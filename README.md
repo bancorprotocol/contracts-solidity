@@ -7,7 +7,7 @@ It achieves this through the use of reserve-tokens, which provide liquidity thro
 
 Bancor is a work in progress. Make sure you understand the risks before using it.
 
-# The Bancor Token Standard
+# The Bancor Enabled Token Standard
 
 The following section describes standard functions a bancor enabled token can implement.
 
