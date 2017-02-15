@@ -5,7 +5,7 @@ import "owned.sol";
     Open issues:
     - throw vs. return value?
     - possibly add modifiers for each stage
-    - possibly create a shared standard token contract and inherit from it, both for the BancorToken and for the BancorEtherToken
+    - possibly create a shared standard token contract and inherit from it, both for the BancorEnabledToken and for the BancorEtherToken
     - add miner abuse protection
     - allow exchanging between 2 reserve tokens directly? can be done through a 3rd party contract
     - issue function can be used - just like transfer - to transfer tokens to the contract address or to a non existent address
@@ -39,9 +39,9 @@ contract BancorEvents {
 }
 
 /*
-    Bancor Token v0.2
+    Bancor Enabled Token v0.2
 */
-contract BancorToken is owned {
+contract BancorEnabledToken is owned {
     enum Stage { Managed, Crowdsale, Traded }
 
     string public standard = 'Token 0.1';
@@ -72,7 +72,7 @@ contract BancorToken is owned {
         _formula            address of a bancor formula contract
         _events             optional, address of a bancor events contract
     */
-    function BancorToken(string _name, string _symbol, uint8 _numDecimalUnits, address _formula, address _events) {
+    function BancorEnabledToken(string _name, string _symbol, uint8 _numDecimalUnits, address _formula, address _events) {
         if (bytes(_name).length == 0 || bytes(_symbol).length < 1 || bytes(_symbol).length > 6 || _formula == 0x0) // validate input
             throw;
 
