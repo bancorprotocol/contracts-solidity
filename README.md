@@ -1,7 +1,13 @@
-# Bancor Network Contracts (alpha v0.2)
+# Bancor Protocol Contracts (alpha v0.2)
 
-Bancor is a **smart-contract-based token conversion protocol**, which enables a single party to convert any token to another, without requiring a second party to exchange with.  
-It achieves this through the use of reserve-tokens, which provide liquidity through autonomous algorithmic price discovery, regardless of trade volume.
+Bancor is a **smart-contract-based token conversion protocol**, which enables a single party to convert any 
+token to another, without requiring a second party to exchange with. It achieves this through the use of 
+reserve-tokens, which provide liquidity through autonomous algorithmic price discovery, regardless of trade volume.
+
+## Overview
+The Bancor protocol represents the first technological solution for the classic problem in economics known as the “Double Coincidence of Wants”, in the domain of asset exchange. For barter, the coincidence of wants problem was solved through money. For money, exchanges still rely on labor, via bid/ask orders and trade between external agents, to make markets and supply liquidity. 
+
+Through the use of smart-contracts, Bancor-Enabled Tokens (BETs) can be created that hold one or more other tokens in their reserve. Tokens may represent existing national currencies or other types of assets. By using a reserve token model and algorithmically-calculated conversion rates, the Bancor Protocol creates a new type of ecosystem for asset exchange, with no central control. This decentralized hierarchical monetary system lays the foundation for an autonomous decentralized global exchange with numerous and substantial advantages.
 
 ## Warning
 
