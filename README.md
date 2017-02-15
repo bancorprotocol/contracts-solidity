@@ -13,11 +13,13 @@ The following section describes standard functions a bancor enabled token can im
 
 ## Motivation
 
-The standard allows...
+Those will allow dapps and wallets to buy and sell the token.
+
+The most important here are `buy` and `sell`.
 
 ## Specification
 
-### BancorToken
+### BancorEnabledToken
 
 First and foremost, a Bancor Enabled Token is also an ERC-20 compliant token.  
 As such, it implements both the standard token methods and the standard token events.
@@ -83,4 +85,4 @@ Triggered when a conversion between the token and one of the reserve tokens take
 
 ## License
 
-License information...
+Bancor is open source and distributed under...
