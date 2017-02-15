@@ -1,0 +1,7 @@
+{
+  "name": "bancor-contracts",
+  "version": "0.0.1",
+  "engines": {
+    "npm": "^3.0.0"
+  }
+}
