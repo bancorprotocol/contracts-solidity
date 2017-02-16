@@ -91,4 +91,4 @@ Triggered when a conversion between the token and one of the reserve tokens take
 
 ## License
 
-Bancor is open source and distributed under...
+Bancor is open source and distributed under the Apache License 2.0
