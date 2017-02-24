@@ -8,7 +8,8 @@ import "owned.sol";
     - possibly create a shared standard token contract and inherit from it, both for the BancorEnabledToken and for the BancorEtherToken
     - add miner abuse protection
     - allow exchanging between 2 reserve tokens directly? can be done through a 3rd party contract
-    - issue function can be used - just like transfer - to transfer tokens to the contract address or to a non existent address
+    - number of reserve tokens is limited to 256 (uint8) - is that enough?
+    - startTrading - looping over the reserve - can run out of gas. Possibly split it and do it as a multi-step process
     - approve - to minimize the risk of the approve/transferFrom attack vector
                 (see https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), approve has to be called twice
                 in 2 separate transactions - once to change the allowance to 0 and secondly to change it to the new allowance value.
@@ -127,6 +128,13 @@ contract BancorEnabledToken is owned {
 
         crowdsale = _crowdsale;
         return true;
+    }
+    
+    /*
+        returns the number of reserve tokens defined
+    */
+    function reserveTokenCount() public returns (uint8 count) {
+        return uint8(reserveTokens.length);
     }
 
     /*
