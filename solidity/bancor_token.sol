@@ -210,7 +210,7 @@ contract BancorToken is owned {
         _crowdsale     new crowdsale contract address
     */
     function startCrowdsale(address _crowdsale, uint256 _allowance) public onlyOwner returns (bool success) {
-        if (stage != Stage.Managed || crowdsale == 0x0 || reserveTokens.length == 0) // validate state
+        if (stage != Stage.Managed || reserveTokens.length == 0) // validate state
             throw;
 
         crowdsale = _crowdsale;
