@@ -40,6 +40,14 @@ Gets the token stage. Possible return values are 0 (Managed), 1 (Crowdsale) or 2
 <br>
 <br>
 <br>
+**reserveTokenCount**
+```cs
+function reserveTokenCount() public returns (uint8 count)
+```
+Gets the number of reserve tokens defined for the token.
+<br>
+<br>
+<br>
 **reserveTokens**
 ```cs
 function reserveTokens() public constant returns (address[] reserveTokens)
@@ -53,6 +61,22 @@ Gets an array of reserve token contract addresses.
 function reserveRatioOf(address _reserveToken) public constant returns (uint8)
 ```
 Gets the constant reserve ratio (CRR) of a reserve token.
+<br>
+<br>
+<br>
+**crowdsale**
+```cs
+function crowdsale() public constant returns (address crowdsale)
+```
+Gets the crowdsale contract address (only available in a non managed stage).
+<br>
+<br>
+<br>
+**crowdsaleAllowance**
+```cs
+function crowdsaleAllowance() public constant returns (uint256 crowdsaleAllowance)
+```
+Gets the number of tokens the crowdsale contract is allowed to issue.
 <br>
 <br>
 <br>
