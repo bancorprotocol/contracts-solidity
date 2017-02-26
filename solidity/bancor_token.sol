@@ -207,9 +207,12 @@ contract BancorToken is owned {
         starts the crowdsale stage (managed stage only)
         can only be called by the token owner
 
-        _crowdsale     new crowdsale contract address
+        _crowdsale      new crowdsale contract address
+        _allowance      maximum number of tokens that can be issued by the crowdsale contract
     */
     function startCrowdsale(address _crowdsale, uint256 _allowance) public onlyOwner returns (bool success) {
+        if (_crowdsale == 0x0 || _allowance == 0) // validate input
+            throw;
         if (stage != Stage.Managed || reserveTokens.length == 0) // validate state
             throw;
 
