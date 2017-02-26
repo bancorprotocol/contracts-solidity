@@ -52,6 +52,7 @@ contract BancorToken is owned {
     address public formula = 0x0;                       // bancor calculation formula contract address
     address public events = 0x0;                        // bancor events contract address
     address public crowdsale = 0x0;                     // crowdsale contract address
+    uint256 public crowdsaleAllowance = 0;              // current number of tokens the crowdsale contract is allowed to issue
     Stage public stage = Stage.Managed;                 // token stage
     address[] public reserveTokens;                     // ERC20 standard token addresses
     mapping (address => uint8) public reserveRatioOf;   // token addresses -> constant reserve ratio, 1-99
@@ -116,20 +117,6 @@ contract BancorToken is owned {
     }
 
     /*
-        updates the crowdsale contract address (managed stage only)
-        can only be called by the token owner
-
-        _crowdsale     new crowdsale contract address
-    */
-    function setCrowdsale(address _crowdsale) public onlyOwner returns (bool success) {
-        if (stage != Stage.Managed) // validate state
-            throw;
-
-        crowdsale = _crowdsale;
-        return true;
-    }
-    
-    /*
         returns the number of reserve tokens defined
     */
     function reserveTokenCount() public returns (uint8 count) {
@@ -167,9 +154,14 @@ contract BancorToken is owned {
             throw;
         if (balanceOf[_to] + _amount < balanceOf[_to]) // target account balance overflow protection
             throw;
+        if (stage == Stage.Crowdsale && _amount > crowdsaleAllowance) // the crowdsale contract is trying to issue more tokens than allowed
+            throw;
 
         totalSupply += _amount;
         balanceOf[_to] += _amount;
+        if (stage == Stage.Crowdsale)
+            crowdsaleAllowance -= _amount;
+
         dispatchUpdate();
         dispatchTransfer(this, _to, _amount);
         return true;
@@ -214,11 +206,15 @@ contract BancorToken is owned {
     /*
         starts the crowdsale stage (managed stage only)
         can only be called by the token owner
+
+        _crowdsale     new crowdsale contract address
     */
-    function startCrowdsale() public onlyOwner returns (bool success) {
+    function startCrowdsale(address _crowdsale, uint256 _allowance) public onlyOwner returns (bool success) {
         if (stage != Stage.Managed || crowdsale == 0x0 || reserveTokens.length == 0) // validate state
             throw;
 
+        crowdsale = _crowdsale;
+        crowdsaleAllowance = _allowance;
         stage = Stage.Crowdsale;
         dispatchUpdate();
         return true;
@@ -310,8 +306,11 @@ contract BancorToken is owned {
             throw;
 
         // if the supply was totally depleted, return to managed stage
-        if (totalSupply == 0)
+        if (totalSupply == 0) {
+            crowdsale = 0x0;
+            crowdsaleAllowance = 0;
             stage = Stage.Managed;
+        }
 
         dispatchConversion(_reserveToken, msg.sender, false, startSupply, reserveBalance, _sellAmount, value);
         return value;
