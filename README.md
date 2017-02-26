@@ -52,7 +52,7 @@ Gets the number of reserve tokens defined for the token.
 ```cs
 function reserveTokens() public constant returns (address[] reserveTokens)
 ```
-Gets an array of reserve token contract addresses.
+Gets an array of the reserve token contract addresses.
 <br>
 <br>
 <br>
