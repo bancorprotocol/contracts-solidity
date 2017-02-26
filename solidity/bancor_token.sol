@@ -144,22 +144,25 @@ contract BancorToken is owned {
 
     /*
         increases the token supply and sends the new tokens to an account
-        can only be called by the token owner (in managed stage only) or the crowdsale contract (in crowdsale stage only)
+        can only be called by the token owner (in managed stage only) or the crowdsale contract (in a non manged stage only)
 
         _to         account to receive the new amount
         _amount     amount to increase the supply by
     */
-    function issue(address _to, uint256 _amount) public onlyManager returns (bool success) {
+    function issue(address _to, uint256 _amount) public returns (bool success) {
+        if (stage == Stage.Managed && msg.sender != owner ||
+            stage != Stage.Managed && msg.sender != crowdsale) // validate permissions
+            throw;
         if (totalSupply + _amount < totalSupply) // supply overflow protection
             throw;
         if (balanceOf[_to] + _amount < balanceOf[_to]) // target account balance overflow protection
             throw;
-        if (stage == Stage.Crowdsale && _amount > crowdsaleAllowance) // the crowdsale contract is trying to issue more tokens than allowed
+        if (stage != Stage.Managed && _amount > crowdsaleAllowance) // check if the crowdsale contract is trying to issue more tokens than allowed
             throw;
 
         totalSupply += _amount;
         balanceOf[_to] += _amount;
-        if (stage == Stage.Crowdsale)
+        if (stage != Stage.Managed)
             crowdsaleAllowance -= _amount;
 
         dispatchUpdate();
