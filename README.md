@@ -42,7 +42,7 @@ Gets the token stage. Possible return values are 0 (Managed), 1 (Crowdsale) or 2
 <br>
 **reserveTokenCount**
 ```cs
-function reserveTokenCount() public returns (uint8 count)
+function reserveTokenCount() public returns (uint16 count)
 ```
 Gets the number of reserve tokens defined for the token.
 <br>
