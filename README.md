@@ -93,7 +93,7 @@ The conversion will only take place if it returns a value greater or equal to `_
 ```cs
 function sell(address _reserveToken, uint256 _sellAmount, uint256 _minimumValue) public returns (uint256 value)
 ```
-Sells the token for one of its reserve tokens.  
+Sells the token by withdrawing from one of its reserve tokens.  
 The conversion will only take place if it returns a value greater or equal to `_minimumValue`.
 
 ### Events
@@ -102,7 +102,7 @@ The conversion will only take place if it returns a value greater or equal to `_
 ```cs
 event Update();
 ```
-Triggered when a reserve is defined, the total supply is issued/destroyed and when the stage changes.
+Triggered when a reserve is defined, the total supply is increased/decreased and when the stage changes.
 <br>
 <br>
 <br>
