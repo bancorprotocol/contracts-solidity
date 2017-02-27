@@ -280,7 +280,7 @@ contract BancorToken is owned {
     }
 
     /*
-        sells the token for one of its reserve tokens
+        sells the token by withdrawing from one of its reserve tokens
 
         _reserveToken   reserve token contract address
         _sellAmount     amount to sell (in the token)
