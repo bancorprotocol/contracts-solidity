@@ -40,11 +40,19 @@ Gets the token stage. Possible return values are 0 (Managed), 1 (Crowdsale) or 2
 <br>
 <br>
 <br>
+**reserveTokenCount**
+```cs
+function reserveTokenCount() public returns (uint16 count)
+```
+Gets the number of reserve tokens defined for the token.
+<br>
+<br>
+<br>
 **reserveTokens**
 ```cs
 function reserveTokens() public constant returns (address[] reserveTokens)
 ```
-Gets an array of reserve token contract addresses.
+Gets an array of the reserve token contract addresses.
 <br>
 <br>
 <br>
@@ -53,6 +61,22 @@ Gets an array of reserve token contract addresses.
 function reserveRatioOf(address _reserveToken) public constant returns (uint8)
 ```
 Gets the constant reserve ratio (CRR) of a reserve token.
+<br>
+<br>
+<br>
+**crowdsale**
+```cs
+function crowdsale() public constant returns (address crowdsale)
+```
+Gets the crowdsale contract address (only available in a non managed stage).
+<br>
+<br>
+<br>
+**crowdsaleAllowance**
+```cs
+function crowdsaleAllowance() public constant returns (uint256 crowdsaleAllowance)
+```
+Gets the number of tokens the crowdsale contract is allowed to issue.
 <br>
 <br>
 <br>
@@ -69,7 +93,7 @@ The conversion will only take place if it returns a value greater or equal to `_
 ```cs
 function sell(address _reserveToken, uint256 _sellAmount, uint256 _minimumValue) public returns (uint256 value)
 ```
-Sells the token for one of its reserve tokens.  
+Sells the token by withdrawing from one of its reserve tokens.  
 The conversion will only take place if it returns a value greater or equal to `_minimumValue`.
 
 ### Events
@@ -78,7 +102,7 @@ The conversion will only take place if it returns a value greater or equal to `_
 ```cs
 event Update();
 ```
-Triggered when a reserve is defined, the total supply is issued/destroyed and when the stage changes.
+Triggered when a reserve is defined, the total supply is increased/decreased and when the stage changes.
 <br>
 <br>
 <br>
