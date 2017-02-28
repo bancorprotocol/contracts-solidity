@@ -1,4 +1,4 @@
-# Bancor Protocol Contracts v0.2 (alpha)
+﻿# Bancor Protocol Contracts v0.2 (alpha)
 
 Bancor is a **smart-contract-based token conversion protocol**, which enables a single party to convert any 
 token to another, without requiring a second party to exchange with. It achieves this through the use of 
@@ -42,7 +42,7 @@ Gets the token stage. Possible return values are 0 (Managed), 1 (Crowdsale) or 2
 <br>
 **reserveTokenCount**
 ```cs
-function reserveTokenCount() public returns (uint16 count)
+function reserveTokenCount() public constant returns (uint16 count)
 ```
 Gets the number of reserve tokens defined for the token.
 <br>
