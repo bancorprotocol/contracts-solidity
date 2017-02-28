@@ -52,7 +52,7 @@ contract BancorToken is owned {
     address public formula = 0x0;                       // bancor calculation formula contract address
     address public events = 0x0;                        // bancor events contract address
     address public crowdsale = 0x0;                     // crowdsale contract address
-    uint256 public crowdsaleAllowance = 0;              // current number of tokens the crowdsale contract is allowed to issue
+    int256 public crowdsaleAllowance = 0;               // current number of tokens the crowdsale contract is allowed to issue, or -1 for unlimited
     Stage public stage = Stage.Managed;                 // token stage
     address[] public reserveTokens;                     // ERC20 standard token addresses
     mapping (address => uint8) public reserveRatioOf;   // token addresses -> constant reserve ratio, 1-99
@@ -150,6 +150,8 @@ contract BancorToken is owned {
         _amount     amount to increase the supply by
     */
     function issue(address _to, uint256 _amount) public returns (bool success) {
+        if (_amount == 0) // validate input
+            throw;
         if (stage == Stage.Managed && msg.sender != owner ||
             stage != Stage.Managed && msg.sender != crowdsale) // validate permissions
             throw;
@@ -157,13 +159,13 @@ contract BancorToken is owned {
             throw;
         if (balanceOf[_to] + _amount < balanceOf[_to]) // target account balance overflow protection
             throw;
-        if (stage != Stage.Managed && _amount > crowdsaleAllowance) // check if the crowdsale contract is trying to issue more tokens than allowed
+        if (stage != Stage.Managed && crowdsaleAllowance >= 0 && _amount > uint256(crowdsaleAllowance)) // check if the crowdsale contract is trying to issue more tokens than allowed
             throw;
 
         totalSupply += _amount;
         balanceOf[_to] += _amount;
-        if (stage != Stage.Managed)
-            crowdsaleAllowance -= _amount;
+        if (stage != Stage.Managed && crowdsaleAllowance >= 0)
+            crowdsaleAllowance -= int256(_amount);
 
         dispatchUpdate();
         dispatchTransfer(this, _to, _amount);
@@ -178,6 +180,8 @@ contract BancorToken is owned {
         _amount     amount to decrease the supply by
     */
     function destroy(address _from, uint256 _amount) public onlyManager returns (bool success) {
+        if (_amount == 0) // validate input
+            throw;
         if (_amount > totalSupply) // negative supply protection
             throw;
         if (_amount > balanceOf[_from]) // target account negative balance protection
@@ -211,9 +215,9 @@ contract BancorToken is owned {
         can only be called by the token owner
 
         _crowdsale      new crowdsale contract address
-        _allowance      maximum number of tokens that can be issued by the crowdsale contract
+        _allowance      maximum number of tokens that can be issued by the crowdsale contract, or -1 for unlimited
     */
-    function startCrowdsale(address _crowdsale, uint256 _allowance) public onlyOwner returns (bool success) {
+    function startCrowdsale(address _crowdsale, int256 _allowance) public onlyOwner returns (bool success) {
         if (_crowdsale == 0x0 || _allowance == 0) // validate input
             throw;
         if (stage != Stage.Managed || reserveTokens.length == 0) // validate state
