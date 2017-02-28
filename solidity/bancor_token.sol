@@ -119,7 +119,7 @@ contract BancorToken is owned {
     /*
         returns the number of reserve tokens defined
     */
-    function reserveTokenCount() public returns (uint8 count) {
+    function reserveTokenCount() public constant returns (uint8 count) {
         return uint8(reserveTokens.length);
     }
 
