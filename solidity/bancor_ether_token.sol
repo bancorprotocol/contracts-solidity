@@ -3,7 +3,6 @@ pragma solidity ^0.4.9;
 /*
     Open issues:
     - throw vs. return value?
-    - keep supply in gwei instead of wei to keep the supply relatively low (10^9 smaller)
 */
 
 contract BancorEtherToken {
