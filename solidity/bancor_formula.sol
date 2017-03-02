@@ -6,6 +6,7 @@ import "owned.sol";
     - the formula is not yet super accurate, especially for very small/very high ratios
     - need to add overflow protection
     - possibly support changing the CRR precision in the future
+    - change exp to use a predefined constant array (for ni) instead of calculating it each call
 */
 
 contract BancorFormula is owned {
