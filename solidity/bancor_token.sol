@@ -7,7 +7,6 @@ import "owned.sol";
     - possibly add modifiers for each stage
     - possibly create a shared standard token contract and inherit from it, both for the BancorToken and for the BancorEtherToken
     - add miner abuse protection
-    - allow exchanging between 2 reserve tokens directly? can be done through a 3rd party contract
     - startTrading - looping over the reserve - can run out of gas. Possibly split it and do it as a multi-step process
     - what happens if one of the reserve tokens gets exploited/hacked/crashes etc.?
     - approve - to minimize the risk of the approve/transferFrom attack vector
@@ -25,8 +24,8 @@ contract ReserveToken { // any ERC20 standard token
 }
 
 contract BancorFormula {
-    function calculatePurchaseValue(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256 value);
-    function calculateSaleValue(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256 value);
+    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256 amount);
+    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256 amount);
     function newFormula() public constant returns (address newFormula);
 }
 
@@ -35,12 +34,11 @@ contract BancorEvents {
     function tokenUpdate() public;
     function tokenTransfer(address _from, address _to, uint256 _value) public;
     function tokenApproval(address _owner, address _spender, uint256 _value) public;
-    function tokenConversion(address _reserveToken, address _trader, bool _isPurchase, uint256 _totalSupply,
-                             uint256 _reserveBalance, uint256 _tokenAmount, uint256 _reserveAmount) public;
+    function tokenChange(address _fromToken, address _toToken, address _changer, uint256 _amount, uint256 _return) public;
 }
 
 /*
-    Bancor Token v0.2
+    Bancor Token v0.3
 */
 contract BancorToken is owned {
     enum Stage { Managed, Crowdsale, Traded }
@@ -64,8 +62,7 @@ contract BancorToken is owned {
     event Update();
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
-    event Conversion(address indexed _reserveToken, address indexed _trader, bool _isPurchase,
-                     uint256 _totalSupply, uint256 _reserveBalance, uint256 _tokenAmount, uint256 _reserveAmount);
+    event Change(address indexed _fromToken, address indexed _toToken, address indexed _changer, uint256 _amount, uint256 _return);
 
     /*
         _name               token name
@@ -120,8 +117,25 @@ contract BancorToken is owned {
     /*
         returns the number of reserve tokens defined
     */
-    function reserveTokenCount() public constant returns (uint8 count) {
-        return uint8(reserveTokens.length);
+    function reserveTokenCount() public constant returns (uint16 count) {
+        return uint16(reserveTokens.length);
+    }
+
+    /*
+        Returns the number of changeable tokens supported by the contract
+        Note that the number of changable tokens is the number of reserve token, plus 1 (that represents the bancor token itself)
+    */
+    function changeableTokenCount() public constant returns (uint16 count) {
+        return reserveTokenCount() + 1;
+    }
+
+    /*
+        Given a changable token index, returns the changable token contract address
+    */
+    function changeableToken(uint16 _tokenIndex) public constant returns (address tokenAddress) {
+        if (_tokenIndex == 0)
+            return this;
+        return reserveTokens[_tokenIndex - 1];
     }
 
     /*
@@ -132,7 +146,7 @@ contract BancorToken is owned {
         _ratio  constant reserve ratio, 1-99
     */
     function addReserve(address _token, uint8 _ratio) public onlyOwner returns (bool success) {
-        if (reserveRatioOf[_token] != 0 || _ratio < 1 || _ratio > 99) // validate input
+        if (_token == address(this) || reserveRatioOf[_token] != 0 || _ratio < 1 || _ratio > 99) // validate input
             throw;
         if (stage != Stage.Managed) // validate state
             throw;
@@ -252,13 +266,65 @@ contract BancorToken is owned {
     }
 
     /*
-        buys the token by depositing one of its reserve tokens
+        Returns the expected return for changing a specific amount of _fromToken to _toToken
+
+        _fromToken  token to change from
+        _toToken    token to change to
+        _amount     amount to change, in fromToken
+    */
+    function getReturn(address _fromToken, address _toToken, uint256 _amount) public constant returns (uint256 amount) {
+        if (_fromToken == _toToken) // validate input
+            throw;
+        if (_fromToken != address(this) && reserveRatioOf[_fromToken] == 0) // validate from token input
+            throw;
+        if (_toToken != address(this) && reserveRatioOf[_toToken] == 0) // validate to token input
+            throw;
+
+        // change between the token and one of its reserves
+        if (_toToken == address(this))
+            return getPurchaseReturn(_fromToken, _amount);
+        else if (_fromToken == address(this))
+            return getSaleReturn(_toToken, _amount);
+
+        // change between 2 reserves
+        uint256 tempAmount = getPurchaseReturn(_fromToken, _amount);
+        return getSaleReturn(_toToken, tempAmount);
+    }
+
+    /*
+        Changes a specific amount of _fromToken to _toToken
+
+        _fromToken  token to change from
+        _toToken    token to change to
+        _amount     amount to change, in fromToken
+        _minReturn  if the change results in an amount smaller than the minimum return, it is cancelled
+    */
+    function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256 amount) {
+        if (_fromToken == _toToken) // validate input
+            throw;
+        if (_fromToken != address(this) && reserveRatioOf[_fromToken] == 0) // validate from token input
+            throw;
+        if (_toToken != address(this) && reserveRatioOf[_toToken] == 0) // validate to token input
+            throw;
+
+        // change between the token and one of its reserves
+        if (_toToken == address(this))
+            return buy(_fromToken, _amount, _minReturn);
+        else if (_fromToken == address(this))
+            return sell(_toToken, _amount, _minReturn);
+
+        // change between 2 reserves
+        uint256 tempAmount = buy(_fromToken, _amount, 0);
+        return sell(_toToken, tempAmount, _minReturn);
+    }
+
+    /*
+        Returns the expected return for buying the token for a reserve token
 
         _reserveToken   reserve token contract address
         _depositAmount  amount to deposit (in the reserve token)
-        _minimumValue   if the conversion results in a value smaller than this value, it is cancelled
     */
-    function buy(address _reserveToken, uint256 _depositAmount, uint256 _minimumValue) public returns (uint256 value) {
+    function getPurchaseReturn(address _reserveToken, uint256 _depositAmount) public constant returns (uint256 amount) {
         uint8 reserveRatio = reserveRatioOf[_reserveToken];
         if (reserveRatio == 0 || _depositAmount == 0) // validate input
             throw;
@@ -269,29 +335,16 @@ contract BancorToken is owned {
         uint256 reserveBalance = reserveToken.balanceOf(this);
 
         BancorFormula formulaContract = BancorFormula(formula);
-        value = formulaContract.calculatePurchaseValue(totalSupply, reserveBalance, reserveRatio, _depositAmount);
-        if (value == 0 || value < _minimumValue) // trade gave nothing in return or didn't return a value that meets the minimum requested value
-            throw;
-        if (totalSupply + value < totalSupply) // supply overflow protection
-            throw;
-        if (!reserveToken.transferFrom(msg.sender, this, _depositAmount)) // can't withdraw funds from the reserve token
-            throw;
-
-        uint256 startSupply = totalSupply;
-        totalSupply += value;
-        balanceOf[msg.sender] += value;
-        dispatchConversion(_reserveToken, msg.sender, true, startSupply, reserveBalance, value, _depositAmount);
-        return value;
+        return formulaContract.calculatePurchaseReturn(totalSupply, reserveBalance, reserveRatio, _depositAmount);
     }
 
     /*
-        sells the token by withdrawing from one of its reserve tokens
+        Returns the expected return for selling the token for one of its reserve tokens
 
         _reserveToken   reserve token contract address
-        _sellAmount     amount to sell (in the token)
-        _minimumValue   if the conversion results in a value smaller than this value, it is cancelled
+        _sellAmount     amount to sell (in the bancor token)
     */
-    function sell(address _reserveToken, uint256 _sellAmount, uint256 _minimumValue) public returns (uint256 value) {
+    function getSaleReturn(address _reserveToken, uint256 _sellAmount) public constant returns (uint256 amount) {
         uint8 reserveRatio = reserveRatioOf[_reserveToken];
         if (reserveRatio == 0 || _sellAmount == 0) // validate input
             throw;
@@ -304,16 +357,53 @@ contract BancorToken is owned {
         uint256 reserveBalance = reserveToken.balanceOf(this);
 
         BancorFormula formulaContract = BancorFormula(formula);
-        value = formulaContract.calculateSaleValue(totalSupply, reserveBalance, reserveRatio, _sellAmount);
-        if (value == 0 || value < _minimumValue) // trade gave nothing in return or didn't return a value that meets the minimum requested value
+        return formulaContract.calculateSaleReturn(totalSupply, reserveBalance, reserveRatio, _sellAmount);
+    }
+
+    /*
+        buys the token by depositing one of its reserve tokens
+
+        _reserveToken   reserve token contract address
+        _depositAmount  amount to deposit (in the reserve token)
+        _minReturn      if the change results in an amount smaller than the minimum return, it is cancelled
+    */
+    function buy(address _reserveToken, uint256 _depositAmount, uint256 _minReturn) public returns (uint256 amount) {
+        amount = getPurchaseReturn(_reserveToken, _depositAmount);
+        if (amount == 0 || amount < _minReturn) // trade gave nothing in return or didn't return an amount that meets the minimum requested amount
             throw;
-        if (reserveBalance <= value) // trade will deplete the reserve
+        if (totalSupply + amount < totalSupply) // supply overflow protection
             throw;
 
-        uint256 startSupply = totalSupply;
+        ReserveToken reserveToken = ReserveToken(_reserveToken);
+        if (!reserveToken.transferFrom(msg.sender, this, _depositAmount)) // can't withdraw funds from the reserve token
+            throw;
+
+        totalSupply += amount;
+        balanceOf[msg.sender] += amount;
+        dispatchChange(_reserveToken, this, msg.sender, _depositAmount, amount);
+        return amount;
+    }
+
+    /*
+        sells the token by withdrawing from one of its reserve tokens
+
+        _reserveToken   reserve token contract address
+        _sellAmount     amount to sell (in the bancor token)
+        _minReturn      if the change results in an amount smaller the minimum return, it is cancelled
+    */
+    function sell(address _reserveToken, uint256 _sellAmount, uint256 _minReturn) public returns (uint256 amount) {
+        amount = getSaleReturn(_reserveToken, _sellAmount);
+        if (amount == 0 || amount < _minReturn) // trade gave nothing in return or didn't return an amount that meets the minimum requested amount
+            throw;
+        
+        ReserveToken reserveToken = ReserveToken(_reserveToken);
+        uint256 reserveBalance = reserveToken.balanceOf(this);
+        if (reserveBalance <= amount) // trade will deplete the reserve
+            throw;
+
         totalSupply -= _sellAmount;
         balanceOf[msg.sender] -= _sellAmount;
-        if (!reserveToken.transfer(msg.sender, value)) // can't transfer funds to the caller
+        if (!reserveToken.transfer(msg.sender, amount)) // can't transfer funds to the caller
             throw;
 
         // if the supply was totally depleted, return to managed stage
@@ -323,8 +413,8 @@ contract BancorToken is owned {
             stage = Stage.Managed;
         }
 
-        dispatchConversion(_reserveToken, msg.sender, false, startSupply, reserveBalance, _sellAmount, value);
-        return value;
+        dispatchChange(this, _reserveToken, msg.sender, _sellAmount, amount);
+        return amount;
     }
 
     // ERC20 standard methods
@@ -400,14 +490,13 @@ contract BancorToken is owned {
         eventsContract.tokenTransfer(_from, _to, _value);
     }
 
-    function dispatchConversion(address _reserveToken, address _trader, bool _isPurchase,
-                                uint256 _totalSupply, uint256 _reserveBalance, uint256 _tokenAmount, uint256 _reserveAmount) private {
-        Conversion(_reserveToken, _trader, _isPurchase, _totalSupply, _reserveBalance, _tokenAmount, _reserveAmount);
+    function dispatchChange(address _fromToken, address _toToken, address _changer, uint256 _amount, uint256 _return) private {
+        Change(_fromToken, _toToken, _changer, _amount, _return);
         if (events == 0x0)
             return;
 
         BancorEvents eventsContract = BancorEvents(events);
-        eventsContract.tokenConversion(_reserveToken, _trader, _isPurchase, _totalSupply, _reserveBalance, _tokenAmount, _reserveAmount);
+        eventsContract.tokenChange(_fromToken, _toToken, _changer, _amount, _return);
     }
 
     // fallback

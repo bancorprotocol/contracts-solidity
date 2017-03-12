@@ -2,7 +2,10 @@ pragma solidity ^0.4.9;
 
 /*
     Open issues:
-    - Anyone can send an event with an invalid address (_token is the msg sender's address) - shouldn't be an issue but point to consider
+    - Anyone can send an event with an invalid address (_token/_sender is the msg sender's address) - shouldn't be an issue but point to consider.
+      Essentially, the listener should make sure that it trusts the sender address before handling the event.
+    - TokenChange event - the _changer isn't indexed so it's impossible to search for all changes a certain account initiated in a given token.
+      This isn't a big deal since the same info can be obtained from the token contract itself and in that contract the _changer IS indexed.
 */
 /*
     this contract allows intercepting events from multiple bancor contracts easily,
@@ -15,8 +18,7 @@ contract BancorEvents {
     event TokenUpdate(address _token);
     event TokenTransfer(address indexed _token, address indexed _from, address indexed _to, uint256 _value);
     event TokenApproval(address indexed _token, address indexed _owner, address indexed _spender, uint256 _value);
-    event TokenConversion(address indexed _token, address indexed _reserveToken, address indexed _trader, bool _isPurchase,
-                          uint256 _totalSupply, uint256 _reserveBalance, uint256 _tokenAmount, uint256 _reserveAmount);
+    event TokenChange(address indexed _sender, address indexed _fromToken, address indexed _toToken, address _changer, uint256 _amount, uint256 _return);
 
     function BancorEvents() {
     }
@@ -37,9 +39,8 @@ contract BancorEvents {
         TokenApproval(msg.sender, _owner, _spender, _value);
     }
 
-    function tokenConversion(address _reserveToken, address _trader, bool _isPurchase, uint256 _totalSupply,
-                             uint256 _reserveBalance, uint256 _tokenAmount, uint256 _reserveAmount) public {
-        TokenConversion(msg.sender, _reserveToken, _trader, _isPurchase, _totalSupply, _reserveBalance, _tokenAmount, _reserveAmount);
+    function tokenChange(address _fromToken, address _toToken, address _changer, uint256 _amount, uint256 _return) public {
+        TokenChange(msg.sender, _fromToken, _toToken, _changer, _amount, _return);
     }
 
     function() {

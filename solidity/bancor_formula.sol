@@ -23,14 +23,14 @@ contract BancorFormula is owned {
     }
 
     /*
-        given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the value that the account needs to get in return (in the main token)
+        given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the return for a given change (in the main token)
 
         _supply             token total supply
         _reserveBalance     total reserve
         _reserveRatio       constant reserve ratio, 1-99
         _depositAmount      deposit amount, in reserve token
     */
-    function calculatePurchaseValue(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256 value) {
+    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256 amount) {
         if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 99 || _depositAmount == 0) // validate input
             throw;
         // limiting input to 128bit to provide *some* overflow protection while keeping the interface generic 256bit
@@ -43,14 +43,14 @@ contract BancorFormula is owned {
     }
 
     /*
-        given a token supply, reserve, CRR and a sell amount (in the main token), calculates the value that the account needs to get in return (in the reserve token)
+        given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
 
         _supply             token total supply
         _reserveBalance     total reserve
         _reserveRatio       constant reserve ratio, 1-99
         _sellAmount         sell amount, in the token itself
     */
-    function calculateSaleValue(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256 value) {
+    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256 amount) {
         if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 99 || _sellAmount == 0) // validate input
             throw;
         // limiting input to 128bit to provide *some* overflow protection while keeping the interface generic 256bit
