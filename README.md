@@ -113,6 +113,14 @@ event Conversion(address indexed _reserveToken, address indexed _trader, bool _i
 ```
 Triggered when a conversion between the token and one of the reserve tokens takes place.
 
+## Collaborators
+
+* **[Yudi Levi](https://github.com/yudilevi)**
+* **[Ilana Pinhas](https://github.com/ilanapi)**
+* **[Barak Manos](https://github.com/barakman)**
+* **[Martin Holst Swende](https://github.com/holiman)**
+
+
 ## License
 
 Bancor Protocol is open source and distributed under the Apache License v2.0
