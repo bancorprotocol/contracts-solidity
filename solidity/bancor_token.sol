@@ -350,8 +350,6 @@ contract BancorToken is owned {
             throw;
         if (stage != Stage.Traded) // validate state
             throw;
-        if (balanceOf[msg.sender] < _sellAmount) // balance check
-            throw;
 
         ReserveToken reserveToken = ReserveToken(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
@@ -392,6 +390,9 @@ contract BancorToken is owned {
         _minReturn      if the change results in an amount smaller the minimum return, it is cancelled
     */
     function sell(address _reserveToken, uint256 _sellAmount, uint256 _minReturn) public returns (uint256 amount) {
+        if (balanceOf[msg.sender] < _sellAmount) // balance check
+            throw;
+
         amount = getSaleReturn(_reserveToken, _sellAmount);
         if (amount == 0 || amount < _minReturn) // trade gave nothing in return or didn't return an amount that meets the minimum requested amount
             throw;
