@@ -1,4 +1,4 @@
-pragma solidity ^0.4.9;
+pragma solidity ^0.4.10;
 import "owned.sol";
 
 /*
@@ -57,6 +57,8 @@ contract BancorToken is owned {
     mapping (address => uint8) public reserveRatioOf;   // token addresses -> constant reserve ratio, 1-99
     mapping (address => uint256) public balanceOf;
     mapping (address => mapping (address => uint256)) public allowance;
+
+    uint8 private totalReserveRatio = 0;                // used to prevent increasing the total reserve ratio above 100% efficiently
 
     // events, can be used to listen to the contract directly, as opposed to through the events contract
     event Update();
@@ -146,13 +148,14 @@ contract BancorToken is owned {
         _ratio  constant reserve ratio, 1-99
     */
     function addReserve(address _token, uint8 _ratio) public onlyOwner returns (bool success) {
-        if (_token == address(this) || reserveRatioOf[_token] != 0 || _ratio < 1 || _ratio > 99) // validate input
+        if (_token == address(this) || reserveRatioOf[_token] != 0 || _ratio < 1 || _ratio > 99 || totalReserveRatio + _ratio > 100) // validate input
             throw;
         if (stage != Stage.Managed) // validate state
             throw;
 
         reserveRatioOf[_token] = _ratio;
         reserveTokens.push(_token);
+        totalReserveRatio += _ratio;
         dispatchUpdate();
         return true;
     }
