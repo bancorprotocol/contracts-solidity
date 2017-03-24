@@ -9,16 +9,6 @@ function expectedThrow(error){
 	}
 }
 
-/*function powerJS( _baseN,  _baseD,  _expN,  _expD){
-    return (fixedExp(ln(_baseN, _baseD) * _expN / _expD), uint256(1) << PRECISION);
-}
-function calculatePurchaseReturnJS(_supply, _reserveBalance, _reserveRatio,_depositAmount){
-	_depositAmount.plus(_reserveBalance)
-	return _supply.times() resN / resD) - _supply;
-
-}
-*/
-
 
 contract('BancorFormula', function(accounts){
 
@@ -32,13 +22,52 @@ contract('BancorFormula', function(accounts){
 	});
 
 
-	it("Should calculate purchase return correctly", function(){
+	it("Should not be possible to purchase more than you're paying for", function(){
+
+		var S = 300000//
+		var R = 63000 // 63000 #
+		var F = 21    //# 21% CRR 
+		var E = 2
 		return BancorFormula.deployed().then(
 			function(instance)
 			{
-				return instance.calculatePurchaseReturn.call(10,10,10,10);
+				return instance.calculatePurchaseReturn.call(S,R,F,E);
 			}).then(function(retval){
-				assert.equal(retval.valueOf(),0,"Purchase return should be 0");
+				// 'Real' value is 1.999975 tokens, should be rounded down to 1
+				assert.equal(retval.valueOf(),1,"Purchase return should be 1");
 		    });
 	});
+
+	it("Should get enough tokens" , function(){
+
+		var S = 300000//
+		var R = 63000 // 63000 #
+		var F = 21    //# 21% CRR 
+		var E = 600 // Purchase for 600 Ether
+		return BancorFormula.deployed().then(
+			function(instance)
+			{
+				return instance.calculatePurchaseReturn.call(S,R,F,E);
+			}).then(function(retval){
+				// 'Real' value is 1.999975 tokens, should be rounded down to 1
+				assert.equal(retval.valueOf(),597,"600 ether should give 597 (597.755599) tokens");
+		    });
+	});
+
+	it("Should not be possible to get more on sale than you're selling", function(){
+
+		var S = 299998// 299998
+		var R = 62998 // 62998  #
+		var F = 21    //# 21% CRR 
+		var T = 2
+		return BancorFormula.deployed().then(
+			function(instance)
+			{
+				return instance.calculateSaleReturn.call(S,R,F,T);
+			}).then(function(retval){
+				// Real value is 1.999975 ether, which should be rounded down to 1
+				assert.equal(retval.valueOf(),1,"Purchase return should be 1");
+		    });
+	});
+
 });
