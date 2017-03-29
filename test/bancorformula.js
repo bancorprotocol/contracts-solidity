@@ -26,32 +26,32 @@ contract('BancorFormula', function(accounts){
 		}).catch(expectedThrow);
 	});
 
-//	testdata.purchaseReturns.forEach(function(k){
-//			var [S,R,F,E,expect,exact] = k
-//			it("Should get correct amount of tokens when purchasing", function(){
-//				return BancorFormula.deployed().then(
-//					function(f)
-//					{
-//						return f.calculatePurchaseReturn.call(S,R,F,E);
-//					}).then(function(retval){
-//						assert.equal(retval.valueOf(),expect,"Purchase return should be "+expect+" ( "+exact+")");
-//				    });
-//			});
-//		}
-//	)
-//	testdata.saleReturns.forEach(function(k){
-//			var [S,R,F,T,expect] = k
-//			it("Should get correct amount of Ether when selling", function(){
-//				return BancorFormula.deployed().then(
-//					function(f)
-//					{
-//						return f.calculateSaleReturn.call(S,R,F,T);
-//					}).then(function(retval){
-//						assert.equal(retval.valueOf(),expect,"Sale return should be "+expect);
-//				    });
-//			});
-//		}
-//	)
+	testdata.purchaseReturns.forEach(function(k){
+			var [S,R,F,E,expect,exact] = k
+			it("Should get correct amount of tokens when purchasing", function(){
+				return BancorFormula.deployed().then(
+					function(f)
+					{
+						return f.calculatePurchaseReturn.call(S,R,F,E);
+					}).then(function(retval){
+						assert.equal(retval.valueOf(),expect,"Purchase return should be "+expect+" ( "+exact+")");
+				    });
+			});
+		}
+	)
+	testdata.saleReturns.forEach(function(k){
+			var [S,R,F,T,expect] = k
+			it("Should get correct amount of Ether when selling", function(){
+				return BancorFormula.deployed().then(
+					function(f)
+					{
+						return f.calculateSaleReturn.call(S,R,F,T);
+					}).then(function(retval){
+						assert.equal(retval.valueOf(),expect,"Sale return should be "+expect);
+				    });
+			});
+		}
+	)
 
 
 	testdata.randomPurchaseReturns.forEach(function(k){
@@ -62,7 +62,7 @@ contract('BancorFormula', function(accounts){
 					{
 						return f.calculatePurchaseReturn.call(S,R,F,E);
 					}).then(function(retval){
-						assert.equal(retval.valueOf(),expect,"Purchase return should be "+expect+" ( "+exact+")");
+						assert(retval.valueOf() <= expect,"Purchase return "+retval+" should be <="+expect+" ( "+exact+"). [S,R,F,E] "+[S,R,F,E]);
 				    }).catch(function(error){
 				    	if(isThrow(error)){
 				    		assert(false, "Purchase return generated throw");
@@ -74,14 +74,15 @@ contract('BancorFormula', function(accounts){
 		}
 	)
 	testdata.randomSaleReturns.forEach(function(k){
-			var [S,R,F,T,expect] = k
+			var [S,R,F,T,expect,exact] = k
 			it("Should get correct amount of Ether when selling", function(){
 				return BancorFormula.deployed().then(
 					function(f)
 					{
 						return f.calculateSaleReturn.call(S,R,F,T);
 					}).then(function(retval){
-						assert.equal(retval.valueOf(),expect,"Sale return should be "+expect);
+						assert(retval.valueOf() <= expect,"Sale return "+retval+" should be <="+expect+" ( "+exact+"). [S,R,F,T] "+[S,R,F,T]);
+
 				    }).catch(function(error){
 				    	if(isThrow(error)){
 				    		assert(false, "Sale return generated throw");
