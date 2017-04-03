@@ -1,5 +1,5 @@
-pragma solidity ^0.4.10;
-import "owned.sol";
+pragma solidity ^0.4.8;
+import "./owned.sol";
 
 /*
     Open issues:
