@@ -9,7 +9,7 @@ import "./Owned.sol";
     - change exp to use a predefined constant array (for ni) instead of calculating it each call
 */
 
-contract BancorFormula is owned {
+contract BancorFormula is Owned {
     uint8 constant PRECISION = 32;  // fractional bits
 
     string public version = '0.1';

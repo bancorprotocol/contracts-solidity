@@ -40,7 +40,7 @@ contract BancorEvents {
 /*
     Bancor Token v0.3
 */
-contract BancorToken is owned {
+contract BancorToken is Owned {
     enum Stage { Managed, Crowdsale, Traded }
 
     string public standard = 'Token 0.1';
