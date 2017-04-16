@@ -71,7 +71,13 @@ contract BancorFormula is Owned {
     }
 
     function fixedLoge(uint256 _x) private returns (uint256) {
-        return (fixedLog2(_x) * 1488522236) >> 31; // 1,488,522,236 = ln(2) * (2 ^ 31)
+        /**
+        Might be room enough to choose an even higher number, e.g.
+        ln(2) * ( 2 ^ 37), which is 47632711549.11315
+        Much better accuracy, and less rounding errors
+        **/ 
+
+        return (fixedLog2(_x) * 2977044471) >> 32; // 2977044471.819572 = ln(2) * (2 ^ 32)
     }
 
     function fixedLog2(uint256 _x) private returns (uint256) {
@@ -101,25 +107,88 @@ contract BancorFormula is Owned {
 
         return hi - lo;
     }
-    
-    function fixedExp(uint256 _x) private returns (uint256) {
+    /**
+    * fixedExp 
+    * Calculates e^x according to maclauren summation:
+    *  e^x = 1+x+x^2/2!...+x^n/n!
+    * @param x : An input assumed to already be upshifted for accuracy
+    * @return returns e^(x>>32) << 32 , that is, upshifted for accuracy
+    **/
+    function fixedExp(uint256 _x) constant returns (uint256) {
         uint256 fixedOne = uint256(1) << PRECISION;
+        uint256 xi = fixedOne;
+        uint256 res = 0xde1bc4d19efcac82445da75b00000000 * xi;
 
-        // TODO: change to constant array instead of calculating each time        
-		uint256[34 + 1] memory ni;
-		ni[0] = 295232799039604140847618609643520000000;
-		for (uint8 n = 1; n < ni.length; ++n)
-		    ni[n] = ni[n - 1] / n;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0xde1bc4d19efcb0000000000000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x6f0de268cf7e58000000000000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x2504a0cd9a7f72000000000000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x9412833669fdc800000000000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x1d9d4d714865f500000000000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x4ef8ce836bba8c0000000000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0xb481d807d1aa68000000000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x16903b00fa354d000000000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x281cdaac677b3400000000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x402e2aad725eb80000000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x5d5a6c9f31fe24000000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x7c7890d442a83000000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x9931ed540345280000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0xaf147cf24ce150000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0xbac08546b867d000000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0xbac08546b867d00000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0xafc441338061b8000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x9c3cabbc0056e000000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x839168328705c80000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x694120286c04a0000;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x50319e98b3d2c400;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x3a52a1e36b82020;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x289286e0fce002;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x1b0c59eb53400;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x114f95b55400;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0xaa7210d200;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x650139600;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x39b78e80;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x1fd8080;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x10fbc0;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x8c40;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x462;
+        xi = (xi * _x) >> PRECISION;
+        res += xi * 0x22;
 
-		uint256 res = ni[0] << PRECISION;
-		uint256 xi = fixedOne;
-		for (uint8 i = 1; i < ni.length; ++i) {
-    	    xi = (xi * _x) >> PRECISION;
-			res += xi * ni[i];
-		}
-
-		return res / ni[0];
+        return res / 0xde1bc4d19efcac82445da75b00000000;
     }
+
 
     function() {
         throw;
