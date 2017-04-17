@@ -24,19 +24,26 @@ contract BancorFormula is Owned {
 
     /*
         given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the return for a given change (in the main token)
+        
+        Formula:
+        Return = Supply * ((1 + Deposit Amount / Reserve Balance) ^ Reserve Ratio - 1)
 
         _supply             token total supply
         _reserveBalance     total reserve
-        _reserveRatio       constant reserve ratio, 1-99
+        _reserveRatio       constant reserve ratio, 1-100
         _depositAmount      deposit amount, in reserve token
     */
     function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256 amount) {
-        if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 99 || _depositAmount == 0) // validate input
+        if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 100 || _depositAmount == 0) // validate input
             throw;
         // limiting input to 128bit to provide *some* overflow protection while keeping the interface generic 256bit
         // TODO: will need to revisit this
         if (_supply > uint128(-1) || _reserveBalance > uint128(-1) || _depositAmount > uint128(-1))
             throw;
+
+        // special case if the CRR = 100
+        if (_reserveRatio == 100)
+            return _supply * (_reserveBalance + _depositAmount) / _reserveBalance - _supply;
 
         var (resN, resD) = power(uint128(_depositAmount + _reserveBalance), uint128(_reserveBalance), _reserveRatio, 100);
         return (_supply * resN / resD) - _supply;
@@ -44,19 +51,26 @@ contract BancorFormula is Owned {
 
     /*
         given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
+        
+        Formula:
+        Return = Reserve Balance * ((1 + Sell Amount / Supply) ^ (1 / Reserve Ratio) - 1)
 
         _supply             token total supply
         _reserveBalance     total reserve
-        _reserveRatio       constant reserve ratio, 1-99
+        _reserveRatio       constant reserve ratio, 1-100
         _sellAmount         sell amount, in the token itself
     */
     function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256 amount) {
-        if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 99 || _sellAmount == 0) // validate input
+        if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 100 || _sellAmount == 0) // validate input
             throw;
         // limiting input to 128bit to provide *some* overflow protection while keeping the interface generic 256bit
         // TODO: will need to revisit this
         if (_supply > uint128(-1) || _reserveBalance > uint128(-1) || _sellAmount > uint128(-1))
             throw;
+
+        // special case if the CRR = 100
+        if (_reserveRatio == 100)
+            return _reserveBalance * (_supply + _sellAmount) / _supply - _reserveBalance;
 
         var (resN, resD) = power(uint128(_sellAmount + _supply), uint128(_supply), 100, _reserveRatio);
         return (_reserveBalance * resN / resD) - _reserveBalance;

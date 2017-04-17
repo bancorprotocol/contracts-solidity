@@ -55,7 +55,7 @@ contract BancorToken is Owned {
     int256 public crowdsaleAllowance = 0;               // current number of tokens the crowdsale contract is allowed to issue, or -1 for unlimited
     Stage public stage = Stage.Managed;                 // token stage
     address[] public reserveTokens;                     // ERC20 standard token addresses
-    mapping (address => uint8) public reserveRatioOf;   // token addresses -> constant reserve ratio, 1-99
+    mapping (address => uint8) public reserveRatioOf;   // token addresses -> constant reserve ratio, 1-100
     mapping (address => uint256) public balanceOf;
     mapping (address => mapping (address => uint256)) public allowance;
 
@@ -156,10 +156,10 @@ contract BancorToken is Owned {
         can only be called by the token owner
 
         _token  address of the reserve token
-        _ratio  constant reserve ratio, 1-99
+        _ratio  constant reserve ratio, 1-100
     */
     function addReserve(address _token, uint8 _ratio) public onlyOwner returns (bool success) {
-        if (_token == address(this) || reserveRatioOf[_token] != 0 || _ratio < 1 || _ratio > 99 || totalReserveRatio + _ratio > 100) // validate input
+        if (_token == address(this) || reserveRatioOf[_token] != 0 || _ratio < 1 || _ratio > 100 || totalReserveRatio + _ratio > 100) // validate input
             throw;
         if (stage != Stage.Managed) // validate state
             throw;
