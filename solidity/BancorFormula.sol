@@ -18,6 +18,12 @@ contract BancorFormula is Owned {
     function BancorFormula() {
     }
 
+    function safeMul(uint a, uint b) internal returns (uint) {
+        uint c = a * b;
+        if ( a != 0 && c / a != b){ throw;}
+        return c;
+    }
+    
     function setNewFormula(address _formula) public onlyOwner {
         newFormula = _formula;
     }
@@ -62,27 +68,89 @@ contract BancorFormula is Owned {
         return (_reserveBalance * resN / resD) - _reserveBalance;
     }
 
-    function power(uint128 _baseN, uint128 _baseD, uint32 _expN, uint32 _expD) private returns (uint256 resN, uint256 resD) {
+    function power(uint128 _baseN, uint128 _baseD, uint32 _expN, uint32 _expD) constant returns (uint256 resN, uint256 resD) {
         return (fixedExp(ln(_baseN, _baseD) * _expN / _expD), uint256(1) << PRECISION);
 	}
     
-    function ln(uint128 _numerator, uint128 _denominator) private returns (uint256) {
-        return fixedLoge(uint256(_numerator) << PRECISION) - fixedLoge(uint256(_denominator) << PRECISION);
+    /**
+        input range: 
+            - numerator: [1,uint256_max >> PRECISION]    
+            - denominator: [1,uint256_max >> PRECISION]
+        output range:
+            [0,0x9b43d4f8d6]
+
+        This method throws outside of bounds
+
+    **/
+    function ln(uint256 _numerator, uint256 _denominator) constant returns (uint256) {
+
+        // denominator > numerator: less than one yields negative values. Unsupported
+        if ( _denominator > _numerator){
+            throw;
+        }
+        // log(1) is the lowest we can go
+        if(_denominator == 0 || _numerator == 0){
+            throw;
+        }
+        // Upper 32 bits are scaled off by PRECISION
+        if(_numerator & 0xffffffff00000000000000000000000000000000000000000000000000000000 != 0){
+            throw;
+        }
+        if(_denominator & 0xffffffff00000000000000000000000000000000000000000000000000000000 != 0){
+            throw;
+        }
+
+        return fixedLoge(_numerator << PRECISION) - fixedLoge(_denominator << PRECISION);
     }
 
-    function fixedLoge(uint256 _x) private returns (uint256) {
+    /*
+        input range: 
+            [0x100000000,uint256_max]
+        output range:
+            [0 , 0x9b43d4f8d6]
+
+        This method throws outside of bounds
+
+    */
+    function fixedLoge(uint256 _x) constant returns (uint256 logE) {
         /*
-        Might be room enough to choose an even higher number, e.g.
-        ln(2) * ( 2 ^ 37), which is 47632711549.11315
-        Much better accuracy, and less rounding errors
-        */ 
+        Since `fixedLog2` output range is max `0xdfffffffff` 
+        (40 bits, or 5 bytes), we can use a very large approximation
+        for `ln(2)`. This one is used since it's the max accuracy 
+        of Python `ln(2)`
 
-        return (fixedLog2(_x) * 2977044471) >> 32; // 2977044471.819572 = ln(2) * (2 ^ 32)
+        0xb17217f7d1cf78 = ln(2) * (1 << 56)
+        
+        */
+        uint256 log2 = fixedLog2(_x);
+        logE = (log2 * 0xb17217f7d1cf78) >> 56;
     }
+    /**
+        Returns log2(x >> 32) << 32 
+        So x is assumed to be already upshifted 32 bits, and 
+        the result is also upshifted 32 bits. 
 
-    function fixedLog2(uint256 _x) private returns (uint256) {
+        input-range : 
+            [0x100000000,uint256_max]
+        output-range: 
+            [0,0xdfffffffff]
+
+        This method throws outside of bounds
+
+    **/
+    function fixedLog2(uint256 _x) constant returns (uint256) {
+
+
         uint256 fixedOne = uint256(1) << PRECISION;
         uint256 fixedTwo = uint256(2) << PRECISION;
+
+        if (_x <= fixedOne){
+            if ( _x == 0){
+                return 0;
+            }
+            // Numbers below 1 are negative. 
+            throw;
+        }
 
         uint256 lo = 0;
         uint256 hi = 0;
@@ -103,6 +171,12 @@ contract BancorFormula is Owned {
                 _x >>= 1;
                 hi += uint256(1) << (PRECISION - 1 - i);
             }
+        }
+        if (lo > hi){
+            //Should never happen, due to the check above
+            // but this is a cheap extra check in case the 
+            // implementation changes over time
+            throw;
         }
 
         return hi - lo;

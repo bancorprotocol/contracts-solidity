@@ -25,7 +25,7 @@ contract('BancorFormula', function(accounts){
   it("handles legal input ranges (fixedExp)", function(){
     return BancorFormula.deployed().then(function(instance){
         var ok = _hex('0x386bfdba29');
-        return instance.fixedExpUnsafe.call(ok);
+        return instance.fixedExp.call(ok);
       }).then(function(retval) { 
         var expected= _hex('0x59ce8876bf3a3b1bfe894fc4f5');
         assert.equal(expected.toString(16),retval.toString(16),"Wrong result for fixedExp at limit");
