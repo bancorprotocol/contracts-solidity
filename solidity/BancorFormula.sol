@@ -71,11 +71,11 @@ contract BancorFormula is Owned {
     }
 
     function fixedLoge(uint256 _x) private returns (uint256) {
-        /**
+        /*
         Might be room enough to choose an even higher number, e.g.
         ln(2) * ( 2 ^ 37), which is 47632711549.11315
         Much better accuracy, and less rounding errors
-        **/ 
+        */ 
 
         return (fixedLog2(_x) * 2977044471) >> 32; // 2977044471.819572 = ln(2) * (2 ^ 32)
     }
@@ -107,13 +107,15 @@ contract BancorFormula is Owned {
 
         return hi - lo;
     }
-    /**
-    * fixedExp 
-    * Calculates e^x according to maclauren summation:
-    *  e^x = 1+x+x^2/2!...+x^n/n!
-    * @param x : An input assumed to already be upshifted for accuracy
-    * @return returns e^(x>>32) << 32 , that is, upshifted for accuracy
-    **/
+    /*
+     fixedExp 
+     Calculates e^x according to maclauren summation:
+      e^x = 1+x+x^2/2!...+x^n/n!
+     
+     _x : An input assumed to already be upshifted for accuracy
+     
+     returns e^(x>>32) << 32 , that is, upshifted for accuracy
+    */
     function fixedExp(uint256 _x) constant returns (uint256) {
         uint256 fixedOne = uint256(1) << PRECISION;
         uint256 xi = fixedOne;
