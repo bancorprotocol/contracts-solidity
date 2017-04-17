@@ -32,6 +32,7 @@ contract BancorFormula {
 contract BancorEvents {
     function newToken() public;
     function tokenUpdate() public;
+    function newTokenOwner(address _prevOwner, address _newOwner) public;
     function tokenTransfer(address _from, address _to, uint256 _value) public;
     function tokenApproval(address _owner, address _spender, uint256 _value) public;
     function tokenChange(address _fromToken, address _toToken, address _changer, uint256 _amount, uint256 _return) public;
@@ -97,6 +98,16 @@ contract BancorToken is Owned {
             stage == Stage.Crowdsale && msg.sender != crowdsale) // validate state & permissions
             throw;
         _;
+    }
+
+    function setOwner(address _newOwner) public onlyOwner {
+        address prevOwner = owner;
+        super.setOwner(_newOwner);
+        if (events == 0x0)
+            return;
+
+        BancorEvents eventsContract = BancorEvents(events);
+        eventsContract.newTokenOwner(prevOwner, owner);
     }
 
     /*
