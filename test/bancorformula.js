@@ -12,11 +12,36 @@ function expectedThrow(error){
     assert(false, error.toString());
   }
 }
-
+function _hex(hexstr){
+  if(hexstr.startsWith("0x")){ 
+    hexstr = hexstr.substr(2);
+  }
+  return new big.BigInteger(hexstr,16);
+}
 
 contract('BancorFormula', function(accounts){
 
 
+  it("handles legal input ranges (fixedExp)", function(){
+    return BancorFormula.deployed().then(function(instance){
+        var ok = _hex('0x386bfdba29');
+        return instance.fixedExpUnsafe.call(ok);
+      }).then(function(retval) { 
+        var expected= _hex('0x59ce8876bf3a3b1bfe894fc4f5');
+        assert.equal(expected.toString(16),retval.toString(16),"Wrong result for fixedExp at limit");
+    });
+  });
+
+  it("throws outside input range (fixedExp) ", function(){
+    return BancorFormula.deployed().then(function(instance){
+        var ok = _hex('0x386bfdba2a');
+        return instance.fixedExp.call(ok);
+      }).then(function(retval) { 
+        assert(false, "testThrow was supposed to throw but didn't.");
+    }).catch(expectedThrow);
+  });
+
+  return;
   it("Throws exceptions at large input", function(){
     return BancorFormula.deployed().then(function(instance){
         var large = new big.BigInteger('0xFFFFF100000000000000000000000000000010');

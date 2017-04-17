@@ -107,16 +107,31 @@ contract BancorFormula is Owned {
 
         return hi - lo;
     }
+
+    /*
+    fixedExp is a 'protected' version of `fixedExpUnsafe`, which 
+    `throw`s instead of overflows
+    */
+    function fixedExp(uint256 _x) constant returns (uint256) {
+        if (_x > 0x386bfdba29) 
+            throw;
+        return fixedExpUnsafe(_x);
+    }
     /*
      fixedExp 
      Calculates e^x according to maclauren summation:
+
       e^x = 1+x+x^2/2!...+x^n/n!
+
+     and returns e^(x>>32) << 32 , that is, upshifted for accuracy
      
-     _x : An input assumed to already be upshifted for accuracy
-     
-     returns e^(x>>32) << 32 , that is, upshifted for accuracy
+     Input range:
+        - Function ok at    <= 242329958953 
+        - Function fails at >= 242329958954
+    This method is is visible for testcases, but not meant for direct use. 
+
     */
-    function fixedExp(uint256 _x) constant returns (uint256) {
+    function fixedExpUnsafe(uint256 _x) constant returns (uint256) {
         uint256 fixedOne = uint256(1) << PRECISION;
         uint256 xi = fixedOne;
         uint256 res = 0xde1bc4d19efcac82445da75b00000000 * xi;
