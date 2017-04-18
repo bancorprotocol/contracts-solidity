@@ -18,12 +18,17 @@ contract BancorFormula is Owned {
     function BancorFormula() {
     }
 
-    function safeMul(uint a, uint b) internal returns (uint) {
-        uint c = a * b;
+    function safeAdd(uint256 a, uint256 b) internal returns (uint){
+        uint c = a + b;
+        if (c < a){ throw; }
+        return c;
+    }
+    function safeMul(uint256 a, uint256 b) internal returns (uint) {
+        uint256 c = a * b;
         if ( a != 0 && c / a != b){ throw;}
         return c;
     }
-    
+
     function setNewFormula(address _formula) public onlyOwner {
         newFormula = _formula;
     }
@@ -36,16 +41,26 @@ contract BancorFormula is Owned {
         _reserveRatio       constant reserve ratio, 1-99
         _depositAmount      deposit amount, in reserve token
     */
-    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256 amount) {
-        if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 99 || _depositAmount == 0) // validate input
-            throw;
-        // limiting input to 128bit to provide *some* overflow protection while keeping the interface generic 256bit
-        // TODO: will need to revisit this
-        if (_supply > uint128(-1) || _reserveBalance > uint128(-1) || _depositAmount > uint128(-1))
+    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
+        // validate input
+        if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 99 || _depositAmount == 0) 
             throw;
 
+        uint256 baseN = safeAdd(_depositAmount, _reserveBalance);
+
+        var (resN, resD) = power(baseN, _reserveBalance, _reserveRatio, 100);
+
+        uint256 amount = safeMul(_supply, resN) / resD;
+        
+        if ( amount < _supply){
+            throw;
+        }
+
+        return amount - _supply;
+        /*        
         var (resN, resD) = power(uint128(_depositAmount + _reserveBalance), uint128(_reserveBalance), _reserveRatio, 100);
         return (_supply * resN / resD) - _supply;
+        */
     }
 
     /*
@@ -56,20 +71,47 @@ contract BancorFormula is Owned {
         _reserveRatio       constant reserve ratio, 1-99
         _sellAmount         sell amount, in the token itself
     */
-    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256 amount) {
-        if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 99 || _sellAmount == 0) // validate input
+    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
+        // validate input
+        if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 99 || _sellAmount == 0) 
             throw;
-        // limiting input to 128bit to provide *some* overflow protection while keeping the interface generic 256bit
-        // TODO: will need to revisit this
-        if (_supply > uint128(-1) || _reserveBalance > uint128(-1) || _sellAmount > uint128(-1))
-            throw;
+        
+        uint256 baseN = safeAdd( _sellAmount, _supply);
+        var (resN, resD) = power(baseN, _supply, 100, _reserveRatio);
 
+        uint256 amount = safeMul(_reserveBalance, resN) / resD ;
+
+        if ( amount < _reserveBalance ){
+            throw;
+        }
+        return amount - _reserveBalance; 
+
+        /*
         var (resN, resD) = power(uint128(_sellAmount + _supply), uint128(_supply), 100, _reserveRatio);
         return (_reserveBalance * resN / resD) - _reserveBalance;
+        */
+
+        //return (_reserveBalance * resN / resD) - _reserveBalance;
     }
 
-    function power(uint128 _baseN, uint128 _baseD, uint32 _expN, uint32 _expD) constant returns (uint256 resN, uint256 resD) {
+    /**
+        Calculate (_baseN / _baseD) ^ ( _expN / _expD)
+        Returns result upshifted by PRECISION
+
+        This method throws is overflow-safe
+    **/ 
+    function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) constant returns (uint256 resN, uint256 resD) {
+        
+        uint256 logbase = ln(_baseN, _baseD);
+        //Not using safeDiv here, since safeDiv protects against
+        // precision loss. It's unavoidable, however
+        // Both `ln` and `fixedExp` are overflow-safe. 
+        resN = fixedExp( safeMul( logbase, _expN) / _expD );
+
+        return (resN  , uint256(1) << PRECISION);
+        /*
         return (fixedExp(ln(_baseN, _baseD) * _expN / _expD), uint256(1) << PRECISION);
+        */
 	}
     
     /**
@@ -145,7 +187,7 @@ contract BancorFormula is Owned {
         uint256 fixedTwo = uint256(2) << PRECISION;
 
         if (_x <= fixedOne){
-            if ( _x == 0){
+            if ( _x == fixedOne){
                 return 0;
             }
             // Numbers below 1 are negative. 
