@@ -50,53 +50,8 @@ contract('BancorFormula', function(accounts){
         assert(false, "testThrow was supposed to throw but didn't: "+retval.toString(16));
     }).catch(expectedThrow);
   });
-  return;
-  testdata.purchaseReturnsErrors.forEach(function(k){
-      var [S,R,F,E,expect,exact] = k
-      it("Should get correct amount of tokens when purchasing", function(){
-        return BancorFormula.deployed().then(
-          function(f)
-          {
-            return f.calculatePurchaseReturn.call(S,R,F,E);
-          }).then(function(retval){
-            diff = retval.valueOf()-expect
-            assert(diff <= 0,"Purchase returned "+diff+ " tokens too many:"
-              +retval.valueOf()+" > "+expect + " ( "+exact+") Inputs [S,R,F,E] = "+[S,R,F,E]);
-            });
-      });
-    }
-  )
 
-  testdata.purchaseReturns.forEach(function(k){
-      var [S,R,F,E,expect,exact] = k
-      it("Should get correct amount of tokens when purchasing", function(){
-        return BancorFormula.deployed().then(
-          function(f)
-          {
-            return f.calculatePurchaseReturn.call(S,R,F,E);
-          }).then(function(retval){
-            assert.equal(retval.valueOf(),expect,"Purchase return should be "+expect+" ( "+exact+")");
-            });
-      });
-    }
-  )
-  testdata.saleReturns.forEach(function(k){
-      var [S,R,F,T,expect, exact] = k
-      it("Should get correct amount of Ether when selling", function(){
-        return BancorFormula.deployed().then(
-          function(f)
-          {
-            return f.calculateSaleReturn.call(S,R,F,T);
-          }).then(function(retval){
-            assert(retval.valueOf() <= expect,"Sale return "+retval+" should be <="+expect+" ( "+exact+"). [S,R,F,T] "+[S,R,F,T]);
-            //assert.equal(retval.valueOf(),expect,"Sale return should be "+expect);
-            });
-      });
-    }
-  )
-
-
-  testdata.randomPurchaseReturns.forEach(function(k){
+  var purchaseTest = function(k){
       var [S,R,F,E,expect,exact] = k
       it("Should get correct amount of tokens when purchasing", function(){
         return BancorFormula.deployed().then(
@@ -111,11 +66,10 @@ contract('BancorFormula', function(accounts){
               }else{
                 assert(false, error.toString());
               }
-            });;
+            });
       });
     }
-  )
-  testdata.randomSaleReturns.forEach(function(k){
+  var saleTest = function(k){
       var [S,R,F,T,expect,exact] = k
       it("Should get correct amount of Ether when selling", function(){
         return BancorFormula.deployed().then(
@@ -134,5 +88,13 @@ contract('BancorFormula', function(accounts){
             });;
       });
     }
-  )
+
+  testdata.purchaseReturnsErrors.forEach(purchaseTest);
+  testdata.purchaseReturns.forEach(purchaseTest);
+  testdata.randomPurchaseReturns.forEach(purchaseTest);
+  testdata.randomPurchaseReturns2.forEach(purchaseTest);
+  testdata.saleReturns.forEach(saleTest);
+  testdata.randomSaleReturns.forEach(saleTest);
+  testdata.randomSaleReturns2.forEach(saleTest);
+  
 });
