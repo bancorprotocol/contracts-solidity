@@ -7,8 +7,8 @@ import './ERC20Token.sol';
 */
 
 contract EtherToken is ERC20Token {
-    function EtherToken(string _name, string _symbol)
-        ERC20Token('Ether Token', 'ET') {
+    function EtherToken()
+        ERC20Token('Ether Token', 'ETH') {
     }
 
     // deposit ether in the account
