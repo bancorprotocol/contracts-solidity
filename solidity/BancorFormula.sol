@@ -4,8 +4,10 @@ import "./Owned.sol";
 /*
     Open issues:
     - the formula is not yet super accurate, especially for very small/very high ratios
-    - need to add overflow protection
     - possibly support changing the CRR precision in the future
+ 
+    Done:
+    - need to add overflow protection
     - change exp to use a predefined constant array (for ni) instead of calculating it each call
 */
 
@@ -57,10 +59,6 @@ contract BancorFormula is Owned {
         }
 
         return amount - _supply;
-        /*        
-        var (resN, resD) = power(uint128(_depositAmount + _reserveBalance), uint128(_reserveBalance), _reserveRatio, 100);
-        return (_supply * resN / resD) - _supply;
-        */
     }
 
     /*
@@ -86,12 +84,6 @@ contract BancorFormula is Owned {
         }
         return amount - _reserveBalance; 
 
-        /*
-        var (resN, resD) = power(uint128(_sellAmount + _supply), uint128(_supply), 100, _reserveRatio);
-        return (_reserveBalance * resN / resD) - _reserveBalance;
-        */
-
-        //return (_reserveBalance * resN / resD) - _reserveBalance;
     }
 
     /**
