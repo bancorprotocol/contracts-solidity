@@ -8,6 +8,9 @@ pragma solidity ^0.4.8;
                 in 2 separate transactions - once to change the allowance to 0 and secondly to change it to the new allowance value
 */
 
+/*
+    ERC20 Standard Token implementation
+*/
 contract ERC20Token {
     string public standard = 'Token 0.1';
     string public name = '';

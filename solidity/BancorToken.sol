@@ -1,17 +1,13 @@
 pragma solidity ^0.4.8;
 import './Owned.sol';
+import './ERC20Token.sol';
 
 /*
     Open issues:
     - throw vs. return value?
     - possibly add modifiers for each stage
-    - possibly create a shared standard token contract and inherit from it, both for the BancorToken and for the EtherToken
     - add miner abuse protection
     - startTrading - looping over the reserve - can run out of gas. Possibly split it and do it as a multi-step process
-    - approve - to minimize the risk of the approve/transferFrom attack vector
-                (see https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), approve has to be called twice
-                in 2 separate transactions - once to change the allowance to 0 and secondly to change it to the new allowance value.
-                Also relevant to the EtherToken
 */
 
 // interfaces
@@ -38,9 +34,9 @@ contract BancorEvents {
 }
 
 /*
-    Bancor Token v0.4
+    Bancor Token v0.5
 */
-contract BancorToken is Owned {
+contract BancorToken is Owned, ERC20Token {
     struct Reserve {
         uint8 ratio;    // constant reserve ratio (CRR), 1-100
         bool isEnabled; // is purchase of the token enabled with the reserve, can be set by the owner
@@ -49,11 +45,7 @@ contract BancorToken is Owned {
 
     enum Stage { Managed, Crowdsale, Traded }
 
-    string public standard = 'Token 0.1';
-    string public name = '';
-    string public symbol = '';                          // 1-6 characters
     uint8 public numDecimalUnits = 0;                   // for display purposes only
-    uint256 public totalSupply = 0;
     address public formula = 0x0;                       // bancor calculation formula contract address
     address public events = 0x0;                        // bancor events contract address
     address public crowdsale = 0x0;                     // crowdsale contract address
@@ -61,30 +53,24 @@ contract BancorToken is Owned {
     Stage public stage = Stage.Managed;                 // token stage
     address[] public reserveTokens;                     // ERC20 standard token addresses
     mapping (address => Reserve) public reserves;       // reserve token addresses -> reserve data
-    mapping (address => uint256) public balanceOf;
-    mapping (address => mapping (address => uint256)) public allowance;
-
     uint8 private totalReserveRatio = 0;                // used to prevent increasing the total reserve ratio above 100% efficiently
 
     // events, can be used to listen to the contract directly, as opposed to through the events contract
     event Update();
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
     event Change(address indexed _fromToken, address indexed _toToken, address indexed _changer, uint256 _amount, uint256 _return);
 
     /*
         _name               token name
-        _symbol             token short symbol
+        _symbol             token short symbol, 1-6 characters
         _numDecimalUnits    for display purposes only
         _formula            address of a bancor formula contract
         _events             optional, address of a bancor events contract
     */
-    function BancorToken(string _name, string _symbol, uint8 _numDecimalUnits, address _formula, address _events) {
+    function BancorToken(string _name, string _symbol, uint8 _numDecimalUnits, address _formula, address _events)
+        ERC20Token(_name, _symbol) {
         if (bytes(_name).length == 0 || bytes(_symbol).length < 1 || bytes(_symbol).length > 6 || _formula == 0x0) // validate input
             throw;
 
-        name = _name;
-        symbol = _symbol;
         numDecimalUnits = _numDecimalUnits;
         formula = _formula;
         events = _events;
@@ -454,36 +440,32 @@ contract BancorToken is Owned {
         return amount;
     }
 
-    // ERC20 standard methods
+    // ERC20 standard method overrides with some extra functionality
 
     // send coins
     function transfer(address _to, uint256 _value) public returns (bool success) {
-        if (balanceOf[msg.sender] < _value) // balance check
-            throw;
-        if (balanceOf[_to] + _value < balanceOf[_to]) // overflow protection
-            throw;
         if (stage == Stage.Crowdsale) // validate state
             throw;
 
-        balanceOf[msg.sender] -= _value;
-        if (_to == address(this)) // transferring to the contract address destroys tokens
-            totalSupply -= _value;
-        else
-            balanceOf[_to] += _value;
+        super.transfer(_to, _value);
 
-        dispatchTransfer(msg.sender, _to, _value);
+        // transferring to the contract address destroys tokens
+        if (_to == address(this)) {
+            balanceOf[_to] -= _value;
+            totalSupply -= _value;
+        }
+
+        if (events == 0x0)
+            return;
+
+        BancorEvents eventsContract = BancorEvents(events);
+        eventsContract.tokenTransfer(msg.sender, _to, _value);
         return true;
     }
 
     // allow another account/contract to spend some tokens on your behalf
     function approve(address _spender, uint256 _value) public returns (bool success) {
-        // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal
-        if (_value != 0 && allowance[msg.sender][_spender] != 0)
-            throw;
-
-        allowance[msg.sender][_spender] = _value;
-
-        Approval(msg.sender, _spender, _value);
+        super.approve(_spender, _value);
         if (events == 0x0)
             return true;
 
@@ -494,20 +476,15 @@ contract BancorToken is Owned {
 
     // an account/contract attempts to get the coins
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
-        if (balanceOf[_from] < _value) // balance check
-            throw;
-        if (balanceOf[_to] + _value < balanceOf[_to]) // overflow protection
-            throw;
-        if (_value > allowance[_from][msg.sender]) // allowance check
-            throw;
         if (stage == Stage.Crowdsale) // validate state
             throw;
 
-        balanceOf[_from] -= _value;
-        balanceOf[_to] += _value;
-        allowance[_from][msg.sender] -= _value;
+        super.transferFrom(_from, _to, _value);
+        if (events == 0x0)
+            return;
 
-        dispatchTransfer(_from, _to, _value);
+        BancorEvents eventsContract = BancorEvents(events);
+        eventsContract.tokenTransfer(_from, _to, _value);
         return true;
     }
 
