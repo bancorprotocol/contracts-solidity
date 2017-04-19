@@ -1,5 +1,5 @@
 pragma solidity ^0.4.8;
-import "./Owned.sol";
+import './Owned.sol';
 
 /*
     Open issues:
@@ -50,8 +50,8 @@ contract BancorToken is Owned {
     enum Stage { Managed, Crowdsale, Traded }
 
     string public standard = 'Token 0.1';
-    string public name = "";
-    string public symbol = "";                          // 1-6 characters
+    string public name = '';
+    string public symbol = '';                          // 1-6 characters
     uint8 public numDecimalUnits = 0;                   // for display purposes only
     uint256 public totalSupply = 0;
     address public formula = 0x0;                       // bancor calculation formula contract address
@@ -541,7 +541,6 @@ contract BancorToken is Owned {
     }
 
     // fallback
-
     function() {
         throw;
     }
