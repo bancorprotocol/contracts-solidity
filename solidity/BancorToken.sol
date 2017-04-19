@@ -139,24 +139,6 @@ contract BancorToken is Owned {
     }
 
     /*
-        returns the constant reserve ratio for the given reserve contract address
-
-        _reserveToken    reserve token contract address
-    */
-    function reserveRatioOf(address _reserveToken) public constant returns (uint8 ratio) {
-        return reserves[_reserveToken].ratio;
-    }
-
-    /*
-        returns a value indicating whether purchasing is enabled with the given reserve
-
-        _reserveToken    reserve token contract address
-    */
-    function isReserveEnabled(address _reserveToken) public constant returns (bool isEnabled) {
-        return reserves[_reserveToken].isEnabled;
-    }
-
-    /*
         returns the number of changeable tokens supported by the contract
         note that the number of changable tokens is the number of reserve token, plus 1 (that represents the bancor token itself)
     */

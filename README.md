@@ -56,11 +56,11 @@ Gets an array of the reserve token contract addresses.
 <br>
 <br>
 <br>
-**reserveRatioOf**
+**reserves**
 ```cs
-function reserveRatioOf(address _reserveToken) public constant returns (uint8)
+function reserves(address _reserveToken) public constant
 ```
-Gets the constant reserve ratio (CRR) of a reserve token.
+Gets the reserve token details.
 <br>
 <br>
 <br>
