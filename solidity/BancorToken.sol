@@ -5,13 +5,13 @@ import './Owned.sol';
     Open issues:
     - throw vs. return value?
     - possibly add modifiers for each stage
-    - possibly create a shared standard token contract and inherit from it, both for the BancorToken and for the BancorEtherToken
+    - possibly create a shared standard token contract and inherit from it, both for the BancorToken and for the EtherToken
     - add miner abuse protection
     - startTrading - looping over the reserve - can run out of gas. Possibly split it and do it as a multi-step process
     - approve - to minimize the risk of the approve/transferFrom attack vector
                 (see https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), approve has to be called twice
                 in 2 separate transactions - once to change the allowance to 0 and secondly to change it to the new allowance value.
-                Also relevant to the BancorEtherToken
+                Also relevant to the EtherToken
 */
 
 // interfaces

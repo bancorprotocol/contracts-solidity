@@ -5,8 +5,7 @@ pragma solidity ^0.4.8;
     - throw vs. return value?
     - approve - to minimize the risk of the approve/transferFrom attack vector
                 (see https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), approve has to be called twice
-                in 2 separate transactions - once to change the allowance to 0 and secondly to change it to the new allowance value.
-                Also relevant to the BancorEtherToken
+                in 2 separate transactions - once to change the allowance to 0 and secondly to change it to the new allowance value
 */
 
 contract ERC20Token {
