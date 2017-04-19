@@ -1,9 +1,95 @@
 import analysis as formula
+import random,math
+def generateRandomTestData2():
+    purchaseResults = []
 
+    for i in range(1, 10000):
+        S = float(random.randint(1, 3e18))
+        F = random.randint(1, 100 )
+        R = math.floor(F*S / 100)
+        E = float(random.randint(700, 300000))
+        try:
+            T = formula.calculatePurchaseReturn(int(S),int(R),F,int(E))
+            T_S = formula.calculatePurchaseReturnSolidity(int(S),int(R),F,int(E))
+            if math.floor(T) < math.floor(T_S):
+                purchaseResults.append("\t[%d,%d,%d,%d,%d, %f], # %d" % ( int(S), int(R), int(F), int(E),math.floor(T), T, T_S ))
+                
+        except Exception, e:
+            pass       
+
+
+    saleResults = []
+
+    for i in range(1, 10000):
+        S = float(random.randint(1, 3e18))
+        F = random.randint(1, 100 )
+        R = math.floor(F*S / 100)
+        T = float(random.randint(700, 300000))
+        try:
+            E = formula.calculateSaleReturn(int(S),int(R),float(F),int(T))
+            E_S = formula.calculateSaleReturnSolidity(int(S),int(R),float(F),int(T))
+            if math.floor(E) < math.floor(E_S):
+                saleResults.append("\t[%d,%d,%d,%d,%d, %f], # %d" % ( int(S), int(R), int(F), int(T),math.floor(E), E ,E_S))
+        except Exception, e:
+            pass
+
+    print("module.exports.randomPurchaseReturns2 = [")
+    print("\n".join(purchaseResults))
+    print("];")
+
+    print("module.exports.randomSaleReturns2 = [")
+    print("\n".join(saleResults))
+    print("];")
+# module.exports.randomSaleReturns2 = [
+#    [95289326501151232,7623146120092099,8,216782,0, 0.000000], # 21298824
+#];
 def testCornercase():
-    print formula.calculatePurchaseReturnSolidity(300000,186000,62,1000000000)
-    print "Expected %f" % formula.calculatePurchaseReturn(300000,186000,62,1000000000)
+    #[S,R,F,T]  = [95289326501151232L,7623146120092099L,8,216782] # 21298824
+    #E_S = formula.calculateSaleReturnSolidity(S,R,F,T)
+    #E = formula.calculateSaleReturn(S,R,F,T)
+    #print("E: %d" % E)
+    #print("E_S: %d" % E_S)
 
+
+    m = formula.Market(95289326501151232L,7623146120092099L,8)
+
+    print "Market"
+    print m
+    # Attacker has 216782 tokens, 0 ether
+    balance = (216782,0)
+    print("Balance (tokens, ether): %s" % str(balance))
+    # Sells all his tokens
+    print("Sells all tokens.")
+    balance = (0, m.sellForReserveToken(balance[0]))
+    print("Balance : %s" % str(balance))
+
+    print m
+    # Buys back
+    print("Buys back with all his ether")
+    balance = (m.buyWithReserveToken(balance[1]+8e6), 0)
+    print("Balance : %s" % str(balance))
+
+    print balance
+    print m
+
+    print "Min buy  unit", formula.calcPurchaseMin(95289326501151232L)
+    print "Min sale unit", formula.calcSaleMin(7623146120092099L)
+
+#def testContinuousPurchase():
+#
+#    m = formula.Market(300000e18,63000e18,21)
+#
+#    #Now, keep buying, see what happens
+
+def testPrecisionLimits():
+
+    limit = 0
+    i = 100
+    n = 0
+    while n < 1000 and limit < 500:
+        print "Min buy  unit", formula.calcPurchaseMin(i)
+        i += 5
+        n = n+1
 
 def testLimits(fn):
     #n = 0x000ffffffffff4b5ee29641798873e6b8dff4787ce9c683c9572bf55b6a80000L
@@ -88,6 +174,8 @@ def testLog2():
     log2(0x20416d8b9f09d345031eb56b29f53708324b2232b812bc84a0c3e740921d1b62L) error: 0.371572 nanopercent
     """
 
+#generateRandomTestData2()
+testPrecisionLimits()
 testCornercase()
 #testLimits(formula.fixedExp)
 #testLimits(formula.fixedLog2)

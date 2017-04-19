@@ -4,7 +4,7 @@ def calculatePurchaseReturn(S,R,F,E):
     return float(S) * ( math.pow(1.0 + float(E)/float(R), float(F)/100.0) - 1.0 )
         
 def calculateSaleReturn(S,R,F,T):
-    return R * ( math.pow((1.0+T/S)  ,(100.0/F)) -1 )
+    return float(R) * ( math.pow((1.0+float(T)/long(S)) ,(100.0/F)) -1.0 )
 # These functions mimic the EVM-implementation
 
 PRECISION = 32;  # fractional bits
@@ -25,20 +25,26 @@ def return_uint256(func):
 
 @return_uint256
 def ln(_numerator, _denominator):
-    print("ln(numerator = %s  , denominator = %s"  % (hex(_numerator) , hex(_denominator)))
-    return fixedLoge(_numerator << PRECISION) - fixedLoge(_denominator << PRECISION);
+    print("  -> ln(numerator = %s  , denominator = %s)"  % (hex(_numerator) , hex(_denominator)))
+    a = fixedLoge(_numerator << PRECISION)
+    b = fixedLoge(_denominator << PRECISION)
+    print("  <- ln(numerator = %s  , denominator = %s) : %d"  % (hex(_numerator) , hex(_denominator), (a-b)))
+#    print("=> %d - %d == %d" % (a , b, (a-b)))
+    return a - b
 
 
 @return_uint256
 def fixedLoge(_x) :
-    print("fixedLoge(  %s )"  % hex(_x))
+#    print("fixedLoge(  %s )"  % hex(_x))
     x = uint256(_x)
-    return math.floor((fixedLog2(_x) * 1488522235) >> 31); # 1,488,522,236 = ln(2) * (2 ^ 31)
+    log2 = fixedLog2(_x)
+    logE = (log2 * 0xb17217f7d1cf78) >> 56;
+    return math.floor(logE)
     
 
 @return_uint256
 def fixedLog2( _ix) :
-    print("fixedLog2(  %s )"  % hex(_ix))
+#    print("fixedLog2(  %s )"  % hex(_ix))
     _x = uint256(_ix)
 
     fixedOne = uint256(1 << PRECISION);# 0x100000000	
@@ -59,8 +65,7 @@ def fixedLog2( _ix) :
             _x >>= 1
             hi =uint256( hi + uint256(1 << (PRECISION - 1 - i)))
     
-    if lo >= hi:
-
+    if lo > hi:
         raise Exception("Underflow, hi < lo: %d < %d at (%d) " % (hi,lo, _ix))
     #print "Correct: %s" % int(math.log(_ix >> PRECISION,2) * 0x100000000)
     #print("fixedLog2(%s << 32  ) => %f => %d" % (hex(_ix >> PRECISION), (hi-lo), math.floor(hi - lo)))
@@ -70,7 +75,20 @@ def fixedLog2( _ix) :
 
 @return_uint256
 def fixedExp(_x):
+
+    print("  -> fixedExp(  %d )"  % _x)
+#    print("fixedExp(  %s )"  % hex(int(_x)))
+    if _x > 0x386bfdba29: 
+        raise Exception("Overflow")
+
+
     fixedOne = uint256(1) << PRECISION;
+
+    if _x == 0:
+        print("  <- fixedExp(  %d ): %s"  % (_x, hex(fixedOne)))
+        return fixedOne
+
+
     xi = fixedOne;
     res = uint256(0xde1bc4d19efcac82445da75b00000000 * xi)
 
@@ -141,8 +159,10 @@ def fixedExp(_x):
     xi = uint256(xi * _x) >> PRECISION
     res += xi * 0x22
 
-    return res / 0xde1bc4d19efcac82445da75b00000000;
-
+    res  = res / 0xde1bc4d19efcac82445da75b00000000;
+    
+    print("  <- fixedExp(  %d ): %s"  % (_x, hex(res)))
+    return res
 
 @return_uint256
 def fixedExpOld( _x) :
@@ -167,14 +187,15 @@ def fixedExpOld( _x) :
 
 
 def power(_baseN,_baseD, _expN, _expD):
-    print("power(baseN = %d, baseD = %d, expN = %d, expD = %d)" % (_baseN, _baseD, _expN, _expD ))
-    x_ln = ln(_baseN, _baseD)
-    #print("ln(%d, %d) = %d" % (_baseN, _baseD, x_ln))
-    #     36893553730 with 31 bit precision
-    #     36893553743 with 32 bit precision
-    #_ln = 36893553752
+    print(" -> power(baseN = %d, baseD = %d, expN = %d, expD = %d) " % (_baseN, _baseD, _expN, _expD ))
+    x_ln = uint256(ln(_baseN, _baseD))
+    _expD = uint256(_expD)
     _ln = x_ln
-    return (fixedExp(_ln * _expN / _expD), 1 << PRECISION);
+    abc = uint256(uint256(_ln * _expN) / _expD)
+    print(" ln [%d] * expN[%d] / expD[%d] : %d" % ( _ln, _expN ,  _expD, abc))
+    res = fixedExp(abc)
+    print(" <- power(baseN = %d, baseD = %d, expN = %d, expD = %d) : %s" % (_baseN, _baseD, _expN, _expD ,hex(res)))
+    return (res, 1 << PRECISION);
 
 
 @return_uint256
@@ -182,50 +203,49 @@ def calculatePurchaseReturnSolidity(S,R,F,E):
     """The 'solidity' version, which matches pretty closely to what 
     happens under the EVM hood"""
 
-    _supply = int(S)
-    _reserveBalance = int(R)
-    _reserveRatio = int(F)
-    _depositAmount = int(E)
+    _supply = uint256(S)
+    _reserveBalance = uint256(R)
+    _reserveRatio = uint256(F)
+    _depositAmount = uint256(E)
 
-    uint128_1 = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-    
-    if _supply > uint128_1 or _reserveBalance > uint128_1 or _depositAmount > uint128_1:
-        raise Exception("Out of bounds")
-
-    # (E+R)^R
     
     (resN, resD) = power(uint128(_depositAmount + _reserveBalance), uint128(_reserveBalance), _reserveRatio, 100);
+
+    result =  (_supply * resN / resD) - _supply
+
+    print(" supply[%d] * resN[%d] / resD[%d] - supply[%d] = %d " %
+        (_supply, resN, resD, _supply, result))
+
     
-    correct_resN = int(math.pow((E+R)/R, float(F)/100)*resD)
-    print "C resN: %d" % correct_resN
-    print "E resN: %d" % resN
+    return result
 
-    #return (_supply *  correct_resN / resD) - _supply
-    return (_supply * resN / resD) - _supply
+def calcPurchaseMin(S):
+    _supply = uint256(S)
+    print _supply * 0x100000001/0x100000000 -_supply
 
+def calcSaleMin(R):
+    _reserveBalance = uint256(R)
+    return _reserveBalance * 0x100000001/0x100000000 -_reserveBalance
 
 @return_uint256
 def calculateSaleReturnSolidity(S, R, F,  T):
     """The 'solidity' version, which matches pretty closely to what 
     happens under the EVM hood"""
-    _supply = int(S)
-    _reserveBalance = int(R)
-    _reserveRatio = int(F)
-    _sellAmount = int(T)
-    
-    uint128_1 = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-    
-    if (_supply == 0 or _reserveBalance == 0 or _reserveRatio < 1 or _reserveRatio > 99 or  _sellAmount == 0):# validate input
-            raise Exception("Error %s %s %s" % (_supply, _reserveBalance,_reserveRatio))
-        # limiting input to 128bit to provide *some* overflow protection while keeping the interface generic 256bit
-        # TODO: will need to revisit this
-    if (_supply > uint128_1 or _reserveBalance > uint128_1 or _sellAmount > uint128_1):
-        raise Exception("Out of bounds")
+    _supply = uint256(S)
+    _reserveBalance = uint256(R)
+    _reserveRatio = uint256(F)
+    _sellAmount = uint256(T)
+ 
 
     (resN, resD) = power(uint128(_sellAmount + _supply), uint128(_supply), 100, _reserveRatio);
     resN = uint256(resN)
     resD = uint256(resD)
-    return (_reserveBalance * resN / resD) - _reserveBalance
+    result = (_reserveBalance * resN / resD) - _reserveBalance
+
+    print(" rbal[%d] * resN[%d] / resD[%d] - rbal[%d] = %d " %
+        (_reserveBalance, resN, resD, _reserveBalance, result))
+
+    return result 
 
 def calculateFactorials():
     """Method to print out the factorials for fixedExp"""
@@ -236,3 +256,38 @@ def calculateFactorials():
     for n in range( 1,  ITERATIONS,1 ) :
         ni.append(math.floor(ni[n - 1] / n))
     print "\n        ".join(["xi = (xi * _x) >> PRECISION;\n        res += xi * %s;" % hex(int(x)) for x in ni])
+
+
+class Market():
+
+    def __init__(self,S,R,F):
+        self.R = int(R)# 63000 #
+        self.S = int(S)
+        self.F = int(F) # 21% CRR , 
+                
+    def buyWithReserveToken(self, E):
+        T = calculatePurchaseReturnSolidity(self.S,self.R,self.F,E)
+        print("Buy with %d Ether => %d tokens" % (E, T) )
+        Tc = calculatePurchaseReturn(self.S,self.R,self.F,E)
+        print("[Correct]:Buy with %d Ether => %d tokens" % (E, Tc) )
+
+        T = uint256(math.floor(T))
+        self.R += E
+        self.S += T
+        return T
+
+    def sellForReserveToken(self, T):
+        E = calculateSaleReturnSolidity(self.S,self.R,self.F,T)
+        E = uint256(math.floor(E))
+        self.R -= E
+        self.S -= T
+        print("Returning %d ether" % E)
+        return E
+
+    def __str__(self):
+        unit_price = self.R / (self.S*self.F)
+        return "\n" \
+        +" ETH Reserve      %f\n" % self.R \
+        +" BGT Supply       %f\n" % self.S \
+        +" BGT Market-cap:  %f\n" % (self.S * unit_price)\
+        + " BGT Unit price   %f\n" % unit_price 
