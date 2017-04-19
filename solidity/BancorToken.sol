@@ -462,6 +462,8 @@ contract BancorToken is Owned {
             throw;
         if (balanceOf[_to] + _value < balanceOf[_to]) // overflow protection
             throw;
+        if (stage == Stage.Crowdsale) // validate state
+            throw;
 
         balanceOf[msg.sender] -= _value;
         if (_to == address(this)) // transferring to the contract address destroys tokens
@@ -497,6 +499,8 @@ contract BancorToken is Owned {
         if (balanceOf[_to] + _value < balanceOf[_to]) // overflow protection
             throw;
         if (_value > allowance[_from][msg.sender]) // allowance check
+            throw;
+        if (stage == Stage.Crowdsale) // validate state
             throw;
 
         balanceOf[_from] -= _value;
