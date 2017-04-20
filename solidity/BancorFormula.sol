@@ -38,6 +38,9 @@ contract BancorFormula is Owned {
     /*
         given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the return for a given change (in the main token)
 
+        Formula:
+        Return = Supply * ((1 + Deposit Amount / Reserve Balance) ^ Reserve Ratio - 1)
+
         _supply             token total supply
         _reserveBalance     total reserve
         _reserveRatio       constant reserve ratio, 1-99
@@ -49,6 +52,15 @@ contract BancorFormula is Owned {
             throw;
 
         uint256 baseN = safeAdd(_depositAmount, _reserveBalance);
+
+        // special case if the CRR = 100
+        if (_reserveRatio == 100){
+            amount = safeMul(_supply , baseN) / _reserveBalance;
+            if ( amount < _supply) {
+                throw;
+            }
+            return amount - _supply;
+        }
 
         var (resN, resD) = power(baseN, _reserveBalance, _reserveRatio, 100);
 
@@ -75,6 +87,18 @@ contract BancorFormula is Owned {
             throw;
         
         uint256 baseN = safeAdd( _sellAmount, _supply);
+
+        // special case if the CRR = 100
+        if (_reserveRatio == 100){
+
+            amount = safeMul(_reserveBalance, baseN) / _supply;
+            if ( amount < _reserveBalance ){
+                throw;
+            }
+            return amount - _reserveBalance; 
+        }
+
+
         var (resN, resD) = power(baseN, _supply, 100, _reserveRatio);
 
         uint256 amount = safeMul(_reserveBalance, resN) / resD ;
