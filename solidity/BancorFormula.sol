@@ -5,10 +5,6 @@ import "./Owned.sol";
     Open issues:
     - the formula is not yet super accurate, especially for very small/very high ratios
     - possibly support changing the CRR precision in the future
- 
-    Done:
-    - need to add overflow protection
-    - change exp to use a predefined constant array (for ni) instead of calculating it each call
 */
 
 contract BancorFormula is Owned {
@@ -31,7 +27,7 @@ contract BancorFormula is Owned {
         return c;
     }
 
-    function setNewFormula(address _formula) public onlyOwner {
+    function setNewFormula(address _formula) public ownerOnly {
         newFormula = _formula;
     }
 
