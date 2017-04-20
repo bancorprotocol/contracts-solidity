@@ -9,8 +9,8 @@ contract Owned {
         owner = msg.sender;
     }
 
-    // allows executing a function by the owner only
-    modifier onlyOwner {
+    // allows execution by the owner only
+    modifier ownerOnly {
         if (msg.sender != owner)
             throw;
         _;
@@ -20,7 +20,7 @@ contract Owned {
         allows transferring the contract ownership
         can only be called by the contract owner
     */
-    function setOwner(address _newOwner) public onlyOwner {
+    function setOwner(address _newOwner) public ownerOnly {
         if (owner == _newOwner)
             throw;
 

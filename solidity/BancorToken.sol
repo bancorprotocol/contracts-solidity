@@ -67,7 +67,8 @@ contract BancorToken is Owned, ERC20Token {
         _events             optional, address of a bancor events contract
     */
     function BancorToken(string _name, string _symbol, uint8 _numDecimalUnits, address _formula, address _events)
-        ERC20Token(_name, _symbol) {
+        ERC20Token(_name, _symbol)
+    {
         if (bytes(_name).length == 0 || bytes(_symbol).length < 1 || bytes(_symbol).length > 6 || _formula == 0x0) // validate input
             throw;
 
@@ -81,8 +82,22 @@ contract BancorToken is Owned, ERC20Token {
         eventsContract.newToken();
     }
 
-    // allows executing a function by the owner in managed stage or by the crowdsale contract in crowdsale stage
-    modifier onlyManager {
+    // allows execution in managed stage only
+    modifier managedOnly {
+        if (stage != Stage.Managed)
+            throw;
+        _;
+    }
+
+    // allows execution in traded stage only
+    modifier tradedOnly {
+        if (stage != Stage.Traded)
+            throw;
+        _;
+    }
+
+    // allows execution by the owner in managed stage or by the crowdsale contract in crowdsale stage
+    modifier managerOnly {
         if (stage == Stage.Traded ||
             stage == Stage.Managed && msg.sender != owner ||
             stage == Stage.Crowdsale && msg.sender != crowdsale) // validate state & permissions
@@ -90,7 +105,7 @@ contract BancorToken is Owned, ERC20Token {
         _;
     }
 
-    function setOwner(address _newOwner) public onlyOwner {
+    function setOwner(address _newOwner) public ownerOnly {
         address prevOwner = owner;
         super.setOwner(_newOwner);
         if (events == 0x0)
@@ -108,7 +123,7 @@ contract BancorToken is Owned, ERC20Token {
 
         _formula     new formula contract address
     */
-    function setFormula(address _formula) public onlyOwner returns (bool success) {
+    function setFormula(address _formula) public ownerOnly returns (bool success) {
         BancorFormula formulaContract = BancorFormula(formula);
         if (formulaContract.newFormula() != _formula)
             throw;
@@ -148,10 +163,13 @@ contract BancorToken is Owned, ERC20Token {
         _token  address of the reserve token
         _ratio  constant reserve ratio, 1-100
     */
-    function addReserve(address _token, uint8 _ratio) public onlyOwner returns (bool success) {
+    function addReserve(address _token, uint8 _ratio)
+        public
+        ownerOnly
+        managedOnly
+        returns (bool success)
+    {
         if (_token == address(this) || reserves[_token].isSet || _ratio < 1 || _ratio > 100 || totalReserveRatio + _ratio > 100) // validate input
-            throw;
-        if (stage != Stage.Managed) // validate state
             throw;
 
         reserves[_token].ratio = _ratio;
@@ -200,7 +218,7 @@ contract BancorToken is Owned, ERC20Token {
         _from       account to remove the new amount from
         _amount     amount to decrease the supply by
     */
-    function destroy(address _from, uint256 _amount) public onlyManager returns (bool success) {
+    function destroy(address _from, uint256 _amount) public managerOnly returns (bool success) {
         if (_amount == 0) // validate input
             throw;
         if (_amount > totalSupply) // negative supply protection
@@ -223,7 +241,7 @@ contract BancorToken is Owned, ERC20Token {
         _to              account to receive the new amount
         _amount          amount to withdraw (in the reserve token)
     */
-    function withdraw(address _reserveToken, address _to, uint256 _amount) public onlyManager returns (bool success) {
+    function withdraw(address _reserveToken, address _to, uint256 _amount) public managerOnly returns (bool success) {
         if (!reserves[_reserveToken].isSet || _amount == 0) // validate input
             throw;
 
@@ -239,7 +257,7 @@ contract BancorToken is Owned, ERC20Token {
         _reserveToken    reserve token contract address
         _disable         true to disable the token, false to re-enable it
     */
-    function disableReserve(address _reserveToken, bool _disable) public onlyOwner {
+    function disableReserve(address _reserveToken, bool _disable) public ownerOnly {
         if (!reserves[_reserveToken].isSet) // validate input
             throw;
 
@@ -254,10 +272,15 @@ contract BancorToken is Owned, ERC20Token {
         _crowdsale      new crowdsale contract address
         _allowance      maximum number of tokens that can be issued by the crowdsale contract, or -1 for unlimited
     */
-    function startCrowdsale(address _crowdsale, int256 _allowance) public onlyOwner returns (bool success) {
+    function startCrowdsale(address _crowdsale, int256 _allowance)
+        public
+        ownerOnly
+        managedOnly
+        returns (bool success)
+    {
         if (_crowdsale == 0x0 || _allowance == 0) // validate input
             throw;
-        if (stage != Stage.Managed || reserveTokens.length == 0) // validate state
+        if (reserveTokens.length == 0) // validate state
             throw;
 
         crowdsale = _crowdsale;
@@ -271,7 +294,7 @@ contract BancorToken is Owned, ERC20Token {
         starts the traded stage
         can only be called by the token owner (in managed stage only) or the crowdsale contract (in crowdsale stage only)
     */
-    function startTrading() public onlyManager returns (bool success) {
+    function startTrading() public managerOnly returns (bool success) {
         if (totalSupply == 0) // validate state
             throw;
 
@@ -346,11 +369,14 @@ contract BancorToken is Owned, ERC20Token {
         _reserveToken   reserve token contract address
         _depositAmount  amount to deposit (in the reserve token)
     */
-    function getPurchaseReturn(address _reserveToken, uint256 _depositAmount) public constant returns (uint256 amount) {
+    function getPurchaseReturn(address _reserveToken, uint256 _depositAmount)
+        public
+        constant
+        tradedOnly
+        returns (uint256 amount)
+    {
         Reserve reserve = reserves[_reserveToken];
         if (!reserve.isSet || !reserve.isEnabled || _depositAmount == 0) // validate input
-            throw;
-        if (stage != Stage.Traded) // validate state
             throw;
 
         ReserveToken reserveToken = ReserveToken(_reserveToken);
@@ -366,11 +392,14 @@ contract BancorToken is Owned, ERC20Token {
         _reserveToken   reserve token contract address
         _sellAmount     amount to sell (in the bancor token)
     */
-    function getSaleReturn(address _reserveToken, uint256 _sellAmount) public constant returns (uint256 amount) {
+    function getSaleReturn(address _reserveToken, uint256 _sellAmount)
+        public
+        constant
+        tradedOnly
+        returns (uint256 amount)
+    {
         Reserve reserve = reserves[_reserveToken];
         if (!reserve.isSet || _sellAmount == 0) // validate input
-            throw;
-        if (stage != Stage.Traded) // validate state
             throw;
 
         ReserveToken reserveToken = ReserveToken(_reserveToken);

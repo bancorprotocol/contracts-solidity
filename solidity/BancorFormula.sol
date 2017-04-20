@@ -18,7 +18,7 @@ contract BancorFormula is Owned {
     function BancorFormula() {
     }
 
-    function setNewFormula(address _formula) public onlyOwner {
+    function setNewFormula(address _formula) public ownerOnly {
         newFormula = _formula;
     }
 
