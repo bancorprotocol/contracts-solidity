@@ -1,5 +1,5 @@
 pragma solidity ^0.4.8;
-import "./Owned.sol";
+import './Owned.sol';
 
 /*
     Open issues:
@@ -23,7 +23,7 @@ contract BancorFormula is Owned {
     }
     function safeMul(uint256 a, uint256 b) internal returns (uint) {
         uint256 c = a * b;
-        if ( a != 0 && c / a != b){ throw;}
+        if (a != 0 && c / a != b){ throw;}
         return c;
     }
 
@@ -50,21 +50,18 @@ contract BancorFormula is Owned {
         uint256 baseN = safeAdd(_depositAmount, _reserveBalance);
 
         // special case if the CRR = 100
-        if (_reserveRatio == 100){
-            amount = safeMul(_supply , baseN) / _reserveBalance;
-            if ( amount < _supply) {
+        if (_reserveRatio == 100) {
+            amount = safeMul(_supply, baseN) / _reserveBalance;
+            if (amount < _supply)
                 throw;
-            }
+
             return amount - _supply;
         }
 
         var (resN, resD) = power(baseN, _reserveBalance, _reserveRatio, 100);
-
         uint256 amount = safeMul(_supply, resN) / resD;
-        
-        if ( amount < _supply){
+        if (amount < _supply)
             throw;
-        }
 
         return amount - _supply;
     }
@@ -82,45 +79,40 @@ contract BancorFormula is Owned {
         if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 99 || _sellAmount == 0) 
             throw;
         
-        uint256 baseN = safeAdd( _sellAmount, _supply);
+        uint256 baseN = safeAdd(_sellAmount, _supply);
 
         // special case if the CRR = 100
-        if (_reserveRatio == 100){
-
+        if (_reserveRatio == 100) {
             amount = safeMul(_reserveBalance, baseN) / _supply;
-            if ( amount < _reserveBalance ){
+            if (amount < _reserveBalance)
                 throw;
-            }
+
             return amount - _reserveBalance; 
         }
 
-
         var (resN, resD) = power(baseN, _supply, 100, _reserveRatio);
-
         uint256 amount = safeMul(_reserveBalance, resN) / resD ;
-
-        if ( amount < _reserveBalance ){
+        if (amount < _reserveBalance)
             throw;
-        }
+
         return amount - _reserveBalance; 
 
     }
 
     /**
-        Calculate (_baseN / _baseD) ^ ( _expN / _expD)
+        Calculate (_baseN / _baseD) ^ (_expN / _expD)
         Returns result upshifted by PRECISION
 
         This method throws is overflow-safe
     **/ 
     function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) constant returns (uint256 resN, uint256 resD) {
-        
         uint256 logbase = ln(_baseN, _baseD);
-        //Not using safeDiv here, since safeDiv protects against
+        // Not using safeDiv here, since safeDiv protects against
         // precision loss. It's unavoidable, however
         // Both `ln` and `fixedExp` are overflow-safe. 
-        resN = fixedExp( safeMul( logbase, _expN) / _expD );
+        resN = fixedExp(safeMul(logbase, _expN) / _expD);
 
-        return (resN  , uint256(1) << PRECISION);
+        return (resN, uint256(1) << PRECISION);
         /*
         return (fixedExp(ln(_baseN, _baseD) * _expN / _expD), uint256(1) << PRECISION);
         */
@@ -131,28 +123,26 @@ contract BancorFormula is Owned {
             - numerator: [1,uint256_max >> PRECISION]    
             - denominator: [1,uint256_max >> PRECISION]
         output range:
-            [0,0x9b43d4f8d6]
+            [0, 0x9b43d4f8d6]
 
         This method throws outside of bounds
 
     **/
     function ln(uint256 _numerator, uint256 _denominator) constant returns (uint256) {
-
         // denominator > numerator: less than one yields negative values. Unsupported
-        if ( _denominator > _numerator){
+        if (_denominator > _numerator)
             throw;
-        }
+
         // log(1) is the lowest we can go
-        if(_denominator == 0 || _numerator == 0){
+        if(_denominator == 0 || _numerator == 0)
             throw;
-        }
+
         // Upper 32 bits are scaled off by PRECISION
-        if(_numerator & 0xffffffff00000000000000000000000000000000000000000000000000000000 != 0){
+        if(_numerator & 0xffffffff00000000000000000000000000000000000000000000000000000000 != 0)
             throw;
-        }
-        if(_denominator & 0xffffffff00000000000000000000000000000000000000000000000000000000 != 0){
+
+        if(_denominator & 0xffffffff00000000000000000000000000000000000000000000000000000000 != 0)
             throw;
-        }
 
         return fixedLoge(_numerator << PRECISION) - fixedLoge(_denominator << PRECISION);
     }
@@ -161,7 +151,7 @@ contract BancorFormula is Owned {
         input range: 
             [0x100000000,uint256_max]
         output range:
-            [0 , 0x9b43d4f8d6]
+            [0, 0x9b43d4f8d6]
 
         This method throws outside of bounds
 
@@ -193,15 +183,13 @@ contract BancorFormula is Owned {
 
     **/
     function fixedLog2(uint256 _x) constant returns (uint256) {
-
-
         uint256 fixedOne = uint256(1) << PRECISION;
         uint256 fixedTwo = uint256(2) << PRECISION;
 
         if (_x <= fixedOne){
-            if ( _x == fixedOne){
+            if (_x == fixedOne)
                 return 0;
-            }
+
             // Numbers below 1 are negative. 
             throw;
         }
@@ -251,7 +239,7 @@ contract BancorFormula is Owned {
 
       e^x = 1+x+x^2/2!...+x^n/n!
 
-     and returns e^(x>>32) << 32 , that is, upshifted for accuracy
+     and returns e^(x>>32) << 32, that is, upshifted for accuracy
      
      Input range:
         - Function ok at    <= 242329958953 
@@ -333,7 +321,6 @@ contract BancorFormula is Owned {
 
         return res / 0xde1bc4d19efcac82445da75b00000000;
     }
-
 
     function() {
         throw;
