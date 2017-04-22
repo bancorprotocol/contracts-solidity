@@ -119,7 +119,7 @@ contract BancorToken is Owned, ERC20Token {
     */
     function setFormula(address _formula) public ownerOnly returns (bool success) {
         BancorFormula formulaContract = BancorFormula(formula);
-        require(formulaContract.newFormula() == _formula);
+        require(_formula == formulaContract.newFormula());
         formula = _formula;
         return true;
     }
