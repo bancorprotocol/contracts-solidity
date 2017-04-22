@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.10;
 import './Owned.sol';
 
 /*
@@ -14,17 +14,6 @@ contract BancorFormula is Owned {
     address public newFormula;
 
     function BancorFormula() {
-    }
-
-    function safeAdd(uint256 a, uint256 b) internal returns (uint){
-        uint c = a + b;
-        if (c < a){ throw; }
-        return c;
-    }
-    function safeMul(uint256 a, uint256 b) internal returns (uint) {
-        uint256 c = a * b;
-        if (a != 0 && c / a != b){ throw;}
-        return c;
     }
 
     function setNewFormula(address _formula) public ownerOnly {
@@ -44,25 +33,19 @@ contract BancorFormula is Owned {
     */
     function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
         // validate input
-        if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 99 || _depositAmount == 0) 
-            throw;
-
+        require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _depositAmount != 0);
         uint256 baseN = safeAdd(_depositAmount, _reserveBalance);
 
         // special case if the CRR = 100
         if (_reserveRatio == 100) {
             amount = safeMul(_supply, baseN) / _reserveBalance;
-            if (amount < _supply)
-                throw;
-
+            assert(amount >= _supply);
             return amount - _supply;
         }
 
         var (resN, resD) = power(baseN, _reserveBalance, _reserveRatio, 100);
         uint256 amount = safeMul(_supply, resN) / resD;
-        if (amount < _supply)
-            throw;
-
+        assert(amount >= _supply);
         return amount - _supply;
     }
 
@@ -76,25 +59,19 @@ contract BancorFormula is Owned {
     */
     function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
         // validate input
-        if (_supply == 0 || _reserveBalance == 0 || _reserveRatio < 1 || _reserveRatio > 99 || _sellAmount == 0) 
-            throw;
-        
+        require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _sellAmount != 0);
         uint256 baseN = safeAdd(_sellAmount, _supply);
 
         // special case if the CRR = 100
         if (_reserveRatio == 100) {
             amount = safeMul(_reserveBalance, baseN) / _supply;
-            if (amount < _reserveBalance)
-                throw;
-
+            assert(amount >= _reserveBalance);
             return amount - _reserveBalance; 
         }
 
         var (resN, resD) = power(baseN, _supply, 100, _reserveRatio);
         uint256 amount = safeMul(_reserveBalance, resN) / resD ;
-        if (amount < _reserveBalance)
-            throw;
-
+        assert(amount >= _reserveBalance);
         return amount - _reserveBalance; 
 
     }
@@ -103,7 +80,7 @@ contract BancorFormula is Owned {
         Calculate (_baseN / _baseD) ^ (_expN / _expD)
         Returns result upshifted by PRECISION
 
-        This method throws is overflow-safe
+        This method asserts is overflow-safe
     **/ 
     function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) constant returns (uint256 resN, uint256 resD) {
         uint256 logbase = ln(_baseN, _baseD);
@@ -125,24 +102,19 @@ contract BancorFormula is Owned {
         output range:
             [0, 0x9b43d4f8d6]
 
-        This method throws outside of bounds
+        This method asserts outside of bounds
 
     **/
     function ln(uint256 _numerator, uint256 _denominator) constant returns (uint256) {
         // denominator > numerator: less than one yields negative values. Unsupported
-        if (_denominator > _numerator)
-            throw;
+        assert(_denominator <= _numerator);
 
         // log(1) is the lowest we can go
-        if(_denominator == 0 || _numerator == 0)
-            throw;
+        assert(_denominator != 0 && _numerator != 0);
 
         // Upper 32 bits are scaled off by PRECISION
-        if(_numerator & 0xffffffff00000000000000000000000000000000000000000000000000000000 != 0)
-            throw;
-
-        if(_denominator & 0xffffffff00000000000000000000000000000000000000000000000000000000 != 0)
-            throw;
+        assert(_numerator & 0xffffffff00000000000000000000000000000000000000000000000000000000 == 0);
+        assert(_denominator & 0xffffffff00000000000000000000000000000000000000000000000000000000 == 0);
 
         return fixedLoge(_numerator << PRECISION) - fixedLoge(_denominator << PRECISION);
     }
@@ -153,7 +125,7 @@ contract BancorFormula is Owned {
         output range:
             [0, 0x9b43d4f8d6]
 
-        This method throws outside of bounds
+        This method asserts outside of bounds
 
     */
     function fixedLoge(uint256 _x) constant returns (uint256 logE) {
@@ -179,7 +151,7 @@ contract BancorFormula is Owned {
         output-range: 
             [0,0xdfffffffff]
 
-        This method throws outside of bounds
+        This method asserts outside of bounds
 
     **/
     function fixedLog2(uint256 _x) constant returns (uint256) {
@@ -191,7 +163,7 @@ contract BancorFormula is Owned {
                 return 0;
 
             // Numbers below 1 are negative. 
-            throw;
+            assert(false);
         }
 
         uint256 lo = 0;
@@ -218,7 +190,7 @@ contract BancorFormula is Owned {
             //Should never happen, due to the check above
             // but this is a cheap extra check in case the 
             // implementation changes over time
-            throw;
+            assert(false);
         }
 
         return hi - lo;
@@ -226,11 +198,10 @@ contract BancorFormula is Owned {
 
     /*
     fixedExp is a 'protected' version of `fixedExpUnsafe`, which 
-    `throw`s instead of overflows
+    asserts instead of overflows
     */
     function fixedExp(uint256 _x) constant returns (uint256) {
-        if (_x > 0x386bfdba29) 
-            throw;
+        assert(_x <= 0x386bfdba29);
         return fixedExpUnsafe(_x);
     }
     /*
@@ -322,7 +293,19 @@ contract BancorFormula is Owned {
         return res / 0xde1bc4d19efcac82445da75b00000000;
     }
 
+    function safeAdd(uint256 a, uint256 b) internal returns (uint){
+        uint c = a + b;
+        assert(c >= a);
+        return c;
+    }
+
+    function safeMul(uint256 a, uint256 b) internal returns (uint) {
+        uint256 c = a * b;
+        assert(a == 0 || c / a == b);
+        return c;
+    }
+
     function() {
-        throw;
+        assert(false);
     }
 }
