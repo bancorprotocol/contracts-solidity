@@ -1,10 +1,9 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.10;
 import './Owned.sol';
 import './ERC20Token.sol';
 
 /*
     Open issues:
-    - throw vs. return value?
     - possibly add modifiers for each stage
     - add miner abuse protection
     - startTrading - looping over the reserve - can run out of gas. Possibly split it and do it as a multi-step process
@@ -69,8 +68,7 @@ contract BancorToken is Owned, ERC20Token {
     function BancorToken(string _name, string _symbol, uint8 _numDecimalUnits, address _formula, address _events)
         ERC20Token(_name, _symbol)
     {
-        if (bytes(_name).length == 0 || bytes(_symbol).length < 1 || bytes(_symbol).length > 6 || _formula == 0x0) // validate input
-            throw;
+        require(bytes(_name).length != 0 && bytes(_symbol).length >= 1 && bytes(_symbol).length <= 6 && _formula != 0x0); // validate input
 
         numDecimalUnits = _numDecimalUnits;
         formula = _formula;
@@ -84,24 +82,20 @@ contract BancorToken is Owned, ERC20Token {
 
     // allows execution in managed stage only
     modifier managedOnly {
-        if (stage != Stage.Managed)
-            throw;
+        assert(stage == Stage.Managed);
         _;
     }
 
     // allows execution in traded stage only
     modifier tradedOnly {
-        if (stage != Stage.Traded)
-            throw;
+        assert(stage == Stage.Traded);
         _;
     }
 
     // allows execution by the owner in managed stage or by the crowdsale contract in crowdsale stage
     modifier managerOnly {
-        if (stage == Stage.Traded ||
-            stage == Stage.Managed && msg.sender != owner ||
-            stage == Stage.Crowdsale && msg.sender != crowdsale) // validate state & permissions
-            throw;
+        assert((stage == Stage.Managed && msg.sender == owner) ||
+               (stage == Stage.Crowdsale && msg.sender == crowdsale)); // validate state & permissions
         _;
     }
 
@@ -125,9 +119,7 @@ contract BancorToken is Owned, ERC20Token {
     */
     function setFormula(address _formula) public ownerOnly returns (bool success) {
         BancorFormula formulaContract = BancorFormula(formula);
-        if (formulaContract.newFormula() != _formula)
-            throw;
-
+        require(formulaContract.newFormula() == _formula);
         formula = _formula;
         return true;
     }
@@ -169,8 +161,7 @@ contract BancorToken is Owned, ERC20Token {
         managedOnly
         returns (bool success)
     {
-        if (_token == address(this) || reserves[_token].isSet || _ratio < 1 || _ratio > 100 || totalReserveRatio + _ratio > 100) // validate input
-            throw;
+        require(_token != address(this) && !reserves[_token].isSet && _ratio > 0 && _ratio <= 100 && totalReserveRatio + _ratio <= 100); // validate input
 
         reserves[_token].ratio = _ratio;
         reserves[_token].isEnabled = true;
@@ -189,17 +180,17 @@ contract BancorToken is Owned, ERC20Token {
         _amount     amount to increase the supply by
     */
     function issue(address _to, uint256 _amount) public returns (bool success) {
-        if (_amount == 0) // validate input
-            throw;
-        if (stage == Stage.Managed && msg.sender != owner ||
-            stage != Stage.Managed && msg.sender != crowdsale) // validate permissions
-            throw;
-        if (totalSupply + _amount < totalSupply) // supply overflow protection
-            throw;
-        if (balanceOf[_to] + _amount < balanceOf[_to]) // target account balance overflow protection
-            throw;
-        if (stage != Stage.Managed && crowdsaleAllowance >= 0 && _amount > uint256(crowdsaleAllowance)) // check if the crowdsale contract is trying to issue more tokens than allowed
-            throw;
+         // validate input
+        require(_amount != 0);
+        // validate permissions
+        assert((stage == Stage.Managed && msg.sender == owner) ||
+                stage != Stage.Managed && msg.sender == crowdsale);
+         // supply overflow protection
+        assert(totalSupply + _amount >= totalSupply);
+        // target account balance overflow protection
+        assert(balanceOf[_to] + _amount >= balanceOf[_to]);
+        // ensure that the crowdsale contract isn't trying to issue more tokens than allowed
+        assert(stage == Stage.Managed || crowdsaleAllowance == -1 || _amount <= uint256(crowdsaleAllowance));
 
         totalSupply += _amount;
         balanceOf[_to] += _amount;
@@ -219,12 +210,7 @@ contract BancorToken is Owned, ERC20Token {
         _amount     amount to decrease the supply by
     */
     function destroy(address _from, uint256 _amount) public managerOnly returns (bool success) {
-        if (_amount == 0) // validate input
-            throw;
-        if (_amount > totalSupply) // negative supply protection
-            throw;
-        if (_amount > balanceOf[_from]) // target account negative balance protection
-            throw;
+        require(_amount != 0 && _amount <= totalSupply && _amount <= balanceOf[_from]); // validate input
 
         totalSupply -= _amount;
         balanceOf[_from] -= _amount;
@@ -242,9 +228,7 @@ contract BancorToken is Owned, ERC20Token {
         _amount          amount to withdraw (in the reserve token)
     */
     function withdraw(address _reserveToken, address _to, uint256 _amount) public managerOnly returns (bool success) {
-        if (!reserves[_reserveToken].isSet || _amount == 0) // validate input
-            throw;
-
+        require(reserves[_reserveToken].isSet && _amount != 0); // validate input
         ReserveToken reserveToken = ReserveToken(_reserveToken);
         return reserveToken.transfer(_to, _amount);
     }
@@ -258,9 +242,7 @@ contract BancorToken is Owned, ERC20Token {
         _disable         true to disable the token, false to re-enable it
     */
     function disableReserve(address _reserveToken, bool _disable) public ownerOnly {
-        if (!reserves[_reserveToken].isSet) // validate input
-            throw;
-
+        require(reserves[_reserveToken].isSet); // validate input
         reserves[_reserveToken].isEnabled = !_disable;
         dispatchUpdate();
     }
@@ -278,10 +260,8 @@ contract BancorToken is Owned, ERC20Token {
         managedOnly
         returns (bool success)
     {
-        if (_crowdsale == 0x0 || _allowance == 0) // validate input
-            throw;
-        if (reserveTokens.length == 0) // validate state
-            throw;
+        require(_crowdsale != 0x0 && _allowance != 0); // validate input
+        assert(reserveTokens.length != 0); // validate state
 
         crowdsale = _crowdsale;
         crowdsaleAllowance = _allowance;
@@ -295,14 +275,12 @@ contract BancorToken is Owned, ERC20Token {
         can only be called by the token owner (in managed stage only) or the crowdsale contract (in crowdsale stage only)
     */
     function startTrading() public managerOnly returns (bool success) {
-        if (totalSupply == 0) // validate state
-            throw;
+        assert(totalSupply != 0); // validate state
 
         // make sure that there's balance in all the reserves 
         for (uint16 i = 0; i < reserveTokens.length; ++i) {
             ReserveToken reserveToken = ReserveToken(reserveTokens[i]);
-            if (reserveToken.balanceOf(this) == 0)
-                throw;
+            assert(reserveToken.balanceOf(this) != 0);
         }
 
         stage = Stage.Traded;
@@ -318,12 +296,9 @@ contract BancorToken is Owned, ERC20Token {
         _amount     amount to change, in fromToken
     */
     function getReturn(address _fromToken, address _toToken, uint256 _amount) public constant returns (uint256 amount) {
-        if (_fromToken == _toToken) // validate input
-            throw;
-        if (_fromToken != address(this) && !reserves[_fromToken].isSet) // validate from token input
-            throw;
-        if (_toToken != address(this) && !reserves[_toToken].isSet) // validate to token input
-            throw;
+        require(_fromToken != _toToken); // validate input
+        require(_fromToken == address(this) || reserves[_fromToken].isSet); // validate from token input
+        require(_toToken == address(this) || reserves[_toToken].isSet); // validate to token input
 
         // change between the token and one of its reserves
         if (_toToken == address(this))
@@ -345,12 +320,9 @@ contract BancorToken is Owned, ERC20Token {
         _minReturn  if the change results in an amount smaller than the minimum return, it is cancelled
     */
     function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256 amount) {
-        if (_fromToken == _toToken) // validate input
-            throw;
-        if (_fromToken != address(this) && !reserves[_fromToken].isSet) // validate from token input
-            throw;
-        if (_toToken != address(this) && !reserves[_toToken].isSet) // validate to token input
-            throw;
+        require(_fromToken != _toToken); // validate input
+        require(_fromToken == address(this) || reserves[_fromToken].isSet); // validate from token input
+        require(_toToken == address(this) || reserves[_toToken].isSet); // validate to token input
 
         // change between the token and one of its reserves
         if (_toToken == address(this))
@@ -376,8 +348,7 @@ contract BancorToken is Owned, ERC20Token {
         returns (uint256 amount)
     {
         Reserve reserve = reserves[_reserveToken];
-        if (!reserve.isSet || !reserve.isEnabled || _depositAmount == 0) // validate input
-            throw;
+        require(reserve.isSet && reserve.isEnabled && _depositAmount != 0); // validate input
 
         ReserveToken reserveToken = ReserveToken(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
@@ -399,8 +370,7 @@ contract BancorToken is Owned, ERC20Token {
         returns (uint256 amount)
     {
         Reserve reserve = reserves[_reserveToken];
-        if (!reserve.isSet || _sellAmount == 0) // validate input
-            throw;
+        require(reserve.isSet && _sellAmount != 0); // validate input
 
         ReserveToken reserveToken = ReserveToken(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
@@ -418,14 +388,11 @@ contract BancorToken is Owned, ERC20Token {
     */
     function buy(address _reserveToken, uint256 _depositAmount, uint256 _minReturn) public returns (uint256 amount) {
         amount = getPurchaseReturn(_reserveToken, _depositAmount);
-        if (amount == 0 || amount < _minReturn) // trade gave nothing in return or didn't return an amount that meets the minimum requested amount
-            throw;
-        if (totalSupply + amount < totalSupply) // supply overflow protection
-            throw;
+        assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
+        assert(totalSupply + amount >= totalSupply); // supply overflow protection
 
         ReserveToken reserveToken = ReserveToken(_reserveToken);
-        if (!reserveToken.transferFrom(msg.sender, this, _depositAmount)) // can't withdraw funds from the reserve token
-            throw;
+        assert(reserveToken.transferFrom(msg.sender, this, _depositAmount)); // withdraw funds from the reserve token
 
         totalSupply += amount;
         balanceOf[msg.sender] += amount;
@@ -441,22 +408,18 @@ contract BancorToken is Owned, ERC20Token {
         _minReturn      if the change results in an amount smaller the minimum return, it is cancelled
     */
     function sell(address _reserveToken, uint256 _sellAmount, uint256 _minReturn) public returns (uint256 amount) {
-        if (balanceOf[msg.sender] < _sellAmount) // balance check
-            throw;
+        require(_sellAmount <= balanceOf[msg.sender]); // balance check
 
         amount = getSaleReturn(_reserveToken, _sellAmount);
-        if (amount == 0 || amount < _minReturn) // trade gave nothing in return or didn't return an amount that meets the minimum requested amount
-            throw;
+        assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
         
         ReserveToken reserveToken = ReserveToken(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
-        if (reserveBalance <= amount) // trade will deplete the reserve
-            throw;
+        assert(amount < reserveBalance); // trade will deplete the reserve
 
         totalSupply -= _sellAmount;
         balanceOf[msg.sender] -= _sellAmount;
-        if (!reserveToken.transfer(msg.sender, amount)) // can't transfer funds to the caller
-            throw;
+        assert(reserveToken.transfer(msg.sender, amount)); // can't transfer funds to the caller
 
         // if the supply was totally depleted, return to managed stage
         if (totalSupply == 0) {
@@ -473,9 +436,7 @@ contract BancorToken is Owned, ERC20Token {
 
     // send coins
     function transfer(address _to, uint256 _value) public returns (bool success) {
-        if (stage == Stage.Crowdsale) // validate state
-            throw;
-
+        assert(stage != Stage.Crowdsale); // validate state
         super.transfer(_to, _value);
 
         // transferring to the contract address destroys tokens
@@ -505,9 +466,7 @@ contract BancorToken is Owned, ERC20Token {
 
     // an account/contract attempts to get the coins
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
-        if (stage == Stage.Crowdsale) // validate state
-            throw;
-
+        assert(stage != Stage.Crowdsale); // validate state
         super.transferFrom(_from, _to, _value);
         if (events == 0x0)
             return;
@@ -548,6 +507,6 @@ contract BancorToken is Owned, ERC20Token {
 
     // fallback
     function() {
-        throw;
+        assert(false);
     }
 }
