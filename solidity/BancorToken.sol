@@ -210,7 +210,7 @@ contract BancorToken is Owned, ERC20Token {
         _amount     amount to decrease the supply by
     */
     function destroy(address _from, uint256 _amount) public managerOnly returns (bool success) {
-        require(_amount != 0 && _amount <= totalSupply && _amount <= balanceOf[_from]); // validate input
+        require(_amount != 0 && _amount <= balanceOf[_from]); // validate input
 
         totalSupply -= _amount;
         balanceOf[_from] -= _amount;
