@@ -2,10 +2,8 @@ pragma solidity ^0.4.10;
 import './ERC20Token.sol';
 
 /*
-    Open issues:
-    - throw vs. return value?
+    Ether tokenization contract
 */
-
 contract EtherToken is ERC20Token {
     function EtherToken()
         ERC20Token('Ether Token', 'ETH') {
