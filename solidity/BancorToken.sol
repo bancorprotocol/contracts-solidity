@@ -93,6 +93,12 @@ contract BancorToken is Owned, ERC20Token {
         _;
     }
 
+    // allows execution in non crowdsale stages
+    modifier notInCrowdsale {
+        assert(stage != Stage.Crowdsale);
+        _;
+    }
+
     // allows execution by the owner in managed stage or by the crowdsale contract in crowdsale stage
     modifier managerOnly {
         assert((stage == Stage.Managed && msg.sender == owner) ||
@@ -434,8 +440,7 @@ contract BancorToken is Owned, ERC20Token {
     // ERC20 standard method overrides with some extra functionality
 
     // send coins
-    function transfer(address _to, uint256 _value) public returns (bool success) {
-        assert(stage != Stage.Crowdsale); // validate state
+    function transfer(address _to, uint256 _value) public notInCrowdsale returns (bool success) {
         super.transfer(_to, _value);
 
         // transferring to the contract address destroys tokens
@@ -464,8 +469,7 @@ contract BancorToken is Owned, ERC20Token {
     }
 
     // an account/contract attempts to get the coins
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
-        assert(stage != Stage.Crowdsale); // validate state
+    function transferFrom(address _from, address _to, uint256 _value) public notInCrowdsale returns (bool success) {
         super.transferFrom(_from, _to, _value);
         if (events == 0x0)
             return;
