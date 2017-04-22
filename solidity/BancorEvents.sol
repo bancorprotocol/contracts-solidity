@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.10;
 
 /*
     Open issues:
@@ -49,6 +49,6 @@ contract BancorEvents {
     }
 
     function() {
-        throw;
+        assert(false);
     }
 }

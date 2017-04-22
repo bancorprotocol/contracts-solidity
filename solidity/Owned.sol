@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.10;
 
 contract Owned {
     address public owner;
@@ -11,8 +11,7 @@ contract Owned {
 
     // allows execution by the owner only
     modifier ownerOnly {
-        if (msg.sender != owner)
-            throw;
+        assert(msg.sender == owner);
         _;
     }
 
@@ -21,8 +20,7 @@ contract Owned {
         can only be called by the contract owner
     */
     function setOwner(address _newOwner) public ownerOnly {
-        if (owner == _newOwner)
-            throw;
+        require(_newOwner != owner);
 
         address prevOwner = owner;
         owner = _newOwner;
