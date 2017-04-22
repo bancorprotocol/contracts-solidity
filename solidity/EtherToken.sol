@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.10;
 import './ERC20Token.sol';
 
 /*
@@ -13,32 +13,25 @@ contract EtherToken is ERC20Token {
 
     // deposit ether in the account
     function deposit() public payable returns (bool success) {
-        if (balanceOf[msg.sender] + msg.value < balanceOf[msg.sender]) // overflow protection
-            throw;
-
+        assert(balanceOf[msg.sender] + msg.value >= balanceOf[msg.sender]); // overflow protection
         balanceOf[msg.sender] += msg.value;
         return true;
     }
 
     // withdraw ether from the account
     function withdraw(uint256 _amount) public returns (bool success) {
-        if (balanceOf[msg.sender] < _amount) // balance check
-            throw;
+        require(_amount <= balanceOf[msg.sender]); // balance check
 
         // deduct the amount from the account balance
         balanceOf[msg.sender] -= _amount;
         // send the amount
-        if (!msg.sender.send(_amount))
-            throw;
-
+        assert(msg.sender.send(_amount));
         return true;
     }
 
     // deposit ether in the account - identical to deposit function
     function() public payable {
-        if (balanceOf[msg.sender] + msg.value < balanceOf[msg.sender]) // overflow protection
-            throw;
-
+        assert(balanceOf[msg.sender] + msg.value >= balanceOf[msg.sender]); // overflow protection
         balanceOf[msg.sender] += msg.value;
     }
 }
