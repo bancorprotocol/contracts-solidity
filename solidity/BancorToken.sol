@@ -7,6 +7,7 @@ import './ERC20Token.sol';
     - possibly add modifiers for each stage
     - add miner abuse protection
     - startTrading - looping over the reserve - can run out of gas. Possibly split it and do it as a multi-step process
+    - assumes that the reserve tokens either return true for transfer/transferFrom or assert - possibly remove the reliance on the return value
 */
 
 // interfaces
@@ -194,7 +195,7 @@ contract BancorToken is Owned, ERC20Token {
 
         totalSupply += _amount;
         balanceOf[_to] += _amount;
-        if (stage != Stage.Managed && crowdsaleAllowance >= 0)
+        if (stage != Stage.Managed && crowdsaleAllowance != -1)
             crowdsaleAllowance -= int256(_amount);
 
         dispatchUpdate();
@@ -370,7 +371,7 @@ contract BancorToken is Owned, ERC20Token {
         returns (uint256 amount)
     {
         Reserve reserve = reserves[_reserveToken];
-        require(reserve.isSet && _sellAmount != 0); // validate input
+        require(reserve.isSet && _sellAmount != 0 && _sellAmount <= balanceOf[msg.sender]); // validate input
 
         ReserveToken reserveToken = ReserveToken(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
@@ -408,18 +409,16 @@ contract BancorToken is Owned, ERC20Token {
         _minReturn      if the change results in an amount smaller the minimum return, it is cancelled
     */
     function sell(address _reserveToken, uint256 _sellAmount, uint256 _minReturn) public returns (uint256 amount) {
-        require(_sellAmount <= balanceOf[msg.sender]); // balance check
-
         amount = getSaleReturn(_reserveToken, _sellAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
         
         ReserveToken reserveToken = ReserveToken(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
-        assert(amount < reserveBalance); // trade will deplete the reserve
+        assert(amount < reserveBalance); // ensuring that the trade won't deplete the reserve
 
         totalSupply -= _sellAmount;
         balanceOf[msg.sender] -= _sellAmount;
-        assert(reserveToken.transfer(msg.sender, amount)); // can't transfer funds to the caller
+        assert(reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller
 
         // if the supply was totally depleted, return to managed stage
         if (totalSupply == 0) {
