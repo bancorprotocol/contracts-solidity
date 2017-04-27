@@ -1,7 +1,7 @@
 pragma solidity ^0.4.10;
 import './Owned.sol';
-import './StandardToken.sol';
-import './StandardTokenInterface.sol';
+import './ERC20Token.sol';
+import './ERC20TokenInterface.sol';
 import './BancorEventsInterface.sol';
 
 /*
@@ -23,7 +23,7 @@ contract BancorFormula {
 /*
     Bancor Token v0.5
 */
-contract BancorToken is Owned, StandardToken {
+contract BancorToken is Owned, ERC20Token {
     struct Reserve {
         uint8 ratio;    // constant reserve ratio (CRR), 1-100
         bool isEnabled; // is purchase of the token enabled with the reserve, can be set by the owner
@@ -54,7 +54,7 @@ contract BancorToken is Owned, StandardToken {
         _events             optional, address of a bancor events contract
     */
     function BancorToken(string _name, string _symbol, uint8 _numDecimalUnits, address _formula, address _events)
-        StandardToken(_name, _symbol)
+        ERC20Token(_name, _symbol)
     {
         require(bytes(_name).length != 0 && bytes(_symbol).length >= 1 && bytes(_symbol).length <= 6 && _formula != 0x0); // validate input
 
@@ -223,7 +223,7 @@ contract BancorToken is Owned, StandardToken {
     */
     function withdraw(address _reserveToken, address _to, uint256 _amount) public managerOnly returns (bool success) {
         require(reserves[_reserveToken].isSet && _amount != 0); // validate input
-        StandardTokenInterface reserveToken = StandardTokenInterface(_reserveToken);
+        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         return reserveToken.transfer(_to, _amount);
     }
 
@@ -273,7 +273,7 @@ contract BancorToken is Owned, StandardToken {
 
         // make sure that there's balance in all the reserves 
         for (uint16 i = 0; i < reserveTokens.length; ++i) {
-            StandardTokenInterface reserveToken = StandardTokenInterface(reserveTokens[i]);
+            ERC20TokenInterface reserveToken = ERC20TokenInterface(reserveTokens[i]);
             assert(reserveToken.balanceOf(this) != 0);
         }
 
@@ -344,7 +344,7 @@ contract BancorToken is Owned, StandardToken {
         Reserve reserve = reserves[_reserveToken];
         require(reserve.isSet && reserve.isEnabled && _depositAmount != 0); // validate input
 
-        StandardTokenInterface reserveToken = StandardTokenInterface(_reserveToken);
+        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
 
         BancorFormula formulaContract = BancorFormula(formula);
@@ -366,7 +366,7 @@ contract BancorToken is Owned, StandardToken {
         Reserve reserve = reserves[_reserveToken];
         require(reserve.isSet && _sellAmount != 0 && _sellAmount <= balanceOf[msg.sender]); // validate input
 
-        StandardTokenInterface reserveToken = StandardTokenInterface(_reserveToken);
+        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
 
         BancorFormula formulaContract = BancorFormula(formula);
@@ -385,7 +385,7 @@ contract BancorToken is Owned, StandardToken {
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
         assert(totalSupply + amount >= totalSupply); // supply overflow protection
 
-        StandardTokenInterface reserveToken = StandardTokenInterface(_reserveToken);
+        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         assert(reserveToken.transferFrom(msg.sender, this, _depositAmount)); // withdraw funds from the reserve token
 
         totalSupply += amount;
@@ -405,7 +405,7 @@ contract BancorToken is Owned, StandardToken {
         amount = getSaleReturn(_reserveToken, _sellAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
         
-        StandardTokenInterface reserveToken = StandardTokenInterface(_reserveToken);
+        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
         assert(amount < reserveBalance); // ensuring that the trade won't deplete the reserve
 

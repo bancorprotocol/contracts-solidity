@@ -1,5 +1,5 @@
 pragma solidity ^0.4.10;
-import './StandardTokenInterface.sol';
+import './ERC20TokenInterface.sol';
 
 /*
     Open issues:
@@ -11,7 +11,7 @@ import './StandardTokenInterface.sol';
 /*
     ERC20 Standard Token implementation
 */
-contract StandardToken is StandardTokenInterface {
+contract ERC20Token is ERC20TokenInterface {
     string public standard = 'Token 0.1';
     string public name = '';
     string public symbol = '';
@@ -22,7 +22,7 @@ contract StandardToken is StandardTokenInterface {
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    function StandardToken(string _name, string _symbol) {
+    function ERC20Token(string _name, string _symbol) {
         name = _name;
         symbol = _symbol;
     }

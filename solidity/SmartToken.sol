@@ -1,13 +1,13 @@
 pragma solidity ^0.4.10;
 import './Owned.sol';
-import './StandardToken.sol';
-import './StandardTokenInterface.sol';
+import './ERC20Token.sol';
+import './ERC20TokenInterface.sol';
 import './BancorEventsInterface.sol';
 
 /*
     Smart Token v0.1
 */
-contract SmartToken is Owned, StandardToken {
+contract SmartToken is Owned, ERC20Token {
     uint8 public numDecimalUnits = 0;   // for display purposes only
     address public events = 0x0;        // bancor events contract address
     address public changer = 0x0;       // changer contract address
@@ -25,7 +25,7 @@ contract SmartToken is Owned, StandardToken {
         _events             optional, address of a bancor events contract
     */
     function SmartToken(string _name, string _symbol, uint8 _numDecimalUnits, address _events)
-        StandardToken(_name, _symbol)
+        ERC20Token(_name, _symbol)
     {
         require(bytes(_name).length != 0 && bytes(_symbol).length >= 1 && bytes(_symbol).length <= 6); // validate input
 

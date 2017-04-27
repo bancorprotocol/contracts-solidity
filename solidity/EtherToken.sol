@@ -1,12 +1,12 @@
 pragma solidity ^0.4.10;
-import './StandardToken.sol';
+import './ERC20Token.sol';
 
 /*
     Ether tokenization contract
 */
-contract EtherToken is StandardToken {
+contract EtherToken is ERC20Token {
     function EtherToken()
-        StandardToken('Ether Token', 'ETH') {
+        ERC20Token('Ether Token', 'ETH') {
     }
 
     // deposit ether in the account
