@@ -1,6 +1,8 @@
 pragma solidity ^0.4.10;
 import './Owned.sol';
-import './ERC20Token.sol';
+import './StandardToken.sol';
+import './StandardTokenInterface.sol';
+import './BancorEventsInterface.sol';
 
 /*
     Open issues:
@@ -12,31 +14,16 @@ import './ERC20Token.sol';
 
 // interfaces
 
-contract ReserveToken { // any ERC20 standard token
-    function balanceOf(address _owner) public constant returns (uint256 balance);
-    function transfer(address _to, uint256 _value) public returns (bool success);
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success);
-}
-
 contract BancorFormula {
     function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256 amount);
     function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256 amount);
     function newFormula() public constant returns (address newFormula);
 }
 
-contract BancorEvents {
-    function newToken() public;
-    function tokenUpdate() public;
-    function newTokenOwner(address _prevOwner, address _newOwner) public;
-    function tokenTransfer(address _from, address _to, uint256 _value) public;
-    function tokenApproval(address _owner, address _spender, uint256 _value) public;
-    function tokenChange(address _fromToken, address _toToken, address _changer, uint256 _amount, uint256 _return) public;
-}
-
 /*
     Bancor Token v0.5
 */
-contract BancorToken is Owned, ERC20Token {
+contract BancorToken is Owned, StandardToken {
     struct Reserve {
         uint8 ratio;    // constant reserve ratio (CRR), 1-100
         bool isEnabled; // is purchase of the token enabled with the reserve, can be set by the owner
@@ -67,7 +54,7 @@ contract BancorToken is Owned, ERC20Token {
         _events             optional, address of a bancor events contract
     */
     function BancorToken(string _name, string _symbol, uint8 _numDecimalUnits, address _formula, address _events)
-        ERC20Token(_name, _symbol)
+        StandardToken(_name, _symbol)
     {
         require(bytes(_name).length != 0 && bytes(_symbol).length >= 1 && bytes(_symbol).length <= 6 && _formula != 0x0); // validate input
 
@@ -77,7 +64,7 @@ contract BancorToken is Owned, ERC20Token {
         if (events == 0x0)
             return;
 
-        BancorEvents eventsContract = BancorEvents(events);
+        BancorEventsInterface eventsContract = BancorEventsInterface(events);
         eventsContract.newToken();
     }
 
@@ -112,8 +99,8 @@ contract BancorToken is Owned, ERC20Token {
         if (events == 0x0)
             return;
 
-        BancorEvents eventsContract = BancorEvents(events);
-        eventsContract.newTokenOwner(prevOwner, owner);
+        BancorEventsInterface eventsContract = BancorEventsInterface(events);
+        eventsContract.tokenOwnerUpdate(prevOwner, owner);
     }
 
     /*
@@ -236,7 +223,7 @@ contract BancorToken is Owned, ERC20Token {
     */
     function withdraw(address _reserveToken, address _to, uint256 _amount) public managerOnly returns (bool success) {
         require(reserves[_reserveToken].isSet && _amount != 0); // validate input
-        ReserveToken reserveToken = ReserveToken(_reserveToken);
+        StandardTokenInterface reserveToken = StandardTokenInterface(_reserveToken);
         return reserveToken.transfer(_to, _amount);
     }
 
@@ -286,7 +273,7 @@ contract BancorToken is Owned, ERC20Token {
 
         // make sure that there's balance in all the reserves 
         for (uint16 i = 0; i < reserveTokens.length; ++i) {
-            ReserveToken reserveToken = ReserveToken(reserveTokens[i]);
+            StandardTokenInterface reserveToken = StandardTokenInterface(reserveTokens[i]);
             assert(reserveToken.balanceOf(this) != 0);
         }
 
@@ -357,7 +344,7 @@ contract BancorToken is Owned, ERC20Token {
         Reserve reserve = reserves[_reserveToken];
         require(reserve.isSet && reserve.isEnabled && _depositAmount != 0); // validate input
 
-        ReserveToken reserveToken = ReserveToken(_reserveToken);
+        StandardTokenInterface reserveToken = StandardTokenInterface(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
 
         BancorFormula formulaContract = BancorFormula(formula);
@@ -379,7 +366,7 @@ contract BancorToken is Owned, ERC20Token {
         Reserve reserve = reserves[_reserveToken];
         require(reserve.isSet && _sellAmount != 0 && _sellAmount <= balanceOf[msg.sender]); // validate input
 
-        ReserveToken reserveToken = ReserveToken(_reserveToken);
+        StandardTokenInterface reserveToken = StandardTokenInterface(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
 
         BancorFormula formulaContract = BancorFormula(formula);
@@ -398,7 +385,7 @@ contract BancorToken is Owned, ERC20Token {
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
         assert(totalSupply + amount >= totalSupply); // supply overflow protection
 
-        ReserveToken reserveToken = ReserveToken(_reserveToken);
+        StandardTokenInterface reserveToken = StandardTokenInterface(_reserveToken);
         assert(reserveToken.transferFrom(msg.sender, this, _depositAmount)); // withdraw funds from the reserve token
 
         totalSupply += amount;
@@ -418,7 +405,7 @@ contract BancorToken is Owned, ERC20Token {
         amount = getSaleReturn(_reserveToken, _sellAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
         
-        ReserveToken reserveToken = ReserveToken(_reserveToken);
+        StandardTokenInterface reserveToken = StandardTokenInterface(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
         assert(amount < reserveBalance); // ensuring that the trade won't deplete the reserve
 
@@ -452,8 +439,26 @@ contract BancorToken is Owned, ERC20Token {
         if (events == 0x0)
             return;
 
-        BancorEvents eventsContract = BancorEvents(events);
+        BancorEventsInterface eventsContract = BancorEventsInterface(events);
         eventsContract.tokenTransfer(msg.sender, _to, _value);
+        return true;
+    }
+
+    // an account/contract attempts to get the coins
+    function transferFrom(address _from, address _to, uint256 _value) public notInCrowdsale returns (bool success) {
+        super.transferFrom(_from, _to, _value);
+
+        // transferring to the contract address destroys tokens
+        if (_to == address(this)) {
+            balanceOf[_to] -= _value;
+            totalSupply -= _value;
+        }
+
+        if (events == 0x0)
+            return;
+
+        BancorEventsInterface eventsContract = BancorEventsInterface(events);
+        eventsContract.tokenTransfer(_from, _to, _value);
         return true;
     }
 
@@ -463,19 +468,8 @@ contract BancorToken is Owned, ERC20Token {
         if (events == 0x0)
             return true;
 
-        BancorEvents eventsContract = BancorEvents(events);
+        BancorEventsInterface eventsContract = BancorEventsInterface(events);
         eventsContract.tokenApproval(msg.sender, _spender, _value);
-        return true;
-    }
-
-    // an account/contract attempts to get the coins
-    function transferFrom(address _from, address _to, uint256 _value) public notInCrowdsale returns (bool success) {
-        super.transferFrom(_from, _to, _value);
-        if (events == 0x0)
-            return;
-
-        BancorEvents eventsContract = BancorEvents(events);
-        eventsContract.tokenTransfer(_from, _to, _value);
         return true;
     }
 
@@ -483,11 +477,11 @@ contract BancorToken is Owned, ERC20Token {
 
     function dispatchUpdate() private {
         Update();
-        if (events == 0x0)
+        /*if (events == 0x0)
             return;
 
-        BancorEvents eventsContract = BancorEvents(events);
-        eventsContract.tokenUpdate();
+        BancorEventsInterface eventsContract = BancorEventsInterface(events);
+        eventsContract.tokenUpdate();*/
     }
 
     function dispatchTransfer(address _from, address _to, uint256 _value) private {
@@ -495,7 +489,7 @@ contract BancorToken is Owned, ERC20Token {
         if (events == 0x0)
             return;
 
-        BancorEvents eventsContract = BancorEvents(events);
+        BancorEventsInterface eventsContract = BancorEventsInterface(events);
         eventsContract.tokenTransfer(_from, _to, _value);
     }
 
@@ -504,7 +498,7 @@ contract BancorToken is Owned, ERC20Token {
         if (events == 0x0)
             return;
 
-        BancorEvents eventsContract = BancorEvents(events);
+        BancorEventsInterface eventsContract = BancorEventsInterface(events);
         eventsContract.tokenChange(_fromToken, _toToken, _changer, _amount, _return);
     }
 

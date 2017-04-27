@@ -1,4 +1,5 @@
 pragma solidity ^0.4.10;
+import './StandardTokenInterface.sol';
 
 /*
     Open issues:
@@ -10,7 +11,7 @@ pragma solidity ^0.4.10;
 /*
     ERC20 Standard Token implementation
 */
-contract ERC20Token {
+contract StandardToken is StandardTokenInterface {
     string public standard = 'Token 0.1';
     string public name = '';
     string public symbol = '';
@@ -21,7 +22,7 @@ contract ERC20Token {
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    function ERC20Token(string _name, string _symbol) {
+    function StandardToken(string _name, string _symbol) {
         name = _name;
         symbol = _symbol;
     }
@@ -37,16 +38,6 @@ contract ERC20Token {
         return true;
     }
 
-    // allow another account/contract to spend some tokens on your behalf
-    function approve(address _spender, uint256 _value) public returns (bool success) {
-        // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal
-        require(_value == 0 || allowance[msg.sender][_spender] == 0);
-
-        allowance[msg.sender][_spender] = _value;
-        Approval(msg.sender, _spender, _value);
-        return true;
-    }
-
     // an account/contract attempts to get the coins
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
         require(_value <= balanceOf[_from]); // balance check
@@ -57,6 +48,16 @@ contract ERC20Token {
         balanceOf[_to] += _value;
         allowance[_from][msg.sender] -= _value;
         Transfer(_from, _to, _value);
+        return true;
+    }
+
+    // allow another account/contract to spend some tokens on your behalf
+    function approve(address _spender, uint256 _value) public returns (bool success) {
+        // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal
+        require(_value == 0 || allowance[msg.sender][_spender] == 0);
+
+        allowance[msg.sender][_spender] = _value;
+        Approval(msg.sender, _spender, _value);
         return true;
     }
 }

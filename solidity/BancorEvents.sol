@@ -1,4 +1,5 @@
 pragma solidity ^0.4.10;
+import './BancorEventsInterface.sol';
 
 /*
     Open issues:
@@ -11,12 +12,13 @@ pragma solidity ^0.4.10;
     this contract allows intercepting events from multiple bancor contracts easily,
     by listening to events from a single contract instead of multiple ones
 */
-contract BancorEvents {
+contract BancorEvents is BancorEventsInterface {
     string public version = '0.1';
 
     event NewToken(address _token);
-    event TokenUpdate(address indexed _token);
-    event NewTokenOwner(address indexed _token, address indexed _prevOwner, address indexed _newOwner);
+    event TokenOwnerUpdate(address indexed _token, address _prevOwner, address _newOwner);
+    event TokenChangerUpdate(address indexed _token, address _prevChanger, address _newChanger);
+    event TokenSupplyUpdate(address indexed _token, uint256 _totalSupply);
     event TokenTransfer(address indexed _token, address indexed _from, address indexed _to, uint256 _value);
     event TokenApproval(address indexed _token, address indexed _owner, address indexed _spender, uint256 _value);
     event TokenChange(address indexed _sender, address indexed _fromToken, address indexed _toToken, address _changer, uint256 _amount, uint256 _return);
@@ -28,12 +30,16 @@ contract BancorEvents {
         NewToken(msg.sender);
     }
 
-    function tokenUpdate() public {
-        TokenUpdate(msg.sender);
+    function tokenOwnerUpdate(address _prevOwner, address _newOwner) public {
+        TokenOwnerUpdate(msg.sender, _prevOwner, _newOwner);
     }
 
-    function newTokenOwner(address _prevOwner, address _newOwner) public {
-        NewTokenOwner(msg.sender, _prevOwner, _newOwner);
+    function tokenChangerUpdate(address _prevChanger, address _newChanger) public {
+        TokenChangerUpdate(msg.sender, _prevChanger, _newChanger);
+    }
+
+    function tokenSupplyUpdate(uint256 _totalSupply) public {
+        TokenSupplyUpdate(msg.sender, _totalSupply);
     }
 
     function tokenTransfer(address _from, address _to, uint256 _value) public {
