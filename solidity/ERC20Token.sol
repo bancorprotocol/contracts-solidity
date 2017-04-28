@@ -52,6 +52,7 @@ contract ERC20Token is ERC20TokenInterface {
     function transferFrom(address _from, address _to, uint256 _value)
         public
         notNull(_from)
+        notNull(_to)
         returns (bool success)
     {
         require(_value <= balanceOf[_from]); // balance check
