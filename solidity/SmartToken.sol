@@ -51,7 +51,11 @@ contract SmartToken is Owned, ERC20Token {
         _;
     }
 
-    function setOwner(address _newOwner) public ownerOnly {
+    function setOwner(address _newOwner)
+        public
+        ownerOnly
+        notNull(_newOwner)
+    {
         address prevOwner = owner;
         super.setOwner(_newOwner);
         if (events == 0x0)
@@ -88,9 +92,14 @@ contract SmartToken is Owned, ERC20Token {
         _to         account to receive the new amount
         _amount     amount to increase the supply by
     */
-    function issue(address _to, uint256 _amount) public managerOnly returns (bool success) {
+    function issue(address _to, uint256 _amount)
+        public
+        managerOnly
+        notNull(_to)
+        returns (bool success)
+    {
          // validate input
-        require(_amount != 0);
+        require(_to != address(this) && _amount != 0);
          // supply overflow protection
         assert(totalSupply + _amount >= totalSupply);
         // target account balance overflow protection
@@ -110,8 +119,13 @@ contract SmartToken is Owned, ERC20Token {
         _from       account to remove the new amount from
         _amount     amount to decrease the supply by
     */
-    function destroy(address _from, uint256 _amount) public managerOnly returns (bool success) {
-        require(_amount != 0 && _amount <= balanceOf[_from]); // validate input
+    function destroy(address _from, uint256 _amount)
+        public
+        managerOnly
+        notNull(_from)
+        returns (bool success)
+    {
+        require(_from != address(this) && _amount != 0 && _amount <= balanceOf[_from]); // validate input
 
         totalSupply -= _amount;
         balanceOf[_from] -= _amount;
@@ -123,6 +137,7 @@ contract SmartToken is Owned, ERC20Token {
     /*
         sets a changer contract address
         can only be called by the token owner (if no changer is defined) or the changer contract (if a changer is defined)
+        the changer can be set to null to transfer ownership from the changer to the owner
         note: can also disable/enable transfers in the same transaction
 
         _changer            new changer contract address (can also be set to 0x0 to remove the current changer)
@@ -140,7 +155,7 @@ contract SmartToken is Owned, ERC20Token {
 
     // send coins
     function transfer(address _to, uint256 _value) public transfersAllowed returns (bool success) {
-        super.transfer(_to, _value);
+        assert(super.transfer(_to, _value));
 
         // transferring to the contract address destroys tokens
         if (_to == address(this)) {
@@ -159,7 +174,7 @@ contract SmartToken is Owned, ERC20Token {
 
     // an account/contract attempts to get the coins
     function transferFrom(address _from, address _to, uint256 _value) public transfersAllowed returns (bool success) {
-        super.transferFrom(_from, _to, _value);
+        assert(super.transferFrom(_from, _to, _value));
 
         // transferring to the contract address destroys tokens
         if (_to == address(this)) {
@@ -178,7 +193,7 @@ contract SmartToken is Owned, ERC20Token {
 
     // allow another account/contract to spend some tokens on your behalf
     function approve(address _spender, uint256 _value) public returns (bool success) {
-        super.approve(_spender, _value);
+        assert(super.approve(_spender, _value));
         if (events == 0x0)
             return true;
 

@@ -27,8 +27,18 @@ contract ERC20Token is ERC20TokenInterface {
         symbol = _symbol;
     }
 
+    // validates an address
+    modifier notNull(address _address) {
+        assert(_address != 0x0);
+        _;
+    }
+
     // send coins
-    function transfer(address _to, uint256 _value) public returns (bool success) {
+    function transfer(address _to, uint256 _value)
+        public
+        notNull(_to)
+        returns (bool success)
+    {
         require(_value <= balanceOf[msg.sender]); // balance check
         assert(balanceOf[_to] + _value >= balanceOf[_to]); // overflow protection
 
@@ -39,7 +49,11 @@ contract ERC20Token is ERC20TokenInterface {
     }
 
     // an account/contract attempts to get the coins
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
+    function transferFrom(address _from, address _to, uint256 _value)
+        public
+        notNull(_from)
+        returns (bool success)
+    {
         require(_value <= balanceOf[_from]); // balance check
         require(_value <= allowance[_from][msg.sender]); // allowance check
         assert(balanceOf[_to] + _value >= balanceOf[_to]); // overflow protection
@@ -52,7 +66,11 @@ contract ERC20Token is ERC20TokenInterface {
     }
 
     // allow another account/contract to spend some tokens on your behalf
-    function approve(address _spender, uint256 _value) public returns (bool success) {
+    function approve(address _spender, uint256 _value)
+        public
+        notNull(_spender)
+        returns (bool success)
+    {
         // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal
         require(_value == 0 || allowance[msg.sender][_spender] == 0);
 
