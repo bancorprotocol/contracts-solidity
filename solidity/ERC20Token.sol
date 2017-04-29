@@ -2,11 +2,6 @@ pragma solidity ^0.4.10;
 import './ERC20TokenInterface.sol';
 
 /*
-    Open issues:
-    - approve - 
-*/
-
-/*
     ERC20 Standard Token implementation
 */
 contract ERC20Token is ERC20TokenInterface {
@@ -33,7 +28,7 @@ contract ERC20Token is ERC20TokenInterface {
 
     /*
         send coins
-        note that the function will throw on any error rather then return a boolean return value to minimize user errors
+        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
     */
     function transfer(address _to, uint256 _value)
         public
@@ -51,7 +46,7 @@ contract ERC20Token is ERC20TokenInterface {
 
     /*
         an account/contract attempts to get the coins
-        note that the function will throw on any error rather then return a boolean return value to minimize user errors
+        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
     */
     function transferFrom(address _from, address _to, uint256 _value)
         public
@@ -72,7 +67,7 @@ contract ERC20Token is ERC20TokenInterface {
 
     /*
         allow another account/contract to spend some tokens on your behalf
-        note that the function will throw on any error rather then return a boolean return value to minimize user errors
+        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
 
         also, to minimize the risk of the approve/transferFrom attack vector
         (see https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), approve has to be called twice
