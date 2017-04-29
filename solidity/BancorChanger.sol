@@ -97,7 +97,12 @@ contract BancorChanger is Owned, TokenChangerInterface {
 
         _formula     new formula contract address
     */
-    function setFormula(address _formula) public ownerOnly returns (bool success) {
+    function setFormula(address _formula)
+        public
+        ownerOnly
+        validAddress(_formula)
+        returns (bool success)
+    {
         BancorFormula formulaContract = BancorFormula(formula);
         require(_formula == formulaContract.newFormula());
         formula = _formula;
@@ -135,7 +140,12 @@ contract BancorChanger is Owned, TokenChangerInterface {
         _token  address of the reserve token
         _ratio  constant reserve ratio, 1-100
     */
-    function addReserve(address _token, uint8 _ratio) public ownerOnly returns (bool success) {
+    function addReserve(address _token, uint8 _ratio)
+        public
+        ownerOnly
+        validAddress(_token)
+        returns (bool success)
+    {
         require(_token != address(this) && _token != token && !reserves[_token].isSet && _ratio > 0 && _ratio <= 100 && totalReserveRatio + _ratio <= 100); // validate input
 
         reserves[_token].ratio = _ratio;
@@ -154,8 +164,13 @@ contract BancorChanger is Owned, TokenChangerInterface {
         _to              account to receive the new amount
         _amount          amount to withdraw (in the reserve token)
     */
-    function withdraw(address _reserveToken, address _to, uint256 _amount) public ownerOnly returns (bool success) {
-        require(reserves[_reserveToken].isSet && _amount != 0); // validate input
+    function withdraw(address _reserveToken, address _to, uint256 _amount)
+        public
+        ownerOnly
+        validReserve(_reserveToken)
+        returns (bool success)
+    {
+        require(_amount != 0); // validate input
         ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         return reserveToken.transfer(_to, _amount);
     }
