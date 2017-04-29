@@ -15,7 +15,6 @@ contract SmartToken is Owned, ERC20Token {
 
     // events, can be used to listen to the contract directly, as opposed to through the events contract
     event ChangerUpdate(address _prevChanger, address _newChanger);
-    event SupplyUpdate(uint256 _totalSupply);
 
     /*
         _name               token name
@@ -107,7 +106,6 @@ contract SmartToken is Owned, ERC20Token {
 
         totalSupply += _amount;
         balanceOf[_to] += _amount;
-        dispatchSupplyUpdate(totalSupply);
         dispatchTransfer(this, _to, _amount);
         return true;
     }
@@ -130,7 +128,6 @@ contract SmartToken is Owned, ERC20Token {
         totalSupply -= _amount;
         balanceOf[_from] -= _amount;
         dispatchTransfer(_from, this, _amount);
-        dispatchSupplyUpdate(totalSupply);
         return true;
     }
 
@@ -161,7 +158,6 @@ contract SmartToken is Owned, ERC20Token {
         if (_to == address(this)) {
             balanceOf[_to] -= _value;
             totalSupply -= _value;
-            dispatchSupplyUpdate(totalSupply);
         }
 
         if (events == 0x0)
@@ -180,7 +176,6 @@ contract SmartToken is Owned, ERC20Token {
         if (_to == address(this)) {
             balanceOf[_to] -= _value;
             totalSupply -= _value;
-            dispatchSupplyUpdate(totalSupply);
         }
 
         if (events == 0x0)
@@ -211,15 +206,6 @@ contract SmartToken is Owned, ERC20Token {
 
         BancorEventsInterface eventsContract = BancorEventsInterface(events);
         eventsContract.tokenChangerUpdate(_prevChanger, _newChanger);
-    }
-
-    function dispatchSupplyUpdate(uint256 _totalSupply) private {
-        SupplyUpdate(_totalSupply);
-        if (events == 0x0)
-            return;
-
-        BancorEventsInterface eventsContract = BancorEventsInterface(events);
-        eventsContract.tokenSupplyUpdate(_totalSupply);
     }
 
     function dispatchTransfer(address _from, address _to, uint256 _value) private {
