@@ -54,7 +54,7 @@ contract SmartToken is Owned, ERC20Token {
     function setOwner(address _newOwner)
         public
         ownerOnly
-        notNull(_newOwner)
+        validAddress(_newOwner)
     {
         address prevOwner = owner;
         super.setOwner(_newOwner);
@@ -95,7 +95,7 @@ contract SmartToken is Owned, ERC20Token {
     function issue(address _to, uint256 _amount)
         public
         managerOnly
-        notNull(_to)
+        validAddress(_to)
         returns (bool success)
     {
          // validate input
@@ -122,7 +122,7 @@ contract SmartToken is Owned, ERC20Token {
     function destroy(address _from, uint256 _amount)
         public
         managerOnly
-        notNull(_from)
+        validAddress(_from)
         returns (bool success)
     {
         require(_from != address(this) && _amount != 0 && _amount <= balanceOf[_from]); // validate input

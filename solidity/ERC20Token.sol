@@ -3,9 +3,7 @@ import './ERC20TokenInterface.sol';
 
 /*
     Open issues:
-    - approve - to minimize the risk of the approve/transferFrom attack vector
-                (see https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), approve has to be called twice
-                in 2 separate transactions - once to change the allowance to 0 and secondly to change it to the new allowance value
+    - approve - 
 */
 
 /*
@@ -27,16 +25,19 @@ contract ERC20Token is ERC20TokenInterface {
         symbol = _symbol;
     }
 
-    // validates an address
-    modifier notNull(address _address) {
+    // validates an address - currently only checks that it isn't null
+    modifier validAddress(address _address) {
         assert(_address != 0x0);
         _;
     }
 
-    // send coins
+    /*
+        send coins
+        note that the function will throw on any error rather then return a boolean return value to minimize user errors
+    */
     function transfer(address _to, uint256 _value)
         public
-        notNull(_to)
+        validAddress(_to)
         returns (bool success)
     {
         require(_value <= balanceOf[msg.sender]); // balance check
@@ -48,11 +49,14 @@ contract ERC20Token is ERC20TokenInterface {
         return true;
     }
 
-    // an account/contract attempts to get the coins
+    /*
+        an account/contract attempts to get the coins
+        note that the function will throw on any error rather then return a boolean return value to minimize user errors
+    */
     function transferFrom(address _from, address _to, uint256 _value)
         public
-        notNull(_from)
-        notNull(_to)
+        validAddress(_from)
+        validAddress(_to)
         returns (bool success)
     {
         require(_value <= balanceOf[_from]); // balance check
@@ -66,10 +70,17 @@ contract ERC20Token is ERC20TokenInterface {
         return true;
     }
 
-    // allow another account/contract to spend some tokens on your behalf
+    /*
+        allow another account/contract to spend some tokens on your behalf
+        note that the function will throw on any error rather then return a boolean return value to minimize user errors
+
+        also, to minimize the risk of the approve/transferFrom attack vector
+        (see https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), approve has to be called twice
+        in 2 separate transactions - once to change the allowance to 0 and secondly to change it to the new allowance value
+    */
     function approve(address _spender, uint256 _value)
         public
-        notNull(_spender)
+        validAddress(_spender)
         returns (bool success)
     {
         // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal
