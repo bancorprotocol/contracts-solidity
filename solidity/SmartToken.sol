@@ -137,7 +137,7 @@ contract SmartToken is Owned, ERC20Token {
         can only be called by the token owner (if no changer is defined) or the changer contract (if a changer is defined)
         the changer can be set to null to transfer ownership from the changer to the owner
 
-        _changer            new changer contract address (can also be set to 0x0 to remove the current changer)
+        _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
     */
     function setChanger(address _changer) public managerOnly returns (bool success) {
         require(_changer != changer);
