@@ -8,6 +8,7 @@ import './BancorEventsInterface.sol';
     Smart Token v0.1
 */
 contract SmartToken is Owned, ERC20Token {
+    string public version = '0.1';
     uint8 public numDecimalUnits = 0;   // for display purposes only
     address public events = 0x0;        // bancor events contract address
     address public changer = 0x0;       // changer contract address
@@ -135,15 +136,13 @@ contract SmartToken is Owned, ERC20Token {
         sets a changer contract address
         can only be called by the token owner (if no changer is defined) or the changer contract (if a changer is defined)
         the changer can be set to null to transfer ownership from the changer to the owner
-        note: can also disable/enable transfers in the same transaction
 
         _changer            new changer contract address (can also be set to 0x0 to remove the current changer)
-        _disableTransfers   true to disable transfers when setting the new changer, false to enable them
     */
-    function setChanger(address _changer, bool _disableTransfers) public managerOnly returns (bool success) {
+    function setChanger(address _changer) public managerOnly returns (bool success) {
+        require(_changer != changer);
         address prevChanger = changer;
         changer = _changer;
-        transfersEnabled = !_disableTransfers;
         dispatchChangerUpdate(prevChanger, changer);
         return true;
     }
