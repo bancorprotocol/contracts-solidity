@@ -7,39 +7,87 @@ reserve-tokens, which provide liquidity through autonomous algorithmic price dis
 ## Overview
 The Bancor protocol represents the first technological solution for the classic problem in economics known as the “Double Coincidence of Wants”, in the domain of asset exchange. For barter, the coincidence of wants problem was solved through money. For money, exchanges still rely on labor, via bid/ask orders and trade between external agents, to make markets and supply liquidity. 
 
-Through the use of smart-contracts, Bancor Tokens can be created that hold one or more other tokens in their reserve. Tokens may represent existing national currencies or other types of assets. By using a reserve token model and algorithmically-calculated conversion rates, the Bancor Protocol creates a new type of ecosystem for asset exchange, with no central control. This decentralized hierarchical monetary system lays the foundation for an autonomous decentralized global exchange with numerous and substantial advantages.
+Through the use of smart-contracts, Smart Tokens can be created that hold one or more other tokens in their reserve. Tokens may represent existing national currencies or other types of assets. By using a reserve token model and algorithmically-calculated conversion rates, the Bancor Protocol creates a new type of ecosystem for asset exchange, with no central control. This decentralized hierarchical monetary system lays the foundation for an autonomous decentralized global exchange with numerous and substantial advantages.
 
 ## Warning
 
 Bancor is a work in progress. Make sure you understand the risks before using it.
 
-# The Bancor Token Standard
+# The Bancor Standards
 
-The following section describes standard functions a bancor token can implement.
+Bancor protocol is implemented using multiple contracts. The main ones are SmartToken and BancorChanger.
+BancorChanger implements the token changer standard (See https://github.com/ethereum/EIPs/issues/228) and is responsible for converting between a token and its reserves.
+SmartToken represents a changer aware ERC-20 compliant token.
+
+# The Smart Token Standard
+
+## Motivation
+
+Those will allow creating a Bancor compliant token while keeping dependencies at a minimum.
+
+## Specification
+
+### SmartToken
+
+First and foremost, a Smart Token is also an ERC-20 compliant token.
+As such, it implements both the standard token methods and the standard token events.
+
+### Methods
+
+Note that these methods can only be executed by the token owner (if no changer is currently set) or by the existing changer (if one is currently set).
+
+**setChanger**
+```cs
+function setChanger(address _changer) public managerOnly returns (bool success)
+```
+Sets or replaces the token changer.
+<br>
+<br>
+<br>
+**issue**
+```cs
+function issue(address _to, uint256 _amount)
+```
+Increases the token supply and sends the new tokens to an account.
+<br>
+<br>
+<br>
+**destroy**
+```cs
+function destroy(address _from, uint256 _amount)
+```
+Removes tokens from an account and decreases the token supply.
+
+### Events
+
+**ChangerUpdate**
+```cs
+event ChangerUpdate(address _prevChanger, address _newChanger)
+```
+Triggered when the token changer is set or replaced.
+<br>
+<br>
+<br>
+
+# The Bancor Changer Standard
+
+The following section describes standard functions a bancor changer can implement.
 
 ## Motivation
 
 Those will allow dapps and wallets to buy and sell the token.
 
-The most important here are `buy` and `sell`.
+The most important here is `change`.
 
 ## Specification
 
 ### BancorToken
 
-First and foremost, a Bancor Token is also an ERC-20 compliant token.  
-As such, it implements both the standard token methods and the standard token events.
+First and foremost, a Bancor Changer is also an EIP-228 compliant changer.
+As such, it implements both the standard changer methods and the standard changer events.
 
 ### Methods
 
-**stage**
-```cs
-function stage() public constant returns (uint8 stage)
-```
-Gets the token stage. Possible return values are 0 (Managed), 1 (Crowdsale) or 2 (Traded).
-<br>
-<br>
-<br>
 **reserveTokenCount**
 ```cs
 function reserveTokenCount() public constant returns (uint16 count)
@@ -64,54 +112,23 @@ Gets the reserve token details.
 <br>
 <br>
 <br>
-**crowdsale**
+**change**
 ```cs
-function crowdsale() public constant returns (address crowdsale)
+function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn)
 ```
-Gets the crowdsale contract address (only available in a non managed stage).
+changes a specific amount of _fromToken to _toToken
+The change will only take place if it returns a value greater or equal to `_minReturn`.
 <br>
 <br>
 <br>
-**crowdsaleAllowance**
-```cs
-function crowdsaleAllowance() public constant returns (uint256 crowdsaleAllowance)
-```
-Gets the number of tokens the crowdsale contract is allowed to issue.
-<br>
-<br>
-<br>
-**buy**
-```cs
-function buy(address _reserveToken, uint256 _depositAmount, uint256 _minimumValue) public returns (uint256 value)
-```
-Buys the token by depositing in one of its reserve tokens.  
-The conversion will only take place if it returns a value greater or equal to `_minimumValue`.
-<br>
-<br>
-<br>
-**sell**
-```cs
-function sell(address _reserveToken, uint256 _sellAmount, uint256 _minimumValue) public returns (uint256 value)
-```
-Sells the token by withdrawing from one of its reserve tokens.  
-The conversion will only take place if it returns a value greater or equal to `_minimumValue`.
 
 ### Events
 
-**Update**
+**Change**
 ```cs
-event Update();
+event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return);
 ```
-Triggered when a reserve is defined, the total supply is increased/decreased and when the stage changes.
-<br>
-<br>
-<br>
-**Conversion**
-```cs
-event Conversion(address indexed _reserveToken, address indexed _trader, bool _isPurchase,
-                 uint256 _totalSupply, uint256 _reserveBalance, uint256 _tokenAmount, uint256 _reserveAmount);
-```
-Triggered when a conversion between the token and one of the reserve tokens takes place.
+Triggered when a change between one of the changeable tokens takes place.
 
 ## Collaborators
 
