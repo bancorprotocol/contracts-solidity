@@ -3,10 +3,10 @@ import './BancorEventsInterface.sol';
 
 /*
     Open issues:
-    - Anyone can send an event with an invalid address (_token/_sender is the msg sender's address) - shouldn't be an issue but point to consider.
+    - Anyone can send an event with an invalid address (_token/_changer is the msg sender's address) - shouldn't be an issue but point to consider.
       Essentially, the listener should make sure that it trusts the sender address before handling the event.
-    - TokenChange event - the _changer isn't indexed so it's impossible to search for all changes a certain account initiated in a given token.
-      This isn't a big deal since the same info can be obtained from the token contract itself and in that contract the _changer IS indexed.
+    - TokenChange event - the _trader isn't indexed so it's impossible to search for all changes a certain account initiated in a given token.
+      This isn't a big deal since the same info can be obtained from the token contract itself and in that contract the _trader IS indexed.
 */
 /*
     this contract allows intercepting events from multiple bancor contracts easily,
@@ -20,7 +20,7 @@ contract BancorEvents is BancorEventsInterface {
     event TokenChangerUpdate(address indexed _token, address _prevChanger, address _newChanger);
     event TokenTransfer(address indexed _token, address indexed _from, address indexed _to, uint256 _value);
     event TokenApproval(address indexed _token, address indexed _owner, address indexed _spender, uint256 _value);
-    event TokenChange(address indexed _sender, address indexed _fromToken, address indexed _toToken, address _changer, uint256 _amount, uint256 _return);
+    event TokenChange(address indexed _changer, address indexed _fromToken, address indexed _toToken, address _trader, uint256 _amount, uint256 _return);
 
     function BancorEvents() {
     }
@@ -45,8 +45,8 @@ contract BancorEvents is BancorEventsInterface {
         TokenApproval(msg.sender, _owner, _spender, _value);
     }
 
-    function tokenChange(address _fromToken, address _toToken, address _changer, uint256 _amount, uint256 _return) public {
-        TokenChange(msg.sender, _fromToken, _toToken, _changer, _amount, _return);
+    function tokenChange(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return) public {
+        TokenChange(msg.sender, _fromToken, _toToken, _trader, _amount, _return);
     }
 
     function() {

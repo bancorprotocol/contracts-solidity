@@ -1,5 +1,4 @@
 pragma solidity ^0.4.10;
-import './Owned.sol';
 
 /*
     Open issues:
@@ -7,17 +6,12 @@ import './Owned.sol';
     - possibly support changing the CRR precision in the future
 */
 
-contract BancorFormula is Owned {
+contract BancorFormula {
     uint8 constant PRECISION = 32;  // fractional bits
 
     string public version = '0.1';
-    address public newFormula;
 
     function BancorFormula() {
-    }
-
-    function setNewFormula(address _formula) public ownerOnly {
-        newFormula = _formula;
     }
 
     /*

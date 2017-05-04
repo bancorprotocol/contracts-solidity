@@ -8,6 +8,8 @@ import './BancorEventsInterface.sol';
     Open issues:
     - add miner abuse protection
     - assumes that the reserve tokens either return true for transfer/transferFrom or throw - possibly remove the reliance on the return value
+    - the change function is wasting gas by calling getReturn - both functions initialize SmartToken/ERC20Token instances. We can save that gas
+      by duplicating code but that's not ideal either
 */
 
 // interfaces
@@ -17,17 +19,17 @@ contract SmartToken {
 
     function issue(address _to, uint256 _amount) public returns (bool success);
     function destroy(address _from, uint256 _amount) public returns (bool success);
-    function setChanger(address _changer, bool _disableTransfers) public returns (bool success);
+    function setChanger(address _changer) public returns (bool success);
+    function disableTransfers(bool _disable) public;
 }
 
 contract BancorFormula {
     function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256 amount);
     function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256 amount);
-    function newFormula() public constant returns (address newFormula);
 }
 
 contract BancorEvents is BancorEventsInterface {
-    function tokenChange(address _fromToken, address _toToken, address _changer, uint256 _amount, uint256 _return) public;
+    function tokenChange(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return) public;
 }
 
 /*
@@ -36,11 +38,11 @@ contract BancorEvents is BancorEventsInterface {
 contract BancorChanger is Owned, TokenChangerInterface {
     struct Reserve {
         uint8 ratio;    // constant reserve ratio (CRR), 1-100
-        bool isEnabled; // is purchase of the token enabled with the reserve, can be set by the owner
+        bool isEnabled; // is purchase of the smart token enabled with the reserve, can be set by the owner
         bool isSet;     // is the reserve set, used to tell if the mapping element is defined
     }
 
-    address public token = 0x0;                     // main token governed by the changer
+    address public token = 0x0;                     // address of the smart token governed by the changer
     address public formula = 0x0;                   // bancor calculation formula contract address
     address public events = 0x0;                    // bancor events contract address
     bool public isActive = false;                   // true if the change functionality can now be used, false if not
@@ -49,12 +51,12 @@ contract BancorChanger is Owned, TokenChangerInterface {
     uint8 private totalReserveRatio = 0;            // used to prevent increasing the total reserve ratio above 100% efficiently
 
     // events, can be used to listen to the contract directly, as opposed to through the events contract
-    event Change(address indexed _fromToken, address indexed _toToken, address indexed _changer, uint256 _amount, uint256 _return);
+    event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return);
 
     /*
-        _token              main token governed by the changer
-        _formula            address of a bancor formula contract
-        _events             optional, address of a bancor events contract
+        _token      smart token governed by the changer
+        _formula    address of a bancor formula contract
+        _events     optional, address of a bancor events contract
     */
     function BancorChanger(address _token, address _formula, address _events)
         validAddress(_token)
@@ -83,30 +85,16 @@ contract BancorChanger is Owned, TokenChangerInterface {
         _;
     }
 
-    // ensures that changing is activated
-    modifier activeOnly() {
+    // ensures that token changing is active
+    modifier active() {
         assert(isActive);
         _;
     }
 
-    /*
-        updates the bancor calculation formula contract address
-        can only be called by the owner
-
-        the owner can only update the formula to a new one approved by the current formula's owner
-
-        _formula     new formula contract address
-    */
-    function setFormula(address _formula)
-        public
-        ownerOnly
-        validAddress(_formula)
-        returns (bool success)
-    {
-        BancorFormula formulaContract = BancorFormula(formula);
-        require(_formula == formulaContract.newFormula());
-        formula = _formula;
-        return true;
+    // ensures that token changing is not active
+    modifier inactive() {
+        assert(!isActive);
+        _;
     }
 
     /*
@@ -118,7 +106,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
 
     /*
         returns the number of changeable tokens supported by the contract
-        note that the number of changable tokens is the number of reserve token, plus 1 (that represents the main token)
+        note that the number of changable tokens is the number of reserve token, plus 1 (that represents the smart token)
     */
     function changeableTokenCount() public constant returns (uint16 count) {
         return reserveTokenCount() + 1;
@@ -134,8 +122,8 @@ contract BancorChanger is Owned, TokenChangerInterface {
     }
 
     /*
-        defines a new reserve for the token (managed stage only)
-        can only be called by the token owner
+        defines a new reserve for the token
+        can only be called by the token owner while the changer is inactive
 
         _token  address of the reserve token
         _ratio  constant reserve ratio, 1-100
@@ -143,6 +131,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
     function addReserve(address _token, uint8 _ratio)
         public
         ownerOnly
+        inactive
         validAddress(_token)
         returns (bool success)
     {
@@ -158,7 +147,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
 
     /*
         withdraws tokens from the reserve and sends them to an account
-        can only be called by the token owner (in managed stage only) or the crowdsale contract (in crowdsale stage only)
+        can only be called by the token owner while the changer is inactive
 
         _reserveToken    reserve token contract address
         _to              account to receive the new amount
@@ -168,9 +157,10 @@ contract BancorChanger is Owned, TokenChangerInterface {
         public
         ownerOnly
         validReserve(_reserveToken)
+        validAddress(_to)
         returns (bool success)
     {
-        require(_amount != 0); // validate input
+        require(_to != address(this) && _amount != 0); // validate input
         ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         return reserveToken.transfer(_to, _amount);
     }
@@ -192,13 +182,38 @@ contract BancorChanger is Owned, TokenChangerInterface {
     }
 
     /*
+        sets the smart token's changer address to a different one instead of the current contract address
+        can only be called by the owner
+        the changer can be set to null to transfer ownership from the changer to the original smart token's owner
+
+        _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
+    */
+    function setTokenChanger(address _changer)
+        public
+        ownerOnly
+        validAddress(_changer)
+        returns (bool success)
+    {
+        require(_changer != address(this));
+        SmartToken smartToken = SmartToken(token);
+        return smartToken.setChanger(_changer);
+    }
+
+    /*
         activates the change logic
         can only be called by the owner
         once changing is activated, it cannot be deactivated by the owner anymore
+        activating the change logic also enables transfers in the smart token
     */
-    function activate() public ownerOnly returns (bool success) {
-        SmartToken mainToken = SmartToken(token);
-        assert(mainToken.totalSupply() != 0 && reserveTokens.length > 0); // validate state
+    function activate()
+        public
+        ownerOnly
+        inactive
+        returns (bool success)
+    {
+        SmartToken smartToken = SmartToken(token);
+        assert(smartToken.totalSupply() != 0 && reserveTokens.length > 0); // validate state
+        smartToken.disableTransfers(false);
         isActive = true;
         return true;
     }
@@ -231,6 +246,58 @@ contract BancorChanger is Owned, TokenChangerInterface {
     }
 
     /*
+        returns the expected return for buying the token for a reserve token
+
+        _reserveToken   reserve token contract address
+        _depositAmount  amount to deposit (in the reserve token)
+    */
+    function getPurchaseReturn(address _reserveToken, uint256 _depositAmount)
+        public
+        constant
+        active
+        validReserve(_reserveToken)
+        returns (uint256 amount)
+    {
+        Reserve reserve = reserves[_reserveToken];
+        require(reserve.isEnabled && _depositAmount != 0); // validate input
+
+        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
+        uint256 reserveBalance = reserveToken.balanceOf(this);
+        assert(reserveBalance != 0); // validate state
+
+        ERC20TokenInterface smartToken = ERC20TokenInterface(token);
+        uint256 tokenSupply = smartToken.totalSupply();
+        BancorFormula formulaContract = BancorFormula(formula);
+        return formulaContract.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
+    }
+
+    /*
+        returns the expected return for selling the token for one of its reserve tokens
+
+        _reserveToken   reserve token contract address
+        _sellAmount     amount to sell (in the smart token)
+    */
+    function getSaleReturn(address _reserveToken, uint256 _sellAmount)
+        public
+        constant
+        active
+        validReserve(_reserveToken)
+        returns (uint256 amount)
+    {
+        ERC20TokenInterface smartToken = ERC20TokenInterface(token);
+        require(_sellAmount != 0 && _sellAmount <= smartToken.balanceOf(msg.sender)); // validate input
+
+        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
+        uint256 reserveBalance = reserveToken.balanceOf(this);
+        assert(reserveBalance != 0); // validate state
+        
+        uint256 tokenSupply = smartToken.totalSupply();
+        Reserve reserve = reserves[_reserveToken];
+        BancorFormula formulaContract = BancorFormula(formula);
+        return formulaContract.calculateSaleReturn(tokenSupply, reserveBalance, reserve.ratio, _sellAmount);
+    }
+
+    /*
         changes a specific amount of _fromToken to _toToken
 
         _fromToken  token to change from
@@ -258,58 +325,6 @@ contract BancorChanger is Owned, TokenChangerInterface {
     }
 
     /*
-        returns the expected return for buying the token for a reserve token
-
-        _reserveToken   reserve token contract address
-        _depositAmount  amount to deposit (in the reserve token)
-    */
-    function getPurchaseReturn(address _reserveToken, uint256 _depositAmount)
-        public
-        constant
-        activeOnly
-        validReserve(_reserveToken)
-        returns (uint256 amount)
-    {
-        Reserve reserve = reserves[_reserveToken];
-        require(reserve.isEnabled && _depositAmount != 0); // validate input
-
-        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
-        uint256 reserveBalance = reserveToken.balanceOf(this);
-        assert(reserveBalance != 0); // validate state
-
-        ERC20TokenInterface mainToken = ERC20TokenInterface(token);
-        uint256 mainSupply = mainToken.totalSupply();
-        BancorFormula formulaContract = BancorFormula(formula);
-        return formulaContract.calculatePurchaseReturn(mainSupply, reserveBalance, reserve.ratio, _depositAmount);
-    }
-
-    /*
-        returns the expected return for selling the token for one of its reserve tokens
-
-        _reserveToken   reserve token contract address
-        _sellAmount     amount to sell (in the main token)
-    */
-    function getSaleReturn(address _reserveToken, uint256 _sellAmount)
-        public
-        constant
-        activeOnly
-        validReserve(_reserveToken)
-        returns (uint256 amount)
-    {
-        ERC20TokenInterface mainToken = ERC20TokenInterface(token);
-        require(_sellAmount != 0 && _sellAmount <= mainToken.balanceOf(msg.sender)); // validate input
-
-        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
-        uint256 reserveBalance = reserveToken.balanceOf(this);
-        assert(reserveBalance != 0); // validate state
-        
-        uint256 mainSupply = mainToken.totalSupply();
-        Reserve reserve = reserves[_reserveToken];
-        BancorFormula formulaContract = BancorFormula(formula);
-        return formulaContract.calculateSaleReturn(mainSupply, reserveBalance, reserve.ratio, _sellAmount);
-    }
-
-    /*
         buys the token by depositing one of its reserve tokens
 
         _reserveToken   reserve token contract address
@@ -323,8 +338,8 @@ contract BancorChanger is Owned, TokenChangerInterface {
         ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         assert(reserveToken.transferFrom(msg.sender, this, _depositAmount)); // transfer _depositAmount funds from the caller in the reserve token
 
-        SmartToken mainToken = SmartToken(token);
-        assert(mainToken.issue(msg.sender, amount)); // issue new funds to the caller in the main token
+        SmartToken smartToken = SmartToken(token);
+        assert(smartToken.issue(msg.sender, amount)); // issue new funds to the caller in the smart token
         dispatchChange(_reserveToken, token, msg.sender, _depositAmount, amount);
         return amount;
     }
@@ -333,7 +348,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
         sells the token by withdrawing from one of its reserve tokens
 
         _reserveToken   reserve token contract address
-        _sellAmount     amount to sell (in the main token)
+        _sellAmount     amount to sell (in the smart token)
         _minReturn      if the change results in an amount smaller the minimum return, it is cancelled
     */
     function sell(address _reserveToken, uint256 _sellAmount, uint256 _minReturn) public returns (uint256 amount) {
@@ -342,30 +357,32 @@ contract BancorChanger is Owned, TokenChangerInterface {
         
         ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
-        assert(amount < reserveBalance); // ensuring that the trade won't deplete the reserve
+        assert(amount <= reserveBalance); // ensure that the trade won't result in negative reserve
 
-        SmartToken mainToken = SmartToken(token);
-        assert(mainToken.destroy(msg.sender, _sellAmount)); // destroy _sellAmount from the caller in the main token
+        SmartToken smartToken = SmartToken(token);
+        uint256 tokenSupply = smartToken.totalSupply();
+        assert(amount < reserveBalance || _sellAmount == tokenSupply); // ensure that the trade will only deplete the reserve if the total supply is depleted as well
+
+        assert(smartToken.destroy(msg.sender, _sellAmount)); // destroy _sellAmount from the caller in the smart token
         assert(reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
 
+        // if the supply was totally depleted, disconnect from the smart token
+        if (_sellAmount == tokenSupply)
+            smartToken.setChanger(0x0);
+
         dispatchChange(this, _reserveToken, msg.sender, _sellAmount, amount);
-
-        // if the supply was totally depleted, disconnect from the main token
-        if (mainToken.totalSupply() == 0)
-            mainToken.setChanger(0x0, false);
-
         return amount;
     }
 
     // utility
 
-    function dispatchChange(address _fromToken, address _toToken, address _changer, uint256 _amount, uint256 _return) private {
-        Change(_fromToken, _toToken, _changer, _amount, _return);
+    function dispatchChange(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return) private {
+        Change(_fromToken, _toToken, _trader, _amount, _return);
         if (events == 0x0)
             return;
 
         BancorEventsInterface eventsContract = BancorEventsInterface(events);
-        eventsContract.tokenChange(_fromToken, _toToken, _changer, _amount, _return);
+        eventsContract.tokenChange(_fromToken, _toToken, _trader, _amount, _return);
     }
 
     // fallback
