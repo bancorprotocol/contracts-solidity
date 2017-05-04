@@ -123,7 +123,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
 
     /*
         defines a new reserve for the token
-        can only be called by the token owner while the changer is inactive
+        can only be called by the changer owner while the changer is inactive
 
         _token  address of the reserve token
         _ratio  constant reserve ratio, 1-100
@@ -169,7 +169,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
 
     /*
         withdraws tokens from the reserve and sends them to an account
-        can only be called by the token owner while the changer is inactive
+        can only be called by the changer owner while the changer is inactive
 
         _reserveToken    reserve token contract address
         _to              account to receive the new amount
@@ -189,7 +189,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
 
     /*
         disables purchasing with the given reserve token in case the reserve token got compromised
-        can only be called by the token owner
+        can only be called by the changer owner
         note that selling is still enabled regardless of this flag and it cannot be disabled by the owner
 
         _reserveToken    reserve token contract address
