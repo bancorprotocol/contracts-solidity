@@ -146,6 +146,28 @@ contract BancorChanger is Owned, TokenChangerInterface {
     }
 
     /*
+        allows the owner to execute the smart token's issue function
+
+        _to         account to receive the new amount
+        _amount     amount to increase the supply by
+    */
+    function issueToken(address _to, uint256 _amount) public ownerOnly returns (bool success) {
+        SmartToken smartToken = SmartToken(token);
+        return smartToken.issue(_to, _amount);
+    }
+
+    /*
+        allows the owner to execute the smart token's destroy function
+
+        _from       account to remove the new amount from
+        _amount     amount to decrease the supply by
+    */
+    function destroyToken(address _from, uint256 _amount) public ownerOnly returns (bool success) {
+        SmartToken smartToken = SmartToken(token);
+        return smartToken.destroy(_from, _amount);
+    }
+
+    /*
         withdraws tokens from the reserve and sends them to an account
         can only be called by the token owner while the changer is inactive
 
