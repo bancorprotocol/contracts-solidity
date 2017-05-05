@@ -1,13 +1,13 @@
 pragma solidity ^0.4.10;
 import './Owned.sol';
 import './ERC20Token.sol';
-import './ERC20TokenInterface.sol';
+import './SmartTokenInterface.sol';
 import './BancorEventsInterface.sol';
 
 /*
     Smart Token v0.1
 */
-contract SmartToken is Owned, ERC20Token {
+contract SmartToken is Owned, ERC20Token, SmartTokenInterface {
     string public version = '0.1';
     uint8 public numDecimalUnits = 0;   // for display purposes only
     address public events = 0x0;        // bancor events contract address

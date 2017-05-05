@@ -1,7 +1,7 @@
 pragma solidity ^0.4.10;
 import './Owned.sol';
 import './TokenChangerInterface.sol';
-import './ERC20TokenInterface.sol';
+import './SmartTokenInterface.sol';
 import './BancorEventsInterface.sol';
 
 /*
@@ -13,15 +13,6 @@ import './BancorEventsInterface.sol';
 */
 
 // interfaces
-
-contract SmartToken {
-    function totalSupply() public constant returns (uint256 totalSupply);
-
-    function issue(address _to, uint256 _amount) public returns (bool success);
-    function destroy(address _from, uint256 _amount) public returns (bool success);
-    function setChanger(address _changer) public returns (bool success);
-    function disableTransfers(bool _disable) public;
-}
 
 contract BancorFormula {
     function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256 amount);
@@ -42,9 +33,9 @@ contract BancorChanger is Owned, TokenChangerInterface {
         bool isSet;     // is the reserve set, used to tell if the mapping element is defined
     }
 
-    address public token = 0x0;                     // address of the smart token governed by the changer
+    SmartTokenInterface public token;               // smart token governed by the changer
     address public events = 0x0;                    // bancor events contract address
-    BancorFormula public formula;                   // bancor calculation formula contract address
+    BancorFormula public formula;                   // bancor calculation formula contract
     bool public isActive = false;                   // true if the change functionality can now be used, false if not
     address[] public reserveTokens;                 // ERC20 standard token addresses
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
@@ -62,7 +53,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
         validAddress(_token)
         validAddress(_formula)
     {
-        token = _token;
+        token = SmartTokenInterface(_token);
         formula = BancorFormula(_formula);
         events = _events;
     }
@@ -81,7 +72,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
 
     // validates a token address - verifies that the address belongs to one of the changable tokens
     modifier validToken(address _address) {
-        assert(_address == token || reserves[_address].isSet);
+        assert(_address == address(token) || reserves[_address].isSet);
         _;
     }
 
@@ -135,7 +126,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
         validAddress(_token)
         returns (bool success)
     {
-        require(_token != address(this) && _token != token && !reserves[_token].isSet && _ratio > 0 && _ratio <= 100 && totalReserveRatio + _ratio <= 100); // validate input
+        require(_token != address(this) && _token != address(token) && !reserves[_token].isSet && _ratio > 0 && _ratio <= 100 && totalReserveRatio + _ratio <= 100); // validate input
 
         reserves[_token].ratio = _ratio;
         reserves[_token].isEnabled = true;
@@ -152,8 +143,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
         _amount     amount to increase the supply by
     */
     function issueToken(address _to, uint256 _amount) public ownerOnly returns (bool success) {
-        SmartToken smartToken = SmartToken(token);
-        return smartToken.issue(_to, _amount);
+        return token.issue(_to, _amount);
     }
 
     /*
@@ -163,8 +153,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
         _amount     amount to decrease the supply by
     */
     function destroyToken(address _from, uint256 _amount) public ownerOnly returns (bool success) {
-        SmartToken smartToken = SmartToken(token);
-        return smartToken.destroy(_from, _amount);
+        return token.destroy(_from, _amount);
     }
 
     /*
@@ -217,8 +206,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
         returns (bool success)
     {
         require(_changer != address(this));
-        SmartToken smartToken = SmartToken(token);
-        return smartToken.setChanger(_changer);
+        return token.setChanger(_changer);
     }
 
     /*
@@ -233,9 +221,8 @@ contract BancorChanger is Owned, TokenChangerInterface {
         inactive
         returns (bool success)
     {
-        SmartToken smartToken = SmartToken(token);
-        assert(smartToken.totalSupply() != 0 && reserveTokens.length > 0); // validate state
-        smartToken.disableTransfers(false);
+        assert(token.totalSupply() != 0 && reserveTokens.length > 0); // validate state
+        token.disableTransfers(false);
         isActive = true;
         return true;
     }
@@ -257,9 +244,10 @@ contract BancorChanger is Owned, TokenChangerInterface {
         require(_fromToken != _toToken); // validate input
 
         // change between the token and one of its reserves
-        if (_toToken == token)
+        address tokenAddress = address(token);
+        if (_toToken == tokenAddress)
             return getPurchaseReturn(_fromToken, _amount);
-        else if (_fromToken == token)
+        else if (_fromToken == tokenAddress)
             return getSaleReturn(_toToken, _amount);
 
         // change between 2 reserves
@@ -287,8 +275,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
         uint256 reserveBalance = reserveToken.balanceOf(this);
         assert(reserveBalance != 0); // validate state
 
-        ERC20TokenInterface smartToken = ERC20TokenInterface(token);
-        uint256 tokenSupply = smartToken.totalSupply();
+        uint256 tokenSupply = token.totalSupply();
         return formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
     }
 
@@ -305,14 +292,13 @@ contract BancorChanger is Owned, TokenChangerInterface {
         validReserve(_reserveToken)
         returns (uint256 amount)
     {
-        ERC20TokenInterface smartToken = ERC20TokenInterface(token);
-        require(_sellAmount != 0 && _sellAmount <= smartToken.balanceOf(msg.sender)); // validate input
+        require(_sellAmount != 0 && _sellAmount <= token.balanceOf(msg.sender)); // validate input
 
         ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         uint256 reserveBalance = reserveToken.balanceOf(this);
         assert(reserveBalance != 0); // validate state
         
-        uint256 tokenSupply = smartToken.totalSupply();
+        uint256 tokenSupply = token.totalSupply();
         Reserve reserve = reserves[_reserveToken];
         return formula.calculateSaleReturn(tokenSupply, reserveBalance, reserve.ratio, _sellAmount);
     }
@@ -334,9 +320,10 @@ contract BancorChanger is Owned, TokenChangerInterface {
         require(_fromToken != _toToken); // validate input
 
         // change between the token and one of its reserves
-        if (_toToken == token)
+        address tokenAddress = address(token);
+        if (_toToken == tokenAddress)
             return buy(_fromToken, _amount, _minReturn);
-        else if (_fromToken == token)
+        else if (_fromToken == tokenAddress)
             return sell(_toToken, _amount, _minReturn);
 
         // change between 2 reserves
@@ -358,8 +345,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
         ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         assert(reserveToken.transferFrom(msg.sender, this, _depositAmount)); // transfer _depositAmount funds from the caller in the reserve token
 
-        SmartToken smartToken = SmartToken(token);
-        assert(smartToken.issue(msg.sender, amount)); // issue new funds to the caller in the smart token
+        assert(token.issue(msg.sender, amount)); // issue new funds to the caller in the smart token
         dispatchChange(_reserveToken, token, msg.sender, _depositAmount, amount);
         return amount;
     }
@@ -379,16 +365,15 @@ contract BancorChanger is Owned, TokenChangerInterface {
         uint256 reserveBalance = reserveToken.balanceOf(this);
         assert(amount <= reserveBalance); // ensure that the trade won't result in negative reserve
 
-        SmartToken smartToken = SmartToken(token);
-        uint256 tokenSupply = smartToken.totalSupply();
+        uint256 tokenSupply = token.totalSupply();
         assert(amount < reserveBalance || _sellAmount == tokenSupply); // ensure that the trade will only deplete the reserve if the total supply is depleted as well
 
-        assert(smartToken.destroy(msg.sender, _sellAmount)); // destroy _sellAmount from the caller in the smart token
+        assert(token.destroy(msg.sender, _sellAmount)); // destroy _sellAmount from the caller in the smart token
         assert(reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
 
         // if the supply was totally depleted, disconnect from the smart token
         if (_sellAmount == tokenSupply)
-            smartToken.setChanger(0x0);
+            token.setChanger(0x0);
 
         dispatchChange(this, _reserveToken, msg.sender, _sellAmount, amount);
         return amount;
