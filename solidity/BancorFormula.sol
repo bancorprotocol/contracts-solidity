@@ -1,4 +1,5 @@
 pragma solidity ^0.4.10;
+import 'SafeMath.sol';
 
 /*
     Open issues:
@@ -6,7 +7,7 @@ pragma solidity ^0.4.10;
     - possibly support changing the CRR precision in the future
 */
 
-contract BancorFormula {
+contract BancorFormula is SafeMath {
     uint8 constant PRECISION = 32;  // fractional bits
 
     string public version = '0.1';
@@ -152,7 +153,7 @@ contract BancorFormula {
         uint256 fixedOne = uint256(1) << PRECISION;
         uint256 fixedTwo = uint256(2) << PRECISION;
 
-        if (_x <= fixedOne){
+        if (_x <= fixedOne) {
             if (_x == fixedOne)
                 return 0;
 
@@ -180,7 +181,7 @@ contract BancorFormula {
                 hi += uint256(1) << (PRECISION - 1 - i);
             }
         }
-        if (lo > hi){
+        if (lo > hi) {
             //Should never happen, due to the check above
             // but this is a cheap extra check in case the 
             // implementation changes over time
@@ -285,18 +286,6 @@ contract BancorFormula {
         res += xi * 0x22;
 
         return res / 0xde1bc4d19efcac82445da75b00000000;
-    }
-
-    function safeAdd(uint256 a, uint256 b) internal returns (uint){
-        uint c = a + b;
-        assert(c >= a);
-        return c;
-    }
-
-    function safeMul(uint256 a, uint256 b) internal returns (uint) {
-        uint256 c = a * b;
-        assert(a == 0 || c / a == b);
-        return c;
     }
 
     function() {

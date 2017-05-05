@@ -98,15 +98,9 @@ contract SmartToken is Owned, ERC20Token {
         validAddress(_to)
         returns (bool success)
     {
-         // validate input
-        require(_to != address(this) && _amount != 0);
-         // supply overflow protection
-        assert(totalSupply + _amount >= totalSupply);
-        // target account balance overflow protection
-        assert(balanceOf[_to] + _amount >= balanceOf[_to]);
-
-        totalSupply += _amount;
-        balanceOf[_to] += _amount;
+        require(_to != address(this) && _amount != 0); // validate input
+        totalSupply = safeAdd(totalSupply, _amount);
+        balanceOf[_to] = safeAdd(balanceOf[_to], _amount);
         dispatchTransfer(this, _to, _amount);
         return true;
     }
@@ -124,10 +118,9 @@ contract SmartToken is Owned, ERC20Token {
         validAddress(_from)
         returns (bool success)
     {
-        require(_from != address(this) && _amount != 0 && _amount <= balanceOf[_from]); // validate input
-
-        totalSupply -= _amount;
-        balanceOf[_from] -= _amount;
+        require(_from != address(this) && _amount != 0); // validate input
+        balanceOf[_from] = safeSub(balanceOf[_from], _amount);
+        totalSupply = safeSub(totalSupply, _amount);
         dispatchTransfer(_from, this, _amount);
         return true;
     }

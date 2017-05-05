@@ -1,10 +1,11 @@
 pragma solidity ^0.4.10;
 import './ERC20TokenInterface.sol';
+import 'SafeMath.sol';
 
 /*
     ERC20 Standard Token implementation
 */
-contract ERC20Token is ERC20TokenInterface {
+contract ERC20Token is ERC20TokenInterface, SafeMath {
     string public standard = 'Token 0.1';
     string public name = '';
     string public symbol = '';
@@ -35,11 +36,8 @@ contract ERC20Token is ERC20TokenInterface {
         validAddress(_to)
         returns (bool success)
     {
-        require(_value <= balanceOf[msg.sender]); // balance check
-        assert(balanceOf[_to] + _value >= balanceOf[_to]); // overflow protection
-
-        balanceOf[msg.sender] -= _value;
-        balanceOf[_to] += _value;
+        balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _value);
+        balanceOf[_to] = safeAdd(balanceOf[_to], _value);
         Transfer(msg.sender, _to, _value);
         return true;
     }
@@ -54,13 +52,9 @@ contract ERC20Token is ERC20TokenInterface {
         validAddress(_to)
         returns (bool success)
     {
-        require(_value <= balanceOf[_from]); // balance check
-        require(_value <= allowance[_from][msg.sender]); // allowance check
-        assert(balanceOf[_to] + _value >= balanceOf[_to]); // overflow protection
-
-        balanceOf[_from] -= _value;
-        balanceOf[_to] += _value;
-        allowance[_from][msg.sender] -= _value;
+        allowance[_from][msg.sender] = safeSub(allowance[_from][msg.sender], _value);
+        balanceOf[_from] = safeSub(balanceOf[_from], _value);
+        balanceOf[_to] = safeAdd(balanceOf[_to], _value);
         Transfer(_from, _to, _value);
         return true;
     }
