@@ -43,8 +43,8 @@ contract BancorChanger is Owned, TokenChangerInterface {
     }
 
     address public token = 0x0;                     // address of the smart token governed by the changer
-    address public formula = 0x0;                   // bancor calculation formula contract address
     address public events = 0x0;                    // bancor events contract address
+    BancorFormula public formula;                   // bancor calculation formula contract address
     bool public isActive = false;                   // true if the change functionality can now be used, false if not
     address[] public reserveTokens;                 // ERC20 standard token addresses
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
@@ -63,7 +63,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
         validAddress(_formula)
     {
         token = _token;
-        formula = _formula;
+        formula = BancorFormula(_formula);
         events = _events;
     }
 
@@ -289,8 +289,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
 
         ERC20TokenInterface smartToken = ERC20TokenInterface(token);
         uint256 tokenSupply = smartToken.totalSupply();
-        BancorFormula formulaContract = BancorFormula(formula);
-        return formulaContract.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
+        return formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
     }
 
     /*
@@ -315,8 +314,7 @@ contract BancorChanger is Owned, TokenChangerInterface {
         
         uint256 tokenSupply = smartToken.totalSupply();
         Reserve reserve = reserves[_reserveToken];
-        BancorFormula formulaContract = BancorFormula(formula);
-        return formulaContract.calculateSaleReturn(tokenSupply, reserveBalance, reserve.ratio, _sellAmount);
+        return formula.calculateSaleReturn(tokenSupply, reserveBalance, reserve.ratio, _sellAmount);
     }
 
     /*
