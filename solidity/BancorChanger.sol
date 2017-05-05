@@ -7,8 +7,6 @@ import './SmartTokenInterface.sol';
     Open issues:
     - add miner abuse protection
     - assumes that the reserve tokens either return true for transfer/transferFrom or throw - possibly remove the reliance on the return value
-    - the change function is wasting gas by calling getReturn - both functions initialize SmartToken/ERC20Token instances. We can save that gas
-      by duplicating code but that's not ideal either
 */
 
 // interfaces
