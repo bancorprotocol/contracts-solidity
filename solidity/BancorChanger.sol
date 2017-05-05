@@ -336,8 +336,8 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface {
 
         ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         assert(reserveToken.transferFrom(msg.sender, this, _depositAmount)); // transfer _depositAmount funds from the caller in the reserve token
-
         assert(token.issue(msg.sender, amount)); // issue new funds to the caller in the smart token
+
         dispatchChange(_reserveToken, token, msg.sender, _depositAmount, amount);
         return amount;
     }
@@ -359,7 +359,6 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface {
 
         uint256 tokenSupply = token.totalSupply();
         assert(amount < reserveBalance || _sellAmount == tokenSupply); // ensure that the trade will only deplete the reserve if the total supply is depleted as well
-
         assert(token.destroy(msg.sender, _sellAmount)); // destroy _sellAmount from the caller in the smart token
         assert(reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
 
