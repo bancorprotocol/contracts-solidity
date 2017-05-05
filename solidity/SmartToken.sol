@@ -8,9 +8,9 @@ import './SmartTokenInterface.sol';
 */
 contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
     string public version = '0.1';
-    uint8 public numDecimalUnits = 0;   // for display purposes only
-    address public changer = 0x0;       // changer contract address
-    bool public transfersEnabled = true;
+    uint8 public numDecimalUnits = 0;       // for display purposes only
+    address public changer = 0x0;           // changer contract address
+    bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
 
     // events, can be used to listen to the contract directly, as opposed to through the events contract
     event ChangerUpdate(address _prevChanger, address _newChanger);
