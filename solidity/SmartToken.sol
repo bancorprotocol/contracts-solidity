@@ -21,7 +21,6 @@ contract SmartToken is Owned, ERC20Token {
         _name               token name
         _symbol             token short symbol, 1-6 characters
         _numDecimalUnits    for display purposes only
-        _formula            address of a bancor formula contract
         _events             optional, address of a bancor events contract
     */
     function SmartToken(string _name, string _symbol, uint8 _numDecimalUnits, address _events)
