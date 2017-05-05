@@ -1,16 +1,14 @@
 pragma solidity ^0.4.10;
-import './Owned.sol';
+import './BancorEventsDispatcher.sol';
 import './ERC20Token.sol';
 import './SmartTokenInterface.sol';
-import './BancorEventsInterface.sol';
 
 /*
     Smart Token v0.1
 */
-contract SmartToken is Owned, ERC20Token, SmartTokenInterface {
+contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
     string public version = '0.1';
     uint8 public numDecimalUnits = 0;   // for display purposes only
-    address public events = 0x0;        // bancor events contract address
     address public changer = 0x0;       // changer contract address
     bool public transfersEnabled = true;
 
@@ -25,16 +23,13 @@ contract SmartToken is Owned, ERC20Token, SmartTokenInterface {
     */
     function SmartToken(string _name, string _symbol, uint8 _numDecimalUnits, address _events)
         ERC20Token(_name, _symbol)
+        BancorEventsDispatcher(_events)
     {
         require(bytes(_name).length != 0 && bytes(_symbol).length >= 1 && bytes(_symbol).length <= 6); // validate input
-
         numDecimalUnits = _numDecimalUnits;
-        events = _events;
-        if (events == 0x0)
-            return;
 
-        BancorEventsInterface eventsContract = BancorEventsInterface(events);
-        eventsContract.newToken();
+        if (address(events) != 0x0)
+            events.newToken();
     }
 
     // allows execution only when transfers aren't disabled
@@ -57,11 +52,9 @@ contract SmartToken is Owned, ERC20Token, SmartTokenInterface {
     {
         address prevOwner = owner;
         super.setOwner(_newOwner);
-        if (events == 0x0)
-            return;
 
-        BancorEventsInterface eventsContract = BancorEventsInterface(events);
-        eventsContract.tokenOwnerUpdate(prevOwner, owner);
+        if (address(events) != 0x0)
+            events.tokenOwnerUpdate(prevOwner, owner);
     }
 
     /*
@@ -151,11 +144,8 @@ contract SmartToken is Owned, ERC20Token, SmartTokenInterface {
             totalSupply -= _value;
         }
 
-        if (events == 0x0)
-            return;
-
-        BancorEventsInterface eventsContract = BancorEventsInterface(events);
-        eventsContract.tokenTransfer(msg.sender, _to, _value);
+        if (address(events) != 0x0)
+            events.tokenTransfer(msg.sender, _to, _value);
         return true;
     }
 
@@ -169,22 +159,17 @@ contract SmartToken is Owned, ERC20Token, SmartTokenInterface {
             totalSupply -= _value;
         }
 
-        if (events == 0x0)
-            return;
-
-        BancorEventsInterface eventsContract = BancorEventsInterface(events);
-        eventsContract.tokenTransfer(_from, _to, _value);
+        if (address(events) != 0x0)
+            events.tokenTransfer(_from, _to, _value);
         return true;
     }
 
     // allow another account/contract to spend some tokens on your behalf
     function approve(address _spender, uint256 _value) public returns (bool success) {
         assert(super.approve(_spender, _value));
-        if (events == 0x0)
-            return true;
 
-        BancorEventsInterface eventsContract = BancorEventsInterface(events);
-        eventsContract.tokenApproval(msg.sender, _spender, _value);
+        if (address(events) != 0x0)
+            events.tokenApproval(msg.sender, _spender, _value);
         return true;
     }
 
@@ -192,20 +177,16 @@ contract SmartToken is Owned, ERC20Token, SmartTokenInterface {
 
     function dispatchChangerUpdate(address _prevChanger, address _newChanger) private {
         ChangerUpdate(_prevChanger, _newChanger);
-        if (events == 0x0)
-            return;
 
-        BancorEventsInterface eventsContract = BancorEventsInterface(events);
-        eventsContract.tokenChangerUpdate(_prevChanger, _newChanger);
+        if (address(events) != 0x0)
+            events.tokenChangerUpdate(_prevChanger, _newChanger);
     }
 
     function dispatchTransfer(address _from, address _to, uint256 _value) private {
         Transfer(_from, _to, _value);
-        if (events == 0x0)
-            return;
 
-        BancorEventsInterface eventsContract = BancorEventsInterface(events);
-        eventsContract.tokenTransfer(_from, _to, _value);
+        if (address(events) != 0x0)
+            events.tokenTransfer(_from, _to, _value);
     }
 
     // fallback

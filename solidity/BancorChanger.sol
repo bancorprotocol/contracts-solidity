@@ -1,8 +1,7 @@
 pragma solidity ^0.4.10;
-import './Owned.sol';
+import './BancorEventsDispatcher.sol';
 import './TokenChangerInterface.sol';
 import './SmartTokenInterface.sol';
-import './BancorEventsInterface.sol';
 
 /*
     Open issues:
@@ -19,14 +18,10 @@ contract BancorFormula {
     function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256 amount);
 }
 
-contract BancorEvents is BancorEventsInterface {
-    function tokenChange(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return) public;
-}
-
 /*
     Bancor Changer v0.1
 */
-contract BancorChanger is Owned, TokenChangerInterface {
+contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface {
     struct Reserve {
         uint8 ratio;    // constant reserve ratio (CRR), 1-100
         bool isEnabled; // is purchase of the smart token enabled with the reserve, can be set by the owner
@@ -34,7 +29,6 @@ contract BancorChanger is Owned, TokenChangerInterface {
     }
 
     SmartTokenInterface public token;               // smart token governed by the changer
-    address public events = 0x0;                    // bancor events contract address
     BancorFormula public formula;                   // bancor calculation formula contract
     bool public isActive = false;                   // true if the change functionality can now be used, false if not
     address[] public reserveTokens;                 // ERC20 standard token addresses
@@ -50,12 +44,12 @@ contract BancorChanger is Owned, TokenChangerInterface {
         _events     optional, address of a bancor events contract
     */
     function BancorChanger(address _token, address _formula, address _events)
+        BancorEventsDispatcher(_events)
         validAddress(_token)
         validAddress(_formula)
     {
         token = SmartTokenInterface(_token);
         formula = BancorFormula(_formula);
-        events = _events;
     }
 
     // validates an address - currently only checks that it isn't null
@@ -383,11 +377,9 @@ contract BancorChanger is Owned, TokenChangerInterface {
 
     function dispatchChange(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return) private {
         Change(_fromToken, _toToken, _trader, _amount, _return);
-        if (events == 0x0)
-            return;
 
-        BancorEventsInterface eventsContract = BancorEventsInterface(events);
-        eventsContract.tokenChange(_fromToken, _toToken, _trader, _amount, _return);
+        if (address(events) != 0x0)
+            events.tokenChange(_fromToken, _toToken, _trader, _amount, _return);
     }
 
     // fallback
