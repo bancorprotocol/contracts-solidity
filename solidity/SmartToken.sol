@@ -43,8 +43,8 @@ contract SmartToken is Owned, ERC20Token, SmartTokenInterface {
         _;
     }
 
-    // allows execution by the owner if there's no changer defined or by the changer contract if a changer is defined
-    modifier managerOnly {
+    // allows execution by the current controller - owner if there's no changer defined or changer contract if a changer is defined
+    modifier controllerOnly {
         assert((changer == 0x0 && msg.sender == owner) ||
                (changer != 0x0 && msg.sender == changer)); // validate state & permissions
         _;
@@ -80,7 +80,7 @@ contract SmartToken is Owned, ERC20Token, SmartTokenInterface {
 
         _disable    true to disable transfers, false to enable them
     */
-    function disableTransfers(bool _disable) public managerOnly {
+    function disableTransfers(bool _disable) public controllerOnly {
         transfersEnabled = !_disable;
     }
 
@@ -93,7 +93,7 @@ contract SmartToken is Owned, ERC20Token, SmartTokenInterface {
     */
     function issue(address _to, uint256 _amount)
         public
-        managerOnly
+        controllerOnly
         validAddress(_to)
         returns (bool success)
     {
@@ -113,7 +113,7 @@ contract SmartToken is Owned, ERC20Token, SmartTokenInterface {
     */
     function destroy(address _from, uint256 _amount)
         public
-        managerOnly
+        controllerOnly
         validAddress(_from)
         returns (bool success)
     {
@@ -131,7 +131,7 @@ contract SmartToken is Owned, ERC20Token, SmartTokenInterface {
 
         _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
     */
-    function setChanger(address _changer) public managerOnly returns (bool success) {
+    function setChanger(address _changer) public controllerOnly returns (bool success) {
         require(_changer != changer);
         address prevChanger = changer;
         changer = _changer;
