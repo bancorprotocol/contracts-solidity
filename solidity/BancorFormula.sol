@@ -1,5 +1,5 @@
 pragma solidity ^0.4.10;
-import 'SafeMath.sol';
+import './SafeMath.sol';
 
 /*
     Open issues:

@@ -1,6 +1,6 @@
 pragma solidity ^0.4.10;
 import './ERC20TokenInterface.sol';
-import 'SafeMath.sol';
+import './SafeMath.sol';
 
 /*
     ERC20 Standard Token implementation

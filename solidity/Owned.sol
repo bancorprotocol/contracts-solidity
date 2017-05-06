@@ -1,5 +1,8 @@
 pragma solidity ^0.4.10;
 
+/*
+    Provides support and utilities for contract ownership
+*/
 contract Owned {
     address public owner;
     address public newOwner;
