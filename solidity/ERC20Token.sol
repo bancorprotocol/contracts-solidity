@@ -23,7 +23,7 @@ contract ERC20Token is ERC20TokenInterface, SafeMath {
 
     // validates an address - currently only checks that it isn't null
     modifier validAddress(address _address) {
-        assert(_address != 0x0);
+        require(_address != 0x0);
         _;
     }
 

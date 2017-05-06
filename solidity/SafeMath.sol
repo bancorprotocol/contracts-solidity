@@ -8,7 +8,7 @@ contract SafeMath {
     }
 
     function safeAdd(uint256 a, uint256 b) internal returns (uint256) {
-        uint c = a + b;
+        uint256 c = a + b;
         assert(c >= a);
         return c;
     }

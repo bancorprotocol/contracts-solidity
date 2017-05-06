@@ -2,6 +2,7 @@ pragma solidity ^0.4.10;
 import './BancorEventsDispatcher.sol';
 import './TokenChangerInterface.sol';
 import './SmartTokenInterface.sol';
+import './SafeMath.sol';
 
 /*
     Open issues:
@@ -18,14 +19,22 @@ contract BancorFormula {
 
 /*
     Bancor Changer v0.1
+
+    The Bancor version of the token changer, allows changing between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves
+
+    ERC20 reserve token balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on
+    the actual reserve balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract
 */
-contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface {
+contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMath {
     struct Reserve {
-        uint8 ratio;    // constant reserve ratio (CRR), 1-100
-        bool isEnabled; // is purchase of the smart token enabled with the reserve, can be set by the owner
-        bool isSet;     // is the reserve set, used to tell if the mapping element is defined
+        uint256 virtualBalance;         // virtual balance
+        uint8 ratio;                    // constant reserve ratio (CRR), 1-100
+        bool isVirtualBalanceEnabled;   // true if virtual balance is enabled, false if not
+        bool isEnabled;                 // is purchase of the smart token enabled with the reserve, can be set by the owner
+        bool isSet;                     // is the reserve set, used to tell if the mapping element is defined
     }
 
+    string public version = '0.1';
     SmartTokenInterface public token;               // smart token governed by the changer
     BancorFormula public formula;                   // bancor calculation formula contract
     bool public isActive = false;                   // true if the change functionality can now be used, false if not
@@ -52,19 +61,25 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface {
 
     // validates an address - currently only checks that it isn't null
     modifier validAddress(address _address) {
-        assert(_address != 0x0);
+        require(_address != 0x0);
         _;
     }
 
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
     modifier validReserve(address _address) {
-        assert(reserves[_address].isSet);
+        require(reserves[_address].isSet);
         _;
     }
 
     // validates a token address - verifies that the address belongs to one of the changable tokens
     modifier validToken(address _address) {
-        assert(_address == address(token) || reserves[_address].isSet);
+        require(_address == address(token) || reserves[_address].isSet);
+        _;
+    }
+
+    // validates reserve ratio range
+    modifier validReserveRatio(uint8 _ratio) {
+        require(_ratio > 0 && _ratio <= 100);
         _;
     }
 
@@ -108,24 +123,86 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface {
         defines a new reserve for the token
         can only be called by the changer owner while the changer is inactive
 
-        _token  address of the reserve token
-        _ratio  constant reserve ratio, 1-100
+        _token                  address of the reserve token
+        _ratio                  constant reserve ratio, 1-100
+        _enableVirtualBalance   true to enable virtual balance for the reserve, false to disable it
     */
-    function addReserve(address _token, uint8 _ratio)
+    function addReserve(address _token, uint8 _ratio, bool _enableVirtualBalance)
         public
         ownerOnly
         inactive
         validAddress(_token)
+        validReserveRatio(_ratio)
         returns (bool success)
     {
-        require(_token != address(this) && _token != address(token) && !reserves[_token].isSet && _ratio > 0 && _ratio <= 100 && totalReserveRatio + _ratio <= 100); // validate input
+        require(_token != address(this) && _token != address(token) && !reserves[_token].isSet && totalReserveRatio + _ratio <= 100); // validate input
 
+        reserves[_token].virtualBalance = 0;
         reserves[_token].ratio = _ratio;
+        reserves[_token].isVirtualBalanceEnabled = _enableVirtualBalance;
         reserves[_token].isEnabled = true;
         reserves[_token].isSet = true;
         reserveTokens.push(_token);
         totalReserveRatio += _ratio;
         return true;
+    }
+
+    /*
+        updates one of the token reserves
+        can only be called by the changer owner
+
+        _reserveToken           address of the reserve token
+        _ratio                  constant reserve ratio, 1-100
+        _enableVirtualBalance   true to enable virtual balance for the reserve, false to disable it
+        _virtualBalance         new reserve's virtual balance
+    */
+    function updateReserve(address _reserveToken, uint8 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)
+        public
+        ownerOnly
+        validReserve(_reserveToken)
+        validReserveRatio(_ratio)
+        returns (bool success)
+    {
+        Reserve reserve = reserves[_reserveToken];
+        require(totalReserveRatio - reserve.ratio + _ratio <= 100); // validate input
+
+        totalReserveRatio = totalReserveRatio - reserve.ratio + _ratio;
+        reserve.ratio = _ratio;
+        reserve.isVirtualBalanceEnabled = _enableVirtualBalance;
+        reserve.virtualBalance = _virtualBalance;
+        return true;
+    }
+
+    /*
+        disables purchasing with the given reserve token in case the reserve token got compromised
+        can only be called by the changer owner
+        note that selling is still enabled regardless of this flag and it cannot be disabled by the owner
+
+        _reserveToken    reserve token contract address
+        _disable         true to disable the token, false to re-enable it
+    */
+    function disableReserve(address _reserveToken, bool _disable)
+        public
+        ownerOnly
+        validReserve(_reserveToken)
+    {
+        reserves[_reserveToken].isEnabled = !_disable;
+    }
+
+    /*
+        returns the reserve's virtual balance if one is defined, otherwise returns the actual balance
+
+        _reserveToken    reserve token contract address
+    */
+    function getReserveBalance(address _reserveToken)
+        public
+        constant
+        validReserve(_reserveToken)
+        returns (uint256 balance)
+    {
+        Reserve reserve = reserves[_reserveToken];
+        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
+        return reserve.isVirtualBalanceEnabled ? reserve.virtualBalance : reserveToken.balanceOf(this);
     }
 
     /*
@@ -163,25 +240,17 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface {
         validAddress(_to)
         returns (bool success)
     {
-        require(_to != address(this) && _amount != 0); // validate input
+        require(_to != address(this) && _to != address(token) && _amount != 0); // validate input
+
         ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
-        return reserveToken.transfer(_to, _amount);
-    }
+        assert(reserveToken.transfer(_to, _amount));
 
-    /*
-        disables purchasing with the given reserve token in case the reserve token got compromised
-        can only be called by the changer owner
-        note that selling is still enabled regardless of this flag and it cannot be disabled by the owner
+        // update virtual balance if relevant
+        Reserve reserve = reserves[_reserveToken];
+        if (reserve.isVirtualBalanceEnabled)
+            reserve.virtualBalance = safeSub(reserve.virtualBalance, _amount);
 
-        _reserveToken    reserve token contract address
-        _disable         true to disable the token, false to re-enable it
-    */
-    function disableReserve(address _reserveToken, bool _disable)
-        public
-        ownerOnly
-        validReserve(_reserveToken)
-    {
-        reserves[_reserveToken].isEnabled = !_disable;
+        return true;
     }
 
     /*
@@ -197,7 +266,7 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface {
         validAddress(_changer)
         returns (bool success)
     {
-        require(_changer != address(this));
+        require(_changer != address(this) && _changer != address(token)); // validate input
         return token.setChanger(_changer);
     }
 
@@ -263,8 +332,7 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface {
         Reserve reserve = reserves[_reserveToken];
         require(reserve.isEnabled && _depositAmount != 0); // validate input
 
-        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
-        uint256 reserveBalance = reserveToken.balanceOf(this);
+        uint256 reserveBalance = getReserveBalance(_reserveToken);
         assert(reserveBalance != 0); // validate state
 
         uint256 tokenSupply = token.totalSupply();
@@ -286,12 +354,11 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface {
     {
         require(_sellAmount != 0 && _sellAmount <= token.balanceOf(msg.sender)); // validate input
 
-        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
-        uint256 reserveBalance = reserveToken.balanceOf(this);
+        Reserve reserve = reserves[_reserveToken];
+        uint256 reserveBalance = getReserveBalance(_reserveToken);
         assert(reserveBalance != 0); // validate state
         
         uint256 tokenSupply = token.totalSupply();
-        Reserve reserve = reserves[_reserveToken];
         return formula.calculateSaleReturn(tokenSupply, reserveBalance, reserve.ratio, _sellAmount);
     }
 
@@ -334,6 +401,11 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface {
         amount = getPurchaseReturn(_reserveToken, _depositAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
+        // update virtual balance if relevant
+        Reserve reserve = reserves[_reserveToken];
+        if (reserve.isVirtualBalanceEnabled)
+            reserve.virtualBalance = safeAdd(reserve.virtualBalance, _depositAmount);
+
         ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         assert(reserveToken.transferFrom(msg.sender, this, _depositAmount)); // transfer _depositAmount funds from the caller in the reserve token
         assert(token.issue(msg.sender, amount)); // issue new funds to the caller in the smart token
@@ -352,21 +424,26 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface {
     function sell(address _reserveToken, uint256 _sellAmount, uint256 _minReturn) public returns (uint256 amount) {
         amount = getSaleReturn(_reserveToken, _sellAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
-        
+
         ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
-        uint256 reserveBalance = reserveToken.balanceOf(this);
+        uint256 reserveBalance = getReserveBalance(_reserveToken);
         assert(amount <= reserveBalance); // ensure that the trade won't result in negative reserve
 
         uint256 tokenSupply = token.totalSupply();
         assert(amount < reserveBalance || _sellAmount == tokenSupply); // ensure that the trade will only deplete the reserve if the total supply is depleted as well
-        assert(token.destroy(msg.sender, _sellAmount)); // destroy _sellAmount from the caller in the smart token
+        assert(token.destroy(msg.sender, _sellAmount)); // destroy _sellAmount from the caller's balance in the smart token
         assert(reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
+
+        // update virtual balance if relevant
+        Reserve reserve = reserves[_reserveToken];
+        if (reserve.isVirtualBalanceEnabled)
+            reserve.virtualBalance = safeSub(reserve.virtualBalance, amount);
 
         // if the supply was totally depleted, disconnect from the smart token
         if (_sellAmount == tokenSupply)
             token.setChanger(0x0);
 
-        dispatchChange(this, _reserveToken, msg.sender, _sellAmount, amount);
+        dispatchChange(token, _reserveToken, msg.sender, _sellAmount, amount);
         return amount;
     }
 
