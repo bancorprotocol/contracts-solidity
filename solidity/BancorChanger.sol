@@ -37,7 +37,7 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
     string public version = '0.1';
     SmartTokenInterface public token;               // smart token governed by the changer
     BancorFormula public formula;                   // bancor calculation formula contract
-    bool public isActive = false;                   // true if the change functionality can now be used, false if not
+    bool public isActive = false;                   // true if the change functionality can be used, false if not
     address[] public reserveTokens;                 // ERC20 standard token addresses
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
     uint8 private totalReserveRatio = 0;            // used to prevent increasing the total reserve ratio above 100% efficiently
