@@ -31,7 +31,7 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         uint8 ratio;                    // constant reserve ratio (CRR), 1-100
         bool isVirtualBalanceEnabled;   // true if virtual balance is enabled, false if not
         bool isEnabled;                 // is purchase of the smart token enabled with the reserve, can be set by the owner
-        bool isSet;                     // is the reserve set, used to tell if the mapping element is defined
+        bool isSet;                     // used to tell if the mapping element is defined
     }
 
     string public version = '0.1';
@@ -227,7 +227,7 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
 
     /*
         withdraws tokens from the reserve and sends them to an account
-        can only be called by the changer owner while the changer is inactive
+        can only be called by the changer owner
 
         _reserveToken    reserve token contract address
         _to              account to receive the new amount

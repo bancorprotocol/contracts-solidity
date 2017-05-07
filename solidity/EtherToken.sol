@@ -11,6 +11,7 @@ contract EtherToken is ERC20Token {
 
     // deposit ether in the account
     function deposit() public payable returns (bool success) {
+        require(msg.value > 0);
         balanceOf[msg.sender] = safeAdd(balanceOf[msg.sender], msg.value); // add the value to the account balance
         totalSupply = safeAdd(totalSupply, msg.value); // increase the total supply
         return true;
