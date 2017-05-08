@@ -35,7 +35,7 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
     }
 
     string public version = '0.1';
-    string public type = 'bancor';
+    string public changerType = 'bancor';
 
     SmartTokenInterface public token;               // smart token governed by the changer
     BancorFormula public formula;                   // bancor calculation formula contract
