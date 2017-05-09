@@ -427,6 +427,8 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
     /*
         buys the token with BTCs (Bitcoin Suisse only)
+
+        _contributor    account that should receive the new tokens
     */
     function buyBitcoinSuisse(address _contributor)
         public
@@ -445,7 +447,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
     /*
         handles direct ETH deposits (as opposed to ERC20 contributions)
 
-        _contributor    account that should the new tokens
+        _contributor    account that should receive the new tokens
         _depositAmount  amount contributed by the account, in wei
     */
     function handleETHDeposit(address _contributor, uint256 _depositAmount) private returns (uint256 amount) {
