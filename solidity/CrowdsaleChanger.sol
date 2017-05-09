@@ -125,7 +125,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
     // validates ERC20 token limit
     modifier validERC20TokenLimit(uint16 _limit) {
-        require(_limit > 0 && _limit <= 1000);
+        require(_limit <= 1000);
         _;
     }
 
