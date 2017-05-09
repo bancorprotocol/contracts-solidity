@@ -378,11 +378,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         _amount     amount to change, in fromToken
         _minReturn  if the change results in an amount smaller than the minimum return, it is cancelled
     */
-    function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn)
-        public
-        validERC20Token(_fromToken)
-        returns (uint256 amount)
-    {
+    function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256 amount) {
         require(_toToken == address(token)); // validate input
         return buyERC20(_fromToken, _amount, _minReturn);
     }
