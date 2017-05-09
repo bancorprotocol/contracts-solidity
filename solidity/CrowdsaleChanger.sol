@@ -491,8 +491,9 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         // issue new funds to the contributor in the smart token
         assert(token.issue(_contributor, _return));
 
-        // issued tokens to the beneficiary
-        uint256 amount = safeMul(100, _return) / BENEFICIARY_PERCENTAGE;
+        // issue tokens to the beneficiary
+        uint256 amount = safeMul(100, _return) / (100 - BENEFICIARY_PERCENTAGE);
+        amount -= _return;
         if (amount == 0)
             return;
 
