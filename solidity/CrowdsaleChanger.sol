@@ -8,6 +8,7 @@ import './SafeMath.sol';
     Open issues:
     - all values are placeholders, need to update them with real values
     - verify ERC20 token addresses, transferFrom (must return a boolean flag) and update them with the correct values
+    - might move all the ERC20 tokens to a different contract or do it manually to lower the gas cost and make the crowdsale changer more generic
 */
 
 // interfaces
