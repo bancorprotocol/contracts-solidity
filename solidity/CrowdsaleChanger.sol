@@ -427,6 +427,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
     /*
         buys the token with BTCs (Bitcoin Suisse only)
+        can only be called before the crowdsale started
 
         _contributor    account that should receive the new tokens
     */
