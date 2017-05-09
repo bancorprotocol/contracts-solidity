@@ -493,7 +493,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
         // issue tokens to the beneficiary
         uint256 amount = safeMul(100, _return) / (100 - BENEFICIARY_PERCENTAGE);
-        amount -= _return;
+        amount = safeSub(amount, _return);
         if (amount == 0)
             return;
 
