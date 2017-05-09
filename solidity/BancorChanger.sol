@@ -52,13 +52,15 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         _formula    address of a bancor formula contract
         _events     optional, address of a bancor events contract
     */
-    function BancorChanger(address _token, address _formula, address _events)
+    function BancorChanger(address _token, address _formula, address _events, address _reserveToken, uint8 _reserveRatio)
         BancorEventsDispatcher(_events)
         validAddress(_token)
         validAddress(_formula)
     {
         token = SmartTokenInterface(_token);
         formula = BancorFormula(_formula);
+
+        addReserve(_reserveToken, _reserveRatio, false);
     }
 
     // validates an address - currently only checks that it isn't null
