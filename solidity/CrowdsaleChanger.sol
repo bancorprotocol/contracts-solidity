@@ -6,6 +6,7 @@ import './SafeMath.sol';
 
 /*
     Open issues:
+    - all values are placeholders, need to update them with real values
     - verify ERC20 token addresses, transferFrom (must return a boolean flag) and update them with the correct values
 */
 
@@ -50,8 +51,8 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
     string public version = '0.1';
     string public changerType = 'crowdsale';
 
-    uint256 public startTime = 0;
-    uint256 public endTime = 0;
+    uint256 public startTime = 0;                           // crowdsale start time (in seconds)
+    uint256 public endTime = 0;                             // crowdsale end time (in seconds)
     uint256 public etherContributed = 0;                    // ether contributed so far
     uint256 public tokenReserveBalance = 0;                 // amount of the ether contributed so far that gets into the smart token's reserve, used to calculate the current price
     address public etherToken = 0x0;                        // ether token contract address
