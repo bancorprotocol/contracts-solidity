@@ -256,7 +256,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
     /*
         withdraws tokens from one of the ERC20 tokens and sends them to an account
         can only be called by the changer owner
-        this is a mechanism to allow the owner to return tokens that were sent directly to this contract by mistake
+        this is a safety mechanism that allows the owner to return tokens that were sent directly to this contract by mistake
 
         _erc20Token     ERC20 token contract address
         _to             account to receive the new amount
