@@ -38,7 +38,7 @@ Note that these methods can only be executed by the token owner (if no changer i
 
 **setChanger**
 ```cs
-function setChanger(address _changer) public managerOnly returns (bool success)
+function setChanger(address _changer) public managerOnly
 ```
 Sets or replaces the token changer.
 <br>
