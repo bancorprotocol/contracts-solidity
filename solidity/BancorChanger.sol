@@ -39,7 +39,6 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
 
     SmartTokenInterface public token;               // smart token governed by the changer
     BancorFormula public formula;                   // bancor calculation formula contract
-    bool public isActive = false;                   // true if the change functionality can be used, false if not
     address[] public reserveTokens;                 // ERC20 standard token addresses
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
     uint8 private totalReserveRatio = 0;            // used to prevent increasing the total reserve ratio above 100% efficiently
@@ -87,15 +86,15 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         _;
     }
 
-    // ensures that token changing is active
+    // ensures that token changing is connected to the smart token
     modifier active() {
-        assert(isActive);
+        assert(token.changer() == address(this));
         _;
     }
 
-    // ensures that token changing is not active
+    // ensures that token changing is not conneccted to the smart token
     modifier inactive() {
-        assert(!isActive);
+        assert(token.changer() != address(this));
         _;
     }
 
@@ -257,28 +256,9 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
 
         _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
     */
-    function setTokenChanger(address _changer)
-        public
-        ownerOnly
-    {
+    function setTokenChanger(address _changer) public ownerOnly {
         require(_changer != address(this) && _changer != address(token)); // validate input
         token.setChanger(_changer);
-    }
-
-    /*
-        activates the change logic
-        can only be called by the owner
-        once changing is activated, it cannot be deactivated by the owner anymore
-        activating the change logic also enables transfers in the smart token
-    */
-    function activate()
-        public
-        ownerOnly
-        inactive
-    {
-        assert(token.totalSupply() != 0 && reserveTokens.length > 0); // validate state
-        token.disableTransfers(false);
-        isActive = true;
     }
 
     /*

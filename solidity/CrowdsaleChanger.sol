@@ -60,7 +60,6 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
     address public beneficiary = 0x0;                       // address to receive all contributed ether
     address public bitcoinSuisse = 0x0;                     // bitcoin suisse address
     SmartTokenInterface public token;                       // smart token governed by the changer
-    bool public isActive = false;                           // true if the crowdsale functionality can be used, false if not
     address[] public acceptedTokens;                        // ERC20 standard token addresses
     mapping (address => ERC20TokenData) public tokenData;   // ERC20 token addresses -> ERC20 token data
 
@@ -131,15 +130,15 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         _;
     }
 
-    // ensures that the contract is active
+    // ensures that token changing is connected to the smart token
     modifier active() {
-        assert(isActive);
+        assert(token.changer() == address(this));
         _;
     }
 
-    // ensures that the contract is not active
+    // ensures that token changing is not conneccted to the smart token
     modifier inactive() {
-        assert(!isActive);
+        assert(token.changer() != address(this));
         _;
     }
 
@@ -219,6 +218,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
     /*
         updates one of the ERC20 tokens
         can only be called by the changer owner
+        note that the function can be called during the crowdsale as well, mainly to update the ERC20 token ETH value
 
         _erc20Token     address of the ERC20 token
         _limit          maximum contribution in percentage out of the total ETH raised so far. 1-1000 (10 == 1%), divided by 1000
@@ -281,29 +281,9 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
         _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
     */
-    function setTokenChanger(address _changer)
-        public
-        ownerOnly
-        validAddress(_changer)
-    {
+    function setTokenChanger(address _changer) public ownerOnly {
         require(_changer != address(this) && _changer != address(token)); // validate input
         token.setChanger(_changer);
-    }
-
-    /*
-        activates/deactivates the contract logic
-        can only be called by the owner
-        activating the change logic also disables transfers in the smart token
-        this can also be used as an emergency stop
-
-        _activate   true to activate the contract, false to deactivate it
-    */
-    function activate(bool _activate) public ownerOnly {
-        assert(!_activate || acceptedTokens.length > 0); // validate state
-        if (_activate)
-            token.disableTransfers(true);
-
-        isActive = _activate;
     }
 
     /*
