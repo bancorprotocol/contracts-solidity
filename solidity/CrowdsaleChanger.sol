@@ -14,7 +14,7 @@ import './SafeMath.sol';
 // interfaces
 
 contract EtherToken {
-    function deposit() public payable returns (bool success);
+    function deposit() public payable;
     function transfer(address _to, uint256 _value) public returns (bool success);
 }
 
@@ -167,9 +167,9 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         _;
     }
 
-    // ensures that we didn't reach the ether cap
-    modifier bitcoinSuisseEtherCapNotReached() {
-        assert(etherContributed < BITCOIN_SUISSE_ETHER_CAP);
+    // ensures that we didn't reach the bitcoin suisse ether cap
+    modifier bitcoinSuisseEtherCapNotReached(uint256 _ethContribution) {
+        require(safeAdd(etherContributed, _ethContribution) <= BITCOIN_SUISSE_ETHER_CAP);
         _;
     }
 
@@ -205,7 +205,6 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         inactive
         validAddress(_token)
         validERC20TokenLimit(_limit)
-        returns (bool success)
     {
         require(_token != address(this) && _token != address(token) && !tokenData[_token].isSet && _valueN != 0 && _valueD != 0); // validate input
 
@@ -215,7 +214,6 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         tokenData[_token].isEnabled = true;
         tokenData[_token].isSet = true;
         acceptedTokens.push(_token);
-        return true;
     }
 
     /*
@@ -232,14 +230,12 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         ownerOnly
         validERC20Token(_erc20Token)
         validERC20TokenLimit(_limit)
-        returns (bool success)
     {
         require(_valueN != 0 && _valueD != 0); // validate input
         ERC20TokenData data = tokenData[_erc20Token];
         data.limit = _limit;
         data.valueN = _valueN;
         data.valueD = _valueD;
-        return true;
     }
 
     /*
@@ -271,13 +267,11 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         ownerOnly
         validERC20Token(_erc20Token)
         validAddress(_to)
-        returns (bool success)
     {
         require(_to != address(this) && _to != address(token) && _amount != 0); // validate input
 
         ERC20TokenInterface erc20Token = ERC20TokenInterface(_erc20Token);
         assert(erc20Token.transfer(_to, _amount));
-        return true;
     }
 
     /*
@@ -291,10 +285,9 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         public
         ownerOnly
         validAddress(_changer)
-        returns (bool success)
     {
         require(_changer != address(this) && _changer != address(token)); // validate input
-        return token.setChanger(_changer);
+        token.setChanger(_changer);
     }
 
     /*
@@ -305,14 +298,12 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
         _activate   true to activate the contract, false to deactivate it
     */
-    function activate(bool _activate) public ownerOnly returns (bool success)
-    {
+    function activate(bool _activate) public ownerOnly {
         assert(!_activate || acceptedTokens.length > 0); // validate state
         if (_activate)
             token.disableTransfers(true);
 
         isActive = _activate;
-        return true;
     }
 
     /*
@@ -436,11 +427,10 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         public
         payable
         bitcoinSuisseOnly
-        bitcoinSuisseEtherCapNotReached
+        bitcoinSuisseEtherCapNotReached(msg.value)
         earlierThan(startTime)
         returns (uint256 amount)
     {
-        require(safeAdd(etherContributed, msg.value) <= BITCOIN_SUISSE_ETHER_CAP); // validate input
         amount = handleETHDeposit(_contributor, msg.value);
         dispatchChange(etherToken, token, msg.sender, msg.value, amount);
         return amount;
@@ -458,8 +448,8 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         assert(amount != 0); // ensure the trade gives something in return
 
         EtherToken ethToken = EtherToken(etherToken);
-        assert(ethToken.deposit.value(_depositAmount)()); // transfer the ether to the ether contract
-        assert(ethToken.transfer(beneficiary, _depositAmount)); // transfer the ther to the beneficiary account
+        ethToken.deposit.value(_depositAmount)(); // transfer the ether to the ether contract
+        assert(ethToken.transfer(beneficiary, _depositAmount)); // transfer the ether to the beneficiary account
         handleContribution(_contributor, _depositAmount, amount);
         return amount;
     }
@@ -489,7 +479,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         // update the total contribution amount
         etherContributed = safeAdd(etherContributed, _depositEthValue);
         // issue new funds to the contributor in the smart token
-        assert(token.issue(_contributor, _return));
+        token.issue(_contributor, _return);
 
         // issue tokens to the beneficiary
         uint256 amount = safeMul(100, _return) / (100 - BENEFICIARY_PERCENTAGE);
@@ -497,7 +487,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         if (amount == 0)
             return;
 
-        assert(token.issue(beneficiary, amount));
+        token.issue(beneficiary, amount);
     }
 
     // utility

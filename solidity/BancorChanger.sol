@@ -137,7 +137,6 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         inactive
         validAddress(_token)
         validReserveRatio(_ratio)
-        returns (bool success)
     {
         require(_token != address(this) && _token != address(token) && !reserves[_token].isSet && totalReserveRatio + _ratio <= 100); // validate input
 
@@ -148,7 +147,6 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         reserves[_token].isSet = true;
         reserveTokens.push(_token);
         totalReserveRatio += _ratio;
-        return true;
     }
 
     /*
@@ -165,7 +163,6 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         ownerOnly
         validReserve(_reserveToken)
         validReserveRatio(_ratio)
-        returns (bool success)
     {
         Reserve reserve = reserves[_reserveToken];
         require(totalReserveRatio - reserve.ratio + _ratio <= 100); // validate input
@@ -174,7 +171,6 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         reserve.ratio = _ratio;
         reserve.isVirtualBalanceEnabled = _enableVirtualBalance;
         reserve.virtualBalance = _virtualBalance;
-        return true;
     }
 
     /*
@@ -215,8 +211,8 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         _to         account to receive the new amount
         _amount     amount to increase the supply by
     */
-    function issueToken(address _to, uint256 _amount) public ownerOnly returns (bool success) {
-        return token.issue(_to, _amount);
+    function issueToken(address _to, uint256 _amount) public ownerOnly {
+        token.issue(_to, _amount);
     }
 
     /*
@@ -225,8 +221,8 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         _from       account to remove the new amount from
         _amount     amount to decrease the supply by
     */
-    function destroyToken(address _from, uint256 _amount) public ownerOnly returns (bool success) {
-        return token.destroy(_from, _amount);
+    function destroyToken(address _from, uint256 _amount) public ownerOnly {
+        token.destroy(_from, _amount);
     }
 
     /*
@@ -242,7 +238,6 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         ownerOnly
         validReserve(_reserveToken)
         validAddress(_to)
-        returns (bool success)
     {
         require(_to != address(this) && _to != address(token) && _amount != 0); // validate input
 
@@ -253,8 +248,6 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         Reserve reserve = reserves[_reserveToken];
         if (reserve.isVirtualBalanceEnabled)
             reserve.virtualBalance = safeSub(reserve.virtualBalance, _amount);
-
-        return true;
     }
 
     /*
@@ -267,11 +260,9 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
     function setTokenChanger(address _changer)
         public
         ownerOnly
-        validAddress(_changer)
-        returns (bool success)
     {
         require(_changer != address(this) && _changer != address(token)); // validate input
-        return token.setChanger(_changer);
+        token.setChanger(_changer);
     }
 
     /*
@@ -284,12 +275,10 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         public
         ownerOnly
         inactive
-        returns (bool success)
     {
         assert(token.totalSupply() != 0 && reserveTokens.length > 0); // validate state
         token.disableTransfers(false);
         isActive = true;
-        return true;
     }
 
     /*
@@ -412,7 +401,7 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
 
         ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         assert(reserveToken.transferFrom(msg.sender, this, _depositAmount)); // transfer _depositAmount funds from the caller in the reserve token
-        assert(token.issue(msg.sender, amount)); // issue new funds to the caller in the smart token
+        token.issue(msg.sender, amount); // issue new funds to the caller in the smart token
 
         dispatchChange(_reserveToken, token, msg.sender, _depositAmount, amount);
         return amount;
@@ -435,7 +424,7 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
 
         uint256 tokenSupply = token.totalSupply();
         assert(amount < reserveBalance || _sellAmount == tokenSupply); // ensure that the trade will only deplete the reserve if the total supply is depleted as well
-        assert(token.destroy(msg.sender, _sellAmount)); // destroy _sellAmount from the caller's balance in the smart token
+        token.destroy(msg.sender, _sellAmount); // destroy _sellAmount from the caller's balance in the smart token
         assert(reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
 
         // update virtual balance if relevant

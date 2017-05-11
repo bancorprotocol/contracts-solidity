@@ -19,9 +19,8 @@ contract BancorEventsDispatcher is Owned {
         replaces the events contract with a new one
         can only be called by the owner
     */
-    function setEvents(address _events) public ownerOnly returns (bool success) {
+    function setEvents(address _events) public ownerOnly {
         require(_events != address(events));
         events = BancorEventsInterface(_events);
-        return true;
     }
 }

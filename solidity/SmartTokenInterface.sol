@@ -9,7 +9,7 @@ contract SmartTokenInterface is ERC20TokenInterface {
     function changer() public constant returns (address changer) {}
 
     function disableTransfers(bool _disable) public;
-    function issue(address _to, uint256 _amount) public returns (bool success);
-    function destroy(address _from, uint256 _amount) public returns (bool success);
-    function setChanger(address _changer) public returns (bool success);
+    function issue(address _to, uint256 _amount) public;
+    function destroy(address _from, uint256 _amount) public;
+    function setChanger(address _changer) public;
 }

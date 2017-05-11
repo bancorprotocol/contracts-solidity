@@ -88,13 +88,11 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
         public
         controllerOnly
         validAddress(_to)
-        returns (bool success)
     {
         require(_to != address(this) && _amount != 0); // validate input
         totalSupply = safeAdd(totalSupply, _amount);
         balanceOf[_to] = safeAdd(balanceOf[_to], _amount);
         dispatchTransfer(this, _to, _amount);
-        return true;
     }
 
     /*
@@ -108,13 +106,11 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
         public
         controllerOnly
         validAddress(_from)
-        returns (bool success)
     {
         require(_from != address(this) && _amount != 0); // validate input
         balanceOf[_from] = safeSub(balanceOf[_from], _amount);
         totalSupply = safeSub(totalSupply, _amount);
         dispatchTransfer(_from, this, _amount);
-        return true;
     }
 
     /*
@@ -124,12 +120,11 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
 
         _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
     */
-    function setChanger(address _changer) public controllerOnly returns (bool success) {
+    function setChanger(address _changer) public controllerOnly {
         require(_changer != changer);
         address prevChanger = changer;
         changer = _changer;
         dispatchChangerUpdate(prevChanger, changer);
-        return true;
     }
 
     // ERC20 standard method overrides with some extra functionality
