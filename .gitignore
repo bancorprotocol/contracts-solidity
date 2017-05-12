@@ -2,6 +2,3 @@
 .vscode
 node_modules
 npm-debug.log
-
-# Ignore build files
-build
