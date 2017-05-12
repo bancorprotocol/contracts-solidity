@@ -3,5 +3,8 @@
   "version": "0.0.1",
   "engines": {
     "npm": "^3.0.0"
+  },
+  "dependencies": {
+    "bignumber": "^1.1.0"
   }
 }
