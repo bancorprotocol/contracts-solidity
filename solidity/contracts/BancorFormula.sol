@@ -46,7 +46,7 @@ contract BancorFormula is SafeMath {
         given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
 
         Formula:
-        Return = Reserve Balance * (1 - (1 - Sell Amount / Supply) ^ (1 / Reserve Ratio) - 1)
+        Return = Reserve Balance * (1 - (1 - Sell Amount / Supply) ^ (1 / Reserve Ratio))
 
         _supply             token total supply
         _reserveBalance     total reserve
