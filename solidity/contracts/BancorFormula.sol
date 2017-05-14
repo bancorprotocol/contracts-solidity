@@ -34,18 +34,19 @@ contract BancorFormula is SafeMath {
         // special case if the CRR = 100
         if (_reserveRatio == 100) {
             amount = safeMul(_supply, baseN) / _reserveBalance;
-            assert(amount >= _supply);
-            return amount - _supply;
+            return safeSub(amount, _supply); 
         }
 
         var (resN, resD) = power(baseN, _reserveBalance, _reserveRatio, 100);
         uint256 amount = safeMul(_supply, resN) / resD;
-        assert(amount >= _supply);
-        return amount - _supply;
+        return safeSub(amount, _supply);
     }
 
     /*
         given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
+
+        Formula:
+        Return = Reserve Balance * (1 - (1 - Sell Amount / Supply) ^ (1 / Reserve Ratio) - 1)
 
         _supply             token total supply
         _reserveBalance     total reserve
@@ -54,21 +55,18 @@ contract BancorFormula is SafeMath {
     */
     function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
         // validate input
-        require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _sellAmount != 0);
-        uint256 baseN = safeAdd(_sellAmount, _supply);
+        require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _sellAmount != 0 && _sellAmount <= _supply);
+        uint256 baseN = safeSub(_supply, _sellAmount);
 
         // special case if the CRR = 100
         if (_reserveRatio == 100) {
             amount = safeMul(_reserveBalance, baseN) / _supply;
-            assert(amount >= _reserveBalance);
-            return amount - _reserveBalance; 
+            return safeSub(_reserveBalance, amount); 
         }
 
-        var (resN, resD) = power(baseN, _supply, 100, _reserveRatio);
-        uint256 amount = safeMul(_reserveBalance, resN) / resD ;
-        assert(amount >= _reserveBalance);
-        return amount - _reserveBalance; 
-
+        var (resN, resD) = power(_supply, baseN, 100, _reserveRatio);
+        uint256 amount = safeMul(_reserveBalance, resD) / resN;
+        return safeSub(_reserveBalance, amount);
     }
 
     /**
@@ -92,8 +90,8 @@ contract BancorFormula is SafeMath {
     
     /**
         input range: 
-            - numerator: [1,uint256_max >> PRECISION]    
-            - denominator: [1,uint256_max >> PRECISION]
+            - numerator: [1, uint256_max >> PRECISION]    
+            - denominator: [1, uint256_max >> PRECISION]
         output range:
             [0, 0x9b43d4f8d6]
 
