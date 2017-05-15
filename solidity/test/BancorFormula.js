@@ -37,7 +37,7 @@ contract('BancorFormula', function(accounts){
         var ok = _hex('0x386bfdba2a');
         return instance.fixedExp.call(ok);
       }).then(function(retval) { 
-        assert(false, "testThrow was supposed to throw but didn't.");
+        assert(false,"was supposed to throw but didn't.");
     }).catch(expectedThrow);
   });
 
@@ -89,12 +89,18 @@ contract('BancorFormula', function(accounts){
       });
     }
 
-  testdata.purchaseReturnsErrors.forEach(purchaseTest);
+//  testdata.purchaseReturnsErrors.forEach(purchaseTest);
   testdata.purchaseReturns.forEach(purchaseTest);
-  testdata.randomPurchaseReturns.forEach(purchaseTest);
-  testdata.randomPurchaseReturns2.forEach(purchaseTest);
   testdata.saleReturns.forEach(saleTest);
+  
+  testdata.purchaseReturnsLarge.forEach(purchaseTest);
+  testdata.saleReturnsLarge.forEach(purchaseTest);
+
+  testdata.randomPurchaseReturns.forEach(purchaseTest);
+
   testdata.randomSaleReturns.forEach(saleTest);
-  testdata.randomSaleReturns2.forEach(saleTest);
+
+//  testdata.randomSaleReturns2.forEach(saleTest);
+//  testdata.randomPurchaseReturns2.forEach(purchaseTest);
   
 });
