@@ -27,6 +27,12 @@ contract ERC20Token is ERC20TokenInterface, SafeMath {
         _;
     }
 
+    // verifies that a transfer value is non zero
+    modifier validValid(uint256 _value) {
+        require(_value != 0);
+        _;
+    }
+
     /*
         send coins
         note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
@@ -34,6 +40,7 @@ contract ERC20Token is ERC20TokenInterface, SafeMath {
     function transfer(address _to, uint256 _value)
         public
         validAddress(_to)
+        validValid(_value)
         returns (bool success)
     {
         balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _value);
@@ -50,6 +57,7 @@ contract ERC20Token is ERC20TokenInterface, SafeMath {
         public
         validAddress(_from)
         validAddress(_to)
+        validValid(_value)
         returns (bool success)
     {
         allowance[_from][msg.sender] = safeSub(allowance[_from][msg.sender], _value);
