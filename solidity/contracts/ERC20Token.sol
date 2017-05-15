@@ -27,9 +27,9 @@ contract ERC20Token is ERC20TokenInterface, SafeMath {
         _;
     }
 
-    // verifies that a transfer value is non zero
+    // verifies that a transfer value is greater than zero
     modifier validValue(uint256 _value) {
-        require(_value != 0);
+        require(_value > 0);
         _;
     }
 
