@@ -40,12 +40,11 @@ contract('ERC20Token', (accounts) => {
 
         try {
             await token.transfer(accounts[1], 500);
+            assert(false, "didn't throw");
         }
         catch (error) {
             return utils.ensureException(error);
         }
-
-        assert(false, "didn't thrown");
     });
 
     it('should throw when attempting to transfer to an invalid address', async () => {
@@ -53,12 +52,11 @@ contract('ERC20Token', (accounts) => {
 
         try {
             await token.transfer(invalidAccount, 10);
+            assert(false, "didn't throw");
         }
         catch (error) {
             return utils.ensureException(error);
         }
-
-        assert(false, "didn't thrown");
     });
 
     it('verifies the allowance after an approval', async () => {
@@ -79,12 +77,11 @@ contract('ERC20Token', (accounts) => {
 
         try {
             await token.approve(invalidAccount, 10);
+            assert(false, "didn't throw");
         }
         catch (error) {
             return utils.ensureException(error);
         }
-
-        assert(false, "didn't thrown");
     });
 
     it('verifies the balances after transferring from another account', async () => {
@@ -121,12 +118,11 @@ contract('ERC20Token', (accounts) => {
 
         try {
             await token.transferFrom(accounts[0], accounts[2], 200, { from: accounts[1] });
+            assert(false, "didn't throw");
         }
         catch (error) {
             return utils.ensureException(error);
         }
-
-        assert(false, "didn't thrown");
     });
 
     it('should throw when attempting to transfer from an invalid account', async () => {
@@ -135,12 +131,11 @@ contract('ERC20Token', (accounts) => {
 
         try {
             await token.transferFrom(invalidAccount, accounts[2], 50, { from: accounts[1] });
+            assert(false, "didn't throw");
         }
         catch (error) {
             return utils.ensureException(error);
         }
-
-        assert(false, "didn't thrown");
     });
 
     it('should throw when attempting to transfer from to an invalid account', async () => {
@@ -149,11 +144,10 @@ contract('ERC20Token', (accounts) => {
 
         try {
             await token.transferFrom(accounts[0], invalidAccount, 50, { from: accounts[1] });
+            assert(false, "didn't throw");
         }
         catch (error) {
             return utils.ensureException(error);
         }
-
-        assert(false, "didn't thrown");
     });
 });
