@@ -1,5 +1,89 @@
 import analysis as formula
 import random,math
+
+def generateTestData():
+    """ Generates some basic scenarios"""
+
+    S = 300000.0
+    R = 63000.0
+    F= 21
+
+    print("module.exports.purchaseReturns= [")
+    for i in range(1, 1000,2):
+        E = float(i * i) # Goes up to 1 million ether 
+        T = formula.calculatePurchaseReturn(S,R,F,E)
+        print("\t[%d,%d,%d,%d,%d, %f]," % ( int(S), int(R), F, int(E),math.floor(T), T ))
+    print("];")
+    
+    print("module.exports.saleReturns = [")
+    for i in range(1, 1000,2):
+        T = float(i * i) # Goes up to 1 million tokens
+        E = formula.calculateSaleReturn(S,R,F,T)
+        print("\t[%d,%d,%d,%d,%d, %f]," % ( int(S), int(R), F, int(T),math.floor(E), E ))
+    print("];")
+
+def generateTestDataLargeNumbers():
+    """ Generates some basic scenarios"""
+    M = 1000000000000000000000000000L
+
+    S = 300000L * M
+    R = 63000L * M
+    F= 21
+
+    print("module.exports.purchaseReturnsLarge= [")
+    for i in range(1, 1000,2):
+        E = long(i)*long(i)*M # Goes up to 1 million ether 
+        T = formula.calculatePurchaseReturn(S,R,F,E)
+        print("\t[%d,%d,%d,%d,%d, %f]," % ( int(S), int(R), F, int(E),math.floor(T), T ))
+    print("];")
+    
+    print("module.exports.saleReturnsLarge = [")
+    for i in range(1, 1000,2):
+        T = long(i)*long(i)*M # Goes up to 1 million tokens
+        E = formula.calculateSaleReturn(S,R,F,T)
+        print("\t[%d,%d,%d,%d,%d, %f]," % ( int(S), int(R),F, int(T),math.floor(E), E ))
+    print("];")
+
+
+def generateRandomTestData():
+    M = 1000000000000000000000000000L
+
+    print("module.exports.randomPurchaseReturns = [")
+    for i in range(1, 100):
+        S = float(random.randint(1e6, 3e6))
+        F = random.randint(1, 100 )
+        R = math.floor(F*S / 100)
+        E = float(random.randint(700, 300000))
+
+        lS = long(S) * M
+        lR = long(R) * M
+        lE = long(E) * M
+
+        T = formula.calculatePurchaseReturn(S,R,float(F),E)
+        lT = formula.calculatePurchaseReturn(lS,lR,float(F),lE)
+        print("\t[%d,%d,%d,%d,%d, %f]," % ( int(S), int(R), int(F), int(E),math.floor(T), T ))
+        print("\t[%d,%d,%d,%d,%d, %f]," % ( lS, lR, F, lE ,math.floor(lT), lT ))
+    print("];")
+
+    print("module.exports.randomSaleReturns = [")
+    for i in range(1, 100):
+        S = float(random.randint(1e6, 3e6))
+        F = random.randint(1, 100 )
+        R = math.floor(F*S / 100)
+        T = float(random.randint(700, 300000))
+
+        lS = long(S) * M
+        lR = long(R) * M
+        lT = long(T) * M
+
+        E = formula.calculateSaleReturn(S,R,float(F),T)
+        lE = formula.calculateSaleReturn(lS,lR,float(F),lT)
+        print("\t[%d,%d,%d,%d,%d, %f]," % ( int(S), int(R), F, int(T),math.floor(E), E ))
+        print("\t[%d,%d,%d,%d,%d, %f]," % ( lS, lR, F, lT,math.floor(lE), lE ))
+    print("];")
+
+
+
 def generateRandomTestData2():
     purchaseResults = []
 
@@ -74,6 +158,24 @@ def testCornercase():
 
     print "Min buy  unit", formula.calcPurchaseMin(95289326501151232L)
     print "Min sale unit", formula.calcSaleMin(7623146120092099L)
+
+def testCornercase2():
+    S = 300000e18
+    R = 63000e18
+    F = 21
+
+    tokens = 1e18 # 99 995 476 193 726 0661
+
+    while True:
+        wei = formula.calculateSaleReturnSolidity(S,R,F,tokens)
+        correct_wei = formula.calculateSaleReturn(S,R,F,tokens)
+        print "%f => %f error" % (tokens , (correct_wei - wei))
+        if(correct_wei < wei):
+            print("Diff %d wei" % (correct_wei - wei) )
+        tokens = tokens+1e10
+
+    print "Market"
+    print m
 
 #def testContinuousPurchase():
 #
@@ -174,14 +276,26 @@ def testLog2():
     log2(0x20416d8b9f09d345031eb56b29f53708324b2232b812bc84a0c3e740921d1b62L) error: 0.371572 nanopercent
     """
 
+M = 1000000000000000000L
+(S,R,F,T) = (300000*M, 63000*M, 21, 1*M)
+formula.verbose = True
+a = formula.calculateSaleReturnSolidity(S,R,F,T)
+b = formula.calculateSaleReturn(S,R,F,T)
+print(a,b,a-b)
+#generateTestData()
+#generateTestDataLargeNumbers()
+#generateRandomTestData()
+
+
+
 #generateRandomTestData2()
-testPrecisionLimits()
-testCornercase()
+#testPrecisionLimits()
+#testCornercase2()
 #testLimits(formula.fixedExp)
 #testLimits(formula.fixedLog2)
 #testLog2()
 #calculateFactorials()
-print(formula.fixedLog2(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffL))
-print(formula.fixedLog2(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffL-1))
-print(formula.fixedLog2(0x100000001))
-print("done")
+#print(formula.fixedLog2(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffL))
+#print(formula.fixedLog2(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffL-1))
+#print(formula.fixedLog2(0x100000001))
+#print("done")
