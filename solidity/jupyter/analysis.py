@@ -1,20 +1,27 @@
 import math,sys
 
 def calculatePurchaseReturn(S,R,F,E):
-    return float(S) * ( math.pow(1.0 + float(E)/float(R), float(F)/100.0) - 1.0 )
+    return S * ( math.pow(1.0 + float(E)/float(R), float(F)/100.0) - 1.0 )
         
 def calculateSaleReturn(S,R,F,T):
-    return float(R) * ( math.pow((1.0+float(T)/long(S)) ,(100.0/F)) -1.0 )
+    """ 
+    E = R(1 - ((1 - T / S) ^ (1 / F))
+     """
+    if (T > S):
+        return 0
+    return R * ( 1.0 - math.pow(float(S-T)/float(S) , (100.0/F)))
 # These functions mimic the EVM-implementation
+
+verbose = False
 
 PRECISION = 32;  # fractional bits
 uint128 = lambda x : int(int(x) & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
          
 
 def uint256(x):
-    r = int(x) & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFL
-    if x > r:
-        raise Exception("Loss of number!")
+    r = int(x) & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    if x > 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:
+        raise Exception("Loss of number! %s" % str(x))
     return r
 
 def return_uint256(func):
@@ -25,17 +32,17 @@ def return_uint256(func):
 
 @return_uint256
 def ln(_numerator, _denominator):
-    print("  -> ln(numerator = %s  , denominator = %s)"  % (hex(_numerator) , hex(_denominator)))
+    if verbose:
+        print("  -> ln(numerator = %s  , denominator = %s)"  % (hex(_numerator) , hex(_denominator)))
     a = fixedLoge(_numerator << PRECISION)
     b = fixedLoge(_denominator << PRECISION)
-    print("  <- ln(numerator = %s  , denominator = %s) : %d"  % (hex(_numerator) , hex(_denominator), (a-b)))
-#    print("=> %d - %d == %d" % (a , b, (a-b)))
+    if verbose:
+        print("  <- ln(numerator = %s  , denominator = %s) : %d"  % (hex(_numerator) , hex(_denominator), (a-b)))
     return a - b
 
 
 @return_uint256
 def fixedLoge(_x) :
-#    print("fixedLoge(  %s )"  % hex(_x))
     x = uint256(_x)
     log2 = fixedLog2(_x)
     logE = (log2 * 0xb17217f7d1cf78) >> 56;
@@ -44,7 +51,7 @@ def fixedLoge(_x) :
 
 @return_uint256
 def fixedLog2( _ix) :
-#    print("fixedLog2(  %s )"  % hex(_ix))
+
     _x = uint256(_ix)
 
     fixedOne = uint256(1 << PRECISION);# 0x100000000	
@@ -67,17 +74,15 @@ def fixedLog2( _ix) :
     
     if lo > hi:
         raise Exception("Underflow, hi < lo: %d < %d at (%d) " % (hi,lo, _ix))
-    #print "Correct: %s" % int(math.log(_ix >> PRECISION,2) * 0x100000000)
-    #print("fixedLog2(%s << 32  ) => %f => %d" % (hex(_ix >> PRECISION), (hi-lo), math.floor(hi - lo)))
-    #print("Returns: %s" % int(math.floor(hi - lo)))
     return uint256(math.floor(hi - lo))
 
 
 @return_uint256
 def fixedExp(_x):
+    _x = uint256(_x)
+    if verbose:
+        print("  -> fixedExp(  %d )"  % _x)
 
-    print("  -> fixedExp(  %d )"  % _x)
-#    print("fixedExp(  %s )"  % hex(int(_x)))
     if _x > 0x386bfdba29: 
         raise Exception("Overflow")
 
@@ -85,7 +90,8 @@ def fixedExp(_x):
     fixedOne = uint256(1) << PRECISION;
 
     if _x == 0:
-        print("  <- fixedExp(  %d ): %s"  % (_x, hex(fixedOne)))
+        if verbose:
+            print("  <- fixedExp(  %d ): %s"  % (_x, hex(fixedOne)))
         return fixedOne
 
 
@@ -161,7 +167,8 @@ def fixedExp(_x):
 
     res  = res / 0xde1bc4d19efcac82445da75b00000000;
     
-    print("  <- fixedExp(  %d ): %s"  % (_x, hex(res)))
+    if verbose:
+        print("  <- fixedExp(  %d ): %s"  % (_x, hex(res)))
     return res
 
 @return_uint256
@@ -187,14 +194,17 @@ def fixedExpOld( _x) :
 
 
 def power(_baseN,_baseD, _expN, _expD):
-    print(" -> power(baseN = %d, baseD = %d, expN = %d, expD = %d) " % (_baseN, _baseD, _expN, _expD ))
+    if verbose:
+        print(" -> power(baseN = %d, baseD = %d, expN = %d, expD = %d) " % (_baseN, _baseD, _expN, _expD ))
     x_ln = uint256(ln(_baseN, _baseD))
     _expD = uint256(_expD)
     _ln = x_ln
     abc = uint256(uint256(_ln * _expN) / _expD)
-    print(" ln [%d] * expN[%d] / expD[%d] : %d" % ( _ln, _expN ,  _expD, abc))
+    if verbose:
+        print(" ln [%d] * expN[%d] / expD[%d] : %d" % ( _ln, _expN ,  _expD, abc))
     res = fixedExp(abc)
-    print(" <- power(baseN = %d, baseD = %d, expN = %d, expD = %d) : %s" % (_baseN, _baseD, _expN, _expD ,hex(res)))
+    if verbose:
+        print(" <- power(baseN = %d, baseD = %d, expN = %d, expD = %d) : %s" % (_baseN, _baseD, _expN, _expD ,hex(res)))
     return (res, 1 << PRECISION);
 
 
@@ -221,7 +231,7 @@ def calculatePurchaseReturnSolidity(S,R,F,E):
 
 def calcPurchaseMin(S):
     _supply = uint256(S)
-    print _supply * 0x100000001/0x100000000 -_supply
+    print (_supply * 0x100000001/0x100000000 -_supply)
 
 def calcSaleMin(R):
     _reserveBalance = uint256(R)
@@ -236,13 +246,20 @@ def calculateSaleReturnSolidity(S, R, F,  T):
     _reserveRatio = uint256(F)
     _sellAmount = uint256(T)
  
+    if ( _supply < _sellAmount):
+        raise Exception("Supply < Tokens")
 
-    (resN, resD) = power(uint128(_sellAmount + _supply), uint128(_supply), 100, _reserveRatio);
+    _baseN = _supply - _sellAmount
+
+    (resN, resD) = power(_supply, _baseN, 100, _reserveRatio);
     resN = uint256(resN)
     resD = uint256(resD)
-    result = (_reserveBalance * resN / resD) - _reserveBalance
 
-    print(" rbal[%d] * resN[%d] / resD[%d] - rbal[%d] = %d " %
+    amount = uint256(_reserveBalance * resD) / resN
+    result = _reserveBalance - amount
+    
+    if verbose:
+        print(" rbal[%d] * resN[%d] / resD[%d] - rbal[%d] = %d " %
         (_reserveBalance, resN, resD, _reserveBalance, result))
 
     return result 
@@ -255,7 +272,7 @@ def calculateFactorials():
     ITERATIONS = 34
     for n in range( 1,  ITERATIONS,1 ) :
         ni.append(math.floor(ni[n - 1] / n))
-    print "\n        ".join(["xi = (xi * _x) >> PRECISION;\n        res += xi * %s;" % hex(int(x)) for x in ni])
+    print( "\n        ".join(["xi = (xi * _x) >> PRECISION;\n        res += xi * %s;" % hex(int(x)) for x in ni]))
 
 
 class Market():
