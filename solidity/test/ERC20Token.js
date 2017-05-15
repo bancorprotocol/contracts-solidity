@@ -29,6 +29,12 @@ contract('ERC20Token', (accounts) => {
         assert.equal(balance, 500);
     });
 
+    it('verifies that a transfer fires a Transfer event', async () => {
+        let token = await TestERC20Token.new('Token1', 'TKN1', 10000);
+        let res = await token.transfer(accounts[1], 500);
+        assert(res.logs.length > 0 && res.logs[0].event == 'Transfer');
+    });
+
     it('should throw when attempting to transfer more than the balance', async () => {
         let token = await TestERC20Token.new('Token1', 'TKN1', 100);
 
@@ -62,6 +68,12 @@ contract('ERC20Token', (accounts) => {
         assert.equal(allowance, 500);
     });
 
+    it('verifies that an approval fires an Approval event', async () => {
+        let token = await TestERC20Token.new('Token1', 'TKN1', 10000);
+        let res = await token.approve(accounts[1], 500);
+        assert(res.logs.length > 0 && res.logs[0].event == 'Approval');
+    });
+
     it('should throw when attempting to define allowance for an invalid address', async () => {
         let token = await TestERC20Token.new('Token1', 'TKN1', 100);
 
@@ -86,6 +98,13 @@ contract('ERC20Token', (accounts) => {
         assert.equal(balance, 0);
         balance = await token.balanceOf.call(accounts[2]);
         assert.equal(balance, 50);
+    });
+
+    it('verifies that transferring from another account fires a Transfer event', async () => {
+        let token = await TestERC20Token.new('Token1', 'TKN1', 1000);
+        await token.approve(accounts[1], 500);
+        let res = await token.transferFrom(accounts[0], accounts[2], 50, { from: accounts[1] });
+        assert(res.logs.length > 0 && res.logs[0].event == 'Transfer');
     });
 
     it('verifies the new allowance after transferring from another account', async () => {
