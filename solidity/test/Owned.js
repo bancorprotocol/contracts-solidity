@@ -31,7 +31,7 @@ contract('Owned', (accounts) => {
         await contract.setOwner(accounts[1]);
         await contract.acceptOwnership({ from: accounts[1] });
         let newOwner = await contract.newOwner.call();
-        assert.equal(web3.toBigNumber(newOwner).toNumber(), 0);
+        assert.equal(newOwner, utils.zeroAddress);
     });
 
     it('verifies that no ownership transfer takes places before the new owner accepted it', async () => {
@@ -58,6 +58,6 @@ contract('Owned', (accounts) => {
         await contract.setOwner(accounts[1]);
         await contract.setOwner('0x0');
         let newOwner = await contract.newOwner.call();
-        assert.equal(web3.toBigNumber(newOwner).toNumber(), 0);
+        assert.equal(newOwner, utils.zeroAddress);
     });
 });
