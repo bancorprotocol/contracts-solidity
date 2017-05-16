@@ -2,7 +2,7 @@
 /* eslint-disable prefer-reflect */
 
 const TestSafeMath = artifacts.require('TestSafeMath.sol');
-const utils = require('./Utils');
+const utils = require('./helpers/Utils');
 
 contract('SafeMath', () => {
     it('verifies successful addition', async () => {

@@ -2,7 +2,7 @@
 /* eslint-disable prefer-reflect */
 
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
-const utils = require('./Utils');
+const utils = require('./helpers/Utils');
 
 const invalidAccount = '0x0';
 

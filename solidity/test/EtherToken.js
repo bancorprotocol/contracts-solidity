@@ -2,7 +2,7 @@
 /* eslint-disable prefer-reflect */
 
 const EtherToken = artifacts.require('EtherToken.sol');
-const utils = require('./Utils');
+const utils = require('./helpers/Utils');
 
 contract('EtherToken', (accounts) => {
     it('verifies the token name after construction', async () => {

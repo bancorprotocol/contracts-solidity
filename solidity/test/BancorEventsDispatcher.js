@@ -2,7 +2,7 @@
 /* eslint-disable prefer-reflect */
 
 const BancorEventsDispatcher = artifacts.require('BancorEventsDispatcher.sol');
-const utils = require('./Utils');
+const utils = require('./helpers/Utils');
 
 const eventsAddress1 = '0x32f0f93396f0865d7ce412695beb3c3ad9ccca75';
 const eventsAddress2 = '0x3f1a081f8b6093f480cb789f99903da4e87afaa1';

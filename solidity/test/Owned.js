@@ -2,7 +2,7 @@
 /* eslint-disable prefer-reflect */
 
 const Owned = artifacts.require('Owned.sol');
-const utils = require('./Utils');
+const utils = require('./helpers/Utils');
 
 contract('Owned', (accounts) => {
     it('verifies the owner after construction', async () => {
