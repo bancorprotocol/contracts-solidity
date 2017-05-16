@@ -8,6 +8,7 @@ import './SafeMath.sol';
     Open issues:
     - add miner abuse protection
     - assumes that the reserve tokens either return true for transfer/transferFrom or throw - possibly remove the reliance on the return value
+    - possibly support ERC223 standard for reserve tokens
 */
 
 // interfaces

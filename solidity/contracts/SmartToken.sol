@@ -4,6 +4,11 @@ import './ERC20Token.sol';
 import './SmartTokenInterface.sol';
 
 /*
+    Open issues:
+    - possibly implement ERC223 standard
+*/
+
+/*
     Smart Token v0.1
 */
 contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
