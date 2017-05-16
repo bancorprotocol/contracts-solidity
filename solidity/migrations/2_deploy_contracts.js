@@ -7,12 +7,14 @@ const BancorEventsDispatcher = artifacts.require('BancorEventsDispatcher.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const ERC20Token = artifacts.require('ERC20Token.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
+const SmartToken = artifacts.require('SmartToken.sol');
 
 module.exports = (deployer) => {
     deployer.deploy(SafeMath);
     deployer.deploy(Owned);
-    deployer.deploy(BancorEventsDispatcher);
+    deployer.deploy(BancorEventsDispatcher, '0x0');
     deployer.deploy(BancorFormula);
     deployer.deploy(ERC20Token, 'DummyToken', 'DUM');
     deployer.deploy(EtherToken);
+    deployer.deploy(SmartToken, 'Token1', 'TKN1', 2, '0x0');
 };

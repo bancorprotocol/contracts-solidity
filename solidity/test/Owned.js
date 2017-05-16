@@ -1,4 +1,4 @@
-/* global artifacts, contract, it, assert, web3 */
+/* global artifacts, contract, it, assert */
 /* eslint-disable prefer-reflect */
 
 const Owned = artifacts.require('Owned.sol');
