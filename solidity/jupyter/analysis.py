@@ -218,13 +218,22 @@ def calculatePurchaseReturnSolidity(S,R,F,E):
     _reserveRatio = uint256(F)
     _depositAmount = uint256(E)
 
+    baseN = uint256(_depositAmount + _reserveBalance);
+
+
+    if _reserveRatio == 100:
+        amount = uint256(_supply - baseN) / _reserveBalance
+        if amount < _supply: 
+            raise Exception("Error, amount < supply")
+        return amount - _supply
     
-    (resN, resD) = power(uint128(_depositAmount + _reserveBalance), uint128(_reserveBalance), _reserveRatio, 100);
+    (resN, resD) = power(baseN, _reserveBalance, _reserveRatio, 100);
+
 
     result =  (_supply * resN / resD) - _supply
-
-    print(" supply[%d] * resN[%d] / resD[%d] - supply[%d] = %d " %
-        (_supply, resN, resD, _supply, result))
+    if verbose:
+        print(" supply[%d] * resN[%d] / resD[%d] - supply[%d] = %d " %
+            (_supply, resN, resD, _supply, result))
 
     
     return result
@@ -250,6 +259,15 @@ def calculateSaleReturnSolidity(S, R, F,  T):
         raise Exception("Supply < Tokens")
 
     _baseN = _supply - _sellAmount
+
+    if _reserveRatio == 100:
+        amount = uint256(_reserveBalance * _baseN ) / _supply
+        if _reserveBalance < amount:
+            raise Exception("_reservebalance < amount")
+
+        return _reserveBalance - amount
+
+
 
     (resN, resD) = power(_supply, _baseN, 100, _reserveRatio);
     resN = uint256(resN)
