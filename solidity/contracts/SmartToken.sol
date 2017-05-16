@@ -38,7 +38,7 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
     }
 
     // verifies that a value is greater than zero
-    modifier validValue(uint256 _value) {
+    modifier validAmount(uint256 _value) {
         require(_value > 0);
         _;
     }
@@ -95,7 +95,7 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
         public
         controllerOnly
         validAddress(_to)
-        validValue(_amount)
+        validAmount(_amount)
     {
         require(_to != address(this)); // validate input
         totalSupply = safeAdd(totalSupply, _amount);
@@ -113,7 +113,7 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
     function destroy(address _from, uint256 _amount)
         public
         controllerOnly
-        validValue(_amount)
+        validAmount(_amount)
     {
         balanceOf[_from] = safeSub(balanceOf[_from], _amount);
         totalSupply = safeSub(totalSupply, _amount);

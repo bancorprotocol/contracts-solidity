@@ -9,6 +9,7 @@ import './SafeMath.sol';
     - all values are placeholders, need to update them with real values
     - verify ERC20 token addresses, transferFrom (must return a boolean flag) and update them with the correct values
     - possibly move all the ERC20 token initialization from the initERC20Tokens function to a different contract to lower the gas cost and make the crowdsale changer more generic
+    - possibly add getters for ERC20 token fields so that the client won't need to rely on the order in the struct
 */
 
 // interfaces
@@ -105,7 +106,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         _;
     }
 
-    // validates a token address - verifies that the address belongs to one of the changable tokens
+    // validates a token address - verifies that the address belongs to one of the changeable tokens
     modifier validToken(address _address) {
         require(_address == address(token) || tokenData[_address].isSet);
         _;
@@ -161,14 +162,14 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
     /*
         returns the number of changeable tokens supported by the contract
-        note that the number of changable tokens is the number of ERC20 tokens plus the smart token
+        note that the number of changeable tokens is the number of ERC20 tokens plus the smart token
     */
     function changeableTokenCount() public constant returns (uint16 count) {
         return uint16(acceptedTokens.length + 1);
     }
 
     /*
-        given a changable token index, returns the changable token contract address
+        given a changeable token index, returns the changeable token contract address
     */
     function changeableToken(uint16 _tokenIndex) public constant returns (address tokenAddress) {
         if (_tokenIndex == 0)

@@ -10,7 +10,7 @@ contract EtherToken is ERC20Token {
     }
 
     // verifies that a transfer value is greater than zero
-    modifier validValue(uint256 _value) {
+    modifier validAmount(uint256 _value) {
         require(_value > 0);
         _;
     }
@@ -18,7 +18,7 @@ contract EtherToken is ERC20Token {
     // deposit ether in the account
     function deposit()
         public
-        validValue(msg.value)
+        validAmount(msg.value)
         payable
     {
         balanceOf[msg.sender] = safeAdd(balanceOf[msg.sender], msg.value); // add the value to the account balance
@@ -28,7 +28,7 @@ contract EtherToken is ERC20Token {
     // withdraw ether from the account
     function withdraw(uint256 _amount)
         public
-        validValue(_amount)
+        validAmount(_amount)
     {
         balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _amount); // deduct the amount from the account balance
         totalSupply = safeSub(totalSupply, _amount); // decrease the total supply
