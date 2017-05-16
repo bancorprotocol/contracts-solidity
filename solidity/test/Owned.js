@@ -52,4 +52,12 @@ contract('Owned', (accounts) => {
             return utils.ensureException(error);
         }
     });
+
+    it('verifies that the owner can cancel ownership transfer before the new owner accepted it', async () => {
+        let contract = await Owned.new();
+        await contract.setOwner(accounts[1]);
+        await contract.setOwner('0x0');
+        let newOwner = await contract.newOwner.call();
+        assert.equal(web3.toBigNumber(newOwner).toNumber(), 0);
+    });
 });
