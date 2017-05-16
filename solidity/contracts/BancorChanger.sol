@@ -60,7 +60,8 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         token = SmartTokenInterface(_token);
         formula = BancorFormula(_formula);
 
-        addReserve(_reserveToken, _reserveRatio, false);
+        if (_reserveToken != 0x0)
+            addReserve(_reserveToken, _reserveRatio, false);
     }
 
     // validates an address - currently only checks that it isn't null
