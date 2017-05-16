@@ -54,7 +54,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
     uint256 public startTime = 0;                               // crowdsale start time (in seconds)
     uint256 public endTime = 0;                                 // crowdsale end time (in seconds)
-    uint256 public etherContributed = 0;                        // ether contributed so far
+    uint256 public totalEtherContributed = 0;                   // ether contributed so far
     uint256 public tokenReserveBalance = 0;                     // amount of the ether contributed so far that gets into the smart token's reserve, used to calculate the current price
     address public etherToken = 0x0;                            // ether token contract address
     address public beneficiary = 0x0;                           // address to receive all contributed ether
@@ -143,7 +143,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
     // ensures that we didn't reach the ether cap
     modifier etherCapNotReached() {
-        assert(etherContributed < ETHER_CAP);
+        assert(totalEtherContributed < ETHER_CAP);
         _;
     }
 
@@ -155,7 +155,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
     // ensures that we didn't reach the bitcoin suisse ether cap
     modifier bitcoinSuisseEtherCapNotReached(uint256 _ethContribution) {
-        require(safeAdd(etherContributed, _ethContribution) <= BITCOIN_SUISSE_ETHER_CAP);
+        require(safeAdd(totalEtherContributed, _ethContribution) <= BITCOIN_SUISSE_ETHER_CAP);
         _;
     }
 
@@ -327,13 +327,13 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
             return 0;
 
         // check ether cap
-        require(safeAdd(etherContributed, depositEthValue) <= ETHER_CAP);
+        require(safeAdd(totalEtherContributed, depositEthValue) <= ETHER_CAP);
 
         // check limit
         if (data.limit != 0) {
             uint256 balance = beneficiaryBalances[_erc20Token];
             uint256 balanceEthValue = safeMul(balance, data.valueN) / data.valueD;  // ether value of the ERC20 token beneficiary balance 
-            uint256 limit = safeMul(etherContributed, data.limit) / 1000; // current limit of the ERC20 token
+            uint256 limit = safeMul(totalEtherContributed, data.limit) / 1000; // current limit of the ERC20 token
             require(safeAdd(balanceEthValue, depositEthValue) <= limit);
         }
 
@@ -454,18 +454,18 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
     function handleContribution(address _contributor, uint256 _depositEthValue, uint256 _return) private {
         // update the reserve balance
         uint8 reserveAllocationPercentage;
-        if (etherContributed >= PHASE3_MIN_CONTRIBUTION)
+        if (totalEtherContributed >= PHASE3_MIN_CONTRIBUTION)
             reserveAllocationPercentage = PHASE3_RESERVE_ALLOCATION;
-        else if (etherContributed >= PHASE2_MIN_CONTRIBUTION)
+        else if (totalEtherContributed >= PHASE2_MIN_CONTRIBUTION)
             reserveAllocationPercentage = PHASE2_RESERVE_ALLOCATION;
-        else if (etherContributed >= PHASE1_MIN_CONTRIBUTION)
+        else if (totalEtherContributed >= PHASE1_MIN_CONTRIBUTION)
             reserveAllocationPercentage = PHASE1_RESERVE_ALLOCATION;
 
         uint256 addToReserve = safeMul(_depositEthValue, reserveAllocationPercentage) / 100;
         tokenReserveBalance = safeAdd(tokenReserveBalance, addToReserve);
 
         // update the total contribution amount
-        etherContributed = safeAdd(etherContributed, _depositEthValue);
+        totalEtherContributed = safeAdd(totalEtherContributed, _depositEthValue);
         // issue new funds to the contributor in the smart token
         token.issue(_contributor, _return);
 
