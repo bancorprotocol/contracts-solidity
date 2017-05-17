@@ -9,9 +9,36 @@ const utils = require('./helpers/Utils');
 
 let tokenAddress;
 let formulaAddress;
+let reserveToken;
+let reserveToken2;
 let reserveTokenAddress;
 let reserveTokenAddress2 = '0x32f0f93396f0865d7ce412695beb3c3ad9ccca75';
 let address1 = '0x3e3ac49882f3fc4b768139af45588242e50e5701';
+
+// used by purchase/sale tests
+async function initChanger(accounts, activate) {
+    let token = await SmartToken.new('Token1', 'TKN1', 2);
+    tokenAddress = token.address;
+
+    reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+    reserveTokenAddress = reserveToken.address;
+
+    reserveToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
+    reserveTokenAddress2 = reserveToken2.address;
+
+    let changer = await BancorChanger.new(tokenAddress, formulaAddress, reserveTokenAddress, 25);
+    let changerAddress = changer.address;
+    await changer.addReserve(reserveTokenAddress2, 15, false);
+
+    await token.issue(accounts[0], 20000);
+    await reserveToken.transfer(changerAddress, 5000);
+    await reserveToken2.transfer(changerAddress, 8000);
+
+    if (activate)
+        await token.setChanger(changerAddress);
+
+    return changer;
+}
 
 function verifyReserve(reserve, isSet, isEnabled, ratio, isVirtualBalanceEnabled, virtualBalance) {
     assert.equal(reserve[0], virtualBalance);
@@ -19,6 +46,10 @@ function verifyReserve(reserve, isSet, isEnabled, ratio, isVirtualBalanceEnabled
     assert.equal(reserve[2], isVirtualBalanceEnabled);
     assert.equal(reserve[3], isEnabled);
     assert.equal(reserve[4], isSet);
+}
+
+function getChangeAmount(transaction) {
+    return transaction.logs[0].args._return.toNumber();
 }
 
 contract('BancorChanger', (accounts) => {
@@ -595,6 +626,419 @@ contract('BancorChanger', (accounts) => {
 
         try {
             await changer.setTokenChanger(token.address);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('verifies that getReturn returns a valid amount', async () => {
+        let changer = await initChanger(accounts, true);
+        let returnAmount = await changer.getReturn.call(reserveTokenAddress, tokenAddress, 500);
+        assert.isNumber(returnAmount.toNumber());
+        assert.notEqual(returnAmount.toNumber(), 0);
+    });
+
+    it('verifies that getReturn returns the same amount as getPurchaseReturn when changing from a reserve to the token', async () => {
+        let changer = await initChanger(accounts, true);
+        let returnAmount = await changer.getReturn.call(reserveTokenAddress, tokenAddress, 500);
+        let purchaseReturnAmount = await changer.getPurchaseReturn.call(reserveTokenAddress, 500);
+        assert.equal(returnAmount.toNumber(), purchaseReturnAmount.toNumber());
+    });
+
+    it('verifies that getReturn returns the same amount as getSaleReturn when changing from the token to a reserve', async () => {
+        let changer = await initChanger(accounts, true);
+        let returnAmount = await changer.getReturn.call(tokenAddress, reserveTokenAddress, 500);
+        let saleReturnAmount = await changer.getSaleReturn.call(reserveTokenAddress, 500);
+        assert.isNumber(returnAmount.toNumber());
+        assert.notEqual(returnAmount.toNumber(), 0);
+        assert.equal(returnAmount.toNumber(), saleReturnAmount.toNumber());
+    });
+
+    it('verifies that getReturn returns the same amount as getPurchaseReturn -> getSaleReturn when changing from reserve 1 to reserve 2', async () => {
+        let changer = await initChanger(accounts, true);
+        let returnAmount = await changer.getReturn.call(reserveTokenAddress, reserveTokenAddress2, 500);
+        let purchaseReturnAmount = await changer.getPurchaseReturn.call(reserveTokenAddress, 500);
+        let saleReturnAmount = await changer.getSaleReturn.call(reserveTokenAddress2, purchaseReturnAmount);
+        assert.isNumber(returnAmount.toNumber());
+        assert.notEqual(returnAmount.toNumber(), 0);
+        assert.equal(returnAmount.toNumber(), saleReturnAmount.toNumber());
+    });
+
+    it('should throw when attempting to get the return with an invalid from token adress', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.getReturn.call('0x0', reserveTokenAddress2, 500);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to get the return with an invalid to token address', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.getReturn.call(reserveTokenAddress, '0x0', 500);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to get the return with identical from/to addresses', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.getReturn.call(reserveTokenAddress, reserveTokenAddress, 500);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to get the purchase return while the changer is not active', async () => {
+        let changer = await initChanger(accounts, false);
+
+        try {
+            await changer.getPurchaseReturn.call(reserveTokenAddress, 500);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to get the purchase return with a non reserve address', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.getPurchaseReturn.call(tokenAddress, 500);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to get the purchase return with an invalid deposit amount', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.getPurchaseReturn.call(reserveTokenAddress, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to get the purchase return with a disabled reserve', async () => {
+        let changer = await initChanger(accounts, true);
+        await changer.disableReserve(reserveTokenAddress, true);
+
+        try {
+            await changer.getPurchaseReturn.call(reserveTokenAddress, 500);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to get the sale return while the changer is not active', async () => {
+        let changer = await initChanger(accounts, false);
+
+        try {
+            await changer.getSaleReturn.call(reserveTokenAddress, 500);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to get the sale return with a non reserve address', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.getSaleReturn.call(tokenAddress, 500);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to get the sale return with an invalid sale amount', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.getSaleReturn.call(reserveTokenAddress, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to get the sale return with amount greater then the seller balance', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.getSaleReturn.call(reserveTokenAddress, 30000);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('verifies that change returns a valid amount', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+        let res = await changer.change(reserveTokenAddress, tokenAddress, 500, 0);
+        let changeAmount = getChangeAmount(res);
+        assert.isNumber(changeAmount);
+        assert.notEqual(changeAmount, 0);
+    });
+
+    it('verifies that change returns the same amount as buy when changing from a reserve to the token', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+        let changeRes = await changer.change(reserveTokenAddress, tokenAddress, 500, 0);
+        let changeAmount = getChangeAmount(changeRes);
+        assert.isNumber(changeAmount);
+        assert.notEqual(changeAmount, 0);
+
+        changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 0);
+        let purchaseAmount = getChangeAmount(purchaseRes);
+        assert.equal(changeAmount, purchaseAmount);
+    });
+
+    it('verifies that change returns the same amount as sell when changing from the token to a reserve', async () => {
+        let changer = await initChanger(accounts, true);
+        let changeRes = await changer.change(tokenAddress, reserveTokenAddress, 500, 0);
+        let changeAmount = getChangeAmount(changeRes);
+        assert.isNumber(changeAmount);
+        assert.notEqual(changeAmount, 0);
+
+        changer = await initChanger(accounts, true);
+        let saleRes = await changer.sell(reserveTokenAddress, 500, 0);
+        let saleAmount = getChangeAmount(saleRes);
+        assert.equal(changeAmount, saleAmount);
+    });
+
+    it('verifies that change returns the same amount as buy -> sell when changing from reserve 1 to reserve 2', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+
+        let changeRes = await changer.change(reserveTokenAddress, reserveTokenAddress2, 500, 0);
+        let changeAmount = getChangeAmount(changeRes);
+        assert.isNumber(changeAmount);
+        assert.notEqual(changeAmount, 0);
+
+        changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 0);
+        let purchaseAmount = getChangeAmount(purchaseRes);
+
+        let saleRes = await changer.sell(reserveTokenAddress2, purchaseAmount, 0);
+        let saleAmount = getChangeAmount(saleRes);
+
+        assert.equal(changeAmount, saleAmount);
+    });
+
+    it('should throw when attempting to change with an invalid from token adress', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+
+        try {
+            await changer.change('0x0', reserveTokenAddress2, 500, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to change with an invalid to token address', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+
+        try {
+            await changer.change(reserveTokenAddress, '0x0', 500, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to change with identical from/to addresses', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+
+        try {
+            await changer.change(reserveTokenAddress, reserveTokenAddress, 500, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to change when the return is smaller than the minimum requested amount', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+
+        try {
+            await changer.change(reserveTokenAddress, reserveTokenAddress2, 500, 2000);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy while the changer is not active', async () => {
+        let changer = await initChanger(accounts, false);
+        await reserveToken.approve(changer.address, 500);
+
+        try {
+            await changer.buy(reserveTokenAddress, 500, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with a non reserve address', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+
+        try {
+            await changer.buy(tokenAddress, 500, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with an invalid deposit amount', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+
+        try {
+            await changer.buy(reserveTokenAddress, 0, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy when the return is smaller than the minimum requested amount', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+
+        try {
+            await changer.buy(reserveTokenAddress, 500, 2000);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with a disabled reserve', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+        await changer.disableReserve(reserveTokenAddress, true);
+
+        try {
+            await changer.buy(reserveTokenAddress, 500, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy without first approving the change to transfer from the buyer account in the reserve contract', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.buy(reserveTokenAddress, 500, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to sell while the changer is not active', async () => {
+        let changer = await initChanger(accounts, false);
+
+        try {
+            await changer.sell(reserveTokenAddress, 500, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to sell with a non reserve address', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.sell(tokenAddress, 500, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to sell with an invalid sale amount', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.sell(reserveTokenAddress, 0, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to sell when the return is smaller than the minimum requested amount', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.sell(reserveTokenAddress, 500, 2000);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to sell with amount greater then the seller balance', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.sell(reserveTokenAddress, 30000, 0);
             assert(false, "didn't throw");
         }
         catch (error) {

@@ -10,6 +10,7 @@ import './SmartTokenInterface.sol';
     - assumes that the reserve tokens either return true for transfer/transferFrom or throw - possibly remove the reliance on the return value
     - possibly support ERC223 standard for reserve tokens
     - possibly add getters for reserve fields so that the client won't need to rely on the order in the struct
+    - getReturn doesn't return the correct amount for changing between 2 reserves as it doesn't take the state change between the two calls into account
 */
 
 // interfaces
@@ -416,6 +417,7 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         assert(amount < reserveBalance || _sellAmount == tokenSupply); // ensure that the trade will only deplete the reserve if the total supply is depleted as well
         token.destroy(msg.sender, _sellAmount); // destroy _sellAmount from the caller's balance in the smart token
         assert(reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
+                                                           // note that it might fail if the actual reserve balance is smaller than the virtual balance
 
         // update virtual balance if relevant
         Reserve reserve = reserves[_reserveToken];
