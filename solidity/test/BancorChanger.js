@@ -856,6 +856,18 @@ contract('BancorChanger', (accounts) => {
         assert.equal(changeAmount, saleAmount);
     });
 
+    it('verifies that selling right after buying does not result in an amount greater than the original purchase amount', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 0);
+        let purchaseAmount = getChangeAmount(purchaseRes);
+
+        let saleRes = await changer.sell(reserveTokenAddress, purchaseAmount, 0);
+        let saleAmount = getChangeAmount(saleRes);
+
+        assert(saleAmount <= 500);
+    });
+
     it('should throw when attempting to change with an invalid from token adress', async () => {
         let changer = await initChanger(accounts, true);
         await reserveToken.approve(changer.address, 500);
