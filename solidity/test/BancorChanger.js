@@ -591,6 +591,7 @@ contract('BancorChanger', (accounts) => {
     it('should throw when the owner attempts to set the token itself as the changer', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         let changer = await BancorChanger.new(token.address, formulaAddress, '0x0', 0);
+        await token.setChanger(changer.address);
 
         try {
             await changer.setTokenChanger(token.address);
