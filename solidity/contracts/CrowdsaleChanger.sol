@@ -1,8 +1,8 @@
 pragma solidity ^0.4.10;
-import './BancorEventsDispatcher.sol';
+import './Owned.sol';
+import './SafeMath.sol';
 import './TokenChangerInterface.sol';
 import './SmartTokenInterface.sol';
-import './SafeMath.sol';
 
 /*
     Open issues:
@@ -24,7 +24,7 @@ contract EtherToken {
 
     The crowdsale version of the token changer, allows buying the smart token with ether/other ERC20 tokens
 */
-contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMath {
+contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     struct ERC20TokenData {
         uint256 valueN;     // 1 smallest unit in wei (numerator)
         uint256 valueD;     // 1 smallest unit in wei (denominator)
@@ -65,7 +65,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
     mapping (address => ERC20TokenData) public tokenData;       // ERC20 token addresses -> ERC20 token data
     mapping (address => uint256) public beneficiaryBalances;    // beneficiary balances in the different tokens
 
-    // events, can be used to listen to the contract directly, as opposed to through the events contract
+    // triggered when a change between two tokens occurs
     event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return);
 
     /*
@@ -74,10 +74,8 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         _startTime      crowdsale start time
         _beneficiary    address to receive all contributed ether
         _bitcoinSuisse  bitcoin suisse address
-        _events         optional, address of a bancor events contract
     */
-    function CrowdsaleChanger(address _token, address _etherToken, uint256 _startTime, address _beneficiary, address _bitcoinSuisse, address _events)
-        BancorEventsDispatcher(_events)
+    function CrowdsaleChanger(address _token, address _etherToken, uint256 _startTime, address _beneficiary, address _bitcoinSuisse)
         validAddress(_token)
         validAddress(_etherToken)
         validAddress(_beneficiary)
@@ -386,7 +384,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         ERC20TokenData data = tokenData[_erc20Token];
         uint256 depositEthValue = safeMul(_depositAmount, data.valueN) / data.valueD;
         handleContribution(msg.sender, depositEthValue, amount);
-        dispatchChange(_erc20Token, token, msg.sender, _depositAmount, amount);
+        Change(_erc20Token, token, msg.sender, _depositAmount, amount);
         return amount;
     }
 
@@ -401,7 +399,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         returns (uint256 amount)
     {
         amount = handleETHDeposit(msg.sender, msg.value);
-        dispatchChange(etherToken, token, msg.sender, msg.value, amount);
+        Change(etherToken, token, msg.sender, msg.value, amount);
         return amount;
     }
 
@@ -420,7 +418,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         returns (uint256 amount)
     {
         amount = handleETHDeposit(_contributor, msg.value);
-        dispatchChange(etherToken, token, msg.sender, msg.value, amount);
+        Change(etherToken, token, msg.sender, msg.value, amount);
         return amount;
     }
 
@@ -477,15 +475,6 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
             return;
 
         token.issue(beneficiary, amount);
-    }
-
-    // utility
-
-    function dispatchChange(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return) private {
-        Change(_fromToken, _toToken, _trader, _amount, _return);
-
-        if (address(events) != 0x0)
-            events.tokenChange(_fromToken, _toToken, _trader, _amount, _return);
     }
 
     // fallback

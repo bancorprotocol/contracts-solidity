@@ -1,8 +1,8 @@
 pragma solidity ^0.4.10;
-import './BancorEventsDispatcher.sol';
+import './Owned.sol';
+import './SafeMath.sol';
 import './TokenChangerInterface.sol';
 import './SmartTokenInterface.sol';
-import './SafeMath.sol';
 
 /*
     Open issues:
@@ -27,7 +27,7 @@ contract BancorFormula {
     ERC20 reserve token balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on
     the actual reserve balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract
 */
-contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMath {
+contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
     struct Reserve {
         uint256 virtualBalance;         // virtual balance
         uint8 ratio;                    // constant reserve ratio (CRR), 1-100
@@ -45,16 +45,14 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
     uint8 private totalReserveRatio = 0;            // used to prevent increasing the total reserve ratio above 100% efficiently
 
-    // events, can be used to listen to the contract directly, as opposed to through the events contract
+    // triggered when a change between two tokens occurs
     event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return);
 
     /*
         _token      smart token governed by the changer
         _formula    address of a bancor formula contract
-        _events     optional, address of a bancor events contract
     */
-    function BancorChanger(address _token, address _formula, address _events, address _reserveToken, uint8 _reserveRatio)
-        BancorEventsDispatcher(_events)
+    function BancorChanger(address _token, address _formula, address _reserveToken, uint8 _reserveRatio)
         validAddress(_token)
         validAddress(_formula)
     {
@@ -395,7 +393,7 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         assert(reserveToken.transferFrom(msg.sender, this, _depositAmount)); // transfer _depositAmount funds from the caller in the reserve token
         token.issue(msg.sender, amount); // issue new funds to the caller in the smart token
 
-        dispatchChange(_reserveToken, token, msg.sender, _depositAmount, amount);
+        Change(_reserveToken, token, msg.sender, _depositAmount, amount);
         return amount;
     }
 
@@ -428,17 +426,8 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         if (_sellAmount == tokenSupply)
             token.setChanger(0x0);
 
-        dispatchChange(token, _reserveToken, msg.sender, _sellAmount, amount);
+        Change(token, _reserveToken, msg.sender, _sellAmount, amount);
         return amount;
-    }
-
-    // utility
-
-    function dispatchChange(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return) private {
-        Change(_fromToken, _toToken, _trader, _amount, _return);
-
-        if (address(events) != 0x0)
-            events.tokenChange(_fromToken, _toToken, _trader, _amount, _return);
     }
 
     // fallback

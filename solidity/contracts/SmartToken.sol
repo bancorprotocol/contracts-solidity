@@ -1,6 +1,6 @@
 pragma solidity ^0.4.10;
-import './BancorEventsDispatcher.sol';
 import './ERC20Token.sol';
+import './Owned.sol';
 import './SmartTokenInterface.sol';
 
 /*
@@ -11,30 +11,25 @@ import './SmartTokenInterface.sol';
 /*
     Smart Token v0.1
 */
-contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
+contract SmartToken is ERC20Token, Owned, SmartTokenInterface {
     string public version = '0.1';
     uint8 public numDecimalUnits = 0;       // for display purposes only
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
     address public changer = 0x0;           // changer contract address
 
-    // events, can be used to listen to the contract directly, as opposed to through the events contract
+    // triggered when a token changer is updated/removed
     event ChangerUpdate(address _prevChanger, address _newChanger);
 
     /*
         _name               token name
         _symbol             token short symbol, 1-6 characters
         _numDecimalUnits    for display purposes only
-        _events             optional, address of a bancor events contract
     */
-    function SmartToken(string _name, string _symbol, uint8 _numDecimalUnits, address _events)
+    function SmartToken(string _name, string _symbol, uint8 _numDecimalUnits)
         ERC20Token(_name, _symbol)
-        BancorEventsDispatcher(_events)
     {
         require(bytes(_name).length != 0 && bytes(_symbol).length >= 1 && bytes(_symbol).length <= 6); // validate input
         numDecimalUnits = _numDecimalUnits;
-
-        if (address(events) != 0x0)
-            events.newToken();
     }
 
     // verifies that a value is greater than zero
@@ -54,14 +49,6 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
         assert((changer == 0x0 && msg.sender == owner) ||
                (changer != 0x0 && msg.sender == changer)); // validate state & permissions
         _;
-    }
-
-    function setOwner(address _newOwner) public ownerOnly {
-        address prevOwner = owner;
-        super.setOwner(_newOwner);
-
-        if (address(events) != 0x0)
-            events.tokenOwnerUpdate(prevOwner, owner);
     }
 
     /*
@@ -100,7 +87,7 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
         require(_to != address(this)); // validate input
         totalSupply = safeAdd(totalSupply, _amount);
         balanceOf[_to] = safeAdd(balanceOf[_to], _amount);
-        dispatchTransfer(this, _to, _amount);
+        Transfer(this, _to, _amount);
     }
 
     /*
@@ -117,7 +104,7 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
     {
         balanceOf[_from] = safeSub(balanceOf[_from], _amount);
         totalSupply = safeSub(totalSupply, _amount);
-        dispatchTransfer(_from, this, _amount);
+        Transfer(_from, this, _amount);
     }
 
     /*
@@ -131,7 +118,7 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
         require(_changer != changer);
         address prevChanger = changer;
         changer = _changer;
-        dispatchChangerUpdate(prevChanger, changer);
+        ChangerUpdate(prevChanger, changer);
     }
 
     // ERC20 standard method overrides with some extra functionality
@@ -146,8 +133,6 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
             totalSupply -= _value;
         }
 
-        if (address(events) != 0x0)
-            events.tokenTransfer(msg.sender, _to, _value);
         return true;
     }
 
@@ -161,34 +146,7 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
             totalSupply -= _value;
         }
 
-        if (address(events) != 0x0)
-            events.tokenTransfer(_from, _to, _value);
         return true;
-    }
-
-    // allow another account/contract to spend some tokens on your behalf
-    function approve(address _spender, uint256 _value) public returns (bool success) {
-        assert(super.approve(_spender, _value));
-
-        if (address(events) != 0x0)
-            events.tokenApproval(msg.sender, _spender, _value);
-        return true;
-    }
-
-    // utility
-
-    function dispatchChangerUpdate(address _prevChanger, address _newChanger) private {
-        ChangerUpdate(_prevChanger, _newChanger);
-
-        if (address(events) != 0x0)
-            events.tokenChangerUpdate(_prevChanger, _newChanger);
-    }
-
-    function dispatchTransfer(address _from, address _to, uint256 _value) private {
-        Transfer(_from, _to, _value);
-
-        if (address(events) != 0x0)
-            events.tokenTransfer(_from, _to, _value);
     }
 
     // fallback
