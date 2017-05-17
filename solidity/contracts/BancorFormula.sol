@@ -30,16 +30,17 @@ contract BancorFormula is SafeMath {
         // validate input
         require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _depositAmount != 0);
         uint256 baseN = safeAdd(_depositAmount, _reserveBalance);
+        uint256 temp;
 
         // special case if the CRR = 100
         if (_reserveRatio == 100) {
-            amount = safeMul(_supply, baseN) / _reserveBalance;
-            return safeSub(amount, _supply); 
+            temp = safeMul(_supply, baseN) / _reserveBalance;
+            return safeSub(temp, _supply); 
         }
 
         var (resN, resD) = power(baseN, _reserveBalance, _reserveRatio, 100);
-        uint256 amount = safeMul(_supply, resN) / resD;
-        return safeSub(amount, _supply);
+        temp = safeMul(_supply, resN) / resD;
+        return safeSub(temp, _supply);
     }
 
     /*
@@ -57,16 +58,20 @@ contract BancorFormula is SafeMath {
         // validate input
         require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _sellAmount != 0 && _sellAmount <= _supply);
         uint256 baseN = safeSub(_supply, _sellAmount);
+        uint256 temp1;
+        uint256 temp2;
 
         // special case if the CRR = 100
         if (_reserveRatio == 100) {
-            amount = safeMul(_reserveBalance, baseN) / _supply;
-            return safeSub(_reserveBalance, amount); 
+            temp1 = safeMul(_reserveBalance, _supply);
+            temp2 = safeMul(_reserveBalance, baseN);
+            return safeSub(temp1, temp2) / _supply;
         }
 
         var (resN, resD) = power(_supply, baseN, 100, _reserveRatio);
-        uint256 amount = safeMul(_reserveBalance, resD) / resN;
-        return safeSub(_reserveBalance, amount);
+        temp1 = safeMul(_reserveBalance, resN);
+        temp2 = safeMul(_reserveBalance, resD);
+        return safeSub(temp1, temp2) / resN;
     }
 
     /**

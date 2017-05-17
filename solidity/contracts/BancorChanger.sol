@@ -8,6 +8,8 @@ import './SafeMath.sol';
     Open issues:
     - add miner abuse protection
     - assumes that the reserve tokens either return true for transfer/transferFrom or throw - possibly remove the reliance on the return value
+    - possibly support ERC223 standard for reserve tokens
+    - possibly add getters for reserve fields so that the client won't need to rely on the order in the struct
 */
 
 // interfaces
@@ -59,7 +61,8 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         token = SmartTokenInterface(_token);
         formula = BancorFormula(_formula);
 
-        addReserve(_reserveToken, _reserveRatio, false);
+        if (_reserveToken != 0x0)
+            addReserve(_reserveToken, _reserveRatio, false);
     }
 
     // validates an address - currently only checks that it isn't null
@@ -74,7 +77,7 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         _;
     }
 
-    // validates a token address - verifies that the address belongs to one of the changable tokens
+    // validates a token address - verifies that the address belongs to one of the changeable tokens
     modifier validToken(address _address) {
         require(_address == address(token) || reserves[_address].isSet);
         _;
@@ -83,6 +86,12 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
     // validates reserve ratio range
     modifier validReserveRatio(uint8 _ratio) {
         require(_ratio > 0 && _ratio <= 100);
+        _;
+    }
+
+    // verifies that an amount is greater than zero
+    modifier validAmount(uint256 _value) {
+        require(_value > 0);
         _;
     }
 
@@ -107,14 +116,14 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
 
     /*
         returns the number of changeable tokens supported by the contract
-        note that the number of changable tokens is the number of reserve token, plus 1 (that represents the smart token)
+        note that the number of changeable tokens is the number of reserve token, plus 1 (that represents the smart token)
     */
     function changeableTokenCount() public constant returns (uint16 count) {
         return reserveTokenCount() + 1;
     }
 
     /*
-        given a changable token index, returns the changable token contract address
+        given a changeable token index, returns the changeable token contract address
     */
     function changeableToken(uint16 _tokenIndex) public constant returns (address tokenAddress) {
         if (_tokenIndex == 0)
@@ -210,7 +219,7 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         _to         account to receive the new amount
         _amount     amount to increase the supply by
     */
-    function issueToken(address _to, uint256 _amount) public ownerOnly {
+    function issueTokens(address _to, uint256 _amount) public ownerOnly {
         token.issue(_to, _amount);
     }
 
@@ -220,7 +229,7 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         _from       account to remove the new amount from
         _amount     amount to decrease the supply by
     */
-    function destroyToken(address _from, uint256 _amount) public ownerOnly {
+    function destroyTokens(address _from, uint256 _amount) public ownerOnly {
         token.destroy(_from, _amount);
     }
 
@@ -237,8 +246,9 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         ownerOnly
         validReserve(_reserveToken)
         validAddress(_to)
+        validAmount(_amount)
     {
-        require(_to != address(this) && _to != address(token) && _amount != 0); // validate input
+        require(_to != address(this) && _to != address(token)); // validate input
 
         ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         assert(reserveToken.transfer(_to, _amount));
@@ -300,10 +310,11 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         constant
         active
         validReserve(_reserveToken)
+        validAmount(_depositAmount)
         returns (uint256 amount)
     {
         Reserve reserve = reserves[_reserveToken];
-        require(reserve.isEnabled && _depositAmount != 0); // validate input
+        require(reserve.isEnabled); // validate input
 
         uint256 reserveBalance = getReserveBalance(_reserveToken);
         assert(reserveBalance != 0); // validate state
@@ -323,9 +334,10 @@ contract BancorChanger is BancorEventsDispatcher, TokenChangerInterface, SafeMat
         constant
         active
         validReserve(_reserveToken)
+        validAmount(_sellAmount)
         returns (uint256 amount)
     {
-        require(_sellAmount != 0 && _sellAmount <= token.balanceOf(msg.sender)); // validate input
+        require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
 
         Reserve reserve = reserves[_reserveToken];
         uint256 reserveBalance = getReserveBalance(_reserveToken);

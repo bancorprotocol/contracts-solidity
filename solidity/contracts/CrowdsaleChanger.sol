@@ -8,7 +8,8 @@ import './SafeMath.sol';
     Open issues:
     - all values are placeholders, need to update them with real values
     - verify ERC20 token addresses, transferFrom (must return a boolean flag) and update them with the correct values
-    - might move all the ERC20 tokens to a different contract or do it manually to lower the gas cost and make the crowdsale changer more generic
+    - possibly move all the ERC20 token initialization from the initERC20Tokens function to a different contract to lower the gas cost and make the crowdsale changer more generic
+    - possibly add getters for ERC20 token fields so that the client won't need to rely on the order in the struct
 */
 
 // interfaces
@@ -52,16 +53,17 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
     string public version = '0.1';
     string public changerType = 'crowdsale';
 
-    uint256 public startTime = 0;                           // crowdsale start time (in seconds)
-    uint256 public endTime = 0;                             // crowdsale end time (in seconds)
-    uint256 public etherContributed = 0;                    // ether contributed so far
-    uint256 public tokenReserveBalance = 0;                 // amount of the ether contributed so far that gets into the smart token's reserve, used to calculate the current price
-    address public etherToken = 0x0;                        // ether token contract address
-    address public beneficiary = 0x0;                       // address to receive all contributed ether
-    address public bitcoinSuisse = 0x0;                     // bitcoin suisse address
-    SmartTokenInterface public token;                       // smart token governed by the changer
-    address[] public acceptedTokens;                        // ERC20 standard token addresses
-    mapping (address => ERC20TokenData) public tokenData;   // ERC20 token addresses -> ERC20 token data
+    uint256 public startTime = 0;                               // crowdsale start time (in seconds)
+    uint256 public endTime = 0;                                 // crowdsale end time (in seconds)
+    uint256 public totalEtherContributed = 0;                   // ether contributed so far
+    uint256 public tokenReserveBalance = 0;                     // amount of the ether contributed so far that gets into the smart token's reserve, used to calculate the current price
+    address public etherToken = 0x0;                            // ether token contract address
+    address public beneficiary = 0x0;                           // address to receive all contributed ether
+    address public bitcoinSuisse = 0x0;                         // bitcoin suisse address
+    SmartTokenInterface public token;                           // smart token governed by the changer
+    address[] public acceptedTokens;                            // ERC20 standard token addresses
+    mapping (address => ERC20TokenData) public tokenData;       // ERC20 token addresses -> ERC20 token data
+    mapping (address => uint256) public beneficiaryBalances;    // beneficiary balances in the different tokens
 
     // events, can be used to listen to the contract directly, as opposed to through the events contract
     event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return);
@@ -90,20 +92,6 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         bitcoinSuisse = _bitcoinSuisse;
 
         addERC20Token(_etherToken, 0, 1, 1); // Ether
-
-        addERC20Token(0xa74476443119A942dE498590Fe1f2454d7D4aC0d, 20, 1, 1); // Golem
-        addERC20Token(0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5, 20, 1, 1); // Augur
-
-        addERC20Token(0x6810e776880C02933D47DB1b9fc05908e5386b96, 10, 1, 1); // Gnosis
-        addERC20Token(0xaeC2E87E0A235266D9C5ADc9DEb4b2E29b54D009, 10, 1, 1); // SingularDTV
-        addERC20Token(0xE0B7927c4aF23765Cb51314A0E0521A9645F0E2A, 10, 1, 1); // DigixDAO
-
-        addERC20Token(0x4993CB95c7443bdC06155c5f5688Be9D8f6999a5, 5, 1, 1); // ROUND
-        addERC20Token(0x607F4C5BB672230e8672085532f7e901544a7375, 5, 1, 1); // iEx.ec
-        addERC20Token(0x888666CA69E0f178DED6D75b5726Cee99A87D698, 5, 1, 1); // ICONOMI
-        addERC20Token(0xAf30D2a7E90d7DC361c8C4585e9BB7D2F6f15bc7, 5, 1, 1); // FirstBlood
-        addERC20Token(0xBEB9eF514a379B997e0798FDcC901Ee474B6D9A1, 5, 1, 1); // Melon
-        addERC20Token(0x667088b212ce3d06a1b553a7221E1fD19000d9aF, 5, 1, 1); // Wings
     }
 
     // validates an address - currently only checks that it isn't null
@@ -118,7 +106,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         _;
     }
 
-    // validates a token address - verifies that the address belongs to one of the changable tokens
+    // validates a token address - verifies that the address belongs to one of the changeable tokens
     modifier validToken(address _address) {
         require(_address == address(token) || tokenData[_address].isSet);
         _;
@@ -156,7 +144,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
     // ensures that we didn't reach the ether cap
     modifier etherCapNotReached() {
-        assert(etherContributed < ETHER_CAP);
+        assert(totalEtherContributed < ETHER_CAP);
         _;
     }
 
@@ -168,25 +156,45 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
     // ensures that we didn't reach the bitcoin suisse ether cap
     modifier bitcoinSuisseEtherCapNotReached(uint256 _ethContribution) {
-        require(safeAdd(etherContributed, _ethContribution) <= BITCOIN_SUISSE_ETHER_CAP);
+        require(safeAdd(totalEtherContributed, _ethContribution) <= BITCOIN_SUISSE_ETHER_CAP);
         _;
     }
 
     /*
         returns the number of changeable tokens supported by the contract
-        note that the number of changable tokens is the number of ERC20 tokens plus the smart token
+        note that the number of changeable tokens is the number of ERC20 tokens plus the smart token
     */
     function changeableTokenCount() public constant returns (uint16 count) {
         return uint16(acceptedTokens.length + 1);
     }
 
     /*
-        given a changable token index, returns the changable token contract address
+        given a changeable token index, returns the changeable token contract address
     */
     function changeableToken(uint16 _tokenIndex) public constant returns (address tokenAddress) {
         if (_tokenIndex == 0)
             return token;
         return acceptedTokens[_tokenIndex - 1];
+    }
+
+    function initERC20Tokens()
+        public
+        ownerOnly
+        inactive
+    {
+        addERC20Token(0xa74476443119A942dE498590Fe1f2454d7D4aC0d, 20, 1, 1); // Golem
+        addERC20Token(0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5, 20, 1, 1); // Augur
+
+        addERC20Token(0x6810e776880C02933D47DB1b9fc05908e5386b96, 10, 1, 1); // Gnosis
+        addERC20Token(0xaeC2E87E0A235266D9C5ADc9DEb4b2E29b54D009, 10, 1, 1); // SingularDTV
+        addERC20Token(0xE0B7927c4aF23765Cb51314A0E0521A9645F0E2A, 10, 1, 1); // DigixDAO
+
+        addERC20Token(0x4993CB95c7443bdC06155c5f5688Be9D8f6999a5, 5, 1, 1); // ROUND
+        addERC20Token(0x607F4C5BB672230e8672085532f7e901544a7375, 5, 1, 1); // iEx.ec
+        addERC20Token(0x888666CA69E0f178DED6D75b5726Cee99A87D698, 5, 1, 1); // ICONOMI
+        addERC20Token(0xAf30D2a7E90d7DC361c8C4585e9BB7D2F6f15bc7, 5, 1, 1); // FirstBlood
+        addERC20Token(0xBEB9eF514a379B997e0798FDcC901Ee474B6D9A1, 5, 1, 1); // Melon
+        addERC20Token(0x667088b212ce3d06a1b553a7221E1fD19000d9aF, 5, 1, 1); // Wings
     }
 
     /*
@@ -320,14 +328,13 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
             return 0;
 
         // check ether cap
-        require(safeAdd(etherContributed, depositEthValue) <= ETHER_CAP);
+        require(safeAdd(totalEtherContributed, depositEthValue) <= ETHER_CAP);
 
         // check limit
         if (data.limit != 0) {
-            ERC20TokenInterface erc20Token = ERC20TokenInterface(_erc20Token);
-            uint256 balance = erc20Token.balanceOf(beneficiary);
+            uint256 balance = beneficiaryBalances[_erc20Token];
             uint256 balanceEthValue = safeMul(balance, data.valueN) / data.valueD;  // ether value of the ERC20 token beneficiary balance 
-            uint256 limit = safeMul(etherContributed, data.limit) / 1000; // current limit of the ERC20 token
+            uint256 limit = safeMul(totalEtherContributed, data.limit) / 1000; // current limit of the ERC20 token
             require(safeAdd(balanceEthValue, depositEthValue) <= limit);
         }
 
@@ -374,6 +381,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
 
         ERC20TokenInterface erc20Token = ERC20TokenInterface(_erc20Token);
         assert(erc20Token.transferFrom(msg.sender, beneficiary, _depositAmount)); // transfer _depositAmount funds from the caller in the ERC20 token
+        beneficiaryBalances[erc20Token] = safeAdd(beneficiaryBalances[erc20Token], _depositAmount); // increase beneficiary ERC20 balance
 
         ERC20TokenData data = tokenData[_erc20Token];
         uint256 depositEthValue = safeMul(_depositAmount, data.valueN) / data.valueD;
@@ -430,6 +438,7 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
         EtherToken ethToken = EtherToken(etherToken);
         ethToken.deposit.value(_depositAmount)(); // transfer the ether to the ether contract
         assert(ethToken.transfer(beneficiary, _depositAmount)); // transfer the ether to the beneficiary account
+        beneficiaryBalances[etherToken] = safeAdd(beneficiaryBalances[etherToken], _depositAmount); // increase beneficiary ETH balance
         handleContribution(_contributor, _depositAmount, amount);
         return amount;
     }
@@ -446,18 +455,18 @@ contract CrowdsaleChanger is BancorEventsDispatcher, TokenChangerInterface, Safe
     function handleContribution(address _contributor, uint256 _depositEthValue, uint256 _return) private {
         // update the reserve balance
         uint8 reserveAllocationPercentage;
-        if (etherContributed >= PHASE3_MIN_CONTRIBUTION)
+        if (totalEtherContributed >= PHASE3_MIN_CONTRIBUTION)
             reserveAllocationPercentage = PHASE3_RESERVE_ALLOCATION;
-        else if (etherContributed >= PHASE2_MIN_CONTRIBUTION)
+        else if (totalEtherContributed >= PHASE2_MIN_CONTRIBUTION)
             reserveAllocationPercentage = PHASE2_RESERVE_ALLOCATION;
-        else if (etherContributed >= PHASE1_MIN_CONTRIBUTION)
+        else if (totalEtherContributed >= PHASE1_MIN_CONTRIBUTION)
             reserveAllocationPercentage = PHASE1_RESERVE_ALLOCATION;
 
         uint256 addToReserve = safeMul(_depositEthValue, reserveAllocationPercentage) / 100;
         tokenReserveBalance = safeAdd(tokenReserveBalance, addToReserve);
 
         // update the total contribution amount
-        etherContributed = safeAdd(etherContributed, _depositEthValue);
+        totalEtherContributed = safeAdd(totalEtherContributed, _depositEthValue);
         // issue new funds to the contributor in the smart token
         token.issue(_contributor, _return);
 

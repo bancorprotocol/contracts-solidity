@@ -7,20 +7,20 @@ contract SafeMath {
     function SafeMath() {
     }
 
-    function safeAdd(uint256 a, uint256 b) internal returns (uint256) {
-        uint256 c = a + b;
-        assert(c >= a);
-        return c;
+    function safeAdd(uint256 _x, uint256 _y) internal returns (uint256) {
+        uint256 z = _x + _y;
+        assert(z >= _x);
+        return z;
     }
 
-    function safeSub(uint256 a, uint256 b) internal returns (uint256) {
-        assert(a >= b);
-        return a - b;
+    function safeSub(uint256 _x, uint256 _y) internal returns (uint256) {
+        assert(_x >= _y);
+        return _x - _y;
     }
 
-    function safeMul(uint256 a, uint256 b) internal returns (uint256) {
-        uint256 c = a * b;
-        assert(a == 0 || c / a == b);
-        return c;
+    function safeMul(uint256 _x, uint256 _y) internal returns (uint256) {
+        uint256 z = _x * _y;
+        assert(_x == 0 || z / _x == _y);
+        return z;
     }
 }

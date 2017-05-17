@@ -1,5 +1,5 @@
 var big = require("bignumber");
-var testdata = require("./FormulaTestData.js")
+var testdata = require("./helpers/FormulaTestData.js")
 var BancorFormula = artifacts.require("./BancorFormula.sol");
 function isThrow(error){
   return error.toString().indexOf("invalid JUMP") != -1 

@@ -4,6 +4,11 @@ import './ERC20Token.sol';
 import './SmartTokenInterface.sol';
 
 /*
+    Open issues:
+    - possibly implement ERC223 standard
+*/
+
+/*
     Smart Token v0.1
 */
 contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
@@ -32,6 +37,12 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
             events.newToken();
     }
 
+    // verifies that a value is greater than zero
+    modifier validAmount(uint256 _value) {
+        require(_value > 0);
+        _;
+    }
+
     // allows execution only when transfers aren't disabled
     modifier transfersAllowed {
         assert(transfersEnabled);
@@ -45,11 +56,7 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
         _;
     }
 
-    function setOwner(address _newOwner)
-        public
-        ownerOnly
-        validAddress(_newOwner)
-    {
+    function setOwner(address _newOwner) public ownerOnly {
         address prevOwner = owner;
         super.setOwner(_newOwner);
 
@@ -88,8 +95,9 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
         public
         controllerOnly
         validAddress(_to)
+        validAmount(_amount)
     {
-        require(_to != address(this) && _amount != 0); // validate input
+        require(_to != address(this)); // validate input
         totalSupply = safeAdd(totalSupply, _amount);
         balanceOf[_to] = safeAdd(balanceOf[_to], _amount);
         dispatchTransfer(this, _to, _amount);
@@ -105,9 +113,8 @@ contract SmartToken is ERC20Token, BancorEventsDispatcher, SmartTokenInterface {
     function destroy(address _from, uint256 _amount)
         public
         controllerOnly
-        validAddress(_from)
+        validAmount(_amount)
     {
-        require(_from != address(this) && _amount != 0); // validate input
         balanceOf[_from] = safeSub(balanceOf[_from], _amount);
         totalSupply = safeSub(totalSupply, _amount);
         dispatchTransfer(_from, this, _amount);
