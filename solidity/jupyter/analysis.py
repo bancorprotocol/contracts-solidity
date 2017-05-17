@@ -1,6 +1,9 @@
 import math,sys
 
 def calculatePurchaseReturn(S,R,F,E):
+    if F== 100:
+        return S*E/R
+
     return S * ( math.pow(1.0 + float(E)/float(R), float(F)/100.0) - 1.0 )
         
 def calculateSaleReturn(S,R,F,T):
@@ -9,6 +12,10 @@ def calculateSaleReturn(S,R,F,T):
      """
     if (T > S):
         return 0
+
+    if F == 100:
+        return R- R*T/S
+
     return R * ( 1.0 - math.pow(float(S-T)/float(S) , (100.0/F)))
 # These functions mimic the EVM-implementation
 
@@ -222,7 +229,7 @@ def calculatePurchaseReturnSolidity(S,R,F,E):
 
 
     if _reserveRatio == 100:
-        amount = uint256(_supply - baseN) / _reserveBalance
+        amount = uint256(_supply * baseN) / _reserveBalance
         if amount < _supply: 
             raise Exception("Error, amount < supply")
         return amount - _supply
@@ -235,12 +242,13 @@ def calculatePurchaseReturnSolidity(S,R,F,E):
         print(" supply[%d] * resN[%d] / resD[%d] - supply[%d] = %d " %
             (_supply, resN, resD, _supply, result))
 
-    
+    #Potential fix, reduce the result by the error occurred through rounding
+    #return result- calcPurchaseMin(S)
     return result
 
 def calcPurchaseMin(S):
     _supply = uint256(S)
-    print (_supply * 0x100000001/0x100000000 -_supply)
+    return (_supply * 0x100000001/0x100000000 -_supply)
 
 def calcSaleMin(R):
     _reserveBalance = uint256(R)
@@ -273,13 +281,16 @@ def calculateSaleReturnSolidity(S, R, F,  T):
     resN = uint256(resN)
     resD = uint256(resD)
 
-    amount = uint256(_reserveBalance * resD) / resN
-    result = _reserveBalance - amount
+    amount = uint256(_reserveBalance * resD)
+    reserveUpshifted =  uint256(_reserveBalance * resN)
+    result = (reserveUpshifted - amount) / resN
     
     if verbose:
         print(" rbal[%d] * resN[%d] / resD[%d] - rbal[%d] = %d " %
         (_reserveBalance, resN, resD, _reserveBalance, result))
 
+#Potenatial fix, reduce the result by the error occurred through rounding
+#    return result - 2*calcSaleMin(R)
     return result 
 
 def calculateFactorials():

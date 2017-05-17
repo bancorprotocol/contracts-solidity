@@ -368,8 +368,8 @@ generateRandomTestData()
 printTooLargeReturns()
 printExpectedThrows()
 
-
-
+#formula.verbose = True
+#
 #(S,R,F,E, correct)  = ( 2709028000000000000000000000000000, 2709028000000000000000000000000000 , 100, 244983000000000000000000000000000L,244983000166133046150207519531250L)
 #print formula.calculatePurchaseReturnSolidity(S,R,F,E)
 #M = 1000000000000000000L
