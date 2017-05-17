@@ -11,6 +11,7 @@ let tokenAddress;
 let formulaAddress;
 let reserveTokenAddress;
 let reserveTokenAddress2 = '0x32f0f93396f0865d7ce412695beb3c3ad9ccca75';
+let address1 = '0x3e3ac49882f3fc4b768139af45588242e50e5701';
 
 function verifyReserve(reserve, isSet, isEnabled, ratio, isVirtualBalanceEnabled, virtualBalance) {
     assert.equal(reserve[0], virtualBalance);
@@ -374,7 +375,7 @@ contract('BancorChanger', (accounts) => {
     it('verifies that the owner can issue tokens', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2, '0x0');
         let changer = await BancorChanger.new(token.address, formulaAddress, '0x0', '0x0', 0);
-        token.setChanger(changer.address);
+        await token.setChanger(changer.address);
         await changer.issueTokens(accounts[1], 100);
         let totalSupply = await token.totalSupply.call();
         assert.equal(totalSupply, 100);
@@ -385,7 +386,7 @@ contract('BancorChanger', (accounts) => {
     it('should throw when a non owner attempts to issue tokens', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2, '0x0');
         let changer = await BancorChanger.new(token.address, formulaAddress, '0x0', '0x0', 0);
-        token.setChanger(changer.address);
+        await token.setChanger(changer.address);
 
         try {
             await changer.issueTokens(accounts[1], 100, { from: accounts[1] });
@@ -411,7 +412,7 @@ contract('BancorChanger', (accounts) => {
     it('verifies that the owner can destroy tokens', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2, '0x0');
         let changer = await BancorChanger.new(token.address, formulaAddress, '0x0', '0x0', 0);
-        token.setChanger(changer.address);
+        await token.setChanger(changer.address);
         await changer.issueTokens(accounts[1], 100);
         await changer.destroyTokens(accounts[1], 20);
         let totalSupply = await token.totalSupply.call();
@@ -423,7 +424,7 @@ contract('BancorChanger', (accounts) => {
     it('should throw when a non owner attempts to destroy tokens', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2, '0x0');
         let changer = await BancorChanger.new(token.address, formulaAddress, '0x0', '0x0', 0);
-        token.setChanger(changer.address);
+        await token.setChanger(changer.address);
         await changer.issueTokens(accounts[1], 100);
 
         try {
@@ -438,7 +439,7 @@ contract('BancorChanger', (accounts) => {
     it('should throw when attempting to destroy tokens while the changer is inactive', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2, '0x0');
         let changer = await BancorChanger.new(token.address, formulaAddress, '0x0', '0x0', 0);
-        token.setChanger(changer.address);
+        await token.setChanger(changer.address);
         await changer.issueTokens(accounts[1], 100);
         await changer.setTokenChanger('0x0');
 
@@ -548,6 +549,51 @@ contract('BancorChanger', (accounts) => {
 
         try {
             await changer.withdraw(tokenAddress, '0x0', 50);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('verifies that the owner can set the token changer', async () => {
+        let token = await SmartToken.new('Token1', 'TKN1', 2, '0x0', { from: accounts[1] });
+        let changer = await BancorChanger.new(token.address, formulaAddress, '0x0', '0x0', 0);
+        await token.setChanger(changer.address, { from: accounts[1] });
+        await changer.setTokenChanger(address1);
+        let newChanger = await token.changer.call();
+        assert.equal(newChanger, address1);
+    });
+
+    it('verifies that the owner can remove the token changer', async () => {
+        let token = await SmartToken.new('Token1', 'TKN1', 2, '0x0', { from: accounts[1] });
+        let changer = await BancorChanger.new(token.address, formulaAddress, '0x0', '0x0', 0);
+        await token.setChanger(changer.address, { from: accounts[1] });
+        await changer.setTokenChanger('0x0');
+        let newChanger = await token.changer.call();
+        assert.equal(newChanger, utils.zeroAddress);
+    });
+
+    it('should throw when a non owner attempts to set the changer', async () => {
+        let token = await SmartToken.new('Token1', 'TKN1', 2, '0x0', { from: accounts[1] });
+        let changer = await BancorChanger.new(token.address, formulaAddress, '0x0', '0x0', 0);
+        await token.setChanger(changer.address, { from: accounts[1] });
+
+        try {
+            await changer.setTokenChanger(address1, { from: accounts[1] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when the owner attempts to set the token itself as the changer', async () => {
+        let token = await SmartToken.new('Token1', 'TKN1', 2, '0x0');
+        let changer = await BancorChanger.new(token.address, formulaAddress, '0x0', '0x0', 0);
+
+        try {
+            await changer.setTokenChanger(token.address);
             assert(false, "didn't throw");
         }
         catch (error) {
