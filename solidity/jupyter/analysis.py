@@ -1,6 +1,9 @@
 import math,sys
 
 def calculatePurchaseReturn(S,R,F,E):
+    if F== 100:
+        return S*E/R
+
     return S * ( math.pow(1.0 + float(E)/float(R), float(F)/100.0) - 1.0 )
         
 def calculateSaleReturn(S,R,F,T):
@@ -9,6 +12,10 @@ def calculateSaleReturn(S,R,F,T):
      """
     if (T > S):
         return 0
+
+    if F == 100:
+        return R- R*T/S
+
     return R * ( 1.0 - math.pow(float(S-T)/float(S) , (100.0/F)))
 # These functions mimic the EVM-implementation
 
@@ -218,20 +225,30 @@ def calculatePurchaseReturnSolidity(S,R,F,E):
     _reserveRatio = uint256(F)
     _depositAmount = uint256(E)
 
+    baseN = uint256(_depositAmount + _reserveBalance);
+
+
+    if _reserveRatio == 100:
+        amount = uint256(_supply * baseN) / _reserveBalance
+        if amount < _supply: 
+            raise Exception("Error, amount < supply")
+        return amount - _supply
     
-    (resN, resD) = power(uint128(_depositAmount + _reserveBalance), uint128(_reserveBalance), _reserveRatio, 100);
+    (resN, resD) = power(baseN, _reserveBalance, _reserveRatio, 100);
+
 
     result =  (_supply * resN / resD) - _supply
+    if verbose:
+        print(" supply[%d] * resN[%d] / resD[%d] - supply[%d] = %d " %
+            (_supply, resN, resD, _supply, result))
 
-    print(" supply[%d] * resN[%d] / resD[%d] - supply[%d] = %d " %
-        (_supply, resN, resD, _supply, result))
-
-    
+    #Potential fix, reduce the result by the error occurred through rounding
+    #return result- calcPurchaseMin(S)
     return result
 
 def calcPurchaseMin(S):
     _supply = uint256(S)
-    print (_supply * 0x100000001/0x100000000 -_supply)
+    return (_supply * 0x100000001/0x100000000 -_supply)
 
 def calcSaleMin(R):
     _reserveBalance = uint256(R)
@@ -251,17 +268,29 @@ def calculateSaleReturnSolidity(S, R, F,  T):
 
     _baseN = _supply - _sellAmount
 
+    if _reserveRatio == 100:
+        amount = uint256(_reserveBalance * _baseN ) / _supply
+        if _reserveBalance < amount:
+            raise Exception("_reservebalance < amount")
+
+        return _reserveBalance - amount
+
+
+
     (resN, resD) = power(_supply, _baseN, 100, _reserveRatio);
     resN = uint256(resN)
     resD = uint256(resD)
 
-    amount = uint256(_reserveBalance * resD) / resN
-    result = _reserveBalance - amount
+    amount = uint256(_reserveBalance * resD)
+    reserveUpshifted =  uint256(_reserveBalance * resN)
+    result = (reserveUpshifted - amount) / resN
     
     if verbose:
         print(" rbal[%d] * resN[%d] / resD[%d] - rbal[%d] = %d " %
         (_reserveBalance, resN, resD, _reserveBalance, result))
 
+#Potenatial fix, reduce the result by the error occurred through rounding
+#    return result - 2*calcSaleMin(R)
     return result 
 
 def calculateFactorials():

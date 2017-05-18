@@ -2,7 +2,8 @@ var big = require("bignumber");
 var testdata = require("./helpers/FormulaTestData.js")
 var BancorFormula = artifacts.require("./BancorFormula.sol");
 function isThrow(error){
-  return error.toString().indexOf("invalid JUMP") != -1;
+  return error.toString().indexOf("invalid JUMP") != -1 
+  || error.toString().indexOf("VM Exception while executing eth_call: invalid opcode") != -1;
 }
 
 function expectedThrow(error){
@@ -18,7 +19,9 @@ function _hex(hexstr){
   }
   return new big.BigInteger(hexstr,16);
 }
-
+function num(numeric_string){
+ return new big.BigInteger(numeric_string, 10); 
+}
 contract('BancorFormula', function(accounts){
 
 
@@ -41,28 +44,22 @@ contract('BancorFormula', function(accounts){
     }).catch(expectedThrow);
   });
 
-
-  it("Throws exceptions at large input", function(){
-    return BancorFormula.deployed().then(function(instance){
-        var large = _hex('0xFFFFF100000000000000000000000000000010');
-        return instance.calculatePurchaseReturn.call(large,large,30,large);
-      }).then(function(retval) { 
-        assert(false, "testThrow was supposed to throw but didn't: "+retval.toString(16));
-    }).catch(expectedThrow);
-  });
-
   var purchaseTest = function(k){
       var [S,R,F,E,expect,exact] = k
+      S = num(S), R = num(R), F = num(F), E = num(E), expect = num(expect)
+
       it("Should get correct amount of tokens when purchasing", function(){
         return BancorFormula.deployed().then(
           function(f)
           {
             return f.calculatePurchaseReturn.call(S,R,F,E);
           }).then(function(retval){
-            assert(retval.valueOf() <= expect,"Purchase return "+retval+" should be <="+expect+" ( "+exact+"). [S,R,F,E] "+[S,R,F,E]);
+            //assert(retval.valueOf() <= expect,"Purchase return "+retval+" should be <="+expect+" ( "+exact+"). [S,R,F,E] "+[S,R,F,E]);
+            assert(retval.eq(expect),"Purchase return "+retval+" should be =="+expect+" ( "+exact+"). [S,R,F,E] "+[S,R,F,E]);
             }).catch(function(error){
               if(isThrow(error)){
-                assert(false, "Purchase return generated throw");
+                if ( expect.valueOf() == 0) assert(true, "Expected throw");
+                else assert(false, "Sale return generated throw");
               }else{
                 assert(false, error.toString());
               }
@@ -71,36 +68,63 @@ contract('BancorFormula', function(accounts){
     }
   var saleTest = function(k){
       var [S,R,F,T,expect,exact] = k
+      S = num(S), R = num(R), F = num(F), T = num(T), expect = num(expect)
+
       it("Should get correct amount of Ether when selling", function(){
         return BancorFormula.deployed().then(
           function(f)
           {
             return f.calculateSaleReturn.call(S,R,F,T);
           }).then(function(retval){
-            assert(retval.valueOf() <= expect,"Sale return "+retval+" should be <="+expect+" ( "+exact+"). [S,R,F,T] "+[S,R,F,T]);
+
+            assert(retval.eq(expect),"Sale return "+retval+" should be =="+expect+" ( "+exact+"). [S,R,F,T] "+[S,R,F,T]);
 
             }).catch(function(error){
               if(isThrow(error)){
-                assert(false, "Sale return generated throw");
+                if ( expect.valueOf() == 0) assert(true, "Expected throw");
+                else assert(false, "Sale return generated throw");
               }else{
                 assert(false, error.toString());
               }
             });;
       });
     }
+  var purchaseThrowTest = function(k){
+      var [S,R,F,E,expect,exact] = k
+      it("Should throw on out of bounds", function(){
+        return BancorFormula.deployed().then(
+          function(f)
+          {
+            return f.calculatePurchaseReturn.call(S,R,F,E);
+          }).then(function(retval) { 
+              assert(false, "was supposed to throw but didn't: [S,R,F,E] "+[S,R,F,E]+" => " +retval.toString(16));
+          }).catch(expectedThrow);
+      });
+    }
+  var saleThrowTest = function(k){
+      var [S,R,F,T,expect,exact] = k
+      it("Should throw on out of bounds", function(){
+        return BancorFormula.deployed().then(
+          function(f)
+          {
+            return f.calculateSaleReturn.call(S,R,F,T);
+          }).then(function(retval) { 
+              assert(false, "was supposed to throw but didn't: [S,R,F,T] "+[S,R,F,T] +"=> " +retval.toString(16));
+          }).catch(expectedThrow);
+      });
+    }
 
-//  testdata.purchaseReturnsErrors.forEach(purchaseTest);
   testdata.purchaseReturns.forEach(purchaseTest);
   testdata.saleReturns.forEach(saleTest);
   
   testdata.purchaseReturnsLarge.forEach(purchaseTest);
-  testdata.saleReturnsLarge.forEach(purchaseTest);
-
+  testdata.saleReturnsLarge.forEach(saleTest);
   testdata.randomPurchaseReturns.forEach(purchaseTest);
-
   testdata.randomSaleReturns.forEach(saleTest);
 
-//  testdata.randomSaleReturns2.forEach(saleTest);
-//  testdata.randomPurchaseReturns2.forEach(purchaseTest);
+  testdata.purchaseReturnExpectedThrows.forEach(purchaseThrowTest)
+  testdata.saleReturnExpectedThrows.forEach(saleThrowTest)
+
+
   
 });

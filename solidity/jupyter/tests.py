@@ -1,8 +1,68 @@
 import analysis as formula
 import random,math
 
+
+tooLargeReturns = {
+        "purchaseReturn" : [], 
+        "saleReturn": [],
+
+}
+expectedThrows = {
+        "purchaseReturn" : [], 
+        "saleReturn": [],    
+}
+def purchaseReturn(S,R,F,E):
+    """ Returns a tuple
+    ( python high-precision purchase return, python-solidity purchase return )
+    """
+
+    T = formula.calculatePurchaseReturn(S,R,F,E)
+    try:
+        Tsol =  formula.calculatePurchaseReturnSolidity(S,R,F,E)
+        if Tsol > T:
+            addTooLargeReturnOnPurchase(S,R,F,E,T,Tsol)
+        return (T,Tsol)
+    except Exception as e:
+        addExpectedThrowOnPurchase(S,R,F,E, str(e))
+    
+    return (T,0)
+
+
+def saleReturn(S,R,F,T):
+    """ Returns a tuple
+    ( python high-precision purchase return, python-solidity purchase return )
+    """
+
+    E = formula.calculateSaleReturn(S,R,F,T)
+    try:
+        Esol = formula.calculateSaleReturnSolidity(S,R,F,T)
+        if Esol > E:
+            addTooLargeReturnOnSale(S,R,F,T,E,Esol)
+        return (E,Esol)
+    except Exception as e:
+        addExpectedThrowOnSale(S,R,F,E, str(e))
+    
+    return (E,0)
+
+
+
+
+def addTooLargeReturnOnPurchase(S,R,F,E,T,Tsol):
+    tooLargeReturns['purchaseReturn'].append([S,R,F,E,Tsol,T])
+
+def addTooLargeReturnOnSale(S,R,F,T,E,Esol):
+    tooLargeReturns['saleReturn'].append([S,R,F,T,Esol,E])
+
+def addExpectedThrowOnPurchase(S,R,F,E, ex):
+    expectedThrows['purchaseReturn'].append([S,R,F,E, ex])
+
+def addExpectedThrowOnSale(S,R,F,T, ex):
+    expectedThrows['saleReturn'].append([S,R,F,T, ex])
+
+    
 def generateTestData():
     """ Generates some basic scenarios"""
+
 
     S = 300000.0
     R = 63000.0
@@ -11,15 +71,15 @@ def generateTestData():
     print("module.exports.purchaseReturns= [")
     for i in range(1, 1000,2):
         E = float(i * i) # Goes up to 1 million ether 
-        T = formula.calculatePurchaseReturn(S,R,F,E)
-        print("\t[%d,%d,%d,%d,%d, %f]," % ( int(S), int(R), F, int(E),math.floor(T), T ))
+        (T,Tsol) = purchaseReturn(S,R,F,E)
+        print("\t['%d','%d','%d','%d','%d', '%f']," % ( int(S), int(R), F, int(E),Tsol, T ))
     print("];")
     
     print("module.exports.saleReturns = [")
     for i in range(1, 1000,2):
         T = float(i * i) # Goes up to 1 million tokens
-        E = formula.calculateSaleReturn(S,R,F,T)
-        print("\t[%d,%d,%d,%d,%d, %f]," % ( int(S), int(R), F, int(T),math.floor(E), E ))
+        (E, Esol) = saleReturn(S,R,F,T)
+        print("\t['%d','%d','%d','%d','%d', '%f']," % ( int(S), int(R), F, int(T),Esol, E ))
     print("];")
 
 def generateTestDataLargeNumbers():
@@ -33,15 +93,15 @@ def generateTestDataLargeNumbers():
     print("module.exports.purchaseReturnsLarge= [")
     for i in range(1, 1000,2):
         E = long(i)*long(i)*M # Goes up to 1 million ether 
-        T = formula.calculatePurchaseReturn(S,R,F,E)
-        print("\t[%d,%d,%d,%d,%d, %f]," % ( int(S), int(R), F, int(E),math.floor(T), T ))
+        (T,Tsol) = purchaseReturn(S,R,F,E)
+        print("\t['%d','%d','%d','%d','%d', '%f']," % ( int(S), int(R), F, int(E),Tsol, T ))
     print("];")
     
     print("module.exports.saleReturnsLarge = [")
     for i in range(1, 1000,2):
         T = long(i)*long(i)*M # Goes up to 1 million tokens
-        E = formula.calculateSaleReturn(S,R,F,T)
-        print("\t[%d,%d,%d,%d,%d, %f]," % ( int(S), int(R),F, int(T),math.floor(E), E ))
+        (E, Esol) = saleReturn(S,R,F,T)
+        print("\t['%d','%d','%d','%d','%d', '%f']," % ( int(S), int(R),F, int(T),Esol, E ))
     print("];")
 
 
@@ -50,39 +110,64 @@ def generateRandomTestData():
 
     print("module.exports.randomPurchaseReturns = [")
     for i in range(1, 100):
-        S = float(random.randint(1e6, 3e6))
+        S = long(random.randint(1e6, 3e6))
         F = random.randint(1, 100 )
         R = math.floor(F*S / 100)
-        E = float(random.randint(700, 300000))
+        E = long(random.randint(700, 300000))
+
+        (T,Tsol) = purchaseReturn(S,R,F,E)
 
         lS = long(S) * M
         lR = long(R) * M
         lE = long(E) * M
 
-        T = formula.calculatePurchaseReturn(S,R,float(F),E)
-        lT = formula.calculatePurchaseReturn(lS,lR,float(F),lE)
-        print("\t[%d,%d,%d,%d,%d, %f]," % ( int(S), int(R), int(F), int(E),math.floor(T), T ))
-        print("\t[%d,%d,%d,%d,%d, %f]," % ( lS, lR, F, lE ,math.floor(lT), lT ))
+        (largeT,largeTsol) = purchaseReturn(lS,lR,F,lE)
+
+        print("\t['%d','%d','%d','%d','%d', '%f']," % ( S, R, F, E,Tsol, T ))
+        print("\t['%d','%d','%d','%d','%d', '%f']," % ( lS, lR, F, lE ,largeTsol, largeT ))
     print("];")
 
     print("module.exports.randomSaleReturns = [")
     for i in range(1, 100):
-        S = float(random.randint(1e6, 3e6))
+        S = long(random.randint(1e6, 3e6))
         F = random.randint(1, 100 )
         R = math.floor(F*S / 100)
-        T = float(random.randint(700, 300000))
+        T = long(random.randint(700, 300000))
+
+        (E, Esol) = saleReturn(S,R,F,T)
 
         lS = long(S) * M
         lR = long(R) * M
         lT = long(T) * M
+    
+        (largeE, largeEsol) = saleReturn(lS,lR,F,lT)
 
-        E = formula.calculateSaleReturn(S,R,float(F),T)
-        lE = formula.calculateSaleReturn(lS,lR,float(F),lT)
-        print("\t[%d,%d,%d,%d,%d, %f]," % ( int(S), int(R), F, int(T),math.floor(E), E ))
-        print("\t[%d,%d,%d,%d,%d, %f]," % ( lS, lR, F, lT,math.floor(lE), lE ))
+        print("\t['%d','%d','%d','%d','%d', '%f']," % ( S, R, F, T,Esol, E ))
+        print("\t['%d','%d','%d','%d','%d', '%f']," % ( lS, lR, F, lT, largeEsol, largeE ))
     print("];")
 
+def printTooLargeReturns():
 
+    print("module.exports.tooLargePurchaseReturns = [")
+    for l in tooLargeReturns['purchaseReturn']:
+        print("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
+    print("];")
+
+    print("module.exports.tooLargeSaleReturns = [")
+    for l in tooLargeReturns['saleReturn']:
+        print("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
+    print("];")
+
+def printExpectedThrows():
+    print("module.exports.purchaseReturnExpectedThrows = [")
+    for l in expectedThrows['purchaseReturn']:
+        print("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
+    print("];")
+
+    print("module.exports.saleReturnExpectedThrows = [")
+    for l in expectedThrows['saleReturn']:
+        print("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
+    print("];")
 
 def generateRandomTestData2():
     purchaseResults = []
@@ -276,18 +361,23 @@ def testLog2():
     log2(0x20416d8b9f09d345031eb56b29f53708324b2232b812bc84a0c3e740921d1b62L) error: 0.371572 nanopercent
     """
 
-M = 1000000000000000000L
-(S,R,F,T) = (300000*M, 63000*M, 21, 1*M)
-formula.verbose = True
-a = formula.calculateSaleReturnSolidity(S,R,F,T)
-b = formula.calculateSaleReturn(S,R,F,T)
-print(a,b,a-b)
-#generateTestData()
-#generateTestDataLargeNumbers()
-#generateRandomTestData()
+generateTestData()
+generateTestDataLargeNumbers()
+generateRandomTestData()
+#
+printTooLargeReturns()
+printExpectedThrows()
 
-
-
+#formula.verbose = True
+#
+#(S,R,F,E, correct)  = ( 2709028000000000000000000000000000, 2709028000000000000000000000000000 , 100, 244983000000000000000000000000000L,244983000166133046150207519531250L)
+#print formula.calculatePurchaseReturnSolidity(S,R,F,E)
+#M = 1000000000000000000L
+#(S,R,F,T) = (300000*M, 63000*M, 21, 1*M)
+#formula.verbose = True
+#a = formula.calculateSaleReturnSolidity(S,R,F,T)
+#b = formula.calculateSaleReturn(S,R,F,T)
+#print(a,b,a-b)
 #generateRandomTestData2()
 #testPrecisionLimits()
 #testCornercase2()
