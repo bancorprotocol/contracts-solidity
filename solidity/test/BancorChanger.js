@@ -656,7 +656,7 @@ contract('BancorChanger', (accounts) => {
         assert.equal(returnAmount.toNumber(), saleReturnAmount.toNumber());
     });
 
-    it('verifies that getReturn returns the same amount as getPurchaseReturn -> getSaleReturn when changing from reserve 1 to reserve 2', async () => {
+    it('verifies that getReturn returns the same amount as buy -> sell when changing from reserve 1 to reserve 2', async () => {
         let changer = await initChanger(accounts, true);
         let returnAmount = await changer.getReturn.call(reserveTokenAddress, reserveTokenAddress2, 500);
 
