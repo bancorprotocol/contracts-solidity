@@ -48,8 +48,8 @@ function verifyReserve(reserve, isSet, isEnabled, ratio, isVirtualBalanceEnabled
     assert.equal(reserve[4], isSet);
 }
 
-function getChangeAmount(transaction) {
-    return transaction.logs[0].args._return.toNumber();
+function getChangeAmount(transaction, logIndex = 0) {
+    return transaction.logs[logIndex].args._return.toNumber();
 }
 
 contract('BancorChanger', (accounts) => {
@@ -659,11 +659,15 @@ contract('BancorChanger', (accounts) => {
     it('verifies that getReturn returns the same amount as getPurchaseReturn -> getSaleReturn when changing from reserve 1 to reserve 2', async () => {
         let changer = await initChanger(accounts, true);
         let returnAmount = await changer.getReturn.call(reserveTokenAddress, reserveTokenAddress2, 500);
-        let purchaseReturnAmount = await changer.getPurchaseReturn.call(reserveTokenAddress, 500);
-        let saleReturnAmount = await changer.getSaleReturn.call(reserveTokenAddress2, purchaseReturnAmount);
-        assert.isNumber(returnAmount.toNumber());
-        assert.notEqual(returnAmount.toNumber(), 0);
-        assert.equal(returnAmount.toNumber(), saleReturnAmount.toNumber());
+
+        await reserveToken.approve(changer.address, 500);
+        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 0);
+        let purchaseAmount = getChangeAmount(purchaseRes);
+
+        let saleRes = await changer.sell(reserveTokenAddress2, purchaseAmount, 0);
+        let saleAmount = getChangeAmount(saleRes);
+
+        assert.equal(returnAmount, saleAmount);
     });
 
     it('should throw when attempting to get the return with an invalid from token adress', async () => {
@@ -841,7 +845,7 @@ contract('BancorChanger', (accounts) => {
         await reserveToken.approve(changer.address, 500);
 
         let changeRes = await changer.change(reserveTokenAddress, reserveTokenAddress2, 500, 0);
-        let changeAmount = getChangeAmount(changeRes);
+        let changeAmount = getChangeAmount(changeRes, 1);
         assert.isNumber(changeAmount);
         assert.notEqual(changeAmount, 0);
 

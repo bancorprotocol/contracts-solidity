@@ -10,7 +10,6 @@ import './SmartTokenInterface.sol';
     - assumes that the reserve tokens either return true for transfer/transferFrom or throw - possibly remove the reliance on the return value
     - possibly support ERC223 standard for reserve tokens
     - possibly add getters for reserve fields so that the client won't need to rely on the order in the struct
-    - getReturn doesn't return the correct amount for changing between 2 reserves as it doesn't take the state change between the two calls into account
 */
 
 // interfaces
@@ -294,8 +293,8 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
             return getSaleReturn(_toToken, _amount);
 
         // change between 2 reserves
-        uint256 tempAmount = getPurchaseReturn(_fromToken, _amount);
-        return getSaleReturn(_toToken, tempAmount);
+        uint256 purchaseReturnAmount = getPurchaseReturn(_fromToken, _amount);
+        return getSaleReturn(_toToken, purchaseReturnAmount, safeAdd(token.totalSupply(), purchaseReturnAmount));
     }
 
     /*
@@ -315,10 +314,8 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         Reserve reserve = reserves[_reserveToken];
         require(reserve.isEnabled); // validate input
 
-        uint256 reserveBalance = getReserveBalance(_reserveToken);
-        assert(reserveBalance != 0); // validate state
-
         uint256 tokenSupply = token.totalSupply();
+        uint256 reserveBalance = getReserveBalance(_reserveToken);
         return formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
     }
 
@@ -328,22 +325,8 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         _reserveToken   reserve token contract address
         _sellAmount     amount to sell (in the smart token)
     */
-    function getSaleReturn(address _reserveToken, uint256 _sellAmount)
-        public
-        constant
-        active
-        validReserve(_reserveToken)
-        validAmount(_sellAmount)
-        returns (uint256 amount)
-    {
-        require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
-
-        Reserve reserve = reserves[_reserveToken];
-        uint256 reserveBalance = getReserveBalance(_reserveToken);
-        assert(reserveBalance != 0); // validate state
-        
-        uint256 tokenSupply = token.totalSupply();
-        return formula.calculateSaleReturn(tokenSupply, reserveBalance, reserve.ratio, _sellAmount);
+    function getSaleReturn(address _reserveToken, uint256 _sellAmount) public constant returns (uint256 amount) {
+        return getSaleReturn(_reserveToken, _sellAmount, token.totalSupply());
     }
 
     /*
@@ -370,8 +353,8 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
             return sell(_toToken, _amount, _minReturn);
 
         // change between 2 reserves
-        uint256 tempAmount = buy(_fromToken, _amount, 0);
-        return sell(_toToken, tempAmount, _minReturn);
+        uint256 purchaseAmount = buy(_fromToken, _amount, 0);
+        return sell(_toToken, purchaseAmount, _minReturn);
     }
 
     /*
@@ -430,6 +413,29 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
 
         Change(token, _reserveToken, msg.sender, _sellAmount, amount);
         return amount;
+    }
+
+    /*
+        utility, returns the expected return for selling the token for one of its reserve tokens, given a total supply override
+
+        _reserveToken   reserve token contract address
+        _sellAmount     amount to sell (in the smart token)
+        _totalSupply    total token supply, overrides the actual token total supply when calculating the return
+    */
+    function getSaleReturn(address _reserveToken, uint256 _sellAmount, uint256 _totalSupply)
+        private
+        constant
+        active
+        validReserve(_reserveToken)
+        validAmount(_sellAmount)
+        validAmount(_totalSupply)
+        returns (uint256 amount)
+    {
+        require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
+
+        Reserve reserve = reserves[_reserveToken];
+        uint256 reserveBalance = getReserveBalance(_reserveToken);
+        return formula.calculateSaleReturn(_totalSupply, reserveBalance, reserve.ratio, _sellAmount);
     }
 
     // fallback
