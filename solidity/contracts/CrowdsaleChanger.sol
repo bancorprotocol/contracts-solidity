@@ -23,6 +23,8 @@ contract EtherToken {
     Crowdsale Changer v0.1
 
     The crowdsale version of the token changer, allows buying the smart token with ether/other ERC20 tokens
+
+    Note that during the crowdsale, the price remains fixed by keeping the same ratio between the reserve and the supply.
 */
 contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     struct ERC20TokenData {
