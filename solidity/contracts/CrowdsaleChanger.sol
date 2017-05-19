@@ -30,7 +30,6 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     struct ERC20TokenData {
         uint256 valueN;     // 1 smallest unit in wei (numerator)
         uint256 valueD;     // 1 smallest unit in wei (denominator)
-        uint16 limit;       // maximum contribution in percentage out of the total ETH raised so far. 1-1000 (10 == 1%), divided by 1000, 0 to disable
         bool isEnabled;     // is purchase of the smart token enabled with the ERC20 token, can be set by the owner
         bool isSet;         // used to tell if the mapping element is defined
     }
@@ -81,7 +80,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         beneficiary = _beneficiary;
         btcs = _btcs;
 
-        addERC20Token(_etherToken, 0, 1, 1); // Ether
+        addERC20Token(_etherToken, 1, 1); // Ether
     }
 
     // validates an address - currently only checks that it isn't null
@@ -99,12 +98,6 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     // validates a token address - verifies that the address belongs to one of the changeable tokens
     modifier validToken(address _address) {
         require(_address == address(token) || tokenData[_address].isSet);
-        _;
-    }
-
-    // validates ERC20 token limit
-    modifier validERC20TokenLimit(uint16 _limit) {
-        require(_limit <= 1000);
         _;
     }
 
@@ -172,19 +165,19 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         ownerOnly
         inactive
     {
-        addERC20Token(0xa74476443119A942dE498590Fe1f2454d7D4aC0d, 20, 1, 1); // Golem
-        addERC20Token(0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5, 20, 1, 1); // Augur
+        addERC20Token(0xa74476443119A942dE498590Fe1f2454d7D4aC0d, 1, 1); // Golem
+        addERC20Token(0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5, 1, 1); // Augur
 
-        addERC20Token(0x6810e776880C02933D47DB1b9fc05908e5386b96, 10, 1, 1); // Gnosis
-        addERC20Token(0xaeC2E87E0A235266D9C5ADc9DEb4b2E29b54D009, 10, 1, 1); // SingularDTV
-        addERC20Token(0xE0B7927c4aF23765Cb51314A0E0521A9645F0E2A, 10, 1, 1); // DigixDAO
+        addERC20Token(0x6810e776880C02933D47DB1b9fc05908e5386b96, 1, 1); // Gnosis
+        addERC20Token(0xaeC2E87E0A235266D9C5ADc9DEb4b2E29b54D009, 1, 1); // SingularDTV
+        addERC20Token(0xE0B7927c4aF23765Cb51314A0E0521A9645F0E2A, 1, 1); // DigixDAO
 
-        addERC20Token(0x4993CB95c7443bdC06155c5f5688Be9D8f6999a5, 5, 1, 1); // ROUND
-        addERC20Token(0x607F4C5BB672230e8672085532f7e901544a7375, 5, 1, 1); // iEx.ec
-        addERC20Token(0x888666CA69E0f178DED6D75b5726Cee99A87D698, 5, 1, 1); // ICONOMI
-        addERC20Token(0xAf30D2a7E90d7DC361c8C4585e9BB7D2F6f15bc7, 5, 1, 1); // FirstBlood
-        addERC20Token(0xBEB9eF514a379B997e0798FDcC901Ee474B6D9A1, 5, 1, 1); // Melon
-        addERC20Token(0x667088b212ce3d06a1b553a7221E1fD19000d9aF, 5, 1, 1); // Wings
+        addERC20Token(0x4993CB95c7443bdC06155c5f5688Be9D8f6999a5, 1, 1); // ROUND
+        addERC20Token(0x607F4C5BB672230e8672085532f7e901544a7375, 1, 1); // iEx.ec
+        addERC20Token(0x888666CA69E0f178DED6D75b5726Cee99A87D698, 1, 1); // ICONOMI
+        addERC20Token(0xAf30D2a7E90d7DC361c8C4585e9BB7D2F6f15bc7, 1, 1); // FirstBlood
+        addERC20Token(0xBEB9eF514a379B997e0798FDcC901Ee474B6D9A1, 1, 1); // Melon
+        addERC20Token(0x667088b212ce3d06a1b553a7221E1fD19000d9aF, 1, 1); // Wings
     }
 
     /*
@@ -192,20 +185,17 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         can only be called by the changer owner while the changer is inactive
 
         _token      address of the ERC20 token
-        _limit      maximum contribution in percentage out of the total ETH raised so far. 1-1000 (10 == 1%), divided by 1000
         _valueN     1 smallest unit in wei (numerator)
         _valueD     1 smallest unit in wei (denominator)
     */
-    function addERC20Token(address _token, uint16 _limit, uint256 _valueN, uint256 _valueD)
+    function addERC20Token(address _token, uint256 _valueN, uint256 _valueD)
         public
         ownerOnly
         inactive
         validAddress(_token)
-        validERC20TokenLimit(_limit)
     {
         require(_token != address(this) && _token != address(token) && !tokenData[_token].isSet && _valueN != 0 && _valueD != 0); // validate input
 
-        tokenData[_token].limit = _limit;
         tokenData[_token].valueN = _valueN;
         tokenData[_token].valueD = _valueD;
         tokenData[_token].isEnabled = true;
@@ -219,19 +209,16 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         note that the function can be called during the crowdsale as well, mainly to update the ERC20 token ETH value
 
         _erc20Token     address of the ERC20 token
-        _limit          maximum contribution in percentage out of the total ETH raised so far. 1-1000 (10 == 1%), divided by 1000
         _valueN         1 smallest unit in wei (numerator)
         _valueD         1 smallest unit in wei (denominator)
     */
-    function updateERC20Token(address _erc20Token, uint16 _limit, uint256 _valueN, uint256 _valueD)
+    function updateERC20Token(address _erc20Token, uint256 _valueN, uint256 _valueD)
         public
         ownerOnly
         validERC20Token(_erc20Token)
-        validERC20TokenLimit(_limit)
     {
         require(_valueN != 0 && _valueD != 0); // validate input
         ERC20TokenData data = tokenData[_erc20Token];
-        data.limit = _limit;
         data.valueN = _valueN;
         data.valueD = _valueD;
     }
@@ -319,15 +306,6 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
 
         // check ether cap
         require(safeAdd(totalEtherContributed, depositEthValue) <= TOTAL_ETHER_CAP);
-
-        // check limit
-        if (data.limit != 0) {
-            uint256 balance = beneficiaryBalances[_erc20Token];
-            uint256 balanceEthValue = safeMul(balance, data.valueN) / data.valueD;  // ether value of the ERC20 token beneficiary balance 
-            uint256 limit = safeMul(totalEtherContributed, data.limit) / 1000; // current limit of the ERC20 token
-            require(safeAdd(balanceEthValue, depositEthValue) <= limit);
-        }
-
         return depositEthValue * TOKEN_PRICE_D / TOKEN_PRICE_N;
     }
 
