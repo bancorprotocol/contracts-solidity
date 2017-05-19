@@ -791,18 +791,6 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to get the sale return with amount greater then the seller balance', async () => {
-        let changer = await initChanger(accounts, true);
-
-        try {
-            await changer.getSaleReturn.call(reserveTokenAddress, 30000);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
     it('verifies that change returns a valid amount', async () => {
         let changer = await initChanger(accounts, true);
         await reserveToken.approve(changer.address, 500);
