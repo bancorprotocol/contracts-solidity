@@ -36,7 +36,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     }
 
     uint256 public constant DURATION = 7 days;                  // crowdsale duration
-    uint256 public constant ETHER_CAP = 100000 ether;           // maximum ether contribution
+    uint256 public constant TOTAL_ETHER_CAP = 100000 ether;     // maximum ether contribution
     uint256 public constant BTCS_ETHER_CAP = 50000 ether;       // maximum bitcoin suisse ether contribution
     uint256 public constant TOKEN_PRICE_N = 1;                  // initial price in wei (numerator)
     uint256 public constant TOKEN_PRICE_D = 100;                // initial price in wei (denominator)
@@ -134,7 +134,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
 
     // ensures that we didn't reach the ether cap
     modifier etherCapNotReached() {
-        assert(totalEtherContributed < ETHER_CAP);
+        assert(totalEtherContributed < TOTAL_ETHER_CAP);
         _;
     }
 
@@ -318,7 +318,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
             return 0;
 
         // check ether cap
-        require(safeAdd(totalEtherContributed, depositEthValue) <= ETHER_CAP);
+        require(safeAdd(totalEtherContributed, depositEthValue) <= TOTAL_ETHER_CAP);
 
         // check limit
         if (data.limit != 0) {
