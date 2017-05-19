@@ -35,22 +35,12 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         bool isSet;         // used to tell if the mapping element is defined
     }
 
-    uint256 public constant DURATION = 30 days;                     // crowdsale duration
-    uint256 public constant ETHER_CAP = 1000000 ether;              // maximum ether contribution
-    uint256 public constant BITCOIN_SUISSE_ETHER_CAP = 20000 ether; // maximum bitcoin suisse ether contribution
-    uint256 public constant INITIAL_PRICE_N = 1;                    // initial price in wei (numerator)
-    uint256 public constant INITIAL_PRICE_D = 100;                  // initial price in wei (denominator)
-    uint8 public constant RESERVE_RATIO = 21;                       // constant reserve ratio for the new token, used to calculate the current price
-    uint8 public constant BENEFICIARY_PERCENTAGE = 30;              // percentage out of the total supply that should be issued to the beneficiary
-
-    // phases
-    uint256 public constant PHASE1_MIN_CONTRIBUTION = 0 ether;
-    uint256 public constant PHASE2_MIN_CONTRIBUTION = 100000 ether;
-    uint256 public constant PHASE3_MIN_CONTRIBUTION = 300000 ether;
-    // % of contribution allocated to the reserve
-    uint8 public constant PHASE1_RESERVE_ALLOCATION = 30;
-    uint8 public constant PHASE2_RESERVE_ALLOCATION = 50;
-    uint8 public constant PHASE3_RESERVE_ALLOCATION = 70;
+    uint256 public constant DURATION = 7 days;                  // crowdsale duration
+    uint256 public constant ETHER_CAP = 100000 ether;           // maximum ether contribution
+    uint256 public constant BTCS_ETHER_CAP = 50000 ether;       // maximum bitcoin suisse ether contribution
+    uint256 public constant TOKEN_PRICE_N = 1;                  // initial price in wei (numerator)
+    uint256 public constant TOKEN_PRICE_D = 100;                // initial price in wei (denominator)
+    uint8 public constant RESERVE_ALLOCATION_PERCENTAGE = 10;   // percentage of contribution that goes to the reserve
 
     string public version = '0.1';
     string public changerType = 'crowdsale';
@@ -61,7 +51,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     uint256 public tokenReserveBalance = 0;                     // amount of the ether contributed so far that gets into the smart token's reserve, used to calculate the current price
     address public etherToken = 0x0;                            // ether token contract address
     address public beneficiary = 0x0;                           // address to receive all contributed ether
-    address public bitcoinSuisse = 0x0;                         // bitcoin suisse address
+    address public btcs = 0x0;                                  // bitcoin suisse address
     SmartTokenInterface public token;                           // smart token governed by the changer
     address[] public acceptedTokens;                            // ERC20 standard token addresses
     mapping (address => ERC20TokenData) public tokenData;       // ERC20 token addresses -> ERC20 token data
@@ -75,13 +65,13 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         _etherToken     ether token contract address
         _startTime      crowdsale start time
         _beneficiary    address to receive all contributed ether
-        _bitcoinSuisse  bitcoin suisse address
+        _btcs           bitcoin suisse address
     */
-    function CrowdsaleChanger(address _token, address _etherToken, uint256 _startTime, address _beneficiary, address _bitcoinSuisse)
+    function CrowdsaleChanger(address _token, address _etherToken, uint256 _startTime, address _beneficiary, address _btcs)
         validAddress(_token)
         validAddress(_etherToken)
         validAddress(_beneficiary)
-        validAddress(_bitcoinSuisse)
+        validAddress(_btcs)
         earlierThan(_startTime)
     {
         token = SmartTokenInterface(_token);
@@ -89,7 +79,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         startTime = _startTime;
         endTime = startTime + DURATION;
         beneficiary = _beneficiary;
-        bitcoinSuisse = _bitcoinSuisse;
+        btcs = _btcs;
 
         addERC20Token(_etherToken, 0, 1, 1); // Ether
     }
@@ -149,14 +139,14 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     }
 
     // ensures that the sender is bitcoin suisse
-    modifier bitcoinSuisseOnly() {
-        assert(msg.sender == bitcoinSuisse);
+    modifier btcsOnly() {
+        assert(msg.sender == btcs);
         _;
     }
 
     // ensures that we didn't reach the bitcoin suisse ether cap
-    modifier bitcoinSuisseEtherCapNotReached(uint256 _ethContribution) {
-        require(safeAdd(totalEtherContributed, _ethContribution) <= BITCOIN_SUISSE_ETHER_CAP);
+    modifier btcsEtherCapNotReached(uint256 _ethContribution) {
+        require(safeAdd(totalEtherContributed, _ethContribution) <= BTCS_ETHER_CAP);
         _;
     }
 
@@ -338,15 +328,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
             require(safeAdd(balanceEthValue, depositEthValue) <= limit);
         }
 
-        // first contribution can't use the simplified bancor formula, so using the predefined initial price instead
-        if (tokenReserveBalance == 0 || token.totalSupply() == 0)
-            return safeMul(depositEthValue, INITIAL_PRICE_D) / INITIAL_PRICE_N;
-
-        // using the simplified bancor formula -
-        // Price = Reserve / (Supply * CRR)
-        uint256 temp = safeMul(depositEthValue, token.totalSupply());
-        temp = safeMul(temp, RESERVE_RATIO);
-        return temp / 100 / tokenReserveBalance;
+        return depositEthValue * TOKEN_PRICE_D / TOKEN_PRICE_N;
     }
 
     /*
@@ -411,11 +393,11 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
 
         _contributor    account that should receive the new tokens
     */
-    function buyBitcoinSuisse(address _contributor)
+    function buyBTCs(address _contributor)
         public
         payable
-        bitcoinSuisseOnly
-        bitcoinSuisseEtherCapNotReached(msg.value)
+        btcsOnly
+        btcsEtherCapNotReached(msg.value)
         earlierThan(startTime)
         returns (uint256 amount)
     {
@@ -454,29 +436,15 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     */
     function handleContribution(address _contributor, uint256 _depositEthValue, uint256 _return) private {
         // update the reserve balance
-        uint8 reserveAllocationPercentage;
-        if (totalEtherContributed >= PHASE3_MIN_CONTRIBUTION)
-            reserveAllocationPercentage = PHASE3_RESERVE_ALLOCATION;
-        else if (totalEtherContributed >= PHASE2_MIN_CONTRIBUTION)
-            reserveAllocationPercentage = PHASE2_RESERVE_ALLOCATION;
-        else if (totalEtherContributed >= PHASE1_MIN_CONTRIBUTION)
-            reserveAllocationPercentage = PHASE1_RESERVE_ALLOCATION;
-
-        uint256 addToReserve = safeMul(_depositEthValue, reserveAllocationPercentage) / 100;
+        uint256 addToReserve = safeMul(_depositEthValue, RESERVE_ALLOCATION_PERCENTAGE) / 100;
         tokenReserveBalance = safeAdd(tokenReserveBalance, addToReserve);
 
         // update the total contribution amount
         totalEtherContributed = safeAdd(totalEtherContributed, _depositEthValue);
         // issue new funds to the contributor in the smart token
         token.issue(_contributor, _return);
-
         // issue tokens to the beneficiary
-        uint256 amount = safeMul(100, _return) / (100 - BENEFICIARY_PERCENTAGE);
-        amount = safeSub(amount, _return);
-        if (amount == 0)
-            return;
-
-        token.issue(beneficiary, amount);
+        token.issue(beneficiary, _return);
     }
 
     // fallback
