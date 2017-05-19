@@ -389,6 +389,8 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         _minReturn      if the change results in an amount smaller the minimum return, it is cancelled
     */
     function sell(address _reserveToken, uint256 _sellAmount, uint256 _minReturn) public returns (uint256 amount) {
+        require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
+
         amount = getSaleReturn(_reserveToken, _sellAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
@@ -431,8 +433,6 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         validAmount(_totalSupply)
         returns (uint256 amount)
     {
-        require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
-
         Reserve reserve = reserves[_reserveToken];
         uint256 reserveBalance = getReserveBalance(_reserveToken);
         return formula.calculateSaleReturn(_totalSupply, reserveBalance, reserve.ratio, _sellAmount);
