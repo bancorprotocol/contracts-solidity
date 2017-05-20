@@ -132,9 +132,9 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         _;
     }
 
-    // ensures that it's later than the given time
-    modifier laterThan(uint256 _time) {
-        assert(now > _time);
+    // ensures that the current time is between _startTime (inclusive) and _endTime (exclusive)
+    modifier between(uint256 _startTime, uint256 _endTime) {
+        assert(now >= _startTime && now < _endTime);
         _;
     }
 
@@ -286,8 +286,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         public
         ownerOnly
         active
-        laterThan(startTime)
-        earlierThan(endTime)
+        between(startTime, endTime)
         validAmount(_cap)
         validEtherCap(_cap, _key)
     {
@@ -368,8 +367,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     */
     function buyERC20(address _erc20Token, uint256 _depositAmount, uint256 _minReturn)
         public
-        laterThan(startTime)
-        earlierThan(endTime)
+        between(startTime, endTime)
         returns (uint256 amount)
     {
         amount = getPurchaseReturn(_erc20Token, _depositAmount);
@@ -392,8 +390,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     function buyETH()
         public
         payable
-        laterThan(startTime)
-        earlierThan(endTime)
+        between(startTime, endTime)
         returns (uint256 amount)
     {
         amount = handleETHDeposit(msg.sender, msg.value);
