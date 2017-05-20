@@ -4,7 +4,7 @@ import './SafeMath.sol';
 /*
     Open issues:
     - the formula is not yet super accurate, especially for very small/very high ratios
-    - possibly support changing the CRR precision in the future
+    - possibly support dynamic precision in the future
 */
 
 contract BancorFormula is SafeMath {

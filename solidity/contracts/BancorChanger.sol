@@ -7,8 +7,6 @@ import './SmartTokenInterface.sol';
 /*
     Open issues:
     - add miner abuse protection
-    - assumes that the reserve tokens either return true for transfer/transferFrom or throw - possibly remove the reliance on the return value
-    - possibly support ERC223 standard for reserve tokens
     - possibly add getters for reserve fields so that the client won't need to rely on the order in the struct
 */
 
