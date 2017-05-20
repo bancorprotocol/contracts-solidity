@@ -14,8 +14,8 @@ contract('SmartToken', (accounts) => {
         assert.equal(name, 'Token1');
         let symbol = await token.symbol.call();
         assert.equal(symbol, 'TKN1');
-        let numDecimalUnits = await token.numDecimalUnits.call();
-        assert.equal(numDecimalUnits, 2);
+        let decimals = await token.decimals.call();
+        assert.equal(decimals, 2);
         let changer = await token.changer.call();
         assert.equal(changer, utils.zeroAddress);
     });
@@ -33,25 +33,6 @@ contract('SmartToken', (accounts) => {
     it('should throw when attempting to construct a token with no symbol', async () => {
         try {
             await SmartToken.new('Token1', '', 2);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('verifies that the owner can change the token decimal unit', async () => {
-        let token = await SmartToken.new('Token1', 'TKN1', 2);
-        await token.setNumDecimalUnits(6);
-        let numDecimalUnits = await token.numDecimalUnits.call();
-        assert.equal(numDecimalUnits, 6);
-    });
-
-    it('should throw when a non owner attempts to change the token decimal units', async () => {
-        let token = await SmartToken.new('Token1', 'TKN1', 2);
-
-        try {
-            await token.setNumDecimalUnits(6, { from: accounts[1] });
             assert(false, "didn't throw");
         }
         catch (error) {

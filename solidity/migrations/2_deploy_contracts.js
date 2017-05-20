@@ -12,7 +12,7 @@ const BancorChanger = artifacts.require('BancorChanger.sol');
 module.exports = async (deployer) => {
     deployer.deploy(SafeMath);
     deployer.deploy(Owned);
-    deployer.deploy(ERC20Token, 'DummyToken', 'DUM');
+    deployer.deploy(ERC20Token, 'DummyToken', 'DUM', 0);
     deployer.deploy(EtherToken);
     deployer.deploy(SmartToken, 'Token1', 'TKN1', 2);
     deployer.deploy(BancorFormula);
