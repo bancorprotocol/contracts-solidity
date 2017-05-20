@@ -26,6 +26,8 @@ contract BancorFormula {
 
     ERC20 reserve token balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on
     the actual reserve balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract
+
+    The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger, it's a safety mechanism in case of bugs/exploits
 */
 contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
     struct Reserve {
@@ -88,8 +90,8 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
     }
 
     // verifies that an amount is greater than zero
-    modifier validAmount(uint256 _value) {
-        require(_value > 0);
+    modifier validAmount(uint256 _amount) {
+        require(_amount > 0);
         _;
     }
 

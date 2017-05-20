@@ -9,9 +9,9 @@ contract EtherToken is ERC20Token {
         ERC20Token('Ether Token', 'ETH') {
     }
 
-    // verifies that a transfer value is greater than zero
-    modifier validAmount(uint256 _value) {
-        require(_value > 0);
+    // verifies that an amount is greater than zero
+    modifier validAmount(uint256 _amount) {
+        require(_amount > 0);
         _;
     }
 

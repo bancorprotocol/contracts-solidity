@@ -6,8 +6,7 @@ import './SmartTokenInterface.sol';
 
 /*
     Open issues:
-    - all values are placeholders, need to update them with real values
-    - verify ERC20 token addresses, transferFrom (must return a boolean flag) and update them with the correct values
+    - verify ERC20 token addresses, transferFrom (must return a boolean flag) and update them with the correct ETH values
     - possibly move all the ERC20 token initialization from the initERC20Tokens function to a different contract to lower the gas cost and make the crowdsale changer more generic
     - possibly add getters for ERC20 token fields so that the client won't need to rely on the order in the struct
 */
@@ -23,8 +22,9 @@ contract EtherToken {
     Crowdsale Changer v0.1
 
     The crowdsale version of the token changer, allows buying the smart token with ether/other ERC20 tokens
+    Note that the price remains fixed for the entire duration of the crowdsale
 
-    Note that during the crowdsale, the price remains fixed by keeping the same ratio between the reserve and the supply.
+    The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger, it's a safety mechanism in case of bugs/exploits
 */
 contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     struct ERC20TokenData {
@@ -34,20 +34,19 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         bool isSet;         // used to tell if the mapping element is defined
     }
 
-    uint256 public constant DURATION = 7 days;                  // crowdsale duration
-    uint256 public constant TOTAL_ETHER_CAP = 100000 ether;     // maximum ether contribution
-    uint256 public constant BTCS_ETHER_CAP = 50000 ether;       // maximum bitcoin suisse ether contribution
-    uint256 public constant TOKEN_PRICE_N = 1;                  // initial price in wei (numerator)
-    uint256 public constant TOKEN_PRICE_D = 100;                // initial price in wei (denominator)
-    uint8 public constant RESERVE_ALLOCATION_PERCENTAGE = 10;   // percentage of contribution that goes to the reserve
+    uint256 public constant DURATION = 7 days;                      // crowdsale duration
+    uint256 public constant BTCS_ETHER_CAP = 50000 ether;           // maximum bitcoin suisse ether contribution
+    uint256 public constant TOKEN_PRICE_N = 1;                      // initial price in wei (numerator)
+    uint256 public constant TOKEN_PRICE_D = 100;                    // initial price in wei (denominator)
 
     string public version = '0.1';
     string public changerType = 'crowdsale';
 
     uint256 public startTime = 0;                               // crowdsale start time (in seconds)
     uint256 public endTime = 0;                                 // crowdsale end time (in seconds)
+    uint256 public totalEtherCap = 1000000 ether;               // current temp ether contribution cap, limited as a safety mechanism until the real cap is revealed
     uint256 public totalEtherContributed = 0;                   // ether contributed so far
-    uint256 public tokenReserveBalance = 0;                     // amount of the ether contributed so far that gets into the smart token's reserve, used to calculate the current price
+    bytes32 public realEtherCapHash;                            // ensures that the real cap is predefined on deployment and cannot be changed later
     address public etherToken = 0x0;                            // ether token contract address
     address public beneficiary = 0x0;                           // address to receive all contributed ether
     address public btcs = 0x0;                                  // bitcoin suisse address
@@ -66,12 +65,13 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         _beneficiary    address to receive all contributed ether
         _btcs           bitcoin suisse address
     */
-    function CrowdsaleChanger(address _token, address _etherToken, uint256 _startTime, address _beneficiary, address _btcs)
+    function CrowdsaleChanger(address _token, address _etherToken, uint256 _startTime, address _beneficiary, address _btcs, bytes32 _realEtherCapHash)
         validAddress(_token)
         validAddress(_etherToken)
         validAddress(_beneficiary)
         validAddress(_btcs)
         earlierThan(_startTime)
+        validAmount(uint256(_realEtherCapHash))
     {
         token = SmartTokenInterface(_token);
         etherToken = _etherToken;
@@ -79,6 +79,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         endTime = startTime + DURATION;
         beneficiary = _beneficiary;
         btcs = _btcs;
+        realEtherCapHash = _realEtherCapHash;
 
         addERC20Token(_etherToken, 1, 1); // Ether
     }
@@ -98,6 +99,18 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     // validates a token address - verifies that the address belongs to one of the changeable tokens
     modifier validToken(address _address) {
         require(_address == address(token) || tokenData[_address].isSet);
+        _;
+    }
+
+    // verifies that an amount is greater than zero
+    modifier validAmount(uint256 _amount) {
+        require(_amount > 0);
+        _;
+    }
+
+    // verifies that the ether cap is valid based on the key provided
+    modifier validEtherCap(uint256 _cap, uint256 _key) {
+        require(computeRealCap(_cap, _key) == realEtherCapHash);
         _;
     }
 
@@ -127,7 +140,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
 
     // ensures that we didn't reach the ether cap
     modifier etherCapNotReached() {
-        assert(totalEtherContributed < TOTAL_ETHER_CAP);
+        assert(totalEtherContributed < totalEtherCap);
         _;
     }
 
@@ -139,7 +152,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
 
     // ensures that we didn't reach the bitcoin suisse ether cap
     modifier btcsEtherCapNotReached(uint256 _ethContribution) {
-        require(safeAdd(totalEtherContributed, _ethContribution) <= BTCS_ETHER_CAP);
+        assert(safeAdd(totalEtherContributed, _ethContribution) <= BTCS_ETHER_CAP);
         _;
     }
 
@@ -193,8 +206,10 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         ownerOnly
         inactive
         validAddress(_token)
+        validAmount(_valueN)
+        validAmount(_valueD)
     {
-        require(_token != address(this) && _token != address(token) && !tokenData[_token].isSet && _valueN != 0 && _valueD != 0); // validate input
+        require(_token != address(this) && _token != address(token) && !tokenData[_token].isSet); // validate input
 
         tokenData[_token].valueN = _valueN;
         tokenData[_token].valueD = _valueD;
@@ -216,8 +231,9 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         public
         ownerOnly
         validERC20Token(_erc20Token)
+        validAmount(_valueN)
+        validAmount(_valueD)
     {
-        require(_valueN != 0 && _valueD != 0); // validate input
         ERC20TokenData data = tokenData[_erc20Token];
         data.valueN = _valueN;
         data.valueD = _valueD;
@@ -252,11 +268,30 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         ownerOnly
         validERC20Token(_erc20Token)
         validAddress(_to)
+        validAmount(_amount)
     {
-        require(_to != address(this) && _to != address(token) && _amount != 0); // validate input
+        require(_to != address(this) && _to != address(token)); // validate input
 
         ERC20TokenInterface erc20Token = ERC20TokenInterface(_erc20Token);
         assert(erc20Token.transfer(_to, _amount));
+    }
+
+    /*
+        enables the real cap defined on deployment
+
+        _cap    predefined cap
+        _key    key used to compute the cap hash
+    */
+    function enableRealCap(uint256 _cap, uint256 _key)
+        public
+        ownerOnly
+        active
+        laterThan(startTime)
+        earlierThan(endTime)
+        validAmount(_cap)
+        validEtherCap(_cap, _key)
+    {
+        totalEtherCap = _cap;
     }
 
     /*
@@ -295,17 +330,18 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         active
         etherCapNotReached
         validERC20Token(_erc20Token)
+        validAmount(_depositAmount)
         returns (uint256 amount)
     {
         ERC20TokenData data = tokenData[_erc20Token];
-        require(data.isEnabled && _depositAmount != 0); // validate input
+        require(data.isEnabled); // validate input
 
         uint256 depositEthValue = safeMul(_depositAmount, data.valueN) / data.valueD;
         if (depositEthValue == 0)
             return 0;
 
         // check ether cap
-        require(safeAdd(totalEtherContributed, depositEthValue) <= TOTAL_ETHER_CAP);
+        require(safeAdd(totalEtherContributed, depositEthValue) <= totalEtherCap);
         return depositEthValue * TOKEN_PRICE_D / TOKEN_PRICE_N;
     }
 
@@ -391,7 +427,6 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         _depositAmount  amount contributed by the account, in wei
     */
     function handleETHDeposit(address _contributor, uint256 _depositAmount) private returns (uint256 amount) {
-        require(_depositAmount > 0); // validate input
         amount = getPurchaseReturn(etherToken, _depositAmount);
         assert(amount != 0); // ensure the trade gives something in return
 
@@ -406,23 +441,29 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     /*
         handles the generic part of the contribution - regardless of the type of contribution
         assumes that the contribution was already added to the beneficiary account in the different tokens
-        updates the reserve balance, total contributed amount and issues new tokens to the contributor and to the beneficiary
+        updates the total contributed amount and issues new tokens to the contributor and to the beneficiary
 
         _contributor        account that should the new tokens
         _depositEthValue    amount contributed by the account, in wei
         _return             amount to be issued to the contributor, in the smart token
     */
     function handleContribution(address _contributor, uint256 _depositEthValue, uint256 _return) private {
-        // update the reserve balance
-        uint256 addToReserve = safeMul(_depositEthValue, RESERVE_ALLOCATION_PERCENTAGE) / 100;
-        tokenReserveBalance = safeAdd(tokenReserveBalance, addToReserve);
-
         // update the total contribution amount
         totalEtherContributed = safeAdd(totalEtherContributed, _depositEthValue);
         // issue new funds to the contributor in the smart token
         token.issue(_contributor, _return);
         // issue tokens to the beneficiary
         token.issue(beneficiary, _return);
+    }
+
+    /*
+        computes the real cap based on the given cap & key
+
+        _cap    cap
+        _key    key used to compute the cap hash
+    */
+    function computeRealCap(uint256 _cap, uint256 _key) private returns (bytes32) {
+        return sha3(_cap, _key);
     }
 
     // fallback

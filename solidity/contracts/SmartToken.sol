@@ -32,9 +32,9 @@ contract SmartToken is ERC20Token, Owned, SmartTokenInterface {
         numDecimalUnits = _numDecimalUnits;
     }
 
-    // verifies that a value is greater than zero
-    modifier validAmount(uint256 _value) {
-        require(_value > 0);
+    // verifies that an amount is greater than zero
+    modifier validAmount(uint256 _amount) {
+        require(_amount > 0);
         _;
     }
 
