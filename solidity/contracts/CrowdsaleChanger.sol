@@ -22,7 +22,8 @@ contract EtherToken {
     Crowdsale Changer v0.1
 
     The crowdsale version of the token changer, allows buying the smart token with ether/other ERC20 tokens
-    Note that the price remains fixed for the entire duration of the crowdsale
+    The price remains fixed for the entire duration of the crowdsale
+    Note that 20% of the contributions are the Bancor token's reserve
 
     The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger, it's a safety mechanism in case of bugs/exploits
 */
