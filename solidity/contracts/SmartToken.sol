@@ -4,16 +4,11 @@ import './Owned.sol';
 import './SmartTokenInterface.sol';
 
 /*
-    Open issues:
-    - possibly implement ERC223 standard
-*/
-
-/*
     Smart Token v0.1
 */
 contract SmartToken is ERC20Token, Owned, SmartTokenInterface {
     string public version = '0.1';
-    uint8 public numDecimalUnits = 0;       // for display purposes only
+
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
     address public changer = 0x0;           // changer contract address
 
@@ -23,15 +18,14 @@ contract SmartToken is ERC20Token, Owned, SmartTokenInterface {
     event ChangerUpdate(address _prevChanger, address _newChanger);
 
     /*
-        _name               token name
-        _symbol             token short symbol, 1-6 characters
-        _numDecimalUnits    for display purposes only
+        _name       token name
+        _symbol     token short symbol, 1-6 characters
+        _decimals   for display purposes only
     */
-    function SmartToken(string _name, string _symbol, uint8 _numDecimalUnits)
-        ERC20Token(_name, _symbol)
+    function SmartToken(string _name, string _symbol, uint8 _decimals)
+        ERC20Token(_name, _symbol, _decimals)
     {
-        require(bytes(_name).length != 0 && bytes(_symbol).length >= 1 && bytes(_symbol).length <= 6); // validate input
-        numDecimalUnits = _numDecimalUnits;
+        require(bytes(_symbol).length <= 6); // validate input
         NewSmartToken(address(this));
     }
 
@@ -52,16 +46,6 @@ contract SmartToken is ERC20Token, Owned, SmartTokenInterface {
         assert((changer == 0x0 && msg.sender == owner) ||
                (changer != 0x0 && msg.sender == changer)); // validate state & permissions
         _;
-    }
-
-    /*
-        sets the number of display decimal units
-        can only be called by the token owner
-
-        _numDecimalUnits    new number of decimal units
-    */
-    function setNumDecimalUnits(uint8 _numDecimalUnits) public ownerOnly {
-        numDecimalUnits = _numDecimalUnits;
     }
 
     /*

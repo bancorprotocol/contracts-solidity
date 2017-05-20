@@ -6,7 +6,7 @@ import './ERC20Token.sol';
 */
 contract EtherToken is ERC20Token {
     function EtherToken()
-        ERC20Token('Ether Token', 'ETH') {
+        ERC20Token('Ether Token', 'ETH', 18) {
     }
 
     // verifies that an amount is greater than zero

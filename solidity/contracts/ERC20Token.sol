@@ -9,6 +9,7 @@ contract ERC20Token is ERC20TokenInterface, SafeMath {
     string public standard = 'Token 0.1';
     string public name = '';
     string public symbol = '';
+    uint8 public decimals = 0;
     uint256 public totalSupply = 0;
     mapping (address => uint256) public balanceOf;
     mapping (address => mapping (address => uint256)) public allowance;
@@ -16,9 +17,12 @@ contract ERC20Token is ERC20TokenInterface, SafeMath {
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    function ERC20Token(string _name, string _symbol) {
+    function ERC20Token(string _name, string _symbol, uint8 _decimals) {
+        require(bytes(_name).length > 0 && bytes(_symbol).length > 0); // validate input
+
         name = _name;
         symbol = _symbol;
+        decimals = _decimals;
     }
 
     // validates an address - currently only checks that it isn't null
