@@ -15,6 +15,10 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
 
     // triggered when a smart token is deployed - the _token address is defined for forward compatibility, in case we want to trigger the event from a factory
     event NewSmartToken(address _token);
+    // triggered when the total supply is increased
+    event Issuance(uint256 _amount);
+    // triggered when the total supply is decreased
+    event Destruction(uint256 _amount);
     // triggered when a token changer is updated/removed
     event ChangerUpdate(address _prevChanger, address _newChanger);
 
@@ -75,6 +79,8 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
         require(_to != address(this)); // validate input
         totalSupply = safeAdd(totalSupply, _amount);
         balanceOf[_to] = safeAdd(balanceOf[_to], _amount);
+
+        Issuance(_amount);
         Transfer(this, _to, _amount);
     }
 
@@ -92,7 +98,9 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
     {
         balanceOf[_from] = safeSub(balanceOf[_from], _amount);
         totalSupply = safeSub(totalSupply, _amount);
+
         Transfer(_from, this, _amount);
+        Destruction(_amount);
     }
 
     /*
@@ -119,6 +127,7 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
         if (_to == address(this)) {
             balanceOf[_to] -= _value;
             totalSupply -= _value;
+            Destruction(_value);
         }
 
         return true;
@@ -132,6 +141,7 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
         if (_to == address(this)) {
             balanceOf[_to] -= _value;
             totalSupply -= _value;
+            Destruction(_value);
         }
 
         return true;
