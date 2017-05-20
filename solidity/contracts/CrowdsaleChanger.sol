@@ -152,6 +152,13 @@ contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
     }
 
     /*
+        returns the number of accepted ERC20 tokens defined
+    */
+    function acceptedTokenCount() public constant returns (uint16 count) {
+        return uint16(acceptedTokens.length);
+    }
+
+    /*
         returns the number of changeable tokens supported by the contract
         note that the number of changeable tokens is the number of ERC20 tokens plus the smart token
     */
