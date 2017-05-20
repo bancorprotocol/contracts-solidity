@@ -30,9 +30,9 @@ contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
     }
 
     uint256 public constant DURATION = 7 days;              // crowdsale duration
-    uint256 public constant BTCS_ETHER_CAP = 50000 ether;   // maximum bitcoin suisse ether contribution
     uint256 public constant TOKEN_PRICE_N = 1;              // initial price in wei (numerator)
     uint256 public constant TOKEN_PRICE_D = 100;            // initial price in wei (denominator)
+    uint256 public constant BTCS_ETHER_CAP = 50000 ether;   // maximum bitcoin suisse ether contribution
 
     string public version = '0.1';
     string public changerType = 'crowdsale';
