@@ -82,4 +82,55 @@ contract('EtherToken', (accounts) => {
             return utils.ensureException(error);
         }
     });
+
+    it('verifies the ether balance after a withdrawal', async () => {
+        let token = await EtherToken.new();
+        await token.deposit({ value: 100 });
+        let prevBalance = web3.eth.getBalance(accounts[0]);
+        let res = await token.withdraw(20);
+        let transaction = web3.eth.getTransaction(res.tx);
+        let newBalance = web3.eth.getBalance(accounts[0]);
+        prevBalance = web3.toBigNumber(prevBalance);
+        newBalance = web3.toBigNumber(newBalance);
+        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
+        assert.equal(newBalance.toString(), prevBalance.minus(transactionCost).plus(20).toString());
+    });
+
+    it('verifies the balances after a transfer', async () => {
+        let token = await EtherToken.new();
+        await token.deposit({ value: 100 });
+        await token.transfer(accounts[1], 10);
+        let balance;
+        balance = await token.balanceOf.call(accounts[0]);
+        assert.equal(balance, 90);
+        balance = await token.balanceOf.call(accounts[1]);
+        assert.equal(balance, 10);
+    });
+
+    it('should throw when attempting to transfer to the token address', async () => {
+        let token = await EtherToken.new();
+        await token.deposit({ value: 100 });
+
+        try {
+            await token.transfer(token.address, 10);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to transferFrom to the token address', async () => {
+        let token = await EtherToken.new();
+        await token.deposit({ value: 100 });
+        await token.approve(accounts[1], 50);
+
+        try {
+            await token.transferFrom(accounts[0], token.address, 10, { from: accounts[1] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
 });
