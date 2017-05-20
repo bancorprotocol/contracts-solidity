@@ -1,11 +1,11 @@
 pragma solidity ^0.4.10;
-import './ERC20TokenInterface.sol';
+import './IERC20Token.sol';
 import './SafeMath.sol';
 
 /*
     ERC20 Standard Token implementation
 */
-contract ERC20Token is ERC20TokenInterface, SafeMath {
+contract ERC20Token is IERC20Token, SafeMath {
     string public standard = 'Token 0.1';
     string public name = '';
     string public symbol = '';

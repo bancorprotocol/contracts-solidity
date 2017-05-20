@@ -1,16 +1,17 @@
 pragma solidity ^0.4.10;
 import './ERC20Token.sol';
 import './Owned.sol';
-import './SmartTokenInterface.sol';
+import './ISmartToken.sol';
+import './ITokenChanger.sol';
 
 /*
     Smart Token v0.1
 */
-contract SmartToken is ERC20Token, Owned, SmartTokenInterface {
+contract SmartToken is ERC20Token, Owned, ISmartToken {
     string public version = '0.1';
 
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
-    address public changer = 0x0;           // changer contract address
+    ITokenChanger public changer;           // changer contract address
 
     // triggered when a smart token is deployed - the _token address is defined for forward compatibility, in case we want to trigger the event from a factory
     event NewSmartToken(address _token);
@@ -43,8 +44,8 @@ contract SmartToken is ERC20Token, Owned, SmartTokenInterface {
 
     // allows execution by the current controller - owner if there's no changer defined or changer contract if a changer is defined
     modifier controllerOnly {
-        assert((changer == 0x0 && msg.sender == owner) ||
-               (changer != 0x0 && msg.sender == changer)); // validate state & permissions
+        assert((address(changer) == 0x0 && msg.sender == owner) ||
+               (address(changer) != 0x0 && msg.sender == address(changer))); // validate state & permissions
         _;
     }
 
@@ -101,9 +102,9 @@ contract SmartToken is ERC20Token, Owned, SmartTokenInterface {
 
         _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
     */
-    function setChanger(address _changer) public controllerOnly {
+    function setChanger(ITokenChanger _changer) public controllerOnly {
         require(_changer != changer);
-        address prevChanger = changer;
+        ITokenChanger prevChanger = changer;
         changer = _changer;
         ChangerUpdate(prevChanger, changer);
     }

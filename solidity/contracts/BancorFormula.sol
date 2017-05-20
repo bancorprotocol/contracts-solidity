@@ -1,5 +1,6 @@
 pragma solidity ^0.4.10;
 import './SafeMath.sol';
+import './IBancorFormula.sol';
 
 /*
     Open issues:
@@ -7,7 +8,7 @@ import './SafeMath.sol';
     - possibly support dynamic precision in the future
 */
 
-contract BancorFormula is SafeMath {
+contract BancorFormula is SafeMath, IBancorFormula {
     uint8 constant PRECISION = 32;  // fractional bits
 
     string public version = '0.1';

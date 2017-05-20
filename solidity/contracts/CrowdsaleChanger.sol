@@ -1,8 +1,9 @@
 pragma solidity ^0.4.10;
 import './Owned.sol';
 import './SafeMath.sol';
-import './TokenChangerInterface.sol';
-import './SmartTokenInterface.sol';
+import './ITokenChanger.sol';
+import './ISmartToken.sol';
+import './IEtherToken.sol';
 
 /*
     Open issues:
@@ -10,13 +11,6 @@ import './SmartTokenInterface.sol';
     - possibly move all the ERC20 token initialization from the initERC20Tokens function to a different contract to lower the gas cost and make the crowdsale changer more generic
     - possibly add getters for ERC20 token fields so that the client won't need to rely on the order in the struct
 */
-
-// interfaces
-
-contract EtherToken {
-    function deposit() public payable;
-    function transfer(address _to, uint256 _value) public returns (bool success);
-}
 
 /*
     Crowdsale Changer v0.1
@@ -27,18 +21,18 @@ contract EtherToken {
 
     The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger, it's a safety mechanism in case of bugs/exploits
 */
-contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
+contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
     struct ERC20TokenData {
-        uint256 valueN;     // 1 smallest unit in wei (numerator)
-        uint256 valueD;     // 1 smallest unit in wei (denominator)
-        bool isEnabled;     // is purchase of the smart token enabled with the ERC20 token, can be set by the owner
-        bool isSet;         // used to tell if the mapping element is defined
+        uint256 valueN; // 1 smallest unit in wei (numerator)
+        uint256 valueD; // 1 smallest unit in wei (denominator)
+        bool isEnabled; // is purchase of the smart token enabled with the ERC20 token, can be set by the owner
+        bool isSet;     // used to tell if the mapping element is defined
     }
 
-    uint256 public constant DURATION = 7 days;                      // crowdsale duration
-    uint256 public constant BTCS_ETHER_CAP = 50000 ether;           // maximum bitcoin suisse ether contribution
-    uint256 public constant TOKEN_PRICE_N = 1;                      // initial price in wei (numerator)
-    uint256 public constant TOKEN_PRICE_D = 100;                    // initial price in wei (denominator)
+    uint256 public constant DURATION = 7 days;              // crowdsale duration
+    uint256 public constant BTCS_ETHER_CAP = 50000 ether;   // maximum bitcoin suisse ether contribution
+    uint256 public constant TOKEN_PRICE_N = 1;              // initial price in wei (numerator)
+    uint256 public constant TOKEN_PRICE_D = 100;            // initial price in wei (denominator)
 
     string public version = '0.1';
     string public changerType = 'crowdsale';
@@ -48,10 +42,10 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     uint256 public totalEtherCap = 1000000 ether;               // current temp ether contribution cap, limited as a safety mechanism until the real cap is revealed
     uint256 public totalEtherContributed = 0;                   // ether contributed so far
     bytes32 public realEtherCapHash;                            // ensures that the real cap is predefined on deployment and cannot be changed later
-    address public etherToken = 0x0;                            // ether token contract address
+    IEtherToken public etherToken;                              // ether token contract address
     address public beneficiary = 0x0;                           // address to receive all contributed ether
     address public btcs = 0x0;                                  // bitcoin suisse address
-    SmartTokenInterface public token;                           // smart token governed by the changer
+    ISmartToken public token;                                   // smart token governed by the changer
     address[] public acceptedTokens;                            // ERC20 standard token addresses
     mapping (address => ERC20TokenData) public tokenData;       // ERC20 token addresses -> ERC20 token data
     mapping (address => uint256) public beneficiaryBalances;    // beneficiary balances in the different tokens
@@ -66,7 +60,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         _beneficiary    address to receive all contributed ether
         _btcs           bitcoin suisse address
     */
-    function CrowdsaleChanger(address _token, address _etherToken, uint256 _startTime, address _beneficiary, address _btcs, bytes32 _realEtherCapHash)
+    function CrowdsaleChanger(ISmartToken _token, IEtherToken _etherToken, uint256 _startTime, address _beneficiary, address _btcs, bytes32 _realEtherCapHash)
         validAddress(_token)
         validAddress(_etherToken)
         validAddress(_beneficiary)
@@ -74,7 +68,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         earlierThan(_startTime)
         validAmount(uint256(_realEtherCapHash))
     {
-        token = SmartTokenInterface(_token);
+        token = _token;
         etherToken = _etherToken;
         startTime = _startTime;
         endTime = startTime + DURATION;
@@ -117,13 +111,13 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
 
     // ensures that token changing is connected to the smart token
     modifier active() {
-        assert(token.changer() == address(this));
+        assert(token.changer() == this);
         _;
     }
 
     // ensures that token changing is not conneccted to the smart token
     modifier inactive() {
-        assert(token.changer() != address(this));
+        assert(token.changer() != this);
         _;
     }
 
@@ -179,19 +173,19 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         ownerOnly
         inactive
     {
-        addERC20Token(0xa74476443119A942dE498590Fe1f2454d7D4aC0d, 1, 1); // Golem
-        addERC20Token(0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5, 1, 1); // Augur
+        addERC20Token(IERC20Token(0xa74476443119A942dE498590Fe1f2454d7D4aC0d), 1, 1); // Golem
+        addERC20Token(IERC20Token(0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5), 1, 1); // Augur
 
-        addERC20Token(0x6810e776880C02933D47DB1b9fc05908e5386b96, 1, 1); // Gnosis
-        addERC20Token(0xaeC2E87E0A235266D9C5ADc9DEb4b2E29b54D009, 1, 1); // SingularDTV
-        addERC20Token(0xE0B7927c4aF23765Cb51314A0E0521A9645F0E2A, 1, 1); // DigixDAO
+        addERC20Token(IERC20Token(0x6810e776880C02933D47DB1b9fc05908e5386b96), 1, 1); // Gnosis
+        addERC20Token(IERC20Token(0xaeC2E87E0A235266D9C5ADc9DEb4b2E29b54D009), 1, 1); // SingularDTV
+        addERC20Token(IERC20Token(0xE0B7927c4aF23765Cb51314A0E0521A9645F0E2A), 1, 1); // DigixDAO
 
-        addERC20Token(0x4993CB95c7443bdC06155c5f5688Be9D8f6999a5, 1, 1); // ROUND
-        addERC20Token(0x607F4C5BB672230e8672085532f7e901544a7375, 1, 1); // iEx.ec
-        addERC20Token(0x888666CA69E0f178DED6D75b5726Cee99A87D698, 1, 1); // ICONOMI
-        addERC20Token(0xAf30D2a7E90d7DC361c8C4585e9BB7D2F6f15bc7, 1, 1); // FirstBlood
-        addERC20Token(0xBEB9eF514a379B997e0798FDcC901Ee474B6D9A1, 1, 1); // Melon
-        addERC20Token(0x667088b212ce3d06a1b553a7221E1fD19000d9aF, 1, 1); // Wings
+        addERC20Token(IERC20Token(0x4993CB95c7443bdC06155c5f5688Be9D8f6999a5), 1, 1); // ROUND
+        addERC20Token(IERC20Token(0x607F4C5BB672230e8672085532f7e901544a7375), 1, 1); // iEx.ec
+        addERC20Token(IERC20Token(0x888666CA69E0f178DED6D75b5726Cee99A87D698), 1, 1); // ICONOMI
+        addERC20Token(IERC20Token(0xAf30D2a7E90d7DC361c8C4585e9BB7D2F6f15bc7), 1, 1); // FirstBlood
+        addERC20Token(IERC20Token(0xBEB9eF514a379B997e0798FDcC901Ee474B6D9A1), 1, 1); // Melon
+        addERC20Token(IERC20Token(0x667088b212ce3d06a1b553a7221E1fD19000d9aF), 1, 1); // Wings
     }
 
     /*
@@ -202,7 +196,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         _valueN     1 smallest unit in wei (numerator)
         _valueD     1 smallest unit in wei (denominator)
     */
-    function addERC20Token(address _token, uint256 _valueN, uint256 _valueD)
+    function addERC20Token(IERC20Token _token, uint256 _valueN, uint256 _valueD)
         public
         ownerOnly
         inactive
@@ -210,7 +204,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         validAmount(_valueN)
         validAmount(_valueD)
     {
-        require(_token != address(this) && _token != address(token) && !tokenData[_token].isSet); // validate input
+        require(_token != address(this) && _token != token && !tokenData[_token].isSet); // validate input
 
         tokenData[_token].valueN = _valueN;
         tokenData[_token].valueD = _valueD;
@@ -228,7 +222,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         _valueN         1 smallest unit in wei (numerator)
         _valueD         1 smallest unit in wei (denominator)
     */
-    function updateERC20Token(address _erc20Token, uint256 _valueN, uint256 _valueD)
+    function updateERC20Token(IERC20Token _erc20Token, uint256 _valueN, uint256 _valueD)
         public
         ownerOnly
         validERC20Token(_erc20Token)
@@ -247,7 +241,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         _erc20Token     ERC20 token contract address
         _disable        true to disable the token, false to re-enable it
     */
-    function disableERC20Token(address _erc20Token, bool _disable)
+    function disableERC20Token(IERC20Token _erc20Token, bool _disable)
         public
         ownerOnly
         validERC20Token(_erc20Token)
@@ -264,7 +258,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         _to             account to receive the new amount
         _amount         amount to withdraw (in the ERC20 token)
     */
-    function withdraw(address _erc20Token, address _to, uint256 _amount)
+    function withdraw(IERC20Token _erc20Token, address _to, uint256 _amount)
         public
         ownerOnly
         validERC20Token(_erc20Token)
@@ -272,9 +266,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         validAmount(_amount)
     {
         require(_to != address(this) && _to != address(token)); // validate input
-
-        ERC20TokenInterface erc20Token = ERC20TokenInterface(_erc20Token);
-        assert(erc20Token.transfer(_to, _amount));
+        assert(_erc20Token.transfer(_to, _amount));
     }
 
     /*
@@ -301,8 +293,8 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
 
         _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
     */
-    function setTokenChanger(address _changer) public ownerOnly {
-        require(_changer != address(this) && _changer != address(token)); // validate input
+    function setTokenChanger(ITokenChanger _changer) public ownerOnly {
+        require(_changer != this && _changer != address(token)); // validate input
         token.setChanger(_changer);
     }
 
@@ -315,7 +307,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     */
     function getReturn(address _fromToken, address _toToken, uint256 _amount) public constant returns (uint256 amount) {
         require(_toToken == address(token)); // validate input
-        return getPurchaseReturn(_fromToken, _amount);
+        return getPurchaseReturn(IERC20Token(_fromToken), _amount);
     }
 
     /*
@@ -324,7 +316,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         _erc20Token     ERC20 token contract address
         _depositAmount  amount to deposit (in the ERC20 token)
     */
-    function getPurchaseReturn(address _erc20Token, uint256 _depositAmount)
+    function getPurchaseReturn(IERC20Token _erc20Token, uint256 _depositAmount)
         public
         constant
         active
@@ -355,7 +347,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
     */
     function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256 amount) {
         require(_toToken == address(token)); // validate input
-        return buyERC20(_fromToken, _amount, _minReturn);
+        return buyERC20(IERC20Token(_fromToken), _amount, _minReturn);
     }
 
     /*
@@ -366,7 +358,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         _depositAmount  amount to deposit (in the ERC20 token)
         _minReturn      if the change results in an amount smaller than the minimum return, it is cancelled
     */
-    function buyERC20(address _erc20Token, uint256 _depositAmount, uint256 _minReturn)
+    function buyERC20(IERC20Token _erc20Token, uint256 _depositAmount, uint256 _minReturn)
         public
         between(startTime, endTime)
         returns (uint256 amount)
@@ -374,7 +366,7 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         amount = getPurchaseReturn(_erc20Token, _depositAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
-        ERC20TokenInterface erc20Token = ERC20TokenInterface(_erc20Token);
+        IERC20Token erc20Token = IERC20Token(_erc20Token);
         assert(erc20Token.transferFrom(msg.sender, beneficiary, _depositAmount)); // transfer _depositAmount funds from the caller in the ERC20 token
         beneficiaryBalances[erc20Token] = safeAdd(beneficiaryBalances[erc20Token], _depositAmount); // increase beneficiary ERC20 balance
 
@@ -428,9 +420,8 @@ contract CrowdsaleChanger is Owned, SafeMath, TokenChangerInterface {
         amount = getPurchaseReturn(etherToken, _depositAmount);
         assert(amount != 0); // ensure the trade gives something in return
 
-        EtherToken ethToken = EtherToken(etherToken);
-        ethToken.deposit.value(_depositAmount)(); // transfer the ether to the ether contract
-        assert(ethToken.transfer(beneficiary, _depositAmount)); // transfer the ether to the beneficiary account
+        etherToken.deposit.value(_depositAmount)(); // transfer the ether to the ether contract
+        assert(etherToken.transfer(beneficiary, _depositAmount)); // transfer the ether to the beneficiary account
         beneficiaryBalances[etherToken] = safeAdd(beneficiaryBalances[etherToken], _depositAmount); // increase beneficiary ETH balance
         handleContribution(_contributor, _depositAmount, amount);
         return amount;

@@ -1,10 +1,11 @@
 pragma solidity ^0.4.10;
 import './ERC20Token.sol';
+import './IEtherToken.sol';
 
 /*
     Ether tokenization contract
 */
-contract EtherToken is ERC20Token {
+contract EtherToken is ERC20Token, IEtherToken {
     function EtherToken()
         ERC20Token('Ether Token', 'ETH', 18) {
     }

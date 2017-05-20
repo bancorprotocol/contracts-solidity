@@ -1,21 +1,15 @@
 pragma solidity ^0.4.10;
 import './Owned.sol';
 import './SafeMath.sol';
-import './TokenChangerInterface.sol';
-import './SmartTokenInterface.sol';
+import './ITokenChanger.sol';
+import './ISmartToken.sol';
+import './IBancorFormula.sol';
 
 /*
     Open issues:
     - add miner abuse protection
     - possibly add getters for reserve fields so that the client won't need to rely on the order in the struct
 */
-
-// interfaces
-
-contract BancorFormula {
-    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256 amount);
-    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256 amount);
-}
 
 /*
     Bancor Changer v0.1
@@ -27,7 +21,7 @@ contract BancorFormula {
 
     The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger, it's a safety mechanism in case of bugs/exploits
 */
-contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
+contract BancorChanger is Owned, SafeMath, ITokenChanger {
     struct Reserve {
         uint256 virtualBalance;         // virtual balance
         uint8 ratio;                    // constant reserve ratio (CRR), 1-100
@@ -39,8 +33,8 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
     string public version = '0.1';
     string public changerType = 'bancor';
 
-    SmartTokenInterface public token;               // smart token governed by the changer
-    BancorFormula public formula;                   // bancor calculation formula contract
+    ISmartToken public token;                       // smart token governed by the changer
+    IBancorFormula public formula;                  // bancor calculation formula contract
     address[] public reserveTokens;                 // ERC20 standard token addresses
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
     uint8 private totalReserveRatio = 0;            // used to prevent increasing the total reserve ratio above 100% efficiently
@@ -52,14 +46,14 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         _token      smart token governed by the changer
         _formula    address of a bancor formula contract
     */
-    function BancorChanger(address _token, address _formula, address _reserveToken, uint8 _reserveRatio)
+    function BancorChanger(ISmartToken _token, IBancorFormula _formula, IERC20Token _reserveToken, uint8 _reserveRatio)
         validAddress(_token)
         validAddress(_formula)
     {
-        token = SmartTokenInterface(_token);
-        formula = BancorFormula(_formula);
+        token = _token;
+        formula = _formula;
 
-        if (_reserveToken != 0x0)
+        if (address(_reserveToken) != 0x0)
             addReserve(_reserveToken, _reserveRatio, false);
     }
 
@@ -95,13 +89,13 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
 
     // ensures that token changing is connected to the smart token
     modifier active() {
-        assert(token.changer() == address(this));
+        assert(token.changer() == this);
         _;
     }
 
     // ensures that token changing is not conneccted to the smart token
     modifier inactive() {
-        assert(token.changer() != address(this));
+        assert(token.changer() != this);
         _;
     }
 
@@ -137,7 +131,7 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         _ratio                  constant reserve ratio, 1-100
         _enableVirtualBalance   true to enable virtual balance for the reserve, false to disable it
     */
-    function addReserve(address _token, uint8 _ratio, bool _enableVirtualBalance)
+    function addReserve(IERC20Token _token, uint8 _ratio, bool _enableVirtualBalance)
         public
         ownerOnly
         inactive
@@ -164,7 +158,7 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         _enableVirtualBalance   true to enable virtual balance for the reserve, false to disable it
         _virtualBalance         new reserve's virtual balance
     */
-    function updateReserve(address _reserveToken, uint8 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)
+    function updateReserve(IERC20Token _reserveToken, uint8 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)
         public
         ownerOnly
         validReserve(_reserveToken)
@@ -187,7 +181,7 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         _reserveToken    reserve token contract address
         _disable         true to disable the token, false to re-enable it
     */
-    function disableReserve(address _reserveToken, bool _disable)
+    function disableReserve(IERC20Token _reserveToken, bool _disable)
         public
         ownerOnly
         validReserve(_reserveToken)
@@ -200,15 +194,14 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
 
         _reserveToken    reserve token contract address
     */
-    function getReserveBalance(address _reserveToken)
+    function getReserveBalance(IERC20Token _reserveToken)
         public
         constant
         validReserve(_reserveToken)
         returns (uint256 balance)
     {
         Reserve reserve = reserves[_reserveToken];
-        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
-        return reserve.isVirtualBalanceEnabled ? reserve.virtualBalance : reserveToken.balanceOf(this);
+        return reserve.isVirtualBalanceEnabled ? reserve.virtualBalance : _reserveToken.balanceOf(this);
     }
 
     /*
@@ -239,7 +232,7 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         _to              account to receive the new amount
         _amount          amount to withdraw (in the reserve token)
     */
-    function withdraw(address _reserveToken, address _to, uint256 _amount)
+    function withdraw(IERC20Token _reserveToken, address _to, uint256 _amount)
         public
         ownerOnly
         validReserve(_reserveToken)
@@ -248,8 +241,7 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
     {
         require(_to != address(this) && _to != address(token)); // validate input
 
-        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
-        assert(reserveToken.transfer(_to, _amount));
+        assert(_reserveToken.transfer(_to, _amount));
 
         // update virtual balance if relevant
         Reserve reserve = reserves[_reserveToken];
@@ -264,8 +256,8 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
 
         _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
     */
-    function setTokenChanger(address _changer) public ownerOnly {
-        require(_changer != address(this) && _changer != address(token)); // validate input
+    function setTokenChanger(ITokenChanger _changer) public ownerOnly {
+        require(_changer != this && _changer != address(token)); // validate input
         token.setChanger(_changer);
     }
 
@@ -284,17 +276,18 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         returns (uint256 amount)
     {
         require(_fromToken != _toToken); // validate input
+        IERC20Token fromToken = IERC20Token(_fromToken);
+        IERC20Token toToken = IERC20Token(_toToken);
 
         // change between the token and one of its reserves
-        address tokenAddress = address(token);
-        if (_toToken == tokenAddress)
-            return getPurchaseReturn(_fromToken, _amount);
-        else if (_fromToken == tokenAddress)
-            return getSaleReturn(_toToken, _amount);
+        if (toToken == token)
+            return getPurchaseReturn(fromToken, _amount);
+        else if (fromToken == token)
+            return getSaleReturn(toToken, _amount);
 
         // change between 2 reserves
-        uint256 purchaseReturnAmount = getPurchaseReturn(_fromToken, _amount);
-        return getSaleReturn(_toToken, purchaseReturnAmount, safeAdd(token.totalSupply(), purchaseReturnAmount));
+        uint256 purchaseReturnAmount = getPurchaseReturn(fromToken, _amount);
+        return getSaleReturn(toToken, purchaseReturnAmount, safeAdd(token.totalSupply(), purchaseReturnAmount));
     }
 
     /*
@@ -303,7 +296,7 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         _reserveToken   reserve token contract address
         _depositAmount  amount to deposit (in the reserve token)
     */
-    function getPurchaseReturn(address _reserveToken, uint256 _depositAmount)
+    function getPurchaseReturn(IERC20Token _reserveToken, uint256 _depositAmount)
         public
         constant
         active
@@ -325,7 +318,7 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         _reserveToken   reserve token contract address
         _sellAmount     amount to sell (in the smart token)
     */
-    function getSaleReturn(address _reserveToken, uint256 _sellAmount) public constant returns (uint256 amount) {
+    function getSaleReturn(IERC20Token _reserveToken, uint256 _sellAmount) public constant returns (uint256 amount) {
         return getSaleReturn(_reserveToken, _sellAmount, token.totalSupply());
     }
 
@@ -344,17 +337,18 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         returns (uint256 amount)
     {
         require(_fromToken != _toToken); // validate input
+        IERC20Token fromToken = IERC20Token(_fromToken);
+        IERC20Token toToken = IERC20Token(_toToken);
 
         // change between the token and one of its reserves
-        address tokenAddress = address(token);
-        if (_toToken == tokenAddress)
-            return buy(_fromToken, _amount, _minReturn);
-        else if (_fromToken == tokenAddress)
-            return sell(_toToken, _amount, _minReturn);
+        if (toToken == token)
+            return buy(fromToken, _amount, _minReturn);
+        else if (fromToken == token)
+            return sell(toToken, _amount, _minReturn);
 
         // change between 2 reserves
-        uint256 purchaseAmount = buy(_fromToken, _amount, 0);
-        return sell(_toToken, purchaseAmount, _minReturn);
+        uint256 purchaseAmount = buy(fromToken, _amount, 0);
+        return sell(toToken, purchaseAmount, _minReturn);
     }
 
     /*
@@ -364,7 +358,7 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         _depositAmount  amount to deposit (in the reserve token)
         _minReturn      if the change results in an amount smaller than the minimum return, it is cancelled
     */
-    function buy(address _reserveToken, uint256 _depositAmount, uint256 _minReturn) public returns (uint256 amount) {
+    function buy(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn) public returns (uint256 amount) {
         amount = getPurchaseReturn(_reserveToken, _depositAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
@@ -373,8 +367,7 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         if (reserve.isVirtualBalanceEnabled)
             reserve.virtualBalance = safeAdd(reserve.virtualBalance, _depositAmount);
 
-        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
-        assert(reserveToken.transferFrom(msg.sender, this, _depositAmount)); // transfer _depositAmount funds from the caller in the reserve token
+        assert(_reserveToken.transferFrom(msg.sender, this, _depositAmount)); // transfer _depositAmount funds from the caller in the reserve token
         token.issue(msg.sender, amount); // issue new funds to the caller in the smart token
 
         Change(_reserveToken, token, msg.sender, _depositAmount, amount);
@@ -388,20 +381,19 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         _sellAmount     amount to sell (in the smart token)
         _minReturn      if the change results in an amount smaller the minimum return, it is cancelled
     */
-    function sell(address _reserveToken, uint256 _sellAmount, uint256 _minReturn) public returns (uint256 amount) {
+    function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn) public returns (uint256 amount) {
         require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
 
         amount = getSaleReturn(_reserveToken, _sellAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
-        ERC20TokenInterface reserveToken = ERC20TokenInterface(_reserveToken);
         uint256 reserveBalance = getReserveBalance(_reserveToken);
         assert(amount <= reserveBalance); // ensure that the trade won't result in negative reserve
 
         uint256 tokenSupply = token.totalSupply();
         assert(amount < reserveBalance || _sellAmount == tokenSupply); // ensure that the trade will only deplete the reserve if the total supply is depleted as well
         token.destroy(msg.sender, _sellAmount); // destroy _sellAmount from the caller's balance in the smart token
-        assert(reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
+        assert(_reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
                                                            // note that it might fail if the actual reserve balance is smaller than the virtual balance
 
         // update virtual balance if relevant
@@ -411,7 +403,7 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
 
         // if the supply was totally depleted, disconnect from the smart token
         if (_sellAmount == tokenSupply)
-            token.setChanger(0x0);
+            token.setChanger(ITokenChanger(0x0));
 
         Change(token, _reserveToken, msg.sender, _sellAmount, amount);
         return amount;
@@ -424,7 +416,7 @@ contract BancorChanger is Owned, SafeMath, TokenChangerInterface {
         _sellAmount     amount to sell (in the smart token)
         _totalSupply    total token supply, overrides the actual token total supply when calculating the return
     */
-    function getSaleReturn(address _reserveToken, uint256 _sellAmount, uint256 _totalSupply)
+    function getSaleReturn(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _totalSupply)
         private
         constant
         active
