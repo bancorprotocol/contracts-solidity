@@ -11,7 +11,7 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
     string public version = '0.1';
 
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
-    ITokenChanger public changer;           // changer contract address
+    ITokenChanger public changer;           // changer contract
 
     // triggered when a smart token is deployed - the _token address is defined for forward compatibility, in case we want to trigger the event from a factory
     event NewSmartToken(address _token);
