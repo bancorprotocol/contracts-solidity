@@ -19,7 +19,7 @@ import './IBancorFormula.sol';
     ERC20 reserve token balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on
     the actual reserve balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract
 
-    The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger, it's a safety mechanism in case of bugs/exploits
+    The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger (it's also a safety mechanism in case of bugs/exploits)
 */
 contract BancorChanger is Owned, SafeMath, ITokenChanger {
     struct Reserve {

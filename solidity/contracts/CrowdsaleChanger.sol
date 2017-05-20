@@ -19,7 +19,7 @@ import './IEtherToken.sol';
     The price remains fixed for the entire duration of the crowdsale
     Note that 20% of the contributions are the Bancor token's reserve
 
-    The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger, it's a safety mechanism in case of bugs/exploits
+    The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger (it's also a safety mechanism in case of bugs/exploits)
 */
 contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
     struct ERC20TokenData {
