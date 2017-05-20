@@ -373,9 +373,8 @@ contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
         amount = getPurchaseReturn(_erc20Token, _depositAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
-        IERC20Token erc20Token = IERC20Token(_erc20Token);
-        assert(erc20Token.transferFrom(msg.sender, beneficiary, _depositAmount)); // transfer _depositAmount funds from the caller in the ERC20 token
-        beneficiaryBalances[erc20Token] = safeAdd(beneficiaryBalances[erc20Token], _depositAmount); // increase beneficiary ERC20 balance
+        assert(_erc20Token.transferFrom(msg.sender, beneficiary, _depositAmount)); // transfer _depositAmount funds from the caller in the ERC20 token
+        beneficiaryBalances[_erc20Token] = safeAdd(beneficiaryBalances[_erc20Token], _depositAmount); // increase beneficiary ERC20 balance
 
         ERC20TokenData data = tokenData[_erc20Token];
         uint256 depositEthValue = safeMul(_depositAmount, data.valueN) / data.valueD;
