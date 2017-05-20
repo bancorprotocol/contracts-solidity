@@ -17,6 +17,8 @@ contract SmartToken is ERC20Token, Owned, SmartTokenInterface {
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
     address public changer = 0x0;           // changer contract address
 
+    // triggered when a smart token is deployed
+    event NewSmartToken();
     // triggered when a token changer is updated/removed
     event ChangerUpdate(address _prevChanger, address _newChanger);
 
@@ -30,6 +32,7 @@ contract SmartToken is ERC20Token, Owned, SmartTokenInterface {
     {
         require(bytes(_name).length != 0 && bytes(_symbol).length >= 1 && bytes(_symbol).length <= 6); // validate input
         numDecimalUnits = _numDecimalUnits;
+        NewSmartToken();
     }
 
     // verifies that an amount is greater than zero
