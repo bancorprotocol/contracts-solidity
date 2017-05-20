@@ -42,10 +42,10 @@ contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
     uint256 public totalEtherCap = 1000000 ether;               // current temp ether contribution cap, limited as a safety mechanism until the real cap is revealed
     uint256 public totalEtherContributed = 0;                   // ether contributed so far
     bytes32 public realEtherCapHash;                            // ensures that the real cap is predefined on deployment and cannot be changed later
-    IEtherToken public etherToken;                              // ether token contract address
     address public beneficiary = 0x0;                           // address to receive all contributed ether
     address public btcs = 0x0;                                  // bitcoin suisse address
     ISmartToken public token;                                   // smart token governed by the changer
+    IEtherToken public etherToken;                              // ether token contract
     address[] public acceptedTokens;                            // ERC20 standard token addresses
     mapping (address => ERC20TokenData) public tokenData;       // ERC20 token addresses -> ERC20 token data
     mapping (address => uint256) public beneficiaryBalances;    // beneficiary balances in the different tokens
