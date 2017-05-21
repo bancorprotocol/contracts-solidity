@@ -333,25 +333,25 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('verifies that the token owner can disable / re-enable a reserve', async () => {
+    it('verifies that the token owner can disable / re-enable reserve purchases', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, 10, false);
         let reserve = await changer.reserves.call(reserveTokenAddress);
         verifyReserve(reserve, true, true, 10, false, 0);
-        await changer.disableReserve(reserveTokenAddress, true);
+        await changer.disableReservePurchases(reserveTokenAddress, true);
         reserve = await changer.reserves.call(reserveTokenAddress);
         verifyReserve(reserve, true, false, 10, false, 0);
-        await changer.disableReserve(reserveTokenAddress, false);
+        await changer.disableReservePurchases(reserveTokenAddress, false);
         reserve = await changer.reserves.call(reserveTokenAddress);
         verifyReserve(reserve, true, true, 10, false, 0);
     });
 
-    it('should throw when a non token owner attempts to disable a reserve', async () => {
+    it('should throw when a non token owner attempts to disable reserve purchases', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, 10, false);
 
         try {
-            await changer.disableReserve(reserveTokenAddress, true, { from: accounts[1] });
+            await changer.disableReservePurchases(reserveTokenAddress, true, { from: accounts[1] });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -359,12 +359,12 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to disable a reserve that does not exist', async () => {
+    it('should throw when attempting to disable reserve purchases for a reserve that does not exist', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, 10, false);
 
         try {
-            await changer.disableReserve(reserveTokenAddress2, true);
+            await changer.disableReservePurchases(reserveTokenAddress2, true);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -742,9 +742,9 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to get the purchase return with a disabled reserve', async () => {
+    it('should throw when attempting to get the purchase return while purchasing with the reserve is disabled', async () => {
         let changer = await initChanger(accounts, true);
-        await changer.disableReserve(reserveTokenAddress, true);
+        await changer.disableReservePurchases(reserveTokenAddress, true);
 
         try {
             await changer.getPurchaseReturn.call(reserveTokenAddress, 500);
@@ -977,10 +977,10 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to buy with a disabled reserve', async () => {
+    it('should throw when attempting to buy while the reserve purchases are disabled', async () => {
         let changer = await initChanger(accounts, true);
         await reserveToken.approve(changer.address, 500);
-        await changer.disableReserve(reserveTokenAddress, true);
+        await changer.disableReservePurchases(reserveTokenAddress, true);
 
         try {
             await changer.buy(reserveTokenAddress, 500, 0);

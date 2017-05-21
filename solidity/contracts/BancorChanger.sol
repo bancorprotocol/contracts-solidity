@@ -18,14 +18,14 @@ import './IBancorFormula.sol';
     ERC20 reserve token balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on
     the actual reserve balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract
 
-    The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger (it's also a safety mechanism in case of bugs/exploits)
+    The changer is upgradable - the token owner can replace it with a new version by calling setTokenChanger (it's also a safety mechanism in case of bugs/exploits)
 */
 contract BancorChanger is SafeMath, ITokenChanger {
     struct Reserve {
         uint256 virtualBalance;         // virtual balance
         uint8 ratio;                    // constant reserve ratio (CRR), 1-100
         bool isVirtualBalanceEnabled;   // true if virtual balance is enabled, false if not
-        bool isEnabled;                 // is purchase of the smart token enabled with the reserve, can be set by the owner
+        bool isPurchaseEnabled;         // is purchase of the smart token enabled with the reserve, can be set by the token owner
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
@@ -130,7 +130,7 @@ contract BancorChanger is SafeMath, ITokenChanger {
 
     /*
         defines a new reserve for the token
-        can only be called by the changer owner while the changer is inactive
+        can only be called by the token owner while the changer is inactive
 
         _token                  address of the reserve token
         _ratio                  constant reserve ratio, 1-100
@@ -148,7 +148,7 @@ contract BancorChanger is SafeMath, ITokenChanger {
         reserves[_token].virtualBalance = 0;
         reserves[_token].ratio = _ratio;
         reserves[_token].isVirtualBalanceEnabled = _enableVirtualBalance;
-        reserves[_token].isEnabled = true;
+        reserves[_token].isPurchaseEnabled = true;
         reserves[_token].isSet = true;
         reserveTokens.push(_token);
         totalReserveRatio += _ratio;
@@ -156,7 +156,7 @@ contract BancorChanger is SafeMath, ITokenChanger {
 
     /*
         updates one of the token reserves
-        can only be called by the changer owner
+        can only be called by the token owner
 
         _reserveToken           address of the reserve token
         _ratio                  constant reserve ratio, 1-100
@@ -180,18 +180,18 @@ contract BancorChanger is SafeMath, ITokenChanger {
 
     /*
         disables purchasing with the given reserve token in case the reserve token got compromised
-        can only be called by the changer owner
-        note that selling is still enabled regardless of this flag and it cannot be disabled by the owner
+        can only be called by the token owner
+        note that selling is still enabled regardless of this flag and it cannot be disabled by the token owner
 
         _reserveToken    reserve token contract address
         _disable         true to disable the token, false to re-enable it
     */
-    function disableReserve(IERC20Token _reserveToken, bool _disable)
+    function disableReservePurchases(IERC20Token _reserveToken, bool _disable)
         public
         tokenOwnerOnly
         validReserve(_reserveToken)
     {
-        reserves[_reserveToken].isEnabled = !_disable;
+        reserves[_reserveToken].isPurchaseEnabled = !_disable;
     }
 
     /*
@@ -210,7 +210,7 @@ contract BancorChanger is SafeMath, ITokenChanger {
     }
 
     /*
-        allows the owner to execute the smart token's issue function
+        allows the token owner to execute the token's issue function
 
         _to         account to receive the new amount
         _amount     amount to increase the supply by
@@ -220,7 +220,7 @@ contract BancorChanger is SafeMath, ITokenChanger {
     }
 
     /*
-        allows the owner to execute the smart token's destroy function
+        allows the token owner to execute the token's destroy function
 
         _from       account to remove the new amount from
         _amount     amount to decrease the supply by
@@ -231,7 +231,7 @@ contract BancorChanger is SafeMath, ITokenChanger {
 
     /*
         withdraws tokens from the reserve and sends them to an account
-        can only be called by the changer owner
+        can only be called by the token owner
 
         _reserveToken    reserve token contract address
         _to              account to receive the new amount
@@ -256,7 +256,7 @@ contract BancorChanger is SafeMath, ITokenChanger {
 
     /*
         sets the smart token's changer address to a different one instead of the current contract address
-        can only be called by the owner
+        can only be called by the token owner
         the changer can be set to null to transfer ownership from the changer to the original smart token's owner
 
         _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
@@ -310,7 +310,7 @@ contract BancorChanger is SafeMath, ITokenChanger {
         returns (uint256 amount)
     {
         Reserve reserve = reserves[_reserveToken];
-        require(reserve.isEnabled); // validate input
+        require(reserve.isPurchaseEnabled); // validate input
 
         uint256 tokenSupply = token.totalSupply();
         uint256 reserveBalance = getReserveBalance(_reserveToken);

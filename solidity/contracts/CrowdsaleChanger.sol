@@ -18,13 +18,13 @@ import './IEtherToken.sol';
     The price remains fixed for the entire duration of the crowdsale
     Note that 20% of the contributions are the Bancor token's reserve
 
-    The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger (it's also a safety mechanism in case of bugs/exploits)
+    The changer is upgradable - the token owner can replace it with a new version by calling setTokenChanger (it's also a safety mechanism in case of bugs/exploits)
 */
 contract CrowdsaleChanger is SafeMath, ITokenChanger {
     struct ERC20TokenData {
         uint256 valueN; // 1 smallest unit in wei (numerator)
         uint256 valueD; // 1 smallest unit in wei (denominator)
-        bool isEnabled; // is purchase of the smart token enabled with the ERC20 token, can be set by the owner
+        bool isEnabled; // is purchase of the smart token enabled with the ERC20 token, can be set by the token owner
         bool isSet;     // used to tell if the mapping element is defined
     }
 
@@ -180,6 +180,10 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
         return acceptedTokens[_tokenIndex - 1];
     }
 
+    /*
+        initializes the predefined ERC20 tokens
+        can only be called by the token owner
+    */
     function initERC20Tokens()
         public
         tokenOwnerOnly
@@ -202,7 +206,7 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
 
     /*
         defines a new ERC20 token
-        can only be called by the changer owner while the changer is inactive
+        can only be called by the token owner while the changer is inactive
 
         _token      address of the ERC20 token
         _valueN     1 smallest unit in wei (numerator)
@@ -227,7 +231,7 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
 
     /*
         updates one of the ERC20 tokens
-        can only be called by the changer owner
+        can only be called by the token owner
         note that the function can be called during the crowdsale as well, mainly to update the ERC20 token ETH value
 
         _erc20Token     address of the ERC20 token
@@ -248,7 +252,7 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
 
     /*
         disables purchasing with the given ERC20 token in case the token got compromised
-        can only be called by the changer owner
+        can only be called by the token owner
 
         _erc20Token     ERC20 token contract address
         _disable        true to disable the token, false to re-enable it
@@ -263,8 +267,8 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
 
     /*
         withdraws tokens from one of the ERC20 tokens and sends them to an account
-        can only be called by the changer owner
-        this is a safety mechanism that allows the owner to return tokens that were sent directly to this contract by mistake
+        can only be called by the token owner
+        this is a safety mechanism that allows the token owner to return tokens that were sent directly to this contract by mistake
 
         _erc20Token     ERC20 token contract address
         _to             account to receive the new amount
@@ -300,7 +304,7 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
 
     /*
         sets the smart token's changer address to a different one instead of the current contract address
-        can only be called by the owner
+        can only be called by the token owner
         the changer can be set to null to transfer ownership from the changer to the original smart token's owner
 
         _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
