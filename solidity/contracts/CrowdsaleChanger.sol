@@ -36,18 +36,18 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
     string public version = '0.1';
     string public changerType = 'crowdsale';
 
-    uint256 public startTime = 0;                               // crowdsale start time (in seconds)
-    uint256 public endTime = 0;                                 // crowdsale end time (in seconds)
-    uint256 public totalEtherCap = 1000000 ether;               // current temp ether contribution cap, limited as a safety mechanism until the real cap is revealed
-    uint256 public totalEtherContributed = 0;                   // ether contributed so far
-    bytes32 public realEtherCapHash;                            // ensures that the real cap is predefined on deployment and cannot be changed later
-    address public beneficiary = 0x0;                           // address to receive all contributed ether
-    address public btcs = 0x0;                                  // bitcoin suisse address
-    ISmartToken public token;                                   // smart token governed by the changer
-    IEtherToken public etherToken;                              // ether token contract
-    address[] public acceptedTokens;                            // ERC20 standard token addresses
-    mapping (address => ERC20TokenData) public tokenData;       // ERC20 token addresses -> ERC20 token data
-    mapping (address => uint256) public beneficiaryBalances;    // beneficiary balances in the different tokens
+    uint256 public startTime = 0;                           // crowdsale start time (in seconds)
+    uint256 public endTime = 0;                             // crowdsale end time (in seconds)
+    uint256 public totalEtherCap = 1000000 ether;           // current temp ether contribution cap, limited as a safety mechanism until the real cap is revealed
+    uint256 public totalEtherContributed = 0;               // ether contributed so far
+    bytes32 public realEtherCapHash;                        // ensures that the real cap is predefined on deployment and cannot be changed later
+    address public beneficiary = 0x0;                       // address to receive all contributed ether
+    address public btcs = 0x0;                              // bitcoin suisse address
+    ISmartToken public token;                               // smart token governed by the changer
+    IEtherToken public etherToken;                          // ether token contract
+    address[] public acceptedTokens;                        // ERC20 standard token addresses
+    mapping (address => ERC20TokenData) public tokenData;   // ERC20 token addresses -> ERC20 token data
+    mapping (address => uint256) public contributions;      // contribution per token
 
     // triggered when a change between two tokens occurs
     event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return);
@@ -383,7 +383,7 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
         assert(_erc20Token.transferFrom(msg.sender, beneficiary, _depositAmount)); // transfer _depositAmount funds from the caller in the ERC20 token
-        beneficiaryBalances[_erc20Token] = safeAdd(beneficiaryBalances[_erc20Token], _depositAmount); // increase beneficiary ERC20 balance
+        contributions[_erc20Token] = safeAdd(contributions[_erc20Token], _depositAmount); // increase ERC20 contribution amount
 
         ERC20TokenData data = tokenData[_erc20Token];
         uint256 depositEthValue = safeMul(_depositAmount, data.valueN) / data.valueD;
@@ -434,7 +434,7 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
 
         etherToken.deposit.value(_depositAmount)(); // transfer the ether to the ether contract
         assert(etherToken.transfer(beneficiary, _depositAmount)); // transfer the ether to the beneficiary account
-        beneficiaryBalances[etherToken] = safeAdd(beneficiaryBalances[etherToken], _depositAmount); // increase beneficiary ETH balance
+        contributions[etherToken] = safeAdd(contributions[etherToken], _depositAmount); // increase ETH contribution amount
         handleContribution(_contributor, _depositAmount, amount);
 
         Change(etherToken, token, msg.sender, msg.value, amount);
