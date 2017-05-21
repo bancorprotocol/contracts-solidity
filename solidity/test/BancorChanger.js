@@ -564,7 +564,7 @@ contract('BancorChanger', (accounts) => {
         await reserveToken.transfer(changer.address, 1000);
 
         try {
-            await changer.withdraw(changer.address, '0x0', 50);
+            await changer.withdraw(reserveToken.address, changer.address, 50);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -579,7 +579,7 @@ contract('BancorChanger', (accounts) => {
         await reserveToken.transfer(changer.address, 1000);
 
         try {
-            await changer.withdraw(tokenAddress, '0x0', 50);
+            await changer.withdraw(reserveToken.address, tokenAddress, 50);
             assert(false, "didn't throw");
         }
         catch (error) {
