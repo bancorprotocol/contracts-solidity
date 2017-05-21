@@ -397,9 +397,7 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
         between(startTime, endTime)
         returns (uint256 amount)
     {
-        amount = handleETHDeposit(msg.sender, msg.value);
-        Change(etherToken, token, msg.sender, msg.value, amount);
-        return amount;
+        return handleETHDeposit(msg.sender, msg.value);
     }
 
     /*
@@ -416,13 +414,12 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
         earlierThan(startTime)
         returns (uint256 amount)
     {
-        amount = handleETHDeposit(_contributor, msg.value);
-        Change(etherToken, token, msg.sender, msg.value, amount);
-        return amount;
+        return handleETHDeposit(_contributor, msg.value);
     }
 
     /*
         handles direct ETH deposits (as opposed to ERC20 contributions)
+        note that the Change event is still triggered using the sender as the trader, as opposed to the contributor
 
         _contributor    account that should receive the new tokens
         _depositAmount  amount contributed by the account, in wei
@@ -435,6 +432,8 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
         assert(etherToken.transfer(beneficiary, _depositAmount)); // transfer the ether to the beneficiary account
         beneficiaryBalances[etherToken] = safeAdd(beneficiaryBalances[etherToken], _depositAmount); // increase beneficiary ETH balance
         handleContribution(_contributor, _depositAmount, amount);
+
+        Change(etherToken, token, msg.sender, msg.value, amount);
         return amount;
     }
 
