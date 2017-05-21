@@ -1,4 +1,4 @@
-/* global artifacts, contract, before, it, assert */
+/* global artifacts, contract, before, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
 const CrowdsaleChanger = artifacts.require('CrowdsaleChanger.sol');
@@ -8,16 +8,20 @@ const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const TestCrowdsaleChanger = artifacts.require('TestCrowdsaleChanger.sol');
 const utils = require('./helpers/Utils');
 
+let token;
 let tokenAddress;
+let etherToken;
 let etherTokenAddress;
 let erc20Token;
 let erc20Token2;
 let erc20TokenAddress;
 let erc20TokenAddress2 = '0x32f0f93396f0865d7ce412695beb3c3ad9ccca75';
 let beneficiaryAddress = '0x69aa30b306805bd17488ce957d03e3c0213ee9e6';
-let btcsAddress = '0x6c3bd314b01bf16066ce6e4ea01ab62fe346d56d';
+let btcsAddress;
 let address1 = '0x3e3ac49882f3fc4b768139af45588242e50e5701';
-let startTime = 4102444800; // far into the future
+let startTime = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // crowdsale hasn't started
+let startTimeInProgress = Math.floor(Date.now() / 1000) - 12 * 60 * 60; // ongoing crowdsale
+let startTimeFinished = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60; // ongoing crowdsale
 let realCap = 1000;
 let realCapKey = 234;
 let realEtherCapHash = '0xd3a40f1165164f13f237cc938419cc292e66b7bb3aa190f21087a3813c5ae1ca';  // sha3(uint256(1000), uint256(234))
@@ -26,12 +30,12 @@ async function generateDefaultChanger() {
     return await CrowdsaleChanger.new(tokenAddress, etherTokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHash);
 }
 
-// used by contribution tests
-async function initChanger(accounts, activate) {
-    let token = await SmartToken.new('Token1', 'TKN1', 2);
+// used by contribution tests, creates a changer that's already in progress
+async function initChanger(accounts, activate, startTimeOverride = startTimeInProgress) {
+    token = await SmartToken.new('Token1', 'TKN1', 2);
     tokenAddress = token.address;
 
-    let etherToken = await EtherToken.new();
+    etherToken = await EtherToken.new();
     etherTokenAddress = etherToken.address;
 
     erc20Token = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
@@ -40,7 +44,7 @@ async function initChanger(accounts, activate) {
     erc20Token2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
     erc20TokenAddress2 = erc20Token2.address;
 
-    let changer = await TestCrowdsaleChanger.new(tokenAddress, etherTokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHash);
+    let changer = await TestCrowdsaleChanger.new(tokenAddress, etherTokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHash, startTimeOverride);
     let changerAddress = changer.address;
     await changer.addERC20Token(erc20TokenAddress, 2, 5);
     await changer.addERC20Token(erc20TokenAddress2, 3, 7);
@@ -70,6 +74,7 @@ contract('CrowdsaleChanger', (accounts) => {
         tokenAddress = token.address;
         etherTokenAddress = etherToken.address;
         erc20TokenAddress = erc20Token.address;
+        btcsAddress = accounts[4];
     });
 
     it('verifies the base storage values after construction', async () => {
@@ -179,6 +184,25 @@ contract('CrowdsaleChanger', (accounts) => {
         assert.equal(changeableTokenAddress, etherTokenAddress);
     });
 
+    it('verifies that the owner can initialze the erc20 tokens', async () => {
+        let changer = await generateDefaultChanger();
+        await changer.initERC20Tokens();
+        let acceptedTokenCount = await changer.acceptedTokenCount.call();
+        assert.isAbove(acceptedTokenCount, 1);
+    });
+
+    it('should throw when a non token owner attempts initialze the erc20 tokens', async () => {
+        let changer = await generateDefaultChanger();
+
+        try {
+            await changer.initERC20Tokens({ from: accounts[1] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
     it('verifies that 2 erc20 tokens are added correctly', async () => {
         let changer = await generateDefaultChanger();
         await changer.addERC20Token(erc20TokenAddress, 2, 5);
@@ -201,7 +225,7 @@ contract('CrowdsaleChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to add an erc0 token when the changer is active', async () => {
+    it('should throw when attempting to add an erc20 token when the changer is active', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         let changer = await CrowdsaleChanger.new(token.address, etherTokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHash);
         await token.setChanger(changer.address);
@@ -493,6 +517,88 @@ contract('CrowdsaleChanger', (accounts) => {
         }
     });
 
+    it('verifies the real ether cap balance after enabled by the owner', async () => {
+        let changer = await initChanger(accounts, true);
+        await changer.enableRealCap(realCap, realCapKey);
+        let totalEtherCap = await changer.totalEtherCap.call();
+        assert.equal(totalEtherCap, realCap);
+    });
+
+    it('should throw when a non owner attempts to enable the real ether cap', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.enableRealCap(realCap, realCapKey, { from: accounts[1] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when the owner attempts to enable the real ether cap while the changer is not active', async () => {
+        let changer = await initChanger(accounts, true);
+        await changer.setTokenChanger('0x0');
+
+        try {
+            await changer.enableRealCap(realCap, realCapKey);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when the owner attempts to enable the real ether cap before the start time', async () => {
+        let token = await SmartToken.new('Token1', 'TKN1', 2);
+        let changer = await CrowdsaleChanger.new(token.address, etherTokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHash);
+        await token.setChanger(changer.address);
+
+        try {
+            await changer.enableRealCap(realCap, realCapKey);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when the owner attempts to enable the real ether cap with an invalid cap', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.enableRealCap(0, realCapKey);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when the owner attempts to enable the real ether cap with the wrong real cap', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.enableRealCap(1001, realCapKey);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when the owner attempts to enable the real ether cap with the wrong cap key', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.enableRealCap(realCap, 235);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
     it('verifies that the token owner can set the token changer', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         let changer = await CrowdsaleChanger.new(token.address, etherTokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHash);
@@ -559,6 +665,29 @@ contract('CrowdsaleChanger', (accounts) => {
 
         await erc20Token.approve(changer.address, 500);
         let purchaseRes = await changer.buyERC20(erc20TokenAddress, 500, 0);
+        let purchaseAmount = getChangeAmount(purchaseRes);
+
+        assert.equal(returnAmount, purchaseAmount);
+    });
+
+    it('verifies that getReturn returns the same amount as buyETH', async () => {
+        let changer = await initChanger(accounts, true);
+        let returnAmount = await changer.getReturn.call(etherTokenAddress, tokenAddress, 500);
+
+        let purchaseRes = await changer.buyETH({ value: 500 });
+        let purchaseAmount = getChangeAmount(purchaseRes);
+
+        assert.equal(returnAmount, purchaseAmount);
+    });
+
+    it('verifies that getReturn returns the same amount as buyBTCs', async () => {
+        let token = await SmartToken.new('Token1', 'TKN1', 2);
+        let changer = await CrowdsaleChanger.new(token.address, etherTokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHash);
+        await token.setChanger(changer.address);
+
+        let returnAmount = await changer.getReturn.call(etherTokenAddress, token.address, 500);
+
+        let purchaseRes = await changer.buyBTCs(accounts[1], { value: 500, from: btcsAddress });
         let purchaseAmount = getChangeAmount(purchaseRes);
 
         assert.equal(returnAmount, purchaseAmount);
@@ -725,6 +854,33 @@ contract('CrowdsaleChanger', (accounts) => {
         }
     });
 
+    it('verifies balances, contributions and total eth contributed after buying with an erc20 token', async () => {
+        let changer = await initChanger(accounts, true);
+        await erc20Token.transfer(accounts[1], 9000);
+        await erc20Token.approve(changer.address, 500, { from: accounts[1] });
+
+        let res = await changer.buyERC20(erc20TokenAddress, 400, 0, { from: accounts[1] });
+        let purchaseAmount = getChangeAmount(res);
+        assert.isNumber(purchaseAmount);
+        assert.notEqual(purchaseAmount, 0);
+
+        let contributorTokenBalance = await token.balanceOf.call(accounts[1]);
+        assert.equal(contributorTokenBalance, purchaseAmount);
+
+        let beneficiaryTokenBalance = await token.balanceOf.call(beneficiaryAddress);
+        assert.equal(beneficiaryTokenBalance, purchaseAmount);
+
+        let beneficiaryERC20Balance = await erc20Token.balanceOf.call(beneficiaryAddress);
+        assert.equal(beneficiaryERC20Balance, 400);
+
+        let erc20Contribution = await changer.contributions.call(erc20TokenAddress);
+        assert.equal(erc20Contribution, 400);
+
+        let contributionEtherValue = Math.floor(400 * 2 / 5);
+        let totalEtherContributed = await changer.totalEtherContributed.call();
+        assert.equal(totalEtherContributed, contributionEtherValue);
+    });
+
     it('should throw when attempting to buy with an erc20 token while the changer is not active', async () => {
         let changer = await initChanger(accounts, false);
         await erc20Token.approve(changer.address, 500);
@@ -802,4 +958,261 @@ contract('CrowdsaleChanger', (accounts) => {
             return utils.ensureException(error);
         }
     });
+
+    it('should throw when attempting to buy with an erc20 token before the crowdsale has started', async () => {
+        let token = await SmartToken.new('Token1', 'TKN1', 2);
+        let changer = await CrowdsaleChanger.new(token.address, etherTokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHash);
+        await changer.addERC20Token(erc20TokenAddress, 2, 5);
+        await erc20Token.approve(changer.address, 500);
+        await token.setChanger(changer.address);
+
+        try {
+            await changer.buyERC20(erc20TokenAddress, 500, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with an erc20 token after the crowdsale has finished', async () => {
+        let token = await SmartToken.new('Token1', 'TKN1', 2);
+        let changer = await TestCrowdsaleChanger.new(token.address, etherTokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHash, startTimeFinished);
+        await changer.addERC20Token(erc20TokenAddress, 2, 5);
+        await erc20Token.approve(changer.address, 500);
+        await token.setChanger(changer.address);
+
+        try {
+            await changer.buyERC20(erc20TokenAddress, 500, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with an erc20 token while hitting the real ether cap', async () => {
+        let changer = await initChanger(accounts, true);
+        await changer.enableRealCap(realCap, realCapKey);
+        await etherToken.deposit({ value: 2000 });
+        await etherToken.approve(changer.address, 1500);
+
+        try {
+            await changer.buyERC20(etherTokenAddress, realCap + 1, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('verifies balances, contributions and total eth contributed after buying with ether', async () => {
+        let changer = await initChanger(accounts, true);
+
+        let res = await changer.buyETH({ value: 200, from: accounts[1] });
+        let purchaseAmount = getChangeAmount(res);
+        assert.isNumber(purchaseAmount);
+        assert.notEqual(purchaseAmount, 0);
+
+        let contributorTokenBalance = await token.balanceOf.call(accounts[1]);
+        assert.equal(contributorTokenBalance, purchaseAmount);
+
+        let beneficiaryTokenBalance = await token.balanceOf.call(beneficiaryAddress);
+        assert.equal(beneficiaryTokenBalance, purchaseAmount);
+
+        let beneficiaryEtherBalance = await etherToken.balanceOf.call(beneficiaryAddress);
+        assert.equal(beneficiaryEtherBalance, 200);
+
+        let etherContribution = await changer.contributions.call(etherTokenAddress);
+        assert.equal(etherContribution, 200);
+
+        let totalEtherContributed = await changer.totalEtherContributed.call();
+        assert.equal(totalEtherContributed, 200);
+    });
+
+    it('should throw when attempting to buy with ether while the changer is not active', async () => {
+        let changer = await initChanger(accounts, false);
+
+        try {
+            await changer.buyETH({ value: 2000 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with ether and an invalid deposit amount', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.buyETH({ value: 0 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with ether while the ether token is disabled', async () => {
+        let changer = await initChanger(accounts, true);
+        await changer.disableERC20Token(etherTokenAddress, true);
+
+        try {
+            await changer.buyETH({ value: 2000 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with ether before the crowdsale has started', async () => {
+        let changer = await initChanger(accounts, true, startTime);
+
+        try {
+            await changer.buyETH({ value: 2000 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with ether after the crowdsale has finished', async () => {
+        let changer = await initChanger(accounts, true, startTimeFinished);
+
+        try {
+            await changer.buyETH({ value: 2000 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with ether while hitting the real ether cap', async () => {
+        let changer = await initChanger(accounts, true);
+        await changer.enableRealCap(realCap, realCapKey);
+
+        try {
+            await changer.buyETH({ value: realCap + 1 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('verifies balances, contributions and total eth contributed after buying through btcs', async () => {
+        let changer = await initChanger(accounts, true, startTime);
+
+        let res = await changer.buyBTCs(accounts[1], { value: 200, from: btcsAddress });
+        let purchaseAmount = getChangeAmount(res);
+        assert.isNumber(purchaseAmount);
+        assert.notEqual(purchaseAmount, 0);
+
+        let contributorTokenBalance = await token.balanceOf.call(accounts[1]);
+        assert.equal(contributorTokenBalance, purchaseAmount);
+
+        let beneficiaryTokenBalance = await token.balanceOf.call(beneficiaryAddress);
+        assert.equal(beneficiaryTokenBalance, purchaseAmount);
+
+        let beneficiaryEtherBalance = await etherToken.balanceOf.call(beneficiaryAddress);
+        assert.equal(beneficiaryEtherBalance, 200);
+
+        let etherContribution = await changer.contributions.call(etherTokenAddress);
+        assert.equal(etherContribution, 200);
+
+        let totalEtherContributed = await changer.totalEtherContributed.call();
+        assert.equal(totalEtherContributed, 200);
+    });
+
+    it('should throw when attempting to buy through btcs from a non btcs address', async () => {
+        let changer = await initChanger(accounts, true, startTime);
+
+        try {
+            await changer.buyBTCs(accounts[1], { value: 2000 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy through btcs while the changer is not active', async () => {
+        let changer = await initChanger(accounts, false, startTime);
+
+        try {
+            await changer.buyBTCs(accounts[1], { value: 2000, from: btcsAddress });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy through btcs and an invalid deposit amount', async () => {
+        let changer = await initChanger(accounts, true, startTime);
+
+        try {
+            await changer.buyBTCs(accounts[1], { value: 0, from: btcsAddress });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy through btcs while the ether token is disabled', async () => {
+        let changer = await initChanger(accounts, true, startTime);
+        await changer.disableERC20Token(etherTokenAddress, true);
+
+        try {
+            await changer.buyBTCs(accounts[1], { value: 2000, from: btcsAddress });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy through btcs after the crowdsale has started', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.buyBTCs(accounts[1], { value: 2000, from: btcsAddress });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy through btcs after the crowdsale has finished', async () => {
+        let changer = await initChanger(accounts, true, startTimeFinished);
+
+        try {
+            await changer.buyBTCs(accounts[1], { value: 2000, from: btcsAddress });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy through btcs while hitting the btcs ether cap', async () => {
+        let changer = await initChanger(accounts, true, startTime);
+        let btcsEtherCap = await changer.BTCS_ETHER_CAP.call();
+        let largerThanCap = btcsEtherCap.plus(1);
+
+        try {
+            await changer.buyBTCs(accounts[1], { value: largerThanCap.toString(), from: btcsAddress });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
 });
+

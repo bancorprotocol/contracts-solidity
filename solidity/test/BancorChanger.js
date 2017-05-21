@@ -7,6 +7,7 @@ const BancorFormula = artifacts.require('BancorFormula.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const utils = require('./helpers/Utils');
 
+let token;
 let tokenAddress;
 let formulaAddress;
 let reserveToken;
@@ -17,7 +18,7 @@ let address1 = '0x3e3ac49882f3fc4b768139af45588242e50e5701';
 
 // used by purchase/sale tests
 async function initChanger(accounts, activate) {
-    let token = await SmartToken.new('Token1', 'TKN1', 2);
+    token = await SmartToken.new('Token1', 'TKN1', 2);
     tokenAddress = token.address;
 
     reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
@@ -925,6 +926,23 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
+    it('verifies balances after buy', async () => {
+        let changer = await initChanger(accounts, true);
+
+        let tokenPrevBalance = await token.balanceOf.call(accounts[0]);
+        let reserveTokenPrevBalance = await reserveToken.balanceOf.call(accounts[0]);
+
+        await reserveToken.approve(changer.address, 500);
+        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 0);
+        let purchaseAmount = getChangeAmount(purchaseRes);
+
+        let reserveTokenNewBalance = await reserveToken.balanceOf.call(accounts[0]);
+        assert.equal(reserveTokenNewBalance.toNumber(), reserveTokenPrevBalance.minus(500).toNumber());
+
+        let tokenNewBalance = await token.balanceOf.call(accounts[0]);
+        assert.equal(tokenNewBalance.toNumber(), tokenPrevBalance.plus(purchaseAmount).toNumber());
+    });
+
     it('should throw when attempting to buy while the changer is not active', async () => {
         let changer = await initChanger(accounts, false);
         await reserveToken.approve(changer.address, 500);
@@ -1001,6 +1019,22 @@ contract('BancorChanger', (accounts) => {
         catch (error) {
             return utils.ensureException(error);
         }
+    });
+
+    it('verifies balances after sell', async () => {
+        let changer = await initChanger(accounts, true);
+
+        let tokenPrevBalance = await token.balanceOf.call(accounts[0]);
+        let reserveTokenPrevBalance = await reserveToken.balanceOf.call(accounts[0]);
+
+        let saleRes = await changer.sell(reserveTokenAddress, 500, 0);
+        let saleAmount = getChangeAmount(saleRes);
+
+        let reserveTokenNewBalance = await reserveToken.balanceOf.call(accounts[0]);
+        assert.equal(reserveTokenNewBalance.toNumber(), reserveTokenPrevBalance.plus(saleAmount).toNumber());
+
+        let tokenNewBalance = await token.balanceOf.call(accounts[0]);
+        assert.equal(tokenNewBalance.toNumber(), tokenPrevBalance.minus(500).toNumber());
     });
 
     it('should throw when attempting to sell while the changer is not active', async () => {
