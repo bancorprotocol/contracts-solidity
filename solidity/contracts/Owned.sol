@@ -1,9 +1,10 @@
 pragma solidity ^0.4.10;
+import './IOwned.sol';
 
 /*
     Provides support and utilities for contract ownership
 */
-contract Owned {
+contract Owned is IOwned {
     address public owner;
     address public newOwner;
 

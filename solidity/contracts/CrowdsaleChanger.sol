@@ -1,5 +1,4 @@
 pragma solidity ^0.4.10;
-import './Owned.sol';
 import './SafeMath.sol';
 import './ITokenChanger.sol';
 import './ISmartToken.sol';
@@ -21,7 +20,7 @@ import './IEtherToken.sol';
 
     The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger (it's also a safety mechanism in case of bugs/exploits)
 */
-contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
+contract CrowdsaleChanger is SafeMath, ITokenChanger {
     struct ERC20TokenData {
         uint256 valueN; // 1 smallest unit in wei (numerator)
         uint256 valueD; // 1 smallest unit in wei (denominator)
@@ -109,6 +108,12 @@ contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
         _;
     }
 
+    // allows execution by the token owner only
+    modifier tokenOwnerOnly {
+        assert(msg.sender == token.owner());
+        _;
+    }
+
     // ensures that token changing is connected to the smart token
     modifier active() {
         assert(token.changer() == this);
@@ -177,7 +182,7 @@ contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
 
     function initERC20Tokens()
         public
-        ownerOnly
+        tokenOwnerOnly
         inactive
     {
         addERC20Token(IERC20Token(0xa74476443119A942dE498590Fe1f2454d7D4aC0d), 1, 1); // Golem
@@ -205,7 +210,7 @@ contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
     */
     function addERC20Token(IERC20Token _token, uint256 _valueN, uint256 _valueD)
         public
-        ownerOnly
+        tokenOwnerOnly
         inactive
         validAddress(_token)
         validAmount(_valueN)
@@ -231,7 +236,7 @@ contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
     */
     function updateERC20Token(IERC20Token _erc20Token, uint256 _valueN, uint256 _valueD)
         public
-        ownerOnly
+        tokenOwnerOnly
         validERC20Token(_erc20Token)
         validAmount(_valueN)
         validAmount(_valueD)
@@ -250,7 +255,7 @@ contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
     */
     function disableERC20Token(IERC20Token _erc20Token, bool _disable)
         public
-        ownerOnly
+        tokenOwnerOnly
         validERC20Token(_erc20Token)
     {
         tokenData[_erc20Token].isEnabled = !_disable;
@@ -267,7 +272,7 @@ contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
     */
     function withdraw(IERC20Token _erc20Token, address _to, uint256 _amount)
         public
-        ownerOnly
+        tokenOwnerOnly
         validERC20Token(_erc20Token)
         validAddress(_to)
         validAmount(_amount)
@@ -284,7 +289,7 @@ contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
     */
     function enableRealCap(uint256 _cap, uint256 _key)
         public
-        ownerOnly
+        tokenOwnerOnly
         active
         between(startTime, endTime)
         validAmount(_cap)
@@ -300,7 +305,7 @@ contract CrowdsaleChanger is Owned, SafeMath, ITokenChanger {
 
         _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
     */
-    function setTokenChanger(ITokenChanger _changer) public ownerOnly {
+    function setTokenChanger(ITokenChanger _changer) public tokenOwnerOnly {
         require(_changer != this && _changer != address(token)); // validate input
         token.setChanger(_changer);
     }

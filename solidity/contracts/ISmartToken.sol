@@ -1,11 +1,12 @@
 pragma solidity ^0.4.10;
+import './IOwned.sol';
 import './IERC20Token.sol';
 import './ITokenChanger.sol';
 
 /*
     Smart Token interface
 */
-contract ISmartToken is IERC20Token {
+contract ISmartToken is IOwned, IERC20Token {
     // this function isn't abstract since the compiler emits automatically generated getter functions as external
     function changer() public constant returns (ITokenChanger changer) {}
 

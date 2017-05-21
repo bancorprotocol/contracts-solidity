@@ -1,5 +1,4 @@
 pragma solidity ^0.4.10;
-import './Owned.sol';
 import './SafeMath.sol';
 import './ITokenChanger.sol';
 import './ISmartToken.sol';
@@ -21,7 +20,7 @@ import './IBancorFormula.sol';
 
     The changer is upgradable - the owner can replace it with a new version by calling setTokenChanger (it's also a safety mechanism in case of bugs/exploits)
 */
-contract BancorChanger is Owned, SafeMath, ITokenChanger {
+contract BancorChanger is SafeMath, ITokenChanger {
     struct Reserve {
         uint256 virtualBalance;         // virtual balance
         uint8 ratio;                    // constant reserve ratio (CRR), 1-100
@@ -87,6 +86,12 @@ contract BancorChanger is Owned, SafeMath, ITokenChanger {
         _;
     }
 
+    // allows execution by the token owner only
+    modifier tokenOwnerOnly {
+        assert(msg.sender == token.owner());
+        _;
+    }
+
     // ensures that token changing is connected to the smart token
     modifier active() {
         assert(token.changer() == this);
@@ -133,7 +138,7 @@ contract BancorChanger is Owned, SafeMath, ITokenChanger {
     */
     function addReserve(IERC20Token _token, uint8 _ratio, bool _enableVirtualBalance)
         public
-        ownerOnly
+        tokenOwnerOnly
         inactive
         validAddress(_token)
         validReserveRatio(_ratio)
@@ -160,7 +165,7 @@ contract BancorChanger is Owned, SafeMath, ITokenChanger {
     */
     function updateReserve(IERC20Token _reserveToken, uint8 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)
         public
-        ownerOnly
+        tokenOwnerOnly
         validReserve(_reserveToken)
         validReserveRatio(_ratio)
     {
@@ -183,7 +188,7 @@ contract BancorChanger is Owned, SafeMath, ITokenChanger {
     */
     function disableReserve(IERC20Token _reserveToken, bool _disable)
         public
-        ownerOnly
+        tokenOwnerOnly
         validReserve(_reserveToken)
     {
         reserves[_reserveToken].isEnabled = !_disable;
@@ -210,7 +215,7 @@ contract BancorChanger is Owned, SafeMath, ITokenChanger {
         _to         account to receive the new amount
         _amount     amount to increase the supply by
     */
-    function issueTokens(address _to, uint256 _amount) public ownerOnly {
+    function issueTokens(address _to, uint256 _amount) public tokenOwnerOnly {
         token.issue(_to, _amount);
     }
 
@@ -220,7 +225,7 @@ contract BancorChanger is Owned, SafeMath, ITokenChanger {
         _from       account to remove the new amount from
         _amount     amount to decrease the supply by
     */
-    function destroyTokens(address _from, uint256 _amount) public ownerOnly {
+    function destroyTokens(address _from, uint256 _amount) public tokenOwnerOnly {
         token.destroy(_from, _amount);
     }
 
@@ -234,7 +239,7 @@ contract BancorChanger is Owned, SafeMath, ITokenChanger {
     */
     function withdraw(IERC20Token _reserveToken, address _to, uint256 _amount)
         public
-        ownerOnly
+        tokenOwnerOnly
         validReserve(_reserveToken)
         validAddress(_to)
         validAmount(_amount)
@@ -256,7 +261,7 @@ contract BancorChanger is Owned, SafeMath, ITokenChanger {
 
         _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
     */
-    function setTokenChanger(ITokenChanger _changer) public ownerOnly {
+    function setTokenChanger(ITokenChanger _changer) public tokenOwnerOnly {
         require(_changer != this && _changer != address(token)); // validate input
         token.setChanger(_changer);
     }
