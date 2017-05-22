@@ -6,9 +6,9 @@ import './IEtherToken.sol';
 
 /*
     Open issues:
-    - verify ERC20 token addresses, transferFrom (must return a boolean flag) and update them with the correct ETH values
-    - possibly move all the ERC20 token initialization from the initERC20Tokens function to a different contract to lower the gas cost and make the crowdsale changer more generic
-    - possibly add getters for ERC20 token fields so that the client won't need to rely on the order in the struct
+    - Verify ERC20 token addresses, transferFrom (must return a boolean flag) and update them with the correct ETH values
+    - Possibly move all the ERC20 token initialization from the initERC20Tokens function to a different contract to lower the gas cost and make the crowdsale changer more generic
+    - Possibly add getters for ERC20 token fields so that the client won't need to rely on the order in the struct
 */
 
 /*

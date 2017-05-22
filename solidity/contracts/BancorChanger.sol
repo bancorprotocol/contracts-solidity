@@ -6,8 +6,8 @@ import './IBancorFormula.sol';
 
 /*
     Open issues:
-    - add miner abuse protection
-    - possibly add getters for reserve fields so that the client won't need to rely on the order in the struct
+    - Add miner front-running attack protection. The issue is somewhat mitigated by the use of _minReturn when changing
+    - Possibly add getters for reserve fields so that the client won't need to rely on the order in the struct
 */
 
 /*

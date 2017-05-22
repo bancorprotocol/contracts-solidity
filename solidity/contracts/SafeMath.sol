@@ -1,7 +1,7 @@
     pragma solidity ^0.4.10;
 
 /*
-    overflow protected math functions
+    Overflow protected math functions
 */
 contract SafeMath {
     function SafeMath() {

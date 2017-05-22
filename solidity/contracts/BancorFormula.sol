@@ -4,8 +4,8 @@ import './IBancorFormula.sol';
 
 /*
     Open issues:
-    - the formula is not yet super accurate, especially for very small/very high ratios
-    - possibly support dynamic precision in the future
+    - The formula is not yet super accurate, especially for very small/very high ratios
+    - Possibly support dynamic precision in the future
 */
 
 contract BancorFormula is SafeMath, IBancorFormula {
