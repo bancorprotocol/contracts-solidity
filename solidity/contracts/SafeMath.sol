@@ -38,7 +38,7 @@ contract SafeMath {
     }
 
     /**
-        @dev returns the product multiplying _x by _y, asserts if the calculation overflows
+        @dev returns the product of multiplying _x by _y, asserts if the calculation overflows
 
         @param _x   factor 1
         @param _y   factor 2
