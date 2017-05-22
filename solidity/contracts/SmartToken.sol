@@ -22,10 +22,12 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
     // triggered when a token changer is updated/removed
     event ChangerUpdate(address _prevChanger, address _newChanger);
 
-    /*
-        _name       token name
-        _symbol     token short symbol, 1-6 characters
-        _decimals   for display purposes only
+    /**
+        @dev constructor
+
+        @param _name       token name
+        @param _symbol     token short symbol, 1-6 characters
+        @param _decimals   for display purposes only
     */
     function SmartToken(string _name, string _symbol, uint8 _decimals)
         ERC20Token(_name, _symbol, _decimals)
@@ -53,22 +55,22 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
         _;
     }
 
-    /*
-        disables/enables transfers
+    /**
+        @dev disables/enables transfers
         can only be called by the token owner (if no changer is defined) or the changer contract (if a changer is defined)
 
-        _disable    true to disable transfers, false to enable them
+        @param _disable    true to disable transfers, false to enable them
     */
     function disableTransfers(bool _disable) public controllerOnly {
         transfersEnabled = !_disable;
     }
 
-    /*
-        increases the token supply and sends the new tokens to an account
+    /**
+        @dev increases the token supply and sends the new tokens to an account
         can only be called by the token owner (if no changer is defined) or the changer contract (if a changer is defined)
 
-        _to         account to receive the new amount
-        _amount     amount to increase the supply by
+        @param _to         account to receive the new amount
+        @param _amount     amount to increase the supply by
     */
     function issue(address _to, uint256 _amount)
         public
@@ -84,12 +86,12 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
         Transfer(this, _to, _amount);
     }
 
-    /*
-        removes tokens from an account and decreases the token supply
+    /**
+        @dev removes tokens from an account and decreases the token supply
         can only be called by the token owner (if no changer is defined) or the changer contract (if a changer is defined)
 
-        _from       account to remove the new amount from
-        _amount     amount to decrease the supply by
+        @param _from       account to remove the new amount from
+        @param _amount     amount to decrease the supply by
     */
     function destroy(address _from, uint256 _amount)
         public
@@ -103,12 +105,12 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
         Destruction(_amount);
     }
 
-    /*
-        sets a changer contract address
+    /**
+        @dev sets a changer contract address
         can only be called by the token owner (if no changer is defined) or the changer contract (if a changer is defined)
         the changer can be set to null to transfer ownership from the changer to the owner
 
-        _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
+        @param _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
     */
     function setChanger(ITokenChanger _changer) public controllerOnly {
         require(_changer != changer);
@@ -119,7 +121,16 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
 
     // ERC20 standard method overrides with some extra functionality
 
-    // send coins
+    /**
+        @dev send coins
+        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
+        also note that when transferring to the smart token's address, the coins are actually destroyed
+
+        @param _to      target address
+        @param _value   transfer amount
+
+        @return true if the transfer was successful, false if it wasn't
+    */
     function transfer(address _to, uint256 _value) public transfersAllowed returns (bool success) {
         assert(super.transfer(_to, _value));
 
@@ -133,7 +144,17 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
         return true;
     }
 
-    // an account/contract attempts to get the coins
+    /**
+        @dev an account/contract attempts to get the coins
+        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
+        also note that when transferring to the smart token's address, the coins are actually destroyed
+
+        @param _from    source address
+        @param _to      target address
+        @param _value   transfer amount
+
+        @return true if the transfer was successful, false if it wasn't
+    */
     function transferFrom(address _from, address _to, uint256 _value) public transfersAllowed returns (bool success) {
         assert(super.transferFrom(_from, _to, _value));
 

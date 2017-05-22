@@ -2,7 +2,7 @@ pragma solidity ^0.4.11;
 import './IERC20Token.sol';
 import './SafeMath.sol';
 
-/*
+/**
     ERC20 Standard Token implementation
 */
 contract ERC20Token is IERC20Token, SafeMath {
@@ -17,6 +17,13 @@ contract ERC20Token is IERC20Token, SafeMath {
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
+    /**
+        @dev constructor
+
+        @param _name        token name
+        @param _symbol      token symbol
+        @param _decimals    decimal points, for display purposes
+    */
     function ERC20Token(string _name, string _symbol, uint8 _decimals) {
         require(bytes(_name).length > 0 && bytes(_symbol).length > 0); // validate input
 
@@ -37,9 +44,14 @@ contract ERC20Token is IERC20Token, SafeMath {
         _;
     }
 
-    /*
-        send coins
+    /**
+        @dev send coins
         note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
+
+        @param _to      target address
+        @param _value   transfer amount
+
+        @return true if the transfer was successful, false if it wasn't
     */
     function transfer(address _to, uint256 _value)
         public
@@ -53,9 +65,15 @@ contract ERC20Token is IERC20Token, SafeMath {
         return true;
     }
 
-    /*
-        an account/contract attempts to get the coins
+    /**
+        @dev an account/contract attempts to get the coins
         note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
+
+        @param _from    source address
+        @param _to      target address
+        @param _value   transfer amount
+
+        @return true if the transfer was successful, false if it wasn't
     */
     function transferFrom(address _from, address _to, uint256 _value)
         public
@@ -71,13 +89,18 @@ contract ERC20Token is IERC20Token, SafeMath {
         return true;
     }
 
-    /*
-        allow another account/contract to spend some tokens on your behalf
+    /**
+        @dev allow another account/contract to spend some tokens on your behalf
         note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
 
         also, to minimize the risk of the approve/transferFrom attack vector
         (see https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), approve has to be called twice
         in 2 separate transactions - once to change the allowance to 0 and secondly to change it to the new allowance value
+
+        @param _spender approved address
+        @param _value   allowance amount
+
+        @return true if the approval was successful, false if it wasn't
     */
     function approve(address _spender, uint256 _value)
         public

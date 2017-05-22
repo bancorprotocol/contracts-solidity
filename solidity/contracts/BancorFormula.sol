@@ -16,16 +16,18 @@ contract BancorFormula is SafeMath, IBancorFormula {
     function BancorFormula() {
     }
 
-    /*
-        given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the return for a given change (in the main token)
+    /**
+        @dev given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the return for a given change (in the main token)
 
         Formula:
         Return = Supply * ((1 + Deposit Amount / Reserve Balance) ^ Reserve Ratio - 1)
 
-        _supply             token total supply
-        _reserveBalance     total reserve
-        _reserveRatio       constant reserve ratio, 1-99
-        _depositAmount      deposit amount, in reserve token
+        @param _supply             token total supply
+        @param _reserveBalance     total reserve
+        @param _reserveRatio       constant reserve ratio, 1-99
+        @param _depositAmount      deposit amount, in reserve token
+
+        @return purchase return amount
     */
     function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
         // validate input
@@ -44,16 +46,18 @@ contract BancorFormula is SafeMath, IBancorFormula {
         return safeSub(temp, _supply);
     }
 
-    /*
-        given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
+    /**
+        @dev given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
 
         Formula:
         Return = Reserve Balance * (1 - (1 - Sell Amount / Supply) ^ (1 / Reserve Ratio))
 
-        _supply             token total supply
-        _reserveBalance     total reserve
-        _reserveRatio       constant reserve ratio, 1-99
-        _sellAmount         sell amount, in the token itself
+        @param _supply             token total supply
+        @param _reserveBalance     total reserve
+        @param _reserveRatio       constant reserve ratio, 1-99
+        @param _sellAmount         sell amount, in the token itself
+
+        @return sale return amount
     */
     function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
         // validate input
@@ -76,11 +80,11 @@ contract BancorFormula is SafeMath, IBancorFormula {
     }
 
     /**
-        Calculate (_baseN / _baseD) ^ (_expN / _expD)
+        @dev Calculate (_baseN / _baseD) ^ (_expN / _expD)
         Returns result upshifted by PRECISION
 
         This method asserts is overflow-safe
-    **/ 
+    */ 
     function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) constant returns (uint256 resN, uint256 resD) {
         uint256 logbase = ln(_baseN, _baseD);
         // Not using safeDiv here, since safeDiv protects against
@@ -103,7 +107,7 @@ contract BancorFormula is SafeMath, IBancorFormula {
 
         This method asserts outside of bounds
 
-    **/
+    */
     function ln(uint256 _numerator, uint256 _denominator) constant returns (uint256) {
         // denominator > numerator: less than one yields negative values. Unsupported
         assert(_denominator <= _numerator);
@@ -118,7 +122,7 @@ contract BancorFormula is SafeMath, IBancorFormula {
         return fixedLoge(_numerator << PRECISION) - fixedLoge(_denominator << PRECISION);
     }
 
-    /*
+    /**
         input range: 
             [0x100000000,uint256_max]
         output range:
@@ -140,6 +144,7 @@ contract BancorFormula is SafeMath, IBancorFormula {
         uint256 log2 = fixedLog2(_x);
         logE = (log2 * 0xb17217f7d1cf78) >> 56;
     }
+
     /**
         Returns log2(x >> 32) << 32 
         So x is assumed to be already upshifted 32 bits, and 
@@ -152,7 +157,7 @@ contract BancorFormula is SafeMath, IBancorFormula {
 
         This method asserts outside of bounds
 
-    **/
+    */
     function fixedLog2(uint256 _x) constant returns (uint256) {
         uint256 fixedOne = uint256(1) << PRECISION;
         uint256 fixedTwo = uint256(2) << PRECISION;
@@ -195,27 +200,28 @@ contract BancorFormula is SafeMath, IBancorFormula {
         return hi - lo;
     }
 
-    /*
-    fixedExp is a 'protected' version of `fixedExpUnsafe`, which 
-    asserts instead of overflows
+    /**
+        fixedExp is a 'protected' version of `fixedExpUnsafe`, which 
+        asserts instead of overflows
     */
     function fixedExp(uint256 _x) constant returns (uint256) {
         assert(_x <= 0x386bfdba29);
         return fixedExpUnsafe(_x);
     }
-    /*
-     fixedExp 
-     Calculates e^x according to maclauren summation:
 
-      e^x = 1+x+x^2/2!...+x^n/n!
+    /**
+        fixedExp 
+        Calculates e^x according to maclauren summation:
 
-     and returns e^(x>>32) << 32, that is, upshifted for accuracy
-     
-     Input range:
-        - Function ok at    <= 242329958953 
-        - Function fails at >= 242329958954
-    This method is is visible for testcases, but not meant for direct use. 
+        e^x = 1+x+x^2/2!...+x^n/n!
 
+        and returns e^(x>>32) << 32, that is, upshifted for accuracy
+
+        Input range:
+            - Function ok at    <= 242329958953 
+            - Function fails at >= 242329958954
+
+        This method is is visible for testcases, but not meant for direct use. 
     */
     function fixedExpUnsafe(uint256 _x) constant returns (uint256) {
         uint256 fixedOne = uint256(1) << PRECISION;

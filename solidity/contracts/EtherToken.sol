@@ -2,7 +2,7 @@ pragma solidity ^0.4.11;
 import './ERC20Token.sol';
 import './IEtherToken.sol';
 
-/*
+/**
     Ether tokenization contract
 */
 contract EtherToken is ERC20Token, IEtherToken {
@@ -11,6 +11,9 @@ contract EtherToken is ERC20Token, IEtherToken {
     // triggered when the total supply is decreased
     event Destruction(uint256 _amount);
 
+    /**
+        @dev constructor
+    */
     function EtherToken()
         ERC20Token('Ether Token', 'ETH', 18) {
     }
@@ -21,7 +24,9 @@ contract EtherToken is ERC20Token, IEtherToken {
         _;
     }
 
-    // deposit ether in the account
+    /**
+        @dev deposit ether in the account
+    */
     function deposit()
         public
         validAmount(msg.value)
@@ -34,7 +39,11 @@ contract EtherToken is ERC20Token, IEtherToken {
         Transfer(this, msg.sender, msg.value);
     }
 
-    // withdraw ether from the account
+    /**
+        @dev withdraw ether from the account
+
+        @param _amount  amount of ether to withdraw
+    */
     function withdraw(uint256 _amount)
         public
         validAmount(_amount)
@@ -49,7 +58,15 @@ contract EtherToken is ERC20Token, IEtherToken {
 
     // ERC20 standard method overrides with some extra protection
 
-    // send coins
+    /**
+        @dev send coins
+        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
+
+        @param _to      target address
+        @param _value   transfer amount
+
+        @return true if the transfer was successful, false if it wasn't
+    */
     function transfer(address _to, uint256 _value)
         public
         returns (bool success)
@@ -59,7 +76,16 @@ contract EtherToken is ERC20Token, IEtherToken {
         return true;
     }
 
-    // an account/contract attempts to get the coins
+    /**
+        @dev an account/contract attempts to get the coins
+        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
+
+        @param _from    source address
+        @param _to      target address
+        @param _value   transfer amount
+
+        @return true if the transfer was successful, false if it wasn't
+    */
     function transferFrom(address _from, address _to, uint256 _value)
         public
         returns (bool success)
@@ -69,7 +95,9 @@ contract EtherToken is ERC20Token, IEtherToken {
         return true;
     }
 
-    // deposit ether in the account
+    /**
+        @dev deposit ether in the account
+    */
     function() public payable {
         deposit();
     }

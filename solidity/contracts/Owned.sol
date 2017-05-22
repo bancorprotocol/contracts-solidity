@@ -10,6 +10,9 @@ contract Owned is IOwned {
 
     event OwnerUpdate(address _prevOwner, address _newOwner);
 
+    /**
+        @dev constructor
+    */
     function Owned() {
         owner = msg.sender;
     }
@@ -20,18 +23,20 @@ contract Owned is IOwned {
         _;
     }
 
-    /*
-        allows transferring the contract ownership
+    /**
+        @dev allows transferring the contract ownership
         the new owner still need to accept the transfer
         can only be called by the contract owner
+
+        @param _newOwner    new contract owner
     */
     function setOwner(address _newOwner) public ownerOnly {
         require(_newOwner != owner);
         newOwner = _newOwner;
     }
 
-    /*
-        used by a new owner to accept an ownership transfer
+    /**
+        @dev used by a new owner to accept an ownership transfer
     */
     function acceptOwnership() public {
         require(msg.sender == newOwner);
