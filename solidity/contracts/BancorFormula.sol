@@ -20,7 +20,7 @@ contract BancorFormula is SafeMath, IBancorFormula {
         @dev given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the return for a given change (in the main token)
 
         Formula:
-        Return = Supply * ((1 + Deposit Amount / Reserve Balance) ^ Reserve Ratio - 1)
+        Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ _reserveRatio - 1)
 
         @param _supply             token total supply
         @param _reserveBalance     total reserve
@@ -50,7 +50,7 @@ contract BancorFormula is SafeMath, IBancorFormula {
         @dev given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
 
         Formula:
-        Return = Reserve Balance * (1 - (1 - Sell Amount / Supply) ^ (1 / Reserve Ratio))
+        Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / _reserveRatio))
 
         @param _supply             token total supply
         @param _reserveBalance     total reserve
