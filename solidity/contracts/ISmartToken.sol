@@ -1,4 +1,4 @@
-pragma solidity ^0.4.10;
+pragma solidity ^0.4.11;
 import './IOwned.sol';
 import './IERC20Token.sol';
 import './ITokenChanger.sol';
