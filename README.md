@@ -1,4 +1,4 @@
-﻿# Bancor Protocol Contracts v0.4 (alpha)
+﻿# Bancor Protocol Contracts v0.5 (alpha)
 
 Bancor is a **smart-contract-based token conversion protocol**, which enables a single party to convert any 
 token to another, without requiring a second party to exchange with. It achieves this through the use of 
@@ -129,6 +129,18 @@ The change will only take place if it returns a value greater or equal to `_minR
 event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return);
 ```
 Triggered when a change between one of the changeable tokens takes place.
+
+## Testing
+Tests are included and can be run using truffle.
+
+### Prerequisites
+* truffle v3.2.2+
+* testrpc v3.0.5+
+* nodejs v7.6.0+
+
+To run the test, execute the following commands from the project's root folder -
+* npm start testrpc
+* npm test
 
 ## Collaborators
 
