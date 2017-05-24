@@ -281,7 +281,7 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
     function withdraw(IERC20Token _erc20Token, address _to, uint256 _amount)
         public
         tokenOwnerOnly
-        validERC20Token(_erc20Token)
+        validAddress(_erc20Token)
         validAddress(_to)
         validAmount(_amount)
     {
