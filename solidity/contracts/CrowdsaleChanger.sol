@@ -92,12 +92,6 @@ contract CrowdsaleChanger is SafeMath, ITokenChanger {
         _;
     }
 
-    // validates a token address - verifies that the address belongs to one of the changeable tokens
-    modifier validToken(address _address) {
-        require(_address == address(token) || tokenData[_address].isSet);
-        _;
-    }
-
     // verifies that an amount is greater than zero
     modifier validAmount(uint256 _amount) {
         require(_amount > 0);
