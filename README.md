@@ -134,9 +134,9 @@ Triggered when a change between one of the changeable tokens takes place.
 Tests are included and can be run using truffle.
 
 ### Prerequisites
+* Node.js v7.6.0+
 * truffle v3.2.2+
 * testrpc v3.0.5+
-* nodejs v7.6.0+
 
 To run the test, execute the following commands from the project's root folder -
 * npm start testrpc
