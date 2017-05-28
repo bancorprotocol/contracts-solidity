@@ -18,13 +18,13 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
 
     string public version = '0.1';
 
-    uint256 public startTime = 0;                           // crowdsale start time (in seconds)
-    uint256 public endTime = 0;                             // crowdsale end time (in seconds)
-    uint256 public totalEtherCap = 1000000 ether;           // current ether contribution cap, initialized with a temp value as a safety mechanism until the real cap is revealed
-    uint256 public totalEtherContributed = 0;               // ether contributed so far
-    bytes32 public realEtherCapHash;                        // ensures that the real cap is predefined on deployment and cannot be changed later
-    address public beneficiary = 0x0;                       // address to receive all ether contributions
-    address public btcs = 0x0;                              // bitcoin suisse address
+    uint256 public startTime = 0;                   // crowdsale start time (in seconds)
+    uint256 public endTime = 0;                     // crowdsale end time (in seconds)
+    uint256 public totalEtherCap = 1000000 ether;   // current ether contribution cap, initialized with a temp value as a safety mechanism until the real cap is revealed
+    uint256 public totalEtherContributed = 0;       // ether contributed so far
+    bytes32 public realEtherCapHash;                // ensures that the real cap is predefined on deployment and cannot be changed later
+    address public beneficiary = 0x0;               // address to receive all ether contributions
+    address public btcs = 0x0;                      // bitcoin suisse address
 
     // triggered on each contribution
     event Contribution(address indexed _contributor, uint256 _amount, uint256 _return);
