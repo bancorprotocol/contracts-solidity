@@ -1,4 +1,4 @@
-﻿# Bancor Protocol Contracts v0.5 (alpha)
+﻿# Bancor Protocol Contracts v0.6 (alpha)
 
 Bancor is a **smart-contract-based token conversion protocol**, which enables a single party to convert any 
 token to another, without requiring a second party to exchange with. It achieves this through the use of 
