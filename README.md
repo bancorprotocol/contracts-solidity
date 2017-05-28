@@ -24,6 +24,7 @@ SmartToken represents a changer aware ERC-20 compliant token.
 ## Motivation
 
 Those will allow creating a Bancor compliant token while keeping dependencies at a minimum.
+In addition, it allows an owning contract to extend its functionality by giving the owner full control.
 
 ## Specification
 
