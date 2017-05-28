@@ -53,9 +53,10 @@ contract('CrowdsaleController', (accounts) => {
         let token = await controller.token.call();
         assert.equal(token, tokenAddress);
         let start = await controller.startTime.call();
-        assert.equal(start, startTime);
+        assert.equal(start.toNumber(), startTime);
         let endTime = await controller.endTime.call();
-        assert.equal(endTime, startTime + 7 * 24 * 60 * 60); // start time + 7 days
+        let duration = await controller.DURATION.call();
+        assert.equal(endTime.toNumber(), startTime + duration.toNumber());
         let beneficiary = await controller.beneficiary.call();
         assert.equal(beneficiary, beneficiaryAddress);
         let btcs = await controller.btcs.call();
