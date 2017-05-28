@@ -34,16 +34,8 @@ As such, it implements both the standard token methods and the standard token ev
 
 ### Methods
 
-Note that these methods can only be executed by the token owner (if no changer is currently set) or by the existing changer (if one is currently set).
+Note that these methods can only be executed by the token owner.
 
-**setChanger**
-```cs
-function setChanger(address _changer) public managerOnly
-```
-Sets or replaces the token changer.
-<br>
-<br>
-<br>
 **issue**
 ```cs
 function issue(address _to, uint256 _amount)
@@ -57,14 +49,40 @@ Increases the token supply and sends the new tokens to an account.
 function destroy(address _from, uint256 _amount)
 ```
 Removes tokens from an account and decreases the token supply.
-
+<br>
+<br>
+<br>
+**disableTransfers**
+```cs
+function disableTransfers(bool _disable)
+```
+Disables transfer/transferFrom functionality.
+<br>
+<br>
+<br>
 ### Events
 
-**ChangerUpdate**
+**NewSmartToken**
 ```cs
-event ChangerUpdate(address _prevChanger, address _newChanger)
+event NewSmartToken(address _token)
 ```
-Triggered when the token changer is set or replaced.
+Triggered when a smart token is deployed.
+<br>
+<br>
+<br>
+**Issuance**
+```cs
+event Issuance(uint256 _amount)
+```
+Triggered when the total supply is increased.
+<br>
+<br>
+<br>
+**Destruction**
+```cs
+event Destruction(uint256 _amount)
+```
+Triggered when the total supply is decreased.
 <br>
 <br>
 <br>
