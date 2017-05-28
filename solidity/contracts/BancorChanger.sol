@@ -1,4 +1,5 @@
 pragma solidity ^0.4.11;
+import './SmartTokenController.sol';
 import './SafeMath.sol';
 import './ITokenChanger.sol';
 import './ISmartToken.sol';
@@ -13,14 +14,14 @@ import './IBancorFormula.sol';
 /*
     Bancor Changer v0.1
 
-    The Bancor version of the token changer, allows changing between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves
+    The Bancor version of the token changer, allows changing between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
     ERC20 reserve token balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on
-    the actual reserve balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract
+    the actual reserve balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract.
 
-    The changer is upgradable - the token owner can replace it with a new version by calling setTokenChanger (it's also a safety mechanism in case of bugs/exploits)
+    The changer is upgradable (just like any SmartTokenController).
 */
-contract BancorChanger is SafeMath, ITokenChanger {
+contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
     struct Reserve {
         uint256 virtualBalance;         // virtual balance
         uint8 ratio;                    // constant reserve ratio (CRR), 1-100
@@ -32,7 +33,6 @@ contract BancorChanger is SafeMath, ITokenChanger {
     string public version = '0.1';
     string public changerType = 'bancor';
 
-    ISmartToken public token;                       // smart token governed by the changer
     IBancorFormula public formula;                  // bancor calculation formula contract
     address[] public reserveTokens;                 // ERC20 standard token addresses
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
@@ -48,20 +48,13 @@ contract BancorChanger is SafeMath, ITokenChanger {
         @param _formula    address of a bancor formula contract
     */
     function BancorChanger(ISmartToken _token, IBancorFormula _formula, IERC20Token _reserveToken, uint8 _reserveRatio)
-        validAddress(_token)
+        SmartTokenController(_token)
         validAddress(_formula)
     {
-        token = _token;
         formula = _formula;
 
         if (address(_reserveToken) != 0x0)
             addReserve(_reserveToken, _reserveRatio, false);
-    }
-
-    // validates an address - currently only checks that it isn't null
-    modifier validAddress(address _address) {
-        require(_address != 0x0);
-        _;
     }
 
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
@@ -79,30 +72,6 @@ contract BancorChanger is SafeMath, ITokenChanger {
     // validates reserve ratio range
     modifier validReserveRatio(uint8 _ratio) {
         require(_ratio > 0 && _ratio <= 100);
-        _;
-    }
-
-    // verifies that an amount is greater than zero
-    modifier validAmount(uint256 _amount) {
-        require(_amount > 0);
-        _;
-    }
-
-    // allows execution by the token owner only
-    modifier tokenOwnerOnly {
-        assert(msg.sender == token.owner());
-        _;
-    }
-
-    // ensures that token changing is connected to the smart token
-    modifier active() {
-        assert(token.changer() == this);
-        _;
-    }
-
-    // ensures that token changing is not conneccted to the smart token
-    modifier inactive() {
-        assert(token.changer() != this);
         _;
     }
 
@@ -148,12 +117,13 @@ contract BancorChanger is SafeMath, ITokenChanger {
     */
     function addReserve(IERC20Token _token, uint8 _ratio, bool _enableVirtualBalance)
         public
-        tokenOwnerOnly
+        ownerOnly
         inactive
         validAddress(_token)
+        notThis(_token)
         validReserveRatio(_ratio)
     {
-        require(_token != address(this) && _token != address(token) && !reserves[_token].isSet && totalReserveRatio + _ratio <= 100); // validate input
+        require(_token != address(token) && !reserves[_token].isSet && totalReserveRatio + _ratio <= 100); // validate input
 
         reserves[_token].virtualBalance = 0;
         reserves[_token].ratio = _ratio;
@@ -175,7 +145,7 @@ contract BancorChanger is SafeMath, ITokenChanger {
     */
     function updateReserve(IERC20Token _reserveToken, uint8 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)
         public
-        tokenOwnerOnly
+        ownerOnly
         validReserve(_reserveToken)
         validReserveRatio(_ratio)
     {
@@ -198,7 +168,7 @@ contract BancorChanger is SafeMath, ITokenChanger {
     */
     function disableReservePurchases(IERC20Token _reserveToken, bool _disable)
         public
-        tokenOwnerOnly
+        ownerOnly
         validReserve(_reserveToken)
     {
         reserves[_reserveToken].isPurchaseEnabled = !_disable;
@@ -222,60 +192,25 @@ contract BancorChanger is SafeMath, ITokenChanger {
     }
 
     /**
-        @dev allows the token owner to execute the token's issue function
+        @dev withdraws tokens held by the contract and sends them to an account
+        also allows the owner to withdraw from the reserves
+        can only be called by the owner
 
-        @param _to         account to receive the new amount
-        @param _amount     amount to increase the supply by
+        @param _token   ERC20 token contract address
+        @param _to      account to receive the new amount
+        @param _amount  amount to withdraw
     */
-    function issueTokens(address _to, uint256 _amount) public tokenOwnerOnly {
-        token.issue(_to, _amount);
-    }
+    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public {
+        require(_to != address(token)); // validate input
+        super.withdrawTokens(_token, _to, _amount);
 
-    /**
-        @dev allows the token owner to execute the token's destroy function
+        if (!reserves[_token].isSet)
+            return;
 
-        @param _from       account to remove the new amount from
-        @param _amount     amount to decrease the supply by
-    */
-    function destroyTokens(address _from, uint256 _amount) public tokenOwnerOnly {
-        token.destroy(_from, _amount);
-    }
-
-    /**
-        @dev withdraws tokens from the reserve and sends them to an account
-        can only be called by the token owner
-
-        @param _reserveToken    reserve token contract address
-        @param _to              account to receive the new amount
-        @param _amount          amount to withdraw (in the reserve token)
-    */
-    function withdraw(IERC20Token _reserveToken, address _to, uint256 _amount)
-        public
-        tokenOwnerOnly
-        validReserve(_reserveToken)
-        validAddress(_to)
-        validAmount(_amount)
-    {
-        require(_to != address(this) && _to != address(token)); // validate input
-
-        assert(_reserveToken.transfer(_to, _amount));
-
-        // update virtual balance if relevant
-        Reserve reserve = reserves[_reserveToken];
+        // if the token is one of the reserve token that has virtual balance associated with it, update it
+        Reserve reserve = reserves[_token];
         if (reserve.isVirtualBalanceEnabled)
             reserve.virtualBalance = safeSub(reserve.virtualBalance, _amount);
-    }
-
-    /**
-        @dev sets the smart token's changer address to a different one instead of the current contract address
-        can only be called by the token owner
-        the changer can be set to null to transfer ownership from the changer to the original smart token's owner
-
-        @param _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
-    */
-    function setTokenChanger(ITokenChanger _changer) public tokenOwnerOnly {
-        require(_changer != this && _changer != address(token)); // validate input
-        token.setChanger(_changer);
     }
 
     /**
@@ -429,10 +364,6 @@ contract BancorChanger is SafeMath, ITokenChanger {
         Reserve reserve = reserves[_reserveToken];
         if (reserve.isVirtualBalanceEnabled)
             reserve.virtualBalance = safeSub(reserve.virtualBalance, amount);
-
-        // if the supply was totally depleted, disconnect from the smart token
-        if (_sellAmount == tokenSupply)
-            token.setChanger(ITokenChanger(0x0));
 
         Change(token, _reserveToken, msg.sender, _sellAmount, amount);
         return amount;

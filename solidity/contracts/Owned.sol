@@ -30,7 +30,7 @@ contract Owned is IOwned {
 
         @param _newOwner    new contract owner
     */
-    function setOwner(address _newOwner) public ownerOnly {
+    function transferOwnership(address _newOwner) public ownerOnly {
         require(_newOwner != owner);
         newOwner = _newOwner;
     }

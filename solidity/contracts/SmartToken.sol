@@ -1,17 +1,15 @@
 pragma solidity ^0.4.11;
 import './ERC20Token.sol';
-import './Owned.sol';
+import './TokenHolder.sol';
 import './ISmartToken.sol';
-import './ITokenChanger.sol';
 
 /*
-    Smart Token v0.1
+    Smart Token v0.2
 */
-contract SmartToken is ERC20Token, Owned, ISmartToken {
-    string public version = '0.1';
+contract SmartToken is ISmartToken, ERC20Token, TokenHolder {
+    string public version = '0.2';
 
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
-    ITokenChanger public changer;           // changer contract
 
     // triggered when a smart token is deployed - the _token address is defined for forward compatibility, in case we want to trigger the event from a factory
     event NewSmartToken(address _token);
@@ -19,8 +17,6 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
     event Issuance(uint256 _amount);
     // triggered when the total supply is decreased
     event Destruction(uint256 _amount);
-    // triggered when a token changer is updated/removed
-    event ChangerUpdate(address _prevChanger, address _newChanger);
 
     /**
         @dev constructor
@@ -36,49 +32,36 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
         NewSmartToken(address(this));
     }
 
-    // verifies that an amount is greater than zero
-    modifier validAmount(uint256 _amount) {
-        require(_amount > 0);
-        _;
-    }
-
     // allows execution only when transfers aren't disabled
     modifier transfersAllowed {
         assert(transfersEnabled);
         _;
     }
 
-    // allows execution by the current controller - owner if there's no changer defined or changer contract if a changer is defined
-    modifier controllerOnly {
-        assert((address(changer) == 0x0 && msg.sender == owner) ||
-               (address(changer) != 0x0 && msg.sender == address(changer))); // validate state & permissions
-        _;
-    }
-
     /**
         @dev disables/enables transfers
-        can only be called by the token owner (if no changer is defined) or the changer contract (if a changer is defined)
+        can only be called by the contract owner
 
         @param _disable    true to disable transfers, false to enable them
     */
-    function disableTransfers(bool _disable) public controllerOnly {
+    function disableTransfers(bool _disable) public ownerOnly {
         transfersEnabled = !_disable;
     }
 
     /**
         @dev increases the token supply and sends the new tokens to an account
-        can only be called by the token owner (if no changer is defined) or the changer contract (if a changer is defined)
+        can only be called by the contract owner
 
         @param _to         account to receive the new amount
         @param _amount     amount to increase the supply by
     */
     function issue(address _to, uint256 _amount)
         public
-        controllerOnly
+        ownerOnly
         validAddress(_to)
+        notThis(_to)
         validAmount(_amount)
     {
-        require(_to != address(this)); // validate input
         totalSupply = safeAdd(totalSupply, _amount);
         balanceOf[_to] = safeAdd(balanceOf[_to], _amount);
 
@@ -88,14 +71,14 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
 
     /**
         @dev removes tokens from an account and decreases the token supply
-        can only be called by the token owner (if no changer is defined) or the changer contract (if a changer is defined)
+        can only be called by the contract owner
 
-        @param _from       account to remove the new amount from
+        @param _from       account to remove the amount from
         @param _amount     amount to decrease the supply by
     */
     function destroy(address _from, uint256 _amount)
         public
-        controllerOnly
+        ownerOnly
         validAmount(_amount)
     {
         balanceOf[_from] = safeSub(balanceOf[_from], _amount);
@@ -103,20 +86,6 @@ contract SmartToken is ERC20Token, Owned, ISmartToken {
 
         Transfer(_from, this, _amount);
         Destruction(_amount);
-    }
-
-    /**
-        @dev sets a changer contract address
-        can only be called by the token owner (if no changer is defined) or the changer contract (if a changer is defined)
-        the changer can be set to null to transfer ownership from the changer to the owner
-
-        @param _changer    new changer contract address (can also be set to 0x0 to remove the current changer)
-    */
-    function setChanger(ITokenChanger _changer) public controllerOnly {
-        require(_changer != changer);
-        ITokenChanger prevChanger = changer;
-        changer = _changer;
-        ChangerUpdate(prevChanger, changer);
     }
 
     // ERC20 standard method overrides with some extra functionality

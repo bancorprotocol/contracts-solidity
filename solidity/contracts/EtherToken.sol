@@ -1,11 +1,12 @@
 pragma solidity ^0.4.11;
 import './ERC20Token.sol';
 import './IEtherToken.sol';
+import './TokenHolder.sol';
 
 /**
     Ether tokenization contract
 */
-contract EtherToken is ERC20Token, IEtherToken {
+contract EtherToken is IEtherToken, ERC20Token, TokenHolder {
     // triggered when the total supply is increased
     event Issuance(uint256 _amount);
     // triggered when the total supply is decreased

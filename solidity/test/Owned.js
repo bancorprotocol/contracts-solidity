@@ -13,7 +13,7 @@ contract('Owned', (accounts) => {
 
     it('verifies the new owner after ownership transfer', async () => {
         let contract = await Owned.new();
-        await contract.setOwner(accounts[1]);
+        await contract.transferOwnership(accounts[1]);
         await contract.acceptOwnership({ from: accounts[1] });
         let owner = await contract.owner.call();
         assert.equal(owner, accounts[1]);
@@ -21,14 +21,14 @@ contract('Owned', (accounts) => {
 
     it('verifies that ownership transfer fires an OwnerUpdate event', async () => {
         let contract = await Owned.new();
-        await contract.setOwner(accounts[1]);
+        await contract.transferOwnership(accounts[1]);
         let res = await contract.acceptOwnership({ from: accounts[1] });
         assert(res.logs.length > 0 && res.logs[0].event == 'OwnerUpdate');
     });
 
     it('verifies that newOwner is cleared after ownership transfer', async () => {
         let contract = await Owned.new();
-        await contract.setOwner(accounts[1]);
+        await contract.transferOwnership(accounts[1]);
         await contract.acceptOwnership({ from: accounts[1] });
         let newOwner = await contract.newOwner.call();
         assert.equal(newOwner, utils.zeroAddress);
@@ -36,7 +36,7 @@ contract('Owned', (accounts) => {
 
     it('verifies that no ownership transfer takes places before the new owner accepted it', async () => {
         let contract = await Owned.new();
-        await contract.setOwner(accounts[1]);
+        await contract.transferOwnership(accounts[1]);
         let owner = await contract.owner.call();
         assert.equal(owner, accounts[0]);
     });
@@ -45,7 +45,7 @@ contract('Owned', (accounts) => {
         let contract = await Owned.new();
 
         try {
-            await contract.setOwner(accounts[1], { from: accounts[2] });
+            await contract.transferOwnership(accounts[1], { from: accounts[2] });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -55,8 +55,8 @@ contract('Owned', (accounts) => {
 
     it('verifies that the owner can cancel ownership transfer before the new owner accepted it', async () => {
         let contract = await Owned.new();
-        await contract.setOwner(accounts[1]);
-        await contract.setOwner('0x0');
+        await contract.transferOwnership(accounts[1]);
+        await contract.transferOwnership('0x0');
         let newOwner = await contract.newOwner.call();
         assert.equal(newOwner, utils.zeroAddress);
     });

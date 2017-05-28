@@ -8,7 +8,7 @@ import './IBancorFormula.sol';
     - Possibly support dynamic precision in the future
 */
 
-contract BancorFormula is SafeMath, IBancorFormula {
+contract BancorFormula is IBancorFormula, SafeMath {
     uint8 constant PRECISION = 32;  // fractional bits
 
     string public version = '0.1';
