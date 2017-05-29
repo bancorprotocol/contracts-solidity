@@ -215,7 +215,7 @@ contract('CrowdsaleController', (accounts) => {
         let controller = await initController(accounts, true, startTime);
         let returnAmount = await controller.computeReturn.call(500);
 
-        let purchaseRes = await controller.contributeBTCs(accounts[1], { value: 500, from: btcsAddress });
+        let purchaseRes = await controller.contributeBTCs({ value: 500, from: btcsAddress });
         let purchaseAmount = getContributionAmount(purchaseRes);
 
         assert.equal(returnAmount, purchaseAmount);
@@ -308,15 +308,16 @@ contract('CrowdsaleController', (accounts) => {
     it('verifies balances and total eth contributed after contributing through btcs', async () => {
         let controller = await initController(accounts, true, startTime);
 
+        let prevContributorTokenBalance = await token.balanceOf.call(btcsAddress);
         let prevEtherBalance = await web3.eth.getBalance(beneficiaryAddress);
 
-        let res = await controller.contributeBTCs(accounts[1], { value: 200, from: btcsAddress });
+        let res = await controller.contributeBTCs({ value: 200, from: btcsAddress });
         let purchaseAmount = getContributionAmount(res);
         assert.isNumber(purchaseAmount);
         assert.notEqual(purchaseAmount, 0);
 
-        let contributorTokenBalance = await token.balanceOf.call(accounts[1]);
-        assert.equal(contributorTokenBalance, purchaseAmount);
+        let contributorTokenBalance = await token.balanceOf.call(btcsAddress);
+        assert.equal(contributorTokenBalance.toNumber(), prevContributorTokenBalance.plus(purchaseAmount).toNumber());
 
         let beneficiaryTokenBalance = await token.balanceOf.call(beneficiaryAddress);
         assert.equal(beneficiaryTokenBalance, purchaseAmount);
@@ -332,7 +333,7 @@ contract('CrowdsaleController', (accounts) => {
         let controller = await initController(accounts, true, startTime);
 
         try {
-            await controller.contributeBTCs(accounts[1], { value: 2000 });
+            await controller.contributeBTCs({ value: 2000 });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -344,7 +345,7 @@ contract('CrowdsaleController', (accounts) => {
         let controller = await initController(accounts, false, startTime);
 
         try {
-            await controller.contributeBTCs(accounts[1], { value: 2000, from: btcsAddress });
+            await controller.contributeBTCs({ value: 2000, from: btcsAddress });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -356,7 +357,7 @@ contract('CrowdsaleController', (accounts) => {
         let controller = await initController(accounts, true, startTime);
 
         try {
-            await controller.contributeBTCs(accounts[1], { value: 0, from: btcsAddress });
+            await controller.contributeBTCs({ value: 0, from: btcsAddress });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -368,7 +369,7 @@ contract('CrowdsaleController', (accounts) => {
         let controller = await initController(accounts, true);
 
         try {
-            await controller.contributeBTCs(accounts[1], { value: 2000, from: btcsAddress });
+            await controller.contributeBTCs({ value: 2000, from: btcsAddress });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -380,7 +381,7 @@ contract('CrowdsaleController', (accounts) => {
         let controller = await initController(accounts, true, startTimeFinished);
 
         try {
-            await controller.contributeBTCs(accounts[1], { value: 2000, from: btcsAddress });
+            await controller.contributeBTCs({ value: 2000, from: btcsAddress });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -394,7 +395,7 @@ contract('CrowdsaleController', (accounts) => {
         let largerThanCap = btcsEtherCap.plus(1);
 
         try {
-            await controller.contributeBTCs(accounts[1], { value: largerThanCap.toString(), from: btcsAddress });
+            await controller.contributeBTCs({ value: largerThanCap.toString(), from: btcsAddress });
             assert(false, "didn't throw");
         }
         catch (error) {

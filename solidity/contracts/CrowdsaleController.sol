@@ -127,38 +127,33 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
         between(startTime, endTime)
         returns (uint256 amount)
     {
-        return processContribution(msg.sender);
+        return processContribution();
     }
 
     /**
         @dev Contribution through BTCs (Bitcoin Suisse only)
         can only be called before the crowdsale started
 
-        @param _contributor    account that should receive the new tokens
-
         @return tokens issued in return
     */
-    function contributeBTCs(address _contributor)
+    function contributeBTCs()
         public
         payable
-        validAddress(_contributor)
         btcsOnly
         btcsEtherCapNotReached(msg.value)
         earlierThan(startTime)
         returns (uint256 amount)
     {
-        return processContribution(_contributor);
+        return processContribution();
     }
 
     /**
         @dev handles contribution logic
         note that the Contribution event is triggered using the sender as the contributor, regardless of the actual contributor
 
-        @param _contributor     account that should receive the new tokens
-
         @return tokens issued in return
     */
-    function processContribution(address _contributor) private
+    function processContribution() private
         active
         validAmount(msg.value)
         etherCapNotReached(msg.value)
@@ -169,7 +164,7 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
 
         assert(beneficiary.send(msg.value)); // transfer the ether to the beneficiary account
         totalEtherContributed = safeAdd(totalEtherContributed, msg.value); // update the total contribution amount
-        token.issue(_contributor, tokenAmount); // issue new funds to the contributor in the smart token
+        token.issue(msg.sender, tokenAmount); // issue new funds to the contributor in the smart token
         token.issue(beneficiary, tokenAmount); // issue tokens to the beneficiary
 
         Contribution(msg.sender, msg.value, tokenAmount);
