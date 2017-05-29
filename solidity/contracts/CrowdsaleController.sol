@@ -6,7 +6,7 @@ import './ISmartToken.sol';
 /*
     Crowdsale v0.1
 
-    The crowdsale version of the smart token controller, allows buying Bancor with ether
+    The crowdsale version of the smart token controller, allows contributing ether in exchange for Bancor tokens
     The price remains fixed for the entire duration of the crowdsale
     Note that 20% of the contributions are the Bancor token's reserve
 */
@@ -116,12 +116,12 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
     }
 
     /**
-        @dev buys the token with ETH
+        @dev ETH contribution
         can only be called during the crowdsale
 
         @return tokens issued in return
     */
-    function buyETH()
+    function contributeETH()
         public
         payable
         between(startTime, endTime)
@@ -131,14 +131,14 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
     }
 
     /**
-        @dev buys the token with BTCs (Bitcoin Suisse only)
+        @dev Contribution through BTCs (Bitcoin Suisse only)
         can only be called before the crowdsale started
 
         @param _contributor    account that should receive the new tokens
 
         @return tokens issued in return
     */
-    function buyBTCs(address _contributor)
+    function contributeBTCs(address _contributor)
         public
         payable
         validAddress(_contributor)
@@ -190,6 +190,6 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
 
     // fallback
     function() payable {
-        buyETH();
+        contributeETH();
     }
 }

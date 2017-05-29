@@ -201,32 +201,32 @@ contract('CrowdsaleController', (accounts) => {
         assert.notEqual(returnAmount.toNumber(), 0);
     });
 
-    it('verifies that computeReturn returns the same amount as buyETH', async () => {
+    it('verifies that computeReturn returns the same amount as contributeETH', async () => {
         let controller = await initController(accounts, true);
         let returnAmount = await controller.computeReturn.call(500);
 
-        let purchaseRes = await controller.buyETH({ value: 500 });
+        let purchaseRes = await controller.contributeETH({ value: 500 });
         let purchaseAmount = getContributionAmount(purchaseRes);
 
         assert.equal(returnAmount, purchaseAmount);
     });
 
-    it('verifies that computeReturn returns the same amount as buyBTCs', async () => {
+    it('verifies that computeReturn returns the same amount as contributeBTCs', async () => {
         let controller = await initController(accounts, true, startTime);
         let returnAmount = await controller.computeReturn.call(500);
 
-        let purchaseRes = await controller.buyBTCs(accounts[1], { value: 500, from: btcsAddress });
+        let purchaseRes = await controller.contributeBTCs(accounts[1], { value: 500, from: btcsAddress });
         let purchaseAmount = getContributionAmount(purchaseRes);
 
         assert.equal(returnAmount, purchaseAmount);
     });
 
-    it('verifies balances and total eth contributed after buying with ether', async () => {
+    it('verifies balances and total eth contributed after contributing ether', async () => {
         let controller = await initController(accounts, true);
 
         let prevEtherBalance = await web3.eth.getBalance(beneficiaryAddress);
 
-        let res = await controller.buyETH({ value: 200, from: accounts[1] });
+        let res = await controller.contributeETH({ value: 200, from: accounts[1] });
         let purchaseAmount = getContributionAmount(res);
         assert.isNumber(purchaseAmount);
         assert.notEqual(purchaseAmount, 0);
@@ -244,11 +244,11 @@ contract('CrowdsaleController', (accounts) => {
         assert.equal(totalEtherContributed, 200);
     });
 
-    it('should throw when attempting to buy with ether while the controller is not active', async () => {
+    it('should throw when attempting to contribute ether while the controller is not active', async () => {
         let controller = await initController(accounts, false);
 
         try {
-            await controller.buyETH({ value: 2000 });
+            await controller.contributeETH({ value: 2000 });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -256,11 +256,11 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to buy with ether and an invalid deposit amount', async () => {
+    it('should throw when attempting to contribute ether and an invalid deposit amount', async () => {
         let controller = await initController(accounts, true);
 
         try {
-            await controller.buyETH({ value: 0 });
+            await controller.contributeETH({ value: 0 });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -268,11 +268,11 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to buy with ether before the crowdsale has started', async () => {
+    it('should throw when attempting to contribute ether before the crowdsale has started', async () => {
         let controller = await initController(accounts, true, startTime);
 
         try {
-            await controller.buyETH({ value: 2000 });
+            await controller.contributeETH({ value: 2000 });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -280,11 +280,11 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to buy with ether after the crowdsale has finished', async () => {
+    it('should throw when attempting to contribute ether after the crowdsale has finished', async () => {
         let controller = await initController(accounts, true, startTimeFinished);
 
         try {
-            await controller.buyETH({ value: 2000 });
+            await controller.contributeETH({ value: 2000 });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -292,12 +292,12 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to buy with ether while hitting the real ether cap', async () => {
+    it('should throw when attempting to contribute ether while hitting the real ether cap', async () => {
         let controller = await initController(accounts, true);
         await controller.enableRealCap(realCap, realCapKey);
 
         try {
-            await controller.buyETH({ value: realCap + 1 });
+            await controller.contributeETH({ value: realCap + 1 });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -305,12 +305,12 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('verifies balances and total eth contributed after buying through btcs', async () => {
+    it('verifies balances and total eth contributed after contributing through btcs', async () => {
         let controller = await initController(accounts, true, startTime);
 
         let prevEtherBalance = await web3.eth.getBalance(beneficiaryAddress);
 
-        let res = await controller.buyBTCs(accounts[1], { value: 200, from: btcsAddress });
+        let res = await controller.contributeBTCs(accounts[1], { value: 200, from: btcsAddress });
         let purchaseAmount = getContributionAmount(res);
         assert.isNumber(purchaseAmount);
         assert.notEqual(purchaseAmount, 0);
@@ -328,11 +328,11 @@ contract('CrowdsaleController', (accounts) => {
         assert.equal(totalEtherContributed, 200);
     });
 
-    it('should throw when attempting to buy through btcs from a non btcs address', async () => {
+    it('should throw when attempting to contribute through btcs from a non btcs address', async () => {
         let controller = await initController(accounts, true, startTime);
 
         try {
-            await controller.buyBTCs(accounts[1], { value: 2000 });
+            await controller.contributeBTCs(accounts[1], { value: 2000 });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -340,11 +340,11 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to buy through btcs while the controller is not active', async () => {
+    it('should throw when attempting to contributing through btcs while the controller is not active', async () => {
         let controller = await initController(accounts, false, startTime);
 
         try {
-            await controller.buyBTCs(accounts[1], { value: 2000, from: btcsAddress });
+            await controller.contributeBTCs(accounts[1], { value: 2000, from: btcsAddress });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -352,11 +352,11 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to buy through btcs and an invalid deposit amount', async () => {
+    it('should throw when attempting to contributing through btcs and an invalid deposit amount', async () => {
         let controller = await initController(accounts, true, startTime);
 
         try {
-            await controller.buyBTCs(accounts[1], { value: 0, from: btcsAddress });
+            await controller.contributeBTCs(accounts[1], { value: 0, from: btcsAddress });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -364,11 +364,11 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to buy through btcs after the crowdsale has started', async () => {
+    it('should throw when attempting to contributing through btcs after the crowdsale has started', async () => {
         let controller = await initController(accounts, true);
 
         try {
-            await controller.buyBTCs(accounts[1], { value: 2000, from: btcsAddress });
+            await controller.contributeBTCs(accounts[1], { value: 2000, from: btcsAddress });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -376,11 +376,11 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to buy through btcs after the crowdsale has finished', async () => {
+    it('should throw when attempting to contributing through btcs after the crowdsale has finished', async () => {
         let controller = await initController(accounts, true, startTimeFinished);
 
         try {
-            await controller.buyBTCs(accounts[1], { value: 2000, from: btcsAddress });
+            await controller.contributeBTCs(accounts[1], { value: 2000, from: btcsAddress });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -388,13 +388,13 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to buy through btcs while hitting the btcs ether cap', async () => {
+    it('should throw when attempting to contributing through btcs while hitting the btcs ether cap', async () => {
         let controller = await initController(accounts, true, startTime);
         let btcsEtherCap = await controller.BTCS_ETHER_CAP.call();
         let largerThanCap = btcsEtherCap.plus(1);
 
         try {
-            await controller.buyBTCs(accounts[1], { value: largerThanCap.toString(), from: btcsAddress });
+            await controller.contributeBTCs(accounts[1], { value: largerThanCap.toString(), from: btcsAddress });
             assert(false, "didn't throw");
         }
         catch (error) {
