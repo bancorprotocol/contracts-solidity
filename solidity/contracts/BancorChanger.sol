@@ -216,13 +216,13 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
     /**
         @dev returns the expected return for changing a specific amount of _fromToken to _toToken
 
-        @param _fromToken  token to change from
-        @param _toToken    token to change to
+        @param _fromToken  ERC20 token to change from
+        @param _toToken    ERC20 token to change to
         @param _amount     amount to change, in fromToken
 
         @return expected change return amount
     */
-    function getReturn(address _fromToken, address _toToken, uint256 _amount)
+    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount)
         public
         constant
         validToken(_fromToken)
@@ -230,18 +230,16 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
         returns (uint256 amount)
     {
         require(_fromToken != _toToken); // validate input
-        IERC20Token fromToken = IERC20Token(_fromToken);
-        IERC20Token toToken = IERC20Token(_toToken);
 
         // change between the token and one of its reserves
-        if (toToken == token)
-            return getPurchaseReturn(fromToken, _amount);
-        else if (fromToken == token)
-            return getSaleReturn(toToken, _amount);
+        if (_toToken == token)
+            return getPurchaseReturn(_fromToken, _amount);
+        else if (_fromToken == token)
+            return getSaleReturn(_toToken, _amount);
 
         // change between 2 reserves
-        uint256 purchaseReturnAmount = getPurchaseReturn(fromToken, _amount);
-        return getSaleReturn(toToken, purchaseReturnAmount, safeAdd(token.totalSupply(), purchaseReturnAmount));
+        uint256 purchaseReturnAmount = getPurchaseReturn(_fromToken, _amount);
+        return getSaleReturn(_toToken, purchaseReturnAmount, safeAdd(token.totalSupply(), purchaseReturnAmount));
     }
 
     /**
@@ -283,32 +281,30 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
     /**
         @dev changes a specific amount of _fromToken to _toToken
 
-        @param _fromToken  token to change from
-        @param _toToken    token to change to
+        @param _fromToken  ERC20 token to change from
+        @param _toToken    ERC20 token to change to
         @param _amount     amount to change, in fromToken
         @param _minReturn  if the change results in an amount smaller than the minimum return, it is cancelled
 
         @return change return amount
     */
-    function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn)
+    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn)
         public
         validToken(_fromToken)
         validToken(_toToken)
         returns (uint256 amount)
     {
         require(_fromToken != _toToken); // validate input
-        IERC20Token fromToken = IERC20Token(_fromToken);
-        IERC20Token toToken = IERC20Token(_toToken);
 
         // change between the token and one of its reserves
-        if (toToken == token)
-            return buy(fromToken, _amount, _minReturn);
-        else if (fromToken == token)
-            return sell(toToken, _amount, _minReturn);
+        if (_toToken == token)
+            return buy(_fromToken, _amount, _minReturn);
+        else if (_fromToken == token)
+            return sell(_toToken, _amount, _minReturn);
 
         // change between 2 reserves
-        uint256 purchaseAmount = buy(fromToken, _amount, 0);
-        return sell(toToken, purchaseAmount, _minReturn);
+        uint256 purchaseAmount = buy(_fromToken, _amount, 0);
+        return sell(_toToken, purchaseAmount, _minReturn);
     }
 
     /**
