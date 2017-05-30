@@ -1,12 +1,15 @@
 pragma solidity ^0.4.11;
+import './ISmartToken.sol';
 import './ERC20Token.sol';
 import './TokenHolder.sol';
-import './ISmartToken.sol';
+import './Owned.sol';
 
 /*
     Smart Token v0.2
+
+    'Owned' is specified here for readability reasons
 */
-contract SmartToken is ISmartToken, ERC20Token, TokenHolder {
+contract SmartToken is ISmartToken, ERC20Token, Owned, TokenHolder {
     string public version = '0.2';
 
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
