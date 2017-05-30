@@ -88,6 +88,18 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
     }
 
     /**
+        @dev computes the real cap based on the given cap & key
+
+        @param _cap    cap
+        @param _key    key used to compute the cap hash
+
+        @return computed real cap hash
+    */
+    function computeRealCap(uint256 _cap, uint256 _key) public constant returns (bytes32) {
+        return sha3(_cap, _key);
+    }
+
+    /**
         @dev enables the real cap defined on deployment
 
         @param _cap    predefined cap
@@ -169,18 +181,6 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
 
         Contribution(msg.sender, msg.value, tokenAmount);
         return tokenAmount;
-    }
-
-    /**
-        @dev computes the real cap based on the given cap & key
-
-        @param _cap    cap
-        @param _key    key used to compute the cap hash
-
-        @return computed real cap hash
-    */
-    function computeRealCap(uint256 _cap, uint256 _key) private returns (bytes32) {
-        return sha3(_cap, _key);
     }
 
     // fallback
