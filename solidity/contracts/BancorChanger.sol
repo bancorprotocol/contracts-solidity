@@ -107,6 +107,21 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
         return reserveTokens[_tokenIndex - 1];
     }
 
+    /*
+        @dev allows the owner to update the formula contract address
+
+        @param _formula    address of a bancor formula contract
+    */
+    function setFormula(IBancorFormula _formula)
+        public
+        ownerOnly
+        validAddress(_formula)
+        notThis(_formula)
+    {
+        require(_formula != formula); // validate input
+        formula = _formula;
+    }
+
     /**
         @dev defines a new reserve for the token
         can only be called by the token owner while the changer is inactive
