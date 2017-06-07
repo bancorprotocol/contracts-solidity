@@ -24,7 +24,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         @param _supply             token total supply
         @param _reserveBalance     total reserve
-        @param _reserveRatio       constant reserve ratio, 1-99
+        @param _reserveRatio       constant reserve ratio, 1-100
         @param _depositAmount      deposit amount, in reserve token
 
         @return purchase return amount
@@ -54,7 +54,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         @param _supply             token total supply
         @param _reserveBalance     total reserve
-        @param _reserveRatio       constant reserve ratio, 1-99
+        @param _reserveRatio       constant reserve ratio, 1-100
         @param _sellAmount         sell amount, in the token itself
 
         @return sale return amount
