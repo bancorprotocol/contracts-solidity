@@ -137,6 +137,61 @@ contract('BancorChanger', (accounts) => {
         assert.equal(changeableTokenAddress, reserveTokenAddress);
     });
 
+    it('verifies the owner can update the formula contract address', async () => {
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
+        await changer.setFormula(accounts[3]);
+        let formula = await changer.formula.call(0);
+        assert.notEqual(formula, formulaAddress);
+    });
+
+    it('should throw when a non owner attempts update the formula contract address', async () => {
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
+
+        try {
+            await changer.setFormula(accounts[3], { from: accounts[1] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when a non owner attempts update the formula contract address with an invalid address', async () => {
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
+
+        try {
+            await changer.setFormula('0x0', { from: accounts[1] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when a non owner attempts update the formula contract address with the changer address', async () => {
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
+
+        try {
+            await changer.setFormula(changer.address, { from: accounts[1] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when a non owner attempts update the formula contract address with the same existing address', async () => {
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
+
+        try {
+            await changer.setFormula(formulaAddress, { from: accounts[1] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
     it('verifies that 2 reserves are added correctly', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, 10, false);
