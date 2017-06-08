@@ -62,6 +62,11 @@ contract BancorFormula is IBancorFormula, SafeMath {
     function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
         // validate input
         require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _sellAmount != 0 && _sellAmount <= _supply);
+
+        // special case for selling the entire supply
+        if (_sellAmount == _supply)
+            return _reserveBalance;
+
         uint256 baseN = safeSub(_supply, _sellAmount);
         uint256 temp1;
         uint256 temp2;
