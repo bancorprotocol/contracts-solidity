@@ -109,7 +109,7 @@ def generateRandomTestData():
     M = 1000000000000000000000000000L
 
     print("module.exports.randomPurchaseReturns = [")
-    for i in range(1, 100):
+    for i in range(1, 1000):
         S = long(random.randint(1e6, 3e6))
         F = random.randint(1, 100 )
         R = math.floor(F*S / 100)
@@ -127,6 +127,14 @@ def generateRandomTestData():
         print("\t['%d','%d','%d','%d','%d', '%f']," % ( lS, lR, F, lE ,largeTsol, largeT ))
     print("];")
 
+    saleReturnDiffs = []
+
+    def addDiff(s,r,f,t, e,esol):
+        diff = e - esol
+        diff_percent = 100*diff / e
+        saleReturnDiffs.append([s,r,f,t, e, esol, diff, diff_percent])
+
+
     print("module.exports.randomSaleReturns = [")
     for i in range(1, 100):
         S = long(random.randint(1e6, 3e6))
@@ -141,10 +149,22 @@ def generateRandomTestData():
         lT = long(T) * M
     
         (largeE, largeEsol) = saleReturn(lS,lR,F,lT)
-
+        
+        addDiff(S,R,F,T,E, Esol)
+        addDiff(lS,lR,F,lT,largeE, largeEsol)
+    
         print("\t['%d','%d','%d','%d','%d', '%f']," % ( S, R, F, T,Esol, E ))
         print("\t['%d','%d','%d','%d','%d', '%f']," % ( lS, lR, F, lT, largeEsol, largeE ))
     print("];")
+
+    maxdiff = 0
+    for diff in saleReturnDiffs: 
+        [s,r,f,t,e, e_sol, d, d_percent] = diff
+        if maxdiff < d_percent:
+            maxdiff = d_percent
+        print("Diff %s percent, for values %s" % (d_percent, [s,r,f,t, e_sol, e]))
+    print "Largest diff %s percent" % maxdiff
+
 
 def printTooLargeReturns():
 
@@ -168,6 +188,7 @@ def printExpectedThrows():
     for l in expectedThrows['saleReturn']:
         print("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
     print("];")
+
 
 def generateRandomTestData2():
     purchaseResults = []
@@ -361,14 +382,42 @@ def testLog2():
     log2(0x20416d8b9f09d345031eb56b29f53708324b2232b812bc84a0c3e740921d1b62L) error: 0.371572 nanopercent
     """
 
+def testTooLargeSaleReturns():
+    """
+    Contains some testcases, found during random testing, where the sale return was larger than expected
+    """
+
+
+    testdata = [
+        [2571869000000000000000000000000000,360061000000000000000000000000000,14,284283000000000000000000000000000,204102574328104782565993111517581,2.04102574323e+32],
+        [300000000000000000000000000000000,63000000000000000000000000000000,21,2401000000000000000000000000000,2365120993837509886570622084182,0],        
+        [300000000000000000000000000000000,63000000000000000000000000000000,21,1000000000000000000000000000,1000012229933918459614528650,9.99993730188e+26],
+        [300000000000000000000000000000000,63000000000000000000000000000000,21,49000000000000000000000000000,48984954188962049634901119411,4.89849483746e+28],
+        [300000000000000000000000000000000,63000000000000000000000000000000,21,81000000000000000000000000000,80958876280831287208758481856,8.09588737955e+28],
+    ]
+    for td in testdata:
+        [s,r,f,t,x,y] = td
+        e = formula.calculateSaleReturnSolidity(s,r,f,t)
+        e_cor = formula.calculateSaleReturn(s,r,f,t)
+        print("E   : %s"% e)
+        print("E_C : %s"% e_cor)
+        diff = e - e_cor
+        smin = formula.calcSaleMin(r)
+        print("diff: %s"%  diff)
+        print("smin: %s "%  smin )
+        print("d/s : %s " % (diff/smin))
+        print("")
+
 generateTestData()
 generateTestDataLargeNumbers()
 generateRandomTestData()
-#
+
 printTooLargeReturns()
 printExpectedThrows()
 
-#formula.verbose = True
+formula.verbose = True
+testTooLargeSaleReturns()
+
 #
 #(S,R,F,E, correct)  = ( 2709028000000000000000000000000000, 2709028000000000000000000000000000 , 100, 244983000000000000000000000000000L,244983000166133046150207519531250L)
 #print formula.calculatePurchaseReturnSolidity(S,R,F,E)

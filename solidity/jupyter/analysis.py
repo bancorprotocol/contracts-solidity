@@ -14,9 +14,10 @@ def calculateSaleReturn(S,R,F,T):
         return 0
 
     if F == 100:
-        return R- R*T/S
+        return R*T/S
 
-    return R * ( 1.0 - math.pow(float(S-T)/float(S) , (100.0/F)))
+
+    return float(R) * ( 1.0 - math.pow(float(S-T)/float(S) , (100.0/float(F))))
 # These functions mimic the EVM-implementation
 
 verbose = False
@@ -47,12 +48,29 @@ def ln(_numerator, _denominator):
         print("  <- ln(numerator = %s  , denominator = %s) : %d"  % (hex(_numerator) , hex(_denominator), (a-b)))
     return a - b
 
+def ln_downwards(_numerator, _denominator):
+    if verbose:
+        print("  -> lnd(numerator = %s  , denominator = %s)"  % (hex(_numerator) , hex(_denominator)))
+    a = fixedLoge((_numerator )<< PRECISION)
+    b = fixedLoge((_denominator )<< PRECISION)
+    if verbose:
+        print("  <- lnd(numerator = %s  , denominator = %s) : %d"  % (hex(_numerator) , hex(_denominator), (a-b-1)))
+    return a - b-1
+
 
 @return_uint256
 def fixedLoge(_x) :
     x = uint256(_x)
     log2 = fixedLog2(_x)
     logE = (log2 * 0xb17217f7d1cf78) >> 56;
+
+    return math.floor(logE)
+
+def fixedLoge_round_up(_x) :
+    x = uint256(_x)
+    log2 = fixedLog2(_x)
+    logE = (log2 * 0xb17217f7d1cf78) >> 56;
+    
     return math.floor(logE)
     
 
@@ -81,6 +99,7 @@ def fixedLog2( _ix) :
     
     if lo > hi:
         raise Exception("Underflow, hi < lo: %d < %d at (%d) " % (hi,lo, _ix))
+
     return uint256(math.floor(hi - lo))
 
 
@@ -214,6 +233,26 @@ def power(_baseN,_baseD, _expN, _expD):
         print(" <- power(baseN = %d, baseD = %d, expN = %d, expD = %d) : %s" % (_baseN, _baseD, _expN, _expD ,hex(res)))
     return (res, 1 << PRECISION);
 
+def power_sale(_baseN,_baseD, _expN, _expD):
+
+    """ This implementation of 'pow' is skewed to round so that 
+    the loss of precision is rounded downwards"""
+
+    _expD = uint256(_expD)
+
+    x_ln = uint256(ln_downwards(_baseN, _baseD))
+    _ln = x_ln
+    if verbose:
+        print("    ln(baseN, baseD) = ln(%s, %s) = %s" % (_baseN, _baseD, _ln))
+   
+
+    real_abc = float(_ln) * float(_expN) / float(_expD)
+    abc = uint256(uint256(_ln * _expN) / _expD)
+
+    res = fixedExp(abc)
+
+
+    return res
 
 @return_uint256
 def calculatePurchaseReturnSolidity(S,R,F,E):
@@ -226,7 +265,6 @@ def calculatePurchaseReturnSolidity(S,R,F,E):
     _depositAmount = uint256(E)
 
     baseN = uint256(_depositAmount + _reserveBalance);
-
 
     if _reserveRatio == 100:
         amount = uint256(_supply * baseN) / _reserveBalance
@@ -243,8 +281,8 @@ def calculatePurchaseReturnSolidity(S,R,F,E):
             (_supply, resN, resD, _supply, result))
 
     #Potential fix, reduce the result by the error occurred through rounding
-    #return result- calcPurchaseMin(S)
-    return result
+    return result- calcPurchaseMin(S)
+#    return result
 
 def calcPurchaseMin(S):
     _supply = uint256(S)
@@ -268,6 +306,7 @@ def calculateSaleReturnSolidity(S, R, F,  T):
 
     _baseN = _supply - _sellAmount
 
+
     if _reserveRatio == 100:
         amount = uint256(_reserveBalance * _baseN ) / _supply
         if _reserveBalance < amount:
@@ -275,13 +314,15 @@ def calculateSaleReturnSolidity(S, R, F,  T):
 
         return _reserveBalance - amount
 
-
-
-    (resN, resD) = power(_supply, _baseN, 100, _reserveRatio);
+    resD = 1 << PRECISION
+#    resN = math.pow( float(_supply)/float(_baseN), float(100)/float(_reserveRatio))*resD
+    resN  = power_sale(_supply, _baseN, 100, _reserveRatio);
     resN = uint256(resN)
     resD = uint256(resD)
 
-    amount = uint256(_reserveBalance * resD)
+    amount = uint256(_reserveBalance * resD) 
+
+
     reserveUpshifted =  uint256(_reserveBalance * resN)
     result = (reserveUpshifted - amount) / resN
     
@@ -290,8 +331,8 @@ def calculateSaleReturnSolidity(S, R, F,  T):
         (_reserveBalance, resN, resD, _reserveBalance, result))
 
 #Potenatial fix, reduce the result by the error occurred through rounding
-#    return result - 2*calcSaleMin(R)
-    return result 
+    return result - calcSaleMin(R)
+    #return result 
 
 def calculateFactorials():
     """Method to print out the factorials for fixedExp"""
