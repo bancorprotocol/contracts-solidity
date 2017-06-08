@@ -45,10 +45,15 @@ contract BancorFormula is IBancorFormula, SafeMath {
             temp = safeMul(_supply, baseN) / _reserveBalance;
             return safeSub(temp, _supply); 
         }
-
-        var (resN, resD) = power(baseN, _reserveBalance, _reserveRatio, 100);
+        var resD = uint256(1) << PRECISION
+        var resN = power(baseN, _reserveBalance, _reserveRatio, 100);
         temp = safeMul(_supply, resN) / resD;
-        return safeSub(temp, _supply);
+        result = safeSub(temp, _supply);
+ 
+        //From the result, we deduct the minimal increment, which is a 
+        // function of R and precision. 
+        return safeSub(result, _reserveBalance/0x100000000)
+ 
     }
 
     /**
@@ -86,31 +91,58 @@ contract BancorFormula is IBancorFormula, SafeMath {
             temp2 = safeMul(_reserveBalance, baseN);
             return safeSub(temp1, temp2) / _supply;
         }
-
-        var (resN, resD) = power(_supply, baseN, 100, _reserveRatio);
+        var resD = uint256(1) << PRECISION
+        var resD = power_rounddown(_supply, baseN, 100, _reserveRatio);
         temp1 = safeMul(_reserveBalance, resN);
         temp2 = safeMul(_reserveBalance, resD);
-        return safeSub(temp1, temp2) / resN;
+
+        result = safeSub(temp1, temp2) / resN;
+        //From the result, we deduct the minimal increment, which is a 
+        // function of R and precision. 
+        return safeSub(result, _reserveBalance/0x100000000)
     }
 
     /**
         @dev Calculate (_baseN / _baseD) ^ (_expN / _expD)
         Returns result upshifted by PRECISION
 
-        This method asserts is overflow-safe
+        This method is overflow-safe
     */ 
-    function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) constant returns (uint256 resN, uint256 resD) {
+    function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) constant returns (uint256 resN) {
         uint256 logbase = ln(_baseN, _baseD);
         // Not using safeDiv here, since safeDiv protects against
         // precision loss. It's unavoidable, however
         // Both `ln` and `fixedExp` are overflow-safe. 
         resN = fixedExp(safeMul(logbase, _expN) / _expD);
 
-        return (resN, uint256(1) << PRECISION);
-        /*
-        return (fixedExp(ln(_baseN, _baseD) * _expN / _expD), uint256(1) << PRECISION);
-        */
+        return resN;
 	}
+    /**
+        @dev Calculate (_baseN / _baseD) ^ (_expN / _expD)
+        This mehthod is skewed to make the precision loss error decrease the result 
+        Returns result upshifted by PRECISION
+
+        This method is overflow-safe
+    */ 
+    function power_rounddown(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) constant returns (uint256 resN) {
+        
+        // In `ln`, the log of numerator and denominator are subtracted: 
+        // log(n)-log(d) . To ensure that the precision loss is in the right 
+        // direction, we subtract one unit 
+        // Reasoning: 
+        //      floor(log(d)) +1 == ceil(log(d))
+        uint256 logbase = ln(_baseN, _baseD);
+        
+        if (logbase > 1){
+            logbase -= 1;
+        }
+        // Not using safeDiv here, since safeDiv protects against
+        // precision loss. It's unavoidable, however
+        // Both `ln` and `fixedExp` are overflow-safe. 
+        resN = fixedExp(safeMul(logbase, _expN) / _expD);
+
+        return resN;
+    }
     
     /**
         input range: 
