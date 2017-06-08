@@ -137,9 +137,4 @@ contract SmartToken is ISmartToken, ERC20Token, Owned, TokenHolder {
 
         return true;
     }
-
-    // fallback
-    function() {
-        assert(false);
-    }
 }

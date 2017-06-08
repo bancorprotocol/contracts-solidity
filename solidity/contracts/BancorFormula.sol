@@ -311,8 +311,4 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         return res / 0xde1bc4d19efcac82445da75b00000000;
     }
-
-    function() {
-        assert(false);
-    }
 }

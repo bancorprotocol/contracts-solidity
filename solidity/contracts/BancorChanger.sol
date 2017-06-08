@@ -406,9 +406,4 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
         uint256 reserveBalance = getReserveBalance(_reserveToken);
         return formula.calculateSaleReturn(_totalSupply, reserveBalance, reserve.ratio, _sellAmount);
     }
-
-    // fallback
-    function() {
-        assert(false);
-    }
 }
