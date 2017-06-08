@@ -505,21 +505,6 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to withdraw 0 amount from a reserve', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
-        let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-        await changer.addReserve(reserveToken.address, 10, false);
-        await reserveToken.transfer(changer.address, 1000);
-
-        try {
-            await changer.withdrawTokens(reserveToken.address, accounts[2], 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
     it('should throw when attempting to withdraw from a reserve to the changer address', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
@@ -647,18 +632,6 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to get the purchase return with an invalid deposit amount', async () => {
-        let changer = await initChanger(accounts, true);
-
-        try {
-            await changer.getPurchaseReturn.call(reserveTokenAddress, 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
     it('should throw when attempting to get the purchase return while purchasing with the reserve is disabled', async () => {
         let changer = await initChanger(accounts, true);
         await changer.disableReservePurchases(reserveTokenAddress, true);
@@ -689,18 +662,6 @@ contract('BancorChanger', (accounts) => {
 
         try {
             await changer.getSaleReturn.call(tokenAddress, 500);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when attempting to get the sale return with an invalid sale amount', async () => {
-        let changer = await initChanger(accounts, true);
-
-        try {
-            await changer.getSaleReturn.call(reserveTokenAddress, 0);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -885,7 +846,7 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to buy with an invalid deposit amount', async () => {
+    it('should throw when attempting to buy while the purchase yields 0 return', async () => {
         let changer = await initChanger(accounts, true);
         await reserveToken.approve(changer.address, 500);
 
@@ -977,7 +938,7 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to sell with an invalid sale amount', async () => {
+    it('should throw when attempting to sell while the sale yields 0 return', async () => {
         let changer = await initChanger(accounts, true);
 
         try {

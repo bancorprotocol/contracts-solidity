@@ -35,18 +35,6 @@ contract('EtherToken', (accounts) => {
         assert.equal(supply, 1000);
     });
 
-    it('should throw when attempting to deposit zero amount', async () => {
-        let token = await EtherToken.new();
-
-        try {
-            await token.deposit({ value: 0 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
     it('verifies the balance and supply after a withdrawal', async () => {
         let token = await EtherToken.new();
         await token.deposit({ value: 100 });
@@ -68,19 +56,6 @@ contract('EtherToken', (accounts) => {
         newBalance = web3.toBigNumber(newBalance);
         let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
         assert.equal(newBalance.toString(), prevBalance.minus(transactionCost).plus(20).toString());
-    });
-
-    it('should throw when attempting to withdraw zero amount', async () => {
-        let token = await EtherToken.new();
-        await token.deposit({ value: 100 });
-
-        try {
-            await token.withdraw(0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
     });
 
     it('verifies the ether balance after a withdrawal', async () => {

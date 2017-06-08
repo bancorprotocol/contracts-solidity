@@ -57,6 +57,12 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
             addReserve(_reserveToken, _reserveRatio, false);
     }
 
+    // verifies that an amount is greater than zero
+    modifier validAmount(uint256 _amount) {
+        require(_amount > 0);
+        _;
+    }
+
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
     modifier validReserve(address _address) {
         require(reserves[_address].isSet);
@@ -270,7 +276,6 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
         constant
         active
         validReserve(_reserveToken)
-        validAmount(_depositAmount)
         returns (uint256 amount)
     {
         Reserve reserve = reserves[_reserveToken];
@@ -394,7 +399,6 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
         constant
         active
         validReserve(_reserveToken)
-        validAmount(_sellAmount)
         validAmount(_totalSupply)
         returns (uint256 amount)
     {

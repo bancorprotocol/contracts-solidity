@@ -51,6 +51,12 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
         realEtherCapHash = _realEtherCapHash;
     }
 
+    // verifies that an amount is greater than zero
+    modifier validAmount(uint256 _amount) {
+        require(_amount > 0);
+        _;
+    }
+
     // verifies that the ether cap is valid based on the key provided
     modifier validEtherCap(uint256 _cap, uint256 _key) {
         require(computeRealCap(_cap, _key) == realEtherCapHash);
@@ -110,7 +116,6 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
         ownerOnly
         active
         between(startTime, endTime)
-        validAmount(_cap)
         validEtherCap(_cap, _key)
     {
         totalEtherCap = _cap;
@@ -167,13 +172,10 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
     */
     function processContribution() private
         active
-        validAmount(msg.value)
         etherCapNotReached(msg.value)
         returns (uint256 amount)
     {
         uint256 tokenAmount = computeReturn(msg.value);
-        assert(tokenAmount != 0); // ensure the trade gives something in return
-
         assert(beneficiary.send(msg.value)); // transfer the ether to the beneficiary account
         totalEtherContributed = safeAdd(totalEtherContributed, msg.value); // update the total contribution amount
         token.issue(msg.sender, tokenAmount); // issue new funds to the contributor in the smart token

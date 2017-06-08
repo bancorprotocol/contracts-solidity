@@ -38,12 +38,6 @@ contract ERC20Token is IERC20Token, SafeMath {
         _;
     }
 
-    // verifies that an amount is greater than zero
-    modifier validAmount(uint256 _amount) {
-        require(_amount > 0);
-        _;
-    }
-
     /**
         @dev send coins
         note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
@@ -56,7 +50,6 @@ contract ERC20Token is IERC20Token, SafeMath {
     function transfer(address _to, uint256 _value)
         public
         validAddress(_to)
-        validAmount(_value)
         returns (bool success)
     {
         balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _value);
@@ -79,7 +72,6 @@ contract ERC20Token is IERC20Token, SafeMath {
         public
         validAddress(_from)
         validAddress(_to)
-        validAmount(_value)
         returns (bool success)
     {
         allowance[_from][msg.sender] = safeSub(allowance[_from][msg.sender], _value);

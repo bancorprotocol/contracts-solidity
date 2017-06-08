@@ -22,18 +22,11 @@ contract EtherToken is IEtherToken, ERC20Token, Owned, TokenHolder {
         ERC20Token('Ether Token', 'ETH', 18) {
     }
 
-    // verifies that an amount is greater than zero
-    modifier validAmount(uint256 _amount) {
-        require(_amount > 0);
-        _;
-    }
-
     /**
         @dev deposit ether in the account
     */
     function deposit()
         public
-        validAmount(msg.value)
         payable
     {
         balanceOf[msg.sender] = safeAdd(balanceOf[msg.sender], msg.value); // add the value to the account balance
@@ -48,10 +41,7 @@ contract EtherToken is IEtherToken, ERC20Token, Owned, TokenHolder {
 
         @param _amount  amount of ether to withdraw
     */
-    function withdraw(uint256 _amount)
-        public
-        validAmount(_amount)
-    {
+    function withdraw(uint256 _amount) public {
         balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _amount); // deduct the amount from the account balance
         totalSupply = safeSub(totalSupply, _amount); // decrease the total supply
         assert(msg.sender.send(_amount)); // send the amount

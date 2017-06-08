@@ -22,12 +22,6 @@ contract TokenHolder is Owned {
         _;
     }
 
-    // verifies that an amount is greater than zero
-    modifier validAmount(uint256 _amount) {
-        require(_amount > 0);
-        _;
-    }
-
     // verifies that the address is different than this contract address
     modifier notThis(address _address) {
         require(_address != address(this));
@@ -48,7 +42,6 @@ contract TokenHolder is Owned {
         validAddress(_token)
         validAddress(_to)
         notThis(_to)
-        validAmount(_amount)
     {
         assert(_token.transfer(_to, _amount));
     }

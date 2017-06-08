@@ -92,18 +92,6 @@ contract('SmartToken', (accounts) => {
         }
     });
 
-    it('should throw when the owner attempts to issue 0 tokens', async () => {
-        let token = await SmartToken.new('Token1', 'TKN1', 2);
-
-        try {
-            await token.issue(accounts[1], 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
     it('should throw when the owner attempts to issue tokens to the token address', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
 
@@ -152,19 +140,6 @@ contract('SmartToken', (accounts) => {
         await token.destroy(accounts[0], 20);
         let balance = await token.balanceOf.call(accounts[0]);
         assert.equal(balance, 80);
-    });
-
-    it('should throw when the owner attempts to destroy 0 tokens', async () => {
-        let token = await SmartToken.new('Token1', 'TKN1', 2);
-        await token.issue(accounts[1], 100);
-
-        try {
-            await token.destroy(accounts[1], 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
     });
 
     it('should throw when a non owner attempts to destroy tokens', async () => {

@@ -256,18 +256,6 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to contribute ether and an invalid deposit amount', async () => {
-        let controller = await initController(accounts, true);
-
-        try {
-            await controller.contributeETH({ value: 0 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
     it('should throw when attempting to contribute ether before the crowdsale has started', async () => {
         let controller = await initController(accounts, true, startTime);
 
@@ -346,18 +334,6 @@ contract('CrowdsaleController', (accounts) => {
 
         try {
             await controller.contributeBTCs({ value: 2000, from: btcsAddress });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when attempting to contributing through btcs and an invalid deposit amount', async () => {
-        let controller = await initController(accounts, true, startTime);
-
-        try {
-            await controller.contributeBTCs({ value: 0, from: btcsAddress });
             assert(false, "didn't throw");
         }
         catch (error) {

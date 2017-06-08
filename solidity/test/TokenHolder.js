@@ -76,18 +76,6 @@ contract('TokenHolder', (accounts) => {
         }
     });
 
-    it('should throw when attempting to withdraw tokens with an invalid amount', async () => {
-        let holder = await initHolder();
-
-        try {
-            await holder.withdrawTokens(erc20TokenAddress, accounts[2], 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
     it('should throw when attempting to withdraw an amount greater than the holder balance', async () => {
         let holder = await initHolder();
 

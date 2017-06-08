@@ -31,7 +31,12 @@ contract BancorFormula is IBancorFormula, SafeMath {
     */
     function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
         // validate input
-        require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _depositAmount != 0);
+        require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100);
+
+        // special case for 0 deposit amount
+        if (_depositAmount == 0)
+            return 0;
+
         uint256 baseN = safeAdd(_depositAmount, _reserveBalance);
         uint256 temp;
 
@@ -61,7 +66,11 @@ contract BancorFormula is IBancorFormula, SafeMath {
     */
     function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint16 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
         // validate input
-        require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _sellAmount != 0 && _sellAmount <= _supply);
+        require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _sellAmount <= _supply);
+
+        // special case for 0 sell amount
+        if (_sellAmount == 0)
+            return 0;
 
         // special case for selling the entire supply
         if (_sellAmount == _supply)

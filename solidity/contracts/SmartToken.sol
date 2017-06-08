@@ -63,7 +63,6 @@ contract SmartToken is ISmartToken, ERC20Token, Owned, TokenHolder {
         ownerOnly
         validAddress(_to)
         notThis(_to)
-        validAmount(_amount)
     {
         totalSupply = safeAdd(totalSupply, _amount);
         balanceOf[_to] = safeAdd(balanceOf[_to], _amount);
@@ -82,7 +81,6 @@ contract SmartToken is ISmartToken, ERC20Token, Owned, TokenHolder {
     function destroy(address _from, uint256 _amount)
         public
         ownerOnly
-        validAmount(_amount)
     {
         balanceOf[_from] = safeSub(balanceOf[_from], _amount);
         totalSupply = safeSub(totalSupply, _amount);
