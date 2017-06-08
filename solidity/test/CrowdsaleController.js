@@ -14,8 +14,10 @@ let startTime = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // crowdsale 
 let startTimeInProgress = Math.floor(Date.now() / 1000) - 12 * 60 * 60; // ongoing crowdsale
 let startTimeFinished = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60; // ongoing crowdsale
 let realCap = 1000;
+let realCapLarge = 1000000000000000000000000000000000000;
 let realCapKey = 234;
 let realEtherCapHash = '0xd3a40f1165164f13f237cc938419cc292e66b7bb3aa190f21087a3813c5ae1ca';  // sha3(uint256(1000), uint256(234))
+let realEtherCapHashLarge = '0xe8de42a704eab00275ed4cdc7e4e626633a0ce70bc986007a037e3ff699f4381';  // sha3(uint256(1000000000000000000000000000000000000), uint256(234))
 
 async function generateDefaultController() {
     return await CrowdsaleController.new(tokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHash);
@@ -187,6 +189,18 @@ contract('CrowdsaleController', (accounts) => {
 
         try {
             await controller.enableRealCap(realCap, 235);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when the owner attempts to enable the real ether cap with a value larger than the initial cap', async () => {
+        let controller = await CrowdsaleController.new(tokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHashLarge);
+
+        try {
+            await controller.enableRealCap(realCapLarge, realCapKey);
             assert(false, "didn't throw");
         }
         catch (error) {

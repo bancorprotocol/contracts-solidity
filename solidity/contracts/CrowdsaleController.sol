@@ -118,6 +118,7 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
         between(startTime, endTime)
         validEtherCap(_cap, _key)
     {
+        require(_cap < totalEtherCap); // validate input
         totalEtherCap = _cap;
     }
 
