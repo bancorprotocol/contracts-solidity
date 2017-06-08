@@ -40,9 +40,8 @@ contract Owned is IOwned {
     */
     function acceptOwnership() public {
         require(msg.sender == newOwner);
-        address prevOwner = owner;
+        OwnerUpdate(owner, newOwner);
         owner = newOwner;
         newOwner = 0x0;
-        OwnerUpdate(prevOwner, owner);
     }
 }
