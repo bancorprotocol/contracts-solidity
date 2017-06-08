@@ -60,29 +60,28 @@ def addExpectedThrowOnSale(S,R,F,T, ex):
     expectedThrows['saleReturn'].append([S,R,F,T, ex])
 
     
-def generateTestData():
+def generateTestData(outp):
     """ Generates some basic scenarios"""
-
 
     S = 300000.0
     R = 63000.0
     F= 21
 
-    print("module.exports.purchaseReturns= [")
+    outp.append("module.exports.purchaseReturns= [")
     for i in range(1, 1000,2):
         E = float(i * i) # Goes up to 1 million ether 
         (T,Tsol) = purchaseReturn(S,R,F,E)
-        print("\t['%d','%d','%d','%d','%d', '%f']," % ( int(S), int(R), F, int(E),Tsol, T ))
-    print("];")
+        outp.append("\t['%d','%d','%d','%d','%d', '%f']," % ( int(S), int(R), F, int(E),Tsol, T ))
+    outp.append("];")
     
-    print("module.exports.saleReturns = [")
+    outp.append("module.exports.saleReturns = [")
     for i in range(1, 1000,2):
         T = float(i * i) # Goes up to 1 million tokens
         (E, Esol) = saleReturn(S,R,F,T)
-        print("\t['%d','%d','%d','%d','%d', '%f']," % ( int(S), int(R), F, int(T),Esol, E ))
-    print("];")
+        outp.append("\t['%d','%d','%d','%d','%d', '%f']," % ( int(S), int(R), F, int(T),Esol, E ))
+    outp.append("];")
 
-def generateTestDataLargeNumbers():
+def generateTestDataLargeNumbers(outp):
     """ Generates some basic scenarios"""
     M = 1000000000000000000000000000L
 
@@ -90,26 +89,26 @@ def generateTestDataLargeNumbers():
     R = 63000L * M
     F= 21
 
-    print("module.exports.purchaseReturnsLarge= [")
+    outp.append("module.exports.purchaseReturnsLarge= [")
     for i in range(1, 1000,2):
         E = long(i)*long(i)*M # Goes up to 1 million ether 
         (T,Tsol) = purchaseReturn(S,R,F,E)
-        print("\t['%d','%d','%d','%d','%d', '%f']," % ( int(S), int(R), F, int(E),Tsol, T ))
-    print("];")
+        outp.append("\t['%d','%d','%d','%d','%d', '%f']," % ( int(S), int(R), F, int(E),Tsol, T ))
+    outp.append("];")
     
-    print("module.exports.saleReturnsLarge = [")
+    outp.append("module.exports.saleReturnsLarge = [")
     for i in range(1, 1000,2):
         T = long(i)*long(i)*M # Goes up to 1 million tokens
         (E, Esol) = saleReturn(S,R,F,T)
-        print("\t['%d','%d','%d','%d','%d', '%f']," % ( int(S), int(R),F, int(T),Esol, E ))
-    print("];")
+        outp.append("\t['%d','%d','%d','%d','%d', '%f']," % ( int(S), int(R),F, int(T),Esol, E ))
+    outp.append("];")
 
 
-def generateRandomTestData():
+def generateRandomTestData(outp):
     M = 1000000000000000000000000000L
 
-    print("module.exports.randomPurchaseReturns = [")
-    for i in range(1, 1000):
+    outp.append("module.exports.randomPurchaseReturns = [")
+    for i in range(1, 300):
         S = long(random.randint(1e6, 3e6))
         F = random.randint(1, 100 )
         R = math.floor(F*S / 100)
@@ -123,9 +122,9 @@ def generateRandomTestData():
 
         (largeT,largeTsol) = purchaseReturn(lS,lR,F,lE)
 
-        print("\t['%d','%d','%d','%d','%d', '%f']," % ( S, R, F, E,Tsol, T ))
-        print("\t['%d','%d','%d','%d','%d', '%f']," % ( lS, lR, F, lE ,largeTsol, largeT ))
-    print("];")
+        outp.append("\t['%d','%d','%d','%d','%d', '%f']," % ( S, R, F, E,Tsol, T ))
+        outp.append("\t['%d','%d','%d','%d','%d', '%f']," % ( lS, lR, F, lE ,largeTsol, largeT ))
+    outp.append("];")
 
     saleReturnDiffs = []
 
@@ -135,8 +134,8 @@ def generateRandomTestData():
         saleReturnDiffs.append([s,r,f,t, e, esol, diff, diff_percent])
 
 
-    print("module.exports.randomSaleReturns = [")
-    for i in range(1, 100):
+    outp.append("module.exports.randomSaleReturns = [")
+    for i in range(1, 300):
         S = long(random.randint(1e6, 3e6))
         F = random.randint(1, 100 )
         R = math.floor(F*S / 100)
@@ -153,9 +152,9 @@ def generateRandomTestData():
         addDiff(S,R,F,T,E, Esol)
         addDiff(lS,lR,F,lT,largeE, largeEsol)
     
-        print("\t['%d','%d','%d','%d','%d', '%f']," % ( S, R, F, T,Esol, E ))
-        print("\t['%d','%d','%d','%d','%d', '%f']," % ( lS, lR, F, lT, largeEsol, largeE ))
-    print("];")
+        outp.append("\t['%d','%d','%d','%d','%d', '%f']," % ( S, R, F, T,Esol, E ))
+        outp.append("\t['%d','%d','%d','%d','%d', '%f']," % ( lS, lR, F, lT, largeEsol, largeE ))
+    outp.append("];")
 
     maxdiff = 0
     for diff in saleReturnDiffs: 
@@ -166,28 +165,28 @@ def generateRandomTestData():
     print "Largest diff %s percent" % maxdiff
 
 
-def printTooLargeReturns():
+def printTooLargeReturns(outp):
 
-    print("module.exports.tooLargePurchaseReturns = [")
+    outp.append("module.exports.tooLargePurchaseReturns = [")
     for l in tooLargeReturns['purchaseReturn']:
-        print("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
-    print("];")
+        outp.append("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
+    outp.append("];")
 
-    print("module.exports.tooLargeSaleReturns = [")
+    outp.append("module.exports.tooLargeSaleReturns = [")
     for l in tooLargeReturns['saleReturn']:
-        print("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
-    print("];")
+        outp.append("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
+    outp.append("];")
 
-def printExpectedThrows():
-    print("module.exports.purchaseReturnExpectedThrows = [")
+def printExpectedThrows(outp):
+    outp.append("module.exports.purchaseReturnExpectedThrows = [")
     for l in expectedThrows['purchaseReturn']:
-        print("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
-    print("];")
+        outp.append("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
+    outp.append("];")
 
-    print("module.exports.saleReturnExpectedThrows = [")
+    outp.append("module.exports.saleReturnExpectedThrows = [")
     for l in expectedThrows['saleReturn']:
-        print("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
-    print("];")
+        outp.append("\t[%s]," % (",".join(["'%s'" % str(i) for i in l])))
+    outp.append("];")
 
 
 def generateRandomTestData2():
@@ -230,15 +229,8 @@ def generateRandomTestData2():
     print("module.exports.randomSaleReturns2 = [")
     print("\n".join(saleResults))
     print("];")
-# module.exports.randomSaleReturns2 = [
-#    [95289326501151232,7623146120092099,8,216782,0, 0.000000], # 21298824
-#];
+
 def testCornercase():
-    #[S,R,F,T]  = [95289326501151232L,7623146120092099L,8,216782] # 21298824
-    #E_S = formula.calculateSaleReturnSolidity(S,R,F,T)
-    #E = formula.calculateSaleReturn(S,R,F,T)
-    #print("E: %d" % E)
-    #print("E_S: %d" % E_S)
 
 
     m = formula.Market(95289326501151232L,7623146120092099L,8)
@@ -283,11 +275,7 @@ def testCornercase2():
     print "Market"
     print m
 
-#def testContinuousPurchase():
-#
-#    m = formula.Market(300000e18,63000e18,21)
-#
-#    #Now, keep buying, see what happens
+
 
 def testPrecisionLimits():
 
@@ -408,15 +396,20 @@ def testTooLargeSaleReturns():
         print("d/s : %s " % (diff/smin))
         print("")
 
-generateTestData()
-generateTestDataLargeNumbers()
-generateRandomTestData()
+outp = []
+generateTestData(outp)
+generateTestDataLargeNumbers(outp)
+generateRandomTestData(outp)
+printTooLargeReturns(outp)
+printExpectedThrows(outp)
+with open("testdata.js", "w+") as f:
+    f.write("\n".join(outp))
+    
+    
 
-printTooLargeReturns()
-printExpectedThrows()
 
-formula.verbose = True
-testTooLargeSaleReturns()
+#formula.verbose = True
+#testTooLargeSaleReturns()
 
 #
 #(S,R,F,E, correct)  = ( 2709028000000000000000000000000000, 2709028000000000000000000000000000 , 100, 244983000000000000000000000000000L,244983000166133046150207519531250L)

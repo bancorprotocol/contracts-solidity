@@ -292,6 +292,9 @@ def calcSaleMin(R):
     _reserveBalance = uint256(R)
     return _reserveBalance * 0x100000001/0x100000000 -_reserveBalance
 
+def minUnit(x):
+    return x/0x100000000
+
 @return_uint256
 def calculateSaleReturnSolidity(S, R, F,  T):
     """The 'solidity' version, which matches pretty closely to what 
@@ -331,7 +334,8 @@ def calculateSaleReturnSolidity(S, R, F,  T):
         (_reserveBalance, resN, resD, _reserveBalance, result))
 
 #Potenatial fix, reduce the result by the error occurred through rounding
-    return result - calcSaleMin(R)
+#    return result
+    return result - minUnit(R)
     #return result 
 
 def calculateFactorials():
