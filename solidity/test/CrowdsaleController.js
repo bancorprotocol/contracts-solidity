@@ -18,6 +18,7 @@ let realCapLarge = 1000000000000000000000000000000000000;
 let realCapKey = 234;
 let realEtherCapHash = '0xd3a40f1165164f13f237cc938419cc292e66b7bb3aa190f21087a3813c5ae1ca';  // sha3(uint256(1000), uint256(234))
 let realEtherCapHashLarge = '0xe8de42a704eab00275ed4cdc7e4e626633a0ce70bc986007a037e3ff699f4381';  // sha3(uint256(1000000000000000000000000000000000000), uint256(234))
+let badContributionGasPrice = 50000000001;
 
 async function generateDefaultController() {
     return await CrowdsaleController.new(tokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHash);
@@ -307,6 +308,18 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
+    it('should throw when attempting to contribute ether with a large gas price', async () => {
+        let controller = await initController(accounts, true);
+
+        try {
+            await controller.contributeETH({ value: 2000, gasPrice: badContributionGasPrice });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
     it('verifies balances and total eth contributed after contributing through btcs', async () => {
         let controller = await initController(accounts, true, startTime);
 
@@ -386,6 +399,18 @@ contract('CrowdsaleController', (accounts) => {
 
         try {
             await controller.contributeBTCs({ value: largerThanCap.toString(), from: btcsAddress });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to contributing through btcs with large gas price', async () => {
+        let controller = await initController(accounts, true, startTime);
+
+        try {
+            await controller.contributeBTCs({ value: 200, from: btcsAddress, gasPrice: badContributionGasPrice });
             assert(false, "didn't throw");
         }
         catch (error) {

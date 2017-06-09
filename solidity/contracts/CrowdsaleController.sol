@@ -11,10 +11,11 @@ import './ISmartToken.sol';
     Note that 20% of the contributions are the Bancor token's reserve
 */
 contract CrowdsaleController is SmartTokenController, SafeMath {
-    uint256 public constant DURATION = 14 days;             // crowdsale duration
-    uint256 public constant TOKEN_PRICE_N = 1;              // initial price in wei (numerator)
-    uint256 public constant TOKEN_PRICE_D = 100;            // initial price in wei (denominator)
-    uint256 public constant BTCS_ETHER_CAP = 50000 ether;   // maximum bitcoin suisse ether contribution
+    uint256 public constant DURATION = 14 days;                 // crowdsale duration
+    uint256 public constant TOKEN_PRICE_N = 1;                  // initial price in wei (numerator)
+    uint256 public constant TOKEN_PRICE_D = 100;                // initial price in wei (denominator)
+    uint256 public constant BTCS_ETHER_CAP = 50000 ether;       // maximum bitcoin suisse ether contribution
+    uint256 public constant MAX_GAS_PRICE = 50000000000 wei;    // maximum gas price for contribution transactions
 
     string public version = '0.1';
 
@@ -54,6 +55,12 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
     // verifies that an amount is greater than zero
     modifier validAmount(uint256 _amount) {
         require(_amount > 0);
+        _;
+    }
+
+    // verifies that the gas price is lower than 50 gwei
+    modifier validGasPrice() {
+        assert(tx.gasprice <= MAX_GAS_PRICE);
         _;
     }
 
@@ -174,6 +181,7 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
     function processContribution() private
         active
         etherCapNotReached(msg.value)
+        validGasPrice
         returns (uint256 amount)
     {
         uint256 tokenAmount = computeReturn(msg.value);
