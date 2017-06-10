@@ -45,14 +45,14 @@ contract BancorFormula is IBancorFormula, SafeMath {
             temp = safeMul(_supply, baseN) / _reserveBalance;
             return safeSub(temp, _supply); 
         }
-        var resD = uint256(1) << PRECISION
+        var resD = uint256(1) << PRECISION;
         var resN = power(baseN, _reserveBalance, _reserveRatio, 100);
         temp = safeMul(_supply, resN) / resD;
-        result = safeSub(temp, _supply);
+        var result = safeSub(temp, _supply);
  
         //From the result, we deduct the minimal increment, which is a 
-        // function of R and precision. 
-        return safeSub(result, _reserveBalance/0x100000000)
+        // function of S and precision. 
+        return safeSub(result, _supply/0x100000000);
  
     }
 
@@ -91,15 +91,15 @@ contract BancorFormula is IBancorFormula, SafeMath {
             temp2 = safeMul(_reserveBalance, baseN);
             return safeSub(temp1, temp2) / _supply;
         }
-        var resD = uint256(1) << PRECISION
-        var resD = power_rounddown(_supply, baseN, 100, _reserveRatio);
+        var resD = uint256(1) << PRECISION;
+        var resN = power_rounddown(_supply, baseN, 100, _reserveRatio);
         temp1 = safeMul(_reserveBalance, resN);
         temp2 = safeMul(_reserveBalance, resD);
 
-        result = safeSub(temp1, temp2) / resN;
+        var result = safeSub(temp1, temp2) / resN;
         //From the result, we deduct the minimal increment, which is a 
         // function of R and precision. 
-        return safeSub(result, _reserveBalance/0x100000000)
+        return safeSub(result, _reserveBalance/0x100000000);
     }
 
     /**
@@ -187,6 +187,12 @@ contract BancorFormula is IBancorFormula, SafeMath {
         0xb17217f7d1cf78 = ln(2) * (1 << 56)
         
         */
+        //Cannot represent negative numbers (below 1)
+        assert(_x > 0x100000000);
+
+        if (_x < 0x300000000){
+            return 0;
+        }
         uint256 log2 = fixedLog2(_x);
         logE = (log2 * 0xb17217f7d1cf78) >> 56;
     }
@@ -208,10 +214,10 @@ contract BancorFormula is IBancorFormula, SafeMath {
         uint256 fixedOne = uint256(1) << PRECISION;
         uint256 fixedTwo = uint256(2) << PRECISION;
 
-        if (_x <= fixedOne) {
-            if (_x == fixedOne)
+        if (_x < fixedTwo) {
+            if (_x >= fixedOne){
                 return 0;
-
+            }
             // Numbers below 1 are negative. 
             assert(false);
         }
