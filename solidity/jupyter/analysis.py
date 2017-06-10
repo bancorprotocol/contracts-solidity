@@ -60,17 +60,17 @@ def ln_downwards(_numerator, _denominator):
 
 @return_uint256
 def fixedLoge(_x) :
+
+    if (_x < 0x100000000):
+        raise Exeption("Out of bounds")
+
+    if (_x < 0x300000000):
+        return 0
+
     x = uint256(_x)
     log2 = fixedLog2(_x)
     logE = (log2 * 0xb17217f7d1cf78) >> 56;
 
-    return math.floor(logE)
-
-def fixedLoge_round_up(_x) :
-    x = uint256(_x)
-    log2 = fixedLog2(_x)
-    logE = (log2 * 0xb17217f7d1cf78) >> 56;
-    
     return math.floor(logE)
     
 
@@ -79,8 +79,15 @@ def fixedLog2( _ix) :
 
     _x = uint256(_ix)
 
-    fixedOne = uint256(1 << PRECISION);# 0x100000000	
+    fixedOne = uint256(1 << PRECISION);# 0x100000000    
     fixedTwo = uint256(2 << PRECISION);# 0x200000000
+
+    if _x < fixedTwo:
+        if x >= fixedOne: 
+            return 0
+        raise Exception("Out of bounds")
+
+
     lo = 0;
     hi = 0;
     while _x < fixedOne:
@@ -197,26 +204,6 @@ def fixedExp(_x):
         print("  <- fixedExp(  %d ): %s"  % (_x, hex(res)))
     return res
 
-@return_uint256
-def fixedExpOld( _x) :
-    """ The previous version, left here for comparisons"""
-    _x = uint256(_x)
-    precision = PRECISION
-    fixedOne = uint256(1 << precision);
-
-    ni = factorials
-
-    xi = uint256(fixedOne)
-    res = uint256(xi * ni[0] )
-    
-    for i in range(1, len(ni) ,1 ):
-        xi = uint256(xi * _x ) >> precision
-        res += math.floor(xi * ni[i])
-        res = uint256(res)
-
-
-    final_res = math.floor(res / ni[0])
-    return final_res
 
 
 def power(_baseN,_baseD, _expN, _expD):
@@ -281,7 +268,7 @@ def calculatePurchaseReturnSolidity(S,R,F,E):
             (_supply, resN, resD, _supply, result))
 
     #Potential fix, reduce the result by the error occurred through rounding
-    return result- calcPurchaseMin(S)
+    return result- minUnit(S)
 #    return result
 
 def calcPurchaseMin(S):

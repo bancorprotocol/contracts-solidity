@@ -161,7 +161,7 @@ def generateRandomTestData(outp):
         [s,r,f,t,e, e_sol, d, d_percent] = diff
         if maxdiff < d_percent:
             maxdiff = d_percent
-        print("Diff %s percent, for values %s" % (d_percent, [s,r,f,t, e_sol, e]))
+        print("Sale diff %s percent, for values %s" % (d_percent, [s,r,f,t, e_sol, e]))
     print "Largest diff %s percent" % maxdiff
 
 
@@ -408,7 +408,11 @@ with open("testdata.js", "w+") as f:
     
 
 
-#formula.verbose = True
+formula.verbose = True
+
+[S,R,F,T,x] = [1010691L, 30320.0, 3, 134856L, 0]
+print formula.calculateSaleReturn(S,R,F,T)
+print formula.calculateSaleReturnSolidity(S,R,F,T)
 #testTooLargeSaleReturns()
 
 #

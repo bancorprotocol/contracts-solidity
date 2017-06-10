@@ -188,7 +188,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         
         */
         //Cannot represent negative numbers (below 1)
-        assert(_x > 0x100000000);
+        assert(_x >= 0x100000000);
 
         if (_x < 0x300000000){
             return 0;
