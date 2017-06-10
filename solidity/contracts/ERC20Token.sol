@@ -40,7 +40,7 @@ contract ERC20Token is IERC20Token, SafeMath {
 
     /**
         @dev send coins
-        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
+        throws on any error rather then return a false flag to minimize user errors
 
         @param _to      target address
         @param _value   transfer amount
@@ -60,7 +60,7 @@ contract ERC20Token is IERC20Token, SafeMath {
 
     /**
         @dev an account/contract attempts to get the coins
-        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
+        throws on any error rather then return a false flag to minimize user errors
 
         @param _from    source address
         @param _to      target address
@@ -83,7 +83,7 @@ contract ERC20Token is IERC20Token, SafeMath {
 
     /**
         @dev allow another account/contract to spend some tokens on your behalf
-        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
+        throws on any error rather then return a false flag to minimize user errors
 
         also, to minimize the risk of the approve/transferFrom attack vector
         (see https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), approve has to be called twice

@@ -93,8 +93,8 @@ contract SmartToken is ISmartToken, ERC20Token, Owned, TokenHolder {
 
     /**
         @dev send coins
-        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
-        also note that when transferring to the smart token's address, the coins are actually destroyed
+        throws on any error rather then return a false flag to minimize user errors
+        note that when transferring to the smart token's address, the coins are actually destroyed
 
         @param _to      target address
         @param _value   transfer amount
@@ -116,8 +116,8 @@ contract SmartToken is ISmartToken, ERC20Token, Owned, TokenHolder {
 
     /**
         @dev an account/contract attempts to get the coins
-        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
-        also note that when transferring to the smart token's address, the coins are actually destroyed
+        throws on any error rather then return a false flag to minimize user errors
+        note that when transferring to the smart token's address, the coins are actually destroyed
 
         @param _from    source address
         @param _to      target address

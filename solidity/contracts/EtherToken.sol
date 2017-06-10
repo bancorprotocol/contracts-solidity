@@ -54,7 +54,7 @@ contract EtherToken is IEtherToken, ERC20Token, Owned, TokenHolder {
 
     /**
         @dev send coins
-        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
+        throws on any error rather then return a false flag to minimize user errors
 
         @param _to      target address
         @param _value   transfer amount
@@ -72,7 +72,7 @@ contract EtherToken is IEtherToken, ERC20Token, Owned, TokenHolder {
 
     /**
         @dev an account/contract attempts to get the coins
-        note that the function slightly deviates from the ERC20 standard and will throw on any error rather then return a boolean return value to minimize user errors
+        throws on any error rather then return a false flag to minimize user errors
 
         @param _from    source address
         @param _to      target address
