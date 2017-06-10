@@ -109,7 +109,7 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
         @return computed real cap hash
     */
     function computeRealCap(uint256 _cap, uint256 _key) public constant returns (bytes32) {
-        return sha3(_cap, _key);
+        return keccak256(_cap, _key);
     }
 
     /**
