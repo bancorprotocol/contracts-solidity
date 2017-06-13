@@ -58,7 +58,7 @@ class TestFormula(unittest.TestCase):
             self.assertEqual(expectedReturn, actualReturn)
             return
         error = abs(expectedReturn - actualReturn) / expectedReturn
-        self.assertLessEqual(error, 1e-9, "expectedReturn: %d, actualReturn: %d, error: %fppm" % (expectedReturn, actualReturn, error * 1000000))
+        self.assertLessEqual(error, 1e-9, "testFixedLog2(%s) expectedReturn: %d, actualReturn: %d, error: %fppm" % (hex(x), expectedReturn, actualReturn, error * 1000000))
 
     @given(st.integers(min_value=0x100000000, max_value=1<<256-1))
     @example(0x100000000)
@@ -69,7 +69,7 @@ class TestFormula(unittest.TestCase):
             self.assertEqual(expectedReturn, actualReturn)
             return
         error = abs(expectedReturn - actualReturn) / expectedReturn
-        self.assertLessEqual(error, 1e-9, "expectedReturn: %d, actualReturn: %d, error: %fppm" % (expectedReturn, actualReturn, error * 1000000))
+        self.assertLessEqual(error, 1e-9, "testFixedLoge(%s) expectedReturn: %d, actualReturn: %d, error: %fppm" % (hex(x), expectedReturn, actualReturn, error * 1000000))
 
     @given(st.integers(min_value=2, max_value=1<<224-1), st.integers(min_value=2, max_value=1<<224-1))
     @example(2, 1)
@@ -81,7 +81,7 @@ class TestFormula(unittest.TestCase):
             self.assertEqual(expectedReturn, actualReturn)
             return
         error = abs(expectedReturn - actualReturn) / expectedReturn
-        self.assertLessEqual(error, 1e-9, "expectedReturn: %d, actualReturn: %d, error: %fppm" % (expectedReturn, actualReturn, error * 1000000))
+        self.assertLessEqual(error, 1e-9, "testLn(%s, %s) expectedReturn: %d, actualReturn: %d, error: %fppm" % (hex(numerator),hex(denominator), expectedReturn, actualReturn, error * 1000000))
 
 
     @given(st.integers(min_value=100), st.integers(min_value=100), st.integers(min_value=1, max_value=100), st.integers(min_value=0))
@@ -96,7 +96,7 @@ class TestFormula(unittest.TestCase):
         self.assertLessEqual(actualReturn, expectedReturn)
         if expectedReturn > actualReturn:
             error = (expectedReturn - actualReturn) / expectedReturn
-            self.assertLessEqual(error, ACCURACY, "Expected %d but got %d, difference of %f ppm" % (expectedReturn, actualReturn, error * 1000000.0))
+            self.assertLessEqual(error, ACCURACY, "testPurchaseReturn Expected %d but got %d, difference of %f ppm" % (expectedReturn, actualReturn, error * 1000000.0))
 
     @given(st.integers(min_value=100), st.integers(min_value=100), st.integers(min_value=1, max_value=100), st.integers(min_value=0))
     def testSaleReturn(self, supply, reserveBalance, reserveRatio, sellAmount):
@@ -106,7 +106,7 @@ class TestFormula(unittest.TestCase):
         self.assertLessEqual(actualReturn, expectedReturn)
         if expectedReturn > actualReturn:
             error = (expectedReturn - actualReturn) / expectedReturn
-            self.assertLessEqual(error, ACCURACY, "Expected %d but got %d, difference of %f ppm" % (expectedReturn, actualReturn, error * 1000000.0))
+            self.assertLessEqual(error, ACCURACY, "testSaleReturn Expected %d but got %d, difference of %f ppm" % (expectedReturn, actualReturn, error * 1000000.0))
 
 
 if __name__ == '__main__':

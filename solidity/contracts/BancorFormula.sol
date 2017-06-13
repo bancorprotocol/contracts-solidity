@@ -190,9 +190,6 @@ contract BancorFormula is IBancorFormula, SafeMath {
         //Cannot represent negative numbers (below 1)
         assert(_x >= 0x100000000);
 
-        if (_x < 0x300000000){
-            return 0;
-        }
         uint256 log2 = fixedLog2(_x);
         logE = (log2 * 0xb17217f7d1cf78) >> 56;
     }
@@ -214,13 +211,15 @@ contract BancorFormula is IBancorFormula, SafeMath {
         uint256 fixedOne = uint256(1) << PRECISION;
         uint256 fixedTwo = uint256(2) << PRECISION;
 
-        if (_x < fixedTwo) {
-            if (_x >= fixedOne){
-                return 0;
-            }
-            // Numbers below 1 are negative. 
-            assert(false);
-        }
+
+        // Numbers below 1 are negative. 
+        assert( _x >= fixedOne);
+        //if (_x < fixedTwo) {
+        //    if (_x >= fixedOne){
+        //        return 0;
+        //    }
+        //    assert(false);
+        //}
 
         uint256 lo = 0;
         uint256 hi = 0;
