@@ -28,14 +28,16 @@ def calculateSaleReturn(S,R,F,T):
 
     return int(R * ( 1.0 - math.pow(float(S-T)/float(S) , (100.0/F))))
 
+def fixedLogn(x , n):
+    one = 1 << 32
+    return int( math.log( float(x) / one, n) * one )
 
-def fixedLogn(x, n):
-    return int(math.log(x >> 32, n)) << 32
-
+def fixedLogE(x):
+    one = 1 << 32
+    return int( math.log( float(x) / one) * one )
 
 def rationalLn(numerator, denominator):
-    return fixedLogn(numerator << 32, math.e) - fixedLogn(denominator << 32, math.e)
-
+    return fixedLogE(numerator << 32) - fixedLogE(denominator << 32)
 
 class TestFormula(unittest.TestCase):
     @classmethod
