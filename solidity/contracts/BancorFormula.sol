@@ -45,6 +45,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
             temp = safeMul(_supply, baseN) / _reserveBalance;
             return safeSub(temp, _supply); 
         }
+
         var resD = uint256(1) << PRECISION;
         var resN = power(baseN, _reserveBalance, _reserveRatio, 100);
         temp = safeMul(_supply, resN) / resD;
@@ -53,8 +54,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         //From the result, we deduct the minimal increment, which is a 
         // function of S and precision. 
         return safeSub(result, _supply/0x100000000);
- 
-    }
+     }
 
     /**
         @dev given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
@@ -92,7 +92,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
             return safeSub(temp1, temp2) / _supply;
         }
         var resD = uint256(1) << PRECISION;
-        var resN = power_rounddown(_supply, baseN, 100, _reserveRatio);
+        var resN = powerRoundDown(_supply, baseN, 100, _reserveRatio);
         temp1 = safeMul(_reserveBalance, resN);
         temp2 = safeMul(_reserveBalance, resD);
 
@@ -124,7 +124,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         This method is overflow-safe
     */ 
-    function power_rounddown(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) constant returns (uint256 resN) {
+    function powerRoundDown(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) constant returns (uint256 resN) {
         
         // In `ln`, the log of numerator and denominator are subtracted: 
         // log(n)-log(d) . To ensure that the precision loss is in the right 
@@ -132,15 +132,13 @@ contract BancorFormula is IBancorFormula, SafeMath {
         // Reasoning: 
         //      floor(log(d)) +1 == ceil(log(d))
         uint256 logbase = ln(_baseN, _baseD);
-        
-        if (logbase > 1){
+        if (logbase > 1)
             logbase -= 1;
-        }
+
         // Not using safeDiv here, since safeDiv protects against
         // precision loss. It's unavoidable, however
         // Both `ln` and `fixedExp` are overflow-safe. 
         resN = fixedExp(safeMul(logbase, _expN) / _expD);
-
         return resN;
     }
     
