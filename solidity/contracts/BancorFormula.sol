@@ -77,10 +77,6 @@ contract BancorFormula is IBancorFormula, SafeMath {
         if (_sellAmount == 0)
             return 0;
 
-        // special case for selling the entire supply
-        if (_sellAmount == _supply)
-            return _reserveBalance;
-
         uint256 baseN = safeSub(_supply, _sellAmount);
         uint256 temp1;
         uint256 temp2;
@@ -91,6 +87,11 @@ contract BancorFormula is IBancorFormula, SafeMath {
             temp2 = safeMul(_reserveBalance, baseN);
             return safeSub(temp1, temp2) / _supply;
         }
+
+        // special case for selling the entire supply
+        if (_sellAmount == _supply)
+            return _reserveBalance;
+
         var resD = uint256(1) << PRECISION;
         var resN = powerRoundDown(_supply, baseN, 100, _reserveRatio);
         temp1 = safeMul(_reserveBalance, resN);
