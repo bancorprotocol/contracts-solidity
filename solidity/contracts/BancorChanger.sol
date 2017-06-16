@@ -20,6 +20,9 @@ import './IBancorFormula.sol';
     the actual reserve balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract.
 
     The changer is upgradable (just like any SmartTokenController).
+
+    WARNING: It is NOT RECOMMENDED to use the changer with Smart Tokens that have less than 8 decimal digits
+             or with very small numbers because of precision loss
 */
 contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
     struct Reserve {
