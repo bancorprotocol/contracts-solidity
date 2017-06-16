@@ -307,7 +307,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
         @param _fromToken  ERC20 token to change from
         @param _toToken    ERC20 token to change to
         @param _amount     amount to change, in fromToken
-        @param _minReturn  if the change results in an amount smaller than the minimum return, it is cancelled
+        @param _minReturn  if the change results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
         @return change return amount
     */
@@ -326,7 +326,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
             return sell(_toToken, _amount, _minReturn);
 
         // change between 2 reserves
-        uint256 purchaseAmount = buy(_fromToken, _amount, 0);
+        uint256 purchaseAmount = buy(_fromToken, _amount, 1);
         return sell(_toToken, purchaseAmount, _minReturn);
     }
 
@@ -335,11 +335,14 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
 
         @param _reserveToken   reserve token contract address
         @param _depositAmount  amount to deposit (in the reserve token)
-        @param _minReturn      if the change results in an amount smaller than the minimum return, it is cancelled
+        @param _minReturn      if the change results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
         @return buy return amount
     */
-    function buy(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn) public returns (uint256 amount) {
+    function buy(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn)
+        public
+        validAmount(_minReturn)
+        returns (uint256 amount) {
         amount = getPurchaseReturn(_reserveToken, _depositAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
@@ -360,11 +363,14 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
 
         @param _reserveToken   reserve token contract address
         @param _sellAmount     amount to sell (in the smart token)
-        @param _minReturn      if the change results in an amount smaller the minimum return, it is cancelled
+        @param _minReturn      if the change results in an amount smaller the minimum return - it is cancelled, must be nonzero
 
         @return sell return amount
     */
-    function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn) public returns (uint256 amount) {
+    function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn)
+        public
+        validAmount(_minReturn)
+        returns (uint256 amount) {
         require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
 
         amount = getSaleReturn(_reserveToken, _sellAmount);

@@ -563,10 +563,10 @@ contract('BancorChanger', (accounts) => {
         let returnAmount = await changer.getReturn.call(reserveTokenAddress, reserveTokenAddress2, 500);
 
         await reserveToken.approve(changer.address, 500);
-        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 0);
+        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 1);
         let purchaseAmount = getChangeAmount(purchaseRes);
 
-        let saleRes = await changer.sell(reserveTokenAddress2, purchaseAmount, 0);
+        let saleRes = await changer.sell(reserveTokenAddress2, purchaseAmount, 1);
         let saleAmount = getChangeAmount(saleRes);
 
         assert.equal(returnAmount, saleAmount);
@@ -672,7 +672,7 @@ contract('BancorChanger', (accounts) => {
     it('verifies that change returns a valid amount', async () => {
         let changer = await initChanger(accounts, true);
         await reserveToken.approve(changer.address, 500);
-        let res = await changer.change(reserveTokenAddress, tokenAddress, 500, 0);
+        let res = await changer.change(reserveTokenAddress, tokenAddress, 500, 1);
         let changeAmount = getChangeAmount(res);
         assert.isNumber(changeAmount);
         assert.notEqual(changeAmount, 0);
@@ -681,27 +681,27 @@ contract('BancorChanger', (accounts) => {
     it('verifies that change returns the same amount as buy when changing from a reserve to the token', async () => {
         let changer = await initChanger(accounts, true);
         await reserveToken.approve(changer.address, 500);
-        let changeRes = await changer.change(reserveTokenAddress, tokenAddress, 500, 0);
+        let changeRes = await changer.change(reserveTokenAddress, tokenAddress, 500, 1);
         let changeAmount = getChangeAmount(changeRes);
         assert.isNumber(changeAmount);
         assert.notEqual(changeAmount, 0);
 
         changer = await initChanger(accounts, true);
         await reserveToken.approve(changer.address, 500);
-        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 0);
+        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 1);
         let purchaseAmount = getChangeAmount(purchaseRes);
         assert.equal(changeAmount, purchaseAmount);
     });
 
     it('verifies that change returns the same amount as sell when changing from the token to a reserve', async () => {
         let changer = await initChanger(accounts, true);
-        let changeRes = await changer.change(tokenAddress, reserveTokenAddress, 500, 0);
+        let changeRes = await changer.change(tokenAddress, reserveTokenAddress, 500, 1);
         let changeAmount = getChangeAmount(changeRes);
         assert.isNumber(changeAmount);
         assert.notEqual(changeAmount, 0);
 
         changer = await initChanger(accounts, true);
-        let saleRes = await changer.sell(reserveTokenAddress, 500, 0);
+        let saleRes = await changer.sell(reserveTokenAddress, 500, 1);
         let saleAmount = getChangeAmount(saleRes);
         assert.equal(changeAmount, saleAmount);
     });
@@ -710,17 +710,17 @@ contract('BancorChanger', (accounts) => {
         let changer = await initChanger(accounts, true);
         await reserveToken.approve(changer.address, 500);
 
-        let changeRes = await changer.change(reserveTokenAddress, reserveTokenAddress2, 500, 0);
+        let changeRes = await changer.change(reserveTokenAddress, reserveTokenAddress2, 500, 1);
         let changeAmount = getChangeAmount(changeRes, 1);
         assert.isNumber(changeAmount);
         assert.notEqual(changeAmount, 0);
 
         changer = await initChanger(accounts, true);
         await reserveToken.approve(changer.address, 500);
-        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 0);
+        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 1);
         let purchaseAmount = getChangeAmount(purchaseRes);
 
-        let saleRes = await changer.sell(reserveTokenAddress2, purchaseAmount, 0);
+        let saleRes = await changer.sell(reserveTokenAddress2, purchaseAmount, 1);
         let saleAmount = getChangeAmount(saleRes);
 
         assert.equal(changeAmount, saleAmount);
@@ -729,10 +729,10 @@ contract('BancorChanger', (accounts) => {
     it('verifies that selling right after buying does not result in an amount greater than the original purchase amount', async () => {
         let changer = await initChanger(accounts, true);
         await reserveToken.approve(changer.address, 500);
-        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 0);
+        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 1);
         let purchaseAmount = getChangeAmount(purchaseRes);
 
-        let saleRes = await changer.sell(reserveTokenAddress, purchaseAmount, 0);
+        let saleRes = await changer.sell(reserveTokenAddress, purchaseAmount, 1);
         let saleAmount = getChangeAmount(saleRes);
 
         assert(saleAmount <= 500);
@@ -741,11 +741,11 @@ contract('BancorChanger', (accounts) => {
     it('verifies that buying right after selling does not result in an amount greater than the original sale amount', async () => {
         let changer = await initChanger(accounts, true);
 
-        let saleRes = await changer.sell(reserveTokenAddress, 500, 0);
+        let saleRes = await changer.sell(reserveTokenAddress, 500, 1);
         let saleAmount = getChangeAmount(saleRes);
 
         await reserveToken.approve(changer.address, 500);
-        let purchaseRes = await changer.buy(reserveTokenAddress, saleAmount, 0);
+        let purchaseRes = await changer.buy(reserveTokenAddress, saleAmount, 1);
         let purchaseAmount = getChangeAmount(purchaseRes);
 
         assert(purchaseAmount <= 500);
@@ -756,7 +756,7 @@ contract('BancorChanger', (accounts) => {
         await reserveToken.approve(changer.address, 500);
 
         try {
-            await changer.change('0x0', reserveTokenAddress2, 500, 0);
+            await changer.change('0x0', reserveTokenAddress2, 500, 1);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -769,7 +769,7 @@ contract('BancorChanger', (accounts) => {
         await reserveToken.approve(changer.address, 500);
 
         try {
-            await changer.change(reserveTokenAddress, '0x0', 500, 0);
+            await changer.change(reserveTokenAddress, '0x0', 500, 1);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -783,6 +783,19 @@ contract('BancorChanger', (accounts) => {
 
         try {
             await changer.change(reserveTokenAddress, reserveTokenAddress, 500, 0);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to change with 0 minimum requested amount', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+
+        try {
+            await changer.change(reserveTokenAddress, reserveTokenAddress2, 500, 2000);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -810,7 +823,7 @@ contract('BancorChanger', (accounts) => {
         let reserveTokenPrevBalance = await reserveToken.balanceOf.call(accounts[0]);
 
         await reserveToken.approve(changer.address, 500);
-        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 0);
+        let purchaseRes = await changer.buy(reserveTokenAddress, 500, 1);
         let purchaseAmount = getChangeAmount(purchaseRes);
 
         let reserveTokenNewBalance = await reserveToken.balanceOf.call(accounts[0]);
@@ -825,7 +838,7 @@ contract('BancorChanger', (accounts) => {
         await reserveToken.approve(changer.address, 500);
 
         try {
-            await changer.buy(reserveTokenAddress, 500, 0);
+            await changer.buy(reserveTokenAddress, 500, 1);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -838,7 +851,7 @@ contract('BancorChanger', (accounts) => {
         await reserveToken.approve(changer.address, 500);
 
         try {
-            await changer.buy(tokenAddress, 500, 0);
+            await changer.buy(tokenAddress, 500, 1);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -851,7 +864,20 @@ contract('BancorChanger', (accounts) => {
         await reserveToken.approve(changer.address, 500);
 
         try {
-            await changer.buy(reserveTokenAddress, 0, 0);
+            await changer.buy(reserveTokenAddress, 0, 1);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with 0 minimum requested amount', async () => {
+        let changer = await initChanger(accounts, true);
+        await reserveToken.approve(changer.address, 500);
+
+        try {
+            await changer.buy(reserveTokenAddress, 500, 0);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -878,7 +904,7 @@ contract('BancorChanger', (accounts) => {
         await changer.disableReservePurchases(reserveTokenAddress, true);
 
         try {
-            await changer.buy(reserveTokenAddress, 500, 0);
+            await changer.buy(reserveTokenAddress, 500, 1);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -890,7 +916,7 @@ contract('BancorChanger', (accounts) => {
         let changer = await initChanger(accounts, true);
 
         try {
-            await changer.buy(reserveTokenAddress, 500, 0);
+            await changer.buy(reserveTokenAddress, 500, 1);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -904,7 +930,7 @@ contract('BancorChanger', (accounts) => {
         let tokenPrevBalance = await token.balanceOf.call(accounts[0]);
         let reserveTokenPrevBalance = await reserveToken.balanceOf.call(accounts[0]);
 
-        let saleRes = await changer.sell(reserveTokenAddress, 500, 0);
+        let saleRes = await changer.sell(reserveTokenAddress, 500, 1);
         let saleAmount = getChangeAmount(saleRes);
 
         let reserveTokenNewBalance = await reserveToken.balanceOf.call(accounts[0]);
@@ -918,7 +944,7 @@ contract('BancorChanger', (accounts) => {
         let changer = await initChanger(accounts, false);
 
         try {
-            await changer.sell(reserveTokenAddress, 500, 0);
+            await changer.sell(reserveTokenAddress, 500, 1);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -930,7 +956,7 @@ contract('BancorChanger', (accounts) => {
         let changer = await initChanger(accounts, true);
 
         try {
-            await changer.sell(tokenAddress, 500, 0);
+            await changer.sell(tokenAddress, 500, 1);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -942,7 +968,19 @@ contract('BancorChanger', (accounts) => {
         let changer = await initChanger(accounts, true);
 
         try {
-            await changer.sell(reserveTokenAddress, 0, 0);
+            await changer.sell(reserveTokenAddress, 0, 1);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to sell with 0 minimum requested amount', async () => {
+        let changer = await initChanger(accounts, true);
+
+        try {
+            await changer.sell(reserveTokenAddress, 500, 0);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -966,7 +1004,7 @@ contract('BancorChanger', (accounts) => {
         let changer = await initChanger(accounts, true);
 
         try {
-            await changer.sell(reserveTokenAddress, 30000, 0);
+            await changer.sell(reserveTokenAddress, 30000, 1);
             assert(false, "didn't throw");
         }
         catch (error) {
