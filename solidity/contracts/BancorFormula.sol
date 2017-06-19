@@ -46,14 +46,13 @@ contract BancorFormula is IBancorFormula, SafeMath {
             return safeSub(temp, _supply); 
         }
 
-        var resD = uint256(1) << PRECISION;
         var resN = power(baseN, _reserveBalance, _reserveRatio, 100);
-        temp = safeMul(_supply, resN) / resD;
+        temp = safeMul(_supply, resN) >> PRECISION;
         var result = safeSub(temp, _supply);
  
         //From the result, we deduct the minimal increment, which is a 
         // function of S and precision. 
-        return safeSub(result, _supply/0x100000000);
+        return safeSub(result, _supply >> PRECISION);
      }
 
     /**
@@ -100,7 +99,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         var result = safeSub(temp1, temp2) / resN;
         //From the result, we deduct the minimal increment, which is a 
         // function of R and precision. 
-        return safeSub(result, _reserveBalance/0x100000000);
+        return safeSub(result, _reserveBalance >> PRECISION);
     }
 
     /**
@@ -220,13 +219,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         //    assert(false);
         //}
 
-        uint256 lo = 0;
         uint256 hi = 0;
-
-        while (_x < fixedOne) {
-            _x <<= 1;
-            lo += fixedOne;
-        }
 
         while (_x >= fixedTwo) {
             _x >>= 1;
@@ -240,14 +233,8 @@ contract BancorFormula is IBancorFormula, SafeMath {
                 hi += uint256(1) << (PRECISION - 1 - i);
             }
         }
-        if (lo > hi) {
-            //Should never happen, due to the check above
-            // but this is a cheap extra check in case the 
-            // implementation changes over time
-            assert(false);
-        }
-
-        return hi - lo;
+	
+        return hi;
     }
 
     /**
