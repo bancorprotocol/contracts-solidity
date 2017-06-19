@@ -49,14 +49,14 @@ contract BancorFormula is IBancorFormula, SafeMath {
             return safeSub(temp, _supply); 
         }
 
-        var resN = power(baseN, _reserveBalance, _reserveRatio, 100);
+        uint256 resN = power(baseN, _reserveBalance, _reserveRatio, 100);
 
         temp = safeMul(_supply, resN) / FIXED_ONE;
 
-        var result =  safeSub(temp, _supply);
-        //From the result, we deduct the minimal increment, which is a         
+        uint256 result =  safeSub(temp, _supply);
+        // from the result, we deduct the minimal increment, which is a         
         // function of S and precision.       
-        return safeSub(result, _supply/0x100000000);
+        return safeSub(result, _supply / 0x100000000);
      }
 
     /**
@@ -95,16 +95,16 @@ contract BancorFormula is IBancorFormula, SafeMath {
         if (_sellAmount == _supply)
             return _reserveBalance;
 
-        var resN = power(_supply, baseN, 100, _reserveRatio);
+        uint256 resN = power(_supply, baseN, 100, _reserveRatio);
 
         temp1 = safeMul(_reserveBalance, resN);
         temp2 = safeMul(_reserveBalance, FIXED_ONE);
 
-        var result = safeSub(temp1, temp2) / resN;
+        uint256 result = safeSub(temp1, temp2) / resN;
 
-        //From the result, we deduct the minimal increment, which is a         
+        // from the result, we deduct the minimal increment, which is a         
         // function of R and precision.       
-        return safeSub(result, _reserveBalance/0x100000000);
+        return safeSub(result, _reserveBalance / 0x100000000);
     }
 
     /**
