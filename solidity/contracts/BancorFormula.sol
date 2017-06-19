@@ -9,7 +9,10 @@ import './IBancorFormula.sol';
 */
 
 contract BancorFormula is IBancorFormula, SafeMath {
+
     uint8 constant PRECISION = 32;  // fractional bits
+    uint256 constant FIXED_ONE = uint256(1) << PRECISION; // 0x100000000
+    uint256 constant FIXED_TWO = uint256(2) << PRECISION; // # 0x200000000
 
     string public version = '0.1';
 
@@ -47,12 +50,9 @@ contract BancorFormula is IBancorFormula, SafeMath {
         }
 
         var resN = power(baseN, _reserveBalance, _reserveRatio, 100);
-        temp = safeMul(_supply, resN) >> PRECISION;
-        var result = safeSub(temp, _supply);
- 
-        //From the result, we deduct the minimal increment, which is a 
-        // function of S and precision. 
-        return safeSub(result, _supply >> PRECISION);
+
+        temp = safeMul(_supply, resN) / FIXED_ONE;
+        return safeSub(temp, _supply);
      }
 
     /**
@@ -91,15 +91,12 @@ contract BancorFormula is IBancorFormula, SafeMath {
         if (_sellAmount == _supply)
             return _reserveBalance;
 
-        var resD = uint256(1) << PRECISION;
-        var resN = powerRoundDown(_supply, baseN, 100, _reserveRatio);
-        temp1 = safeMul(_reserveBalance, resN);
-        temp2 = safeMul(_reserveBalance, resD);
+        var resN = power(_supply, baseN, 100, _reserveRatio);
 
-        var result = safeSub(temp1, temp2) / resN;
-        //From the result, we deduct the minimal increment, which is a 
-        // function of R and precision. 
-        return safeSub(result, _reserveBalance >> PRECISION);
+        temp1 = safeMul(_reserveBalance, resN);
+        temp2 = safeMul(_reserveBalance, FIXED_ONE);
+
+        return safeSub(temp1, temp2) / resN;
     }
 
     /**
@@ -117,30 +114,6 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         return resN;
 	}
-    /**
-        @dev Calculate (_baseN / _baseD) ^ (_expN / _expD)
-        This mehthod is skewed to make the precision loss error decrease the result 
-        Returns result upshifted by PRECISION
-
-        This method is overflow-safe
-    */ 
-    function powerRoundDown(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) constant returns (uint256 resN) {
-        
-        // In `ln`, the log of numerator and denominator are subtracted: 
-        // log(n)-log(d) . To ensure that the precision loss is in the right 
-        // direction, we subtract one unit 
-        // Reasoning: 
-        //      floor(log(d)) +1 == ceil(log(d))
-        uint256 logbase = ln(_baseN, _baseD);
-        if (logbase > 1)
-            logbase -= 1;
-
-        // Not using safeDiv here, since safeDiv protects against
-        // precision loss. It's unavoidable, however
-        // Both `ln` and `fixedExp` are overflow-safe. 
-        resN = fixedExp(safeMul(logbase, _expN) / _expD);
-        return resN;
-    }
     
     /**
         input range: 
@@ -163,7 +136,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         assert(_numerator & 0xffffffff00000000000000000000000000000000000000000000000000000000 == 0);
         assert(_denominator & 0xffffffff00000000000000000000000000000000000000000000000000000000 == 0);
 
-        return fixedLoge(_numerator << PRECISION) - fixedLoge(_denominator << PRECISION);
+        return fixedLoge( (_numerator * FIXED_ONE) / _denominator);
     }
 
     /**
@@ -177,7 +150,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
     */
     function fixedLoge(uint256 _x) constant returns (uint256 logE) {
         /*
-        Since `fixedLog2` output range is max `0xdfffffffff` 
+        Since `fixedLog2_min` output range is max `0xdfffffffff` 
         (40 bits, or 5 bytes), we can use a very large approximation
         for `ln(2)`. This one is used since it's the max accuracy 
         of Python `ln(2)`
@@ -186,16 +159,19 @@ contract BancorFormula is IBancorFormula, SafeMath {
         
         */
         //Cannot represent negative numbers (below 1)
-        assert(_x >= 0x100000000);
+        assert(_x >= FIXED_ONE);
 
         uint256 log2 = fixedLog2(_x);
         logE = (log2 * 0xb17217f7d1cf78) >> 56;
     }
 
     /**
-        Returns log2(x >> 32) << 32 
+        Returns log2(x >> 32) << 32 [1]
         So x is assumed to be already upshifted 32 bits, and 
         the result is also upshifted 32 bits. 
+        
+        [1] The function returns a number which is lower than the 
+        actual value
 
         input-range : 
             [0x100000000,uint256_max]
@@ -206,34 +182,25 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     */
     function fixedLog2(uint256 _x) constant returns (uint256) {
-        uint256 fixedOne = uint256(1) << PRECISION;
-        uint256 fixedTwo = uint256(2) << PRECISION;
 
 
         // Numbers below 1 are negative. 
-        assert( _x >= fixedOne);
-        //if (_x < fixedTwo) {
-        //    if (_x >= fixedOne){
-        //        return 0;
-        //    }
-        //    assert(false);
-        //}
+        assert( _x >= FIXED_ONE);
 
         uint256 hi = 0;
 
-        while (_x >= fixedTwo) {
+        while (_x >= FIXED_TWO) {
             _x >>= 1;
-            hi += fixedOne;
+            hi += FIXED_ONE;
         }
 
         for (uint8 i = 0; i < PRECISION; ++i) {
-            _x = (_x * _x) >> PRECISION;
-            if (_x >= fixedTwo) {
+            _x = (_x * _x) / FIXED_ONE;
+            if (_x >= FIXED_TWO) {
                 _x >>= 1;
                 hi += uint256(1) << (PRECISION - 1 - i);
             }
         }
-	
         return hi;
     }
 
@@ -261,8 +228,8 @@ contract BancorFormula is IBancorFormula, SafeMath {
         This method is is visible for testcases, but not meant for direct use. 
     */
     function fixedExpUnsafe(uint256 _x) constant returns (uint256) {
-        uint256 fixedOne = uint256(1) << PRECISION;
-        uint256 xi = fixedOne;
+    
+        uint256 xi = FIXED_ONE;
         uint256 res = 0xde1bc4d19efcac82445da75b00000000 * xi;
 
         xi = (xi * _x) >> PRECISION;
