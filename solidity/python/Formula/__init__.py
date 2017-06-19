@@ -96,5 +96,5 @@ def safeAdd(x,y):
 
 
 def safeSub(x,y):
-    assert(x > y)
+    assert(x >= y)
     return x - y
