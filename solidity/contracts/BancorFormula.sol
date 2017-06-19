@@ -12,7 +12,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     uint8 constant PRECISION = 32;  // fractional bits
     uint256 constant FIXED_ONE = uint256(1) << PRECISION; // 0x100000000
-    uint256 constant FIXED_TWO = uint256(2) << PRECISION; // # 0x200000000
+    uint256 constant FIXED_TWO = uint256(2) << PRECISION; // 0x200000000
 
     string public version = '0.1';
 
@@ -111,7 +111,6 @@ contract BancorFormula is IBancorFormula, SafeMath {
         // precision loss. It's unavoidable, however
         // Both `ln` and `fixedExp` are overflow-safe. 
         resN = fixedExp(safeMul(logbase, _expN) / _expD);
-
         return resN;
 	}
     
@@ -182,13 +181,10 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     */
     function fixedLog2(uint256 _x) constant returns (uint256) {
-
-
         // Numbers below 1 are negative. 
         assert( _x >= FIXED_ONE);
 
         uint256 hi = 0;
-
         while (_x >= FIXED_TWO) {
             _x >>= 1;
             hi += FIXED_ONE;
@@ -201,6 +197,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
                 hi += uint256(1) << (PRECISION - 1 - i);
             }
         }
+
         return hi;
     }
 
