@@ -50,16 +50,16 @@ contract BancorFormula is IBancorFormula, SafeMath {
         }
 
         var resN = power(baseN, _reserveBalance, _reserveRatio, 100);
+
         temp = safeMul(_supply, resN) / FIXED_ONE;
         return safeSub(temp, _supply);
-
      }
 
     /**
         @dev given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
 
         Formula:
-        Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 100))
+        Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 100)))
 
         @param _supply             token total supply
         @param _reserveBalance     total reserve
@@ -201,7 +201,6 @@ contract BancorFormula is IBancorFormula, SafeMath {
                 hi += uint256(1) << (PRECISION - 1 - i);
             }
         }
-
         return hi;
     }
 
