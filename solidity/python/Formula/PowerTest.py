@@ -1,14 +1,21 @@
-from sys    import argv
-from math   import log
-from random import randrange
-from Power  import power
-from Power  import PRECISION
+from sys     import argv
+from math    import log
+from decimal import Decimal
+from random  import randrange
+from Power   import power
+from Power   import PRECISION
 
 
 def powerTest(_baseN, _baseD, _expN, _expD):
-    fixed = float(power(_baseN, _baseD, _expN, _expD))/(1<<PRECISION)
-    real = (float(_baseN)/float(_baseD))**(float(_expN)/float(_expD))
-    return fixed,real
+    fixed = power(_baseN, _baseD, _expN, _expD) >> PRECISION
+    real  = (Decimal(_baseN)/Decimal(_baseD))**(Decimal(_expN)/Decimal(_expD))
+    if fixed > real:
+        error = []
+        error.append('error occurred on {}^{}:'.format(Decimal(_baseN)/Decimal(_baseD),Decimal(_expN)/Decimal(_expD)))
+        error.append('fixed result = {}'.format(fixed))
+        error.append('real  result = {}'.format(real))
+        raise BaseException('\n'.join(error))
+    return float(fixed / real)
 
 
 size = int(argv[1]) if len(argv) > 1 else 0
@@ -18,21 +25,19 @@ if size == 0:
 
 n = 0
 worstAccuracy = 1
-while n < size:
+while n < size: # avoid creating a large range in memory
     _baseN = randrange(1<<PRECISION,1<<(256-PRECISION))
     _baseD = randrange(1<<PRECISION,_baseN+1)
     _expN  = randrange(1<<PRECISION,1<<(256-PRECISION))
     _expD  = randrange(1<<PRECISION,_expN+1)
     try:
-        fixed,real = powerTest(_baseN, _baseD, _expN, _expD)
-        if fixed <= real:
-            accuracy = fixed / real
-            if worstAccuracy > accuracy:
-                worstAccuracy = accuracy
-                print 'worst accuracy of {:.8f} found for {:.4f}^{:.4f}'.format(accuracy,float(_baseN)/float(_baseD),float(_expN)/float(_expD))
-            n += 1
-        else:
-            print 'error accuracy of {:.8f} found for {:.4f}^{:.4f}'.format(accuracy,float(_baseN)/float(_baseD),float(_expN)/float(_expD))
-            break
-    except:
+        accuracy = powerTest(_baseN, _baseD, _expN, _expD)
+        if worstAccuracy > accuracy:
+            worstAccuracy = accuracy
+        print 'accuracy = {:.8f}, worst accuracy = {:.8f}'.format(accuracy,worstAccuracy)
+        n += 1
+    except Exception,error:
         pass
+    except BaseException,error:
+        print error
+        break
