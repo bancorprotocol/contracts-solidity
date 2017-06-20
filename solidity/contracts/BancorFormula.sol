@@ -231,6 +231,19 @@ contract BancorFormula is IBancorFormula, SafeMath {
             - Function fails at >= 242329958954
 
         This method is is visible for testcases, but not meant for direct use. 
+ 
+        The values in this method been generated via the following python snippet: 
+
+        def calculateFactorials():
+            """Method to print out the factorials for fixedExp"""
+
+            ni = []
+            ni.append( 295232799039604140847618609643520000000) # 34!
+            ITERATIONS = 34
+            for n in range( 1,  ITERATIONS,1 ) :
+                ni.append(math.floor(ni[n - 1] / n))
+            print( "\n        ".join(["xi = (xi * _x) >> PRECISION;\n        res += xi * %s;" % hex(int(x)) for x in ni]))
+
     */
     function fixedExpUnsafe(uint256 _x) constant returns (uint256) {
     
