@@ -216,28 +216,6 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
     }
 
     /**
-        @dev withdraws tokens held by the contract and sends them to an account
-        also allows the owner to withdraw from the reserves
-        can only be called by the owner
-
-        @param _token   ERC20 token contract address
-        @param _to      account to receive the new amount
-        @param _amount  amount to withdraw
-    */
-    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public {
-        require(_to != address(token)); // validate input
-        super.withdrawTokens(_token, _to, _amount);
-
-        if (!reserves[_token].isSet)
-            return;
-
-        // if the token is one of the reserve token that has virtual balance associated with it, update it
-        Reserve reserve = reserves[_token];
-        if (reserve.isVirtualBalanceEnabled)
-            reserve.virtualBalance = safeSub(reserve.virtualBalance, _amount);
-    }
-
-    /**
         @dev returns the expected return for changing a specific amount of _fromToken to _toToken
 
         @param _fromToken  ERC20 token to change from

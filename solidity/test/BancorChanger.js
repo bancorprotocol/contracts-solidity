@@ -520,21 +520,6 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to withdraw from a reserve to the token address', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
-        let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-        await changer.addReserve(reserveToken.address, 10, false);
-        await reserveToken.transfer(changer.address, 1000);
-
-        try {
-            await changer.withdrawTokens(reserveToken.address, tokenAddress, 50);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
     it('verifies that getReturn returns a valid amount', async () => {
         let changer = await initChanger(accounts, true);
         let returnAmount = await changer.getReturn.call(reserveTokenAddress, tokenAddress, 500);
