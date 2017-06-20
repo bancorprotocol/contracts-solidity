@@ -108,7 +108,7 @@ def generateRandomTestData(outp):
     M = 1000000000000000000000000000L
 
     outp.append("module.exports.randomPurchaseReturns = [")
-    for i in range(1, 300):
+    for i in range(1, 30000):
         S = long(random.randint(1e6, 3e6))
         F = random.randint(1, 100 )
         R = math.floor(F*S / 100)
@@ -135,7 +135,7 @@ def generateRandomTestData(outp):
 
 
     outp.append("module.exports.randomSaleReturns = [")
-    for i in range(1, 300):
+    for i in range(1, 30000):
         S = long(random.randint(1e6, 3e6))
         F = random.randint(1, 100 )
         R = math.floor(F*S / 100)
@@ -161,7 +161,7 @@ def generateRandomTestData(outp):
         [s,r,f,t,e, e_sol, d, d_percent] = diff
         if maxdiff < d_percent:
             maxdiff = d_percent
-        print("Sale diff %s percent, for values %s" % (d_percent, [s,r,f,t, e_sol, e]))
+        #print("Sale diff %s percent, for values %s" % (d_percent, [s,r,f,t, e_sol, e]))
     print "Largest diff %s percent" % maxdiff
 
 
@@ -396,42 +396,131 @@ def testTooLargeSaleReturns():
         print("d/s : %s " % (diff/smin))
         print("")
 
-outp = []
-generateTestData(outp)
-generateTestDataLargeNumbers(outp)
-generateRandomTestData(outp)
-printTooLargeReturns(outp)
-printExpectedThrows(outp)
-with open("testdata.js", "w+") as f:
-    f.write("\n".join(outp))
+def writeTestdataToFile():
+    """ Write generated data to a file, for js-based unit-testing in e.g. truffle"""
     
+    outp = []
+    generateTestData(outp)
+    generateTestDataLargeNumbers(outp)
+    generateRandomTestData(outp)
+    outp = []
+    printTooLargeReturns(outp)
+    printExpectedThrows(outp)
+    print "\n".join(outp)
+
+    with open("testdata.js", "w+") as f:
+        f.write("\n".join(outp))
+        
     
 
+def generateRandomTestWithGiven(S,R,F):
 
-formula.verbose = True
 
-[S,R,F,T,x] = [1010691L, 30320.0, 3, 134856L, 0]
-print formula.calculateSaleReturn(S,R,F,T)
-print formula.calculateSaleReturnSolidity(S,R,F,T)
-#testTooLargeSaleReturns()
+    d = {"largestDiff" : 0, "largest" : "", "largestNegativeDiff": "", "largestNegative" : 0}
+    
+    def addDiff(sale, isSale=True):
 
+        corr = sale[-1]
+        act  = sale[-2]
+        diff = corr - act
+        if corr == 0 and act != 0:
+            print("0 expected, got %d" % act)
+            print(sale)
+        elif act == 0 and corr != 0:
+            pass
+        else:
+            diff_percent = 100*diff / corr
+            out = ["Expected %d got %d,diff of %f percent" % (corr, act, diff_percent)]
+            if isSale:
+                out.append("S: %s" % (sale))
+            else:
+                out.append("P: %s" % (sale))
+            
+            if diff_percent > d["largestDiff"]:
+                d["largestDiff"] = diff_percent
+                d["largest"] = "\n".join(out)
+            if diff_percent < d["largestNegative"]:
+                d["largestNegativeDiff"] = diff_percent
+                d["largestNegative"] = "\n".join(out)
+
+
+
+            #print "\n".join(out)
+
+    for i in range(1, 10000000):
+
+        randE = long(random.randint(700, S))
+        randT = long(random.randint(700, S))
+
+        (T,Tsol) = purchaseReturn(S,R,F,randE)
+        (E, Esol) = saleReturn(S,R,F,randT)
+
+        purchase = [S,R,F,randE,Tsol,T]
+        sale     = [S,R,F,randT,Esol,E]
+
+        addDiff(sale)
+        addDiff(purchase, False)
+
+
+    print("Largest diff:")
+    print d["largest"]
+
+    print("Largest negative diff:")
+    print d["largestNegative"]
+
+def doFixedLog2MaxTest():
+    def f(inp):
+        a = formula.fixedLog2_max(inp)
+        b = formula.realFixedLogn(inp,2)
+        if a  < b:
+            print "%s => %s < %s" % (inp, a, b)
+            return 1
+        return 0
+    iterations = 10000
+    count =0 
+    for i in range(1,iterations):
+        x = random.randint(0x100000000,0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffL)
+        count = count +  f(x)    
+    
+    print("doFixedLog2MaxTest : Found %d cases out of %d" % (count, iterations))
+
+def doFixedLog2MinTest():
+    def f(inp):
+        a = formula.fixedLog2_min(inp)
+        b = formula.realFixedLogn(inp,2)
+        if a > b:
+            print "%s => %s > %s" % (inp, a, b)
+            return 1
+        return 0
+    iterations = 100000
+    count =0 
+    for i in range(1,iterations):
+        x = random.randint(0x100000000,0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffL)
+        count = count +  f(x)    
+    
+    print("doFixedLog2MinTest : Found %d cases out of %d " % (count, iterations))
+
+# 
+M = 1000000000000000000L
+S = 79323978L
+R = 79344L
+F = 10
+generateRandomTestWithGiven(M*S,M*R,F)
+# 916 136 292 775 233 477
+#[S,R,F,T,a,b] = [79323978000000000000000000L, 79344000000000000000000L, 10, 916136292775233477L, 0, 9163674940076306.0]
 #
-#(S,R,F,E, correct)  = ( 2709028000000000000000000000000000, 2709028000000000000000000000000000 , 100, 244983000000000000000000000000000L,244983000166133046150207519531250L)
-#print formula.calculatePurchaseReturnSolidity(S,R,F,E)
-#M = 1000000000000000000L
-#(S,R,F,T) = (300000*M, 63000*M, 21, 1*M)
+##[S,R,F,T,a,b] = [79323978000000000000000000L, 79344000000000000000000L, 10, 8800523918738181190L, 88101047014325420L, 8.802740859166925e+16]             
 #formula.verbose = True
-#a = formula.calculateSaleReturnSolidity(S,R,F,T)
-#b = formula.calculateSaleReturn(S,R,F,T)
-#print(a,b,a-b)
-#generateRandomTestData2()
-#testPrecisionLimits()
-#testCornercase2()
-#testLimits(formula.fixedExp)
-#testLimits(formula.fixedLog2)
-#testLog2()
-#calculateFactorials()
-#print(formula.fixedLog2(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffL))
-#print(formula.fixedLog2(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffL-1))
-#print(formula.fixedLog2(0x100000001))
-#print("done")
+#print formula.calculateSaleReturn(S,R,F,T)
+#print formula.calculateSaleReturnSolidity(S,R,F,T)
+#
+
+#doFixedLog2MinTest()
+#doFixedLog2MaxTest()
+#x = 67504686562770247832571536239480371532496774510112092282143228637781870841065
+#formula.verbose = True
+#formula.fixedLog2_max(x)
+#print formula.realFixedLogFloat(x,2)
+# 0.000 532 574 797 862 395
+# 0.000 184 737 145 470 601
+
