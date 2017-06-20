@@ -10,10 +10,11 @@ import './IBancorFormula.sol';
 
 contract BancorFormula is IBancorFormula, SafeMath {
 
-    uint8 constant PRECISION = 32;  // fractional bits
+    uint8 constant PRECISION   = 32;  // fractional bits
     uint256 constant FIXED_ONE = uint256(1) << PRECISION; // 0x100000000
     uint256 constant FIXED_TWO = uint256(2) << PRECISION; // 0x200000000
-
+    //0x0000000100000000000000000000000000000000000000000000000000000000
+    uint256 constant MAX_VAL   = uint256(1)<<(256-PRECISION);
     string public version = '0.1';
 
     function BancorFormula() {
@@ -132,7 +133,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         This method asserts outside of bounds
 
     */
-    function ln(uint256 _numerator, uint256 _denominator) constant returns (uint256) {
+    function ln(uint256 _numerator, uint256 _denominator) public constant returns (uint256) {
         // denominator > numerator: less than one yields negative values. Unsupported
         assert(_denominator <= _numerator);
 
@@ -140,8 +141,8 @@ contract BancorFormula is IBancorFormula, SafeMath {
         assert(_denominator != 0 && _numerator != 0);
 
         // Upper 32 bits are scaled off by PRECISION
-        assert(_numerator & 0xffffffff00000000000000000000000000000000000000000000000000000000 == 0);
-        assert(_denominator & 0xffffffff00000000000000000000000000000000000000000000000000000000 == 0);
+        assert(_numerator < MAX_VAL);
+        assert(_denominator < MAX_VAL);
 
         return fixedLoge( (_numerator * FIXED_ONE) / _denominator);
     }
