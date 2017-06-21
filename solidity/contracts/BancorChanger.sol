@@ -359,15 +359,15 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
 
         uint256 tokenSupply = token.totalSupply();
         assert(amount < reserveBalance || _sellAmount == tokenSupply); // ensure that the trade will only deplete the reserve if the total supply is depleted as well
-        token.destroy(msg.sender, _sellAmount); // destroy _sellAmount from the caller's balance in the smart token
-        assert(_reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
-                                                           // note that it might fail if the actual reserve balance is smaller than the virtual balance
 
         // update virtual balance if relevant
         Reserve reserve = reserves[_reserveToken];
         if (reserve.isVirtualBalanceEnabled)
             reserve.virtualBalance = safeSub(reserve.virtualBalance, amount);
 
+        token.destroy(msg.sender, _sellAmount); // destroy _sellAmount from the caller's balance in the smart token
+        assert(_reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
+                                                            // note that it might fail if the actual reserve balance is smaller than the virtual balance
         Change(token, _reserveToken, msg.sender, _sellAmount, amount);
         return amount;
     }
