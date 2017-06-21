@@ -1,6 +1,7 @@
 PRECISION = 32  # fractional bits
 FIXED_ONE = (1) << PRECISION # 0x100000000
 FIXED_TWO = (2) << PRECISION # 0x200000000
+FIXED_MAX = (1) << (256-PRECISION) # 0x100000000000000000000000000000000000000000000000000000000
 
 
 '''*
@@ -36,8 +37,8 @@ def ln(_numerator, _denominator):
     assert(_denominator != 0 and _numerator != 0)
 
     # Upper 32 bits are scaled off by PRECISION
-    assert(_numerator & 0xffffffff00000000000000000000000000000000000000000000000000000000 == 0)
-    assert(_denominator & 0xffffffff00000000000000000000000000000000000000000000000000000000 == 0)
+    assert(_numerator < FIXED_MAX)
+    assert(_denominator < FIXED_MAX)
 
     return fixedLoge( (_numerator * FIXED_ONE) / _denominator)
 
