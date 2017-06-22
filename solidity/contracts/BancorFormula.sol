@@ -13,7 +13,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
     uint8 constant PRECISION   = 32;  // fractional bits
     uint256 constant FIXED_ONE = uint256(1) << PRECISION; // 0x100000000
     uint256 constant FIXED_TWO = uint256(2) << PRECISION; // 0x200000000
-    uint256 constant MAX_VAL   = uint256(1) << (256-PRECISION); // 0x0000000100000000000000000000000000000000000000000000000000000000
+    uint256 constant MAX_VAL   = uint256(1) << (256 - PRECISION); // 0x0000000100000000000000000000000000000000000000000000000000000000
     string public version = '0.1';
 
     function BancorFormula() {
