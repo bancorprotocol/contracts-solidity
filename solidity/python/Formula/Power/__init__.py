@@ -202,4 +202,5 @@ def fixedExpUnsafe(_x):
 
 
 def safeMul(x,y):
+    assert(x * y < (1 << 256))
     return x * y
