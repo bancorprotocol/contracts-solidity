@@ -36,10 +36,7 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
 
     temp = safeMul(_supply, resN) / FIXED_ONE
 
-    result =  safeSub(temp, _supply)
-    #From the result, we deduct the minimal increment, which is a         
-    # function of S and precision.       
-    return safeSub(result, _supply/0x100000000)
+    return safeSub(temp, _supply)
 
 
 '''*
@@ -80,11 +77,7 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     temp1 = safeMul(_reserveBalance, resN)
     temp2 = safeMul(_reserveBalance, FIXED_ONE)
 
-    result = safeSub(temp1, temp2) / resN
-
-    #From the result, we deduct the minimal increment, which is a         
-    # function of R and precision.       
-    return safeSub(result, _reserveBalance/0x100000000)
+    return safeSub(temp1, temp2) / resN
 
 
 def safeMul(x,y):
