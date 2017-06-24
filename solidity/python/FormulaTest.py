@@ -39,16 +39,19 @@ if size == 0:
 
 
 n = 0
-worst_ratio = 1
+worst_sale_acc = 1
+worst_purchase_acc = 1
 while n < size: # avoid creating a large range in memory
     _supply          = randrange(1,80000000*10**18)
     _reserveBalance  = randrange(1,80000*10**18)
     _reserveRatio    = randrange(1,99)
     _amount          = randrange(1,_supply)
     try:
-        saleAccuracy     = runTest(calculateSaleReturnTest    , _supply, _reserveBalance, _reserveRatio, _amount)
-        purchaseAccuracy = runTest(calculatePurchaseReturnTest, _supply, _reserveBalance, _reserveRatio, _amount)
-        print 'sale accuracy = {:.12f}, purchase accuracy = {:.12f}'.format(saleAccuracy,purchaseAccuracy)
+        sale_acc     = runTest(calculateSaleReturnTest    , _supply, _reserveBalance, _reserveRatio, _amount)
+        purchase_acc = runTest(calculatePurchaseReturnTest, _supply, _reserveBalance, _reserveRatio, _amount)
+        worst_sale_acc     = min(worst_sale_acc    ,sale_acc    )
+        worst_purchase_acc = min(worst_purchase_acc,purchase_acc)
+        print 'sale accuracy = {:.12f}, purchase accuracy = {:.12f}, worst sale accuracy = {:.12f}, worst purchase accuracy = {:.12f}'.format(sale_acc,purchase_acc,worst_sale_acc,worst_purchase_acc)
         n += 1
     except Exception,error:
         pass
