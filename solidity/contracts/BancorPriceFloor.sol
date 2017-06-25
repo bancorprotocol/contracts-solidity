@@ -2,13 +2,16 @@ pragma solidity ^0.4.11;
 import './TokenHolder.sol';
 import './SafeMath.sol';
 import './ISmartToken.sol';
+import './Owned.sol';
 
 /*
     BancorPriceFloor v0.1
 
     The bancor price floor contract is a simple contract that allows selling smart tokens for a constant ETH price
+
+    'Owned' is specified here for readability reasons
 */
-contract BancorPriceFloor is TokenHolder, SafeMath {
+contract BancorPriceFloor is Owned, TokenHolder, SafeMath {
     uint256 public constant TOKEN_PRICE_N = 1;      // crowdsale price in wei (numerator)
     uint256 public constant TOKEN_PRICE_D = 100;    // crowdsale price in wei (denominator)
 
@@ -36,7 +39,7 @@ contract BancorPriceFloor is TokenHolder, SafeMath {
         uint256 allowance = token.allowance(msg.sender, this); // get the full allowance amount
         assert(token.transferFrom(msg.sender, this, allowance)); // transfer all tokens from the sender to the contract
         uint256 etherValue = safeMul(allowance, TOKEN_PRICE_N) / TOKEN_PRICE_D; // calculate ETH value of the tokens
-        assert(msg.sender.send(etherValue)); // send the ETH amount to the seller
+        msg.sender.transfer(etherValue); // send the ETH amount to the seller
         return etherValue;
     }
 
