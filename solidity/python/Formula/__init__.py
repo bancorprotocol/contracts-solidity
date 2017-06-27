@@ -6,15 +6,12 @@ from Power import FIXED_TWO
 
 '''*
     @dev given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the return for a given change (in the main token)
-
     Formula:
     Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 100) - 1)
-
     @param _supply             token total supply
     @param _reserveBalance     total reserve
     @param _reserveRatio       constant reserve ratio, 1-100
     @param _depositAmount      deposit amount, in reserve token
-
     @return purchase return amount
 '''
 def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmount):
@@ -41,15 +38,12 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
 
 '''*
     @dev given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
-
     Formula:
     Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 100)))
-
     @param _supply             token total supply
     @param _reserveBalance     total reserve
     @param _reserveRatio       constant reserve ratio, 1-100
     @param _sellAmount         sell amount, in the token itself
-
     @return sale return amount
 '''
 def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):

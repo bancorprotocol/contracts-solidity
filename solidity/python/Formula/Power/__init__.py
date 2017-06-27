@@ -7,7 +7,6 @@ FIXED_MAX = (1) << (256-PRECISION) # 0x10000000000000000000000000000000000000000
 '''*
     @dev Calculate (_baseN / _baseD) ^ (_expN / _expD)
     Returns result upshifted by PRECISION
-
     This method is overflow-safe
 ''' 
 def power(_baseN, _baseD, _expN, _expD):
@@ -25,9 +24,7 @@ def power(_baseN, _baseD, _expN, _expD):
         - denominator: [1, uint256_max >> PRECISION]
     output range:
         [0, 0x9b43d4f8d6]
-
     This method asserts outside of bounds
-
 '''
 def ln(_numerator, _denominator):
     # denominator > numerator: less than one yields negative values. Unsupported
@@ -48,9 +45,7 @@ def ln(_numerator, _denominator):
         [0x100000000,uint256_max]
     output range:
         [0, 0x9b43d4f8d6]
-
     This method asserts outside of bounds
-
 '''
 def fixedLoge(_x):
     '''
@@ -58,7 +53,6 @@ def fixedLoge(_x):
     (40 bits, or 5 bytes), we can use a very large approximation
     for `ln(2)`. This one is used since it's the max accuracy 
     of Python `ln(2)`
-
     0xb17217f7d1cf78 = ln(2) * (1 << 56)
     
     '''
@@ -76,14 +70,11 @@ def fixedLoge(_x):
     
     [1] The function returns a number which is lower than the 
     actual value
-
     input-range : 
         [0x100000000,uint256_max]
     output-range: 
         [0,0xdfffffffff]
-
     This method asserts outside of bounds
-
 '''
 def fixedLog2(_x):
     # Numbers below 1 are negative. 
@@ -115,15 +106,11 @@ def fixedExp(_x):
 '''*
     fixedExp 
     Calculates e^x according to maclauren summation:
-
     e^x = 1+x+x^2/2!...+x^n/n!
-
     and returns e^(x>>32) << 32, that is, upshifted for accuracy
-
     Input range:
         - Function ok at    <= 242329958953 
         - Function fails at >= 242329958954
-
     This method is is visible for testcases, but not meant for direct use. 
 '''
 def fixedExpUnsafe(_x):

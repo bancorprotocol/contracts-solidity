@@ -1,5 +1,4 @@
 from sys     import argv
-from math    import log
 from decimal import Decimal
 from random  import randrange
 from Power   import power
