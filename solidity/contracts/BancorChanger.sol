@@ -12,7 +12,7 @@ import './IBancorFormula.sol';
 */
 
 /*
-    Bancor Changer v0.1
+    Bancor Changer v0.2
 
     The Bancor version of the token changer, allows changing between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
@@ -43,7 +43,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
 
     // triggered when a change between two tokens occurs
     event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return);
-    // triggered when the price between two tokens has changed
+    // triggered when the price between two tokens changes
     event PriceChange(address indexed _token1, address indexed _token2, uint256 _token1Amount, uint256 _token2Amount);
 
     /**
