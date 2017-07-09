@@ -33,7 +33,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    string public version = '0.1';
+    string public version = '0.2';
     string public changerType = 'bancor';
 
     IBancorFormula public formula;                  // bancor calculation formula contract
@@ -43,6 +43,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
 
     // triggered when a change between two tokens occurs
     event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return);
+    // triggered when the price between two tokens has changed
+    event PriceChange(address indexed _token1, address indexed _token2, uint256 _token1Amount, uint256 _token2Amount);
 
     /**
         @dev constructor
@@ -333,6 +335,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
         token.issue(msg.sender, amount); // issue new funds to the caller in the smart token
 
         Change(_reserveToken, token, msg.sender, _depositAmount, amount);
+        PriceChange(_reserveToken, token, SafeMul(getReserveBalance(_reserveToken), 100), SafeMul(token.totalSupply(), reserve.ratio));
         return amount;
     }
 
@@ -369,6 +372,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
         assert(_reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
                                                             // note that it might fail if the actual reserve balance is smaller than the virtual balance
         Change(token, _reserveToken, msg.sender, _sellAmount, amount);
+        PriceChange(token, _reserveToken, SafeMul(token.totalSupply(), reserve.ratio), SafeMul(getReserveBalance(_reserveToken), 100));
         return amount;
     }
 
