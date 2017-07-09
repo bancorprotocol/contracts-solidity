@@ -72,26 +72,6 @@ contract SmartTokenController is TokenHolder {
     }
 
     /**
-        @dev allows the owner to execute the token's issue function
-
-        @param _to         account to receive the new amount
-        @param _amount     amount to increase the supply by
-    */
-    function issueTokens(address _to, uint256 _amount) public ownerOnly {
-        token.issue(_to, _amount);
-    }
-
-    /**
-        @dev allows the owner to execute the token's destroy function
-
-        @param _from       account to remove the amount from
-        @param _amount     amount to decrease the supply by
-    */
-    function destroyTokens(address _from, uint256 _amount) public ownerOnly {
-        token.destroy(_from, _amount);
-    }
-
-    /**
         @dev withdraws tokens held by the token and sends them to an account
         can only be called by the owner
 
