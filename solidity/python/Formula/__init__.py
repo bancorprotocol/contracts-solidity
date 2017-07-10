@@ -54,19 +54,19 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     if (_sellAmount == 0):
         return 0
 
-    baseN = safeSub(_supply, _sellAmount)
+    baseD = safeSub(_supply, _sellAmount)
 
     # special case if the CRR = 100
     if (_reserveRatio == 100):
         temp1 = safeMul(_reserveBalance, _supply)
-        temp2 = safeMul(_reserveBalance, baseN)
+        temp2 = safeMul(_reserveBalance, baseD)
         return safeSub(temp1, temp2) / _supply
 
     # special case for selling the entire supply
     if (_sellAmount == _supply):
         return _reserveBalance
 
-    resN = power(_supply, baseN, 100, _reserveRatio)
+    resN = power(_supply, baseD, 100, _reserveRatio)
 
     temp1 = safeMul(_reserveBalance, resN)
     temp2 = safeMul(_reserveBalance, FIXED_ONE)
