@@ -64,12 +64,14 @@ contract('BancorChanger', (accounts) => {
         reserveTokenAddress = reserveToken.address;
     });
 
-    it('verifies the token address and formula address after construction', async () => {
+    it('verifies the token address, formula and flags after construction', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
         let token = await changer.token.call();
         assert.equal(token, tokenAddress);
         let formula = await changer.formula.call();
         assert.equal(formula, formulaAddress);
+        let changingEnabled = await changer.changingEnabled.call();
+        assert.equal(changingEnabled, true);
     });
 
     it('should throw when attempting to construct a changer with no token', async () => {
@@ -391,6 +393,35 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
+    it('verifies that the manager can disable / re-enable changing', async () => {
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
+        await changer.transferManagement(accounts[4]);
+        await changer.acceptManagement({ from: accounts[4] });
+
+        let changingEnabled = await changer.changingEnabled.call();
+        assert.equal(changingEnabled, true);
+
+        await changer.disableChanging(true, { from: accounts[4] });
+        changingEnabled = await changer.changingEnabled.call();
+        assert.equal(changingEnabled, false);
+
+        await changer.disableChanging(false, { from: accounts[4] });
+        changingEnabled = await changer.changingEnabled.call();
+        assert.equal(changingEnabled, true);
+    });
+
+    it('should throw when a non owner attempts to disable changing', async () => {
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
+
+        try {
+            await changer.disableChanging(true, { from: accounts[1] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
     it('verifies that the owner can disable / re-enable reserve purchases', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, 10, false);
@@ -696,7 +727,7 @@ contract('BancorChanger', (accounts) => {
         await reserveToken.approve(changer.address, 500);
 
         let changeRes = await changer.change(reserveTokenAddress, reserveTokenAddress2, 500, 1);
-        let changeAmount = getChangeAmount(changeRes, 1);
+        let changeAmount = getChangeAmount(changeRes, 2);
         assert.isNumber(changeAmount);
         assert.notEqual(changeAmount, 0);
 
@@ -857,6 +888,20 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
+    it('should throw when attempting to buy while changing is disabled', async () => {
+        let changer = await initChanger(accounts, true);
+        await changer.disableChanging(true);
+        await reserveToken.approve(changer.address, 500);
+
+        try {
+            await changer.buy(reserveTokenAddress, 500, 1);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
     it('should throw when attempting to buy with 0 minimum requested amount', async () => {
         let changer = await initChanger(accounts, true);
         await reserveToken.approve(changer.address, 500);
@@ -954,6 +999,19 @@ contract('BancorChanger', (accounts) => {
 
         try {
             await changer.sell(reserveTokenAddress, 0, 1);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to sell while changing is disabled', async () => {
+        let changer = await initChanger(accounts, true);
+        await changer.disableChanging(true);
+
+        try {
+            await changer.sell(reserveTokenAddress, 500, 1);
             assert(false, "didn't throw");
         }
         catch (error) {

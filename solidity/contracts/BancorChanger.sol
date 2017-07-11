@@ -1,5 +1,6 @@
 pragma solidity ^0.4.11;
 import './SmartTokenController.sol';
+import './Managed.sol';
 import './SafeMath.sol';
 import './ITokenChanger.sol';
 import './ISmartToken.sol';
@@ -24,12 +25,12 @@ import './IBancorFormula.sol';
     WARNING: It is NOT RECOMMENDED to use the changer with Smart Tokens that have less than 8 decimal digits
              or with very small numbers because of precision loss
 */
-contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
+contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath {
     struct Reserve {
         uint256 virtualBalance;         // virtual balance
         uint8 ratio;                    // constant reserve ratio (CRR), 1-100
         bool isVirtualBalanceEnabled;   // true if virtual balance is enabled, false if not
-        bool isPurchaseEnabled;         // is purchase of the smart token enabled with the reserve, can be set by the token owner
+        bool isPurchaseEnabled;         // is purchase of the smart token enabled with the reserve, can be set by the owner
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
@@ -40,6 +41,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
     address[] public reserveTokens;                 // ERC20 standard token addresses
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
     uint8 private totalReserveRatio = 0;            // used to prevent increasing the total reserve ratio above 100% efficiently
+    bool public changingEnabled = true;             // true if token changing is enabled, false if not
 
     // triggered when a change between two tokens occurs
     event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return);
@@ -83,6 +85,12 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
     // validates reserve ratio range
     modifier validReserveRatio(uint8 _ratio) {
         require(_ratio > 0 && _ratio <= 100);
+        _;
+    }
+
+    // allows execution only when changing isn't disabled
+    modifier changingAllowed {
+        assert(changingEnabled);
         _;
     }
 
@@ -135,7 +143,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
 
     /**
         @dev defines a new reserve for the token
-        can only be called by the token owner while the changer is inactive
+        can only be called by the owner while the changer is inactive
 
         @param _token                  address of the reserve token
         @param _ratio                  constant reserve ratio, 1-100
@@ -162,7 +170,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
 
     /**
         @dev updates one of the token reserves
-        can only be called by the token owner
+        can only be called by the owner
 
         @param _reserveToken           address of the reserve token
         @param _ratio                  constant reserve ratio, 1-100
@@ -185,9 +193,20 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
     }
 
     /**
+        @dev disables the entire change functionality
+        this is a safety mechanism in case of a serious bug/exploit
+        can only be called by the manager
+
+        @param _disable true to disable changing, false to re-enable it
+    */
+    function disableChanging(bool _disable) public managerOnly {
+        changingEnabled = !_disable;
+    }
+
+    /**
         @dev disables purchasing with the given reserve token in case the reserve token got compromised
-        can only be called by the token owner
-        note that selling is still enabled regardless of this flag and it cannot be disabled by the token owner
+        can only be called by the owner
+        note that selling is still enabled regardless of this flag and it cannot be disabled by the owner
 
         @param _reserveToken    reserve token contract address
         @param _disable         true to disable the token, false to re-enable it
@@ -321,6 +340,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
     */
     function buy(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn)
         public
+        changingAllowed
         validAmount(_minReturn)
         returns (uint256 amount) {
         amount = getPurchaseReturn(_reserveToken, _depositAmount);
@@ -350,6 +370,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
     */
     function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn)
         public
+        changingAllowed
         validAmount(_minReturn)
         returns (uint256 amount) {
         require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
