@@ -335,7 +335,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
         token.issue(msg.sender, amount); // issue new funds to the caller in the smart token
 
         Change(_reserveToken, token, msg.sender, _depositAmount, amount);
-        PriceChange(_reserveToken, token, SafeMul(getReserveBalance(_reserveToken), 100), SafeMul(token.totalSupply(), reserve.ratio));
+        PriceChange(_reserveToken, token, safeMul(getReserveBalance(_reserveToken), 100), safeMul(token.totalSupply(), reserve.ratio));
         return amount;
     }
 
@@ -372,7 +372,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, SafeMath {
         assert(_reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
                                                             // note that it might fail if the actual reserve balance is smaller than the virtual balance
         Change(token, _reserveToken, msg.sender, _sellAmount, amount);
-        PriceChange(token, _reserveToken, SafeMul(token.totalSupply(), reserve.ratio), SafeMul(getReserveBalance(_reserveToken), 100));
+        PriceChange(token, _reserveToken, safeMul(token.totalSupply(), reserve.ratio), safeMul(getReserveBalance(_reserveToken), 100));
         return amount;
     }
 
