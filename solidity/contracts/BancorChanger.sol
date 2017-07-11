@@ -2,9 +2,9 @@ pragma solidity ^0.4.11;
 import './SmartTokenController.sol';
 import './Managed.sol';
 import './SafeMath.sol';
-import './ITokenChanger.sol';
-import './ISmartToken.sol';
-import './IBancorFormula.sol';
+import './interfaces/ITokenChanger.sol';
+import './interfaces/ISmartToken.sol';
+import './interfaces/IBancorFormula.sol';
 
 /*
     Open issues:

@@ -1,6 +1,6 @@
 pragma solidity ^0.4.11;
 import './TokenHolder.sol';
-import './ISmartToken.sol';
+import './interfaces/ISmartToken.sol';
 
 /*
     The smart token controller is an upgradable part of the smart token that allows

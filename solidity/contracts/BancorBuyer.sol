@@ -1,8 +1,8 @@
 pragma solidity ^0.4.11;
 import './TokenHolder.sol';
-import './ISmartToken.sol';
-import './IEtherToken.sol';
-import './ITokenChanger.sol';
+import './interfaces/ISmartToken.sol';
+import './interfaces/IEtherToken.sol';
+import './interfaces/ITokenChanger.sol';
 
 /*
     Bancor Changer interface

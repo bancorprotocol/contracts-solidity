@@ -1,8 +1,8 @@
 pragma solidity ^0.4.11;
-import './ISmartToken.sol';
 import './ERC20Token.sol';
 import './TokenHolder.sol';
 import './Owned.sol';
+import './interfaces/ISmartToken.sol';
 
 /*
     Smart Token v0.2

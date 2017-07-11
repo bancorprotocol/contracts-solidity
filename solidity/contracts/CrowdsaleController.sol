@@ -1,7 +1,7 @@
 pragma solidity ^0.4.11;
 import './SmartTokenController.sol';
 import './SafeMath.sol';
-import './ISmartToken.sol';
+import './interfaces/ISmartToken.sol';
 
 /*
     Crowdsale v0.1

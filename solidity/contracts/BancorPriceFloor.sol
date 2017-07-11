@@ -1,8 +1,8 @@
 pragma solidity ^0.4.11;
 import './TokenHolder.sol';
-import './SafeMath.sol';
-import './ISmartToken.sol';
 import './Owned.sol';
+import './SafeMath.sol';
+import './interfaces/ISmartToken.sol';
 
 /*
     BancorPriceFloor v0.1

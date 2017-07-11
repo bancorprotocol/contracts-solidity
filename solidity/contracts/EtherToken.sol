@@ -1,8 +1,8 @@
 pragma solidity ^0.4.11;
-import './IEtherToken.sol';
 import './ERC20Token.sol';
 import './TokenHolder.sol';
 import './Owned.sol';
+import './interfaces/IEtherToken.sol';
 
 /**
     Ether tokenization contract
