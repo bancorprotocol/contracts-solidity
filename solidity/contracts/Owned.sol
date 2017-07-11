@@ -25,7 +25,7 @@ contract Owned is IOwned {
 
     /**
         @dev allows transferring the contract ownership
-        the new owner still need to accept the transfer
+        the new owner still needs to accept the transfer
         can only be called by the contract owner
 
         @param _newOwner    new contract owner

@@ -3,6 +3,7 @@
 
 const SafeMath = artifacts.require('SafeMath.sol');
 const Owned = artifacts.require('Owned.sol');
+const Managed = artifacts.require('Managed.sol');
 const TokenHolder = artifacts.require('TokenHolder.sol');
 const ERC20Token = artifacts.require('ERC20Token.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
@@ -15,6 +16,7 @@ const CrowdsaleController = artifacts.require('CrowdsaleController.sol');
 module.exports = async (deployer) => {
     deployer.deploy(SafeMath);
     deployer.deploy(Owned);
+    deployer.deploy(Managed);
     deployer.deploy(TokenHolder);
     deployer.deploy(ERC20Token, 'DummyToken', 'DUM', 0);
     deployer.deploy(EtherToken);
