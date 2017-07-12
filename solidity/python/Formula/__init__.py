@@ -1,7 +1,5 @@
 from Power import power
-from Power import PRECISION
-from Power import FIXED_ONE
-from Power import FIXED_TWO
+from Power import getBestPrecision
 
 
 '''*
@@ -29,9 +27,10 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
         temp = safeMul(_supply, baseN) / _reserveBalance
         return safeSub(temp, _supply) 
 
-    resN = power(baseN, _reserveBalance, _reserveRatio, 100)
+    precision = getBestPrecision(baseN, _reserveBalance, _reserveRatio, 100)
+    resN = power(baseN, _reserveBalance, _reserveRatio, 100, precision)
 
-    temp = safeMul(_supply, resN) / FIXED_ONE
+    temp = safeMul(_supply, resN) >> precision
 
     return safeSub(temp, _supply)
 
@@ -66,10 +65,11 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     if (_sellAmount == _supply):
         return _reserveBalance
 
-    resN = power(_supply, baseD, 100, _reserveRatio)
+    precision = getBestPrecision(_supply, baseD, 100, _reserveRatio)
+    resN = power(_supply, baseD, 100, _reserveRatio, precision)
 
     temp1 = safeMul(_reserveBalance, resN)
-    temp2 = safeMul(_reserveBalance, FIXED_ONE)
+    temp2 = safeMul(_reserveBalance, 1 << precision)
 
     return safeSub(temp1, temp2) / resN
 
