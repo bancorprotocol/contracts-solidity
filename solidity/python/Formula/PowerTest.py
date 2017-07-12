@@ -2,11 +2,13 @@ from sys     import argv
 from decimal import Decimal
 from random  import randrange
 from Power   import power
-from Power   import PRECISION
+
+
+PRECISION = 32
 
 
 def powerTest(_baseN, _baseD, _expN, _expD):
-    fixed = power(_baseN, _baseD, _expN, _expD) >> PRECISION
+    fixed = power(_baseN, _baseD, _expN, _expD, PRECISION) >> PRECISION
     real  = (Decimal(_baseN)/Decimal(_baseD))**(Decimal(_expN)/Decimal(_expD))
     if fixed > real:
         error = []
@@ -24,6 +26,7 @@ if size == 0:
 
 n = 0
 worstAccuracy = 1
+numOfFailures = 0
 while n < size: # avoid creating a large range in memory
     _baseN = randrange(1<<PRECISION,1<<(256-PRECISION))
     _baseD = randrange(1<<PRECISION,_baseN+1)
@@ -31,12 +34,12 @@ while n < size: # avoid creating a large range in memory
     _expD  = randrange(1<<PRECISION,_expN+1)
     try:
         accuracy = powerTest(_baseN, _baseD, _expN, _expD)
-        if worstAccuracy > accuracy:
-            worstAccuracy = accuracy
-        print 'accuracy = {:.8f}, worst accuracy = {:.8f}'.format(accuracy,worstAccuracy)
-        n += 1
+        worstAccuracy = min(worstAccuracy,accuracy)
     except Exception,error:
-        pass
+        accuracy = 0
+        numOfFailures += 1
     except BaseException,error:
         print error
         break
+    print 'Test #{}: accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n,accuracy,worstAccuracy,numOfFailures)
+    n += 1

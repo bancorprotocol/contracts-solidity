@@ -4,11 +4,12 @@ assert(NUM_OF_PRECISIONS % NUM_OF_VALUES_PER_ROW == 0)
 
 
 def fixedExpUnsafe(_x,precision):
-    xi = 1 << precision
-    res = safeMul(coefs[NUM_OF_COEFS-1],xi)
-    for i in range(NUM_OF_COEFS-2,-1,-1):
-        xi = safeMul(xi,_x) >> precision
+    xi = _x
+    res = safeMul(coefs[NUM_OF_COEFS-1],1 << precision)
+    for i in range(NUM_OF_COEFS-2,0,-1):
         res = safeAdd(res,safeMul(xi,coefs[i]))
+        xi = safeMul(xi,_x) >> precision
+    res = safeAdd(res,safeMul(xi,coefs[0]))
     return res / coefs[NUM_OF_COEFS-1]
 
 
