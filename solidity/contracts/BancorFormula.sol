@@ -242,8 +242,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     */
     function fixedExpUnsafe(uint256 _x, uint8 _precision) constant returns (uint256) {
-    
-        uint256 xi;
+        uint256 xi = uint256(1) << _precision;
         uint256 res = 0xde1bc4d19efcac82445da75b00000000 << _precision;
 
         xi = (xi * _x) >> _precision;
