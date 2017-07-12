@@ -1,7 +1,4 @@
-PRECISION = 32  # fractional bits
-FIXED_ONE = (1) << PRECISION # 0x100000000
-FIXED_TWO = (2) << PRECISION # 0x200000000
-FIXED_MAX = (1) << (256-PRECISION) # 0x100000000000000000000000000000000000000000000000000000000
+MAX_FIXED_EXP_32 = 0x386bfdba29
 
 
 '''*
@@ -9,12 +6,12 @@ FIXED_MAX = (1) << (256-PRECISION) # 0x10000000000000000000000000000000000000000
     Returns result upshifted by PRECISION
     This method is overflow-safe
 ''' 
-def power(_baseN, _baseD, _expN, _expD):
-    logbase = ln(_baseN, _baseD)
+def power(_baseN, _baseD, _expN, _expD, PRECISION):
+    logbase = ln(_baseN, _baseD, PRECISION)
     # Not using safeDiv here, since safeDiv protects against
     # precision loss. It's unavoidable, however
     # Both `ln` and `fixedExp` are overflow-safe. 
-    resN = fixedExp(safeMul(logbase, _expN) / _expD)
+    resN = fixedExp(safeMul(logbase, _expN) / _expD, PRECISION)
     return resN
 
 
@@ -26,7 +23,7 @@ def power(_baseN, _baseD, _expN, _expD):
         [0, 0x9b43d4f8d6]
     This method asserts outside of bounds
 '''
-def ln(_numerator, _denominator):
+def ln(_numerator, _denominator, PRECISION):
     # denominator > numerator: less than one yields negative values. Unsupported
     assert(_denominator <= _numerator)
 
@@ -34,10 +31,10 @@ def ln(_numerator, _denominator):
     assert(_denominator != 0 and _numerator != 0)
 
     # Upper 32 bits are scaled off by PRECISION
-    assert(_numerator < FIXED_MAX)
-    assert(_denominator < FIXED_MAX)
+    assert(_numerator < (1 << (256-PRECISION)))
+    assert(_denominator < (1 << (256-PRECISION)))
 
-    return fixedLoge( (_numerator * FIXED_ONE) / _denominator)
+    return fixedLoge( (_numerator * (1 << PRECISION)) / _denominator, PRECISION)
 
 
 '''*
@@ -47,7 +44,7 @@ def ln(_numerator, _denominator):
         [0, 0x9b43d4f8d6]
     This method asserts outside of bounds
 '''
-def fixedLoge(_x):
+def fixedLoge(_x, PRECISION):
     '''
     Since `fixedLog2_min` output range is max `0xdfffffffff` 
     (40 bits, or 5 bytes), we can use a very large approximation
@@ -57,9 +54,9 @@ def fixedLoge(_x):
     
     '''
     #Cannot represent negative numbers (below 1)
-    assert(_x >= FIXED_ONE)
+    assert(_x >= (1 << PRECISION))
 
-    log2 = fixedLog2(_x)
+    log2 = fixedLog2(_x, PRECISION)
     return (log2 * 0xb17217f7d1cf78) >> 56
 
 
@@ -76,7 +73,10 @@ def fixedLoge(_x):
         [0,0xdfffffffff]
     This method asserts outside of bounds
 '''
-def fixedLog2(_x):
+def fixedLog2(_x, PRECISION):
+    FIXED_ONE = 1 << PRECISION
+    FIXED_TWO = 2 << PRECISION
+
     # Numbers below 1 are negative. 
     assert( _x >= FIXED_ONE)
 
@@ -98,9 +98,9 @@ def fixedLog2(_x):
     fixedExp is a 'protected' version of `fixedExpUnsafe`, which 
     asserts instead of overflows
 '''
-def fixedExp(_x):
-    assert(_x <= 0x386bfdba29)
-    return fixedExpUnsafe(_x)
+def fixedExp(_x, PRECISION):
+    assert(_x <= MAX_FIXED_EXP_32)
+    return fixedExpUnsafe(_x, PRECISION)
 
 
 '''*
@@ -113,10 +113,9 @@ def fixedExp(_x):
         - Function fails at >= 242329958954
     This method is is visible for testcases, but not meant for direct use. 
 '''
-def fixedExpUnsafe(_x):
+def fixedExpUnsafe(_x, PRECISION):
 
-    xi = FIXED_ONE
-    res = 0xde1bc4d19efcac82445da75b00000000 * xi
+    res = 0xde1bc4d19efcac82445da75b00000000 << PRECISION
 
     xi = (xi * _x) >> PRECISION
     res += xi * 0xde1bc4d19efcac82445da75b00000000
@@ -191,3 +190,29 @@ def fixedExpUnsafe(_x):
 def safeMul(x,y):
     assert(x * y < (1 << 256))
     return x * y
+
+
+def getBestPrecision(_baseN, _baseD, _expN, _expD):
+    precision = floorLog2(MAX_FIXED_EXP_32*_expD/(lnUpperBound(_baseN,_baseD)*_expN))
+    return max(precision,32)
+
+
+def lnUpperBound(baseN,baseD):
+    assert(baseN > baseD)
+    if 100000*baseN <= 271828*baseD: # baseN/baseD < e^1
+        return 1
+    if 100000*baseN <= 738905*baseD: # baseN/baseD < e^2
+        return 2
+    if baseN <= 8*baseD:             # baseN/baseD <= 2^3 < e^3
+        return 3
+    return floorLog2(baseN/baseD)
+
+
+def floorLog2(n):
+    t = 0
+    for k in range(8,0,-1):
+        if (n > (1<<(1<<k))-1):
+            s = 1 << k
+            n >>= s
+            t |= s
+    return t | (n >> 1)
