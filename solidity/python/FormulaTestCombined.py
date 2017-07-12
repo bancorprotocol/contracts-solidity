@@ -7,7 +7,7 @@ from Formula import calculatePurchaseReturn
 
 def formulaTest(_supply, _reserveBalance, _reserveRatio, _amount):
     _new_amount = calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _amount)
-    _old_amount = calculateSaleReturn(_supply+_new_amount, _reserveBalance+_amount, _reserveRatio, _new_amount)	
+    _old_amount = calculateSaleReturn(_supply+_new_amount, _reserveBalance+_amount, _reserveRatio, _new_amount)
     if _old_amount > _amount:
         error = []
         error.append('error occurred on:')
@@ -26,6 +26,7 @@ if size == 0:
 
 n = 0
 worstGain = 1
+numOfFailures = 0
 while n < size: # avoid creating a large range in memory
     _supply         = randrange(1,10**26)
     _reserveBalance = randrange(1,10**23)
@@ -33,12 +34,12 @@ while n < size: # avoid creating a large range in memory
     _amount         = randrange(1,_supply)
     try:
         gain = formulaTest(_supply, _reserveBalance, _reserveRatio, _amount)
-        if worstGain > gain:
-            worstGain = gain
-        print 'gain = {:.12f}, worst gain = {:.12f}'.format(gain,worstGain)
-        n += 1
+        worstGain = min(worstGain,gain)
     except Exception,error:
-        pass
+        gain = 0
+        numOfFailures += 1
     except BaseException,error:
         print error
         break
+    print 'Test #{}: gain = {:.12f}, worst gain = {:.12f}, num of failures = {}'.format(n,gain,worstGain,numOfFailures)
+    n += 1
