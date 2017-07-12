@@ -5,7 +5,7 @@ import './interfaces/IBancorFormula.sol';
 /*
     Open issues:
     - The formula is not yet super accurate, especially for very small/very high ratios
-    - Possibly support dynamic precision in the future
+    - Improve dynamic precision support
 */
 
 contract BancorFormula is IBancorFormula, SafeMath {
@@ -46,7 +46,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
             return safeSub(temp, _supply); 
         }
 
-        uint8 precision = getBestPrecision(baseN, _reserveBalance, _reserveRatio, 100)
+        uint8 precision = getBestPrecision(baseN, _reserveBalance, _reserveRatio, 100);
         uint256 resN = power(baseN, _reserveBalance, _reserveRatio, 100, precision);
 
         temp = safeMul(_supply, resN) >> precision;
@@ -90,7 +90,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         if (_sellAmount == _supply)
             return _reserveBalance;
 
-        uint8 precision = getBestPrecision(_supply, baseD, 100, _reserveRatio)
+        uint8 precision = getBestPrecision(_supply, baseD, 100, _reserveRatio);
         uint256 resN = power(_supply, baseD, 100, _reserveRatio, precision);
 
         temp1 = safeMul(_reserveBalance, resN);
@@ -101,42 +101,42 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     /**
         @dev Calculate (_baseN / _baseD) ^ (_expN / _expD)
-        Returns result upshifted by PRECISION
+        Returns result upshifted by precision
 
         This method is overflow-safe
     */ 
-    function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD, uint8 PRECISION) constant returns (uint256 resN) {
-        uint256 logbase = ln(_baseN, _baseD, PRECISION);
+    function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD, uint8 _precision) constant returns (uint256 resN) {
+        uint256 logbase = ln(_baseN, _baseD, _precision);
         // Not using safeDiv here, since safeDiv protects against
         // precision loss. It's unavoidable, however
         // Both `ln` and `fixedExp` are overflow-safe. 
-        resN = fixedExp(safeMul(logbase, _expN) / _expD, PRECISION);
+        resN = fixedExp(safeMul(logbase, _expN) / _expD, _precision);
         return resN;
     }
     
     /**
         input range: 
-            - numerator: [1, uint256_max >> PRECISION]    
-            - denominator: [1, uint256_max >> PRECISION]
+            - numerator: [1, uint256_max >> precision]    
+            - denominator: [1, uint256_max >> precision]
         output range:
             [0, 0x9b43d4f8d6]
 
         This method asserts outside of bounds
 
     */
-    function ln(uint256 _numerator, uint256 _denominator, uint8 PRECISION) public constant returns (uint256) {
+    function ln(uint256 _numerator, uint256 _denominator, uint8 _precision) public constant returns (uint256) {
         // denominator > numerator: less than one yields negative values. Unsupported
         assert(_denominator <= _numerator);
 
         // log(1) is the lowest we can go
         assert(_denominator != 0 && _numerator != 0);
 
-        // Upper bits are scaled off by PRECISION
-        uint256 MAX_VAL = uint256(1) << (256 - PRECISION);
+        // Upper bits are scaled off by precision
+        uint256 MAX_VAL = uint256(1) << (256 - _precision);
         assert(_numerator < MAX_VAL);
         assert(_denominator < MAX_VAL);
 
-        return fixedLoge( (_numerator << PRECISION) / _denominator, PRECISION);
+        return fixedLoge( (_numerator << _precision) / _denominator, _precision);
     }
 
     /**
@@ -148,7 +148,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         This method asserts outside of bounds
 
     */
-    function fixedLoge(uint256 _x, uint8 PRECISION) constant returns (uint256 logE) {
+    function fixedLoge(uint256 _x, uint8 _precision) constant returns (uint256 logE) {
         /*
         Since `fixedLog2_min` output range is max `0xdfffffffff` 
         (40 bits, or 5 bytes), we can use a very large approximation
@@ -159,9 +159,9 @@ contract BancorFormula is IBancorFormula, SafeMath {
         
         */
         //Cannot represent negative numbers (below 1)
-        assert(_x >= uint256(1) << PRECISION);
+        assert(_x >= uint256(1) << _precision);
 
-        uint256 log2 = fixedLog2(_x, PRECISION);
+        uint256 log2 = fixedLog2(_x, _precision);
         logE = (log2 * 0xb17217f7d1cf78) >> 56;
     }
 
@@ -181,9 +181,9 @@ contract BancorFormula is IBancorFormula, SafeMath {
         This method asserts outside of bounds
 
     */
-    function fixedLog2(uint256 _x, uint8 PRECISION) constant returns (uint256) {
-        uint256 FIXED_ONE = uint256(1) << PRECISION;
-        uint256 FIXED_TWO = uint256(2) << PRECISION;
+    function fixedLog2(uint256 _x, uint8 _precision) constant returns (uint256) {
+        uint256 FIXED_ONE = uint256(1) << _precision;
+        uint256 FIXED_TWO = uint256(2) << _precision;
 
         // Numbers below 1 are negative. 
         assert( _x >= FIXED_ONE);
@@ -194,11 +194,11 @@ contract BancorFormula is IBancorFormula, SafeMath {
             hi += FIXED_ONE;
         }
 
-        for (uint8 i = 0; i < PRECISION; ++i) {
+        for (uint8 i = 0; i < _precision; ++i) {
             _x = (_x * _x) / FIXED_ONE;
             if (_x >= FIXED_TWO) {
                 _x >>= 1;
-                hi += uint256(1) << (PRECISION - 1 - i);
+                hi += uint256(1) << (_precision - 1 - i);
             }
         }
 
@@ -209,9 +209,9 @@ contract BancorFormula is IBancorFormula, SafeMath {
         fixedExp is a 'protected' version of `fixedExpUnsafe`, which 
         asserts instead of overflows
     */
-    function fixedExp(uint256 _x, uint8 PRECISION) constant returns (uint256) {
+    function fixedExp(uint256 _x, uint8 _precision) constant returns (uint256) {
         assert(_x <= MAX_FIXED_EXP_32);
-        return fixedExpUnsafe(_x, PRECISION);
+        return fixedExpUnsafe(_x, _precision);
     }
 
     /**
@@ -238,109 +238,102 @@ contract BancorFormula is IBancorFormula, SafeMath {
             ITERATIONS = 34
             for n in range( 1,  ITERATIONS,1 ) :
                 ni.append(math.floor(ni[n - 1] / n))
-            print( "\n        ".join(["xi = (xi * _x) >> PRECISION;\n        res += xi * %s;" % hex(int(x)) for x in ni]))
+            print( "\n        ".join(["xi = (xi * _x) >> _precision;\n        res += xi * %s;" % hex(int(x)) for x in ni]))
 
     */
-    function fixedExpUnsafe(uint256 _x, uint8 PRECISION) constant returns (uint256) {
+    function fixedExpUnsafe(uint256 _x, uint8 _precision) constant returns (uint256) {
     
         uint256 xi;
-        uint256 res = 0xde1bc4d19efcac82445da75b00000000 << PRECISION;
+        uint256 res = 0xde1bc4d19efcac82445da75b00000000 << _precision;
 
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0xde1bc4d19efcac82445da75b00000000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x6f0de268cf7e5641222ed3ad80000000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x2504a0cd9a7f7215b60f9be480000000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x9412833669fdc856d83e6f920000000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x1d9d4d714865f4de2b3fafea0000000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x4ef8ce836bba8cfb1dff2a70000000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0xb481d807d1aa66d04490610000000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x16903b00fa354cda08920c2000000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x281cdaac677b334ab9e732000000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x402e2aad725eb8778fd85000000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x5d5a6c9f31fe2396a2af000000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x7c7890d442a82f73839400000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x9931ed54034526b58e400000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0xaf147cf24ce150cf7e00000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0xbac08546b867cdaa200000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0xbac08546b867cdaa20000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0xafc441338061b2820000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x9c3cabbc0056d790000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x839168328705c30000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x694120286c049c000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x50319e98b3d2c000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x3a52a1e36b82000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x289286e0fce000;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x1b0c59eb53400;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x114f95b55400;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0xaa7210d200;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x650139600;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x39b78e80;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x1fd8080;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x10fbc0;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x8c40;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x462;
-        xi = (xi * _x) >> PRECISION;
+        xi = (xi * _x) >> _precision;
         res += xi * 0x22;
 
         return res / 0xde1bc4d19efcac82445da75b00000000;
     }
 
-    /**
-        getBestPrecision 
-    */
     function getBestPrecision(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) constant returns (uint8) {
         uint8 precision = floorLog2(MAX_FIXED_EXP_32*_expD/(lnUpperBound(_baseN,_baseD)*_expN));
         return precision >= 32 ? precision : 32;
     }
 
-    /**
-        lnUpperBound 
-    */
     function lnUpperBound(uint256 baseN, uint256 baseD) constant returns (uint8) {
-        assert(baseN > baseD)
-        if (100000*baseN <= 271828*baseD) // baseN/baseD < e^1
+        assert(baseN > baseD);
+
+        if (100000 * baseN <= 271828 * baseD) // baseN / baseD < e^1
             return 1;
-        if (100000*baseN <= 738905*baseD) // baseN/baseD < e^2
+        if (100000 * baseN <= 738905 * baseD) // baseN / baseD < e^2
             return 2;
-        if (baseN <= 8*baseD)             // baseN/baseD <= 2^3 < e^3
+        if (baseN <= 8 * baseD)               // baseN / baseD <= 2^3 < e^3
             return 3;
+
         return floorLog2(baseN/baseD);
     }
 
-    /**
-        floorLog2 
-    */
     function floorLog2(uint256 n) constant returns (uint8) {
         uint256 t = 0;
         for (int k = 7; k >= 0; k--) {
