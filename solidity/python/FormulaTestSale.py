@@ -27,6 +27,7 @@ if size == 0:
 
 n = 0
 worstAccuracy = 1
+numOfFailures = 0
 while n < size: # avoid creating a large range in memory
     _supply         = randrange(1,10**26)
     _reserveBalance = randrange(1,10**23)
@@ -34,12 +35,12 @@ while n < size: # avoid creating a large range in memory
     _amount         = randrange(1,_supply)
     try:
         accuracy = formulaTest(_supply, _reserveBalance, _reserveRatio, _amount)
-        if worstAccuracy > accuracy:
-            worstAccuracy = accuracy
-        print 'accuracy = {:.12f}, worst accuracy = {:.12f}'.format(accuracy,worstAccuracy)
-        n += 1
+        worstAccuracy = min(worstAccuracy,accuracy)
     except Exception,error:
-        pass
+        accuracy = 0
+        numOfFailures += 1
     except BaseException,error:
         print error
         break
+    print 'Test #{}: accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n,accuracy,worstAccuracy,numOfFailures)
+    n += 1
