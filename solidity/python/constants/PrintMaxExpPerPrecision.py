@@ -69,4 +69,45 @@ for i in range(len(values)/NUM_OF_VALUES_PER_ROW):
     for j in range(NUM_OF_VALUES_PER_ROW):
         items.append('0x{:x}'.format(values[i*NUM_OF_VALUES_PER_ROW+j]))
     print '    '+''.join([formatString.format(item) for item in items])
-print ']'
+print ']\n'
+
+
+lo = 1
+hi = 1 << 256
+while lo+1 < hi:
+    mid = (lo+hi)/2
+    try:
+        for precision in range(32,64,2):
+            maxExp = values[32]
+            for p in range (32,precision,2):
+                maxExp = safeMul(maxExp,mid)/100000000000000000
+                fixedExpUnsafe(maxExp,precision)
+        lo = mid
+        mid = (lo+hi)/2
+    except Exception,error:
+        hi = mid
+        mid = (lo+hi)/2
+try:
+    for precision in range(32,64,2):
+        maxExp = values[32]
+        for p in range (32,precision,2):
+            maxExp = safeMul(maxExp,hi)/100000000000000000
+            fixedExpUnsafe(maxExp,precision)
+    maxFactor = hi
+except Exception,error:
+    for precision in range(32,64,2):
+        maxExp = values[32]
+        for p in range (32,precision,2):
+            maxExp = safeMul(maxExp,lo)/100000000000000000
+            fixedExpUnsafe(maxExp,precision)
+    maxFactor = lo
+
+
+print 'maxFactor = ',maxFactor
+formatString = '{:s}{:d}{:s}{:d}{:s}'.format('Precision = {:3d} | Theoretical Max Exp = {:',maxLen,'s} | Practical Max Exp = {:',maxLen,'s}')
+for precision in range(32,64,2):
+    maxExp = values[32]
+    for p in range (32,precision,2):
+        maxExp = safeMul(maxExp,maxFactor)/100000000000000000
+        fixedExpUnsafe(maxExp,precision)
+    print formatString.format(precision,'0x{:x}'.format(values[precision]),'0x{:x}'.format(maxExp))
