@@ -260,7 +260,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
     }
 
     /**
-        fixedExp 
+        fixedExpUnsafe 
         Calculates e ^ x according to maclauren summation:
 
         e^x = 1 + x + x ^ 2 / 2!...+ x ^ n / n!
@@ -276,7 +276,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         The values in this method been generated via the following python snippet: 
 
         def calculateFactorials():
-            """Method to print out the factorials for fixedExp"""
+            """Method to print out the factorials for fixedExpUnsafe"""
 
             ni = []
             ni.append(295232799039604140847618609643520000000) # 34!
