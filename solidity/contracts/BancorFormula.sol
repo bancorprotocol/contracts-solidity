@@ -326,7 +326,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
             return 1;
         if (100000 * baseN <= 738905 * baseD) // baseN / baseD < e^2
             return 2;
-        if (baseN <= 8 * baseD)               // baseN / baseD <= 2^3 < e^3
+        if (baseN <= 20 * baseD)              // baseN / baseD < e^3
             return 3;
 
         return floorLog2(baseN/baseD);
