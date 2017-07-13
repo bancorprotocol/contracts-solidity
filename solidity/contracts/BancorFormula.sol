@@ -206,8 +206,53 @@ contract BancorFormula is IBancorFormula, SafeMath {
     }
 
     /**
-        fixedExp is a 'protected' version of `fixedExpUnsafe`, which 
-        asserts instead of overflows
+        fixedExp is a 'protected' version of `fixedExpUnsafe`, which asserts instead of overflows.
+        The maximum value which can be passed to fixedExpUnsafe depends on the precision used.
+        The following array maps each precision between 0 and 63 to the maximum value permitted:
+        maxExpArray = {
+            0xc1               ,0x17a              ,0x2e5              ,0x5ab              ,
+            0xb1b              ,0x15bf             ,0x2a0c             ,0x50a2             ,
+            0x9aa2             ,0x1288c            ,0x238b2            ,0x4429a            ,
+            0x82b78            ,0xfaadc            ,0x1e0bb8           ,0x399e96           ,
+            0x6e7f88           ,0xd3e7a3           ,0x1965fea          ,0x30b5057          ,
+            0x5d681f3          ,0xb320d03          ,0x15784a40         ,0x292c5bdd         ,
+            0x4ef57b9b         ,0x976bd995         ,0x122624e32        ,0x22ce03cd5        ,
+            0x42beef808        ,0x7ffffffff        ,0xf577eded5        ,0x1d6bd8b2eb       ,
+            0x386bfdba29       ,0x6c3390ecc8       ,0xcf8014760f       ,0x18ded91f0e7      ,
+            0x2fb1d8fe082      ,0x5b771955b36      ,0xaf67a93bb50      ,0x15060c256cb2     ,
+            0x285145f31ae5     ,0x4d5156639708     ,0x944620b0e70e     ,0x11c592761c666    ,
+            0x2214d10d014ea    ,0x415bc6d6fb7dd    ,0x7d56e76777fc5    ,0xf05dc6b27edad    ,
+            0x1ccf4b44bb4820   ,0x373fc456c53bb7   ,0x69f3d1c921891c   ,0xcb2ff529eb71e4   ,
+            0x185a82b87b72e95  ,0x2eb40f9f620fda6  ,0x5990681d961a1ea  ,0xabc25204e02828d  ,
+            0x14962dee9dc97640 ,0x277abdcdab07d5a7 ,0x4bb5ecca963d54ab ,0x9131271922eaa606 ,
+            0x116701e6ab0cd188d,0x215f77c045fbe8856,0x3ffffffffffffffff,0x7abbf6f6abb9d087f,
+        };
+        Since we cannot use an array of constants, we need to approximate the maximum value dynamically.
+        The precision may be a value between 32 and 64, in multiples of 2 (i.e., 32, 34, 36, ..., 64).
+        For the minimum precision of 32, the maximum value is MAX_FIXED_EXP_32.
+        For each additional precision unit, the maximum value permitted increases by approximately 1.9.
+        So in order to calculate it, we should multiply MAX_FIXED_EXP_32 by 1.9^((precision-32)/2).
+        Since we cannot use non-integers, we multiply by 19^((precision-32)/2) and divide by 10^((precision-32)/2).
+        But there is a better approximation, since this "1.9" factor in fact extends beyond a single decimal digit.
+        So instead, we use 367765941410054209/100000000000000000, which yields maximum values quite close to real ones:
+        maxExpArray = {
+            -------------------,-------------------,-------------------,-------------------,
+            -------------------,-------------------,-------------------,-------------------,
+            -------------------,-------------------,-------------------,-------------------,
+            -------------------,-------------------,-------------------,-------------------,
+            -------------------,-------------------,-------------------,-------------------,
+            -------------------,-------------------,-------------------,-------------------,
+            -------------------,-------------------,-------------------,-------------------,
+            -------------------,-------------------,-------------------,-------------------,
+            0x386bfdba29       ,-------------------,0xcf8014760e       ,-------------------,
+            0x2fb1d8fe07b      ,-------------------,0xaf67a93bb37      ,-------------------,
+            0x285145f31a8f     ,-------------------,0x944620b0e5ee     ,-------------------,
+            0x2214d10d0112e    ,-------------------,0x7d56e7677738e    ,-------------------,
+            0x1ccf4b44bb20d0   ,-------------------,0x69f3d1c9210d27   ,-------------------,
+            0x185a82b87b5b294  ,-------------------,0x5990681d95d4371  ,-------------------,
+            0x14962dee9dbd672a ,-------------------,0x4bb5ecca961fb9b8 ,-------------------,
+            0x116701e6ab096705a,-------------------,0x3fffffffffffe6599,-------------------,
+        };
     */
     function fixedExp(uint256 _x, uint8 _precision) constant returns (uint256) {
         uint256 maxExp = MAX_FIXED_EXP_32;
