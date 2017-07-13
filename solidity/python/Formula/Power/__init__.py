@@ -105,7 +105,11 @@ def fixedLog2(_x, _precision):
     asserts instead of overflows
 '''
 def fixedExp(_x, _precision):
-    assert(_x <= MAX_FIXED_EXP_32);
+    maxExp = MAX_FIXED_EXP_32;
+    for p in range (32,_precision,2):
+        maxExp = maxExp * 367765941410054209 / 100000000000000000;
+    
+    assert(_x <= maxExp);
     return fixedExpUnsafe(_x, _precision);
 
 '''
@@ -209,7 +213,11 @@ def fixedExpUnsafe(_x, _precision):
 
 def getBestPrecision(_baseN, _baseD, _expN, _expD):
     precision = floorLog2(MAX_FIXED_EXP_32*_expD/(lnUpperBound(_baseN,_baseD)*_expN));
-    return precision if precision >= 32 else 32;
+    if (precision <= 32):
+        return 32;
+    if (precision >= 48):
+        return 64;
+    return precision * 2 - 32;
 
 def lnUpperBound(baseN, baseD):
     assert(baseN > baseD);
