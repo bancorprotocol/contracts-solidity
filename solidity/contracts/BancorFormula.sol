@@ -322,11 +322,12 @@ contract BancorFormula is IBancorFormula, SafeMath {
     function lnUpperBound(uint256 baseN, uint256 baseD) constant returns (uint8) {
         assert(baseN > baseD);
 
-        if (100000 * baseN <= 271828 * baseD) // baseN / baseD < e^1
+        scaled_baseN = baseN * 100000;
+        if (scaled_baseN <= baseD *  271828) // baseN / baseD < e^1
             return 1;
-        if (100000 * baseN <= 738905 * baseD) // baseN / baseD < e^2
+        if (scaled_baseN <= baseD *  738905) // baseN / baseD < e^2
             return 2;
-        if (baseN <= 8 * baseD)               // baseN / baseD <= 2^3 < e^3
+        if (scaled_baseN <= baseD * 2008553) // baseN / baseD < e^3
             return 3;
 
         return floorLog2(baseN/baseD);
