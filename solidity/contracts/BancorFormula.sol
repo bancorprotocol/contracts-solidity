@@ -224,7 +224,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
             0x116701e6ab0cd188d,0x215f77c045fbe8856,0x3ffffffffffffffff,0x7abbf6f6abb9d087f,
         };
         Since we cannot use an array of constants, we need to approximate the maximum value dynamically.
-        The precision may be a value between 32 and 64, in multiples of 2 (i.e., 32, 34, 36, ..., 64).
+        The precision may be a value between 32 and 62, in multiples of 2 (i.e., 32, 34, 36, ..., 62).
         For the minimum precision of 32, the maximum value is MAX_FIXED_EXP_32.
         For each additional precision unit, the maximum value permitted increases by approximately 1.9.
         So in order to calculate it, we should multiply MAX_FIXED_EXP_32 by 1.9 ^ ((precision - 32) / 2).
@@ -260,7 +260,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
     }
 
     /**
-        fixedExpUnsafe 
+        fixedExp 
         Calculates e ^ x according to maclauren summation:
 
         e^x = 1 + x + x ^ 2 / 2!...+ x ^ n / n!
@@ -276,7 +276,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         The values in this method been generated via the following python snippet: 
 
         def calculateFactorials():
-            """Method to print out the factorials for fixedExpUnsafe"""
+            """Method to print out the factorials for fixedExp"""
 
             ni = []
             ni.append(295232799039604140847618609643520000000) # 34!
@@ -375,7 +375,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Hence if we deduce that the highest precision which can be used is 33, then we can in fact most likely use a precision of 34.
         So instead of returning 'precision', we return 'precision * 2 - 32'.
         Of course, we should later assert that the value passed to fixedExpUnsafe is not larger than MAX_FIXED_EXP(precision).
-        Due to this assertion (made in function fixedExp before calling function fixedExpUnsafe), the precision must be a value between 32 and 64.
+        Due to this assertion (made in function fixedExp before calling function fixedExpUnsafe), the precision must be a value between 32 and 62.
         In addition, since the value of 'precision * 2 - 32' is even, we can calculate MAX_FIXED_EXP(precision) within half as many iterations.
         Hence both functions (getBestPrecision and fixedExp) are tightly coupled.
         Note that the outcome of this function only affects the accuracy of the computation of "base^exp".
@@ -385,8 +385,8 @@ contract BancorFormula is IBancorFormula, SafeMath {
         uint8 precision = floorLog2(MAX_FIXED_EXP_32 * _expD / (lnUpperBound(_baseN,_baseD) * _expN));
         if (precision <= 32)
             return 32;
-        if (precision >= 48)
-            return 64;
+        if (precision >= 47)
+            return 62;
         return precision * 2 - 32;
     }
 
