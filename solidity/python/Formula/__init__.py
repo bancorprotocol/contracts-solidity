@@ -32,9 +32,7 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
 
     precision = getBestPrecision(baseN, _reserveBalance, _reserveRatio, 100);
     resN = power(baseN, _reserveBalance, _reserveRatio, 100, precision);
-
     temp = safeMul(_supply, resN) >> precision;
-
     return safeSub(temp, _supply);
 
 '''
@@ -72,10 +70,8 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
 
     precision = getBestPrecision(_supply, baseD, 100, _reserveRatio);
     resN = power(_supply, baseD, 100, _reserveRatio, precision);
-
     temp1 = safeMul(_reserveBalance, resN);
     temp2 = safeMul(_reserveBalance, (1) << precision);
-
     return safeSub(temp1, temp2) / resN;
 
 
