@@ -372,20 +372,34 @@ contract BancorFormula is IBancorFormula, SafeMath {
         return precision * 2 - 32;
     }
 
+    /**
+        lnUpperBound 
+        Takes a rational number (baseN/baseD) as input.
+        Returns an estimated upper-bound integer of the natural logarithm of the input.
+        We can generally use floorLog2, although there is possibly a tighter bound.
+        We cannot use floorLog2 when the input is smaller than 8.
+        Complexity is O(log(input)).
+    */
     function lnUpperBound(uint256 baseN, uint256 baseD) constant returns (uint8) {
         assert(baseN > baseD);
 
         uint256 scaledBaseN = baseN * 100000;
-        if (scaledBaseN <= baseD *  271828) // baseN / baseD < e^1
+        if (scaledBaseN <= baseD *  271828) // baseN / baseD < e^1 (floorLog2 will return 0 if baseN/baseD < 2)
             return 1;
-        if (scaledBaseN <= baseD *  738905) // baseN / baseD < e^2
+        if (scaledBaseN <= baseD *  738905) // baseN / baseD < e^2 (floorLog2 will return 1 if baseN/baseD < 4)
             return 2;
-        if (scaledBaseN <= baseD * 2008553) // baseN / baseD < e^3
+        if (scaledBaseN <= baseD * 2008553) // baseN / baseD < e^3 (floorLog2 will return 2 if baseN/baseD < 8)
             return 3;
 
         return floorLog2(baseN/baseD);
     }
 
+    /**
+        floorLog2 
+        Takes a natural number (n) as input.
+        Returns the largest integer smaller than or equal to the binary logarithm of the input.
+        Complexity is O(log(input)).
+    */
     function floorLog2(uint256 n) constant returns (uint8) {
         uint256 t = 0;
         for (int k = 7; k >= 0; k--) {
