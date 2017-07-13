@@ -23,91 +23,78 @@ def safeAdd(x,y):
     return x + y
 
 
-NUM_OF_COEFS = 34
-coefs = [NUM_OF_COEFS]
-for i in range(NUM_OF_COEFS-1,0,-1):
-    coefs.append(coefs[-1]*i)
-
-
-values = []
-for precision in range(NUM_OF_PRECISIONS):
+def binarySearch(func,args):
     lo = 1
     hi = 1 << 256
     while lo+1 < hi:
         mid = (lo+hi)/2
         try:
-            fixedExpUnsafe(mid,precision)
+            func(mid,args)
             lo = mid
             mid = (lo+hi)/2
         except Exception,error:
             hi = mid
             mid = (lo+hi)/2
     try:
-        fixedExpUnsafe(hi,precision)
-        values.append(hi)
+        func(hi,args)
+        return hi
     except Exception,error:
-        fixedExpUnsafe(lo,precision)
-        values.append(lo)
+        func(lo,args)
+        return lo
 
 
-maxLen = len('0x{:x}'.format(values[-1]))
+def getMaxExp(precision,factor):
+    maxExp = maxExpArray[32]
+    for p in range (32,precision,2):
+        maxExp = safeMul(maxExp,factor)/100000000000000000
+        fixedExpUnsafe(maxExp,precision)
+    return maxExp
 
 
-print 'Analysis:'
-formatString = '{:s}{:d}{:s}'.format('Precision = {:3d} | Max Exp = {:',maxLen,'s} | Ratio = {:9.7f}')
+def assertFactor(factor,args):
+    for precision in range(32,64,2):
+        getMaxExp(precision,factor)
+
+
+NUM_OF_COEFS = 34
+coefs = [NUM_OF_COEFS]
+for i in range(NUM_OF_COEFS-1,0,-1):
+    coefs.append(coefs[-1]*i)
+
+
+maxExpArray = [0]*NUM_OF_PRECISIONS
 for precision in range(NUM_OF_PRECISIONS):
-    maxExp = '0x{:x}'.format(values[precision])
-    ratio = float(values[precision])/float(values[precision-1]) if precision else 0.0
+    maxExpArray[precision] = binarySearch(fixedExpUnsafe,precision)
+
+
+maxFactor = binarySearch(assertFactor,None)
+
+
+maxMaxExpLen = len('0x{:x}'.format(maxExpArray[-1]))
+
+
+print 'Max Exp Per Precision:'
+formatString = '{:s}{:d}{:s}'.format('Precision = {:2d} | Max Exp = {:',maxMaxExpLen,'s} | Ratio = {:9.7f}')
+for precision in range(NUM_OF_PRECISIONS):
+    maxExp = '0x{:x}'.format(maxExpArray[precision])
+    ratio = float(maxExpArray[precision])/float(maxExpArray[precision-1]) if precision > 0 else 0.0
     print formatString.format(precision,maxExp,ratio)
 print ''
 
 
 print 'maxExpArray = ['
-formatString = '{:s}{:d}{:s}'.format('{:',maxLen,'s},')
-for i in range(len(values)/NUM_OF_VALUES_PER_ROW):
+formatString = '{:s}{:d}{:s}'.format('{:',maxMaxExpLen,'s},')
+for i in range(len(maxExpArray)/NUM_OF_VALUES_PER_ROW):
     items = []
     for j in range(NUM_OF_VALUES_PER_ROW):
-        items.append('0x{:x}'.format(values[i*NUM_OF_VALUES_PER_ROW+j]))
+        items.append('0x{:x}'.format(maxExpArray[i*NUM_OF_VALUES_PER_ROW+j]))
     print '    '+''.join([formatString.format(item) for item in items])
 print ']\n'
 
 
-lo = 1
-hi = 1 << 256
-while lo+1 < hi:
-    mid = (lo+hi)/2
-    try:
-        for precision in range(32,64,2):
-            maxExp = values[32]
-            for p in range (32,precision,2):
-                maxExp = safeMul(maxExp,mid)/100000000000000000
-                fixedExpUnsafe(maxExp,precision)
-        lo = mid
-        mid = (lo+hi)/2
-    except Exception,error:
-        hi = mid
-        mid = (lo+hi)/2
-try:
-    for precision in range(32,64,2):
-        maxExp = values[32]
-        for p in range (32,precision,2):
-            maxExp = safeMul(maxExp,hi)/100000000000000000
-            fixedExpUnsafe(maxExp,precision)
-    maxFactor = hi
-except Exception,error:
-    for precision in range(32,64,2):
-        maxExp = values[32]
-        for p in range (32,precision,2):
-            maxExp = safeMul(maxExp,lo)/100000000000000000
-            fixedExpUnsafe(maxExp,precision)
-    maxFactor = lo
-
-
-print 'maxFactor = ',maxFactor
-formatString = '{:s}{:d}{:s}{:d}{:s}'.format('Precision = {:3d} | Theoretical Max Exp = {:',maxLen,'s} | Practical Max Exp = {:',maxLen,'s}')
+print 'maxFactor =',maxFactor
+formatString = '{:s}{:d}{:s}{:d}{:s}'.format('Precision = {:2d} | Theoretical Max Exp = {:',maxMaxExpLen,'s} | Practical Max Exp = {:',maxMaxExpLen,'s}')
 for precision in range(32,64,2):
-    maxExp = values[32]
-    for p in range (32,precision,2):
-        maxExp = safeMul(maxExp,maxFactor)/100000000000000000
-        fixedExpUnsafe(maxExp,precision)
-    print formatString.format(precision,'0x{:x}'.format(values[precision]),'0x{:x}'.format(maxExp))
+    theoreticalMaxExp = '0x{:x}'.format(maxExpArray[precision])
+    practicalMaxExp = '0x{:x}'.format(getMaxExp(precision,maxFactor))
+    print formatString.format(precision,theoreticalMaxExp,practicalMaxExp)
