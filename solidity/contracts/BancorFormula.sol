@@ -48,9 +48,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         uint8 precision = getBestPrecision(baseN, _reserveBalance, _reserveRatio, 100);
         uint256 resN = power(baseN, _reserveBalance, _reserveRatio, 100, precision);
-
         temp = safeMul(_supply, resN) >> precision;
-
         return safeSub(temp, _supply);
      }
 
@@ -92,10 +90,8 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         uint8 precision = getBestPrecision(_supply, baseD, 100, _reserveRatio);
         uint256 resN = power(_supply, baseD, 100, _reserveRatio, precision);
-
         temp1 = safeMul(_reserveBalance, resN);
         temp2 = safeMul(_reserveBalance, uint256(1) << precision);
-
         return safeSub(temp1, temp2) / resN;
     }
 
@@ -141,7 +137,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     /**
         input range: 
-            [0x100000000,uint256_max]
+            [0x100000000, uint256_max]
         output range:
             [0, 0x9b43d4f8d6]
 
@@ -174,7 +170,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         actual value
 
         input-range : 
-            [0x100000000,uint256_max]
+            [0x100000000, uint256_max]
         output-range: 
             [0,0xdfffffffff]
 
@@ -231,10 +227,10 @@ contract BancorFormula is IBancorFormula, SafeMath {
         The precision may be a value between 32 and 64, in multiples of 2 (i.e., 32, 34, 36, ..., 64).
         For the minimum precision of 32, the maximum value is MAX_FIXED_EXP_32.
         For each additional precision unit, the maximum value permitted increases by approximately 1.9.
-        So in order to calculate it, we should multiply MAX_FIXED_EXP_32 by 1.9^((precision-32)/2).
-        Since we cannot use non-integers, we multiply by 19^((precision-32)/2) and divide by 10^((precision-32)/2).
+        So in order to calculate it, we should multiply MAX_FIXED_EXP_32 by 1.9 ^ ((precision - 32) / 2).
+        Since we cannot use non-integers, we multiply by 19 ^ ((precision - 32) / 2) and divide by 10 ^ ((precision - 32) / 2).
         But there is a better approximation, since this "1.9" factor in fact extends beyond a single decimal digit.
-        So instead, we use 367765941410054209/100000000000000000, which yields maximum values quite close to real ones:
+        So instead, we use 367765941410234761 / 100000000000000000, which yields maximum values quite close to real ones:
         maxExpArray = {
             -------------------,-------------------,-------------------,-------------------,
             -------------------,-------------------,-------------------,-------------------,
@@ -257,7 +253,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
     function fixedExp(uint256 _x, uint8 _precision) constant returns (uint256) {
         uint256 maxExp = MAX_FIXED_EXP_32;
         for (uint8 p = 32; p < _precision; p += 2)
-            maxExp = maxExp * 367765941410054209 / 100000000000000000;
+            maxExp = maxExp * 367765941410234761 / 100000000000000000;
         
         assert(_x <= maxExp);
         return fixedExpUnsafe(_x, _precision);
@@ -265,11 +261,11 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     /**
         fixedExp 
-        Calculates e^x according to maclauren summation:
+        Calculates e ^ x according to maclauren summation:
 
-        e^x = 1+x+x^2/2!...+x^n/n!
+        e^x = 1 + x + x ^ 2 / 2!...+ x ^ n / n!
 
-        and returns e^(x>>32) << 32, that is, upshifted for accuracy
+        and returns e ^ (x >> 32) << 32, that is, upshifted for accuracy
 
         Input range:
             - Function ok at    <= 242329958953 
@@ -283,9 +279,9 @@ contract BancorFormula is IBancorFormula, SafeMath {
             """Method to print out the factorials for fixedExp"""
 
             ni = []
-            ni.append( 295232799039604140847618609643520000000) # 34!
+            ni.append(295232799039604140847618609643520000000) # 34!
             ITERATIONS = 34
-            for n in range( 1,  ITERATIONS,1 ) :
+            for n in range(1, ITERATIONS, 1) :
                 ni.append(math.floor(ni[n - 1] / n))
             print( "\n        ".join(["xi = (xi * _x) >> _precision;\n        res += xi * %s;" % hex(int(x)) for x in ni]))
 
@@ -374,7 +370,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     /**
         lnUpperBound 
-        Takes a rational number (baseN/baseD) as input.
+        Takes a rational number (baseN / baseD) as input.
         Returns an estimated upper-bound integer of the natural logarithm of the input.
         We can generally use floorLog2, although there is possibly a tighter bound.
         We cannot use floorLog2 when the input is smaller than 8.
@@ -384,11 +380,11 @@ contract BancorFormula is IBancorFormula, SafeMath {
         assert(baseN > baseD);
 
         uint256 scaledBaseN = baseN * 100000;
-        if (scaledBaseN <= baseD *  271828) // baseN / baseD < e^1 (floorLog2 will return 0 if baseN/baseD < 2)
+        if (scaledBaseN <= baseD *  271828) // baseN / baseD < e^1 (floorLog2 will return 0 if baseN / baseD < 2)
             return 1;
-        if (scaledBaseN <= baseD *  738905) // baseN / baseD < e^2 (floorLog2 will return 1 if baseN/baseD < 4)
+        if (scaledBaseN <= baseD *  738905) // baseN / baseD < e^2 (floorLog2 will return 1 if baseN / baseD < 4)
             return 2;
-        if (scaledBaseN <= baseD * 2008553) // baseN / baseD < e^3 (floorLog2 will return 2 if baseN/baseD < 8)
+        if (scaledBaseN <= baseD * 2008553) // baseN / baseD < e^3 (floorLog2 will return 2 if baseN / baseD < 8)
             return 3;
 
         return floorLog2(baseN/baseD);
