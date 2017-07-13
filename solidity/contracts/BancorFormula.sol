@@ -210,7 +210,11 @@ contract BancorFormula is IBancorFormula, SafeMath {
         asserts instead of overflows
     */
     function fixedExp(uint256 _x, uint8 _precision) constant returns (uint256) {
-        assert(_x <= MAX_FIXED_EXP_32);
+        uint256 maxExp = MAX_FIXED_EXP_32;
+        for (uint8 p = 32; p < _precision; p += 2)
+            maxExp = maxExp * 367765941410054209 / 100000000000000000;
+        
+        assert(_x <= maxExp);
         return fixedExpUnsafe(_x, _precision);
     }
 
@@ -315,19 +319,23 @@ contract BancorFormula is IBancorFormula, SafeMath {
     }
 
     function getBestPrecision(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) constant returns (uint8) {
-        uint8 precision = floorLog2(MAX_FIXED_EXP_32*_expD/(lnUpperBound(_baseN,_baseD)*_expN));
-        return precision >= 32 ? precision : 32;
+        uint8 precision = floorLog2(MAX_FIXED_EXP_32 * _expD / (lnUpperBound(_baseN,_baseD) * _expN));
+        if (precision <= 32)
+            return 32;
+        if (precision >= 48)
+            return 64;
+        return precision * 2 - 32;
     }
 
     function lnUpperBound(uint256 baseN, uint256 baseD) constant returns (uint8) {
         assert(baseN > baseD);
 
-        scaled_baseN = baseN * 100000;
-        if (scaled_baseN <= baseD *  271828) // baseN / baseD < e^1
+        uint256 scaledBaseN = baseN * 100000;
+        if (scaledBaseN <= baseD *  271828) // baseN / baseD < e^1
             return 1;
-        if (scaled_baseN <= baseD *  738905) // baseN / baseD < e^2
+        if (scaledBaseN <= baseD *  738905) // baseN / baseD < e^2
             return 2;
-        if (scaled_baseN <= baseD * 2008553) // baseN / baseD < e^3
+        if (scaledBaseN <= baseD * 2008553) // baseN / baseD < e^3
             return 3;
 
         return floorLog2(baseN/baseD);
@@ -336,12 +344,13 @@ contract BancorFormula is IBancorFormula, SafeMath {
     function floorLog2(uint256 n) constant returns (uint8) {
         uint256 t = 0;
         for (int k = 7; k >= 0; k--) {
-            if (n > (uint256(1)<<(1<<k))-1) {
+            if (n > (uint256(1) << (1 << k)) - 1) {
                 uint256 s = uint256(1) << k;
                 n >>= s;
                 t |= s;
             }
         }
+
         return uint8(t | (n >> 1));
     }
 }
