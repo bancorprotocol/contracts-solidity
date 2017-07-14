@@ -419,18 +419,13 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Complexity is O(log(input bit-length)).
     */
     function floorLog2(uint256 n) constant returns (uint8) {
-        uint8 lo = 0;
-        uint8 hi = 255;
-        while (lo+1 < hi) {
-            uint8 mid = (lo+hi)/2;
-            if (n >= (uint256(1) << mid))
-                lo = mid;
-            else
-                hi = mid;
+        uint8 t = 0;
+        for (int k = 7; k >= 0; k--) {
+            uint8 s = (n >= (uint256(1) << (1 << k))) << k;
+            n >>= s;
+            t |= s;
         }
-        if (n >= (uint256(1) << hi))
-            return hi;
-        else
-            return lo;
+
+        return t;
     }
 }
