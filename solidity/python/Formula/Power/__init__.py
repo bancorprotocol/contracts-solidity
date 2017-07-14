@@ -314,18 +314,12 @@ def lnUpperBound(baseN, baseD):
     Complexity is O(log(input bit-length)).
 '''
 def floorLog2(n):
-    lo = 0;
-    hi = 255;
-    while (lo+1 < hi):
-        mid = (lo+hi)/2;
-        if (n >= (1 << mid)):
-            lo = mid;
-        else:
-            hi = mid;
-    if (n >= (1 << hi)):
-        return hi;
-    else:
-        return lo;
+    t = 0;
+    for k in range(7,-1,-1):
+        s = (n >= ((1) << (1 << k))) << k;
+        n >>= s;
+        t |= s;
+    return t;
 
 
 def safeMul(x,y):
