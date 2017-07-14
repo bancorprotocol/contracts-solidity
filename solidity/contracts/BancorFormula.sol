@@ -396,7 +396,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Returns an estimated upper-bound integer of the natural logarithm of the input.
         We can generally use floorLog2, although there is possibly a tighter bound.
         We cannot use floorLog2 when the input is smaller than 8.
-        Complexity is O(log(input)).
+        Complexity is O(log(input bit-length)).
     */
     function lnUpperBound(uint256 baseN, uint256 baseD) constant returns (uint8) {
         assert(baseN > baseD);
@@ -416,18 +416,21 @@ contract BancorFormula is IBancorFormula, SafeMath {
         floorLog2 
         Takes a natural number (n) as input.
         Returns the largest integer smaller than or equal to the binary logarithm of the input.
-        Complexity is O(log(input)).
+        Complexity is O(log(input bit-length)).
     */
     function floorLog2(uint256 n) constant returns (uint8) {
-        uint256 t = 0;
-        for (int k = 7; k >= 0; k--) {
-            if (n > (uint256(1) << (1 << k)) - 1) {
-                uint256 s = uint256(1) << k;
-                n >>= s;
-                t |= s;
-            }
+        uint8 lo = 0;
+        uint8 hi = 255;
+        while (lo+1 < hi) {
+            uint8 mid = (lo+hi)/2;
+            if (n >= (uint256(1) << mid))
+                lo = mid;
+            else
+                hi = mid;
         }
-
-        return uint8(t | (n >> 1));
+        if (n >= (uint256(1) << hi))
+            return hi;
+        else
+            return lo;
     }
 }
