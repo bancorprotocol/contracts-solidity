@@ -31,10 +31,8 @@ def binarySearch(func,args):
         try:
             func(mid,args)
             lo = mid
-            mid = (lo+hi)/2
         except Exception,error:
             hi = mid
-            mid = (lo+hi)/2
     try:
         func(hi,args)
         return hi
