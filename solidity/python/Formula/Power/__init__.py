@@ -292,7 +292,7 @@ def getBestPrecision(_baseN, _baseD, _expN, _expD):
     Returns an estimated upper-bound integer of the natural logarithm of the input.
     We can generally use floorLog2, although there is possibly a tighter bound.
     We cannot use floorLog2 when the input is smaller than 8.
-    Complexity is O(log(input)).
+    Complexity is O(log(input bit-length)).
 '''
 def lnUpperBound(baseN, baseD):
     assert(baseN > baseD);
@@ -311,16 +311,21 @@ def lnUpperBound(baseN, baseD):
     floorLog2 
     Takes a natural number (n) as input.
     Returns the largest integer smaller than or equal to the binary logarithm of the input.
-    Complexity is O(log(input)).
+    Complexity is O(log(input bit-length)).
 '''
 def floorLog2(n):
-    t = 0;
-    for k in range(7,-1,-1):
-        if (n > ((1)<<(1<<k))-1):
-            s = (1) << k;
-            n >>= s;
-            t |= s;
-    return (t | (n >> 1));
+    lo = 0;
+    hi = 255;
+    while (lo+1 < hi):
+        mid = (lo+hi)/2;
+        if (n >= (1 << mid)):
+            lo = mid;
+        else:
+            hi = mid;
+    if (n >= (1 << hi)):
+        return hi;
+    else:
+        return lo;
 
 
 def safeMul(x,y):
