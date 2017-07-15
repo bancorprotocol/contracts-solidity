@@ -265,26 +265,21 @@ def fixedExpUnsafe(_x, _precision):
     However, function fixedExpUnsafe(x), which calculates e^x, is limited to a maximum value of x.
     The limit depends on the precision (e.g, for precision=32, the maximum value of x is MAX_FIXED_EXP_32).
     Hence before calling the 'power' function, we need to estimate an upper-bound for ln(base)*exponent.
-    Dividing MAX_FIXED_EXP_32 by this value will indicate the highest precision which can be used.
-    Of course, this is slightly a 'chicken-egg' paradox, because MAX_FIXED_EXP_32 corresponds with a precision of 32 to begin with.
-    For example, if we deduce that the highest precision which can be used is 33, then we should have actually used "MAX_FIXED_EXP_33" in order to deduce that.
-    However, the value of MAX_FIXED_EXP(precision) is appriximately 2 times larger than the value of MAX_FIXED_EXP(precision-1).
-    Hence if we deduce that the highest precision which can be used is 33, then we can in fact most likely use a precision of 34.
-    So instead of returning 'precision', we return 'precision * 2 - 32'.
     Of course, we should later assert that the value passed to fixedExpUnsafe is not larger than MAX_FIXED_EXP(precision).
-    Due to this assertion (made in function fixedExp before calling function fixedExpUnsafe), the precision must be a value between 32 and 62.
-    In addition, since the value of 'precision * 2 - 32' is even, we can calculate MAX_FIXED_EXP(precision) within half as many iterations.
-    Hence both functions (getBestPrecision and fixedExp) are tightly coupled.
+    Due to this assertion (made in function fixedExp), functions getBestPrecision and fixedExp are tightly coupled.
     Note that the outcome of this function only affects the accuracy of the computation of "base^exp".
     Therefore, there is no need to assert that no intermediate result exceeds 256 bits (nor in this function, neither in any of the functions down the calling tree).
 '''
 def getBestPrecision(_baseN, _baseD, _expN, _expD):
-    precision = floorLog2(MAX_FIXED_EXP_32*_expD/(lnUpperBound(_baseN,_baseD)*_expN));
-    if (precision <= 32):
+    maxExp = MAX_FIXED_EXP_32;
+    maxVal = _expN * lnUpperBound(_baseN, _baseD);
+    for precision in range (32,64,2):
+        if (maxExp < (maxVal << precision) / _expD):
+            break;
+        maxExp = maxExp * 367765941410234761 / 100000000000000000;
+    if (precision == 32):
         return 32;
-    if (precision >= 47):
-        return 62;
-    return precision * 2 - 32;
+    return precision-2;
 
 '''
     lnUpperBound 
