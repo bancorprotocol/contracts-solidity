@@ -44,7 +44,7 @@ def binarySearch(func,args):
 def getMaxExp(precision,factor):
     maxExp = maxExpArray[32]
     for p in range (32,precision,2):
-        maxExp = safeMul(maxExp,factor)/100000000000000000
+        maxExp = safeMul(maxExp,factor) >> (64-2)
         fixedExpUnsafe(maxExp,precision)
     return maxExp
 
@@ -90,7 +90,7 @@ for i in range(len(maxExpArray)/NUM_OF_VALUES_PER_ROW):
 print ']\n'
 
 
-print 'maxFactor =',maxFactor
+print 'maxFactor = 0x{:x}'.format(maxFactor)
 formatString = '{:s}{:d}{:s}{:d}{:s}'.format('Precision = {:2d} | Theoretical Max Exp = {:',maxMaxExpLen,'s} | Practical Max Exp = {:',maxMaxExpLen,'s}')
 for precision in range(32,64,2):
     theoreticalMaxExp = '0x{:x}'.format(maxExpArray[precision])
