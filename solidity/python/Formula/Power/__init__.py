@@ -132,7 +132,7 @@ def fixedLog2(_x, _precision):
     - MaxFixedExp(precision) = MAX_FIXED_EXP_32 * 3.61^(precision/2-16)
     Since we cannot use non-integers, we do MAX_FIXED_EXP_32 * 361^(precision/2-16) / 100^(precision/2-16).
     But there is a better approximation, because this "1.9" factor in fact extends beyond a single decimal digit.
-    So instead, we use 367765941410234761 / 100000000000000000, which yields maximum values quite close to real ones:
+    So instead, we use 0xeb5ec5975959c565 / 0x4000000000000000, which yields maximum values quite close to real ones:
     maxExpArray = {
         -------------------,-------------------,-------------------,-------------------,
         -------------------,-------------------,-------------------,-------------------,
@@ -148,14 +148,14 @@ def fixedLog2(_x, _precision):
         0x2214d10d0112e    ,-------------------,0x7d56e7677738e    ,-------------------,
         0x1ccf4b44bb20d0   ,-------------------,0x69f3d1c9210d27   ,-------------------,
         0x185a82b87b5b294  ,-------------------,0x5990681d95d4371  ,-------------------,
-        0x14962dee9dbd672a ,-------------------,0x4bb5ecca961fb9b8 ,-------------------,
-        0x116701e6ab096705a,-------------------,0x3fffffffffffe6599,-------------------,
+        0x14962dee9dbd672b ,-------------------,0x4bb5ecca961fb9bf ,-------------------,
+        0x116701e6ab0967080,-------------------,0x3fffffffffffe6652,-------------------,
     };
 '''
 def fixedExp(_x, _precision):
     maxExp = MAX_FIXED_EXP_32;
     for p in range(32,_precision,2):
-        maxExp = maxExp * 367765941410234761 / 100000000000000000;
+        maxExp = (maxExp * 0xeb5ec5975959c565) >> (64-2);
     
     assert(_x <= maxExp);
     return fixedExpUnsafe(_x, _precision);
@@ -279,7 +279,7 @@ def getBestPrecision(_baseN, _baseD, _expN, _expD):
     for precision in range(32,64,2):
         if (maxExp < (maxVal << precision) / _expD):
             break;
-        maxExp = maxExp * 367765941410234761 / 100000000000000000;
+        maxExp = (maxExp * 0xeb5ec5975959c565) >> (64-2);
     if (precision == 32):
         return 32;
     return precision-2;
