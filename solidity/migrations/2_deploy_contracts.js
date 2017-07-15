@@ -23,6 +23,6 @@ module.exports = async (deployer) => {
     await deployer.deploy(SmartToken, 'Token1', 'TKN1', 2);
     deployer.deploy(SmartTokenController, SmartToken.address);
     deployer.deploy(BancorFormula);
-    deployer.deploy(BancorChanger, SmartToken.address, '0x124', '0x0', 0);
+    deployer.deploy(BancorChanger, SmartToken.address, '0x124', 0, '0x0', 0);
     deployer.deploy(CrowdsaleController, SmartToken.address, 4102444800, '0x125', '0x126', 1);
 };

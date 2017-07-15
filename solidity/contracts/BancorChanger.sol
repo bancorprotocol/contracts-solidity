@@ -40,7 +40,9 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
     IBancorFormula public formula;                  // bancor calculation formula contract
     address[] public reserveTokens;                 // ERC20 standard token addresses
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
-    uint8 private totalReserveRatio = 0;            // used to prevent increasing the total reserve ratio above 100% efficiently
+    uint8 private totalReserveRatio = 0;            // used to efficiently prevent increasing the total reserve ratio above 100%
+    uint16 public maxChangeFeePercentage = 0;       // maximum change fee percentage for the lifetime of the contract, 0...3000 (0 = no fee, 1 = 0.01%, 3000 = 30%)
+    uint16 public changeFeePercentage = 0;          // current change fee percentage, 0...maxChangeFeePercentage
     bool public changingEnabled = true;             // true if token changing is enabled, false if not
 
     // triggered when a change between two tokens occurs
@@ -51,14 +53,17 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
     /**
         @dev constructor
 
-        @param _token      smart token governed by the changer
-        @param _formula    address of a bancor formula contract
+        @param _token                   smart token governed by the changer
+        @param _formula                 address of a bancor formula contract
+        @param _maxChangeFeePercentage  maximum change fee percentage
     */
-    function BancorChanger(ISmartToken _token, IBancorFormula _formula, IERC20Token _reserveToken, uint8 _reserveRatio)
+    function BancorChanger(ISmartToken _token, IBancorFormula _formula, uint16 _maxChangeFeePercentage, IERC20Token _reserveToken, uint8 _reserveRatio)
         SmartTokenController(_token)
         validAddress(_formula)
+        validMaxChangeFeePercentage(_maxChangeFeePercentage)
     {
         formula = _formula;
+        maxChangeFeePercentage = _maxChangeFeePercentage;
 
         if (address(_reserveToken) != 0x0)
             addReserve(_reserveToken, _reserveRatio, false);
@@ -79,6 +84,18 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
     // validates a token address - verifies that the address belongs to one of the changeable tokens
     modifier validToken(address _address) {
         require(_address == address(token) || reserves[_address].isSet);
+        _;
+    }
+
+    // validates maximum change fee percentage
+    modifier validMaxChangeFeePercentage(uint16 _changeFeePercentage) {
+        require(_changeFeePercentage >= 0 && _changeFeePercentage <= 3000);
+        _;
+    }
+
+    // validates change fee percentage
+    modifier validChangeFeePercentage(uint16 _changeFeePercentage) {
+        require(_changeFeePercentage >= 0 && _changeFeePercentage <= maxChangeFeePercentage);
         _;
     }
 
@@ -142,6 +159,40 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
     }
 
     /**
+        @dev disables the entire change functionality
+        this is a safety mechanism in case of a emergency
+        can only be called by the manager
+
+        @param _disable true to disable changing, false to re-enable it
+    */
+    function disableChanging(bool _disable) public managerOnly {
+        changingEnabled = !_disable;
+    }
+
+    /**
+        @dev updates the current change fee percentage
+        can only be called by the manager
+
+        @param _changeFeePercentage new change fee percentage
+    */
+    function setChangeFeePercentage(uint16 _changeFeePercentage)
+        public
+        managerOnly
+        validChangeFeePercentage(_changeFeePercentage)
+    {
+        changeFeePercentage = _changeFeePercentage;
+    }
+
+    /*
+        @dev returns the change fee for a given return amount
+
+        @return change fee
+    */
+    function getChangeFee(uint256 _amount) public constant returns (uint256 fee) {
+        return safeMul(_amount, changeFeePercentage) / 10000;
+    }
+
+    /**
         @dev defines a new reserve for the token
         can only be called by the owner while the changer is inactive
 
@@ -190,17 +241,6 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
         reserve.ratio = _ratio;
         reserve.isVirtualBalanceEnabled = _enableVirtualBalance;
         reserve.virtualBalance = _virtualBalance;
-    }
-
-    /**
-        @dev disables the entire change functionality
-        this is a safety mechanism in case of a serious bug/exploit
-        can only be called by the manager
-
-        @param _disable true to disable changing, false to re-enable it
-    */
-    function disableChanging(bool _disable) public managerOnly {
-        changingEnabled = !_disable;
     }
 
     /**
@@ -285,7 +325,12 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
 
         uint256 tokenSupply = token.totalSupply();
         uint256 reserveBalance = getReserveBalance(_reserveToken);
-        return formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
+        amount = formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
+        if (changeFeePercentage == 0)
+            return amount;
+
+        uint256 fee = getChangeFee(amount);
+        return safeSub(amount, fee);
     }
 
     /**
@@ -416,6 +461,11 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
     {
         Reserve reserve = reserves[_reserveToken];
         uint256 reserveBalance = getReserveBalance(_reserveToken);
-        return formula.calculateSaleReturn(_totalSupply, reserveBalance, reserve.ratio, _sellAmount);
+        amount = formula.calculateSaleReturn(_totalSupply, reserveBalance, reserve.ratio, _sellAmount);
+        if (changeFeePercentage == 0)
+            return amount;
+
+        uint256 fee = getChangeFee(amount);
+        return safeSub(amount, fee);
     }
 }
