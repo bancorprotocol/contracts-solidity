@@ -375,8 +375,8 @@ contract BancorFormula is IBancorFormula, SafeMath {
     */
     function getBestPrecision(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) constant returns (uint8) {
         uint8 precision;
-        uint8 maxExp = MAX_FIXED_EXP_32;
-        uint8 maxVal = _expN*lnUpperBound(_baseN,_baseD);
+        uint256 maxExp = MAX_FIXED_EXP_32;
+        uint256 maxVal = _expN * lnUpperBound(_baseN,_baseD);
         for (precision = 32; precision < 64; precision += 2) {
             if (maxExp < (maxVal << precision) / _expD)
                 break;
