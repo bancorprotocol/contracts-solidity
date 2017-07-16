@@ -115,14 +115,14 @@ contract BancorFormula is IBancorFormula, SafeMath {
         uint8 precision;
         uint256 maxExp = MAX_FIXED_EXP_32;
         uint256 maxVal = _expN * lnUpperBound(_baseN,_baseD);
-        for (precision = 32; precision < 64; precision += 2) {
+        for (precision = 0; precision < 32; precision += 2) {
             if (maxExp < (maxVal << precision) / _expD)
                 break;
             maxExp = (maxExp * 0xeb5ec5975959c565) >> (64-2);
         }
-        if (precision == 32)
+        if (precision == 0)
             return 32;
-        return precision-2;
+        return precision+32-2;
     }
 
     /**
@@ -177,13 +177,13 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         uint256 scaledBaseN = _baseN * 100000;
         if (scaledBaseN <= _baseD *  271828) // _baseN / _baseD < e^1 (floorLog2 will return 0 if _baseN / _baseD < 2)
-            return 1;
+            return uint256(1) << 32;
         if (scaledBaseN <= _baseD *  738905) // _baseN / _baseD < e^2 (floorLog2 will return 1 if _baseN / _baseD < 4)
-            return 2;
+            return uint256(2) << 32;
         if (scaledBaseN <= _baseD * 2008553) // _baseN / _baseD < e^3 (floorLog2 will return 2 if _baseN / _baseD < 8)
-            return 3;
+            return uint256(3) << 32;
 
-        return ((floorLog2((_baseN - 1) / _baseD) + 1) * 0xb17217f7d1cf78 + (1 << 56) - 1) >> 56;
+        return (floorLog2((_baseN - 1) / _baseD) + 1) * 0xb17217f8;
     }
 
     /**
