@@ -10,6 +10,8 @@ import './interfaces/IBancorFormula.sol';
 
 contract BancorFormula is IBancorFormula, SafeMath {
 
+    uint256 constant ONE = 1;
+    uint256 constant TWO = 2;
     uint256 constant MAX_FIXED_EXP_32 = 0x386bfdba29;
     string public version = '0.2';
 
@@ -91,7 +93,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         uint8 precision = calculateBestPrecision(_supply, baseD, 100, _reserveRatio);
         uint256 resN = power(_supply, baseD, 100, _reserveRatio, precision);
         temp1 = safeMul(_reserveBalance, resN);
-        temp2 = safeMul(_reserveBalance, uint256(1) << precision);
+        temp2 = safeMul(_reserveBalance, ONE << precision);
         return safeSub(temp1, temp2) / resN;
     }
 
@@ -156,7 +158,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         assert(_denominator != 0 && _numerator != 0);
 
         // Upper bits are scaled off by precision
-        uint256 MAX_VAL = uint256(1) << (256 - _precision);
+        uint256 MAX_VAL = ONE << (256 - _precision);
         assert(_numerator < MAX_VAL);
         assert(_denominator < MAX_VAL);
 
@@ -205,7 +207,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         
         */
         //Cannot represent negative numbers (below 1)
-        assert(_x >= uint256(1) << _precision);
+        assert(_x >= ONE << _precision);
 
         uint256 log2 = fixedLog2(_x, _precision);
         logE = (log2 * 0xb17217f7d1cf78) >> 56;
@@ -228,8 +230,8 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     */
     function fixedLog2(uint256 _x, uint8 _precision) constant returns (uint256) {
-        uint256 fixedOne = uint256(1) << _precision;
-        uint256 fixedTwo = uint256(2) << _precision;
+        uint256 fixedOne = ONE << _precision;
+        uint256 fixedTwo = TWO << _precision;
 
         // Numbers below 1 are negative. 
         assert( _x >= fixedOne);
@@ -244,7 +246,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
             _x = (_x * _x) / fixedOne;
             if (_x >= fixedTwo) {
                 _x >>= 1;
-                hi += uint256(1) << (_precision - 1 - i);
+                hi += ONE << (_precision - 1 - i);
             }
         }
 
@@ -260,7 +262,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
     function floorLog2(uint256 _n) constant returns (uint256) {
         uint8 t = 0;
         for (uint8 s = 128; s > 0; s >>= 1) {
-            if (_n >= (uint256(1) << s)) {
+            if (_n >= (ONE << s)) {
                 _n >>= s;
                 t |= s;
             }
