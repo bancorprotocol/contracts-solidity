@@ -46,7 +46,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
             return safeSub(temp, _supply); 
         }
 
-        uint8 precision = getBestPrecision(baseN, _reserveBalance, _reserveRatio, 100);
+        uint8 precision = calculateBestPrecision(baseN, _reserveBalance, _reserveRatio, 100);
         uint256 resN = power(baseN, _reserveBalance, _reserveRatio, 100, precision);
         temp = safeMul(_supply, resN) >> precision;
         return safeSub(temp, _supply);
@@ -88,7 +88,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         if (_sellAmount == _supply)
             return _reserveBalance;
 
-        uint8 precision = getBestPrecision(_supply, baseD, 100, _reserveRatio);
+        uint8 precision = calculateBestPrecision(_supply, baseD, 100, _reserveRatio);
         uint256 resN = power(_supply, baseD, 100, _reserveRatio, precision);
         temp1 = safeMul(_reserveBalance, resN);
         temp2 = safeMul(_reserveBalance, uint256(1) << precision);
@@ -96,7 +96,35 @@ contract BancorFormula is IBancorFormula, SafeMath {
     }
 
     /**
-        @dev Calculate (_baseN / _baseD) ^ (_expN / _expD)
+        calculateBestPrecision 
+        Predicts the highest precision which can be used in order to compute "base^exp" without exceeding 256 bits in any of the intermediate computations.
+        Instead of calculating "base ^ exp", we calculate "e ^ (ln(base) * exp)".
+        The value of ln(base) is represented with an integer slightly smaller than ln(base) * 2 ^ precision.
+        The larger the precision is, the more accurately this value represents the real value.
+        However, function fixedExpUnsafe(x), which calculates e ^ x, is limited to a maximum value of x.
+        The limit depends on the precision (e.g, for precision = 32, the maximum value of x is MAX_FIXED_EXP_32).
+        Hence before calling the 'power' function, we need to estimate an upper-bound for ln(base) * exponent.
+        Of course, we should later assert that the value passed to fixedExpUnsafe is not larger than MAX_FIXED_EXP(precision).
+        Due to this assertion (made in function fixedExp), functions calculateBestPrecision and fixedExp are tightly coupled.
+        Note that the outcome of this function only affects the accuracy of the computation of "base ^ exp".
+        Therefore, there is no need to assert that no intermediate result exceeds 256 bits (nor in this function, neither in any of the functions down the calling tree).
+    */
+    function calculateBestPrecision(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) constant returns (uint8) {
+        uint8 precision;
+        uint256 maxExp = MAX_FIXED_EXP_32;
+        uint256 maxVal = _expN * lnUpperBound(_baseN,_baseD);
+        for (precision = 32; precision < 64; precision += 2) {
+            if (maxExp < (maxVal << precision) / _expD)
+                break;
+            maxExp = (maxExp * 0xeb5ec5975959c565) >> (64-2);
+        }
+        if (precision == 32)
+            return 32;
+        return precision-2;
+    }
+
+    /**
+        @dev calculates (_baseN / _baseD) ^ (_expN / _expD)
         Returns result upshifted by precision
 
         This method is overflow-safe
@@ -133,6 +161,28 @@ contract BancorFormula is IBancorFormula, SafeMath {
         assert(_denominator < MAX_VAL);
 
         return fixedLoge( (_numerator << _precision) / _denominator, _precision);
+    }
+
+    /**
+        lnUpperBound 
+        Takes a rational number (baseN / baseD) as input.
+        Returns an estimated upper-bound integer of the natural logarithm of the input.
+        We can generally use floorLog2, although there is possibly a tighter bound.
+        We cannot use floorLog2 when the input is smaller than 8.
+        Complexity is O(log(input bit - length)).
+    */
+    function lnUpperBound(uint256 _baseN, uint256 _baseD) constant returns (uint8) {
+        assert(_baseN > _baseD);
+
+        uint256 scaledBaseN = _baseN * 100000;
+        if (scaledBaseN <= _baseD *  271828) // _baseN / _baseD < e^1 (floorLog2 will return 0 if _baseN / _baseD < 2)
+            return 1;
+        if (scaledBaseN <= _baseD *  738905) // _baseN / _baseD < e^2 (floorLog2 will return 1 if _baseN / _baseD < 4)
+            return 2;
+        if (scaledBaseN <= _baseD * 2008553) // _baseN / _baseD < e^3 (floorLog2 will return 2 if _baseN / _baseD < 8)
+            return 3;
+
+        return floorLog2(_baseN / _baseD);
     }
 
     /**
@@ -178,27 +228,46 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     */
     function fixedLog2(uint256 _x, uint8 _precision) constant returns (uint256) {
-        uint256 FIXED_ONE = uint256(1) << _precision;
-        uint256 FIXED_TWO = uint256(2) << _precision;
+        uint256 fixedOne = uint256(1) << _precision;
+        uint256 fixedTwo = uint256(2) << _precision;
 
         // Numbers below 1 are negative. 
-        assert( _x >= FIXED_ONE);
+        assert( _x >= fixedOne);
 
         uint256 hi = 0;
-        while (_x >= FIXED_TWO) {
+        while (_x >= fixedTwo) {
             _x >>= 1;
-            hi += FIXED_ONE;
+            hi += fixedOne;
         }
 
         for (uint8 i = 0; i < _precision; ++i) {
-            _x = (_x * _x) / FIXED_ONE;
-            if (_x >= FIXED_TWO) {
+            _x = (_x * _x) / fixedOne;
+            if (_x >= fixedTwo) {
                 _x >>= 1;
                 hi += uint256(1) << (_precision - 1 - i);
             }
         }
 
         return hi;
+    }
+
+    /**
+        floorLog2
+        Takes a natural number (n) as input.
+        Returns the largest integer smaller than or equal to the binary logarithm of the input.
+        Complexity is O(log(input bit - length)).
+    */
+    function floorLog2(uint256 _n) constant returns (uint8) {
+        uint8 t = 0;
+        for (int k = 7; k >= 0; k--) {
+            if (_n >= (uint256(1) << (1 << k))) {
+                uint8 s = 1 << k;
+                _n >>= s;
+                t |= s;
+            }
+        }
+
+        return t;
     }
 
     /**
@@ -230,8 +299,8 @@ contract BancorFormula is IBancorFormula, SafeMath {
         And in order to optimize for speed, we multiply MAX_FIXED_EXP_32 by 1.9^2 for every 2 additional precision units.
         Hence the general function for mapping a given precision to the maximum value permitted is:
         - precision = [32, 34, 36, ..., 62]
-        - MaxFixedExp(precision) = MAX_FIXED_EXP_32 * 3.61^(precision/2-16)
-        Since we cannot use non-integers, we do MAX_FIXED_EXP_32 * 361^(precision/2-16) / 100^(precision/2-16).
+        - MaxFixedExp(precision) = MAX_FIXED_EXP_32 * 3.61 ^ (precision / 2 - 16)
+        Since we cannot use non-integers, we do MAX_FIXED_EXP_32 * 361 ^ (precision / 2 - 16) / 100 ^ (precision / 2 - 16).
         But there is a better approximation, because this "1.9" factor in fact extends beyond a single decimal digit.
         So instead, we use 0xeb5ec5975959c565 / 0x4000000000000000, which yields maximum values quite close to real ones:
         maxExpArray = {
@@ -360,74 +429,5 @@ contract BancorFormula is IBancorFormula, SafeMath {
         res += xi * 0x22;
 
         return res / 0xde1bc4d19efcac82445da75b00000000;
-    }
-
-    /**
-        getBestPrecision 
-        Predicts the highest precision which can be used in order to compute "base^exp" without exceeding 256 bits in any of the intermediate computations.
-        Instead of calculating "base^exp", we calculate "e^(ln(base)*exp)".
-        The value of ln(base) is represented with an integer slightly smaller than ln(base)*2^precision.
-        The larger the precision is, the more accurately this value represents the real value.
-        However, function fixedExpUnsafe(x), which calculates e^x, is limited to a maximum value of x.
-        The limit depends on the precision (e.g, for precision=32, the maximum value of x is MAX_FIXED_EXP_32).
-        Hence before calling the 'power' function, we need to estimate an upper-bound for ln(base)*exponent.
-        Of course, we should later assert that the value passed to fixedExpUnsafe is not larger than MAX_FIXED_EXP(precision).
-        Due to this assertion (made in function fixedExp), functions getBestPrecision and fixedExp are tightly coupled.
-        Note that the outcome of this function only affects the accuracy of the computation of "base^exp".
-        Therefore, there is no need to assert that no intermediate result exceeds 256 bits (nor in this function, neither in any of the functions down the calling tree).
-    */
-    function getBestPrecision(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) constant returns (uint8) {
-        uint8 precision;
-        uint256 maxExp = MAX_FIXED_EXP_32;
-        uint256 maxVal = _expN * lnUpperBound(_baseN,_baseD);
-        for (precision = 32; precision < 64; precision += 2) {
-            if (maxExp < (maxVal << precision) / _expD)
-                break;
-            maxExp = (maxExp * 0xeb5ec5975959c565) >> (64-2);
-        }
-        if (precision == 32)
-            return 32;
-        return precision-2;
-    }
-
-    /**
-        lnUpperBound 
-        Takes a rational number (baseN / baseD) as input.
-        Returns an estimated upper-bound integer of the natural logarithm of the input.
-        We can generally use floorLog2, although there is possibly a tighter bound.
-        We cannot use floorLog2 when the input is smaller than 8.
-        Complexity is O(log(input bit-length)).
-    */
-    function lnUpperBound(uint256 baseN, uint256 baseD) constant returns (uint8) {
-        assert(baseN > baseD);
-
-        uint256 scaledBaseN = baseN * 100000;
-        if (scaledBaseN <= baseD *  271828) // baseN / baseD < e^1 (floorLog2 will return 0 if baseN / baseD < 2)
-            return 1;
-        if (scaledBaseN <= baseD *  738905) // baseN / baseD < e^2 (floorLog2 will return 1 if baseN / baseD < 4)
-            return 2;
-        if (scaledBaseN <= baseD * 2008553) // baseN / baseD < e^3 (floorLog2 will return 2 if baseN / baseD < 8)
-            return 3;
-
-        return floorLog2(baseN/baseD);
-    }
-
-    /**
-        floorLog2 
-        Takes a natural number (n) as input.
-        Returns the largest integer smaller than or equal to the binary logarithm of the input.
-        Complexity is O(log(input bit-length)).
-    */
-    function floorLog2(uint256 n) constant returns (uint8) {
-        uint8 t = 0;
-        for (int k = 7; k >= 0; k--) {
-            if (n >= (uint256(1) << (1 << k))) {
-                uint8 s = 1 << k;
-                n >>= s;
-                t |= s;
-            }
-        }
-
-        return t;
     }
 }
