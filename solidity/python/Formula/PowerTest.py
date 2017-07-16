@@ -2,21 +2,24 @@ from sys     import argv
 from decimal import Decimal
 from random  import randrange
 from Power   import power
+from Power   import calculateBestPrecision
 
 
-PRECISION = 32
-
-
-def powerTest(_baseN, _baseD, _expN, _expD):
-    fixed = power(_baseN, _baseD, _expN, _expD, PRECISION) >> PRECISION
-    real  = (Decimal(_baseN)/Decimal(_baseD))**(Decimal(_expN)/Decimal(_expD))
+def powerTest(baseN,baseD,expN,expD):
+    precision = calculateBestPrecision(baseN,baseD,expN,expD)
+    fixed = Decimal(power(baseN,baseD,expN,expD,precision))/(1<<precision)
+    real  = (Decimal(baseN)/Decimal(baseD))**(Decimal(expN)/Decimal(expD))
     if fixed > real:
         error = []
-        error.append('error occurred on {}^{}:'.format(Decimal(_baseN)/Decimal(_baseD),Decimal(_expN)/Decimal(_expD)))
-        error.append('fixed result = {}'.format(fixed))
-        error.append('real  result = {}'.format(real))
+        error.append('error occurred on:')
+        error.append('baseN = {}'.format(baseN))
+        error.append('baseD = {}'.format(baseD))
+        error.append('expN  = {}'.format(expN))
+        error.append('expD  = {}'.format(expD))
+        error.append('fixed = {}'.format(fixed))
+        error.append('real  = {}'.format(real))
         raise BaseException('\n'.join(error))
-    return float(fixed / real)
+    return fixed/real
 
 
 size = int(argv[1]) if len(argv) > 1 else 0
@@ -28,12 +31,12 @@ n = 0
 worstAccuracy = 1
 numOfFailures = 0
 while n < size: # avoid creating a large range in memory
-    _baseN = randrange(1<<PRECISION,1<<(256-PRECISION))
-    _baseD = randrange(1<<PRECISION,_baseN+1)
-    _expN  = randrange(1<<PRECISION,1<<(256-PRECISION))
-    _expD  = randrange(1<<PRECISION,_expN+1)
+    baseN = randrange(2,10**26)
+    baseD = randrange(1,baseN)
+    expN  = randrange(1,100)
+    expD  = randrange(1,100)
     try:
-        accuracy = powerTest(_baseN, _baseD, _expN, _expD)
+        accuracy = powerTest(baseN,baseD,expN,expD)
         worstAccuracy = min(worstAccuracy,accuracy)
     except Exception,error:
         accuracy = 0
