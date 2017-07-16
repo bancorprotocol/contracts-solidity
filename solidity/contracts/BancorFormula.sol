@@ -182,7 +182,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         if (scaledBaseN <= _baseD * 2008553) // _baseN / _baseD < e^3 (floorLog2 will return 2 if _baseN / _baseD < 8)
             return 3;
 
-        return floorLog2(_baseN / _baseD);
+        return ((floorLog2((baseN-1)/baseD)+1)*0xb17217f7d1cf78+(1<<56)-1)>>56; // ceiling(ceiling(log2(base))*logE(2)))
     }
 
     /**
