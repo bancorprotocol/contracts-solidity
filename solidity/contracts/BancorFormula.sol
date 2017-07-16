@@ -131,13 +131,12 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         This method is overflow-safe
     */ 
-    function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD, uint8 _precision) constant returns (uint256 resN) {
+    function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD, uint8 _precision) constant returns (uint256) {
         uint256 logbase = ln(_baseN, _baseD, _precision);
         // Not using safeDiv here, since safeDiv protects against
         // precision loss. It's unavoidable, however
         // Both `ln` and `fixedExp` are overflow-safe. 
-        resN = fixedExp(safeMul(logbase, _expN) / _expD, _precision);
-        return resN;
+        return fixedExp(safeMul(logbase, _expN) / _expD, _precision);
     }
     
     /**
@@ -196,7 +195,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         This method asserts outside of bounds
 
     */
-    function fixedLoge(uint256 _x, uint8 _precision) constant returns (uint256 logE) {
+    function fixedLoge(uint256 _x, uint8 _precision) constant returns (uint256) {
         /*
         Since `fixedLog2_min` output range is max `0xdfffffffff` 
         (40 bits, or 5 bytes), we can use a very large approximation
@@ -210,7 +209,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         assert(_x >= ONE << _precision);
 
         uint256 log2 = fixedLog2(_x, _precision);
-        logE = (log2 * 0xb17217f7d1cf78) >> 56;
+        return (log2 * 0xb17217f7d1cf78) >> 56;
     }
 
     /**
