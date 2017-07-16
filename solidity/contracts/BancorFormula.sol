@@ -182,7 +182,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         if (scaledBaseN <= _baseD * 2008553) // _baseN / _baseD < e^3 (floorLog2 will return 2 if _baseN / _baseD < 8)
             return 3;
 
-        return ((floorLog2((baseN-1)/baseD)+1)*0xb17217f7d1cf78+(1<<56)-1)>>56; // ceiling(ceiling(log2(base))*logE(2)))
+        return ((floorLog2((_baseN - 1) / _baseD) + 1) * 0xb17217f7d1cf78 + (1 << 56) - 1) >> 56; // ceiling(ceiling(log2(base)) * logE(2)))
     }
 
     /**
@@ -260,8 +260,8 @@ contract BancorFormula is IBancorFormula, SafeMath {
     function floorLog2(uint256 _n) constant returns (uint256) {
         uint8 t = 0;
         for (uint8 s = 128; s > 0; s >>= 1) {
-            if (n >= (uint256(1) << s)) {
-                n >>= s;
+            if (_n >= (uint256(1) << s)) {
+                _n >>= s;
                 t |= s;
             }
         }
