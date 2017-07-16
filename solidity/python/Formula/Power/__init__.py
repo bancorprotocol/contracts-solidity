@@ -123,13 +123,16 @@ def fixedLog2(_x, _precision):
         0x116701e6ab0cd188d,0x215f77c045fbe8856,0x3ffffffffffffffff,0x7abbf6f6abb9d087f,
     };
     Since we cannot use an array of constants, we need to approximate the maximum value dynamically.
-    The precision may be a value between 32 and 62, in multiples of 2 (i.e., 32, 34, 36, ..., 62).
-    For the minimum precision of 32, the maximum value is MAX_FIXED_EXP_32.
+    For a precision of 32, the maximum value permitted is MAX_FIXED_EXP_32.
     For each additional precision unit, the maximum value permitted increases by approximately 1.9.
-    So in order to calculate it, we should multiply MAX_FIXED_EXP_32 by 1.9 ^ ((precision - 32) / 2).
-    Since we cannot use non-integers, we multiply by 19 ^ ((precision - 32) / 2) and divide by 10 ^ ((precision - 32) / 2).
-    But there is a better approximation, since this "1.9" factor in fact extends beyond a single decimal digit.
-    So instead, we use 367765941410234761 / 100000000000000000, which yields maximum values quite close to real ones:
+    So in order to calculate it, we need to multiply MAX_FIXED_EXP_32 by 1.9 for every additional precision unit.
+    And in order to optimize for speed, we multiply MAX_FIXED_EXP_32 by 1.9^2 for every 2 additional precision units.
+    Hence the general function for mapping a given precision to the maximum value permitted is:
+    - precision = [32, 34, 36, ..., 62]
+    - MaxFixedExp(precision) = MAX_FIXED_EXP_32 * 3.61^(precision/2-16)
+    Since we cannot use non-integers, we do MAX_FIXED_EXP_32 * 361^(precision/2-16) / 100^(precision/2-16).
+    But there is a better approximation, because this "1.9" factor in fact extends beyond a single decimal digit.
+    So instead, we use 0xeb5ec5975959c565 / 0x4000000000000000, which yields maximum values quite close to real ones:
     maxExpArray = {
         -------------------,-------------------,-------------------,-------------------,
         -------------------,-------------------,-------------------,-------------------,
@@ -145,14 +148,14 @@ def fixedLog2(_x, _precision):
         0x2214d10d0112e    ,-------------------,0x7d56e7677738e    ,-------------------,
         0x1ccf4b44bb20d0   ,-------------------,0x69f3d1c9210d27   ,-------------------,
         0x185a82b87b5b294  ,-------------------,0x5990681d95d4371  ,-------------------,
-        0x14962dee9dbd672a ,-------------------,0x4bb5ecca961fb9b8 ,-------------------,
-        0x116701e6ab096705a,-------------------,0x3fffffffffffe6599,-------------------,
+        0x14962dee9dbd672b ,-------------------,0x4bb5ecca961fb9bf ,-------------------,
+        0x116701e6ab0967080,-------------------,0x3fffffffffffe6652,-------------------,
     };
 '''
 def fixedExp(_x, _precision):
     maxExp = MAX_FIXED_EXP_32;
-    for p in range (32,_precision,2):
-        maxExp = maxExp * 367765941410234761 / 100000000000000000;
+    for p in range(32,_precision,2):
+        maxExp = (maxExp * 0xeb5ec5975959c565) >> (64-2);
     
     assert(_x <= maxExp);
     return fixedExpUnsafe(_x, _precision);
@@ -273,10 +276,10 @@ def fixedExpUnsafe(_x, _precision):
 def getBestPrecision(_baseN, _baseD, _expN, _expD):
     maxExp = MAX_FIXED_EXP_32;
     maxVal = _expN * lnUpperBound(_baseN, _baseD);
-    for precision in range (32,64,2):
+    for precision in range(32,64,2):
         if (maxExp < (maxVal << precision) / _expD):
             break;
-        maxExp = maxExp * 367765941410234761 / 100000000000000000;
+        maxExp = (maxExp * 0xeb5ec5975959c565) >> (64-2);
     if (precision == 32):
         return 32;
     return precision-2;
