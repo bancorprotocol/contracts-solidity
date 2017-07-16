@@ -147,7 +147,6 @@ contract BancorFormula is IBancorFormula, SafeMath {
             [0, 0x9b43d4f8d6]
 
         This method asserts outside of bounds
-
     */
     function ln(uint256 _numerator, uint256 _denominator, uint8 _precision) public constant returns (uint256) {
         // denominator > numerator: less than one yields negative values. Unsupported
@@ -168,9 +167,10 @@ contract BancorFormula is IBancorFormula, SafeMath {
         lnUpperBound 
         Takes a rational number (baseN / baseD) as input.
         Returns an estimated upper-bound integer of the natural logarithm of the input.
-        We can generally use floorLog2, although there is possibly a tighter bound.
-        We cannot use floorLog2 when the input is smaller than 8.
-        Complexity is O(log(input bit - length)).
+        We do this by calculating the value of "ceiling(ceiling(log2(base)) * ln(2)))".
+        The expression "floor(log2(base)) >= ceiling(ln(base))" does not hold for all cases of base < 8.
+        We therefore cover these cases (and a few more) manually.
+        Complexity is O(log(input bit-length)).
     */
     function lnUpperBound(uint256 _baseN, uint256 _baseD) constant returns (uint256) {
         assert(_baseN > _baseD);
@@ -183,7 +183,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         if (scaledBaseN <= _baseD * 2008553) // _baseN / _baseD < e^3 (floorLog2 will return 2 if _baseN / _baseD < 8)
             return 3;
 
-        return ((floorLog2((_baseN - 1) / _baseD) + 1) * 0xb17217f7d1cf78 + (1 << 56) - 1) >> 56; // ceiling(ceiling(log2(base)) * logE(2)))
+        return ((floorLog2((_baseN - 1) / _baseD) + 1) * 0xb17217f7d1cf78 + (1 << 56) - 1) >> 56;
     }
 
     /**
@@ -253,7 +253,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         floorLog2
         Takes a natural number (n) as input.
         Returns the largest integer smaller than or equal to the binary logarithm of the input.
-        Complexity is O(log(input bit - length)).
+        Complexity is O(log(input bit-length)).
     */
     function floorLog2(uint256 _n) constant returns (uint256) {
         uint8 t = 0;
