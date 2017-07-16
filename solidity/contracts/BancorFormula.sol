@@ -171,7 +171,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         We cannot use floorLog2 when the input is smaller than 8.
         Complexity is O(log(input bit - length)).
     */
-    function lnUpperBound(uint256 _baseN, uint256 _baseD) constant returns (uint8) {
+    function lnUpperBound(uint256 _baseN, uint256 _baseD) constant returns (uint256) {
         assert(_baseN > _baseD);
 
         uint256 scaledBaseN = _baseN * 100000;
@@ -257,7 +257,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Returns the largest integer smaller than or equal to the binary logarithm of the input.
         Complexity is O(log(input bit - length)).
     */
-    function floorLog2(uint256 _n) constant returns (uint8) {
+    function floorLog2(uint256 _n) constant returns (uint256) {
         uint8 t = 0;
         for (uint8 s = 128; s > 0; s >>= 1) {
             if (n >= (uint256(1) << s)) {
