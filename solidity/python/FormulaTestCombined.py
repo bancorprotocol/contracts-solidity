@@ -5,18 +5,18 @@ from Formula import calculateSaleReturn
 from Formula import calculatePurchaseReturn
 
 
-def formulaTest(_supply, _reserveBalance, _reserveRatio, _amount):
-    _new_amount = calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _amount)
-    _old_amount = calculateSaleReturn(_supply+_new_amount, _reserveBalance+_amount, _reserveRatio, _new_amount)
-    if _old_amount > _amount:
+def formulaTest(supply,reserve,ratio,amount):
+    newAmount = calculatePurchaseReturn(supply,reserve,ratio,amount)
+    oldAmount = calculateSaleReturn(supply+newAmount,reserve+amount,ratio,newAmount)
+    if oldAmount > amount:
         error = []
         error.append('error occurred on:')
-        error.append('_supply         = {}'.format(_supply))
-        error.append('_reserveBalance = {}'.format(_reserveBalance))
-        error.append('_reserveRatio   = {}'.format(_reserveRatio))
-        error.append('_amount         = {}'.format(_amount))
+        error.append('supply  = {}'.format(supply))
+        error.append('reserve = {}'.format(reserve))
+        error.append('ratio   = {}'.format(ratio))
+        error.append('amount  = {}'.format(amount))
         raise BaseException('\n'.join(error))
-    return float(Decimal(_old_amount) / Decimal(_amount))
+    return Decimal(oldAmount)/amount
 
 
 size = int(argv[1]) if len(argv) > 1 else 0
@@ -28,12 +28,12 @@ n = 0
 worstGain = 1
 numOfFailures = 0
 while n < size: # avoid creating a large range in memory
-    _supply         = randrange(1,10**26)
-    _reserveBalance = randrange(1,10**23)
-    _reserveRatio   = randrange(1,99)
-    _amount         = randrange(1,_supply)
+    supply  = randrange(2,10**26)
+    reserve = randrange(1,10**23)
+    ratio   = randrange(1,99)
+    amount  = randrange(1,supply)
     try:
-        gain = formulaTest(_supply, _reserveBalance, _reserveRatio, _amount)
+        gain = formulaTest(supply,reserve,ratio,amount)
         worstGain = min(worstGain,gain)
     except Exception,error:
         gain = 0
