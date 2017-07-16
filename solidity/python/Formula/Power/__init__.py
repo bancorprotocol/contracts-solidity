@@ -41,8 +41,7 @@ def power(_baseN, _baseD, _expN, _expD, _precision):
     # Not using safeDiv here, since safeDiv protects against
     # precision loss. It's unavoidable, however
     # Both `ln` and `fixedExp` are overflow-safe. 
-    resN = fixedExp(safeMul(logbase, _expN) / _expD, _precision);
-    return resN;
+    return fixedExp(safeMul(logbase, _expN) / _expD, _precision);
 
 '''
     input range: 
@@ -97,17 +96,14 @@ def lnUpperBound(_baseN, _baseD):
 
     This method asserts outside of bounds
 
-'''
-def fixedLoge(_x, _precision):
-    '''
     Since `fixedLog2_min` output range is max `0xdfffffffff` 
     (40 bits, or 5 bytes), we can use a very large approximation
     for `ln(2)`. This one is used since it's the max accuracy 
     of Python `ln(2)`
 
     0xb17217f7d1cf78 = ln(2) * (1 << 56)
-    
-    '''
+'''
+def fixedLoge(_x, _precision):
     #Cannot represent negative numbers (below 1)
     assert(_x >= ONE << _precision);
 
