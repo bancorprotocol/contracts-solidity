@@ -259,10 +259,9 @@ contract BancorFormula is IBancorFormula, SafeMath {
     */
     function floorLog2(uint256 _n) constant returns (uint8) {
         uint8 t = 0;
-        for (int k = 7; k >= 0; k--) {
-            if (_n >= (uint256(1) << (1 << k))) {
-                uint8 s = 1 << k;
-                _n >>= s;
+        for (uint8 s = 128; s > 0; s >>= 1) {
+            if (n >= (uint256(1) << s)) {
+                n >>= s;
                 t |= s;
             }
         }
