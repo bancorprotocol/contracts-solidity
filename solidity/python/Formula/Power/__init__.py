@@ -52,7 +52,6 @@ def power(_baseN, _baseD, _expN, _expD, _precision):
         [0, 0x9b43d4f8d6]
 
     This method asserts outside of bounds
-
 '''
 def ln(_numerator, _denominator, _precision):
     # denominator > numerator: less than one yields negative values. Unsupported
@@ -72,9 +71,10 @@ def ln(_numerator, _denominator, _precision):
     lnUpperBound 
     Takes a rational number (baseN / baseD) as input.
     Returns an estimated upper-bound integer of the natural logarithm of the input.
-    We can generally use floorLog2, although there is possibly a tighter bound.
-    We cannot use floorLog2 when the input is smaller than 8.
-    Complexity is O(log(input bit - length)).
+    We do this by calculating the value of "ceiling(ceiling(log2(base)) * ln(2)))".
+    The expression "floor(log2(base)) >= ceiling(ln(base))" does not hold for all cases of base < 8.
+    We therefore cover these cases (and a few more) manually.
+    Complexity is O(log(input bit-length)).
 '''
 def lnUpperBound(_baseN, _baseD):
     assert(_baseN > _baseD);
@@ -87,7 +87,7 @@ def lnUpperBound(_baseN, _baseD):
     if (scaledBaseN <= _baseD * 2008553): # _baseN / _baseD < e^3 (floorLog2 will return 2 if _baseN / _baseD < 8)
         return 3;
 
-    return ((floorLog2((_baseN - 1) / _baseD) + 1) * 0xb17217f7d1cf78 + (1 << 56) - 1) >> 56; # ceiling(ceiling(log2(base)) * logE(2)))
+    return ((floorLog2((_baseN - 1) / _baseD) + 1) * 0xb17217f7d1cf78 + (1 << 56) - 1) >> 56;
 
 '''
     input range: 
@@ -154,7 +154,7 @@ def fixedLog2(_x, _precision):
     floorLog2
     Takes a natural number (n) as input.
     Returns the largest integer smaller than or equal to the binary logarithm of the input.
-    Complexity is O(log(input bit - length)).
+    Complexity is O(log(input bit-length)).
 '''
 def floorLog2(_n):
     t = 0;
