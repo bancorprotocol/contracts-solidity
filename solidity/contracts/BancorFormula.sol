@@ -194,18 +194,15 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         This method asserts outside of bounds
 
-    */
-    function fixedLoge(uint256 _x, uint8 _precision) constant returns (uint256) {
-        /*
         Since `fixedLog2_min` output range is max `0xdfffffffff` 
         (40 bits, or 5 bytes), we can use a very large approximation
         for `ln(2)`. This one is used since it's the max accuracy 
         of Python `ln(2)`
 
         0xb17217f7d1cf78 = ln(2) * (1 << 56)
-        
-        */
-        //Cannot represent negative numbers (below 1)
+    */
+    function fixedLoge(uint256 _x, uint8 _precision) constant returns (uint256) {
+        // cannot represent negative numbers (below 1)
         assert(_x >= ONE << _precision);
 
         uint256 log2 = fixedLog2(_x, _precision);
