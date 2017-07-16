@@ -131,7 +131,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         This method is overflow-safe
     */ 
-    function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD, uint8 _precision) constant returns (uint256) {
+    function power(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD, uint8 _precision) constant returns (uint256) {
         uint256 logbase = ln(_baseN, _baseD, _precision);
         // Not using safeDiv here, since safeDiv protects against
         // precision loss. It's unavoidable, however
