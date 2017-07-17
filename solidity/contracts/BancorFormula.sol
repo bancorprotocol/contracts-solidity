@@ -109,12 +109,12 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Of course, we should later assert that the value passed to fixedExpUnsafe is not larger than MAX_FIXED_EXP(precision).
         Due to this assertion (made in function fixedExp), functions calculateBestPrecision and fixedExp are tightly coupled.
         Note that the outcome of this function only affects the accuracy of the computation of "base ^ exp".
-        Therefore, there is no need to assert that no intermediate result exceeds 256 bits (nor in this function, neither in any of the functions down the calling tree).
+        Therefore, we do not need to assert that no intermediate result exceeds 256 bits (nor in this function, neither in any of the functions down the calling tree).
     */
     function calculateBestPrecision(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) constant returns (uint8) {
         uint8 precision;
         uint256 maxExp = MAX_FIXED_EXP_32;
-        uint256 maxVal = _expN * lnUpperBound(_baseN,_baseD);
+        uint256 maxVal = lnUpperBound32(_baseN,_baseD) * _expN;
         for (precision = 0; precision < 32; precision += 2) {
             if (maxExp < (maxVal << precision) / _expD)
                 break;
@@ -164,15 +164,16 @@ contract BancorFormula is IBancorFormula, SafeMath {
     }
 
     /**
-        lnUpperBound 
-        Takes a rational number (baseN / baseD) as input.
-        Returns an estimated upper-bound integer of the natural logarithm of the input.
-        We do this by calculating the value of "ceiling(ceiling(log2(base)) * ln(2)))".
-        The expression "floor(log2(base)) >= ceiling(ln(base))" does not hold for all cases of base < 8.
+        lnUpperBound32 
+        Takes a rational number "baseN / baseD" as input.
+        Returns an integer upper-bound of the natural logarithm of the input scaled by 2^32.
+        We do this by calculating "UpperBound(log2(baseN / baseD)) * Ceiling(ln(2) * 2^32)".
+        We calculate "UpperBound(log2(baseN / baseD))" as "Floor(log2((_baseN - 1) / _baseD)) + 1".
+        For small values of "baseN / baseD", this sometimes yields a bad upper-bound approximation.
         We therefore cover these cases (and a few more) manually.
         Complexity is O(log(input bit-length)).
     */
-    function lnUpperBound(uint256 _baseN, uint256 _baseD) constant returns (uint256) {
+    function lnUpperBound32(uint256 _baseN, uint256 _baseD) constant returns (uint256) {
         assert(_baseN > _baseD);
 
         uint256 scaledBaseN = _baseN * 100000;
