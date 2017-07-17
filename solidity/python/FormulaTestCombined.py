@@ -24,10 +24,11 @@ if size == 0:
     size = input('How many test-cases would you like to execute? ')
 
 
-n = 0
 worstGain = 1
 numOfFailures = 0
-while n < size: # avoid creating a large range in memory
+
+
+for n in xrange(size):
     supply  = randrange(2,10**26)
     reserve = randrange(1,10**23)
     ratio   = randrange(1,99)
@@ -42,4 +43,3 @@ while n < size: # avoid creating a large range in memory
         print error
         break
     print 'Test #{}: gain = {:.12f}, worst gain = {:.12f}, num of failures = {}'.format(n,gain,worstGain,numOfFailures)
-    n += 1
