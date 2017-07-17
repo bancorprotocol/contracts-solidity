@@ -29,10 +29,11 @@ end = 10**23
 gap = (end-bgn)/size
 
 
-n = 0
 worstAccuracy = 1
 numOfFailures = 0
-while n < size: # avoid creating a large range in memory
+
+
+for n in xrange(size):
     supply  = 10**26
     reserve = 10**23
     ratio   = 10
@@ -47,4 +48,3 @@ while n < size: # avoid creating a large range in memory
         print error
         break
     print 'Test #{}: amount = {:23d}, accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n,amount,accuracy,worstAccuracy,numOfFailures)
-    n += 1
