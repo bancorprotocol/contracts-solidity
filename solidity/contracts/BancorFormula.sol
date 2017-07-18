@@ -141,24 +141,17 @@ contract BancorFormula is IBancorFormula, SafeMath {
     
     /**
         input range: 
-            - numerator: [1, uint256_max >> precision]    
-            - denominator: [1, uint256_max >> precision]
+            - numerator: [1, uint256_max / 2 ^ precision]    
+            - denominator: [1, numerator]
+            If numerator / denominator < 1 then ln(numerator / denominator) < 0
         output range:
-            [0, 0x9b43d4f8d6]
+            [0, ln(uint256_max) * 2 ^ precision]
 
         This method asserts outside of bounds
     */
     function ln(uint256 _numerator, uint256 _denominator, uint8 _precision) public constant returns (uint256) {
-        // denominator > numerator: less than one yields negative values. Unsupported
-        assert(_denominator <= _numerator);
-
-        // log(1) is the lowest we can go
-        assert(_denominator != 0 && _numerator != 0);
-
-        // Upper bits are scaled off by precision
-        uint256 MAX_VAL = ONE << (256 - _precision);
-        assert(_numerator < MAX_VAL);
-        assert(_denominator < MAX_VAL);
+        // validate input
+        assert(0 < _denominator && _denominator <= _numerator && _numerator < (ONE << (256 - _precision)));
 
         return fixedLoge( (_numerator << _precision) / _denominator, _precision);
     }
