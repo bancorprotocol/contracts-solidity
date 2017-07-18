@@ -70,8 +70,7 @@ def ln(_numerator, _denominator, _precision):
     lnUpperBound32 
     Takes a rational number "baseN / baseD" as input.
     Returns an integer upper-bound of the natural logarithm of the input scaled by 2^32.
-    We do this by calculating "UpperBound(log2(baseN / baseD)) * Ceiling(ln(2) * 2^32)".
-    We calculate "UpperBound(log2(baseN / baseD))" as "Floor(log2((_baseN - 1) / _baseD)) + 1".
+    We do this by calculating "Ceiling(log2(baseN / baseD)) * Ceiling(ln(2) * 2^32)".
     For small values of "baseN / baseD", this sometimes yields a bad upper-bound approximation.
     We therefore cover these cases (and a few more) manually.
     Complexity is O(log(input bit-length)).
@@ -79,15 +78,15 @@ def ln(_numerator, _denominator, _precision):
 def lnUpperBound32(_baseN, _baseD):
     assert(_baseN > _baseD);
 
-    scaledBaseN = _baseN * 100000;
-    if (scaledBaseN <= _baseD *  271828): # _baseN / _baseD < e^1 (floorLog2 will return 0 if _baseN / _baseD < 2)
+    scaledBaseN = _baseN << 32;
+    if (scaledBaseN <= _baseD *  0x2b7e15162): # _baseN / _baseD < e^1 (floorLog2 will return 0 if _baseN / _baseD < 2)
         return 1 << 32;
-    if (scaledBaseN <= _baseD *  738905): # _baseN / _baseD < e^2 (floorLog2 will return 1 if _baseN / _baseD < 4)
+    if (scaledBaseN <= _baseD *  0x763992e35): # _baseN / _baseD < e^2 (floorLog2 will return 1 if _baseN / _baseD < 4)
         return 2 << 32;
-    if (scaledBaseN <= _baseD * 2008553): # _baseN / _baseD < e^3 (floorLog2 will return 2 if _baseN / _baseD < 8)
+    if (scaledBaseN <= _baseD * 0x1415e5bf6f): # _baseN / _baseD < e^3 (floorLog2 will return 2 if _baseN / _baseD < 8)
         return 3 << 32;
 
-    return (floorLog2((_baseN - 1) / _baseD) + 1) * 0xb17217f8;
+    return ceilLog2(_baseN, _baseD) * 0xb17217f8;
 
 '''
     input range: 
@@ -146,6 +145,16 @@ def fixedLog2(_x, _precision):
             hi += ONE << (_precision - 1 - i);
 
     return hi;
+
+'''
+    ceilLog2
+    Takes a rational number "baseN / baseD" as input.
+    Returns the smallest integer larger than or equal to the binary logarithm of the input.
+    Complexity is O(log(input bit-length)).
+'''
+def ceilLog2(uint256 _baseN, uint256 _baseD):
+    return floorLog2((_baseN - 1) / _baseD) + 1;
+}
 
 '''
     floorLog2
