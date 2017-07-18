@@ -156,9 +156,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         assert(_denominator != 0 && _numerator != 0);
 
         // Upper bits are scaled off by precision
-        uint256 MAX_VAL = ONE << (256 - _precision);
-        assert(_numerator < MAX_VAL);
-        assert(_denominator < MAX_VAL);
+        assert(_numerator < (ONE << (256 - _precision)));
 
         return fixedLoge( (_numerator << _precision) / _denominator, _precision);
     }
