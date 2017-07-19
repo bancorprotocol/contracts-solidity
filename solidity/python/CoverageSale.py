@@ -57,9 +57,9 @@ def Main():
                                 relativeLoss = 1-fixed/real
                                 worstAbsoluteLoss.Update(supply,reserve,ratio,amount,fixed,real,absoluteLoss,relativeLoss)
                                 worstRelativeLoss.Update(supply,reserve,ratio,amount,fixed,real,relativeLoss,absoluteLoss)
-                        worstAbsoluteLossStr = 'worstAbsoluteLoss = {:.0f} (relativeLoss = {:.0f}%)'.format(worstAbsoluteLoss.major,worstAbsoluteLoss.minor*100)
-                        worstRelativeLossStr = 'worstRelativeLoss = {:.0f}% (absoluteLoss = {:.0f})'.format(worstRelativeLoss.major*100,worstRelativeLoss.minor)
-                        print 'Test {} out of {}: {}, {}'.format(testNum,numOfTests,worstAbsoluteLossStr,worstRelativeLossStr)
+                                worstAbsoluteLossStr = 'worstAbsoluteLoss = {:.0f} (relativeLoss = {:.0f}%)'.format(worstAbsoluteLoss.major,worstAbsoluteLoss.minor*100)
+                                worstRelativeLossStr = 'worstRelativeLoss = {:.0f}% (absoluteLoss = {:.0f})'.format(worstRelativeLoss.major*100,worstRelativeLoss.minor)
+                                print 'Test {} out of {}: {}, {}'.format(testNum,numOfTests,worstAbsoluteLossStr,worstRelativeLossStr)
                         testNum += 1
     except KeyboardInterrupt:
         print 'Process aborted by user request'
