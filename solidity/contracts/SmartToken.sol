@@ -5,12 +5,12 @@ import './Owned.sol';
 import './interfaces/ISmartToken.sol';
 
 /*
-    Smart Token v0.2
+    Smart Token v0.3
 
     'Owned' is specified here for readability reasons
 */
 contract SmartToken is ISmartToken, ERC20Token, Owned, TokenHolder {
-    string public version = '0.2';
+    string public version = '0.3';
 
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
 
@@ -89,52 +89,14 @@ contract SmartToken is ISmartToken, ERC20Token, Owned, TokenHolder {
         Destruction(_amount);
     }
 
-    // ERC20 standard method overrides with some extra functionality
-
     /**
-        @dev send coins
-        throws on any error rather then return a false flag to minimize user errors
-        note that when transferring to the smart token's address, the coins are actually destroyed
+        @dev removes tokens from the sender account and decreases the token supply
 
-        @param _to      target address
-        @param _value   transfer amount
-
-        @return true if the transfer was successful, false if it wasn't
+        @param _amount     amount to remove
     */
-    function transfer(address _to, uint256 _value) public transfersAllowed returns (bool success) {
-        assert(super.transfer(_to, _value));
-
-        // transferring to the contract address destroys tokens
-        if (_to == address(this)) {
-            balanceOf[_to] -= _value;
-            totalSupply -= _value;
-            Destruction(_value);
-        }
-
-        return true;
-    }
-
-    /**
-        @dev an account/contract attempts to get the coins
-        throws on any error rather then return a false flag to minimize user errors
-        note that when transferring to the smart token's address, the coins are actually destroyed
-
-        @param _from    source address
-        @param _to      target address
-        @param _value   transfer amount
-
-        @return true if the transfer was successful, false if it wasn't
-    */
-    function transferFrom(address _from, address _to, uint256 _value) public transfersAllowed returns (bool success) {
-        assert(super.transferFrom(_from, _to, _value));
-
-        // transferring to the contract address destroys tokens
-        if (_to == address(this)) {
-            balanceOf[_to] -= _value;
-            totalSupply -= _value;
-            Destruction(_value);
-        }
-
-        return true;
+    function burn(uint256 _amount) public {
+        balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _amount);
+        totalSupply = safeSub(totalSupply, _amount);
+        Destruction(_amount);
     }
 }
