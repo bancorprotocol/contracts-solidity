@@ -145,9 +145,8 @@ def fixedLog2(_x, _precision):
     Returns the smallest integer larger than or equal to the binary logarithm of the input.
     Complexity is O(log(input bit-length)).
 '''
-def ceilLog2(uint256 _baseN, uint256 _baseD):
+def ceilLog2(_baseN, _baseD):
     return floorLog2((_baseN - 1) / _baseD) + 1;
-}
 
 '''
     floorLog2
