@@ -41,7 +41,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
     address[] public reserveTokens;                 // ERC20 standard token addresses
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
     uint8 private totalReserveRatio = 0;            // used to efficiently prevent increasing the total reserve ratio above 100%
-    uint16 public maxChangeFeePercentage = 0;       // maximum change fee percentage for the lifetime of the contract, 0...3000 (0 = no fee, 1 = 0.01%, 3000 = 30%)
+    uint16 public maxChangeFeePercentage = 0;       // maximum change fee percentage for the lifetime of the contract, 0...10000 (0 = no fee, 1 = 0.01%, 10000 = 100%)
     uint16 public changeFeePercentage = 0;          // current change fee percentage, 0...maxChangeFeePercentage
     bool public changingEnabled = true;             // true if token changing is enabled, false if not
 
@@ -89,7 +89,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
 
     // validates maximum change fee percentage
     modifier validMaxChangeFeePercentage(uint16 _changeFeePercentage) {
-        require(_changeFeePercentage >= 0 && _changeFeePercentage <= 3000);
+        require(_changeFeePercentage >= 0 && _changeFeePercentage <= 10000);
         _;
     }
 
