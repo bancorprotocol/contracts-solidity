@@ -73,15 +73,14 @@ contract SmartToken is ISmartToken, ERC20Token, Owned, TokenHolder {
 
     /**
         @dev removes tokens from an account and decreases the token supply
-        can only be called by the contract owner
+        can be called by the contract owner to destroy tokens from any account or by any holder to destroy tokens from his/her own account
 
         @param _from       account to remove the amount from
         @param _amount     amount to decrease the supply by
     */
-    function destroy(address _from, uint256 _amount)
-        public
-        ownerOnly
-    {
+    function destroy(address _from, uint256 _amount) public ownerOnly {
+        require(msg.sender == _from || msg.sender == owner); // validate input
+
         balanceOf[_from] = safeSub(balanceOf[_from], _amount);
         totalSupply = safeSub(totalSupply, _amount);
 
@@ -89,14 +88,36 @@ contract SmartToken is ISmartToken, ERC20Token, Owned, TokenHolder {
         Destruction(_amount);
     }
 
-    /**
-        @dev removes tokens from the sender account and decreases the token supply
+    // ERC20 standard method overrides with some extra functionality
 
-        @param _amount     amount to remove
+    /**
+        @dev send coins
+        throws on any error rather then return a false flag to minimize user errors
+        in addition to the standard checks, the function throws if transfers are disabled
+
+        @param _to      target address
+        @param _value   transfer amount
+
+        @return true if the transfer was successful, false if it wasn't
     */
-    function burn(uint256 _amount) public {
-        balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _amount);
-        totalSupply = safeSub(totalSupply, _amount);
-        Destruction(_amount);
+    function transfer(address _to, uint256 _value) public transfersAllowed returns (bool success) {
+        assert(super.transfer(_to, _value));
+        return true;
+    }
+
+    /**
+        @dev an account/contract attempts to get the coins
+        throws on any error rather then return a false flag to minimize user errors
+        in addition to the standard checks, the function throws if transfers are disabled
+
+        @param _from    source address
+        @param _to      target address
+        @param _value   transfer amount
+
+        @return true if the transfer was successful, false if it wasn't
+    */
+    function transferFrom(address _from, address _to, uint256 _value) public transfersAllowed returns (bool success) {
+        assert(super.transferFrom(_from, _to, _value));
+        return true;
     }
 }
