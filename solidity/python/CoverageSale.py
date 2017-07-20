@@ -32,23 +32,27 @@ def Main():
     range_ratio   = [int(MINIMUM_VALUE_RATIO  *GROWTH_FACTOR_RATIO  **n) for n in range(int(log(MAXIMUM_VALUE_RATIO  ,GROWTH_FACTOR_RATIO  ))+1)]
     range_amount  = [int(MINIMUM_VALUE_AMOUNT *GROWTH_FACTOR_AMOUNT **n) for n in range(int(log(MAXIMUM_VALUE_AMOUNT ,GROWTH_FACTOR_AMOUNT ))+1)]
     
-    testNum = 1
+    testNum = 0
     numOfTests = len(range_supply)*len(range_reserve)*len(range_ratio)*len(range_amount)
     
     worstAbsoluteLoss = Record(range_supply[0],range_reserve[0],range_ratio[0],range_amount[0],0,0.0)
     worstRelativeLoss = Record(range_supply[0],range_reserve[0],range_ratio[0],range_amount[0],0,0.0)
+    
+    failureTransactionCount = 0
+    invalidTransactionCount = 0
     
     try:
         for             supply  in range_supply :
             for         reserve in range_reserve:
                 for     ratio   in range_ratio  :
                     for amount  in range_amount :
+                        testNum += 1
                         if amount <= supply:
                             fixed,real = Test(supply,reserve,ratio,amount)
                             if real < 0:
-                                pass # Transaction Invalid
+                                invalidTransactionCount += 1
                             elif fixed < 0:
-                                pass # Transaction Failure
+                                failureTransactionCount += 1
                             elif real < fixed:
                                 print 'Implementation Error:',Record(supply,reserve,ratio,amount,fixed,real)
                                 return
@@ -60,12 +64,14 @@ def Main():
                                 worstAbsoluteLossStr = 'worstAbsoluteLoss = {:.0f} (relativeLoss = {:.0f}%)'.format(worstAbsoluteLoss.major,worstAbsoluteLoss.minor*100)
                                 worstRelativeLossStr = 'worstRelativeLoss = {:.0f}% (absoluteLoss = {:.0f})'.format(worstRelativeLoss.major*100,worstRelativeLoss.minor)
                                 print 'Test {} out of {}: {}, {}'.format(testNum,numOfTests,worstAbsoluteLossStr,worstRelativeLossStr)
-                        testNum += 1
     except KeyboardInterrupt:
         print 'Process aborted by user request'
     
     print 'worstAbsoluteLoss:',worstAbsoluteLoss
     print 'worstRelativeLoss:',worstRelativeLoss
+    
+    print 'failureTransactionCount:',failureTransactionCount
+    print 'invalidTransactionCount:',invalidTransactionCount
 
 
 def Test(supply,reserve,ratio,amount):
