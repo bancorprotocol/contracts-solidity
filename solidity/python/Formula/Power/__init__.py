@@ -1,6 +1,7 @@
 ONE = 1;
 TWO = 2;
 MAX_FIXED_EXP_32 = 0x386bfdba29;
+MAX_FACTOR_64 = 0xeb5ec5975959c565;
 
 
 '''
@@ -23,7 +24,7 @@ def calculateBestPrecision(_baseN, _baseD, _expN, _expD):
     for precision in range(0, 32, 2):
         if (maxExp < (maxVal << precision) / _expD):
             break;
-        maxExp = (maxExp * 0xeb5ec5975959c565) >> (64-2);
+        maxExp = (maxExp * MAX_FACTOR_64) >> (64-2);
     else:
         return 64-2;
     if (precision == 0):
@@ -195,7 +196,7 @@ def floorLog2(_n):
     - MaxFixedExp(precision) = MAX_FIXED_EXP_32 * 3.61 ^ (precision / 2 - 16)
     Since we cannot use non-integers, we do MAX_FIXED_EXP_32 * 361 ^ (precision / 2 - 16) / 100 ^ (precision / 2 - 16).
     But there is a better approximation, because this "1.9" factor in fact extends beyond a single decimal digit.
-    So instead, we use 0xeb5ec5975959c565 / 0x4000000000000000, which yields maximum values quite close to real ones:
+    So instead, we use 0xeb5ec5975959c565 / 0x4000000000000000, which yields maximum values quite close to the real ones:
     maxExpArray = {
         -------------------,-------------------,-------------------,-------------------,
         -------------------,-------------------,-------------------,-------------------,
@@ -218,7 +219,7 @@ def floorLog2(_n):
 def fixedExp(_x, _precision):
     maxExp = MAX_FIXED_EXP_32;
     for p in range(32, _precision, 2):
-        maxExp = (maxExp * 0xeb5ec5975959c565) >> (64-2);
+        maxExp = (maxExp * MAX_FACTOR_64) >> (64-2);
     
     assert(_x <= maxExp);
     return fixedExpUnsafe(_x, _precision);
@@ -231,9 +232,8 @@ def fixedExp(_x, _precision):
 
     and returns e ^ (x >> 32) << 32, that is, upshifted for accuracy
 
-    Input range:
-        - Function ok at    <= 242329958953 
-        - Function fails at >= 242329958954
+    Input range: the maximum permitted value for _x depends on the value of _precision.
+    Read the documentation of function fixedExp for more details.
 
     This method is is visible for testcases, but not meant for direct use. 
 
