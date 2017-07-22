@@ -64,7 +64,7 @@ contract('BancorChanger', (accounts) => {
         reserveTokenAddress = reserveToken.address;
     });
 
-    it('verifies the change data after construction', async () => {
+    it('verifies the changer data after construction', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
         let token = await changer.token.call();
         assert.equal(token, tokenAddress);
