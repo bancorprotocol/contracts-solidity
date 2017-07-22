@@ -1,16 +1,24 @@
+from math import factorial
+
+
 NUM_OF_PRECISIONS = 64
 NUM_OF_VALUES_PER_ROW = 4
 assert(NUM_OF_PRECISIONS % NUM_OF_VALUES_PER_ROW == 0)
 
 
-def fixedExpUnsafe(_x,precision):
-    xi = _x
-    res = safeMul(coefs[NUM_OF_COEFS-1],1 << precision)
-    for i in range(NUM_OF_COEFS-2,0,-1):
-        res = safeAdd(res,safeMul(xi,coefs[i]))
-        xi = safeMul(xi,_x) >> precision
-    res = safeAdd(res,safeMul(xi,coefs[0]))
-    return res / coefs[NUM_OF_COEFS-1]
+NUM_OF_COEFS = 34
+maxFactorial = factorial(NUM_OF_COEFS)
+coefficients = [maxFactorial/factorial(i) for i in range(NUM_OF_COEFS)]
+
+
+def fixedExpUnsafe(x,precision):
+    xi = x
+    res = safeMul(coefficients[0],1 << precision)
+    for i in range(1,NUM_OF_COEFS-1):
+        res = safeAdd(res,safeMul(xi,coefficients[i]))
+        xi = safeMul(xi,x) >> precision
+    res = safeAdd(res,safeMul(xi,coefficients[-1]))
+    return res / coefficients[0]
 
 
 def safeMul(x,y):
@@ -44,20 +52,14 @@ def binarySearch(func,args):
 def getMaxExp(precision,factor):
     maxExp = maxExpArray[32]
     for p in range (32,precision,2):
-        maxExp = safeMul(maxExp,factor) >> (64-2)
+        maxExp = safeMul(maxExp,factor) >> (NUM_OF_PRECISIONS-2)
         fixedExpUnsafe(maxExp,precision)
     return maxExp
 
 
 def assertFactor(factor,args):
-    for precision in range(32,64,2):
+    for precision in range(32,NUM_OF_PRECISIONS,2):
         getMaxExp(precision,factor)
-
-
-NUM_OF_COEFS = 34
-coefs = [NUM_OF_COEFS]
-for i in range(NUM_OF_COEFS-1,0,-1):
-    coefs.append(coefs[-1]*i)
 
 
 maxExpArray = [0]*NUM_OF_PRECISIONS
@@ -92,7 +94,7 @@ print ']\n'
 
 print 'maxFactor = 0x{:x}'.format(maxFactor)
 formatString = '{:s}{:d}{:s}{:d}{:s}'.format('Precision = {:2d} | Theoretical Max Exp = {:',maxMaxExpLen,'s} | Practical Max Exp = {:',maxMaxExpLen,'s}')
-for precision in range(32,64,2):
+for precision in range(32,NUM_OF_PRECISIONS,2):
     theoreticalMaxExp = '0x{:x}'.format(maxExpArray[precision])
     practicalMaxExp = '0x{:x}'.format(getMaxExp(precision,maxFactor))
     print formatString.format(precision,theoreticalMaxExp,practicalMaxExp)
