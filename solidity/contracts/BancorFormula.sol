@@ -13,6 +13,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
     uint256 constant ONE = 1;
     uint256 constant TWO = 2;
     uint256 constant MAX_FIXED_EXP_32 = 0x386bfdba29;
+    uint256 constant MAX_FACTOR_64 = 0xeb5ec5975959c565;
     string public version = '0.2';
 
     function BancorFormula() {
@@ -118,7 +119,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         for (precision = 0; precision < 32; precision += 2) {
             if (maxExp < (maxVal << precision) / _expD)
                 break;
-            maxExp = (maxExp * 0xeb5ec5975959c565) >> (64-2);
+            maxExp = (maxExp * MAX_FACTOR_64) >> (64-2);
         }
         if (precision == 0)
             return 32;
@@ -302,7 +303,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         - MaxFixedExp(precision) = MAX_FIXED_EXP_32 * 3.61 ^ (precision / 2 - 16)
         Since we cannot use non-integers, we do MAX_FIXED_EXP_32 * 361 ^ (precision / 2 - 16) / 100 ^ (precision / 2 - 16).
         But there is a better approximation, because this "1.9" factor in fact extends beyond a single decimal digit.
-        So instead, we use 0xeb5ec5975959c565 / 0x4000000000000000, which yields maximum values quite close to real ones:
+        So instead, we use 0xeb5ec5975959c565 / 0x4000000000000000, which yields maximum values quite close to the real ones:
         maxExpArray = {
             -------------------,-------------------,-------------------,-------------------,
             -------------------,-------------------,-------------------,-------------------,
@@ -325,7 +326,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
     function fixedExp(uint256 _x, uint8 _precision) constant returns (uint256) {
         uint256 maxExp = MAX_FIXED_EXP_32;
         for (uint8 p = 32; p < _precision; p += 2)
-            maxExp = (maxExp * 0xeb5ec5975959c565) >> (64-2);
+            maxExp = (maxExp * MAX_FACTOR_64) >> (64-2);
         
         assert(_x <= maxExp);
         return fixedExpUnsafe(_x, _precision);
@@ -339,9 +340,8 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         and returns e ^ (x >> 32) << 32, that is, upshifted for accuracy
 
-        Input range:
-            - Function ok at    <= 242329958953 
-            - Function fails at >= 242329958954
+        Input range: the maximum permitted value for _x depends on the value of _precision.
+        Read the documentation of function fixedExp for more details.
 
         This method is is visible for testcases, but not meant for direct use. 
  
