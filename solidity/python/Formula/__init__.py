@@ -1,6 +1,5 @@
 from Power import power
 from Power import calculateBestPrecision
-from Power import ONE
 
 
 '''
@@ -29,7 +28,7 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
     # special case if the CRR = 100
     if (_reserveRatio == 100):
         temp = safeMul(_supply, baseN) / _reserveBalance;
-        return safeSub(temp, _supply); 
+        return safeSub(temp, _supply);
 
     precision = calculateBestPrecision(baseN, _reserveBalance, _reserveRatio, 100);
     resN = power(baseN, _reserveBalance, _reserveRatio, 100, precision);
@@ -72,7 +71,7 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     precision = calculateBestPrecision(_supply, baseD, 100, _reserveRatio);
     resN = power(_supply, baseD, 100, _reserveRatio, precision);
     temp1 = safeMul(_reserveBalance, resN);
-    temp2 = safeMul(_reserveBalance, ONE << precision);
+    temp2 = safeMul(_reserveBalance, 1 << precision);
     return safeSub(temp1, temp2) / resN;
 
 
