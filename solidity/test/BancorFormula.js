@@ -29,24 +29,25 @@ function num(numericStr) {
 }
 
 contract('BancorFormula', () => {
-    it('handles legal input ranges (fixedExp)', () => {
-        return BancorFormula.deployed().then((instance) => {
-            let ok = _hex('0x386bfdba29');
-            return instance.fixedExp.call(ok, 32);
-        }).then((retval) => {
-            let expected = _hex('0x59ce8876bf3a3b1b396ae19c95');
-            assert.equal(expected.toString(16), retval.toString(16), 'Wrong result for fixedExp at limit');
+    for (var precision = 0; precision < 128; precision++) {
+        it('handles legal input ranges (fixedExp)', () => {
+            return BancorFormula.deployed().then((instance) => {
+                let ok = testArrays.maxExpArray[precision];
+                return instance.fixedExp.call(ok, precision);
+            }).then((retval) => {
+                let expected = testArrays.maxValArray[precision];
+                assert.equal(expected.toString(16), retval.toString(16), 'Wrong result for fixedExp at limit');
+            });
         });
-    });
-
-    it('throws outside input range (fixedExp)', () => {
-        return BancorFormula.deployed().then((instance) => {
-            let ok = _hex('0x386bfdba2a');
-            return instance.fixedExp.call(ok, 32);
-        }).then(() => {
-            assert(false, "was supposed to throw but didn't.");
-        }).catch(expectedThrow);
-    });
+        it('throws outside input range (fixedExp)', () => {
+            return BancorFormula.deployed().then((instance) => {
+                let err = testArrays.maxExpArray[precision] + 1;
+                return instance.fixedExp.call(err, precision);
+            }).then(() => {
+                assert(false, "was supposed to throw but didn't.");
+            }).catch(expectedThrow);
+        });
+    }
 
     let purchaseTest = (k) => {
         let [S, R, F, E, expect, exact] = k;
