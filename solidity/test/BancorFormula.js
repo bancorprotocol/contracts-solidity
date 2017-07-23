@@ -2,7 +2,8 @@
 /* eslint-disable prefer-reflect */
 
 let big = require('bignumber');
-let testdata = require('./helpers/FormulaTestData.js')
+let testdata = require('./helpers/FormulaTestData.js');
+let testArrays = require('./helpers/FormulaTestArrays.js');
 let BancorFormula = artifacts.require('./BancorFormula.sol');
 
 function isThrow(error) {
