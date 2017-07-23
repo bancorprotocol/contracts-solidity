@@ -13,38 +13,38 @@ contract BancorFormula is IBancorFormula, SafeMath {
     string public version = '0.2';
 
     function BancorFormula() {
-        /*maxExpArray[  0] = 0xc1;
-        maxExpArray[  1] = 0x17a;
-        maxExpArray[  2] = 0x2e5;
-        maxExpArray[  3] = 0x5ab;
-        maxExpArray[  4] = 0xb1b;
-        maxExpArray[  5] = 0x15bf;
-        maxExpArray[  6] = 0x2a0c;
-        maxExpArray[  7] = 0x50a2;
-        maxExpArray[  8] = 0x9aa2;
-        maxExpArray[  9] = 0x1288c;
-        maxExpArray[ 10] = 0x238b2;
-        maxExpArray[ 11] = 0x4429a;
-        maxExpArray[ 12] = 0x82b78;
-        maxExpArray[ 13] = 0xfaadc;
-        maxExpArray[ 14] = 0x1e0bb8;
-        maxExpArray[ 15] = 0x399e96;
-        maxExpArray[ 16] = 0x6e7f88;
-        maxExpArray[ 17] = 0xd3e7a3;
-        maxExpArray[ 18] = 0x1965fea;
-        maxExpArray[ 19] = 0x30b5057;
-        maxExpArray[ 20] = 0x5d681f3;
-        maxExpArray[ 21] = 0xb320d03;
-        maxExpArray[ 22] = 0x15784a40;
-        maxExpArray[ 23] = 0x292c5bdd;
-        maxExpArray[ 24] = 0x4ef57b9b;
-        maxExpArray[ 25] = 0x976bd995;
-        maxExpArray[ 26] = 0x122624e32;
-        maxExpArray[ 27] = 0x22ce03cd5;
-        maxExpArray[ 28] = 0x42beef808;
-        maxExpArray[ 29] = 0x7ffffffff;
-        maxExpArray[ 30] = 0xf577eded5;
-        maxExpArray[ 31] = 0x1d6bd8b2eb;*/
+    //  maxExpArray[  0] = 0xc1;
+    //  maxExpArray[  1] = 0x17a;
+    //  maxExpArray[  2] = 0x2e5;
+    //  maxExpArray[  3] = 0x5ab;
+    //  maxExpArray[  4] = 0xb1b;
+    //  maxExpArray[  5] = 0x15bf;
+    //  maxExpArray[  6] = 0x2a0c;
+    //  maxExpArray[  7] = 0x50a2;
+    //  maxExpArray[  8] = 0x9aa2;
+    //  maxExpArray[  9] = 0x1288c;
+    //  maxExpArray[ 10] = 0x238b2;
+    //  maxExpArray[ 11] = 0x4429a;
+    //  maxExpArray[ 12] = 0x82b78;
+    //  maxExpArray[ 13] = 0xfaadc;
+    //  maxExpArray[ 14] = 0x1e0bb8;
+    //  maxExpArray[ 15] = 0x399e96;
+    //  maxExpArray[ 16] = 0x6e7f88;
+    //  maxExpArray[ 17] = 0xd3e7a3;
+    //  maxExpArray[ 18] = 0x1965fea;
+    //  maxExpArray[ 19] = 0x30b5057;
+    //  maxExpArray[ 20] = 0x5d681f3;
+    //  maxExpArray[ 21] = 0xb320d03;
+    //  maxExpArray[ 22] = 0x15784a40;
+    //  maxExpArray[ 23] = 0x292c5bdd;
+    //  maxExpArray[ 24] = 0x4ef57b9b;
+    //  maxExpArray[ 25] = 0x976bd995;
+    //  maxExpArray[ 26] = 0x122624e32;
+    //  maxExpArray[ 27] = 0x22ce03cd5;
+    //  maxExpArray[ 28] = 0x42beef808;
+    //  maxExpArray[ 29] = 0x7ffffffff;
+    //  maxExpArray[ 30] = 0xf577eded5;
+    //  maxExpArray[ 31] = 0x1d6bd8b2eb;
         maxExpArray[ 32] = 0x386bfdba29;
         maxExpArray[ 33] = 0x6c3390ecc8;
         maxExpArray[ 34] = 0xcf8014760f;
@@ -238,19 +238,19 @@ contract BancorFormula is IBancorFormula, SafeMath {
     */
     function calculateBestPrecision(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) constant returns (uint8) {
         uint256 maxVal = lnUpperBound(_baseN, _baseD) * _expN;
-		uint8 lo = MIN_PRECISION;
-		uint8 hi = MAX_PRECISION;
-		while (lo + 1 < hi) {
-			uint8 mid = (lo + hi) / 2;
-			if ((maxVal << (mid - MIN_PRECISION)) / _expD <= maxExpArray[mid])
-				lo = mid;
-			else
-				hi = mid;
-		}
-		if ((maxVal << (hi - MIN_PRECISION)) / _expD <= maxExpArray[hi])
-			return hi;
-		else
-			return lo;
+        uint8 lo = MIN_PRECISION;
+        uint8 hi = MAX_PRECISION;
+        while (lo + 1 < hi) {
+            uint8 mid = (lo + hi) / 2;
+            if ((maxVal << (mid - MIN_PRECISION)) / _expD <= maxExpArray[mid])
+                lo = mid;
+            else
+                hi = mid;
+        }
+        if ((maxVal << (hi - MIN_PRECISION)) / _expD <= maxExpArray[hi])
+            return hi;
+        else
+            return lo;
     }
 
     /**
