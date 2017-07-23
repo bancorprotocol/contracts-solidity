@@ -32,9 +32,9 @@ contract('BancorFormula', () => {
     it('handles legal input ranges (fixedExp)', () => {
         return BancorFormula.deployed().then((instance) => {
             let ok = _hex('0x386bfdba29');
-            return instance.fixedExp.call(ok);
+            return instance.fixedExp.call(ok, 32);
         }).then((retval) => {
-            let expected = _hex('0x59ce8876bf3a3b1bfe894fc4f5');
+            let expected = _hex('0x59ce8876bf3a3b1b396ae19c95');
             assert.equal(expected.toString(16), retval.toString(16), 'Wrong result for fixedExp at limit');
         });
     });
@@ -42,7 +42,7 @@ contract('BancorFormula', () => {
     it('throws outside input range (fixedExp)', () => {
         return BancorFormula.deployed().then((instance) => {
             let ok = _hex('0x386bfdba2a');
-            return instance.fixedExp.call(ok);
+            return instance.fixedExp.call(ok, 32);
         }).then(() => {
             assert(false, "was supposed to throw but didn't.");
         }).catch(expectedThrow);
