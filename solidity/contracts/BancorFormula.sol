@@ -232,7 +232,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         This maximum exponent depends on the precision used ("maxExpArray" maps each precision between 0 and 127 to its maximum exponent).
         Hence before calling the exponentiation function, we need to determine the highest precision which can be used.
         We do this by estimating an upper-bound for "ln(base) * exp", and then choosing the highest precision which this value is permitted for.
-        Of course, we should later assert that the actual value represting "ln(base) * exp" is indeed not larger than the maximum exponent.
+        Of course, we should later assert that the actual value representing "ln(base) * exp" is indeed not larger than the maximum exponent.
         Note that the outcome of this function only affects the accuracy of the computation of "base ^ exp".
         Therefore, we do not need to assert that no intermediate result exceeds 256 bits (nor in this function, neither in any of the functions down the calling tree).
     */
