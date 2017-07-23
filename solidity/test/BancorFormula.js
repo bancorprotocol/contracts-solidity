@@ -72,7 +72,7 @@ contract('BancorFormula', () => {
                     }
                 });
         });
-    }
+    };
 
     let saleTest = (k) => {
         let [S, R, F, T, expect, exact] = k;
@@ -98,7 +98,7 @@ contract('BancorFormula', () => {
                     }
                 });
         });
-    }
+    };
 
     let purchaseThrowTest = (k) => {
         let [S, R, F, E, expect, exact] = k;
@@ -109,11 +109,11 @@ contract('BancorFormula', () => {
                     return f.calculatePurchaseReturn.call(S, R, F, E);
                 })
                 .then((retval) => {
-                    assert(false, "was supposed to throw but didn't: [S,R,F,E] " + [S, R, F, E] + " => " + retval.toString(16));
+                    assert(false, "was supposed to throw but didn't: [S,R,F,E] " + [S, R, F, E] + ' => ' + retval.toString(16));
                 })
                 .catch(expectedThrow);
         });
-    }
+    };
 
     let saleThrowTest = (k) => {
         let [S, R, F, T, expect, exact] = k;
@@ -124,11 +124,11 @@ contract('BancorFormula', () => {
                     return f.calculateSaleReturn.call(S, R, F, T);
                 })
                 .then((retval) => {
-                    assert(false, "was supposed to throw but didn't: [S,R,F,T] " + [S, R, F, T] + "=> " + retval.toString(16));
+                    assert(false, "was supposed to throw but didn't: [S,R,F,T] " + [S, R, F, T] + '=> ' + retval.toString(16));
                 })
                 .catch(expectedThrow);
         });
-    }
+    };
 
     testdata.purchaseReturns.forEach(purchaseTest);
     testdata.saleReturns.forEach(saleTest);
@@ -138,6 +138,6 @@ contract('BancorFormula', () => {
     testdata.randomPurchaseReturns.forEach(purchaseTest);
     testdata.randomSaleReturns.forEach(saleTest);
 
-    testdata.purchaseReturnExpectedThrows.forEach(purchaseThrowTest)
-    testdata.saleReturnExpectedThrows.forEach(saleThrowTest)
+    testdata.purchaseReturnExpectedThrows.forEach(purchaseThrowTest);
+    testdata.saleReturnExpectedThrows.forEach(saleThrowTest);
 });
