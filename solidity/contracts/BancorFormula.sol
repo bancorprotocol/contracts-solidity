@@ -319,7 +319,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
     */
     function fixedLoge(uint256 _x, uint8 _precision) constant returns (uint256) {
         // cannot represent negative numbers (below 1)
-        assert(_x >= UINT256_1 << _precision);
+        assert(_x >= (UINT256_1 << _precision));
 
         uint256 log2 = fixedLog2(_x, _precision);
         return (log2 * 0xb17217f7d1cf78) >> 56;
