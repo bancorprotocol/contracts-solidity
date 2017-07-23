@@ -2,21 +2,145 @@ pragma solidity ^0.4.11;
 import './SafeMath.sol';
 import './interfaces/IBancorFormula.sol';
 
-/*
-    Open issues:
-    - The formula is not yet super accurate, especially for very small/very high ratios
-    - Improve dynamic precision support
-*/
-
 contract BancorFormula is IBancorFormula, SafeMath {
 
-    uint256 constant ONE = 1;
-    uint256 constant TWO = 2;
-    uint256 constant MAX_FIXED_EXP_32 = 0x386bfdba29;
-    uint256 constant MAX_FACTOR_64 = 0xeb5ec5975959c565;
+    uint256[128] maxExpArray;
+    uint256 constant UINT1 = 1;
+    uint256 constant UINT2 = 2;
+    uint256 constant UINT3 = 3;
+    uint8 constant MIN_PRECISION = 32;
+    uint8 constant MAX_PRECISION = 95;
     string public version = '0.2';
 
     function BancorFormula() {
+//      maxExpArray[  0] = 0xc1;
+//      maxExpArray[  1] = 0x17a;
+//      maxExpArray[  2] = 0x2e5;
+//      maxExpArray[  3] = 0x5ab;
+//      maxExpArray[  4] = 0xb1b;
+//      maxExpArray[  5] = 0x15bf;
+//      maxExpArray[  6] = 0x2a0c;
+//      maxExpArray[  7] = 0x50a2;
+//      maxExpArray[  8] = 0x9aa2;
+//      maxExpArray[  9] = 0x1288c;
+//      maxExpArray[ 10] = 0x238b2;
+//      maxExpArray[ 11] = 0x4429a;
+//      maxExpArray[ 12] = 0x82b78;
+//      maxExpArray[ 13] = 0xfaadc;
+//      maxExpArray[ 14] = 0x1e0bb8;
+//      maxExpArray[ 15] = 0x399e96;
+//      maxExpArray[ 16] = 0x6e7f88;
+//      maxExpArray[ 17] = 0xd3e7a3;
+//      maxExpArray[ 18] = 0x1965fea;
+//      maxExpArray[ 19] = 0x30b5057;
+//      maxExpArray[ 20] = 0x5d681f3;
+//      maxExpArray[ 21] = 0xb320d03;
+//      maxExpArray[ 22] = 0x15784a40;
+//      maxExpArray[ 23] = 0x292c5bdd;
+//      maxExpArray[ 24] = 0x4ef57b9b;
+//      maxExpArray[ 25] = 0x976bd995;
+//      maxExpArray[ 26] = 0x122624e32;
+//      maxExpArray[ 27] = 0x22ce03cd5;
+//      maxExpArray[ 28] = 0x42beef808;
+//      maxExpArray[ 29] = 0x7ffffffff;
+//      maxExpArray[ 30] = 0xf577eded5;
+//      maxExpArray[ 31] = 0x1d6bd8b2eb;
+        maxExpArray[ 32] = 0x386bfdba29;
+        maxExpArray[ 33] = 0x6c3390ecc8;
+        maxExpArray[ 34] = 0xcf8014760f;
+        maxExpArray[ 35] = 0x18ded91f0e7;
+        maxExpArray[ 36] = 0x2fb1d8fe082;
+        maxExpArray[ 37] = 0x5b771955b36;
+        maxExpArray[ 38] = 0xaf67a93bb50;
+        maxExpArray[ 39] = 0x15060c256cb2;
+        maxExpArray[ 40] = 0x285145f31ae5;
+        maxExpArray[ 41] = 0x4d5156639708;
+        maxExpArray[ 42] = 0x944620b0e70e;
+        maxExpArray[ 43] = 0x11c592761c666;
+        maxExpArray[ 44] = 0x2214d10d014ea;
+        maxExpArray[ 45] = 0x415bc6d6fb7dd;
+        maxExpArray[ 46] = 0x7d56e76777fc5;
+        maxExpArray[ 47] = 0xf05dc6b27edad;
+        maxExpArray[ 48] = 0x1ccf4b44bb4820;
+        maxExpArray[ 49] = 0x373fc456c53bb7;
+        maxExpArray[ 50] = 0x69f3d1c921891c;
+        maxExpArray[ 51] = 0xcb2ff529eb71e4;
+        maxExpArray[ 52] = 0x185a82b87b72e95;
+        maxExpArray[ 53] = 0x2eb40f9f620fda6;
+        maxExpArray[ 54] = 0x5990681d961a1ea;
+        maxExpArray[ 55] = 0xabc25204e02828d;
+        maxExpArray[ 56] = 0x14962dee9dc97640;
+        maxExpArray[ 57] = 0x277abdcdab07d5a7;
+        maxExpArray[ 58] = 0x4bb5ecca963d54ab;
+        maxExpArray[ 59] = 0x9131271922eaa606;
+        maxExpArray[ 60] = 0x116701e6ab0cd188d;
+        maxExpArray[ 61] = 0x215f77c045fbe8856;
+        maxExpArray[ 62] = 0x3ffffffffffffffff;
+        maxExpArray[ 63] = 0x7abbf6f6abb9d087f;
+        maxExpArray[ 64] = 0xeb5ec597592befbf4;
+        maxExpArray[ 65] = 0x1c35fedd14b861eb04;
+        maxExpArray[ 66] = 0x3619c87664579bc94a;
+        maxExpArray[ 67] = 0x67c00a3b07ffc01fd6;
+        maxExpArray[ 68] = 0xc6f6c8f8739773a7a4;
+        maxExpArray[ 69] = 0x17d8ec7f04136f4e561;
+        maxExpArray[ 70] = 0x2dbb8caad9b7097b91a;
+        maxExpArray[ 71] = 0x57b3d49dda84556d6f6;
+        maxExpArray[ 72] = 0xa830612b6591d9d9e61;
+        maxExpArray[ 73] = 0x1428a2f98d728ae223dd;
+        maxExpArray[ 74] = 0x26a8ab31cb8464ed99e1;
+        maxExpArray[ 75] = 0x4a23105873875bd52dfd;
+        maxExpArray[ 76] = 0x8e2c93b0e33355320ead;
+        maxExpArray[ 77] = 0x110a688680a7530515f3e;
+        maxExpArray[ 78] = 0x20ade36b7dbeeb8d79659;
+        maxExpArray[ 79] = 0x3eab73b3bbfe282243ce1;
+        maxExpArray[ 80] = 0x782ee3593f6d69831c453;
+        maxExpArray[ 81] = 0xe67a5a25da41063de1495;
+        maxExpArray[ 82] = 0x1b9fe22b629ddbbcdf8754;
+        maxExpArray[ 83] = 0x34f9e8e490c48e67e6ab8b;
+        maxExpArray[ 84] = 0x6597fa94f5b8f20ac16666;
+        maxExpArray[ 85] = 0xc2d415c3db974ab32a5184;
+        maxExpArray[ 86] = 0x175a07cfb107ed35ab61430;
+        maxExpArray[ 87] = 0x2cc8340ecb0d0f520a6af58;
+        maxExpArray[ 88] = 0x55e129027014146b9e37405;
+        maxExpArray[ 89] = 0xa4b16f74ee4bb2040a1ec6c;
+        maxExpArray[ 90] = 0x13bd5ee6d583ead3bd636b5c;
+        maxExpArray[ 91] = 0x25daf6654b1eaa55fd64df5e;
+        maxExpArray[ 92] = 0x4898938c9175530325b9d116;
+        maxExpArray[ 93] = 0x8b380f3558668c46c91c49a2;
+        maxExpArray[ 94] = 0x10afbbe022fdf442b2a522507;
+        maxExpArray[ 95] = 0x1ffffffffffffffffffffffff;
+//      maxExpArray[ 96] = 0x3d5dfb7b55dce843f89a7dbcb;
+//      maxExpArray[ 97] = 0x75af62cbac95f7dfa3295ec26;
+//      maxExpArray[ 98] = 0xe1aff6e8a5c30f58221fbf899;
+//      maxExpArray[ 99] = 0x1b0ce43b322bcde4a56e8ada5a;
+//      maxExpArray[100] = 0x33e0051d83ffe00feb432b473b;
+//      maxExpArray[101] = 0x637b647c39cbb9d3d26c56e949;
+//      maxExpArray[102] = 0xbec763f8209b7a72b0afea0d31;
+//      maxExpArray[103] = 0x16ddc6556cdb84bdc8d12d22e6f;
+//      maxExpArray[104] = 0x2bd9ea4eed422ab6b7b072b029e;
+//      maxExpArray[105] = 0x54183095b2c8ececf30dd533d03;
+//      maxExpArray[106] = 0xa14517cc6b9457111eed5b8adf1;
+//      maxExpArray[107] = 0x13545598e5c23276ccf0ede68034;
+//      maxExpArray[108] = 0x2511882c39c3adea96fec2102329;
+//      maxExpArray[109] = 0x471649d87199aa990756806903c5;
+//      maxExpArray[110] = 0x88534434053a9828af9f37367ee6;
+//      maxExpArray[111] = 0x1056f1b5bedf75c6bcb2ce8aed428;
+//      maxExpArray[112] = 0x1f55b9d9ddff141121e70ebe0104e;
+//      maxExpArray[113] = 0x3c1771ac9fb6b4c18e229803dae82;
+//      maxExpArray[114] = 0x733d2d12ed20831ef0a4aead8c66d;
+//      maxExpArray[115] = 0xdcff115b14eedde6fc3aa5353f2e4;
+//      maxExpArray[116] = 0x1a7cf47248624733f355c5c1f0d1f1;
+//      maxExpArray[117] = 0x32cbfd4a7adc790560b3335687b89b;
+//      maxExpArray[118] = 0x616a0ae1edcba5599528c20605b3f6;
+//      maxExpArray[119] = 0xbad03e7d883f69ad5b0a186184e06b;
+//      maxExpArray[120] = 0x16641a07658687a905357ac0ebe198b;
+//      maxExpArray[121] = 0x2af09481380a0a35cf1ba02f36c6a56;
+//      maxExpArray[122] = 0x5258b7ba7725d902050f6360afddf96;
+//      maxExpArray[123] = 0x9deaf736ac1f569deb1b5ae3f36c130;
+//      maxExpArray[124] = 0x12ed7b32a58f552afeb26faf21deca06;
+//      maxExpArray[125] = 0x244c49c648baa98192dce88b42f53caf;
+//      maxExpArray[126] = 0x459c079aac334623648e24d17c74b3dc;
+//      maxExpArray[127] = 0x6ae67b5f2f528d5f3189036ee0f27453;
     }
 
     /**
@@ -46,7 +170,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         // special case if the CRR = 100
         if (_reserveRatio == 100) {
             temp = safeMul(_supply, baseN) / _reserveBalance;
-            return safeSub(temp, _supply); 
+            return safeSub(temp, _supply);
         }
 
         uint8 precision = calculateBestPrecision(baseN, _reserveBalance, _reserveRatio, 100);
@@ -94,36 +218,39 @@ contract BancorFormula is IBancorFormula, SafeMath {
         uint8 precision = calculateBestPrecision(_supply, baseD, 100, _reserveRatio);
         uint256 resN = power(_supply, baseD, 100, _reserveRatio, precision);
         temp1 = safeMul(_reserveBalance, resN);
-        temp2 = safeMul(_reserveBalance, ONE << precision);
+        temp2 = safeMul(_reserveBalance, UINT1 << precision);
         return safeSub(temp1, temp2) / resN;
     }
 
     /**
-        calculateBestPrecision 
-        Predicts the highest precision which can be used in order to compute "base^exp" without exceeding 256 bits in any of the intermediate computations.
+        calculateBestPrecision
+        Predicts the highest precision which can be used in order to compute "base ^ exp" without exceeding 256 bits in any of the intermediate computations.
         Instead of calculating "base ^ exp", we calculate "e ^ (ln(base) * exp)".
-        The value of ln(base) is represented with an integer slightly smaller than ln(base) * 2 ^ precision.
+        The value of "ln(base)" is represented with an integer slightly smaller than "ln(base) * 2 ^ precision".
         The larger the precision is, the more accurately this value represents the real value.
-        However, function fixedExpUnsafe(x), which calculates e ^ x, is limited to a maximum value of x.
-        The limit depends on the precision (e.g, for precision = 32, the maximum value of x is MAX_FIXED_EXP_32).
-        Hence before calling the 'power' function, we need to estimate an upper-bound for ln(base) * exponent.
-        Of course, we should later assert that the value passed to fixedExpUnsafe is not larger than MAX_FIXED_EXP(precision).
+        However, function fixedExpUnsafe(x), which calculates "e ^ x", is limited to a maximum value of x.
+        The limit depends on the precision - maxExpArray maps each precision between 0 and 127 to the maximum value permitted.
+        Hence before calling the 'power' function, we need to estimate an upper-bound for "ln(base) * exp".
+        Of course, we should later assert that the value passed to fixedExpUnsafe is not larger than maxExpArray[precision].
         Due to this assertion (made in function fixedExp), functions calculateBestPrecision and fixedExp are tightly coupled.
         Note that the outcome of this function only affects the accuracy of the computation of "base ^ exp".
         Therefore, we do not need to assert that no intermediate result exceeds 256 bits (nor in this function, neither in any of the functions down the calling tree).
     */
     function calculateBestPrecision(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) constant returns (uint8) {
-        uint8 precision;
-        uint256 maxExp = MAX_FIXED_EXP_32;
-        uint256 maxVal = lnUpperBound32(_baseN,_baseD) * _expN;
-        for (precision = 0; precision < 32; precision += 2) {
-            if (maxExp < (maxVal << precision) / _expD)
-                break;
-            maxExp = (maxExp * MAX_FACTOR_64) >> (64-2);
-        }
-        if (precision == 0)
-            return 32;
-        return precision+32-2;
+        uint256 maxVal = lnUpperBound(_baseN, _baseD) * _expN;
+		uint8 lo = MIN_PRECISION;
+		uint8 hi = MAX_PRECISION;
+		while (lo + 1 < hi) {
+			uint8 mid = (lo + hi) / 2;
+			if ((maxVal << (mid - MIN_PRECISION)) / _expD <= maxExpArray[mid])
+				lo = mid;
+			else
+				hi = mid;
+		}
+		if ((maxVal << (hi - MIN_PRECISION)) / _expD <= maxExpArray[hi])
+			return hi;
+		else
+			return lo;
     }
 
     /**
@@ -131,18 +258,18 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Returns result upshifted by precision
 
         This method is overflow-safe
-    */ 
+    */
     function power(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD, uint8 _precision) constant returns (uint256) {
         uint256 logbase = ln(_baseN, _baseD, _precision);
         // Not using safeDiv here, since safeDiv protects against
         // precision loss. It's unavoidable, however
-        // Both `ln` and `fixedExp` are overflow-safe. 
+        // Both `ln` and `fixedExp` are overflow-safe.
         return fixedExp(safeMul(logbase, _expN) / _expD, _precision);
     }
-    
+
     /**
-        input range: 
-            - numerator: [1, uint256_max / 2 ^ precision]    
+        input range:
+            - numerator: [1, uint256_max / 2 ^ precision]
             - denominator: [1, numerator]
             If numerator / denominator < 1 then ln(numerator / denominator) < 0
         output range:
@@ -151,53 +278,51 @@ contract BancorFormula is IBancorFormula, SafeMath {
         This method asserts outside of bounds
     */
     function ln(uint256 _numerator, uint256 _denominator, uint8 _precision) public constant returns (uint256) {
-        // validate input
-        assert(0 < _denominator && _denominator <= _numerator && _numerator < (ONE << (256 - _precision)));
-
+        assert(0 < _denominator && _denominator <= _numerator && _numerator < (UINT1 << (256 - _precision)));
         return fixedLoge( (_numerator << _precision) / _denominator, _precision);
     }
 
     /**
-        lnUpperBound32 
+        lnUpperBound
         Takes a rational number "baseN / baseD" as input.
-        Returns an integer upper-bound of the natural logarithm of the input scaled by 2^32.
-        We do this by calculating "Ceiling(log2(baseN / baseD)) * Ceiling(ln(2) * 2^32)".
+        Returns an integer upper-bound of the natural logarithm of the input scaled by 2 ^ MIN_PRECISION.
+        We do this by calculating "Ceiling(log2(baseN / baseD)) * Ceiling(ln(2) * 2 ^ MIN_PRECISION)".
         For small values of "baseN / baseD", this sometimes yields a bad upper-bound approximation.
         We therefore cover these cases (and a few more) manually.
         Complexity is O(log(input bit-length)).
     */
-    function lnUpperBound32(uint256 _baseN, uint256 _baseD) constant returns (uint256) {
+    function lnUpperBound(uint256 _baseN, uint256 _baseD) constant returns (uint256) {
         assert(_baseN > _baseD);
 
-        uint256 scaledBaseN = _baseN << 32;
+        uint256 scaledBaseN = _baseN << MIN_PRECISION;
         if (scaledBaseN <= _baseD *  0x2b7e15162) // _baseN / _baseD < e^1 (floorLog2 will return 0 if _baseN / _baseD < 2)
-            return uint256(1) << 32;
+            return UINT1 << MIN_PRECISION;
         if (scaledBaseN <= _baseD *  0x763992e35) // _baseN / _baseD < e^2 (floorLog2 will return 1 if _baseN / _baseD < 4)
-            return uint256(2) << 32;
+            return UINT2 << MIN_PRECISION;
         if (scaledBaseN <= _baseD * 0x1415e5bf6f) // _baseN / _baseD < e^3 (floorLog2 will return 2 if _baseN / _baseD < 8)
-            return uint256(3) << 32;
+            return UINT3 << MIN_PRECISION;
 
         return ceilLog2(_baseN, _baseD) * 0xb17217f8;
     }
 
     /**
-        input range: 
+        input range:
             [0x100000000, uint256_max]
         output range:
             [0, 0x9b43d4f8d6]
 
         This method asserts outside of bounds
 
-        Since `fixedLog2_min` output range is max `0xdfffffffff` 
+        Since `fixedLog2_min` output range is max `0xdfffffffff`
         (40 bits, or 5 bytes), we can use a very large approximation
-        for `ln(2)`. This one is used since it's the max accuracy 
+        for `ln(2)`. This one is used since it's the max accuracy
         of Python `ln(2)`
 
         0xb17217f7d1cf78 = ln(2) * (1 << 56)
     */
     function fixedLoge(uint256 _x, uint8 _precision) constant returns (uint256) {
         // cannot represent negative numbers (below 1)
-        assert(_x >= ONE << _precision);
+        assert(_x >= UINT1 << _precision);
 
         uint256 log2 = fixedLog2(_x, _precision);
         return (log2 * 0xb17217f7d1cf78) >> 56;
@@ -205,25 +330,25 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     /**
         Returns log2(x >> 32) << 32 [1]
-        So x is assumed to be already upshifted 32 bits, and 
-        the result is also upshifted 32 bits. 
-        
-        [1] The function returns a number which is lower than the 
+        So x is assumed to be already upshifted 32 bits, and
+        the result is also upshifted 32 bits.
+
+        [1] The function returns a number which is lower than the
         actual value
 
-        input-range : 
+        input-range:
             [0x100000000, uint256_max]
-        output-range: 
+        output-range:
             [0,0xdfffffffff]
 
         This method asserts outside of bounds
 
     */
     function fixedLog2(uint256 _x, uint8 _precision) constant returns (uint256) {
-        uint256 fixedOne = ONE << _precision;
-        uint256 fixedTwo = TWO << _precision;
+        uint256 fixedOne = UINT1 << _precision;
+        uint256 fixedTwo = UINT2 << _precision;
 
-        // Numbers below 1 are negative. 
+        // Numbers below 1 are negative.
         assert( _x >= fixedOne);
 
         uint256 hi = 0;
@@ -236,7 +361,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
             _x = (_x * _x) / fixedOne;
             if (_x >= fixedTwo) {
                 _x >>= 1;
-                hi += ONE << (_precision - 1 - i);
+                hi += UINT1 << (_precision - 1 - i);
             }
         }
 
@@ -262,7 +387,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
     function floorLog2(uint256 _n) constant returns (uint256) {
         uint8 t = 0;
         for (uint8 s = 128; s > 0; s >>= 1) {
-            if (_n >= (ONE << s)) {
+            if (_n >= (UINT1 << s)) {
                 _n >>= s;
                 t |= s;
             }
@@ -274,66 +399,15 @@ contract BancorFormula is IBancorFormula, SafeMath {
     /**
         fixedExp is a 'protected' version of `fixedExpUnsafe`, which asserts instead of overflows.
         The maximum value which can be passed to fixedExpUnsafe depends on the precision used.
-        The following array maps each precision between 0 and 63 to the maximum value permitted:
-        maxExpArray = {
-            0xc1               ,0x17a              ,0x2e5              ,0x5ab              ,
-            0xb1b              ,0x15bf             ,0x2a0c             ,0x50a2             ,
-            0x9aa2             ,0x1288c            ,0x238b2            ,0x4429a            ,
-            0x82b78            ,0xfaadc            ,0x1e0bb8           ,0x399e96           ,
-            0x6e7f88           ,0xd3e7a3           ,0x1965fea          ,0x30b5057          ,
-            0x5d681f3          ,0xb320d03          ,0x15784a40         ,0x292c5bdd         ,
-            0x4ef57b9b         ,0x976bd995         ,0x122624e32        ,0x22ce03cd5        ,
-            0x42beef808        ,0x7ffffffff        ,0xf577eded5        ,0x1d6bd8b2eb       ,
-            0x386bfdba29       ,0x6c3390ecc8       ,0xcf8014760f       ,0x18ded91f0e7      ,
-            0x2fb1d8fe082      ,0x5b771955b36      ,0xaf67a93bb50      ,0x15060c256cb2     ,
-            0x285145f31ae5     ,0x4d5156639708     ,0x944620b0e70e     ,0x11c592761c666    ,
-            0x2214d10d014ea    ,0x415bc6d6fb7dd    ,0x7d56e76777fc5    ,0xf05dc6b27edad    ,
-            0x1ccf4b44bb4820   ,0x373fc456c53bb7   ,0x69f3d1c921891c   ,0xcb2ff529eb71e4   ,
-            0x185a82b87b72e95  ,0x2eb40f9f620fda6  ,0x5990681d961a1ea  ,0xabc25204e02828d  ,
-            0x14962dee9dc97640 ,0x277abdcdab07d5a7 ,0x4bb5ecca963d54ab ,0x9131271922eaa606 ,
-            0x116701e6ab0cd188d,0x215f77c045fbe8856,0x3ffffffffffffffff,0x7abbf6f6abb9d087f,
-        };
-        Since we cannot use an array of constants, we need to approximate the maximum value dynamically.
-        For a precision of 32, the maximum value permitted is MAX_FIXED_EXP_32.
-        For each additional precision unit, the maximum value permitted increases by approximately 1.9.
-        So in order to calculate it, we need to multiply MAX_FIXED_EXP_32 by 1.9 for every additional precision unit.
-        And in order to optimize for speed, we multiply MAX_FIXED_EXP_32 by 1.9^2 for every 2 additional precision units.
-        Hence the general function for mapping a given precision to the maximum value permitted is:
-        - precision = [32, 34, 36, ..., 62]
-        - MaxFixedExp(precision) = MAX_FIXED_EXP_32 * 3.61 ^ (precision / 2 - 16)
-        Since we cannot use non-integers, we do MAX_FIXED_EXP_32 * 361 ^ (precision / 2 - 16) / 100 ^ (precision / 2 - 16).
-        But there is a better approximation, because this "1.9" factor in fact extends beyond a single decimal digit.
-        So instead, we use 0xeb5ec5975959c565 / 0x4000000000000000, which yields maximum values quite close to the real ones:
-        maxExpArray = {
-            -------------------,-------------------,-------------------,-------------------,
-            -------------------,-------------------,-------------------,-------------------,
-            -------------------,-------------------,-------------------,-------------------,
-            -------------------,-------------------,-------------------,-------------------,
-            -------------------,-------------------,-------------------,-------------------,
-            -------------------,-------------------,-------------------,-------------------,
-            -------------------,-------------------,-------------------,-------------------,
-            -------------------,-------------------,-------------------,-------------------,
-            0x386bfdba29       ,-------------------,0xcf8014760e       ,-------------------,
-            0x2fb1d8fe07b      ,-------------------,0xaf67a93bb37      ,-------------------,
-            0x285145f31a8f     ,-------------------,0x944620b0e5ee     ,-------------------,
-            0x2214d10d0112e    ,-------------------,0x7d56e7677738e    ,-------------------,
-            0x1ccf4b44bb20d0   ,-------------------,0x69f3d1c9210d27   ,-------------------,
-            0x185a82b87b5b294  ,-------------------,0x5990681d95d4371  ,-------------------,
-            0x14962dee9dbd672b ,-------------------,0x4bb5ecca961fb9bf ,-------------------,
-            0x116701e6ab0967080,-------------------,0x3fffffffffffe6652,-------------------,
-        };
+        The global maxExpArray maps each precision between 0 and 127 to the maximum value permitted.
     */
     function fixedExp(uint256 _x, uint8 _precision) constant returns (uint256) {
-        uint256 maxExp = MAX_FIXED_EXP_32;
-        for (uint8 p = 32; p < _precision; p += 2)
-            maxExp = (maxExp * MAX_FACTOR_64) >> (64-2);
-        
-        assert(_x <= maxExp);
+        assert(_x <= maxExpArray[_precision]);
         return fixedExpUnsafe(_x, _precision);
     }
 
     /**
-        fixedExp 
+        fixedExp
         Calculates e ^ x according to maclauren summation:
 
         e^x = 1 + x + x ^ 2 / 2!...+ x ^ n / n!
@@ -343,9 +417,9 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Input range: the maximum permitted value for _x depends on the value of _precision.
         Read the documentation of function fixedExp for more details.
 
-        This method is is visible for testcases, but not meant for direct use. 
- 
-        The values in this method been generated via the following python snippet: 
+        This method is is visible for testcases, but not meant for direct use.
+
+        The values in this method been generated via the following python snippet:
 
         def calculateFactorials():
             """Method to print out the factorials for fixedExp"""
