@@ -15,9 +15,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     /**
         The values below depend on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
-        - Apply the same change in file '../python/Formula/Power/__init__.py'
-        - Run the file 'PrintLn2ScalingFactors.py' and paste the results below
-        - Apply the same change in file '../python/Formula/Power/__init__.py'
+        Apply the same change in file 'PrintLn2ScalingFactors.py', run it and paste the printed results below.
     */
     uint256 constant CEILING_LN2_MANTISSA = 0xb17217f8;
     uint256 constant FLOOR_LN2_MANTISSA   = 0x2c5c85fdf473de6af278ece600fcbda;
@@ -25,9 +23,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     /**
         The function below depends on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
-        - Apply the same change in file '../python/Formula/Power/__init__.py'
-        - Run the file 'PrintFunctionBancorFormula.py' and paste the results below
-        - Apply the same change in file '../python/Formula/Power/__init__.py'
+        Apply the same change in file 'PrintFunctionBancorFormula.py', run it and paste the printed results below.
     */
     function BancorFormula() {
     //  maxExpArray[  0] = 0xc1;
