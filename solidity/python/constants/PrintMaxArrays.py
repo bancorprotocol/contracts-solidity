@@ -1,7 +1,8 @@
 from math import factorial
 
 
-NUM_OF_PRECISIONS = 128
+MIN_PRECISION = 32
+MAX_PRECISION = 127
 
 
 NUM_OF_COEFS = 34
@@ -45,6 +46,9 @@ def binarySearch(func,args):
     except Exception,error:
         func(lo,args)
         return lo
+
+
+NUM_OF_PRECISIONS = MAX_PRECISION+1
 
 
 maxExpArray = [0]*NUM_OF_PRECISIONS
