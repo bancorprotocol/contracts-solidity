@@ -3,6 +3,7 @@ UINT256_2 = 2;
 UINT256_3 = 3;
 MIN_PRECISION = 32;
 MAX_PRECISION = 127;
+CEILING_LN2 = 0xb17217f8; # Ceiling(ln(2) * 2 ^ MIN_PRECISION)
 maxExpArray = [0] * 128;
 
 '''
@@ -190,62 +191,53 @@ def ln(_numerator, _denominator, _precision):
     return fixedLoge( (_numerator << _precision) / _denominator, _precision);
 
 '''
-    Takes a rational number "baseN / baseD" as input.
+    Takes a rational number "numerator / denominator" as input.
     Returns an integer upper-bound of the natural logarithm of the input scaled by "2 ^ MIN_PRECISION".
-    We do this by calculating "Ceiling(log2(baseN / baseD)) * Ceiling(ln(2) * 2 ^ MIN_PRECISION)".
-    For small values of "baseN / baseD", this sometimes yields a bad upper-bound approximation.
+    We do this by calculating "Ceiling(log2(numerator / denominator)) * Ceiling(ln(2) * 2 ^ MIN_PRECISION)".
+    For small values of "numerator / denominator", this sometimes yields a bad upper-bound approximation.
     We therefore cover these cases (and a few more) manually.
     Complexity is O(log(input bit-length)).
 '''
-def lnUpperBound(_baseN, _baseD):
-    assert(_baseN > _baseD);
+def lnUpperBound(_numerator, _denominator):
+    assert(_numerator > _denominator);
 
-    scaledBaseN = _baseN << MIN_PRECISION;
-    if (scaledBaseN <= _baseD *  0x2b7e15162): # _baseN / _baseD < e^1 (floorLog2 will return 0 if _baseN / _baseD < 2)
+    scaledNumerator = _numerator << MIN_PRECISION;
+    if (scaledNumerator <= _denominator *  0x2b7e15162): # _numerator / _denominator < e^1 (floorLog2 will return 0 if _numerator / _denominator < 2)
         return UINT256_1 << MIN_PRECISION;
-    if (scaledBaseN <= _baseD *  0x763992e35): # _baseN / _baseD < e^2 (floorLog2 will return 1 if _baseN / _baseD < 4)
+    if (scaledNumerator <= _denominator *  0x763992e35): # _numerator / _denominator < e^2 (floorLog2 will return 1 if _numerator / _denominator < 4)
         return UINT256_2 << MIN_PRECISION;
-    if (scaledBaseN <= _baseD * 0x1415e5bf6f): # _baseN / _baseD < e^3 (floorLog2 will return 2 if _baseN / _baseD < 8)
+    if (scaledNumerator <= _denominator * 0x1415e5bf6f): # _numerator / _denominator < e^3 (floorLog2 will return 2 if _numerator / _denominator < 8)
         return UINT256_3 << MIN_PRECISION;
 
-    return ceilLog2(_baseN, _baseD) * 0xb17217f8;
+    return ceilLog2(_numerator, _denominator) * CEILING_LN2;
 
 '''
-    Since `fixedLog2` max output is `256 * 2 ^ 127` (136 bits), we can use a very large approximation for `ln(2)`.
-    Due to the maximum accuracy of `ln(2)` in Python, we use `0xb17217f7d1cf78 = ln(2) * (1 << 56)` here.
-    This method asserts outside of bounds.
+    The maximum output of fixedLog2 is 0x407fffffffffffffffffffffffffffffff.
+    Hence the highest approximation of ln(2) which can be used safely is 0x2c5c85fdf473de6af278ece600fcbda / 2 ^ 122.
+    Since python accuracy is insufficient, we compute this value via https://www.wolframalpha.com/input/?i=convert+(floor(log(2)*2%5E122))+to+hex.
 '''
 def fixedLoge(_x, _precision):
-    # if x < 1 then log(x) < 0
-    assert(_x >= (UINT256_1 << _precision));
-
     log2 = fixedLog2(_x, _precision);
-    return (log2 * 0xb17217f7d1cf78) >> 56;
+    return (log2 * 0x2c5c85fdf473de6af278ece600fcbda) >> 122;
 
 '''
-    Returns log2(x >> 32) << 32 [1]
-    So x is assumed to be already upshifted 32 bits, and
-    the result is also upshifted 32 bits.
+    Returns floor(log2(x / 2 ^ precision) * 2 ^ precision)
 
-    [1] The function returns a number which is lower than the
-    actual value
+    Ranges:
+        precision between MIN_PRECISION and MAX_PRECISION
+        x         between 2 ^ precision and (2 ^ (256 - precision) - 1) * (2 ^ precision)
+        output    between 0             and floor(log2(2 ^ (256 - precision) - 1) * 2 ^ precision)
 
-    input-range:
-        [0x100000000, uint256_max]
-    output-range:
-        [0,0xdfffffffff]
-
-    This method asserts outside of bounds
-
+    Maximum output:
+        precision = 127
+        x         = 0xffffffffffffffffffffffffffffffff80000000000000000000000000000000
+        output    = 0x407fffffffffffffffffffffffffffffff
 '''
 def fixedLog2(_x, _precision):
+    hi = 0;
     fixedOne = UINT256_1 << _precision;
     fixedTwo = UINT256_2 << _precision;
 
-    # if x < 1 then log(x) < 0
-    assert(_x >= fixedOne);
-
-    hi = 0;
     while (_x >= fixedTwo):
         _x >>= 1;
         hi += fixedOne;
@@ -259,12 +251,12 @@ def fixedLog2(_x, _precision):
     return hi;
 
 '''
-    Takes a rational number "baseN / baseD" as input.
+    Takes a rational number "numerator / denominator" as input.
     Returns the smallest integer larger than or equal to the binary logarithm of the input.
     Complexity is O(log(input bit-length)).
 '''
-def ceilLog2(_baseN, _baseD):
-    return floorLog2((_baseN - 1) / _baseD) + 1;
+def ceilLog2(_numerator, _denominator):
+    return floorLog2((_numerator - 1) / _denominator) + 1;
 
 '''
     Takes a natural number "n" as input.
