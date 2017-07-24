@@ -10,6 +10,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
     uint256 constant UINT256_3 = 3;
     uint8 constant MIN_PRECISION = 32;
     uint8 constant MAX_PRECISION = 127;
+    uint256 constant CEILING_LN2 = 0xb17217f8; // Ceiling(ln(2) * 2 ^ MIN_PRECISION)
     string public version = '0.2';
 
     /**
@@ -281,25 +282,25 @@ contract BancorFormula is IBancorFormula, SafeMath {
     }
 
     /**
-        Takes a rational number "baseN / baseD" as input.
+        Takes a rational number "numerator / denominator" as input.
         Returns an integer upper-bound of the natural logarithm of the input scaled by "2 ^ MIN_PRECISION".
-        We do this by calculating "Ceiling(log2(baseN / baseD)) * Ceiling(ln(2) * 2 ^ MIN_PRECISION)".
-        For small values of "baseN / baseD", this sometimes yields a bad upper-bound approximation.
+        We do this by calculating "Ceiling(log2(numerator / denominator)) * Ceiling(ln(2) * 2 ^ MIN_PRECISION)".
+        For small values of "numerator / denominator", this sometimes yields a bad upper-bound approximation.
         We therefore cover these cases (and a few more) manually.
         Complexity is O(log(input bit-length)).
     */
-    function lnUpperBound(uint256 _baseN, uint256 _baseD) constant returns (uint256) {
-        assert(_baseN > _baseD);
+    function lnUpperBound(uint256 _numerator, uint256 _denominator) constant returns (uint256) {
+        assert(_numerator > _denominator);
 
-        uint256 scaledBaseN = _baseN << MIN_PRECISION;
-        if (scaledBaseN <= _baseD *  0x2b7e15162) // _baseN / _baseD < e^1 (floorLog2 will return 0 if _baseN / _baseD < 2)
+        uint256 scaledNumerator = _numerator << MIN_PRECISION;
+        if (scaledNumerator <= _denominator *  0x2b7e15162) // _numerator / _denominator < e^1 (floorLog2 will return 0 if _numerator / _denominator < 2)
             return UINT256_1 << MIN_PRECISION;
-        if (scaledBaseN <= _baseD *  0x763992e35) // _baseN / _baseD < e^2 (floorLog2 will return 1 if _baseN / _baseD < 4)
+        if (scaledNumerator <= _denominator *  0x763992e35) // _numerator / _denominator < e^2 (floorLog2 will return 1 if _numerator / _denominator < 4)
             return UINT256_2 << MIN_PRECISION;
-        if (scaledBaseN <= _baseD * 0x1415e5bf6f) // _baseN / _baseD < e^3 (floorLog2 will return 2 if _baseN / _baseD < 8)
+        if (scaledNumerator <= _denominator * 0x1415e5bf6f) // _numerator / _denominator < e^3 (floorLog2 will return 2 if _numerator / _denominator < 8)
             return UINT256_3 << MIN_PRECISION;
 
-        return ceilLog2(_baseN, _baseD) * 0xb17217f8;
+        return ceilLog2(_numerator, _denominator) * CEILING_LN2;
     }
 
     /**
@@ -356,12 +357,12 @@ contract BancorFormula is IBancorFormula, SafeMath {
     }
 
     /**
-        Takes a rational number "baseN / baseD" as input.
+        Takes a rational number "numerator / denominator" as input.
         Returns the smallest integer larger than or equal to the binary logarithm of the input.
         Complexity is O(log(input bit-length)).
     */
-    function ceilLog2(uint256 _baseN, uint256 _baseD) constant returns (uint256) {
-        return floorLog2((_baseN - 1) / _baseD) + 1;
+    function ceilLog2(uint256 _numerator, uint256 _denominator) constant returns (uint256) {
+        return floorLog2((_numerator - 1) / _denominator) + 1;
     }
 
     /**
