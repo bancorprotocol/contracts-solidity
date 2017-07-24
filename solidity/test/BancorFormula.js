@@ -39,13 +39,14 @@ contract('BancorFormula', () => {
                 assert.equal(expected.toString(16), retval.toString(16), 'Wrong result for fixedExp at limit');
             });
         });
-        it('throws outside input range (fixedExp)', () => {
+        it('verifies input limit (fixedExpUnsafe)', () => {
             return BancorFormula.deployed().then((instance) => {
-                let err = testArrays.maxExpArray[precision] + 1;
-                return instance.fixedExp.call(err, precision);
-            }).then(() => {
-                assert(false, "was supposed to throw but didn't.");
-            }).catch(expectedThrow);
+                let retval0 = instance.fixedExpUnsafe.call(testArrays.maxExpArray[precision] + 0, precision);
+                let retval1 = instance.fixedExpUnsafe.call(testArrays.maxExpArray[precision] + 1, precision);
+                return [retval0, retval1];
+            }).then((retvals) => {
+                assert(retvals[0] > retvals[1], 'Result indicates wrong limit for fixedExpUnsafe');
+            });
         });
     }
 
