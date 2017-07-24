@@ -29,7 +29,7 @@ function num(numericStr) {
 }
 
 contract('BancorFormula', () => {
-    for (var precision = 0; precision < 128; precision++) {
+    for (var precision = 32; precision < 128; precision++) {
         it('handles legal input ranges (fixedExp)', () => {
             return BancorFormula.deployed().then((instance) => {
                 let ok = testArrays.maxExpArray[precision];
