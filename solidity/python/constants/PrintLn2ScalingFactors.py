@@ -6,8 +6,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from decimal import Decimal
 from decimal import getcontext
 from Formula.Power import fixedLog2
-from Formula.Power import MIN_PRECISION
-from Formula.Power import MAX_PRECISION
+
+
+MIN_PRECISION = 32
+MAX_PRECISION = 127
 
 
 getcontext().prec = MAX_PRECISION
