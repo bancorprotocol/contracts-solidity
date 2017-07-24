@@ -304,42 +304,33 @@ contract BancorFormula is IBancorFormula, SafeMath {
     }
 
     /**
-        Since `fixedLog2` max output is `256 * 2 ^ 127` (136 bits), we can use a very large approximation for `ln(2)`.
-        Due to the maximum accuracy of `ln(2)` in Python, we use `0xb17217f7d1cf78 = ln(2) * (1 << 56)` here.
-        This method asserts outside of bounds.
+        The maximum output of fixedLog2 is 0x407fffffffffffffffffffffffffffffff.
+        Hence the highest approximation of ln(2) which can be used safely is 0x2c5c85fdf473de6af278ece600fcbda / 2 ^ 122.
+        Since python accuracy is insufficient, we compute this value via https://www.wolframalpha.com/input/?i=convert+(floor(log(2)*2%5E122))+to+hex.
     */
     function fixedLoge(uint256 _x, uint8 _precision) constant returns (uint256) {
-        // if x < 1 then log(x) < 0
-        assert(_x >= (UINT256_1 << _precision));
-
         uint256 log2 = fixedLog2(_x, _precision);
-        return (log2 * 0xb17217f7d1cf78) >> 56;
+        return (log2 * 0x2c5c85fdf473de6af278ece600fcbda) >> 122;
     }
 
     /**
-        Returns log2(x >> 32) << 32 [1]
-        So x is assumed to be already upshifted 32 bits, and
-        the result is also upshifted 32 bits.
+        Returns floor(log2(x / 2 ^ precision) * 2 ^ precision)
 
-        [1] The function returns a number which is lower than the
-        actual value
+        Ranges:
+            precision between MIN_PRECISION and MAX_PRECISION
+            x         between 2 ^ precision and (2 ^ (256 - precision) - 1) * (2 ^ precision)
+            output    between 0             and floor(log2(2 ^ (256 - precision) - 1) * 2 ^ precision)
 
-        input-range:
-            [0x100000000, uint256_max]
-        output-range:
-            [0,0xdfffffffff]
-
-        This method asserts outside of bounds
-
+        Maximum output:
+            precision = 127
+            x         = 0xffffffffffffffffffffffffffffffff80000000000000000000000000000000
+            output    = 0x407fffffffffffffffffffffffffffffff
     */
     function fixedLog2(uint256 _x, uint8 _precision) constant returns (uint256) {
+        uint256 hi = 0;
         uint256 fixedOne = UINT256_1 << _precision;
         uint256 fixedTwo = UINT256_2 << _precision;
 
-        // if x < 1 then log(x) < 0
-        assert(_x >= fixedOne);
-
-        uint256 hi = 0;
         while (_x >= fixedTwo) {
             _x >>= 1;
             hi += fixedOne;
