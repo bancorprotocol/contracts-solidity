@@ -3,7 +3,6 @@ from math import factorial
 
 MIN_PRECISION = 32
 MAX_PRECISION = 127
-NUM_OF_PRECISIONS = 128
 
 
 NUM_OF_COEFS = 34
@@ -49,13 +48,13 @@ def binarySearch(func,args):
         return lo
 
 
-maxExpArray = [0]*NUM_OF_PRECISIONS
-for precision in range(NUM_OF_PRECISIONS):
+maxExpArray = [0]*(MAX_PRECISION+1)
+for precision in range(MAX_PRECISION+1):
     maxExpArray[precision] = binarySearch(fixedExpUnsafe,precision)
 
 
 print '    function BancorFormula() {'
-for precision in range(NUM_OF_PRECISIONS):
+for precision in range(MAX_PRECISION+1):
     prefix = '  ' if MIN_PRECISION <= precision <= MAX_PRECISION else '//'
     print '    {}  maxExpArray[{:3d}] = 0x{:x};'.format(prefix,precision,maxExpArray[precision])
 print '    }'
