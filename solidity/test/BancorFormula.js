@@ -1,7 +1,6 @@
-/* global artifacts, contract, before, it, assert */
+/* global artifacts, contract, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
-let big = require('bignumber');
 let testdata = require('./helpers/FormulaTestData.js');
 let testArrays = require('./helpers/FormulaTestArrays.js');
 let BancorFormula = artifacts.require('./BancorFormula.sol');
@@ -17,42 +16,30 @@ function expectedThrow(error) {
         assert(false, error.toString());
 }
 
-function _hex(hexstr) {
-    if (hexstr.startsWith('0x'))
-        hexstr = hexstr.substr(2);
-
-    return new big.BigInteger(hexstr, 16);
-}
-
-function num(numericStr) {
-    return new big.BigInteger(numericStr, 10);
-}
-
 contract('BancorFormula', () => {
-    for (var precision = 32; precision < 128; precision++) {
-        it('handles legal input ranges (fixedExp)', () => {
-            return BancorFormula.deployed().then((instance) => {
-                let ok = testArrays.maxExpArray[precision];
-                return instance.fixedExp.call(ok, precision);
-            }).then((retval) => {
-                let expected = testArrays.maxValArray[precision];
-                assert.equal(expected.toString(16), retval.toString(16), 'Wrong result for fixedExp at limit');
-            });
+    for (let precision = 32; precision < 128; precision++) {
+        it('handles legal input ranges (fixedExp)', async () => {
+            let instance = await BancorFormula.deployed();
+            let ok = testArrays.maxExp[precision];
+            ok = web3.toBigNumber(ok);
+            let retval = await instance.fixedExp.call(ok, precision);
+            let expected = testArrays.maxVal[precision];
+            expected = web3.toBigNumber(expected);
+            assert.equal(expected.toString(16), retval.toString(16), 'Wrong result for fixedExp at limit');
         });
-        it('verifies input limit (fixedExpUnsafe)', () => {
-            return BancorFormula.deployed().then((instance) => {
-                let retval0 = instance.fixedExpUnsafe.call(testArrays.maxExpArray[precision] + 0, precision);
-                let retval1 = instance.fixedExpUnsafe.call(testArrays.maxExpArray[precision] + 1, precision);
-                return [retval0, retval1];
-            }).then((retvals) => {
-                assert(retvals[0] > retvals[1], 'Result indicates wrong limit for fixedExpUnsafe');
-            });
+        it('verifies input limit (fixedExpUnsafe)', async () => {
+            let instance = await BancorFormula.deployed();
+            let maxExp = testArrays.maxExp[precision];
+            maxExp = web3.toBigNumber(maxExp);
+            let retval0 = await instance.fixedExpUnsafe.call(maxExp.plus(0), precision);
+            let retval1 = await instance.fixedExpUnsafe.call(maxExp.plus(1), precision);
+            assert(retval0.greaterThan(retval1), 'Result indicates wrong limit for fixedExpUnsafe');
         });
     }
 
     let purchaseTest = (k) => {
         let [S, R, F, E, expect, exact] = k;
-        S = num(S), R = num(R), F = num(F), E = num(E), expect = num(expect);
+        S = web3.toBigNumber(S), R = web3.toBigNumber(R), F = web3.toBigNumber(F), E = web3.toBigNumber(E), expect = web3.toBigNumber(expect);
 
         it('Should get correct amount of tokens when purchasing', () => {
             return BancorFormula.deployed()
@@ -79,7 +66,7 @@ contract('BancorFormula', () => {
 
     let saleTest = (k) => {
         let [S, R, F, T, expect, exact] = k;
-        S = num(S), R = num(R), F = num(F), T = num(T), expect = num(expect);
+        S = web3.toBigNumber(S), R = web3.toBigNumber(R), F = web3.toBigNumber(F), T = web3.toBigNumber(T), expect = web3.toBigNumber(expect);
 
         it('Should get correct amount of Ether when selling', () => {
             return BancorFormula.deployed().then(

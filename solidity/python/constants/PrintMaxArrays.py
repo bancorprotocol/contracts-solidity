@@ -57,13 +57,13 @@ for precision in range(NUM_OF_PRECISIONS):
     maxValArray[precision] = fixedExpUnsafe(maxExpArray[precision],precision)
 
 
-print 'var maxExpArray = ['
+print 'module.exports.maxExp = ['
 for precision in range(NUM_OF_PRECISIONS):
-    print '    /* {:3d} */    0x{:x},'.format(precision,maxExpArray[precision])
+    print '    /* {:3d} */    \'0x{:x}\','.format(precision,maxExpArray[precision])
 print '];'
 
 
-print 'var maxValArray = ['
+print 'module.exports.maxVal = ['
 for precision in range(NUM_OF_PRECISIONS):
-    print '    /* {:3d} */    0x{:x},'.format(precision,maxValArray[precision])
+    print '    /* {:3d} */    \'0x{:x}\','.format(precision,maxValArray[precision])
 print '];'
