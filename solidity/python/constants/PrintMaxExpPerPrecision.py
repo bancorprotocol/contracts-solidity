@@ -1,9 +1,12 @@
 from math import factorial
 
 
-NUM_OF_PRECISIONS = 64
+MIN_PRECISION = 32
+MAX_PRECISION = 63
+
+
 NUM_OF_VALUES_PER_ROW = 4
-assert(NUM_OF_PRECISIONS % NUM_OF_VALUES_PER_ROW == 0)
+assert((MAX_PRECISION+1) % NUM_OF_VALUES_PER_ROW == 0)
 
 
 NUM_OF_COEFS = 34
@@ -50,20 +53,20 @@ def binarySearch(func,args):
 
 
 def getMaxExp(precision,factor):
-    maxExp = maxExpArray[32]
-    for p in range (32,precision,2):
-        maxExp = safeMul(maxExp,factor) >> (NUM_OF_PRECISIONS-2)
+    maxExp = maxExpArray[MIN_PRECISION]
+    for p in range (MIN_PRECISION,precision):
+        maxExp = safeMul(maxExp,factor) >> MAX_PRECISION
         fixedExpUnsafe(maxExp,precision)
     return maxExp
 
 
 def assertFactor(factor,args):
-    for precision in range(32,NUM_OF_PRECISIONS,2):
+    for precision in range(MIN_PRECISION,MAX_PRECISION+1):
         getMaxExp(precision,factor)
 
 
-maxExpArray = [0]*NUM_OF_PRECISIONS
-for precision in range(NUM_OF_PRECISIONS):
+maxExpArray = [0]*(MAX_PRECISION+1)
+for precision in range(MAX_PRECISION+1):
     maxExpArray[precision] = binarySearch(fixedExpUnsafe,precision)
 
 
@@ -75,7 +78,7 @@ maxMaxExpLen = len('0x{:x}'.format(maxExpArray[-1]))
 
 print 'Max Exp Per Precision:'
 formatString = '{:s}{:d}{:s}'.format('Precision = {:2d} | Max Exp = {:',maxMaxExpLen,'s} | Ratio = {:9.7f}')
-for precision in range(NUM_OF_PRECISIONS):
+for precision in range(MAX_PRECISION+1):
     maxExp = '0x{:x}'.format(maxExpArray[precision])
     ratio = float(maxExpArray[precision])/float(maxExpArray[precision-1]) if precision > 0 else 0.0
     print formatString.format(precision,maxExp,ratio)
@@ -92,9 +95,9 @@ for i in range(len(maxExpArray)/NUM_OF_VALUES_PER_ROW):
 print ']\n'
 
 
-print 'maxFactor = 0x{:x}'.format(maxFactor)
+print 'maxFactor = 0x{:x} / 0x{:x}'.format(maxFactor,1<<MAX_PRECISION)
 formatString = '{:s}{:d}{:s}{:d}{:s}'.format('Precision = {:2d} | Theoretical Max Exp = {:',maxMaxExpLen,'s} | Practical Max Exp = {:',maxMaxExpLen,'s}')
-for precision in range(32,NUM_OF_PRECISIONS,2):
+for precision in range(MIN_PRECISION,MAX_PRECISION+1):
     theoreticalMaxExp = '0x{:x}'.format(maxExpArray[precision])
     practicalMaxExp = '0x{:x}'.format(getMaxExp(precision,maxFactor))
     print formatString.format(precision,theoreticalMaxExp,practicalMaxExp)
