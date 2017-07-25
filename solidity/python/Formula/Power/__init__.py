@@ -3,7 +3,6 @@ UINT256_2 = 2;
 UINT256_3 = 3;
 MIN_PRECISION = 32;
 MAX_PRECISION = 127;
-maxExpArray = [0] * 128;
 
 '''
     The values below depend on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
@@ -17,6 +16,7 @@ FLOOR_LN2_EXPONENT   = 122;
     The function below depends on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
     Apply the same change in file 'PrintFunctionBancorFormula.py', run it and paste the printed results below.
 '''
+maxExpArray = [0] * 128;
 def BancorFormula():
 #   maxExpArray[  0] = 0xc1;
 #   maxExpArray[  1] = 0x17a;
