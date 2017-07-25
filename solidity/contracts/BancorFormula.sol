@@ -281,7 +281,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Ranges:
             precision   between MIN_PRECISION and MAX_PRECISION
             numerator   between 1             and 2 ^ (256 - precision) - 1
-            denominator between 1             and numerator
+            denominator between 1             and 2 ^ (256 - precision) - 1
             output      between 0             and floor(ln(2 ^ (256 - precision) - 1) * 2 ^ precision)
 
         This function asserts "0 < denominator <= numerator < 2 ^ (256 - precision)".
