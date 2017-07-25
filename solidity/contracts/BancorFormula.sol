@@ -276,14 +276,15 @@ contract BancorFormula is IBancorFormula, SafeMath {
     }
 
     /**
-        input range:
-            - numerator: [1, uint256_max / 2 ^ precision]
-            - denominator: [1, numerator]
-            If numerator / denominator < 1 then ln(numerator / denominator) < 0
-        output range:
-            [0, ln(uint256_max) * 2 ^ precision]
+        Returns floor(ln(numerator / denominator) * 2 ^ precision)
 
-        This method asserts outside of bounds
+        Ranges:
+            precision   between MIN_PRECISION and MAX_PRECISION
+            numerator   between 1             and 2 ^ (256 - precision) - 1
+            denominator between 1             and numerator
+            output      between 0             and floor(ln(2 ^ (256 - precision) - 1) * 2 ^ precision)
+
+        This function asserts "0 < denominator <= numerator < 2 ^ (256 - precision)".
     */
     function ln(uint256 _numerator, uint256 _denominator, uint8 _precision) public constant returns (uint256) {
         assert(0 < _denominator && _denominator <= _numerator && _numerator < (UINT256_1 << (256 - _precision)));
@@ -296,12 +297,12 @@ contract BancorFormula is IBancorFormula, SafeMath {
         We do this by calculating "Ceiling(log2(numerator / denominator)) * Ceiling(ln(2) * 2 ^ MIN_PRECISION)".
         For small values of "numerator / denominator", this sometimes yields a bad upper-bound approximation.
         We therefore cover these cases (and a few more) manually.
+        This function assumes "0 < denominator < numerator < 2 ^ (256 - MIN_PRECISION)".
         Complexity is O(log(input bit-length)).
     */
     function lnUpperBound(uint256 _numerator, uint256 _denominator) constant returns (uint256) {
-        assert(_numerator > _denominator);
-
         uint256 scaledNumerator = _numerator << MIN_PRECISION;
+
         if (scaledNumerator <= _denominator *  0x2b7e15162) // _numerator / _denominator < e^1 (floorLog2 will return 0 if _numerator / _denominator < 2)
             return UINT256_1 << MIN_PRECISION;
         if (scaledNumerator <= _denominator *  0x763992e35) // _numerator / _denominator < e^2 (floorLog2 will return 1 if _numerator / _denominator < 4)
