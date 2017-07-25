@@ -4,6 +4,10 @@ from random  import randrange
 from Formula import calculateSaleReturn
 
 
+from decimal import getcontext
+getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
+
+
 def formulaTest(supply,reserve,ratio,amount):
     fixed = Decimal(calculateSaleReturn(supply,reserve,ratio,amount))
     real  = Decimal(reserve)*(1-(1-Decimal(amount)/Decimal(supply))**(100/Decimal(ratio)))
