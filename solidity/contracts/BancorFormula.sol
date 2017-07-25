@@ -8,9 +8,19 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     uint256 constant UINT256_1 = 1;
     uint256 constant UINT256_2 = 2;
-    uint256 constant UINT256_3 = 3;
     uint8 constant MIN_PRECISION = 32;
     uint8 constant MAX_PRECISION = 127;
+
+    /**
+        The values below depend on MIN_PRECISION. If you choose to change it:
+        Apply the same change in file 'PrintExpScalingFactors.py', run it and paste the printed results below.
+    */
+    uint256 constant SCALED_EXP_1 = 0x2b7e15162;
+    uint256 constant SCALED_VAL_1 = 0x100000000;
+    uint256 constant SCALED_EXP_2 = 0x763992e35;
+    uint256 constant SCALED_VAL_2 = 0x200000000;
+    uint256 constant SCALED_EXP_3 = 0x1415e5bf6f;
+    uint256 constant SCALED_VAL_3 = 0x300000000;
 
     /**
         The values below depend on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
@@ -303,12 +313,12 @@ contract BancorFormula is IBancorFormula, SafeMath {
     function lnUpperBound(uint256 _numerator, uint256 _denominator) constant returns (uint256) {
         uint256 scaledNumerator = _numerator << MIN_PRECISION;
 
-        if (scaledNumerator <= _denominator *  0x2b7e15162) // _numerator / _denominator < e^1 (floorLog2 will return 0 if _numerator / _denominator < 2)
-            return UINT256_1 << MIN_PRECISION;
-        if (scaledNumerator <= _denominator *  0x763992e35) // _numerator / _denominator < e^2 (floorLog2 will return 1 if _numerator / _denominator < 4)
-            return UINT256_2 << MIN_PRECISION;
-        if (scaledNumerator <= _denominator * 0x1415e5bf6f) // _numerator / _denominator < e^3 (floorLog2 will return 2 if _numerator / _denominator < 8)
-            return UINT256_3 << MIN_PRECISION;
+        if (scaledNumerator <= _denominator * SCALED_EXP_1) // _numerator / _denominator < e^1
+            return SCALED_VAL_1;
+        if (scaledNumerator <= _denominator * SCALED_EXP_2) // _numerator / _denominator < e^2
+            return SCALED_VAL_2;
+        if (scaledNumerator <= _denominator * SCALED_EXP_3) // _numerator / _denominator < e^3
+            return SCALED_VAL_3;
 
         return ceilLog2(_numerator, _denominator) * CEILING_LN2_MANTISSA;
     }
