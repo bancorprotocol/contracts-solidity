@@ -27,10 +27,10 @@ GROWTH_FACTOR_AMOUNT  = 1.5
 def Main():
     getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
     
-    range_supply  = [int(MINIMUM_VALUE_SUPPLY *GROWTH_FACTOR_SUPPLY **n) for n in range(int(log(MAXIMUM_VALUE_SUPPLY ,GROWTH_FACTOR_SUPPLY ))+1)]
-    range_reserve = [int(MINIMUM_VALUE_RESERVE*GROWTH_FACTOR_RESERVE**n) for n in range(int(log(MAXIMUM_VALUE_RESERVE,GROWTH_FACTOR_RESERVE))+1)]
-    range_ratio   = [int(MINIMUM_VALUE_RATIO  *GROWTH_FACTOR_RATIO  **n) for n in range(int(log(MAXIMUM_VALUE_RATIO  ,GROWTH_FACTOR_RATIO  ))+1)]
-    range_amount  = [int(MINIMUM_VALUE_AMOUNT *GROWTH_FACTOR_AMOUNT **n) for n in range(int(log(MAXIMUM_VALUE_AMOUNT ,GROWTH_FACTOR_AMOUNT ))+1)]
+    range_supply  = GenerateRange(MINIMUM_VALUE_SUPPLY ,MAXIMUM_VALUE_SUPPLY ,GROWTH_FACTOR_SUPPLY )
+    range_reserve = GenerateRange(MINIMUM_VALUE_RESERVE,MAXIMUM_VALUE_RESERVE,GROWTH_FACTOR_RESERVE)
+    range_ratio   = GenerateRange(MINIMUM_VALUE_RATIO  ,MAXIMUM_VALUE_RATIO  ,GROWTH_FACTOR_RATIO  )
+    range_amount  = GenerateRange(MINIMUM_VALUE_AMOUNT ,MAXIMUM_VALUE_AMOUNT ,GROWTH_FACTOR_AMOUNT )
     
     testNum = 0
     numOfTests = len(range_supply)*len(range_reserve)*len(range_ratio)*len(range_amount)
@@ -84,6 +84,10 @@ def Test(supply,reserve,ratio,amount):
     except Exception:
         real = -1
     return fixed,real
+
+
+def GenerateRange(minimumValue,maximumValue,growthFactor):
+    return [int(minimumValue*growthFactor**n) for n in range(int(log(float(maximumValue)/float(minimumValue),growthFactor))+1)]
 
 
 class Record():
