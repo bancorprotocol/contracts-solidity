@@ -5,6 +5,10 @@ from Formula import calculateSaleReturn
 from Formula import calculatePurchaseReturn
 
 
+from decimal import getcontext
+getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
+
+
 def formulaTest(supply,reserve,ratio,amount):
     newAmount = calculatePurchaseReturn(supply,reserve,ratio,amount)
     oldAmount = calculateSaleReturn(supply+newAmount,reserve+amount,ratio,newAmount)
