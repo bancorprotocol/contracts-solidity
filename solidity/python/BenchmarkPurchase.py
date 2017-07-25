@@ -3,6 +3,10 @@ from decimal import Decimal
 from Formula import calculatePurchaseReturn
 
 
+from decimal import getcontext
+getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
+
+
 def formulaTest(supply,reserve,ratio,amount):
     fixed = Decimal(calculatePurchaseReturn(supply,reserve,ratio,amount))
     real  = Decimal(supply)*((1+Decimal(amount)/Decimal(reserve))**(Decimal(ratio)/100)-1)
