@@ -6,7 +6,6 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
     string public version = '0.2';
 
-    uint256[128] maxExpArray;
     uint256 constant UINT256_1 = 1;
     uint256 constant UINT256_2 = 2;
     uint256 constant UINT256_3 = 3;
@@ -25,6 +24,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         The function below depends on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
         Apply the same change in file 'PrintFunctionBancorFormula.py', run it and paste the printed results below.
     */
+    uint256[128] maxExpArray;
     function BancorFormula() {
     //  maxExpArray[  0] = 0xc1;
     //  maxExpArray[  1] = 0x17a;
