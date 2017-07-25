@@ -53,6 +53,7 @@ for precision in range(MAX_PRECISION+1):
     maxExpArray[precision] = binarySearch(fixedExpUnsafe,precision)
 
 
+print '    uint256[{}] maxExpArray;'.format(MAX_PRECISION+1)
 print '    function BancorFormula() {'
 for precision in range(MAX_PRECISION+1):
     prefix = '  ' if MIN_PRECISION <= precision <= MAX_PRECISION else '//'
