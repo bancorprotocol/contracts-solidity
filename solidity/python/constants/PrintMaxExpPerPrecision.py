@@ -70,7 +70,7 @@ for precision in range(MAX_PRECISION+1):
     maxExpArray[precision] = binarySearch(fixedExpUnsafe,precision)
 
 
-maxFactor = binarySearch(assertFactor,None)
+growthFactor = binarySearch(assertFactor,None)
 
 
 maxMaxExpLen = len('0x{:x}'.format(maxExpArray[-1]))
@@ -95,9 +95,9 @@ for i in range(len(maxExpArray)/NUM_OF_VALUES_PER_ROW):
 print ']\n'
 
 
-print 'maxFactor = 0x{:x} / 0x{:x}'.format(maxFactor,1<<MAX_PRECISION)
-formatString = '{:s}{:d}{:s}{:d}{:s}'.format('Precision = {:2d} | Theoretical Max Exp = {:',maxMaxExpLen,'s} | Practical Max Exp = {:',maxMaxExpLen,'s}')
+print 'Compute the values dynamically, using a growth-factor of 0x{:x} >> {:d}:'.format(growthFactor,MAX_PRECISION)
+formatString = '{:s}{:d}{:s}{:d}{:s}'.format('Precision = {:2d} | Theoretical Max Exp = {:',maxMaxExpLen,'s} | Practical Max Exp = {:',maxMaxExpLen,'s} | Difference = {:d}')
 for precision in range(MIN_PRECISION,MAX_PRECISION+1):
-    theoreticalMaxExp = '0x{:x}'.format(maxExpArray[precision])
-    practicalMaxExp = '0x{:x}'.format(getMaxExp(precision,maxFactor))
-    print formatString.format(precision,theoreticalMaxExp,practicalMaxExp)
+    theoreticalMaxExp = maxExpArray[precision]
+    practicalMaxExp = getMaxExp(precision,maxFactor)
+    print formatString.format(precision,'0x{:x}'.format(theoreticalMaxExp),'0x{:x}'.format(practicalMaxExp),theoreticalMaxExp-practicalMaxExp)
