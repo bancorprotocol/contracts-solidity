@@ -1,30 +1,26 @@
-from sys     import argv
-from decimal import Decimal
-from random  import randrange
-from Formula import calculatePurchaseReturn
-
-
-from decimal import getcontext
-getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
+import sys
+import random
+import BancorFormula
+import ActualFormula
 
 
 def formulaTest(supply,reserve,ratio,amount):
-    fixed = Decimal(calculatePurchaseReturn(supply,reserve,ratio,amount))
-    real  = Decimal(supply)*((1+Decimal(amount)/Decimal(reserve))**(Decimal(ratio)/100)-1)
-    if fixed > real:
+    bancor = BancorFormula.calculatePurchaseReturn(supply,reserve,ratio,amount)
+    actual = ActualFormula.calculatePurchaseReturn(supply,reserve,ratio,amount)
+    if bancor > actual:
         error = []
         error.append('error occurred on:')
-        error.append('supply  = {}'.format(supply))
+        error.append('supply  = {}'.format(supply ))
         error.append('reserve = {}'.format(reserve))
-        error.append('ratio   = {}'.format(ratio))
-        error.append('amount  = {}'.format(amount))
-        error.append('fixed   = {}'.format(fixed))
-        error.append('real    = {}'.format(real))
+        error.append('ratio   = {}'.format(ratio  ))
+        error.append('amount  = {}'.format(amount ))
+        error.append('bancor  = {}'.format(bancor ))
+        error.append('actual  = {}'.format(actual ))
         raise BaseException('\n'.join(error))
-    return fixed/real
+    return bancor/actual
 
 
-size = int(argv[1]) if len(argv) > 1 else 0
+size = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 if size == 0:
     size = input('How many test-cases would you like to execute? ')
 
@@ -34,10 +30,10 @@ numOfFailures = 0
 
 
 for n in xrange(size):
-    supply  = randrange(2,10**26)
-    reserve = randrange(1,10**23)
-    ratio   = randrange(1,99)
-    amount  = randrange(1,supply)
+    supply  = random.randrange(2,10**26)
+    reserve = random.randrange(1,10**23)
+    ratio   = random.randrange(1,99)
+    amount  = random.randrange(1,supply)
     try:
         accuracy = formulaTest(supply,reserve,ratio,amount)
         worstAccuracy = min(worstAccuracy,accuracy)

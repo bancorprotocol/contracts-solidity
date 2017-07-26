@@ -1,7 +1,7 @@
-from math    import log
-from decimal import Decimal
-from decimal import getcontext
-from Formula import calculateSaleReturn
+import sys
+import math
+import BancorFormula
+import ActualFormula
 
 
 MINIMUM_VALUE_SUPPLY  = 100
@@ -24,9 +24,7 @@ MAXIMUM_VALUE_AMOUNT  = 10**34
 GROWTH_FACTOR_AMOUNT  = 1.5
 
 
-def Main():
-    getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
-    
+def Main():    
     range_supply  = GenerateRange(MINIMUM_VALUE_SUPPLY ,MAXIMUM_VALUE_SUPPLY ,GROWTH_FACTOR_SUPPLY )
     range_reserve = GenerateRange(MINIMUM_VALUE_RESERVE,MAXIMUM_VALUE_RESERVE,GROWTH_FACTOR_RESERVE)
     range_ratio   = GenerateRange(MINIMUM_VALUE_RATIO  ,MAXIMUM_VALUE_RATIO  ,GROWTH_FACTOR_RATIO  )
@@ -48,19 +46,19 @@ def Main():
                     for amount  in range_amount :
                         testNum += 1
                         if amount <= supply:
-                            fixed,real = Test(supply,reserve,ratio,amount)
-                            if real < 0:
+                            bancor,actual = Test(supply,reserve,ratio,amount)
+                            if actual < 0:
                                 invalidTransactionCount += 1
-                            elif fixed < 0:
+                            elif bancor < 0:
                                 failureTransactionCount += 1
-                            elif real < fixed:
-                                print 'Implementation Error:',Record(supply,reserve,ratio,amount,fixed,real)
+                            elif actual < bancor:
+                                print 'Implementation Error:',Record(supply,reserve,ratio,amount,bancor,actual)
                                 return
-                            else: # 0 <= fixed <= real
-                                absoluteLoss = real-fixed
-                                relativeLoss = 1-fixed/real
-                                worstAbsoluteLoss.Update(supply,reserve,ratio,amount,fixed,real,absoluteLoss,relativeLoss)
-                                worstRelativeLoss.Update(supply,reserve,ratio,amount,fixed,real,relativeLoss,absoluteLoss)
+                            else: # 0 <= bancor <= actual
+                                absoluteLoss = actual-bancor
+                                relativeLoss = 1-bancor/actual
+                                worstAbsoluteLoss.Update(supply,reserve,ratio,amount,bancor,actual,absoluteLoss,relativeLoss)
+                                worstRelativeLoss.Update(supply,reserve,ratio,amount,bancor,actual,relativeLoss,absoluteLoss)
                                 worstAbsoluteLossStr = 'worstAbsoluteLoss = {:.0f} (relativeLoss = {:.0f}%)'.format(worstAbsoluteLoss.major,worstAbsoluteLoss.minor*100)
                                 worstRelativeLossStr = 'worstRelativeLoss = {:.0f}% (absoluteLoss = {:.0f})'.format(worstRelativeLoss.major*100,worstRelativeLoss.minor)
                                 print 'Test {} out of {}: {}, {}'.format(testNum,numOfTests,worstAbsoluteLossStr,worstRelativeLossStr)
@@ -76,35 +74,35 @@ def Main():
 
 def Test(supply,reserve,ratio,amount):
     try:
-        fixed = calculateSaleReturn(supply,reserve,ratio,amount)
+        bancor = BancorFormula.calculateSaleReturn(supply,reserve,ratio,amount)
     except Exception:
-        fixed = -1
+        bancor = -1
     try:
-        real = Decimal(reserve)*(1-(1-Decimal(amount)/Decimal(supply))**(100/Decimal(ratio)))
+        actual = ActualFormula.calculateSaleReturn(supply,reserve,ratio,amount)
     except Exception:
-        real = -1
-    return fixed,real
+        actual = -1
+    return bancor,actual
 
 
 def GenerateRange(minimumValue,maximumValue,growthFactor):
-    return [int(minimumValue*growthFactor**n) for n in range(int(log(float(maximumValue)/float(minimumValue),growthFactor))+1)]
+    return [int(minimumValue*growthFactor**n) for n in range(int(math.log(float(maximumValue)/float(minimumValue),growthFactor))+1)]
 
 
 class Record():
-    def __init__(self,supply,reserve,ratio,amount,fixed,real,major=0.0,minor=0.0):
-        self._set(supply,reserve,ratio,amount,fixed,real,major,minor)
+    def __init__(self,supply,reserve,ratio,amount,bancor,actual,major=0.0,minor=0.0):
+        self._set(supply,reserve,ratio,amount,bancor,actual,major,minor)
     def __str__(self):
-        return ', '.join(['{} = {}'.format(var,eval('self.'+var)) for var in 'supply,reserve,ratio,amount,fixed,real'.split(',')])
-    def Update(self,supply,reserve,ratio,amount,fixed,real,major,minor):
+        return ', '.join(['{} = {}'.format(var,eval('self.'+var)) for var in 'supply,reserve,ratio,amount,bancor,actual'.split(',')])
+    def Update(self,supply,reserve,ratio,amount,bancor,actual,major,minor):
         if self.major < major or (self.major == major and self.minor < minor):
-            self._set(supply,reserve,ratio,amount,fixed,real,major,minor)
-    def _set(self,supply,reserve,ratio,amount,fixed,real,major,minor):
+            self._set(supply,reserve,ratio,amount,bancor,actual,major,minor)
+    def _set(self,supply,reserve,ratio,amount,bancor,actual,major,minor):
         self.supply  = supply 
         self.reserve = reserve
         self.ratio   = ratio  
         self.amount  = amount 
-        self.fixed   = fixed  
-        self.real    = real   
+        self.bancor  = bancor 
+        self.actual  = actual 
         self.major   = major  
         self.minor   = minor  
 

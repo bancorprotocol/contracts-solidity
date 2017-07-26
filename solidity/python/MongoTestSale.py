@@ -1,14 +1,8 @@
-import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
-
-
-from sys     import argv
-from math    import log
-from decimal import Decimal
-from decimal import getcontext
-from pymongo import MongoClient
-from Formula import calculateSaleReturn
+import math
+import pymongo
+import BancorFormula
+import ActualFormula
 
 
 USERNAME      = ''
@@ -48,7 +42,7 @@ def Main():
     password      = PASSWORD     
     server_name   = SERVER_NAME  
     database_name = DATABASE_NAME
-    for arg in argv[1:]:
+    for arg in sys.argv[1:]:
         username      = arg[len('username='     ):] if arg.startswith('username='     ) else username     
         password      = arg[len('password='     ):] if arg.startswith('password='     ) else password     
         server_name   = arg[len('server_name='  ):] if arg.startswith('server_name='  ) else server_name  
@@ -57,8 +51,7 @@ def Main():
         uri = 'mongodb://{}:{}@{}/{}'.format(username,password,server_name,database_name)
     else:
         uri = 'mongodb://{}/{}'.format(server_name,database_name)
-    getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
-    TestAll(MongoClient(uri).get_database(database_name).get_collection('sale'))
+    TestAll(pymongo.MongoClient(uri).get_database(database_name).get_collection('sale'))
 
 
 def TestAll(collection):
@@ -71,47 +64,47 @@ def TestAll(collection):
             for     ratio   in range_ratio  :
                 for amount  in range_amount :
                     if amount <= supply:
-                        fixed,real = Test(supply,reserve,ratio,amount)
-                        if real < 0:
+                        bancor,actual = Test(supply,reserve,ratio,amount)
+                        if actual < 0:
                             status = TRANSACTION_INVALID
                             loss = {'absolute':0,'relative':0}
-                        elif fixed < 0:
+                        elif bancor < 0:
                             status = TRANSACTION_FAILURE
                             loss = {'absolute':0,'relative':0}
-                        elif real < fixed:
+                        elif actual < bancor:
                             status = IMPLEMENTATION_ERROR
                             loss = {'absolute':0,'relative':0}
-                        else: # 0 <= fixed <= real
+                        else: # 0 <= bancor <= actual
                             status = TRANSACTION_SUCCESS
-                            loss = {'absolute':float(real-fixed),'relative':1-float(fixed/real)}
+                            loss = {'absolute':float(actual-bancor),'relative':1-float(bancor/actual)}
                         entry = {
                             'supply' :'{}'    .format(supply ),
                             'reserve':'{}'    .format(reserve),
                             'ratio'  :'{}'    .format(ratio  ),
                             'amount' :'{}'    .format(amount ),
-                            'fixed'  :'{}'    .format(fixed  ),
-                            'real'   :'{:.2f}'.format(real   ),
+                            'bancor' :'{}'    .format(bancor ),
+                            'actual' :'{:.2f}'.format(actual ),
                             'status' :status,
                             'loss'   :loss  ,
                         }
                         id = collection.insert(entry)
-                        print ', '.join('{}: {}'.format(key,entry[key]) for key in ['supply','reserve','ratio','amount','fixed','real','status','loss'])
+                        print ', '.join('{}: {}'.format(key,entry[key]) for key in ['supply','reserve','ratio','amount','bancor','actual','status','loss'])
 
 
 def Test(supply,reserve,ratio,amount):
     try:
-        fixed = calculateSaleReturn(supply,reserve,ratio,amount)
+        bancor = BancorFormula.calculateSaleReturn(supply,reserve,ratio,amount)
     except Exception:
-        fixed = -1
+        bancor = -1
     try:
-        real = Decimal(reserve)*(1-(1-Decimal(amount)/Decimal(supply))**(100/Decimal(ratio)))
+        actual = ActualFormula.calculateSaleReturn(supply,reserve,ratio,amount)
     except Exception:
-        real = -1
-    return fixed,real
+        actual = -1
+    return bancor,actual
 
 
 def GenerateRange(minimumValue,maximumValue,growthFactor):
-    return [int(minimumValue*growthFactor**n) for n in range(int(log(float(maximumValue)/float(minimumValue),growthFactor))+1)]
+    return [int(minimumValue*growthFactor**n) for n in range(int(math.log(float(maximumValue)/float(minimumValue),growthFactor))+1)]
 
 
 Main()
