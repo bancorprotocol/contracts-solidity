@@ -227,9 +227,8 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     precision = calculateBestPrecision(_supply, baseD, 100, _reserveRatio);
     resN = power(_supply, baseD, 100, _reserveRatio, precision);
     temp1 = safeMul(_reserveBalance, resN);
-    temp2 = safeMul(_reserveBalance, 1 << precision);
+    temp2 = safeMul(_reserveBalance, ONE << precision);
     return safeSub(temp1, temp2) / resN;
-
 
 '''
     Predicts the highest precision which can be used in order to compute "base ^ exp" without exceeding 256 bits in any of the intermediate computations.
