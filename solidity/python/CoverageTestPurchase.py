@@ -1,4 +1,3 @@
-import sys
 import math
 import BancorFormula
 import ActualFormula

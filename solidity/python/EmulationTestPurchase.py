@@ -1,4 +1,3 @@
-import sys
 import web3
 import json
 import math
