@@ -314,11 +314,11 @@ contract BancorFormula is IBancorFormula, SafeMath {
     function lnUpperBound(uint256 _numerator, uint256 _denominator) constant returns (uint256) {
         uint256 scaledNumerator = _numerator << MIN_PRECISION;
 
-        if (scaledNumerator <= _denominator * SCALED_EXP_1P0) // _numerator / _denominator < e^1
+        if (scaledNumerator <= _denominator * SCALED_EXP_1P0) // _numerator / _denominator < e^1.0
             return SCALED_VAL_1P0;
-        if (scaledNumerator <= _denominator * SCALED_EXP_2P0) // _numerator / _denominator < e^2
+        if (scaledNumerator <= _denominator * SCALED_EXP_2P0) // _numerator / _denominator < e^2.0
             return SCALED_VAL_2P0;
-        if (scaledNumerator <= _denominator * SCALED_EXP_3P0) // _numerator / _denominator < e^3
+        if (scaledNumerator <= _denominator * SCALED_EXP_3P0) // _numerator / _denominator < e^3.0
             return SCALED_VAL_3P0;
 
         return ceilLog2(_numerator, _denominator) * CEILING_LN2_MANTISSA;
