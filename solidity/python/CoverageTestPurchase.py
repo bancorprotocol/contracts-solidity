@@ -45,7 +45,7 @@ def Main():
                 for     ratio   in range_ratio  :
                     for amount  in range_amount :
                         testNum += 1
-                        if amount <= reserve:
+                        if True:
                             bancor = Run(BancorFormula,supply,reserve,ratio,amount)
                             actual = Run(ActualFormula,supply,reserve,ratio,amount)
                             if actual < 0:
