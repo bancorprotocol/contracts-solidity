@@ -46,7 +46,8 @@ def Main():
                     for amount  in range_amount :
                         testNum += 1
                         if amount <= reserve:
-                            bancor,actual = Test(supply,reserve,ratio,amount)
+                            bancor = Run(BancorFormula,supply,reserve,ratio,amount)
+                            actual = Run(ActualFormula,supply,reserve,ratio,amount)
                             if actual < 0:
                                 invalidTransactionCount += 1
                             elif bancor < 0:
@@ -72,16 +73,11 @@ def Main():
     print 'invalidTransactionCount:',invalidTransactionCount
 
 
-def Test(supply,reserve,ratio,amount):
+def Run(module,supply,reserve,ratio,amount):
     try:
-        bancor = BancorFormula.calculatePurchaseReturn(supply,reserve,ratio,amount)
+        return module.calculatePurchaseReturn(supply,reserve,ratio,amount)
     except Exception:
-        bancor = -1
-    try:
-        actual = ActualFormula.calculatePurchaseReturn(supply,reserve,ratio,amount)
-    except Exception:
-        actual = -1
-    return bancor,actual
+        return -1
 
 
 def GenerateRange(minimumValue,maximumValue,growthFactor):

@@ -64,7 +64,8 @@ def TestAll(collection):
             for     ratio   in range_ratio  :
                 for amount  in range_amount :
                     if True:
-                        bancor,actual = Test(supply,reserve,ratio,amount)
+                        bancor = Run(BancorFormula,supply,reserve,ratio,amount)
+                        actual = Run(ActualFormula,supply,reserve,ratio,amount)
                         if actual < 0:
                             status = TRANSACTION_INVALID
                             loss = {'absolute':0,'relative':0}
@@ -91,16 +92,11 @@ def TestAll(collection):
                         print ', '.join('{}: {}'.format(key,entry[key]) for key in ['supply','reserve','ratio','amount','bancor','actual','status','loss'])
 
 
-def Test(supply,reserve,ratio,amount):
+def Run(module,supply,reserve,ratio,amount):
     try:
-        bancor = BancorFormula.calculatePurchaseReturn(supply,reserve,ratio,amount)
+        return module.calculatePurchaseReturn(supply,reserve,ratio,amount)
     except Exception:
-        bancor = -1
-    try:
-        actual = ActualFormula.calculatePurchaseReturn(supply,reserve,ratio,amount)
-    except Exception:
-        actual = -1
-    return bancor,actual
+        return -1
 
 
 def GenerateRange(minimumValue,maximumValue,growthFactor):
