@@ -5,6 +5,10 @@ from Formula import calculateBestPrecision
 from Formula import power
 
 
+from decimal import getcontext
+getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
+
+
 def powerTest(baseN,baseD,expN,expD):
     precision = calculateBestPrecision(baseN,baseD,expN,expD)
     fixed = Decimal(power(baseN,baseD,expN,expD,precision))/(1<<precision)
