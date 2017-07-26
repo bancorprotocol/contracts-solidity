@@ -54,7 +54,7 @@ def Main():
         server_name   = arg[len('server_name='  ):] if arg.startswith('server_name='  ) else server_name  
         database_name = arg[len('database_name='):] if arg.startswith('database_name=') else database_name
     if username and password:
-        uri = 'mongodb://{}:{}@{}/{}?ssl=true&ssl_cert_reqs=CERT_NONE'.format(username,password,server_name,database_name)
+        uri = 'mongodb://{}:{}@{}/{}'.format(username,password,server_name,database_name)
     else:
         uri = 'mongodb://{}/{}'.format(server_name,database_name)
     getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
