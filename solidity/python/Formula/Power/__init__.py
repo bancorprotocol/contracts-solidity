@@ -1,8 +1,19 @@
-UINT256_1 = 1;
-UINT256_2 = 2;
-UINT256_3 = 3;
+ONE = 1;
+TWO = 2;
+
 MIN_PRECISION = 32;
 MAX_PRECISION = 127;
+
+'''
+    The values below depend on MIN_PRECISION. If you choose to change it:
+    Apply the same change in file 'PrintExpScalingFactors.py', run it and paste the printed results below.
+'''
+SCALED_EXP_1 = 0x2b7e15162;
+SCALED_VAL_1 = 0x100000000;
+SCALED_EXP_2 = 0x763992e35;
+SCALED_VAL_2 = 0x200000000;
+SCALED_EXP_3 = 0x1415e5bf6f;
+SCALED_VAL_3 = 0x300000000;
 
 '''
     The values below depend on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
@@ -196,7 +207,7 @@ def power(_baseN, _baseD, _expN, _expD, _precision):
     This function asserts "0 < denominator <= numerator < 2 ^ (256 - precision)".
 '''
 def ln(_numerator, _denominator, _precision):
-    assert(0 < _denominator and _denominator <= _numerator and _numerator < (UINT256_1 << (256 - _precision)));
+    assert(0 < _denominator and _denominator <= _numerator and _numerator < (ONE << (256 - _precision)));
     return fixedLoge( (_numerator << _precision) / _denominator, _precision);
 
 '''
@@ -211,17 +222,18 @@ def ln(_numerator, _denominator, _precision):
 def lnUpperBound(_numerator, _denominator):
     scaledNumerator = _numerator << MIN_PRECISION;
 
-    if (scaledNumerator <= _denominator *  0x2b7e15162): # _numerator / _denominator < e^1 (floorLog2 will return 0 if _numerator / _denominator < 2)
-        return UINT256_1 << MIN_PRECISION;
-    if (scaledNumerator <= _denominator *  0x763992e35): # _numerator / _denominator < e^2 (floorLog2 will return 1 if _numerator / _denominator < 4)
-        return UINT256_2 << MIN_PRECISION;
-    if (scaledNumerator <= _denominator * 0x1415e5bf6f): # _numerator / _denominator < e^3 (floorLog2 will return 2 if _numerator / _denominator < 8)
-        return UINT256_3 << MIN_PRECISION;
+    if (scaledNumerator <= _denominator * SCALED_EXP_1): # _numerator / _denominator < e^1
+        return SCALED_VAL_1;
+    if (scaledNumerator <= _denominator * SCALED_EXP_2): # _numerator / _denominator < e^2
+        return SCALED_VAL_2;
+    if (scaledNumerator <= _denominator * SCALED_EXP_3): # _numerator / _denominator < e^3
+        return SCALED_VAL_3;
 
     return ceilLog2(_numerator, _denominator) * CEILING_LN2_MANTISSA;
 
 '''
     Returns floor(ln(x / 2 ^ precision) * 2 ^ precision)
+    Assumes x >= 2 ^ precision
 '''
 def fixedLoge(_x, _precision):
     log2 = fixedLog2(_x, _precision);
@@ -229,6 +241,7 @@ def fixedLoge(_x, _precision):
 
 '''
     Returns floor(log2(x / 2 ^ precision) * 2 ^ precision)
+    Assumes x >= 2 ^ precision
 
     Ranges:
         precision between MIN_PRECISION and MAX_PRECISION
@@ -237,8 +250,8 @@ def fixedLoge(_x, _precision):
 '''
 def fixedLog2(_x, _precision):
     hi = 0;
-    fixedOne = UINT256_1 << _precision;
-    fixedTwo = UINT256_2 << _precision;
+    fixedOne = ONE << _precision;
+    fixedTwo = TWO << _precision;
 
     while (_x >= fixedTwo):
         _x >>= 1;
@@ -248,7 +261,7 @@ def fixedLog2(_x, _precision):
         _x = (_x * _x) / fixedOne;
         if (_x >= fixedTwo):
             _x >>= 1;
-            hi += UINT256_1 << (_precision - 1 - i);
+            hi += ONE << (_precision - 1 - i);
 
     return hi;
 
@@ -268,7 +281,7 @@ def ceilLog2(_numerator, _denominator):
 def floorLog2(_n):
     t = 0;
     for s in [1 << (8 - 1 - k) for k in range(8)]:
-        if (_n >= (UINT256_1 << s)):
+        if (_n >= (ONE << s)):
             _n >>= s;
             t |= s;
 
