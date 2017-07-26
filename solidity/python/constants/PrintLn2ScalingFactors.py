@@ -5,7 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 
 from decimal import Decimal
 from decimal import getcontext
-from Formula.Power import fixedLog2
+from Formula import fixedLog2
 
 
 MIN_PRECISION = 32

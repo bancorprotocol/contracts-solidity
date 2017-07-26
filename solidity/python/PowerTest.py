@@ -1,8 +1,8 @@
 from sys     import argv
 from decimal import Decimal
 from random  import randrange
-from Power   import power
-from Power   import calculateBestPrecision
+from Formula import power
+from Formula import calculateBestPrecision
 
 
 def powerTest(baseN,baseD,expN,expD):
