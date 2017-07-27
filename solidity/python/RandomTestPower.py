@@ -34,7 +34,7 @@ for n in xrange(size):
     baseN = random.randrange(2,10**26)
     baseD = random.randrange(1,baseN)
     expN  = random.randrange(1,100)
-    expD  = random.randrange(1,100)
+    expD  = random.randrange(expN,101)
     try:
         accuracy = powerTest(baseN,baseD,expN,expD)
         worstAccuracy = min(worstAccuracy,accuracy)
