@@ -8,6 +8,8 @@ MAX_PRECISION = 127;
     The values below depend on MIN_PRECISION. If you choose to change it:
     Apply the same change in file 'PrintExpScalingFactors.py', run it and paste the printed results below.
 '''
+SCALED_EXP_0P5 = 0x1a61298e1;
+SCALED_VAL_0P5 = 0x80000000;
 SCALED_EXP_1P0 = 0x2b7e15162;
 SCALED_VAL_1P0 = 0x100000000;
 SCALED_EXP_2P0 = 0x763992e35;
@@ -294,6 +296,8 @@ def ln(_numerator, _denominator, _precision):
 def lnUpperBound(_numerator, _denominator):
     scaledNumerator = _numerator << MIN_PRECISION;
 
+    if (scaledNumerator <= _denominator * SCALED_EXP_0P5): # _numerator / _denominator < e^0.5
+        return SCALED_VAL_0P5;
     if (scaledNumerator <= _denominator * SCALED_EXP_1P0): # _numerator / _denominator < e^1.0
         return SCALED_VAL_1P0;
     if (scaledNumerator <= _denominator * SCALED_EXP_2P0): # _numerator / _denominator < e^2.0
