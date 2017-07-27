@@ -1,8 +1,8 @@
 import sys
 import math
 import pymongo
-import BancorFormula
-import ActualFormula
+import FormulaSolidityPort
+import FormulaNativePython
 
 
 USERNAME      = ''
@@ -64,32 +64,32 @@ def TestAll(collection):
             for     ratio   in range_ratio  :
                 for amount  in range_amount :
                     if amount <= supply:
-                        bancor = Run(BancorFormula,supply,reserve,ratio,amount)
-                        actual = Run(ActualFormula,supply,reserve,ratio,amount)
-                        if actual < 0:
+                        resultSolidityPort = Run(FormulaSolidityPort,supply,reserve,ratio,amount)
+                        resultNativePython = Run(FormulaNativePython,supply,reserve,ratio,amount)
+                        if resultNativePython < 0:
                             status = TRANSACTION_INVALID
                             loss = {'absolute':0,'relative':0}
-                        elif bancor < 0:
+                        elif resultSolidityPort < 0:
                             status = TRANSACTION_FAILURE
                             loss = {'absolute':0,'relative':0}
-                        elif actual < bancor:
+                        elif resultNativePython < resultSolidityPort:
                             status = IMPLEMENTATION_ERROR
                             loss = {'absolute':0,'relative':0}
-                        else: # 0 <= bancor <= actual
+                        else: # 0 <= resultSolidityPort <= resultNativePython
                             status = TRANSACTION_SUCCESS
-                            loss = {'absolute':float(actual-bancor),'relative':1-float(bancor/actual)}
+                            loss = {'absolute':float(resultNativePython-resultSolidityPort),'relative':1-float(resultSolidityPort/resultNativePython)}
                         entry = {
                             'supply' :'{}'    .format(supply ),
                             'reserve':'{}'    .format(reserve),
                             'ratio'  :'{}'    .format(ratio  ),
                             'amount' :'{}'    .format(amount ),
-                            'bancor' :'{}'    .format(bancor ),
-                            'actual' :'{:.2f}'.format(actual ),
+                            'resultSolidityPort' :'{}'    .format(resultSolidityPort ),
+                            'resultNativePython' :'{:.2f}'.format(resultNativePython ),
                             'status' :status,
                             'loss'   :loss  ,
                         }
                         id = collection.insert(entry)
-                        print ', '.join('{}: {}'.format(key,entry[key]) for key in ['supply','reserve','ratio','amount','bancor','actual','status','loss'])
+                        print ', '.join('{}: {}'.format(key,entry[key]) for key in ['supply','reserve','ratio','amount','resultSolidityPort','resultNativePython','status','loss'])
 
 
 def Run(module,supply,reserve,ratio,amount):

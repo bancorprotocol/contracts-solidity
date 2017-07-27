@@ -1,11 +1,11 @@
 import sys
 import random
-import BancorFormula
+import FormulaSolidityPort
 
 
 def formulaTest(supply,reserve,ratio,amount):
-    newAmount = BancorFormula.calculatePurchaseReturn(supply,reserve,ratio,amount)
-    oldAmount = BancorFormula.calculateSaleReturn(supply+newAmount,reserve+amount,ratio,newAmount)
+    newAmount = FormulaSolidityPort.calculatePurchaseReturn(supply,reserve,ratio,amount)
+    oldAmount = FormulaSolidityPort.calculateSaleReturn(supply+newAmount,reserve+amount,ratio,newAmount)
     if oldAmount > amount:
         error = []
         error.append('error occurred on:')

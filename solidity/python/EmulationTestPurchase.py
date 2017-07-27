@@ -1,7 +1,7 @@
 import web3
 import json
 import math
-import BancorFormula
+import FormulaSolidityPort
 
 
 MINIMUM_VALUE_SUPPLY  = 100
@@ -45,7 +45,7 @@ def Main():
                 for amount  in range_amount :
                     testNum += 1
                     if True:
-                        python   = Run(BancorFormula ,supply,reserve,ratio,amount)
+                        python   = Run(FormulaSolidityPort ,supply,reserve,ratio,amount)
                         solidity = Run(contractHandle,supply,reserve,ratio,amount)
                         print 'Test {} out of {}: python = {}, solidity = {}'.format(testNum,numOfTests,python,solidity)
                         if python != solidity:

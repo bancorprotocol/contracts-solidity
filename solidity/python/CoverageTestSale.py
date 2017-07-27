@@ -1,6 +1,6 @@
 import math
-import BancorFormula
-import ActualFormula
+import FormulaSolidityPort
+import FormulaNativePython
 
 
 MINIMUM_VALUE_SUPPLY  = 100
@@ -45,20 +45,20 @@ def Main():
                     for amount  in range_amount :
                         testNum += 1
                         if amount <= supply:
-                            bancor = Run(BancorFormula,supply,reserve,ratio,amount)
-                            actual = Run(ActualFormula,supply,reserve,ratio,amount)
-                            if actual < 0:
+                            resultSolidityPort = Run(FormulaSolidityPort,supply,reserve,ratio,amount)
+                            resultNativePython = Run(FormulaNativePython,supply,reserve,ratio,amount)
+                            if resultNativePython < 0:
                                 invalidTransactionCount += 1
-                            elif bancor < 0:
+                            elif resultSolidityPort < 0:
                                 failureTransactionCount += 1
-                            elif actual < bancor:
-                                print 'Implementation Error:',Record(supply,reserve,ratio,amount,bancor,actual)
+                            elif resultNativePython < resultSolidityPort:
+                                print 'Implementation Error:',Record(supply,reserve,ratio,amount,resultSolidityPort,resultNativePython)
                                 return
-                            else: # 0 <= bancor <= actual
-                                absoluteLoss = actual-bancor
-                                relativeLoss = 1-bancor/actual
-                                worstAbsoluteLoss.Update(supply,reserve,ratio,amount,bancor,actual,absoluteLoss,relativeLoss)
-                                worstRelativeLoss.Update(supply,reserve,ratio,amount,bancor,actual,relativeLoss,absoluteLoss)
+                            else: # 0 <= resultSolidityPort <= resultNativePython
+                                absoluteLoss = resultNativePython-resultSolidityPort
+                                relativeLoss = 1-resultSolidityPort/resultNativePython
+                                worstAbsoluteLoss.Update(supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,absoluteLoss,relativeLoss)
+                                worstRelativeLoss.Update(supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,relativeLoss,absoluteLoss)
                                 worstAbsoluteLossStr = 'worstAbsoluteLoss = {:.0f} (relativeLoss = {:.0f}%)'.format(worstAbsoluteLoss.major,worstAbsoluteLoss.minor*100)
                                 worstRelativeLossStr = 'worstRelativeLoss = {:.0f}% (absoluteLoss = {:.0f})'.format(worstRelativeLoss.major*100,worstRelativeLoss.minor)
                                 print 'Test {} out of {}: {}, {}'.format(testNum,numOfTests,worstAbsoluteLossStr,worstRelativeLossStr)
@@ -84,20 +84,20 @@ def GenerateRange(minimumValue,maximumValue,growthFactor):
 
 
 class Record():
-    def __init__(self,supply,reserve,ratio,amount,bancor,actual,major=0.0,minor=0.0):
-        self._set(supply,reserve,ratio,amount,bancor,actual,major,minor)
+    def __init__(self,supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,major=0.0,minor=0.0):
+        self._set(supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,major,minor)
     def __str__(self):
-        return ', '.join(['{} = {}'.format(var,eval('self.'+var)) for var in 'supply,reserve,ratio,amount,bancor,actual'.split(',')])
-    def Update(self,supply,reserve,ratio,amount,bancor,actual,major,minor):
+        return ', '.join(['{} = {}'.format(var,eval('self.'+var)) for var in 'supply,reserve,ratio,amount,resultSolidityPort,resultNativePython'.split(',')])
+    def Update(self,supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,major,minor):
         if self.major < major or (self.major == major and self.minor < minor):
-            self._set(supply,reserve,ratio,amount,bancor,actual,major,minor)
-    def _set(self,supply,reserve,ratio,amount,bancor,actual,major,minor):
+            self._set(supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,major,minor)
+    def _set(self,supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,major,minor):
         self.supply  = supply 
         self.reserve = reserve
         self.ratio   = ratio  
         self.amount  = amount 
-        self.bancor  = bancor 
-        self.actual  = actual 
+        self.resultSolidityPort  = resultSolidityPort 
+        self.resultNativePython  = resultNativePython 
         self.major   = major  
         self.minor   = minor  
 

@@ -1,24 +1,24 @@
 import sys
 import random
-import BancorFormula
-import ActualFormula
+import FormulaSolidityPort
+import FormulaNativePython
 
 
 def powerTest(baseN,baseD,expN,expD):
-    precision = BancorFormula.calculateBestPrecision(baseN,baseD,expN,expD)
-    bancor = BancorFormula.power(baseN,baseD,expN,expD,precision)
-    actual = ActualFormula.power(baseN,baseD,expN,expD,precision)
-    if bancor > actual:
+    precision = FormulaSolidityPort.calculateBestPrecision(baseN,baseD,expN,expD)
+    resultSolidityPort = FormulaSolidityPort.power(baseN,baseD,expN,expD,precision)
+    resultNativePython = FormulaNativePython.power(baseN,baseD,expN,expD,precision)
+    if resultSolidityPort > resultNativePython:
         error = []
         error.append('error occurred on:')
         error.append('baseN  = {}'.format(baseN ))
         error.append('baseD  = {}'.format(baseD ))
         error.append('expN   = {}'.format(expN  ))
         error.append('expD   = {}'.format(expD  ))
-        error.append('bancor = {}'.format(bancor))
-        error.append('actual = {}'.format(actual))
+        error.append('resultSolidityPort = {}'.format(resultSolidityPort))
+        error.append('resultNativePython = {}'.format(resultNativePython))
         raise BaseException('\n'.join(error))
-    return bancor/actual
+    return resultSolidityPort/resultNativePython
 
 
 size = int(sys.argv[1]) if len(sys.argv) > 1 else 0

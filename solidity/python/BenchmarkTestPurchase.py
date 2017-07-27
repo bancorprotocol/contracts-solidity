@@ -1,22 +1,22 @@
 import sys
-import BancorFormula
-import ActualFormula
+import FormulaSolidityPort
+import FormulaNativePython
 
 
 def formulaTest(supply,reserve,ratio,amount):
-    bancor = BancorFormula.calculatePurchaseReturn(supply,reserve,ratio,amount)
-    actual = ActualFormula.calculatePurchaseReturn(supply,reserve,ratio,amount)
-    if bancor > actual:
+    resultSolidityPort = FormulaSolidityPort.calculatePurchaseReturn(supply,reserve,ratio,amount)
+    resultNativePython = FormulaNativePython.calculatePurchaseReturn(supply,reserve,ratio,amount)
+    if resultSolidityPort > resultNativePython:
         error = []
         error.append('error occurred on:')
         error.append('supply  = {}'.format(supply ))
         error.append('reserve = {}'.format(reserve))
         error.append('ratio   = {}'.format(ratio  ))
         error.append('amount  = {}'.format(amount ))
-        error.append('bancor  = {}'.format(bancor ))
-        error.append('actual  = {}'.format(actual ))
+        error.append('resultSolidityPort  = {}'.format(resultSolidityPort ))
+        error.append('resultNativePython  = {}'.format(resultNativePython ))
         raise BaseException('\n'.join(error))
-    return bancor/actual
+    return resultSolidityPort/resultNativePython
 
 
 size = int(sys.argv[1]) if len(sys.argv) > 1 else 0

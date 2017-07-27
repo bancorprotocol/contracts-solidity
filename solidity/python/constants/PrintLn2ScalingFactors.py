@@ -5,7 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 
 from decimal import Decimal
 from decimal import getcontext
-from BancorFormula import fixedLog2
+from FormulaSolidityPort import fixedLog2
 
 
 MIN_PRECISION = 32
