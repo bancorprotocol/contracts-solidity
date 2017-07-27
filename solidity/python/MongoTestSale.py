@@ -51,7 +51,7 @@ def Main():
         uri = 'mongodb://{}:{}@{}/{}'.format(username,password,server_name,database_name)
     else:
         uri = 'mongodb://{}/{}'.format(server_name,database_name)
-    TestAll(pymongo.MongoClient(uri).get_database(database_name).get_collection('sale'))
+    TestAll(pymongo.MongoClient(uri)[database_name]['sale'])
 
 
 def TestAll(collection):
