@@ -79,14 +79,14 @@ def TestAll(collection):
                             status = TRANSACTION_SUCCESS
                             loss = {'absolute':float(resultNativePython-resultSolidityPort),'relative':1-float(resultSolidityPort/resultNativePython)}
                         entry = {
-                            'supply' :'{}'    .format(supply ),
-                            'reserve':'{}'    .format(reserve),
-                            'ratio'  :'{}'    .format(ratio  ),
-                            'amount' :'{}'    .format(amount ),
-                            'resultSolidityPort' :'{}'    .format(resultSolidityPort ),
-                            'resultNativePython' :'{:.2f}'.format(resultNativePython ),
-                            'status' :status,
-                            'loss'   :loss  ,
+                            'supply' :'{}'.format(supply ),
+                            'reserve':'{}'.format(reserve),
+                            'ratio'  :'{}'.format(ratio  ),
+                            'amount' :'{}'.format(amount ),
+                            'resultSolidityPort':'{}'    .format(resultSolidityPort),
+                            'resultNativePython':'{:.2f}'.format(resultNativePython),
+                            'status':status,
+                            'loss'  :loss  ,
                         }
                         id = collection.insert(entry)
                         print ', '.join('{}: {}'.format(key,entry[key]) for key in ['supply','reserve','ratio','amount','resultSolidityPort','resultNativePython','status','loss'])

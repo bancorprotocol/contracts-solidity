@@ -14,8 +14,8 @@ def formulaTest(supply,reserve,ratio,amount):
         error.append('reserve = {}'.format(reserve))
         error.append('ratio   = {}'.format(ratio  ))
         error.append('amount  = {}'.format(amount ))
-        error.append('resultSolidityPort  = {}'.format(resultSolidityPort ))
-        error.append('resultNativePython  = {}'.format(resultNativePython ))
+        error.append('resultSolidityPort = {}'.format(resultSolidityPort))
+        error.append('resultNativePython = {}'.format(resultNativePython))
         raise BaseException('\n'.join(error))
     return resultSolidityPort/resultNativePython
 
