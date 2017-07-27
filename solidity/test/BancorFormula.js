@@ -17,7 +17,7 @@ function expectedThrow(error) {
 }
 
 contract('BancorFormula', () => {
-    for (let precision = 32; precision < 128; precision++) {
+    for (let precision = testArrays.MIN_PRECISION; precision <= testArrays.MAX_PRECISION; precision++) {
         it('handles legal input ranges (fixedExp)', async () => {
             let instance = await BancorFormula.deployed();
             let ok = testArrays.maxExp[precision];

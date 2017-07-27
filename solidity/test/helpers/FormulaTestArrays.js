@@ -1,3 +1,5 @@
+module.exports.MIN_PRECISION = 32;
+module.exports.MAX_PRECISION = 127;
 module.exports.maxExp = [
     /*   0 */    '0xc1',
     /*   1 */    '0x17a',
