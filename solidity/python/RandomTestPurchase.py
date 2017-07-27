@@ -32,7 +32,7 @@ numOfFailures = 0
 for n in xrange(size):
     supply  = random.randrange(2,10**26)
     reserve = random.randrange(1,10**23)
-    ratio   = random.randrange(1,99)
+    ratio   = random.randrange(1,100)
     amount  = random.randrange(1,supply)
     try:
         accuracy = formulaTest(supply,reserve,ratio,amount)
