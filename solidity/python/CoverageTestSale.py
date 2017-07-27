@@ -96,10 +96,10 @@ class Record():
         self.reserve = reserve
         self.ratio   = ratio  
         self.amount  = amount 
-        self.resultSolidityPort  = resultSolidityPort 
-        self.resultNativePython  = resultNativePython 
         self.major   = major  
         self.minor   = minor  
+        self.resultSolidityPort = resultSolidityPort
+        self.resultNativePython = resultNativePython
 
 
 Main()
