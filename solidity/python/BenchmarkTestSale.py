@@ -9,10 +9,10 @@ def formulaTest(supply,reserve,ratio,amount):
     if resultSolidityPort > resultNativePython:
         error = []
         error.append('error occurred on:')
-        error.append('supply  = {}'.format(supply ))
-        error.append('reserve = {}'.format(reserve))
-        error.append('ratio   = {}'.format(ratio  ))
-        error.append('amount  = {}'.format(amount ))
+        error.append('supply             = {}'.format(supply            ))
+        error.append('reserve            = {}'.format(reserve           ))
+        error.append('ratio              = {}'.format(ratio             ))
+        error.append('amount             = {}'.format(amount            ))
         error.append('resultSolidityPort = {}'.format(resultSolidityPort))
         error.append('resultNativePython = {}'.format(resultNativePython))
         raise BaseException('\n'.join(error))

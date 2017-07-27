@@ -11,10 +11,10 @@ def powerTest(baseN,baseD,expN,expD):
     if resultSolidityPort > resultNativePython:
         error = []
         error.append('error occurred on:')
-        error.append('baseN = {}'.format(baseN))
-        error.append('baseD = {}'.format(baseD))
-        error.append('expN  = {}'.format(expN ))
-        error.append('expD  = {}'.format(expD ))
+        error.append('baseN              = {}'.format(baseN             ))
+        error.append('baseD              = {}'.format(baseD             ))
+        error.append('expN               = {}'.format(expN              ))
+        error.append('expD               = {}'.format(expD              ))
         error.append('resultSolidityPort = {}'.format(resultSolidityPort))
         error.append('resultNativePython = {}'.format(resultNativePython))
         raise BaseException('\n'.join(error))

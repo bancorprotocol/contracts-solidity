@@ -9,10 +9,10 @@ def formulaTest(supply,reserve,ratio,amount):
     if oldAmount > amount:
         error = []
         error.append('error occurred on:')
-        error.append('supply  = {}'.format(supply ))
-        error.append('reserve = {}'.format(reserve))
-        error.append('ratio   = {}'.format(ratio  ))
-        error.append('amount  = {}'.format(amount ))
+        error.append('supply    = {}'.format(supply   ))
+        error.append('reserve   = {}'.format(reserve  ))
+        error.append('ratio     = {}'.format(ratio    ))
+        error.append('amount    = {}'.format(amount   ))
         error.append('newAmount = {}'.format(newAmount))
         error.append('oldAmount = {}'.format(oldAmount))
         raise BaseException('\n'.join(error))

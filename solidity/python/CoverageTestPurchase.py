@@ -92,14 +92,14 @@ class Record():
         if self.major < major or (self.major == major and self.minor < minor):
             self._set(supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,major,minor)
     def _set(self,supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,major,minor):
-        self.supply  = supply 
-        self.reserve = reserve
-        self.ratio   = ratio  
-        self.amount  = amount 
-        self.major   = major  
-        self.minor   = minor  
+        self.supply             = supply            
+        self.reserve            = reserve           
+        self.ratio              = ratio             
+        self.amount             = amount            
         self.resultSolidityPort = resultSolidityPort
         self.resultNativePython = resultNativePython
+        self.major              = major             
+        self.minor              = minor             
 
 
 Main()
