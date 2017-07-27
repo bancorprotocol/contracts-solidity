@@ -37,7 +37,7 @@ def Main():
     abi = open('../contracts/build/BancorFormula.abi').read()
     bin = open('../contracts/build/BancorFormula.bin').read()
     contract = web3RPCProvider.eth.contract(abi=json.loads(abi),bytecode=bin)
-    contractHandle = contract(web3RPCProvider.eth.getTransactionReceipt(contract.deploy())['contractAddress']).call()
+    FormulaContractAddr = contract(web3RPCProvider.eth.getTransactionReceipt(contract.deploy())['contractAddress']).call()
     
     for             supply  in range_supply :
         for         reserve in range_reserve:
@@ -45,11 +45,11 @@ def Main():
                 for amount  in range_amount :
                     testNum += 1
                     if True:
-                        python   = Run(FormulaSolidityPort ,supply,reserve,ratio,amount)
-                        solidity = Run(contractHandle,supply,reserve,ratio,amount)
-                        print 'Test {} out of {}: python = {}, solidity = {}'.format(testNum,numOfTests,python,solidity)
-                        if python != solidity:
-                            print 'Emulation Error:',', '.join(['{} = {}'.format(var,eval(var)) for var in 'supply,reserve,ratio,amount,python,solidity'.split(',')])
+                        resultSolidityPort = Run(FormulaSolidityPort,supply,reserve,ratio,amount)
+                        resultContractAddr = Run(FormulaContractAddr,supply,reserve,ratio,amount)
+                        print 'Test {} out of {}: resultSolidityPort = {}, resultContractAddr = {}'.format(testNum,numOfTests,resultSolidityPort,resultContractAddr)
+                        if resultSolidityPort != resultContractAddr:
+                            print 'Emulation Error:',', '.join(['{} = {}'.format(var,eval(var)) for var in 'supply,reserve,ratio,amount,resultSolidityPort,resultContractAddr'.split(',')])
                             return
 
 
