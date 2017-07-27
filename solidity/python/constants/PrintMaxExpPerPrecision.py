@@ -99,5 +99,5 @@ print 'Compute the values dynamically, using a growth-factor of 0x{:x} >> {:d}:'
 formatString = '{:s}{:d}{:s}{:d}{:s}'.format('Precision = {:2d} | Theoretical Max Exp = {:',maxMaxExpLen,'s} | Practical Max Exp = {:',maxMaxExpLen,'s} | Difference = {:d}')
 for precision in range(MIN_PRECISION,MAX_PRECISION+1):
     theoreticalMaxExp = maxExpArray[precision]
-    practicalMaxExp = getMaxExp(precision,maxFactor)
+    practicalMaxExp = getMaxExp(precision,growthFactor)
     print formatString.format(precision,'0x{:x}'.format(theoreticalMaxExp),'0x{:x}'.format(practicalMaxExp),theoreticalMaxExp-practicalMaxExp)
