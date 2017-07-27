@@ -49,7 +49,7 @@ def Main():
                         solidity = Run(contractHandle,supply,reserve,ratio,amount)
                         print 'Test {} out of {}: python = {}, solidity = {}'.format(testNum,numOfTests,python,solidity)
                         if python != solidity:
-                            print 'Emulation Error:',Record(supply,reserve,ratio,amount,bancor,actual)
+                            print 'Emulation Error:',', '.join(['{} = {}'.format(var,eval(var)) for var in 'supply,reserve,ratio,amount,python,solidity'.split(',')])
                             return
 
 
