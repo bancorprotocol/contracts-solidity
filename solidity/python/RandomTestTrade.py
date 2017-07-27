@@ -13,6 +13,8 @@ def formulaTest(supply,reserve,ratio,amount):
         error.append('reserve = {}'.format(reserve))
         error.append('ratio   = {}'.format(ratio  ))
         error.append('amount  = {}'.format(amount ))
+        error.append('newAmount = {}'.format(newAmount))
+        error.append('oldAmount = {}'.format(oldAmount))
         raise BaseException('\n'.join(error))
     return float(oldAmount)/amount
 
