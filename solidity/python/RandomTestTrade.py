@@ -22,7 +22,7 @@ if size == 0:
     size = input('How many test-cases would you like to execute? ')
 
 
-bestGain = 0
+worstAccuracy = 1
 numOfFailures = 0
 
 
@@ -32,12 +32,12 @@ for n in xrange(size):
     ratio   = random.randrange(1,99)
     amount  = random.randrange(1,supply)
     try:
-        gain = formulaTest(supply,reserve,ratio,amount)
-        bestGain = max(bestGain,gain)
+        accuracy = formulaTest(supply,reserve,ratio,amount)
+        worstAccuracy = min(worstAccuracy,accuracy)
     except Exception,error:
-        gain = 0
+        accuracy = 0
         numOfFailures += 1
     except BaseException,error:
         print error
         break
-    print 'Test #{}: gain = {:.12f}, best gain = {:.12f}, num of failures = {}'.format(n,gain,bestGain,numOfFailures)
+    print 'Test #{}: accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n,accuracy,worstAccuracy,numOfFailures)
