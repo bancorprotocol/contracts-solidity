@@ -87,19 +87,12 @@ class Record():
     def __init__(self,supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,major=0.0,minor=0.0):
         self._set(supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,major,minor)
     def __str__(self):
-        return ', '.join(['{} = {}'.format(var,eval('self.'+var)) for var in 'supply,reserve,ratio,amount,resultSolidityPort,resultNativePython'.split(',')])
+        return ''.join(['\n\t{} = {}'.format(var,vars(self)[var]) for var in 'supply,reserve,ratio,amount,resultSolidityPort,resultNativePython'.split(',')])
     def Update(self,supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,major,minor):
         if self.major < major or (self.major == major and self.minor < minor):
             self._set(supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,major,minor)
     def _set(self,supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,major,minor):
-        self.supply             = supply            
-        self.reserve            = reserve           
-        self.ratio              = ratio             
-        self.amount             = amount            
-        self.resultSolidityPort = resultSolidityPort
-        self.resultNativePython = resultNativePython
-        self.major              = major             
-        self.minor              = minor             
+        self.__dict__.update({key:val for key,val in locals().iteritems() if key != 'self'})
 
 
 Main()
