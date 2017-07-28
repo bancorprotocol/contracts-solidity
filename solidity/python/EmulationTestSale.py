@@ -49,7 +49,11 @@ def Main():
                         resultContractAddr = Run(FormulaContractAddr,supply,reserve,ratio,amount)
                         print 'Test {} out of {}: resultSolidityPort = {}, resultContractAddr = {}'.format(testNum,numOfTests,resultSolidityPort,resultContractAddr)
                         if resultSolidityPort != resultContractAddr:
-                            print 'Emulation Error:',', '.join(['{} = {}'.format(var,eval(var)) for var in 'supply,reserve,ratio,amount,resultSolidityPort,resultContractAddr'.split(',')])
+                            print 'Emulation Error:'
+                            print 'supply  = {}'.format(supply )
+                            print 'reserve = {}'.format(reserve)
+                            print 'ratio   = {}'.format(ratio  )
+                            print 'amount  = {}'.format(amount )
                             return
 
 
