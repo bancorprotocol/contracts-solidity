@@ -7,8 +7,7 @@ def formulaTest(supply,reserve,ratio,amount):
     newAmount = FormulaSolidityPort.calculatePurchaseReturn(supply,reserve,ratio,amount)
     oldAmount = FormulaSolidityPort.calculateSaleReturn(supply+newAmount,reserve+amount,ratio,newAmount)
     if oldAmount > amount:
-        error = []
-        error.append('error occurred on:')
+        error = ['Implementation Error:']
         error.append('supply    = {}'.format(supply   ))
         error.append('reserve   = {}'.format(reserve  ))
         error.append('ratio     = {}'.format(ratio    ))

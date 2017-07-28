@@ -9,8 +9,7 @@ def powerTest(baseN,baseD,expN,expD):
     resultSolidityPort = FormulaSolidityPort.power(baseN,baseD,expN,expD,precision)
     resultNativePython = FormulaNativePython.power(baseN,baseD,expN,expD,precision)
     if resultSolidityPort > resultNativePython:
-        error = []
-        error.append('error occurred on:')
+        error = ['Implementation Error:']
         error.append('baseN              = {}'.format(baseN             ))
         error.append('baseD              = {}'.format(baseD             ))
         error.append('expN               = {}'.format(expN              ))

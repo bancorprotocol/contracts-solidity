@@ -8,8 +8,7 @@ def formulaTest(supply,reserve,ratio,amount):
     resultSolidityPort = FormulaSolidityPort.calculateSaleReturn(supply,reserve,ratio,amount)
     resultNativePython = FormulaNativePython.calculateSaleReturn(supply,reserve,ratio,amount)
     if resultSolidityPort > resultNativePython:
-        error = []
-        error.append('error occurred on:')
+        error = ['Implementation Error:']
         error.append('supply             = {}'.format(supply            ))
         error.append('reserve            = {}'.format(reserve           ))
         error.append('ratio              = {}'.format(ratio             ))
