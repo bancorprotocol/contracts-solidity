@@ -1,11 +1,11 @@
 pragma solidity ^0.4.11;
-import '../SafeMath.sol';
+import '../Utils.sol';
 
 /*
-    SafeMath test helper that exposes the SafeMath functions
+    Utils test helper that exposes the safe math functions
 */
-contract TestSafeMath is SafeMath {
-    function TestSafeMath() {
+contract TestUtils is Utils {
+    function TestUtils() {
     }
 
     function testSafeAdd(uint256 _x, uint256 _y) public constant returns (uint256) {

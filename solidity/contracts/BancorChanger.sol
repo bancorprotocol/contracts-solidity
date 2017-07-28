@@ -1,7 +1,7 @@
 pragma solidity ^0.4.11;
 import './SmartTokenController.sol';
 import './Managed.sol';
-import './SafeMath.sol';
+import './Utils.sol';
 import './interfaces/ITokenChanger.sol';
 import './interfaces/ISmartToken.sol';
 import './interfaces/IBancorFormula.sol';
@@ -25,7 +25,7 @@ import './interfaces/IBancorFormula.sol';
     WARNING: It is NOT RECOMMENDED to use the changer with Smart Tokens that have less than 8 decimal digits
              or with very small numbers because of precision loss
 */
-contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath {
+contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     struct Reserve {
         uint256 virtualBalance;         // virtual balance
         uint8 ratio;                    // constant reserve ratio (CRR), 1-100
@@ -67,12 +67,6 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
 
         if (address(_reserveToken) != 0x0)
             addReserve(_reserveToken, _reserveRatio, false);
-    }
-
-    // verifies that an amount is greater than zero
-    modifier validAmount(uint256 _amount) {
-        require(_amount > 0);
-        _;
     }
 
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
@@ -386,7 +380,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
     function buy(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn)
         public
         changingAllowed
-        validAmount(_minReturn)
+        greaterThanZero(_minReturn)
         returns (uint256 amount) {
         amount = getPurchaseReturn(_reserveToken, _depositAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
@@ -416,7 +410,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
     function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn)
         public
         changingAllowed
-        validAmount(_minReturn)
+        greaterThanZero(_minReturn)
         returns (uint256 amount) {
         require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
 
@@ -456,7 +450,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed, SafeMath
         constant
         active
         validReserve(_reserveToken)
-        validAmount(_totalSupply)
+        greaterThanZero(_totalSupply)
         returns (uint256 amount)
     {
         Reserve reserve = reserves[_reserveToken];

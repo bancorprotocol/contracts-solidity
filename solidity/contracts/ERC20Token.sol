@@ -1,11 +1,11 @@
 pragma solidity ^0.4.11;
-import './SafeMath.sol';
+import './Utils.sol';
 import './interfaces/IERC20Token.sol';
 
 /**
     ERC20 Standard Token implementation
 */
-contract ERC20Token is IERC20Token, SafeMath {
+contract ERC20Token is IERC20Token, Utils {
     string public standard = 'Token 0.1';
     string public name = '';
     string public symbol = '';
@@ -30,12 +30,6 @@ contract ERC20Token is IERC20Token, SafeMath {
         name = _name;
         symbol = _symbol;
         decimals = _decimals;
-    }
-
-    // validates an address - currently only checks that it isn't null
-    modifier validAddress(address _address) {
-        require(_address != 0x0);
-        _;
     }
 
     /**

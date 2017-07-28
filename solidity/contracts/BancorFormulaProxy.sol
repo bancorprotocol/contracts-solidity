@@ -1,5 +1,6 @@
 pragma solidity ^0.4.11;
 import './Owned.sol';
+import './Utils.sol';
 import './interfaces/IBancorFormula.sol';
 
 /**
@@ -8,7 +9,7 @@ import './interfaces/IBancorFormula.sol';
     it allows upgrading the BancorFormula contract without the need to update each and every
     BancorChanger contract instance individually.
 */
-contract BancorFormulaProxy is IBancorFormula, Owned {
+contract BancorFormulaProxy is IBancorFormula, Owned, Utils {
     IBancorFormula public formula;  // bancor calculation formula contract
 
     /**
@@ -20,18 +21,6 @@ contract BancorFormulaProxy is IBancorFormula, Owned {
         validAddress(_formula)
     {
         formula = _formula;
-    }
-
-    // validates an address - currently only checks that it isn't null
-    modifier validAddress(address _address) {
-        require(_address != 0x0);
-        _;
-    }
-
-    // verifies that the address is different than this contract address
-    modifier notThis(address _address) {
-        require(_address != address(this));
-        _;
     }
 
     /*

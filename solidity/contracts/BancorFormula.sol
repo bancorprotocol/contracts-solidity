@@ -1,8 +1,8 @@
 pragma solidity ^0.4.11;
-import './SafeMath.sol';
+import './Utils.sol';
 import './interfaces/IBancorFormula.sol';
 
-contract BancorFormula is IBancorFormula, SafeMath {
+contract BancorFormula is IBancorFormula, Utils {
 
     string public version = '0.2';
 

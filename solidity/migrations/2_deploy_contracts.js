@@ -1,7 +1,7 @@
 /* global artifacts */
 /* eslint-disable prefer-reflect */
 
-const SafeMath = artifacts.require('SafeMath.sol');
+const Utils = artifacts.require('Utils.sol');
 const Owned = artifacts.require('Owned.sol');
 const Managed = artifacts.require('Managed.sol');
 const TokenHolder = artifacts.require('TokenHolder.sol');
@@ -15,7 +15,7 @@ const BancorChanger = artifacts.require('BancorChanger.sol');
 const CrowdsaleController = artifacts.require('CrowdsaleController.sol');
 
 module.exports = async (deployer) => {
-    deployer.deploy(SafeMath);
+    deployer.deploy(Utils);
     deployer.deploy(Owned);
     deployer.deploy(Managed);
     deployer.deploy(TokenHolder);

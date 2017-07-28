@@ -1,5 +1,6 @@
 pragma solidity ^0.4.11;
 import './Owned.sol';
+import './Utils.sol';
 import './interfaces/IERC20Token.sol';
 import './interfaces/ITokenHolder.sol';
 
@@ -10,23 +11,11 @@ import './interfaces/ITokenHolder.sol';
     The TokenHolder's contract sole purpose is to provide a safety mechanism that allows
     the owner to send tokens that were sent to the contract by mistake back to their sender.
 */
-contract TokenHolder is ITokenHolder, Owned {
+contract TokenHolder is ITokenHolder, Owned, Utils {
     /**
         @dev constructor
     */
     function TokenHolder() {
-    }
-
-    // validates an address - currently only checks that it isn't null
-    modifier validAddress(address _address) {
-        require(_address != 0x0);
-        _;
-    }
-
-    // verifies that the address is different than this contract address
-    modifier notThis(address _address) {
-        require(_address != address(this));
-        _;
     }
 
     /**

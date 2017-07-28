@@ -9,7 +9,7 @@ import './interfaces/ISmartToken.sol';
 
     'Owned' is specified here for readability reasons
 */
-contract SmartToken is ISmartToken, ERC20Token, Owned, TokenHolder {
+contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     string public version = '0.3';
 
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not

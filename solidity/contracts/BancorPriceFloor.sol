@@ -1,7 +1,7 @@
 pragma solidity ^0.4.11;
 import './TokenHolder.sol';
 import './Owned.sol';
-import './SafeMath.sol';
+import './Utils.sol';
 import './interfaces/ISmartToken.sol';
 
 /*
@@ -11,7 +11,7 @@ import './interfaces/ISmartToken.sol';
 
     'Owned' is specified here for readability reasons
 */
-contract BancorPriceFloor is Owned, TokenHolder, SafeMath {
+contract BancorPriceFloor is Owned, TokenHolder {
     uint256 public constant TOKEN_PRICE_N = 1;      // crowdsale price in wei (numerator)
     uint256 public constant TOKEN_PRICE_D = 100;    // crowdsale price in wei (denominator)
 

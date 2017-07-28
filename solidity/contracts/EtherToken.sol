@@ -9,7 +9,7 @@ import './interfaces/IEtherToken.sol';
 
     'Owned' is specified here for readability reasons
 */
-contract EtherToken is IEtherToken, ERC20Token, Owned, TokenHolder {
+contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     // triggered when the total supply is increased
     event Issuance(uint256 _amount);
     // triggered when the total supply is decreased

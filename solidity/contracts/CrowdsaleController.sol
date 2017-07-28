@@ -1,6 +1,6 @@
 pragma solidity ^0.4.11;
 import './SmartTokenController.sol';
-import './SafeMath.sol';
+import './Utils.sol';
 import './interfaces/ISmartToken.sol';
 
 /*
@@ -10,7 +10,7 @@ import './interfaces/ISmartToken.sol';
     The price remains fixed for the entire duration of the crowdsale
     Note that 20% of the contributions are the Bancor token's reserve
 */
-contract CrowdsaleController is SmartTokenController, SafeMath {
+contract CrowdsaleController is SmartTokenController {
     uint256 public constant DURATION = 14 days;                 // crowdsale duration
     uint256 public constant TOKEN_PRICE_N = 1;                  // initial price in wei (numerator)
     uint256 public constant TOKEN_PRICE_D = 100;                // initial price in wei (denominator)
@@ -43,19 +43,13 @@ contract CrowdsaleController is SmartTokenController, SafeMath {
         validAddress(_beneficiary)
         validAddress(_btcs)
         earlierThan(_startTime)
-        validAmount(uint256(_realEtherCapHash))
+        greaterThanZero(uint256(_realEtherCapHash))
     {
         startTime = _startTime;
         endTime = startTime + DURATION;
         beneficiary = _beneficiary;
         btcs = _btcs;
         realEtherCapHash = _realEtherCapHash;
-    }
-
-    // verifies that an amount is greater than zero
-    modifier validAmount(uint256 _amount) {
-        require(_amount > 0);
-        _;
     }
 
     // verifies that the gas price is lower than 50 gwei
