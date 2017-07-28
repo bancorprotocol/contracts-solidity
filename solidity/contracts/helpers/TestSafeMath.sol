@@ -2,7 +2,7 @@ pragma solidity ^0.4.11;
 import '../SafeMath.sol';
 
 /*
-    Test token with predefined supply
+    SafeMath test helper that exposes the SafeMath functions
 */
 contract TestSafeMath is SafeMath {
     function TestSafeMath() {

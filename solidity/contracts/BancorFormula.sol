@@ -262,7 +262,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Note that the outcome of this function only affects the accuracy of the computation of "base ^ exp".
         Therefore, we do not need to assert that no intermediate result exceeds 256 bits (nor in this function, neither in any of the functions down the calling tree).
     */
-    function calculateBestPrecision(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) constant returns (uint8) {
+    function calculateBestPrecision(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) internal constant returns (uint8) {
         uint256 maxVal = lnUpperBound(_baseN, _baseD) * _expN;
         uint8 lo = MIN_PRECISION;
         uint8 hi = MAX_PRECISION;
@@ -283,7 +283,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Calculates an integer approximation of "(_baseN / _baseD) ^ (_expN / _expD) * 2 ^ _precision".
         This method is overflow-safe.
     */
-    function power(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD, uint8 _precision) constant returns (uint256) {
+    function power(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD, uint8 _precision) internal constant returns (uint256) {
         uint256 logbase = ln(_baseN, _baseD, _precision);
         return fixedExp(safeMul(logbase, _expN) / _expD, _precision);
     }
@@ -299,7 +299,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
 
         This function asserts "0 < denominator <= numerator < 2 ^ (256 - precision)".
     */
-    function ln(uint256 _numerator, uint256 _denominator, uint8 _precision) public constant returns (uint256) {
+    function ln(uint256 _numerator, uint256 _denominator, uint8 _precision) internal constant returns (uint256) {
         assert(0 < _denominator && _denominator <= _numerator && _numerator < (ONE << (256 - _precision)));
         return fixedLoge( (_numerator << _precision) / _denominator, _precision);
     }
@@ -313,7 +313,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         This function assumes "0 < denominator < numerator < 2 ^ (256 - MIN_PRECISION)".
         Complexity is O(log(input bit-length)).
     */
-    function lnUpperBound(uint256 _numerator, uint256 _denominator) constant returns (uint256) {
+    function lnUpperBound(uint256 _numerator, uint256 _denominator) internal constant returns (uint256) {
         uint256 scaledNumerator = _numerator << MIN_PRECISION;
 
         if (scaledNumerator <= _denominator * SCALED_EXP_0P5) // _numerator / _denominator < e^0.5
@@ -332,7 +332,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Returns floor(ln(x / 2 ^ precision) * 2 ^ precision)
         Assumes x >= 2 ^ precision
     */
-    function fixedLoge(uint256 _x, uint8 _precision) constant returns (uint256) {
+    function fixedLoge(uint256 _x, uint8 _precision) internal constant returns (uint256) {
         uint256 log2 = fixedLog2(_x, _precision);
         return (log2 * FLOOR_LN2_MANTISSA) >> FLOOR_LN2_EXPONENT;
     }
@@ -346,7 +346,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
             x         between 2 ^ precision and (2 ^ (256 - precision) - 1) * (2 ^ precision)
             output    between 0             and floor(log2(2 ^ (256 - precision) - 1) * 2 ^ precision)
     */
-    function fixedLog2(uint256 _x, uint8 _precision) constant returns (uint256) {
+    function fixedLog2(uint256 _x, uint8 _precision) internal constant returns (uint256) {
         uint256 hi = 0;
         uint256 fixedOne = ONE << _precision;
         uint256 fixedTwo = TWO << _precision;
@@ -372,7 +372,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Returns the smallest integer larger than or equal to the binary logarithm of the input.
         Complexity is O(log(input bit-length)).
     */
-    function ceilLog2(uint256 _numerator, uint256 _denominator) constant returns (uint256) {
+    function ceilLog2(uint256 _numerator, uint256 _denominator) internal constant returns (uint256) {
         return floorLog2((_numerator - 1) / _denominator) + 1;
     }
 
@@ -381,7 +381,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         Returns the largest integer smaller than or equal to the binary logarithm of the input.
         Complexity is O(log(input bit-length)).
     */
-    function floorLog2(uint256 _n) constant returns (uint256) {
+    function floorLog2(uint256 _n) internal constant returns (uint256) {
         uint8 t = 0;
         for (uint8 s = 128; s > 0; s >>= 1) {
             if (_n >= (ONE << s)) {
@@ -398,7 +398,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         The maximum value which can be passed to fixedExpUnsafe depends on the precision used.
         The global maxExpArray maps each precision between 0 and 127 to the maximum value permitted.
     */
-    function fixedExp(uint256 _x, uint8 _precision) constant returns (uint256) {
+    function fixedExp(uint256 _x, uint8 _precision) internal constant returns (uint256) {
         assert(_x <= maxExpArray[_precision]);
         return fixedExpUnsafe(_x, _precision);
     }
@@ -409,7 +409,7 @@ contract BancorFormula is IBancorFormula, SafeMath {
         It returns "e ^ (x >> precision) << precision", that is, the result is upshifted for accuracy.
         The maximum permitted value for _x depends on the value of _precision (see maxExpArray).
     */
-    function fixedExpUnsafe(uint256 _x, uint8 _precision) constant returns (uint256) {
+    function fixedExpUnsafe(uint256 _x, uint8 _precision) internal constant returns (uint256) {
         uint256 xi = _x;
         uint256 res = uint256(0xde1bc4d19efcac82445da75b00000000) << _precision;
 

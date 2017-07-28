@@ -1,43 +1,37 @@
-/* global artifacts, contract, it, assert, web3 */
-/* eslint-disable prefer-reflect */
+/* global artifacts, contract, it, before, assert, web3 */
+/* eslint-disable prefer-reflect, no-loop-func */
 
-let testdata = require('./helpers/FormulaTestData.js');
 let testArrays = require('./helpers/FormulaTestArrays.js');
-let BancorFormula = artifacts.require('./BancorFormula.sol');
+let TestBancorFormula = artifacts.require('./helpers/TestBancorFormula.sol');
 
-function isThrow(error) {
-    return error.toString().indexOf('invalid JUMP') != -1 || error.toString().indexOf('VM Exception while executing eth_call: invalid opcode') != -1;
-}
-
-function expectedThrow(error) {
-    if (isThrow(error))
-        console.log('\tExpected throw. Test succeeded.');
-    else
-        assert(false, error.toString());
-}
+let formula;
 
 contract('BancorFormula', () => {
+    before(async () => {
+        formula = await TestBancorFormula.new();
+    });
+
     for (let precision = testArrays.MIN_PRECISION; precision <= testArrays.MAX_PRECISION; precision++) {
-        it('handles legal input ranges (fixedExp)', async () => {
-            let instance = await BancorFormula.deployed();
-            let ok = testArrays.maxExp[precision];
+        let maxExp = testArrays.maxExp[precision];
+
+        it('handles legal input ranges (fixedExp), ' + maxExp, async () => {
+            let ok = maxExp;
             ok = web3.toBigNumber(ok);
-            let retval = await instance.fixedExp.call(ok, precision);
+            let retval = await formula.testFixedExp.call(ok, precision);
             let expected = testArrays.maxVal[precision];
             expected = web3.toBigNumber(expected);
             assert.equal(expected.toString(16), retval.toString(16), 'Wrong result for fixedExp at limit');
         });
-        it('verifies input limit (fixedExpUnsafe)', async () => {
-            let instance = await BancorFormula.deployed();
-            let maxExp = testArrays.maxExp[precision];
+
+        it('verifies input limit (fixedExpUnsafe), ' + maxExp, async () => {
             maxExp = web3.toBigNumber(maxExp);
-            let retval0 = await instance.fixedExpUnsafe.call(maxExp.plus(0), precision);
-            let retval1 = await instance.fixedExpUnsafe.call(maxExp.plus(1), precision);
+            let retval0 = await formula.testFixedExpUnsafe.call(maxExp.plus(0), precision);
+            let retval1 = await formula.testFixedExpUnsafe.call(maxExp.plus(1), precision);
             assert(retval0.greaterThan(retval1), 'Result indicates wrong limit for fixedExpUnsafe');
         });
     }
 
-    let purchaseTest = (k) => {
+/*    let purchaseTest = (k) => {
         let [S, R, F, E, expect, exact] = k;
         S = web3.toBigNumber(S), R = web3.toBigNumber(R), F = web3.toBigNumber(F), E = web3.toBigNumber(E), expect = web3.toBigNumber(expect);
 
@@ -129,5 +123,5 @@ contract('BancorFormula', () => {
     testdata.randomSaleReturns.forEach(saleTest);
 
     testdata.purchaseReturnExpectedThrows.forEach(purchaseThrowTest);
-    testdata.saleReturnExpectedThrows.forEach(saleThrowTest);
+    testdata.saleReturnExpectedThrows.forEach(saleThrowTest);*/
 });
