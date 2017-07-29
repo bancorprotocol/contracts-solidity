@@ -243,6 +243,8 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     Hence before calling the exponentiation function, we need to determine the highest precision which can be used.
     We do this by estimating an upper-bound for "ln(base) * exp", and then choosing the highest precision which this value is permitted for.
     Of course, we should later assert that the actual value representing "ln(base) * exp" is indeed not larger than the maximum exponent of the chosen precision.
+    We can bring accuracy to a maximum by replacing "lnUpperBound(_baseN, _baseD)" with "ln(_baseN, _baseD, MIN_PRECISION) + 1".
+    This, however, will impact performance, so we will need to establish a more efficient (less accurate) implementation of "ln".
     Note that the outcome of this function only affects the accuracy of the computation of "base ^ exp".
     Therefore, we do not need to assert that no intermediate result exceeds 256 bits (nor in this function, neither in any of the functions down the calling tree).
 '''
