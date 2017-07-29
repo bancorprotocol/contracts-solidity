@@ -58,6 +58,24 @@ contract BancorBuyer is TokenHolder {
         return returnAmount;
     }
 
+    /**
+        @dev buys the smart token with ETH if the return amount meets the minimum requested
+
+        @param _minReturn  if the change results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+
+        @return tokens issued in return
+    */
+    function buyMin(uint256 _minReturn) public payable returns (uint256 amount) {
+        etherToken.deposit.value(msg.value)(); // deposit ETH in the reserve
+        assert(etherToken.approve(tokenChanger, 0)); // need to reset the allowance to 0 before setting a new one
+        assert(etherToken.approve(tokenChanger, msg.value)); // approve the changer to use the ETH amount for the purchase
+
+        ISmartToken smartToken = tokenChanger.token();
+        uint256 returnAmount = tokenChanger.change(etherToken, smartToken, msg.value, _minReturn); // do the actual change
+        assert(smartToken.transfer(msg.sender, returnAmount)); // transfer the tokens to the sender
+        return returnAmount;
+    }
+
     // fallback
     function() payable {
         buy();
