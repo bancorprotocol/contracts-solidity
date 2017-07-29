@@ -13,14 +13,14 @@ contract IBancorChanger is ITokenChanger {
 }
 
 /*
-    BancorBuyer v0.1
+    BancorBuyer v0.2
 
     The bancor buyer contract is a simple bancor changer wrapper that allows buying smart tokens with ETH
 
     WARNING: the contract will make the purchase using the current price at transaction mining time
 */
 contract BancorBuyer is TokenHolder {
-    string public version = '0.1';
+    string public version = '0.2';
     IBancorChanger public tokenChanger; // bancor ETH <-> smart token changer
     IEtherToken public etherToken;      // ether token
 
