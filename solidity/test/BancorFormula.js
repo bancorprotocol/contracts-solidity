@@ -12,22 +12,71 @@ contract('BancorFormula', () => {
     });
 
     for (let precision = testArrays.MIN_PRECISION; precision <= testArrays.MAX_PRECISION; precision++) {
-        let maxExp = testArrays.maxExp[precision];
 
-        it('handles legal input ranges (fixedExp), ' + maxExp, async () => {
-            let ok = maxExp;
-            ok = web3.toBigNumber(ok);
-            let retval = await formula.testFixedExp.call(ok, precision);
-            let expected = testArrays.maxVal[precision];
-            expected = web3.toBigNumber(expected);
-            assert.equal(expected.toString(16), retval.toString(16), 'Wrong result for fixedExp at limit');
+        let maxExp         = web3.toBigNumber(testArrays.maxExp[precision]);
+        let maxNumerator   = web3.toBigNumber((1 << precision) - 1);
+        let minDenominator = web3.toBigNumber(1);
+
+        it('Verify function fixedExp legal input', async () => {
+            try {
+                let retval = await formula.testFixedExp.call(maxExp, precision);
+                let expected = web3.toBigNumber(testArrays.maxVal[precision]);
+                assert.equal(expected.toString(16), retval.toString(16), 'Result of function fixedExp is wrong');
+            }
+            catch(error) {
+                assert(false, 'Function fixedExp failed when it should have succeeded');
+            }
         });
 
-        it('verifies input limit (fixedExpUnsafe), ' + maxExp, async () => {
-            maxExp = web3.toBigNumber(maxExp);
+        it('Verify function fixedExp illegal input', async () => {
+            try {
+                let retval = await formula.testFixedExp.call(maxExp.plus(1), precision);
+                assert(false, 'Function fixedExp succeeded when it should have failed');
+            }
+            catch(error) {
+            }
+        });
+
+        it('Verify function fixedExpUnsafe input range', async () => {
             let retval0 = await formula.testFixedExpUnsafe.call(maxExp.plus(0), precision);
             let retval1 = await formula.testFixedExpUnsafe.call(maxExp.plus(1), precision);
-            assert(retval0.greaterThan(retval1), 'Result indicates wrong limit for fixedExpUnsafe');
+            assert(retval0.greaterThan(retval1), 'Result of function fixedExpUnsafe indicates that limit of function fixedExp is wrong');
+        });
+
+        it('Verify function ln legal input', async () => {
+            try {
+                let retval = await formula.testLn.call(maxNumerator, minDenominator, precision);
+            }
+            catch(error) {
+                assert(false, 'Function ln failed when it should have succeeded');
+            }
+        });
+
+        it('Verify function ln illegal input', async () => {
+            try {
+                let retval = await formula.testLn.call(maxNumerator.plus(1), minDenominator, precision);
+                assert(false, 'Function ln succeeded when it should have failed');
+            }
+            catch(error) {
+            }
+        });
+
+        it('Verify function ln illegal input', async () => {
+            try {
+                let retval = await formula.testLn.call(maxNumerator, minDenominator.minus(1), precision);
+                assert(false, 'Function ln succeeded when it should have failed');
+            }
+            catch(error) {
+            }
+        });
+
+        it('Verify function ln illegal input', async () => {
+            try {
+                let retval = await formula.testLn.call(minDenominator, maxNumerator, precision);
+                assert(false, 'Function ln succeeded when it should have failed');
+            }
+            catch(error) {
+            }
         });
     }
 
