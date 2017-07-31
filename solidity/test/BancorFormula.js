@@ -11,6 +11,9 @@ contract('BancorFormula', () => {
         formula = await TestBancorFormula.new();
     });
 
+    let LIMIT = web3.toBigNumber(2).toPower(256);
+    let FLOOR_LN2_MANTISSA = web3.toBigNumber(constants.FLOOR_LN2_MANTISSA);
+
     for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
 
         let maxExp         = web3.toBigNumber(constants.maxExpArray[precision]);
@@ -77,6 +80,12 @@ contract('BancorFormula', () => {
             }
             catch(error) {
             }
+        });
+
+        it('Verify function fixedLoge mantissa', async () => {
+            let x = maxNumerator.dividedToIntegerBy(minDenominator);
+            let retval = await formula.testFixedLog2.call(x, precision);
+            assert(retval.times(FLOOR_LN2_MANTISSA).lessThan(LIMIT), `Result of function fixedLog2(${x}, ${precision}) indicates that mantissa used in function fixedLoge is wrong`);
         });
     }
 
