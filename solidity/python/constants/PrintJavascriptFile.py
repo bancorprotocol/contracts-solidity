@@ -1,5 +1,5 @@
-from binom import getMaxExpArray
-from binom import getMaxValArray
+from common import getMaxExpArray
+from common import getMaxValArray
 
 
 MIN_PRECISION = 32

@@ -1,7 +1,7 @@
-from binom import getMaxExpArray
-from binom import binarySearch
-from binom import fixedExpSafe
-from binom import safeMul
+from common import getMaxExpArray
+from common import binarySearch
+from common import fixedExpSafe
+from common import safeMul
 
 
 MIN_PRECISION = 32

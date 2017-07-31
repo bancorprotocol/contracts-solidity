@@ -1,4 +1,4 @@
-from binom import coefficients
+from common import coefficients
 
 
 print '    function fixedExpUnsafe(uint256 _x, uint8 _precision) constant returns (uint256) {'

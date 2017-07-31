@@ -1,4 +1,4 @@
-from math import exp
+from common import exp
 
 
 MIN_PRECISION = 32

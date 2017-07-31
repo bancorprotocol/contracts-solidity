@@ -1,4 +1,4 @@
-from binom import getMaxExpArray
+from common import getMaxExpArray
 
 
 MIN_PRECISION = 32
