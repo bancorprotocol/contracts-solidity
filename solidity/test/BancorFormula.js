@@ -1,7 +1,7 @@
 /* global artifacts, contract, it, before, assert, web3 */
 /* eslint-disable prefer-reflect, no-loop-func */
 
-let testArrays = require('./helpers/FormulaTestArrays.js');
+let constants = require('./helpers/FormulaConstants.js');
 let TestBancorFormula = artifacts.require('./helpers/TestBancorFormula.sol');
 
 let formula;
@@ -11,16 +11,16 @@ contract('BancorFormula', () => {
         formula = await TestBancorFormula.new();
     });
 
-    for (let precision = testArrays.MIN_PRECISION; precision <= testArrays.MAX_PRECISION; precision++) {
+    for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
 
-        let maxExp         = web3.toBigNumber(testArrays.maxExp[precision]);
+        let maxExp         = web3.toBigNumber(constants.maxExp[precision]);
         let maxNumerator   = web3.toBigNumber((1 << (256 - precision)) - 1);
         let minDenominator = web3.toBigNumber(1);
 
         it('Verify function fixedExp legal input', async () => {
             try {
                 let retval = await formula.testFixedExp.call(maxExp, precision);
-                let expected = web3.toBigNumber(testArrays.maxVal[precision]);
+                let expected = web3.toBigNumber(constants.maxVal[precision]);
                 assert.equal(expected.toString(16), retval.toString(16), `Result of function fixedExp(${maxExp}, ${precision}) is wrong`);
             }
             catch(error) {
