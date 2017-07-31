@@ -60,13 +60,13 @@ print 'module.exports.MIN_PRECISION = {};'.format(MIN_PRECISION)
 print 'module.exports.MAX_PRECISION = {};'.format(MAX_PRECISION)
 
 
-print 'module.exports.maxExp = ['
+print 'module.exports.maxExpArray = ['
 for precision in range(NUM_OF_PRECISIONS):
     print '    /* {:3d} */    \'0x{:x}\','.format(precision,maxExpArray[precision])
 print '];'
 
 
-print 'module.exports.maxVal = ['
+print 'module.exports.maxValArray = ['
 for precision in range(NUM_OF_PRECISIONS):
     print '    /* {:3d} */    \'0x{:x}\','.format(precision,maxValArray[precision])
 print '];'

@@ -1,6 +1,6 @@
 module.exports.MIN_PRECISION = 32;
 module.exports.MAX_PRECISION = 127;
-module.exports.maxExp = [
+module.exports.maxExpArray = [
     /*   0 */    '0xc1',
     /*   1 */    '0x17a',
     /*   2 */    '0x2e5',
@@ -130,7 +130,7 @@ module.exports.maxExp = [
     /* 126 */    '0x459c079aac334623648e24d17c74b3dc',
     /* 127 */    '0x6ae67b5f2f528d5f3189036ee0f27453',
 ];
-module.exports.maxVal = [
+module.exports.maxValArray = [
     /*   0 */    '0x114b06b554307756ca04f4cba9a73491a',
     /*   1 */    '0x116725662328c918cc52a23d39760e5b9',
     /*   2 */    '0x120a92c8c432654ba21dcdb328faecff8',
