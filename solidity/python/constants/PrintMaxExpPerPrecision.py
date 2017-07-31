@@ -9,7 +9,7 @@ NUM_OF_VALUES_PER_ROW = 4
 assert((MAX_PRECISION+1) % NUM_OF_VALUES_PER_ROW == 0)
 
 
-def fixedExpUnsafe(x,precision):
+def fixedExpSafe(x,precision):
     xi = x
     res = safeMul(coefficients[0],1 << precision)
     for coefficient in coefficients[1:-1]:
@@ -51,7 +51,7 @@ def getMaxExp(precision,factor):
     maxExp = maxExpArray[MIN_PRECISION]
     for p in range (MIN_PRECISION,precision):
         maxExp = safeMul(maxExp,factor) >> MAX_PRECISION
-        fixedExpUnsafe(maxExp,precision)
+        fixedExpSafe(maxExp,precision)
     return maxExp
 
 
@@ -62,7 +62,7 @@ def assertFactor(factor,args):
 
 maxExpArray = [0]*(MAX_PRECISION+1)
 for precision in range(MAX_PRECISION+1):
-    maxExpArray[precision] = binarySearch(fixedExpUnsafe,precision)
+    maxExpArray[precision] = binarySearch(fixedExpSafe,precision)
 
 
 growthFactor = binarySearch(assertFactor,None)

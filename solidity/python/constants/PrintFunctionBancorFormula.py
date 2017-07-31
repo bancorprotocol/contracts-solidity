@@ -5,7 +5,7 @@ MIN_PRECISION = 32
 MAX_PRECISION = 127
 
 
-def fixedExpUnsafe(x,precision):
+def fixedExpSafe(x,precision):
     xi = x
     res = safeMul(coefficients[0],1 << precision)
     for coefficient in coefficients[1:-1]:
@@ -45,7 +45,7 @@ def binarySearch(func,args):
 
 maxExpArray = [0]*(MAX_PRECISION+1)
 for precision in range(MAX_PRECISION+1):
-    maxExpArray[precision] = binarySearch(fixedExpUnsafe,precision)
+    maxExpArray[precision] = binarySearch(fixedExpSafe,precision)
 
 
 print '    uint256[{}] maxExpArray;'.format(MAX_PRECISION+1)

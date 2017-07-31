@@ -5,7 +5,7 @@ MIN_PRECISION = 32
 MAX_PRECISION = 127
 
 
-def fixedExpUnsafe(x,precision):
+def fixedExpSafe(x,precision):
     xi = x
     res = safeMul(coefficients[0],1 << precision)
     for coefficient in coefficients[1:-1]:
@@ -48,12 +48,12 @@ NUM_OF_PRECISIONS = MAX_PRECISION+1
 
 maxExpArray = [0]*NUM_OF_PRECISIONS
 for precision in range(NUM_OF_PRECISIONS):
-    maxExpArray[precision] = binarySearch(fixedExpUnsafe,precision)
+    maxExpArray[precision] = binarySearch(fixedExpSafe,precision)
 
 
 maxValArray = [0]*NUM_OF_PRECISIONS
 for precision in range(NUM_OF_PRECISIONS):
-    maxValArray[precision] = fixedExpUnsafe(maxExpArray[precision],precision)
+    maxValArray[precision] = fixedExpSafe(maxExpArray[precision],precision)
 
 
 print 'module.exports.MIN_PRECISION = {};'.format(MIN_PRECISION)
