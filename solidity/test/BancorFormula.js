@@ -3,6 +3,7 @@
 
 let constants = require('./helpers/FormulaConstants.js');
 let TestBancorFormula = artifacts.require('./helpers/TestBancorFormula.sol');
+const utils = require('./helpers/Utils');
 
 let formula;
 
@@ -16,8 +17,8 @@ contract('BancorFormula', () => {
 
     for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
 
-        let maxExp         = web3.toBigNumber(constants.maxExpArray[precision]);
-        let maxNumerator   = web3.toBigNumber(2).toPower(256 - precision).minus(1);
+        let maxExp = web3.toBigNumber(constants.maxExpArray[precision]);
+        let maxNumerator = web3.toBigNumber(2).toPower(256 - precision).minus(1);
         let minDenominator = web3.toBigNumber(1);
 
         it('Verify function fixedExp legal input', async () => {
@@ -26,17 +27,18 @@ contract('BancorFormula', () => {
                 let expected = web3.toBigNumber(constants.maxValArray[precision]);
                 assert.equal(expected.toString(16), retval.toString(16), `Result of function fixedExp(${maxExp}, ${precision}) is wrong`);
             }
-            catch(error) {
+            catch (error) {
                 assert(false, `Function fixedExp(${maxExp}, ${precision}) failed when it should have succeeded`);
             }
         });
 
         it('Verify function fixedExp illegal input', async () => {
             try {
-                let retval = await formula.testFixedExp.call(maxExp.plus(1), precision);
+                await formula.testFixedExp.call(maxExp.plus(1), precision);
                 assert(false, `Function fixedExp(${maxExp.plus(1)}, ${precision}) succeeded when it should have failed`);
             }
-            catch(error) {
+            catch (error) {
+                return utils.ensureException(error);
             }
         });
 
@@ -48,37 +50,40 @@ contract('BancorFormula', () => {
 
         it('Verify function ln legal input', async () => {
             try {
-                let retval = await formula.testLn.call(maxNumerator, minDenominator, precision);
+                await formula.testLn.call(maxNumerator, minDenominator, precision);
             }
-            catch(error) {
+            catch (error) {
                 assert(false, `Function ln(${maxNumerator}, ${minDenominator}, ${precision}) failed when it should have succeeded`);
             }
         });
 
         it('Verify function ln illegal input', async () => {
             try {
-                let retval = await formula.testLn.call(maxNumerator.plus(1), minDenominator, precision);
+                await formula.testLn.call(maxNumerator.plus(1), minDenominator, precision);
                 assert(false, `Function ln(${maxNumerator.plus(1)}, ${minDenominator}, ${precision}) succeeded when it should have failed`);
             }
-            catch(error) {
+            catch (error) {
+                return utils.ensureException(error);
             }
         });
 
         it('Verify function ln illegal input', async () => {
             try {
-                let retval = await formula.testLn.call(maxNumerator, minDenominator.minus(1), precision);
+                await formula.testLn.call(maxNumerator, minDenominator.minus(1), precision);
                 assert(false, `Function ln(${maxNumerator}, ${minDenominator.minus(1)}, ${precision}) succeeded when it should have failed`);
             }
-            catch(error) {
+            catch (error) {
+                return utils.ensureException(error);
             }
         });
 
         it('Verify function ln illegal input', async () => {
             try {
-                let retval = await formula.testLn.call(minDenominator, maxNumerator, precision);
+                await formula.testLn.call(minDenominator, maxNumerator, precision);
                 assert(false, `Function ln(${minDenominator}, ${maxNumerator}, ${precision}) succeeded when it should have failed`);
             }
-            catch(error) {
+            catch (error) {
+                return utils.ensureException(error);
             }
         });
 
@@ -88,98 +93,4 @@ contract('BancorFormula', () => {
             assert(retval.times(FLOOR_LN2_MANTISSA).lessThan(LIMIT), `Result of function fixedLog2(${x}, ${precision}) indicates that mantissa used in function fixedLoge is wrong`);
         });
     }
-
-/*    let purchaseTest = (k) => {
-        let [S, R, F, E, expect, exact] = k;
-        S = web3.toBigNumber(S), R = web3.toBigNumber(R), F = web3.toBigNumber(F), E = web3.toBigNumber(E), expect = web3.toBigNumber(expect);
-
-        it('Should get correct amount of tokens when purchasing', () => {
-            return BancorFormula.deployed()
-                .then((f) => {
-                    return f.calculatePurchaseReturn.call(S, R, F, E);
-                })
-                .then((retval) => {
-                    // assert(retval.valueOf() <= expect,"Purchase return "+retval+" should be <="+expect+" ( "+exact+"). [S,R,F,E] "+[S,R,F,E]);
-                    assert(retval.eq(expect), 'Purchase return ' + retval + ' should be ==' + expect + ' ( ' + exact + '). [S,R,F,E] ' + [S, R, F, E]);
-                })
-                .catch((error) => {
-                    if (isThrow(error)) {
-                        if (expect.valueOf() == 0)
-                            assert(true, 'Expected throw');
-                        else
-                            assert(false, 'Sale return generated throw');
-                    }
-                    else {
-                        assert(false, error.toString());
-                    }
-                });
-        });
-    };
-
-    let saleTest = (k) => {
-        let [S, R, F, T, expect, exact] = k;
-        S = web3.toBigNumber(S), R = web3.toBigNumber(R), F = web3.toBigNumber(F), T = web3.toBigNumber(T), expect = web3.toBigNumber(expect);
-
-        it('Should get correct amount of Ether when selling', () => {
-            return BancorFormula.deployed().then(
-                (f) => {
-                    return f.calculateSaleReturn.call(S, R, F, T);
-                })
-                .then((retval) => {
-                    assert(retval.eq(expect), 'Sale return ' + retval + ' should be ==' + expect + ' ( ' + exact + '). [S,R,F,T] ' + [S, R, F, T]);
-                })
-                .catch((error) => {
-                    if (isThrow(error)) {
-                        if (expect.valueOf() == 0)
-                            assert(true, 'Expected throw');
-                        else
-                            assert(false, 'Sale return generated throw');
-                    }
-                    else {
-                        assert(false, error.toString());
-                    }
-                });
-        });
-    };
-
-    let purchaseThrowTest = (k) => {
-        let [S, R, F, E, expect, exact] = k;
-
-        it('Should throw on out of bounds', () => {
-            return BancorFormula.deployed()
-                .then((f) => {
-                    return f.calculatePurchaseReturn.call(S, R, F, E);
-                })
-                .then((retval) => {
-                    assert(false, "was supposed to throw but didn't: [S,R,F,E] " + [S, R, F, E] + ' => ' + retval.toString(16));
-                })
-                .catch(expectedThrow);
-        });
-    };
-
-    let saleThrowTest = (k) => {
-        let [S, R, F, T, expect, exact] = k;
-
-        it('Should throw on out of bounds', () => {
-            return BancorFormula.deployed()
-                .then((f) => {
-                    return f.calculateSaleReturn.call(S, R, F, T);
-                })
-                .then((retval) => {
-                    assert(false, "was supposed to throw but didn't: [S,R,F,T] " + [S, R, F, T] + '=> ' + retval.toString(16));
-                })
-                .catch(expectedThrow);
-        });
-    };
-
-    testdata.purchaseReturns.forEach(purchaseTest);
-    testdata.saleReturns.forEach(saleTest);
-
-    testdata.purchaseReturnsLarge.forEach(purchaseTest);
-    testdata.saleReturnsLarge.forEach(saleTest);
-    testdata.randomPurchaseReturns.forEach(purchaseTest);
-    testdata.randomSaleReturns.forEach(saleTest);
-
-    testdata.purchaseReturnExpectedThrows.forEach(purchaseThrowTest);
-    testdata.saleReturnExpectedThrows.forEach(saleThrowTest);*/
 });
