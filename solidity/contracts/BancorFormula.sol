@@ -313,7 +313,6 @@ contract BancorFormula is IBancorFormula, Utils {
         For small values of "numerator / denominator", this sometimes yields a bad upper-bound approximation.
         We therefore cover these cases (and a few more) manually.
         This function assumes "0 < denominator < numerator < 2 ^ (256 - MIN_PRECISION)".
-        Complexity is O(log(input bit-length)).
     */
     function lnUpperBound(uint256 _numerator, uint256 _denominator) internal constant returns (uint256) {
         uint256 scaledNumerator = _numerator << MIN_PRECISION;
@@ -353,15 +352,20 @@ contract BancorFormula is IBancorFormula, Utils {
         uint256 fixedOne = ONE << _precision;
         uint256 fixedTwo = TWO << _precision;
 
+        // Here we compute the integer part of log2(x).
+        // If x >= 2, then the integer part of log2(x) > 0.
+        // We assume that x is not much greater than 2, and perform a simple bit-count.
+        // If this is not the case, then we need to use floorLog2 for better performance.
         while (_x >= fixedTwo) {
             _x >>= 1;
             hi += fixedOne;
         }
 
+        // At this point, knowing that 1 <= x < 2, we compute the fraction part of log2(x).
         for (uint8 i = 0; i < _precision; ++i) {
-            _x = (_x * _x) / fixedOne;
+            _x = (_x * _x) / fixedOne; // now 1 <= x < 4
             if (_x >= fixedTwo) {
-                _x >>= 1;
+                _x >>= 1; // now 1 <= x < 2
                 hi += ONE << (_precision - 1 - i);
             }
         }
@@ -372,7 +376,6 @@ contract BancorFormula is IBancorFormula, Utils {
     /**
         Takes a rational number "numerator / denominator" as input.
         Returns the smallest integer larger than or equal to the binary logarithm of the input.
-        Complexity is O(log(input bit-length)).
     */
     function ceilLog2(uint256 _numerator, uint256 _denominator) internal constant returns (uint256) {
         return floorLog2((_numerator - 1) / _denominator) + 1;
@@ -381,7 +384,6 @@ contract BancorFormula is IBancorFormula, Utils {
     /**
         Takes a natural number "n" as input.
         Returns the largest integer smaller than or equal to the binary logarithm of the input.
-        Complexity is O(log(input bit-length)).
     */
     function floorLog2(uint256 _n) internal constant returns (uint256) {
         uint8 t = 0;
