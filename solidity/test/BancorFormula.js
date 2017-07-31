@@ -14,7 +14,7 @@ contract('BancorFormula', () => {
     for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
 
         let maxExp         = web3.toBigNumber(constants.maxExpArray[precision]);
-        let maxNumerator   = web3.toBigNumber((1 << (256 - precision)) - 1);
+        let maxNumerator   = web3.toBigNumber(2).toPower(256 - precision).minus(1);
         let minDenominator = web3.toBigNumber(1);
 
         it('Verify function fixedExp legal input', async () => {
