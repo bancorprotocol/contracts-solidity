@@ -334,8 +334,8 @@ contract BancorFormula is IBancorFormula, Utils {
         Assumes x >= 2 ^ precision
     */
     function fixedLoge(uint256 _x, uint8 _precision) internal constant returns (uint256) {
-        uint256 log2 = fixedLog2(_x, _precision);
-        return (log2 * FLOOR_LN2_MANTISSA) >> FLOOR_LN2_EXPONENT;
+        uint256 res = fixedLog2(_x, _precision);
+        return (res * FLOOR_LN2_MANTISSA) >> FLOOR_LN2_EXPONENT;
     }
 
     /**
