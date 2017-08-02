@@ -295,8 +295,8 @@ contract BancorFormula is IBancorFormula, Utils {
 
         Ranges:
             precision   between MIN_PRECISION and MAX_PRECISION
-            numerator   between 1             and 2 ^ (256 - MAX_PRECISION) - 1
-            denominator between 1             and 2 ^ (256 - MAX_PRECISION) - 1
+            numerator   between 1             and 2 ^ (256 - MIN_PRECISION) - 1
+            denominator between 1             and 2 ^ (256 - MIN_PRECISION) - 1
             output      between 0             and floor(ln(2 ^ (256 - MAX_PRECISION) - 1) * 2 ^ MAX_PRECISION)
 
         This function asserts "0 < denominator <= numerator < 2 ^ (256 - precision)".
@@ -344,7 +344,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
         Ranges:
             precision between MIN_PRECISION     and MAX_PRECISION
-            x         between 2 ^ MIN_PRECISION and (2 ^ (256 - MAX_PRECISION) - 1) * (2 ^ MAX_PRECISION)
+            x         between 2 ^ MIN_PRECISION and (2 ^ (256 - MIN_PRECISION) - 1) * (2 ^ MIN_PRECISION)
             output    between 0                 and floor(log2(2 ^ (256 - MAX_PRECISION) - 1) * 2 ^ MAX_PRECISION)
     */
     function fixedLog2(uint256 _x, uint8 _precision) internal constant returns (uint256) {
