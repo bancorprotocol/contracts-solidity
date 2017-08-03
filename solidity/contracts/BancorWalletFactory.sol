@@ -16,7 +16,7 @@ contract IBancorChanger is ITokenChanger {
 /*
     BancorBuyer v0.2
 
-    The bancor buyer contract is a simple bancor changer wrapper that allows buying smart tokens with ETH
+    The bancor wallet contract is a simple bancor changer wrapper that allows buying and selling smart tokens with ETH and BNT
 
     WARNING: the contract will make the purchase using the current price at transaction mining time
 */
@@ -187,9 +187,10 @@ contract BancorWallet is Owned, TokenHolder {
     payable
     userOnly
     returns (uint256 amount) {
-
+        assert(bancorToken.transferFrom(msg.sender, this, _bntAmount)); // need user to approve the wallet spend bancor token
         assert(bancorToken.approve(tokenChanger, 0)); // need to reset the allowance to 0 before setting a new one
         assert(bancorToken.approve(tokenChanger, _bntAmount)); // approve the changer to use the BNT amount for the purchase
+
         uint256 returnAmount = tokenChanger.change(bancorToken, etherToken, _bntAmount, 1); // do the actual change using the current price
 
         etherToken.withdraw(returnAmount); // withdraw ETH in the reserve
@@ -209,7 +210,7 @@ contract BancorWallet is Owned, TokenHolder {
     payable
     userOnly
     returns (uint256 amount) {
-
+        assert(bancorToken.transferFrom(msg.sender, this, _bntAmount)); // need user to approve the wallet spend bancor token
         assert(bancorToken.approve(tokenChanger, 0)); // need to reset the allowance to 0 before setting a new one
         assert(bancorToken.approve(tokenChanger, _bntAmount)); // approve the changer to use the BNT amount for the purchase
         uint256 returnAmount = tokenChanger.change(bancorToken, etherToken, _bntAmount, _minReturn); // do the actual change using the _minReturn price
