@@ -276,9 +276,9 @@ def power(_baseN, _baseD, _expN, _expD, _precision):
 
     Ranges:
         precision   between MIN_PRECISION and MAX_PRECISION
-        numerator   between 1             and 2 ^ (256 - precision) - 1
-        denominator between 1             and 2 ^ (256 - precision) - 1
-        output      between 0             and floor(ln(2 ^ (256 - precision) - 1) * 2 ^ precision)
+        numerator   between 1             and 2 ^ (256 - MIN_PRECISION) - 1
+        denominator between 1             and 2 ^ (256 - MIN_PRECISION) - 1
+        output      between 0             and floor(ln(2 ^ (256 - MAX_PRECISION) - 1) * 2 ^ MAX_PRECISION)
 
     This function asserts "0 < denominator <= numerator < 2 ^ (256 - precision)".
 '''
@@ -313,17 +313,17 @@ def lnUpperBound(_numerator, _denominator):
     Assumes x >= 2 ^ precision
 '''
 def fixedLoge(_x, _precision):
-    log2 = fixedLog2(_x, _precision);
-    return (log2 * FLOOR_LN2_MANTISSA) >> FLOOR_LN2_EXPONENT;
+    res = fixedLog2(_x, _precision);
+    return (res * FLOOR_LN2_MANTISSA) >> FLOOR_LN2_EXPONENT;
 
 '''
     Returns floor(log2(x / 2 ^ precision) * 2 ^ precision)
     Assumes x >= 2 ^ precision
 
     Ranges:
-        precision between MIN_PRECISION and MAX_PRECISION
-        x         between 2 ^ precision and (2 ^ (256 - precision) - 1) * (2 ^ precision)
-        output    between 0             and floor(log2(2 ^ (256 - precision) - 1) * 2 ^ precision)
+        precision between MIN_PRECISION     and MAX_PRECISION
+        x         between 2 ^ MIN_PRECISION and (2 ^ (256 - MIN_PRECISION) - 1) * (2 ^ MIN_PRECISION)
+        output    between 0                 and floor(log2(2 ^ (256 - MAX_PRECISION) - 1) * 2 ^ MAX_PRECISION)
 '''
 def fixedLog2(_x, _precision):
     hi = 0;
