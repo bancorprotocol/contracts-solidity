@@ -12,5 +12,5 @@ print '    uint256[{}] maxExpArray;'.format(len(maxExpArray))
 print '    function BancorFormula() {'
 for precision in range(len(maxExpArray)):
     prefix = '  ' if MIN_PRECISION <= precision <= MAX_PRECISION else '//'
-    print '    {}  maxExpArray[{:3d}] = 0x{:x};'.format(prefix,precision,maxExpArray[precision])
+    print '    {}  maxExpArray[{:3d}] = 0x{:x};'.format(prefix,precision,maxExpArray[precision]<<(MAX_PRECISION-precision))
 print '    }'

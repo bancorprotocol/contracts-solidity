@@ -7,165 +7,158 @@ contract BancorFormula is IBancorFormula, Utils {
     string public version = '0.2';
 
     uint256 constant ONE = 1;
-    uint256 constant TWO = 2;
 
     uint8 constant MIN_PRECISION = 32;
     uint8 constant MAX_PRECISION = 127;
 
     /**
-        The values below depend on MIN_PRECISION. If you choose to change it:
-        Apply the same change in file 'PrintExpScalingFactors.py', run it and paste the printed results below.
+        The values below depend on MAX_PRECISION. If you choose to change it:
+        Apply the same change in file 'PrintIntScalingFactors.py', run it and paste the results below.
     */
-    uint256 constant SCALED_EXP_0P5 = 0x1a61298e1;
-    uint256 constant SCALED_VAL_0P5 = 0x80000000;
-    uint256 constant SCALED_EXP_1P0 = 0x2b7e15162;
-    uint256 constant SCALED_VAL_1P0 = 0x100000000;
-    uint256 constant SCALED_EXP_2P0 = 0x763992e35;
-    uint256 constant SCALED_VAL_2P0 = 0x200000000;
-    uint256 constant SCALED_EXP_3P0 = 0x1415e5bf6f;
-    uint256 constant SCALED_VAL_3P0 = 0x300000000;
+    uint256 constant FIXED_1 = 0x080000000000000000000000000000000;
+    uint256 constant FIXED_2 = 0x100000000000000000000000000000000;
+    uint256 constant MAX_NUM = 0x1ffffffffffffffffffffffffffffffff;
+
+    /**
+        The values below depend on MAX_PRECISION. If you choose to change it:
+        Apply the same change in file 'PrintLn2ScalingFactors.py', run it and paste the results below.
+    */
+    uint256 constant LN2_MANTISSA = 0x2c5c85fdf473de6af278ece600fcbda;
+    uint8   constant LN2_EXPONENT = 122;
 
     /**
         The values below depend on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
-        Apply the same change in file 'PrintLn2ScalingFactors.py', run it and paste the printed results below.
-    */
-    uint256 constant CEILING_LN2_MANTISSA = 0xb17217f8;
-    uint256 constant FLOOR_LN2_MANTISSA   = 0x2c5c85fdf473de6af278ece600fcbda;
-    uint8   constant FLOOR_LN2_EXPONENT   = 122;
-
-    /**
-        The values below depend on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
-        Apply the same change in file 'PrintFunctionBancorFormula.py', run it and paste the printed results below.
+        Apply the same change in file 'PrintFunctionBancorFormula.py', run it and paste the results below.
     */
     uint256[128] maxExpArray;
     function BancorFormula() {
-    //  maxExpArray[  0] = 0xc1;
-    //  maxExpArray[  1] = 0x17a;
-    //  maxExpArray[  2] = 0x2e5;
-    //  maxExpArray[  3] = 0x5ab;
-    //  maxExpArray[  4] = 0xb1b;
-    //  maxExpArray[  5] = 0x15bf;
-    //  maxExpArray[  6] = 0x2a0c;
-    //  maxExpArray[  7] = 0x50a2;
-    //  maxExpArray[  8] = 0x9aa2;
-    //  maxExpArray[  9] = 0x1288c;
-    //  maxExpArray[ 10] = 0x238b2;
-    //  maxExpArray[ 11] = 0x4429a;
-    //  maxExpArray[ 12] = 0x82b78;
-    //  maxExpArray[ 13] = 0xfaadc;
-    //  maxExpArray[ 14] = 0x1e0bb8;
-    //  maxExpArray[ 15] = 0x399e96;
-    //  maxExpArray[ 16] = 0x6e7f88;
-    //  maxExpArray[ 17] = 0xd3e7a3;
-    //  maxExpArray[ 18] = 0x1965fea;
-    //  maxExpArray[ 19] = 0x30b5057;
-    //  maxExpArray[ 20] = 0x5d681f3;
-    //  maxExpArray[ 21] = 0xb320d03;
-    //  maxExpArray[ 22] = 0x15784a40;
-    //  maxExpArray[ 23] = 0x292c5bdd;
-    //  maxExpArray[ 24] = 0x4ef57b9b;
-    //  maxExpArray[ 25] = 0x976bd995;
-    //  maxExpArray[ 26] = 0x122624e32;
-    //  maxExpArray[ 27] = 0x22ce03cd5;
-    //  maxExpArray[ 28] = 0x42beef808;
-    //  maxExpArray[ 29] = 0x7ffffffff;
-    //  maxExpArray[ 30] = 0xf577eded5;
-    //  maxExpArray[ 31] = 0x1d6bd8b2eb;
-        maxExpArray[ 32] = 0x386bfdba29;
-        maxExpArray[ 33] = 0x6c3390ecc8;
-        maxExpArray[ 34] = 0xcf8014760f;
-        maxExpArray[ 35] = 0x18ded91f0e7;
-        maxExpArray[ 36] = 0x2fb1d8fe082;
-        maxExpArray[ 37] = 0x5b771955b36;
-        maxExpArray[ 38] = 0xaf67a93bb50;
-        maxExpArray[ 39] = 0x15060c256cb2;
-        maxExpArray[ 40] = 0x285145f31ae5;
-        maxExpArray[ 41] = 0x4d5156639708;
-        maxExpArray[ 42] = 0x944620b0e70e;
-        maxExpArray[ 43] = 0x11c592761c666;
-        maxExpArray[ 44] = 0x2214d10d014ea;
-        maxExpArray[ 45] = 0x415bc6d6fb7dd;
-        maxExpArray[ 46] = 0x7d56e76777fc5;
-        maxExpArray[ 47] = 0xf05dc6b27edad;
-        maxExpArray[ 48] = 0x1ccf4b44bb4820;
-        maxExpArray[ 49] = 0x373fc456c53bb7;
-        maxExpArray[ 50] = 0x69f3d1c921891c;
-        maxExpArray[ 51] = 0xcb2ff529eb71e4;
-        maxExpArray[ 52] = 0x185a82b87b72e95;
-        maxExpArray[ 53] = 0x2eb40f9f620fda6;
-        maxExpArray[ 54] = 0x5990681d961a1ea;
-        maxExpArray[ 55] = 0xabc25204e02828d;
-        maxExpArray[ 56] = 0x14962dee9dc97640;
-        maxExpArray[ 57] = 0x277abdcdab07d5a7;
-        maxExpArray[ 58] = 0x4bb5ecca963d54ab;
-        maxExpArray[ 59] = 0x9131271922eaa606;
-        maxExpArray[ 60] = 0x116701e6ab0cd188d;
-        maxExpArray[ 61] = 0x215f77c045fbe8856;
-        maxExpArray[ 62] = 0x3ffffffffffffffff;
-        maxExpArray[ 63] = 0x7abbf6f6abb9d087f;
-        maxExpArray[ 64] = 0xeb5ec597592befbf4;
-        maxExpArray[ 65] = 0x1c35fedd14b861eb04;
-        maxExpArray[ 66] = 0x3619c87664579bc94a;
-        maxExpArray[ 67] = 0x67c00a3b07ffc01fd6;
-        maxExpArray[ 68] = 0xc6f6c8f8739773a7a4;
-        maxExpArray[ 69] = 0x17d8ec7f04136f4e561;
-        maxExpArray[ 70] = 0x2dbb8caad9b7097b91a;
-        maxExpArray[ 71] = 0x57b3d49dda84556d6f6;
-        maxExpArray[ 72] = 0xa830612b6591d9d9e61;
-        maxExpArray[ 73] = 0x1428a2f98d728ae223dd;
-        maxExpArray[ 74] = 0x26a8ab31cb8464ed99e1;
-        maxExpArray[ 75] = 0x4a23105873875bd52dfd;
-        maxExpArray[ 76] = 0x8e2c93b0e33355320ead;
-        maxExpArray[ 77] = 0x110a688680a7530515f3e;
-        maxExpArray[ 78] = 0x20ade36b7dbeeb8d79659;
-        maxExpArray[ 79] = 0x3eab73b3bbfe282243ce1;
-        maxExpArray[ 80] = 0x782ee3593f6d69831c453;
-        maxExpArray[ 81] = 0xe67a5a25da41063de1495;
-        maxExpArray[ 82] = 0x1b9fe22b629ddbbcdf8754;
-        maxExpArray[ 83] = 0x34f9e8e490c48e67e6ab8b;
-        maxExpArray[ 84] = 0x6597fa94f5b8f20ac16666;
-        maxExpArray[ 85] = 0xc2d415c3db974ab32a5184;
-        maxExpArray[ 86] = 0x175a07cfb107ed35ab61430;
-        maxExpArray[ 87] = 0x2cc8340ecb0d0f520a6af58;
-        maxExpArray[ 88] = 0x55e129027014146b9e37405;
-        maxExpArray[ 89] = 0xa4b16f74ee4bb2040a1ec6c;
-        maxExpArray[ 90] = 0x13bd5ee6d583ead3bd636b5c;
-        maxExpArray[ 91] = 0x25daf6654b1eaa55fd64df5e;
-        maxExpArray[ 92] = 0x4898938c9175530325b9d116;
-        maxExpArray[ 93] = 0x8b380f3558668c46c91c49a2;
-        maxExpArray[ 94] = 0x10afbbe022fdf442b2a522507;
-        maxExpArray[ 95] = 0x1ffffffffffffffffffffffff;
-        maxExpArray[ 96] = 0x3d5dfb7b55dce843f89a7dbcb;
-        maxExpArray[ 97] = 0x75af62cbac95f7dfa3295ec26;
-        maxExpArray[ 98] = 0xe1aff6e8a5c30f58221fbf899;
-        maxExpArray[ 99] = 0x1b0ce43b322bcde4a56e8ada5a;
-        maxExpArray[100] = 0x33e0051d83ffe00feb432b473b;
-        maxExpArray[101] = 0x637b647c39cbb9d3d26c56e949;
-        maxExpArray[102] = 0xbec763f8209b7a72b0afea0d31;
-        maxExpArray[103] = 0x16ddc6556cdb84bdc8d12d22e6f;
-        maxExpArray[104] = 0x2bd9ea4eed422ab6b7b072b029e;
-        maxExpArray[105] = 0x54183095b2c8ececf30dd533d03;
-        maxExpArray[106] = 0xa14517cc6b9457111eed5b8adf1;
-        maxExpArray[107] = 0x13545598e5c23276ccf0ede68034;
-        maxExpArray[108] = 0x2511882c39c3adea96fec2102329;
-        maxExpArray[109] = 0x471649d87199aa990756806903c5;
-        maxExpArray[110] = 0x88534434053a9828af9f37367ee6;
-        maxExpArray[111] = 0x1056f1b5bedf75c6bcb2ce8aed428;
-        maxExpArray[112] = 0x1f55b9d9ddff141121e70ebe0104e;
-        maxExpArray[113] = 0x3c1771ac9fb6b4c18e229803dae82;
-        maxExpArray[114] = 0x733d2d12ed20831ef0a4aead8c66d;
-        maxExpArray[115] = 0xdcff115b14eedde6fc3aa5353f2e4;
-        maxExpArray[116] = 0x1a7cf47248624733f355c5c1f0d1f1;
-        maxExpArray[117] = 0x32cbfd4a7adc790560b3335687b89b;
-        maxExpArray[118] = 0x616a0ae1edcba5599528c20605b3f6;
-        maxExpArray[119] = 0xbad03e7d883f69ad5b0a186184e06b;
-        maxExpArray[120] = 0x16641a07658687a905357ac0ebe198b;
-        maxExpArray[121] = 0x2af09481380a0a35cf1ba02f36c6a56;
-        maxExpArray[122] = 0x5258b7ba7725d902050f6360afddf96;
-        maxExpArray[123] = 0x9deaf736ac1f569deb1b5ae3f36c130;
-        maxExpArray[124] = 0x12ed7b32a58f552afeb26faf21deca06;
-        maxExpArray[125] = 0x244c49c648baa98192dce88b42f53caf;
-        maxExpArray[126] = 0x459c079aac334623648e24d17c74b3dc;
+    //  maxExpArray[  0] = 0x6080000000000000000000000000000000;
+    //  maxExpArray[  1] = 0x5e80000000000000000000000000000000;
+    //  maxExpArray[  2] = 0x5ca0000000000000000000000000000000;
+    //  maxExpArray[  3] = 0x5ab0000000000000000000000000000000;
+    //  maxExpArray[  4] = 0x58d8000000000000000000000000000000;
+    //  maxExpArray[  5] = 0x56fc000000000000000000000000000000;
+    //  maxExpArray[  6] = 0x5418000000000000000000000000000000;
+    //  maxExpArray[  7] = 0x50a2000000000000000000000000000000;
+    //  maxExpArray[  8] = 0x4d51000000000000000000000000000000;
+    //  maxExpArray[  9] = 0x4a23000000000000000000000000000000;
+    //  maxExpArray[ 10] = 0x4716400000000000000000000000000000;
+    //  maxExpArray[ 11] = 0x4429a00000000000000000000000000000;
+    //  maxExpArray[ 12] = 0x415bc00000000000000000000000000000;
+    //  maxExpArray[ 13] = 0x3eab700000000000000000000000000000;
+    //  maxExpArray[ 14] = 0x3c17700000000000000000000000000000;
+    //  maxExpArray[ 15] = 0x399e960000000000000000000000000000;
+    //  maxExpArray[ 16] = 0x373fc40000000000000000000000000000;
+    //  maxExpArray[ 17] = 0x34f9e8c000000000000000000000000000;
+    //  maxExpArray[ 18] = 0x32cbfd4000000000000000000000000000;
+    //  maxExpArray[ 19] = 0x30b5057000000000000000000000000000;
+    //  maxExpArray[ 20] = 0x2eb40f9800000000000000000000000000;
+    //  maxExpArray[ 21] = 0x2cc8340c00000000000000000000000000;
+    //  maxExpArray[ 22] = 0x2af0948000000000000000000000000000;
+    //  maxExpArray[ 23] = 0x292c5bdd00000000000000000000000000;
+    //  maxExpArray[ 24] = 0x277abdcd80000000000000000000000000;
+    //  maxExpArray[ 25] = 0x25daf66540000000000000000000000000;
+    //  maxExpArray[ 26] = 0x244c49c640000000000000000000000000;
+    //  maxExpArray[ 27] = 0x22ce03cd50000000000000000000000000;
+    //  maxExpArray[ 28] = 0x215f77c040000000000000000000000000;
+    //  maxExpArray[ 29] = 0x1ffffffffc000000000000000000000000;
+    //  maxExpArray[ 30] = 0x1eaefdbdaa000000000000000000000000;
+    //  maxExpArray[ 31] = 0x1d6bd8b2eb000000000000000000000000;
+        maxExpArray[ 32] = 0x1c35fedd14800000000000000000000000;
+        maxExpArray[ 33] = 0x1b0ce43b32000000000000000000000000;
+        maxExpArray[ 34] = 0x19f0028ec1e00000000000000000000000;
+        maxExpArray[ 35] = 0x18ded91f0e700000000000000000000000;
+        maxExpArray[ 36] = 0x17d8ec7f04100000000000000000000000;
+        maxExpArray[ 37] = 0x16ddc6556cd80000000000000000000000;
+        maxExpArray[ 38] = 0x15ecf52776a00000000000000000000000;
+        maxExpArray[ 39] = 0x15060c256cb20000000000000000000000;
+        maxExpArray[ 40] = 0x1428a2f98d728000000000000000000000;
+        maxExpArray[ 41] = 0x13545598e5c20000000000000000000000;
+        maxExpArray[ 42] = 0x1288c4161ce1c000000000000000000000;
+        maxExpArray[ 43] = 0x11c592761c666000000000000000000000;
+        maxExpArray[ 44] = 0x110a688680a75000000000000000000000;
+        maxExpArray[ 45] = 0x1056f1b5bedf7400000000000000000000;
+        maxExpArray[ 46] = 0xfaadceceeff8a00000000000000000000;
+        maxExpArray[ 47] = 0xf05dc6b27edad00000000000000000000;
+        maxExpArray[ 48] = 0xe67a5a25da41000000000000000000000;
+        maxExpArray[ 49] = 0xdcff115b14eedc0000000000000000000;
+        maxExpArray[ 50] = 0xd3e7a3924312380000000000000000000;
+        maxExpArray[ 51] = 0xcb2ff529eb71e40000000000000000000;
+        maxExpArray[ 52] = 0xc2d415c3db974a8000000000000000000;
+        maxExpArray[ 53] = 0xbad03e7d883f698000000000000000000;
+        maxExpArray[ 54] = 0xb320d03b2c343d4000000000000000000;
+        maxExpArray[ 55] = 0xabc25204e02828d000000000000000000;
+        maxExpArray[ 56] = 0xa4b16f74ee4bb20000000000000000000;
+        maxExpArray[ 57] = 0x9deaf736ac1f569c00000000000000000;
+        maxExpArray[ 58] = 0x976bd9952c7aa95600000000000000000;
+        maxExpArray[ 59] = 0x9131271922eaa60600000000000000000;
+        maxExpArray[ 60] = 0x8b380f3558668c4680000000000000000;
+        maxExpArray[ 61] = 0x857ddf0117efa21580000000000000000;
+        maxExpArray[ 62] = 0x7fffffffffffffffe0000000000000000;
+        maxExpArray[ 63] = 0x7abbf6f6abb9d087f0000000000000000;
+        maxExpArray[ 64] = 0x75af62cbac95f7dfa0000000000000000;
+        maxExpArray[ 65] = 0x70d7fb7452e187ac10000000000000000;
+        maxExpArray[ 66] = 0x6c3390ecc8af379294000000000000000;
+        maxExpArray[ 67] = 0x67c00a3b07ffc01fd6000000000000000;
+        maxExpArray[ 68] = 0x637b647c39cbb9d3d2000000000000000;
+        maxExpArray[ 69] = 0x5f63b1fc104dbd3958400000000000000;
+        maxExpArray[ 70] = 0x5b771955b36e12f723400000000000000;
+        maxExpArray[ 71] = 0x57b3d49dda84556d6f600000000000000;
+        maxExpArray[ 72] = 0x54183095b2c8ececf3080000000000000;
+        maxExpArray[ 73] = 0x50a28be635ca2b888f740000000000000;
+        maxExpArray[ 74] = 0x4d5156639708c9db33c20000000000000;
+        maxExpArray[ 75] = 0x4a23105873875bd52dfd0000000000000;
+        maxExpArray[ 76] = 0x471649d87199aa9907568000000000000;
+        maxExpArray[ 77] = 0x4429a21a029d4c1457cf8000000000000;
+        maxExpArray[ 78] = 0x415bc6d6fb7dd71af2cb2000000000000;
+        maxExpArray[ 79] = 0x3eab73b3bbfe282243ce1000000000000;
+        maxExpArray[ 80] = 0x3c1771ac9fb6b4c18e229800000000000;
+        maxExpArray[ 81] = 0x399e96897690418f78525400000000000;
+        maxExpArray[ 82] = 0x373fc456c53bb779bf0ea800000000000;
+        maxExpArray[ 83] = 0x34f9e8e490c48e67e6ab8b00000000000;
+        maxExpArray[ 84] = 0x32cbfd4a7adc790560b33300000000000;
+        maxExpArray[ 85] = 0x30b50570f6e5d2acca946100000000000;
+        maxExpArray[ 86] = 0x2eb40f9f620fda6b56c28600000000000;
+        maxExpArray[ 87] = 0x2cc8340ecb0d0f520a6af580000000000;
+        maxExpArray[ 88] = 0x2af09481380a0a35cf1ba028000000000;
+        maxExpArray[ 89] = 0x292c5bdd3b92ec810287b1b0000000000;
+        maxExpArray[ 90] = 0x277abdcdab07d5a77ac6d6b8000000000;
+        maxExpArray[ 91] = 0x25daf6654b1eaa55fd64df5e000000000;
+        maxExpArray[ 92] = 0x244c49c648baa98192dce88b000000000;
+        maxExpArray[ 93] = 0x22ce03cd5619a311b2471268800000000;
+        maxExpArray[ 94] = 0x215f77c045fbe885654a44a0e00000000;
+        maxExpArray[ 95] = 0x1ffffffffffffffffffffffff00000000;
+        maxExpArray[ 96] = 0x1eaefdbdaaee7421fc4d3ede580000000;
+        maxExpArray[ 97] = 0x1d6bd8b2eb257df7e8ca57b0980000000;
+        maxExpArray[ 98] = 0x1c35fedd14b861eb0443f7f1320000000;
+        maxExpArray[ 99] = 0x1b0ce43b322bcde4a56e8ada5a0000000;
+        maxExpArray[100] = 0x19f0028ec1fff007f5a195a39d8000000;
+        maxExpArray[101] = 0x18ded91f0e72ee74f49b15ba524000000;
+        maxExpArray[102] = 0x17d8ec7f04136f4e5615fd41a62000000;
+        maxExpArray[103] = 0x16ddc6556cdb84bdc8d12d22e6f000000;
+        maxExpArray[104] = 0x15ecf52776a1155b5bd8395814f000000;
+        maxExpArray[105] = 0x15060c256cb23b3b3cc3754cf40c00000;
+        maxExpArray[106] = 0x1428a2f98d728ae223ddab715be200000;
+        maxExpArray[107] = 0x13545598e5c23276ccf0ede6803400000;
+        maxExpArray[108] = 0x1288c4161ce1d6f54b7f6108119480000;
+        maxExpArray[109] = 0x11c592761c666aa641d5a01a40f140000;
+        maxExpArray[110] = 0x110a688680a7530515f3e6e6cfdcc0000;
+        maxExpArray[111] = 0x1056f1b5bedf75c6bcb2ce8aed4280000;
+        maxExpArray[112] = 0xfaadceceeff8a0890f3875f008270000;
+        maxExpArray[113] = 0xf05dc6b27edad306388a600f6ba08000;
+        maxExpArray[114] = 0xe67a5a25da41063de1495d5b18cda000;
+        maxExpArray[115] = 0xdcff115b14eedde6fc3aa5353f2e4000;
+        maxExpArray[116] = 0xd3e7a3924312399f9aae2e0f868f8800;
+        maxExpArray[117] = 0xcb2ff529eb71e41582cccd5a1ee26c00;
+        maxExpArray[118] = 0xc2d415c3db974ab32a51840c0b67ec00;
+        maxExpArray[119] = 0xbad03e7d883f69ad5b0a186184e06b00;
+        maxExpArray[120] = 0xb320d03b2c343d4829abd6075f0cc580;
+        maxExpArray[121] = 0xabc25204e02828d73c6e80bcdb1a9580;
+        maxExpArray[122] = 0xa4b16f74ee4bb2040a1ec6c15fbbf2c0;
+        maxExpArray[123] = 0x9deaf736ac1f569deb1b5ae3f36c1300;
+        maxExpArray[124] = 0x976bd9952c7aa957f5937d790ef65030;
+        maxExpArray[125] = 0x9131271922eaa6064b73a22d0bd4f2bc;
+        maxExpArray[126] = 0x8b380f3558668c46c91c49a2f8e967b8;
         maxExpArray[127] = 0x6ae67b5f2f528d5f3189036ee0f27453;
     }
 
@@ -199,9 +192,8 @@ contract BancorFormula is IBancorFormula, Utils {
             return safeSub(temp, _supply);
         }
 
-        uint8 precision = calculateBestPrecision(baseN, _reserveBalance, _reserveRatio, 100);
-        uint256 resN = power(baseN, _reserveBalance, _reserveRatio, 100, precision);
-        temp = safeMul(_supply, resN) >> precision;
+        var(result, precision) = power(baseN, _reserveBalance, _reserveRatio, 100);
+        temp = safeMul(_supply, result) >> precision;
         return safeSub(temp, _supply);
      }
 
@@ -241,179 +233,95 @@ contract BancorFormula is IBancorFormula, Utils {
         if (_sellAmount == _supply)
             return _reserveBalance;
 
-        uint8 precision = calculateBestPrecision(_supply, baseD, 100, _reserveRatio);
-        uint256 resN = power(_supply, baseD, 100, _reserveRatio, precision);
-        temp1 = safeMul(_reserveBalance, resN);
+        var(result, precision) = power(_supply, baseD, 100, _reserveRatio);
+        temp1 = safeMul(_reserveBalance, result);
         temp2 = safeMul(_reserveBalance, ONE << precision);
-        return safeSub(temp1, temp2) / resN;
+        return safeSub(temp1, temp2) / result;
     }
 
     /**
-        Predicts the highest precision which can be used in order to compute "base ^ exp" without exceeding 256 bits in any of the intermediate computations.
-        Instead of calculating "base ^ exp", we calculate "e ^ (ln(base) * exp)".
-        The value of "ln(base)" is represented with an integer slightly smaller than "ln(base) * 2 ^ precision".
-        The larger "precision" is, the more accurately this value represents the real value.
-        However, the larger "precision" is, the more bits are required in order to store this value.
-        And the exponentiation function, which takes "x" and calculates "e ^ x", is limited to a maximum exponent (maximum value of "x").
-        This maximum exponent depends on the precision used ("maxExpArray" maps each precision between 0 and 127 to its maximum exponent).
-        Hence before calling the exponentiation function, we need to determine the highest precision which can be used.
-        We do this by estimating an upper-bound for "ln(base) * exp", and then choosing the highest precision which this value is permitted for.
-        Of course, we should later assert that the actual value representing "ln(base) * exp" is indeed not larger than the maximum exponent of the chosen precision.
-        We can bring accuracy to a maximum by replacing "lnUpperBound(_baseN, _baseD)" with "ln(_baseN, _baseD, MIN_PRECISION) + 1".
-        This, however, will impact performance, so we will need to establish a more efficient (less accurate) implementation of "ln".
-        Note that the outcome of this function only affects the accuracy of the computation of "base ^ exp".
-        Therefore, we do not need to assert that no intermediate result exceeds 256 bits (nor in this function, neither in any of the functions down the calling tree).
+        General Description:
+            Determine a value of precision.
+            Calculate an integer approximation of (_baseN / _baseD) ^ (_expN / _expD) * 2 ^ precision.
+            Return the result along with the precision used.
+        Detailed Description:
+            Instead of calculating "base ^ exp", we calculate "e ^ (ln(base) * exp)".
+            The value of "ln(base)" is represented with an integer slightly smaller than "ln(base) * 2 ^ precision".
+            The larger "precision" is, the more accurately this value represents the real value.
+            However, the larger "precision" is, the more bits are required in order to store this value.
+            And the exponentiation function, which takes "x" and calculates "e ^ x", is limited to a maximum exponent (maximum value of "x").
+            This maximum exponent depends on the precision used ("maxExpArray" maps each precision between 0 and 127 to its maximum exponent).
+            Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
+            This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
     */
-    function calculateBestPrecision(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) internal constant returns (uint8) {
-        uint256 maxVal = lnUpperBound(_baseN, _baseD) * _expN;
+    function power(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) internal constant returns (uint256, uint8) {
+        uint256 maxExp = safeMul(ln(_baseN, _baseD), _expN) / _expD;
+        uint8 precision = findPositionInMaxExpArray(maxExp);
+        return (fixedExp(maxExp >> (MAX_PRECISION - precision), precision), precision);
+    }
+
+    /**
+        Return floor(ln(numerator / denominator) * 2 ^ MAX_PRECISION), where:
+        - The numerator   is a value between 1 and 2 ^ (256 - MAX_PRECISION) - 1
+        - The denominator is a value between 1 and 2 ^ (256 - MAX_PRECISION) - 1
+        - The output      is a value between 0 and floor(ln(2 ^ (256 - MAX_PRECISION) - 1) * 2 ^ MAX_PRECISION)
+        This functions asserts that the numerator is larger than or equal to the denominator, because the output would be negative otherwise.
+    */
+    function ln(uint256 _numerator, uint256 _denominator) internal constant returns (uint256) {
+        assert(1 <= _denominator && _denominator <= _numerator && _numerator <= MAX_NUM);
+
+        uint256 res = 0;
+        uint256 x = (_numerator * FIXED_1) / _denominator;
+
+        // If x >= 2, then we compute the integer part of log2(x), which is larger than 0.
+        if (x >= FIXED_2) {
+            uint256 count = floorLog2(x / FIXED_1);
+            x >>= count; // now x < 2
+            res = count * FIXED_1;
+        }
+
+        // If x > 1, then we compute the fraction part of log2(x), which is larger than 0.
+        if (x > FIXED_1) {
+            for (uint8 i = MAX_PRECISION; i > 0; --i) {
+                x = (x * x) / FIXED_1; // now 1 < x < 4
+                if (x >= FIXED_2) {
+                    x >>= 1; // now 1 < x < 2
+                    res += ONE << (i - 1);
+                }
+            }
+        }
+
+        return (res * LN2_MANTISSA) >> LN2_EXPONENT;
+    }
+
+    /**
+        The global "maxExpArray" is sorted in descending order, and therefore the following statements are equivalent:
+        - This function finds the position of [the smallest value in "maxExpArray" larger than or equal to "maxExp"]
+        - This function finds the highest position of [a value in "maxExpArray" larger than or equal to "maxExp"]
+    */
+    function findPositionInMaxExpArray(uint256 maxExp) internal constant returns (uint8) {
         uint8 lo = MIN_PRECISION;
         uint8 hi = MAX_PRECISION;
         while (lo + 1 < hi) {
             uint8 mid = (lo + hi) / 2;
-            if ((maxVal << (mid - MIN_PRECISION)) / _expD <= maxExpArray[mid])
+            if (maxExpArray[mid] >= maxExp)
                 lo = mid;
             else
                 hi = mid;
         }
-        if ((maxVal << (hi - MIN_PRECISION)) / _expD <= maxExpArray[hi])
+        if (maxExpArray[hi] >= maxExp)
             return hi;
         else
             return lo;
     }
 
     /**
-        Calculates an integer approximation of "(_baseN / _baseD) ^ (_expN / _expD) * 2 ^ _precision".
-        This method is overflow-safe.
-    */
-    function power(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD, uint8 _precision) internal constant returns (uint256) {
-        uint256 logbase = ln(_baseN, _baseD, _precision);
-        return fixedExp(safeMul(logbase, _expN) / _expD, _precision);
-    }
-
-    /**
-        Returns floor(ln(numerator / denominator) * 2 ^ precision)
-
-        Ranges:
-            precision   between MIN_PRECISION and MAX_PRECISION
-            numerator   between 1             and 2 ^ (256 - MIN_PRECISION) - 1
-            denominator between 1             and 2 ^ (256 - MIN_PRECISION) - 1
-            output      between 0             and floor(ln(2 ^ (256 - MAX_PRECISION) - 1) * 2 ^ MAX_PRECISION)
-
-        This function asserts "0 < denominator <= numerator < 2 ^ (256 - precision)".
-    */
-    function ln(uint256 _numerator, uint256 _denominator, uint8 _precision) internal constant returns (uint256) {
-        assert(0 < _denominator && _denominator <= _numerator && _numerator < (ONE << (256 - _precision)));
-        return fixedLoge( (_numerator << _precision) / _denominator, _precision);
-    }
-
-    /**
-        Takes a rational number "numerator / denominator" as input.
-        Returns an integer upper-bound of the natural logarithm of the input scaled by "2 ^ MIN_PRECISION".
-        We do this by calculating "Ceiling(log2(numerator / denominator)) * Ceiling(ln(2) * 2 ^ MIN_PRECISION)".
-        For small values of "numerator / denominator", this sometimes yields a bad upper-bound approximation.
-        We therefore cover these cases (and a few more) manually.
-        This function assumes "0 < denominator < numerator < 2 ^ (256 - MIN_PRECISION)".
-    */
-    function lnUpperBound(uint256 _numerator, uint256 _denominator) internal constant returns (uint256) {
-        uint256 scaledNumerator = _numerator << MIN_PRECISION;
-
-        if (scaledNumerator <= _denominator * SCALED_EXP_0P5) // _numerator / _denominator < e^0.5
-            return SCALED_VAL_0P5;
-        if (scaledNumerator <= _denominator * SCALED_EXP_1P0) // _numerator / _denominator < e^1.0
-            return SCALED_VAL_1P0;
-        if (scaledNumerator <= _denominator * SCALED_EXP_2P0) // _numerator / _denominator < e^2.0
-            return SCALED_VAL_2P0;
-        if (scaledNumerator <= _denominator * SCALED_EXP_3P0) // _numerator / _denominator < e^3.0
-            return SCALED_VAL_3P0;
-
-        return ceilLog2(_numerator, _denominator) * CEILING_LN2_MANTISSA;
-    }
-
-    /**
-        Returns floor(ln(x / 2 ^ precision) * 2 ^ precision)
-        Assumes x >= 2 ^ precision
-    */
-    function fixedLoge(uint256 _x, uint8 _precision) internal constant returns (uint256) {
-        uint256 res = fixedLog2(_x, _precision);
-        return (res * FLOOR_LN2_MANTISSA) >> FLOOR_LN2_EXPONENT;
-    }
-
-    /**
-        Returns floor(log2(x / 2 ^ precision) * 2 ^ precision)
-        Assumes x >= 2 ^ precision
-
-        Ranges:
-            precision between MIN_PRECISION     and MAX_PRECISION
-            x         between 2 ^ MIN_PRECISION and (2 ^ (256 - MIN_PRECISION) - 1) * (2 ^ MIN_PRECISION)
-            output    between 0                 and floor(log2(2 ^ (256 - MAX_PRECISION) - 1) * 2 ^ MAX_PRECISION)
-    */
-    function fixedLog2(uint256 _x, uint8 _precision) internal constant returns (uint256) {
-        uint256 hi = 0;
-        uint256 fixedOne = ONE << _precision;
-        uint256 fixedTwo = TWO << _precision;
-
-        // Here we compute the integer part of log2(x).
-        // If x >= 2, then the integer part of log2(x) > 0.
-        // We assume that x is not much greater than 2, and perform a simple bit-count.
-        // If this is not the case, then we need to use floorLog2 for better performance.
-        while (_x >= fixedTwo) {
-            _x >>= 1;
-            hi += fixedOne;
-        }
-
-        // At this point, knowing that 1 <= x < 2, we compute the fraction part of log2(x).
-        for (uint8 i = 0; i < _precision; ++i) {
-            _x = (_x * _x) / fixedOne; // now 1 <= x < 4
-            if (_x >= fixedTwo) {
-                _x >>= 1; // now 1 <= x < 2
-                hi += ONE << (_precision - 1 - i);
-            }
-        }
-
-        return hi;
-    }
-
-    /**
-        Takes a rational number "numerator / denominator" as input.
-        Returns the smallest integer larger than or equal to the binary logarithm of the input.
-    */
-    function ceilLog2(uint256 _numerator, uint256 _denominator) internal constant returns (uint256) {
-        return floorLog2((_numerator - 1) / _denominator) + 1;
-    }
-
-    /**
-        Takes a natural number "n" as input.
-        Returns the largest integer smaller than or equal to the binary logarithm of the input.
-    */
-    function floorLog2(uint256 _n) internal constant returns (uint256) {
-        uint8 t = 0;
-        for (uint8 s = 128; s > 0; s >>= 1) {
-            if (_n >= (ONE << s)) {
-                _n >>= s;
-                t |= s;
-            }
-        }
-
-        return t;
-    }
-
-    /**
-        fixedExp is a 'protected' version of fixedExpUnsafe, which asserts instead of overflows.
-        The maximum value which can be passed to fixedExpUnsafe depends on the precision used.
-        The global maxExpArray maps each precision between 0 and 127 to the maximum value permitted.
-    */
-    function fixedExp(uint256 _x, uint8 _precision) internal constant returns (uint256) {
-        assert(_x <= maxExpArray[_precision]);
-        return fixedExpUnsafe(_x, _precision);
-    }
-
-    /**
-        This function can be auto-generated by the script 'PrintFunctionFixedExpUnsafe.py'.
+        This function can be auto-generated by the script 'PrintFunctionFixedExp.py'.
         It approximates "e ^ x" via maclauren summation: "(x^0)/0! + (x^1)/1! + ... + (x^n)/n!".
         It returns "e ^ (x >> precision) << precision", that is, the result is upshifted for accuracy.
-        The maximum permitted value for _x depends on the value of _precision (see maxExpArray).
+        The maximum permitted value for "x" depends on the value of "precision" (see "maxExpArray").
     */
-    function fixedExpUnsafe(uint256 _x, uint8 _precision) internal constant returns (uint256) {
+    function fixedExp(uint256 _x, uint8 _precision) internal constant returns (uint256) {
         uint256 xi = _x;
         uint256 res = uint256(0xde1bc4d19efcac82445da75b00000000) << _precision;
 
@@ -484,5 +392,31 @@ contract BancorFormula is IBancorFormula, Utils {
         res += xi * 0x22;
 
         return res / 0xde1bc4d19efcac82445da75b00000000;
+    }
+
+    /**
+        Compute the largest integer smaller than or equal to the binary logarithm of the input.
+    */
+    function floorLog2(uint256 _n) internal constant returns (uint256) {
+        uint8 res = 0;
+
+        if (_n < 256) {
+            // At most 8 iterations
+            while (_n > 1) {
+                _n >>= 1;
+                res += 1;
+            }
+        }
+        else {
+            // Exactly 8 iterations
+            for (uint8 s = 128; s > 0; s >>= 1) {
+                if (_n >= (ONE << s)) {
+                    _n >>= s;
+                    res |= s;
+                }
+            }
+        }
+
+        return res;
     }
 }
