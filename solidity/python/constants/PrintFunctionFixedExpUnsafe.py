@@ -1,7 +1,7 @@
 from common import coefficients
 
 
-print '    function fixedExpUnsafe(uint256 _x, uint8 _precision) constant returns (uint256) {'
+print '    function fixedExpUnsafe(uint256 _x, uint8 _precision) internal constant returns (uint256) {'
 print '        uint256 xi = _x;'
 print '        uint256 res = uint256(0x{:x}) << _precision;\n'.format(coefficients[0])
 for coefficient in coefficients[1:-1]:
