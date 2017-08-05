@@ -15,8 +15,8 @@ def getMaxValArray(maxExpArray):
 
 
 def binarySearch(func,args):
-    lo = 1
-    hi = 1 << 256
+    lo = 0
+    hi = (1<<256)-1
     while lo+1 < hi:
         mid = (lo+hi)/2
         try:
