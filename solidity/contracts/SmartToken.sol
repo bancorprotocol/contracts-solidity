@@ -78,7 +78,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
         @param _from       account to remove the amount from
         @param _amount     amount to decrease the supply by
     */
-    function destroy(address _from, uint256 _amount) public ownerOnly {
+    function destroy(address _from, uint256 _amount) public {
         require(msg.sender == _from || msg.sender == owner); // validate input
 
         balanceOf[_from] = safeSub(balanceOf[_from], _amount);
