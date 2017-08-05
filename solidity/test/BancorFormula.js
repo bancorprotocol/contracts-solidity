@@ -60,13 +60,12 @@ contract('BancorFormula', () => {
 
         it('Verify function fixedExp legal input', async () => {
             let retVal = await formula.testFixedExp.call(maxExp, precision);
-            assert.equal(retVal.toString(16), maxVal.toString(16), `Result of function fixedExp(${maxExp}, ${precision}) is wrong`);
+            assert(retVal.equals(maxVal), `Result of function fixedExp(${maxExp}, ${precision}) is wrong`);
         });
 
         it('Verify function fixedExp illegal input', async () => {
-            let retVal0 = await formula.testFixedExp.call(maxExp.plus(0), precision);
-            let retVal1 = await formula.testFixedExp.call(maxExp.plus(1), precision);
-            assert(retVal0.greaterThan(retVal1), `Results of function fixedExp(...) indicate that maxExpArray[${precision}] is wrong`);
+            let retVal = await formula.testFixedExp.call(maxExp.plus(1), precision);
+            assert(retVal.lessThan(maxVal), `Result of function fixedExp(${maxExp.plus(1)}, ${precision}) indicates that maxExpArray[${precision}] is wrong`);
         });
     }
 });
