@@ -17,7 +17,6 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     uint256 constant FIXED_1 = 0x080000000000000000000000000000000;
     uint256 constant FIXED_2 = 0x100000000000000000000000000000000;
-    uint256 constant MAX_NUM = 0x1ffffffffffffffffffffffffffffffff;
 
     /**
         The values below depend on MAX_PRECISION. If you choose to change it:
@@ -265,13 +264,11 @@ contract BancorFormula is IBancorFormula, Utils {
         - The numerator   is a value between 1 and 2 ^ (256 - MAX_PRECISION) - 1
         - The denominator is a value between 1 and 2 ^ (256 - MAX_PRECISION) - 1
         - The output      is a value between 0 and floor(ln(2 ^ (256 - MAX_PRECISION) - 1) * 2 ^ MAX_PRECISION)
-        This functions asserts that the numerator is larger than or equal to the denominator, because the output would be negative otherwise.
+        This functions assumes that the numerator is larger than or equal to the denominator, because the output would be negative otherwise.
     */
     function ln(uint256 _numerator, uint256 _denominator) internal constant returns (uint256) {
-        assert(1 <= _denominator && _denominator <= _numerator && _numerator <= MAX_NUM);
-
         uint256 res = 0;
-        uint256 x = (_numerator * FIXED_1) / _denominator;
+        uint256 x = safeMul(_numerator, FIXED_1) / _denominator;
 
         // If x >= 2, then we compute the integer part of log2(x), which is larger than 0.
         if (x >= FIXED_2) {

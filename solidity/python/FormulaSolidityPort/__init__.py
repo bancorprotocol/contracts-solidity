@@ -9,7 +9,6 @@ MAX_PRECISION = 127;
 '''
 FIXED_1 = 0x080000000000000000000000000000000;
 FIXED_2 = 0x100000000000000000000000000000000;
-MAX_NUM = 0x1ffffffffffffffffffffffffffffffff;
 
 '''
     The values below depend on MAX_PRECISION. If you choose to change it:
@@ -248,13 +247,11 @@ def power(_baseN, _baseD, _expN, _expD):
     - The numerator   is a value between 1 and 2 ^ (256 - MAX_PRECISION) - 1
     - The denominator is a value between 1 and 2 ^ (256 - MAX_PRECISION) - 1
     - The output      is a value between 0 and floor(ln(2 ^ (256 - MAX_PRECISION) - 1) * 2 ^ MAX_PRECISION)
-    This functions asserts that the numerator is larger than or equal to the denominator, because the output would be negative otherwise.
+    This functions assumes that the numerator is larger than or equal to the denominator, because the output would be negative otherwise.
 '''
 def ln(_numerator, _denominator):
-    assert(1 <= _denominator and _denominator <= _numerator and _numerator <= MAX_NUM);
-
     res = 0;
-    x = (_numerator * FIXED_1) / _denominator;
+    x = safeMul(_numerator, FIXED_1) / _denominator;
 
     # If x >= 2, then we compute the integer part of log2(x), which is larger than 0.
     if (x >= FIXED_2):
