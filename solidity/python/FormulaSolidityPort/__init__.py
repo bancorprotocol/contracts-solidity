@@ -277,16 +277,19 @@ def ln(_numerator, _denominator):
 def findPositionInMaxExpArray(_x):
     lo = MIN_PRECISION;
     hi = MAX_PRECISION;
+
     while (lo + 1 < hi):
         mid = (lo + hi) / 2;
         if (maxExpArray[mid] >= _x):
             lo = mid;
         else:
             hi = mid;
+
     if (maxExpArray[hi] >= _x):
         return hi;
     if (maxExpArray[lo] >= _x):
         return lo;
+
     assert(false);
     return 0;
 

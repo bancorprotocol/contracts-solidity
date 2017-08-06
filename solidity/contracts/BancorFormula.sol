@@ -299,6 +299,7 @@ contract BancorFormula is IBancorFormula, Utils {
     function findPositionInMaxExpArray(uint256 _x) internal constant returns (uint8) {
         uint8 lo = MIN_PRECISION;
         uint8 hi = MAX_PRECISION;
+
         while (lo + 1 < hi) {
             uint8 mid = (lo + hi) / 2;
             if (maxExpArray[mid] >= _x)
@@ -306,10 +307,12 @@ contract BancorFormula is IBancorFormula, Utils {
             else
                 hi = mid;
         }
+
         if (maxExpArray[hi] >= _x)
             return hi;
         if (maxExpArray[lo] >= _x)
             return lo;
+
         assert(false);
         return 0;
     }
