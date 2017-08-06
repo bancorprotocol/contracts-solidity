@@ -17,6 +17,7 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     uint256 constant FIXED_1 = 0x080000000000000000000000000000000;
     uint256 constant FIXED_2 = 0x100000000000000000000000000000000;
+    uint256 constant MAX_NUM = 0x1ffffffffffffffffffffffffffffffff;
 
     /**
         The values below depend on MAX_PRECISION. If you choose to change it:
@@ -254,7 +255,7 @@ contract BancorFormula is IBancorFormula, Utils {
             This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
     */
     function power(uint256 _baseN, uint256 _baseD, uint8 _expN, uint8 _expD) internal constant returns (uint256, uint8) {
-        uint256 lnBaseTimesExp = safeMul(ln(_baseN, _baseD), _expN) / _expD;
+        uint256 lnBaseTimesExp = ln(_baseN, _baseD) * _expN / _expD;
         uint8 precision = findPositionInMaxExpArray(lnBaseTimesExp);
         return (fixedExp(lnBaseTimesExp >> (MAX_PRECISION - precision), precision), precision);
     }
@@ -267,8 +268,10 @@ contract BancorFormula is IBancorFormula, Utils {
         This functions assumes that the numerator is larger than or equal to the denominator, because the output would be negative otherwise.
     */
     function ln(uint256 _numerator, uint256 _denominator) internal constant returns (uint256) {
+        assert(numerator <= MAX_NUM);
+
         uint256 res = 0;
-        uint256 x = safeMul(_numerator, FIXED_1) / _denominator;
+        uint256 x = _numerator * FIXED_1 / _denominator;
 
         // If x >= 2, then we compute the integer part of log2(x), which is larger than 0.
         if (x >= FIXED_2) {

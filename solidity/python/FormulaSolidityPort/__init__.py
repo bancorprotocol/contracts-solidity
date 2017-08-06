@@ -9,6 +9,7 @@ MAX_PRECISION = 127;
 '''
 FIXED_1 = 0x080000000000000000000000000000000;
 FIXED_2 = 0x100000000000000000000000000000000;
+MAX_NUM = 0x1ffffffffffffffffffffffffffffffff;
 
 '''
     The values below depend on MAX_PRECISION. If you choose to change it:
@@ -238,7 +239,7 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
         This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
 '''
 def power(_baseN, _baseD, _expN, _expD):
-    lnBaseTimesExp = safeMul(ln(_baseN, _baseD), _expN) / _expD;
+    lnBaseTimesExp = ln(_baseN, _baseD) * _expN / _expD;
     precision = findPositionInMaxExpArray(lnBaseTimesExp);
     return (fixedExp(lnBaseTimesExp >> (MAX_PRECISION - precision), precision), precision);
 
@@ -250,8 +251,10 @@ def power(_baseN, _baseD, _expN, _expD):
     This functions assumes that the numerator is larger than or equal to the denominator, because the output would be negative otherwise.
 '''
 def ln(_numerator, _denominator):
+    assert(numerator <= MAX_NUM);
+
     res = 0;
-    x = safeMul(_numerator, FIXED_1) / _denominator;
+    x = _numerator * FIXED_1 / _denominator;
 
     # If x >= 2, then we compute the integer part of log2(x), which is larger than 0.
     if (x >= FIXED_2):
