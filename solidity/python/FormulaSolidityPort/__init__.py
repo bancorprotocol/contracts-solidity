@@ -239,9 +239,9 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
         This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
 '''
 def power(_baseN, _baseD, _expN, _expD):
-    maxExp = safeMul(ln(_baseN, _baseD), _expN) / _expD;
-    precision = findPositionInMaxExpArray(maxExp);
-    return (fixedExp(maxExp >> (MAX_PRECISION - precision), precision), precision);
+    lnBaseTimesExp = safeMul(ln(_baseN, _baseD), _expN) / _expD;
+    precision = findPositionInMaxExpArray(lnBaseTimesExp);
+    return (fixedExp(lnBaseTimesExp >> (MAX_PRECISION - precision), precision), precision);
 
 '''
     Return floor(ln(numerator / denominator) * 2 ^ MAX_PRECISION), where:
@@ -274,19 +274,19 @@ def ln(_numerator, _denominator):
 
 '''
     The global "maxExpArray" is sorted in descending order, and therefore the following statements are equivalent:
-    - This function finds the position of [the smallest value in "maxExpArray" larger than or equal to "maxExp"]
-    - This function finds the highest position of [a value in "maxExpArray" larger than or equal to "maxExp"]
+    - This function finds the position of [the smallest value in "maxExpArray" larger than or equal to "x"]
+    - This function finds the highest position of [a value in "maxExpArray" larger than or equal to "x"]
 '''
-def findPositionInMaxExpArray(maxExp):
+def findPositionInMaxExpArray(_x):
     lo = MIN_PRECISION;
     hi = MAX_PRECISION;
     while (lo + 1 < hi):
         mid = (lo + hi) / 2;
-        if (maxExpArray[mid] >= maxExp):
+        if (maxExpArray[mid] >= _x):
             lo = mid;
         else:
             hi = mid;
-    if (maxExpArray[hi] >= maxExp):
+    if (maxExpArray[hi] >= _x):
         return hi;
     else:
         return lo;

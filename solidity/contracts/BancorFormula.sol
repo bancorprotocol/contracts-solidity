@@ -255,9 +255,9 @@ contract BancorFormula is IBancorFormula, Utils {
             This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
     */
     function power(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) internal constant returns (uint256, uint8) {
-        uint256 maxExp = safeMul(ln(_baseN, _baseD), _expN) / _expD;
-        uint8 precision = findPositionInMaxExpArray(maxExp);
-        return (fixedExp(maxExp >> (MAX_PRECISION - precision), precision), precision);
+        uint256 lnBaseTimesExp = safeMul(ln(_baseN, _baseD), _expN) / _expD;
+        uint8 precision = findPositionInMaxExpArray(lnBaseTimesExp);
+        return (fixedExp(lnBaseTimesExp >> (MAX_PRECISION - precision), precision), precision);
     }
 
     /**
@@ -296,20 +296,20 @@ contract BancorFormula is IBancorFormula, Utils {
 
     /**
         The global "maxExpArray" is sorted in descending order, and therefore the following statements are equivalent:
-        - This function finds the position of [the smallest value in "maxExpArray" larger than or equal to "maxExp"]
-        - This function finds the highest position of [a value in "maxExpArray" larger than or equal to "maxExp"]
+        - This function finds the position of [the smallest value in "maxExpArray" larger than or equal to "x"]
+        - This function finds the highest position of [a value in "maxExpArray" larger than or equal to "x"]
     */
-    function findPositionInMaxExpArray(uint256 maxExp) internal constant returns (uint8) {
+    function findPositionInMaxExpArray(uint256 _x) internal constant returns (uint8) {
         uint8 lo = MIN_PRECISION;
         uint8 hi = MAX_PRECISION;
         while (lo + 1 < hi) {
             uint8 mid = (lo + hi) / 2;
-            if (maxExpArray[mid] >= maxExp)
+            if (maxExpArray[mid] >= _x)
                 lo = mid;
             else
                 hi = mid;
         }
-        if (maxExpArray[hi] >= maxExp)
+        if (maxExpArray[hi] >= _x)
             return hi;
         else
             return lo;
