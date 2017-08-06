@@ -293,7 +293,7 @@ def findPositionInMaxExpArray(_x):
     if (maxExpArray[lo] >= _x):
         return lo;
 
-    assert(false);
+    assert(False);
     return 0;
 
 '''
