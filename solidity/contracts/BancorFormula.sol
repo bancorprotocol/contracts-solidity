@@ -311,8 +311,10 @@ contract BancorFormula is IBancorFormula, Utils {
         }
         if (maxExpArray[hi] >= _x)
             return hi;
-        else
+        if (maxExpArray[lo] >= _x)
             return lo;
+        assert(false);
+        return 0;
     }
 
     /**
