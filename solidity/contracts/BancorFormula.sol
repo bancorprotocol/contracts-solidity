@@ -272,7 +272,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
         // If x >= 2, then we compute the integer part of log2(x), which is larger than 0.
         if (x >= FIXED_2) {
-            uint256 count = floorLog2(x / FIXED_1);
+            uint8 count = floorLog2(x / FIXED_1);
             x >>= count; // now x < 2
             res = count * FIXED_1;
         }
@@ -396,7 +396,7 @@ contract BancorFormula is IBancorFormula, Utils {
     /**
         Compute the largest integer smaller than or equal to the binary logarithm of the input.
     */
-    function floorLog2(uint256 _n) internal constant returns (uint256) {
+    function floorLog2(uint256 _n) internal constant returns (uint8) {
         uint8 res = 0;
 
         if (_n < 256) {
