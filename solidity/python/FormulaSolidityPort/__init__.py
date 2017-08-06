@@ -251,7 +251,7 @@ def power(_baseN, _baseD, _expN, _expD):
     This functions assumes that the numerator is larger than or equal to the denominator, because the output would be negative otherwise.
 '''
 def ln(_numerator, _denominator):
-    assert(numerator <= MAX_NUM);
+    assert(_numerator <= MAX_NUM);
 
     res = 0;
     x = _numerator * FIXED_1 / _denominator;

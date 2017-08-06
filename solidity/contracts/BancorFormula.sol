@@ -268,7 +268,7 @@ contract BancorFormula is IBancorFormula, Utils {
         This functions assumes that the numerator is larger than or equal to the denominator, because the output would be negative otherwise.
     */
     function ln(uint256 _numerator, uint256 _denominator) internal constant returns (uint256) {
-        assert(numerator <= MAX_NUM);
+        assert(_numerator <= MAX_NUM);
 
         uint256 res = 0;
         uint256 x = _numerator * FIXED_1 / _denominator;
