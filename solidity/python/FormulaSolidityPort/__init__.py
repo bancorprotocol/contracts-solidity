@@ -168,7 +168,7 @@ def BancorFormula():
 '''
 def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmount):
     # validate input
-    assert(_supply != 0 and _reserveBalance != 0 and _reserveRatio > 0 and _reserveRatio <= 100);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= 100);
 
     # special case for 0 deposit amount
     if (_depositAmount == 0):
@@ -200,11 +200,15 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
 '''
 def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     # validate input
-    assert(_supply != 0 and _reserveBalance != 0 and _reserveRatio > 0 and _reserveRatio <= 100 and _sellAmount <= _supply);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= 100 and _sellAmount <= _supply);
 
     # special case for 0 sell amount
     if (_sellAmount == 0):
         return 0;
+
+    # special case for selling the entire supply
+    if (_sellAmount == _supply):
+        return _reserveBalance;
 
     baseD = safeSub(_supply, _sellAmount);
 
@@ -213,10 +217,6 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
         temp1 = safeMul(_reserveBalance, _supply);
         temp2 = safeMul(_reserveBalance, baseD);
         return safeSub(temp1, temp2) / _supply;
-
-    # special case for selling the entire supply
-    if (_sellAmount == _supply):
-        return _reserveBalance;
 
     (result, precision) = power(_supply, baseD, 100, _reserveRatio);
     temp1 = safeMul(_reserveBalance, result);

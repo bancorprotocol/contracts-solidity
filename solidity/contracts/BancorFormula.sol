@@ -177,7 +177,7 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint8 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
         // validate input
-        require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100);
+        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= 100);
 
         // special case for 0 deposit amount
         if (_depositAmount == 0)
@@ -212,11 +212,15 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint8 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
         // validate input
-        require(_supply != 0 && _reserveBalance != 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _sellAmount <= _supply);
+        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _sellAmount <= _supply);
 
         // special case for 0 sell amount
         if (_sellAmount == 0)
             return 0;
+
+        // special case for selling the entire supply
+        if (_sellAmount == _supply)
+            return _reserveBalance;
 
         uint256 baseD = safeSub(_supply, _sellAmount);
         uint256 temp1;
@@ -228,10 +232,6 @@ contract BancorFormula is IBancorFormula, Utils {
             temp2 = safeMul(_reserveBalance, baseD);
             return safeSub(temp1, temp2) / _supply;
         }
-
-        // special case for selling the entire supply
-        if (_sellAmount == _supply)
-            return _reserveBalance;
 
         var(result, precision) = power(_supply, baseD, 100, _reserveRatio);
         temp1 = safeMul(_reserveBalance, result);
