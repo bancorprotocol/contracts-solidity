@@ -234,7 +234,7 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
         The larger "precision" is, the more accurately this value represents the real value.
         However, the larger "precision" is, the more bits are required in order to store this value.
         And the exponentiation function, which takes "x" and calculates "e ^ x", is limited to a maximum exponent (maximum value of "x").
-        This maximum exponent depends on the precision used ("maxExpArray" maps each precision between 0 and 127 to its maximum exponent).
+        This maximum exponent depends on the "precision" used, and it is given by "maxExpArray[precision] >> (MAX_PRECISION - precision)".
         Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
         This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
 '''
