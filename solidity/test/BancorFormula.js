@@ -21,7 +21,7 @@ contract('BancorFormula', () => {
         let baseD = MAX_NUMERATOR.minus(1);
         let expN  = ratio;
         let expD  = 100;
-        let test  = `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD})`;
+        let test  = `Function power(${baseN.toString(16)}, ${baseD.toString(16)}, ${expN}, ${expD})`;
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
@@ -38,7 +38,7 @@ contract('BancorFormula', () => {
         let baseD = MAX_NUMERATOR.minus(1);
         let expN  = 100;
         let expD  = ratio;
-        let test  = `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD})`;
+        let test  = `Function power(${baseN.toString(16)}, ${baseD.toString(16)}, ${expN}, ${expD})`;
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
@@ -55,7 +55,7 @@ contract('BancorFormula', () => {
         let baseD = MIN_DENOMINATOR;
         let expN  = ratio;
         let expD  = 100;
-        let test  = `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD})`;
+        let test  = `Function power(${baseN.toString(16)}, ${baseD.toString(16)}, ${expN}, ${expD})`;
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
@@ -72,7 +72,7 @@ contract('BancorFormula', () => {
         let baseD = MIN_DENOMINATOR;
         let expN  = 100;
         let expD  = ratio;
-        let test  = `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD})`;
+        let test  = `Function power(${baseN.toString(16)}, ${baseD.toString(16)}, ${expN}, ${expD})`;
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
@@ -87,7 +87,7 @@ contract('BancorFormula', () => {
     for (let dummy = 1; dummy <= 1; dummy++) {
         let numerator = MAX_NUMERATOR;
         let denominator = MIN_DENOMINATOR;
-        let test = `Function ln(${numerator.toFixed()}, ${denominator.toFixed()})`;
+        let test = `Function ln(${numerator.toString(16)}, ${denominator.toString(16)})`;
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testLn.call(numerator, denominator);
@@ -102,7 +102,7 @@ contract('BancorFormula', () => {
     for (let dummy = 1; dummy <= 1; dummy++) {
         let numerator = MAX_NUMERATOR.plus(1);
         let denominator = MIN_DENOMINATOR;
-        let test = `Function ln(${numerator.toFixed()}, ${denominator.toFixed()})`;
+        let test = `Function ln(${numerator.toString(16)}, ${denominator.toString(16)})`;
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testLn.call(numerator, denominator);
@@ -126,11 +126,11 @@ contract('BancorFormula', () => {
         for (let index = 0; index < tuples.length; index++) {
             let input = tuples[index]['input'];
             let output = tuples[index]['output'];
-            let test = `Function findPositionInMaxExpArray(${input.toFixed()})`;
+            let test = `Function findPositionInMaxExpArray(${input.toString(16)})`;
             it(`${test}:`, async () => {
                 try {
                     let retVal = await formula.testFindPositionInMaxExpArray.call(input);
-                    assert(retVal.equals(output), `${test}: output should be ${output.toFixed()} but it is ${retVal.toFixed()}`);
+                    assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
                     assert(precision > constants.MIN_PRECISION || !output.lessThan(web3.toBigNumber(precision)), `${test} passed when it should have failed`);
                 }
                 catch (error) {
@@ -145,13 +145,13 @@ contract('BancorFormula', () => {
         let maxVal = web3.toBigNumber(constants.maxValArray[precision]);
         let errExp = maxExp.plus(1);
 
-        let test1 = `Function fixedExp(${maxExp.toFixed()}, ${precision})`;
+        let test1 = `Function fixedExp(${maxExp.toString(16)}, ${precision})`;
         it(`${test1}:`, async () => {
             let retVal = await formula.testFixedExp.call(maxExp, precision);
             assert(retVal.equals(maxVal), `${test1}: output is wrong`);
         });
 
-        let test2 = `Function fixedExp(${errExp.toFixed()}, ${precision})`;
+        let test2 = `Function fixedExp(${errExp.toString(16)}, ${precision})`;
         it(`${test2}:`, async () => {
             let retVal = await formula.testFixedExp.call(errExp, precision);
             assert(retVal.lessThan(maxVal), `${test2}:  output indicates that maxExpArray[${precision}] is wrong`);
@@ -168,10 +168,10 @@ contract('BancorFormula', () => {
         for (let index = 0; index < tuples.length; index++) {
             let input = tuples[index]['input'];
             let output = tuples[index]['output'];
-            let test = `Function floorLog2(${input.toFixed()})`;
+            let test = `Function floorLog2(${input.toString(16)})`;
             it(`${test}:`, async () => {
                 let retVal = await formula.testFloorLog2.call(input);
-                    assert(retVal.equals(output), `${test}: output should be ${output.toFixed()} but it is ${retVal.toFixed()}`);
+                    assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
             });
         }
     }
