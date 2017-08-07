@@ -116,11 +116,12 @@ contract('BancorFormula', () => {
 
     for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
         let maxExp = web3.toBigNumber(constants.maxExpArray[precision]);
+        let shlVal = web3.toBigNumber(2).toPower(constants.MAX_PRECISION - precision);
         let tuples = [
-            {'input' : maxExp.plus(0).times(web3.toBigNumber(2).toPower(constants.MAX_PRECISION - precision)).minus(1), 'output' : web3.toBigNumber(precision-0)},
-            {'input' : maxExp.plus(0).times(web3.toBigNumber(2).toPower(constants.MAX_PRECISION - precision)).minus(0), 'output' : web3.toBigNumber(precision-0)},
-            {'input' : maxExp.plus(1).times(web3.toBigNumber(2).toPower(constants.MAX_PRECISION - precision)).minus(1), 'output' : web3.toBigNumber(precision-0)},
-            {'input' : maxExp.plus(1).times(web3.toBigNumber(2).toPower(constants.MAX_PRECISION - precision)).minus(0), 'output' : web3.toBigNumber(precision-1)},
+            {'input' : maxExp.plus(0).times(shlVal).minus(1), 'output' : web3.toBigNumber(precision-0)},
+            {'input' : maxExp.plus(0).times(shlVal).minus(0), 'output' : web3.toBigNumber(precision-0)},
+            {'input' : maxExp.plus(1).times(shlVal).minus(1), 'output' : web3.toBigNumber(precision-0)},
+            {'input' : maxExp.plus(1).times(shlVal).minus(0), 'output' : web3.toBigNumber(precision-1)},
         ];
 
         for (let index = 0; index < tuples.length; index++) {
