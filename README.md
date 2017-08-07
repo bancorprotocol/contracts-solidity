@@ -158,7 +158,7 @@ Tests are included and can be run using truffle.
 * testrpc v3.0.5+
 
 To run the test, execute the following commands from the project's root folder -
-* npm start testrpc
+* npm run testrpc
 * npm test
 
 ## Collaborators
