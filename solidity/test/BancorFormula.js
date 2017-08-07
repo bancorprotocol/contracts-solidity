@@ -124,14 +124,17 @@ contract('BancorFormula', () => {
         ];
 
         for (let index = 0; index < tuples.length; index++) {
-            it('Verify function findPositionInMaxExpArray legal input', async () => {
+            let input = tuples[index]['input'];
+            let output = tuples[index]['output'];
+            let test = `Function findPositionInMaxExpArray(${input.toFixed()})`;
+            it(`${test}:`, async () => {
                 try {
-                    let retVal = await formula.testFindPositionInMaxExpArray.call(tuples[index]['input']);
-                    assert(retVal.equals(tuples[index]['output']), `Result of function findPositionInMaxExpArray(${tuples[index]['input'].toFixed()}) should be ${tuples[index]['output'].toFixed()} but is ${retVal.toFixed()}`);
-                    assert(precision > constants.MIN_PRECISION || !tuples[index]['output'].lessThan(web3.toBigNumber(precision)), `Function findPositionInMaxExpArray(${tuples[index]['input'].toFixed()}) passed when it should have failed`);
+                    let retVal = await formula.testFindPositionInMaxExpArray.call(input);
+                    assert(retVal.equals(output), `${test}: output should be ${output.toFixed()} but it is ${retVal.toFixed()}`);
+                    assert(precision > constants.MIN_PRECISION || !output.lessThan(web3.toBigNumber(precision)), `${test} passed when it should have failed`);
                 }
                 catch (error) {
-                    assert(precision == constants.MIN_PRECISION && tuples[index]['output'].lessThan(web3.toBigNumber(precision)), `Function findPositionInMaxExpArray(${tuples[index]['input'].toFixed()}) failed when it should have passed`);
+                    assert(precision == constants.MIN_PRECISION && output.lessThan(web3.toBigNumber(precision)), `${test} failed when it should have passed`);
                 }
             });
         }
@@ -160,9 +163,12 @@ contract('BancorFormula', () => {
         ];
 
         for (let index = 0; index < tuples.length; index++) {
-            it('Verify function floorLog2 legal input', async () => {
-                let retVal = await formula.testFloorLog2.call(tuples[index]['input']);
-                assert(retVal.equals(tuples[index]['output']), `Result of function floorLog2(${tuples[index]['input'].toFixed()}) should be ${tuples[index]['output'].toFixed()} but is ${retVal.toFixed()}`);
+            let input = tuples[index]['input'];
+            let output = tuples[index]['output'];
+            let test = `Function floorLog2(${input.toFixed()})`;
+            it(`${test}:`, async () => {
+                let retVal = await formula.testFloorLog2.call(input);
+                    assert(retVal.equals(output), `${test}: output should be ${output.toFixed()} but it is ${retVal.toFixed()}`);
             });
         }
     }
