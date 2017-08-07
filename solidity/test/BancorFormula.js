@@ -16,65 +16,69 @@ contract('BancorFormula', () => {
     let MIN_DENOMINATOR = web3.toBigNumber(1);
 
     for (let ratio = 1; ratio <= 99; ratio++) {
-        it('Verify function power(minimum base, exponent smaller than 1)', async () => {
-            let baseN = MAX_NUMERATOR;
-            let baseD = MAX_NUMERATOR.minus(1);
-            let expN  = ratio;
-            let expD  = 100;
+        let baseN = MAX_NUMERATOR;
+        let baseD = MAX_NUMERATOR.minus(1);
+        let expN  = ratio;
+        let expD  = 100;
+        let test  = `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD})`;
+        it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
-                assert(ratio <= 99, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) passed when it should have failed`);
+                assert(ratio <= 99, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 100, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) failed when it should have passed`);
+                assert(ratio >= 100, `${test} failed when it should have passed`);
             }
         });
     }
 
     for (let ratio = 1; ratio <= 99; ratio++) {
-        it('Verify function power(minimum base, exponent larger than 1)', async () => {
-            let baseN = MAX_NUMERATOR;
-            let baseD = MAX_NUMERATOR.minus(1);
-            let expN  = 100;
-            let expD  = ratio;
+        let baseN = MAX_NUMERATOR;
+        let baseD = MAX_NUMERATOR.minus(1);
+        let expN  = 100;
+        let expD  = ratio;
+        let test  = `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD})`;
+        it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
-                assert(ratio <= 99, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) passed when it should have failed`);
+                assert(ratio <= 99, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 100, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) failed when it should have passed`);
+                assert(ratio >= 100, `${test} failed when it should have passed`);
             }
         });
     }
 
     for (let ratio = 1; ratio <= 99; ratio++) {
-        it('Verify function power(maximum base, exponent smaller than 1)', async () => {
-            let baseN = MAX_NUMERATOR;
-            let baseD = MIN_DENOMINATOR;
-            let expN  = ratio;
-            let expD  = 100;
+        let baseN = MAX_NUMERATOR;
+        let baseD = MIN_DENOMINATOR;
+        let expN  = ratio;
+        let expD  = 100;
+        let test  = `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD})`;
+        it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
-                assert(ratio <= 63, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) passed when it should have failed`);
+                assert(ratio <= 63, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 64, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) failed when it should have passed`);
+                assert(ratio >= 64, `${test} failed when it should have passed`);
             }
         });
     }
 
     for (let ratio = 1; ratio <= 99; ratio++) {
-        it('Verify function power(maximum base, exponent larger than 1)', async () => {
-            let baseN = MAX_NUMERATOR;
-            let baseD = MIN_DENOMINATOR;
-            let expN  = 100;
-            let expD  = ratio;
+        let baseN = MAX_NUMERATOR;
+        let baseD = MIN_DENOMINATOR;
+        let expN  = 100;
+        let expD  = ratio;
+        let test  = `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD})`;
+        it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
-                assert(ratio <= 0, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) passed when it should have failed`);
+                assert(ratio <= 0, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 1, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) failed when it should have passed`);
+                assert(ratio >= 1, `${test} failed when it should have passed`);
             }
         });
     }
