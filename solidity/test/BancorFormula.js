@@ -36,6 +36,29 @@ contract('BancorFormula', () => {
 
     for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
         let maxExp = web3.toBigNumber(constants.maxExpArray[precision]);
+        let tuples = [
+            {'input' : maxExp.plus(0).times(web3.toBigNumber(2).toPower(constants.MAX_PRECISION - precision)).minus(1), 'output' : web3.toBigNumber(precision-0)},
+            {'input' : maxExp.plus(0).times(web3.toBigNumber(2).toPower(constants.MAX_PRECISION - precision)).minus(0), 'output' : web3.toBigNumber(precision-0)},
+            {'input' : maxExp.plus(1).times(web3.toBigNumber(2).toPower(constants.MAX_PRECISION - precision)).minus(1), 'output' : web3.toBigNumber(precision-0)},
+            {'input' : maxExp.plus(1).times(web3.toBigNumber(2).toPower(constants.MAX_PRECISION - precision)).minus(0), 'output' : web3.toBigNumber(precision-1)},
+        ];
+
+        for (let index = 0; index < tuples.length; index++) {
+            it('Verify function findPositionInMaxExpArray legal input', async () => {
+                try {
+                    let retVal = await formula.testFindPositionInMaxExpArray.call(tuples[index]['input']);
+                    assert(retVal.equals(tuples[index]['output']), `Result of function findPositionInMaxExpArray(${tuples[index]['input']}) should be ${tuples[index]['output']}$ but is ${retVal}$`);
+                    assert(precision > constants.MIN_PRECISION || !tuples[index]['output'].lessThan(web3.toBigNumber(precision)), `Function findPositionInMaxExpArray(${tuples[index]['input']}) passed when it should have failed`);
+                }
+                catch (error) {
+                    assert(precision == constants.MIN_PRECISION && tuples[index]['output'].lessThan(web3.toBigNumber(precision)), `Function findPositionInMaxExpArray(${tuples[index]['input']}) failed when it should have passed`);
+                }
+            });
+        }
+    }
+
+    for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
+        let maxExp = web3.toBigNumber(constants.maxExpArray[precision]);
         let maxVal = web3.toBigNumber(constants.maxValArray[precision]);
 
         it('Verify function fixedExp legal input', async () => {
