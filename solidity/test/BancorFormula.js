@@ -143,15 +143,18 @@ contract('BancorFormula', () => {
     for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
         let maxExp = web3.toBigNumber(constants.maxExpArray[precision]);
         let maxVal = web3.toBigNumber(constants.maxValArray[precision]);
+        let errExp = maxExp.plus(1);
 
-        it('Verify function fixedExp legal input', async () => {
+        let test1 = `Function fixedExp(${maxExp.toFixed()}, ${precision})`;
+        it(`${test1}:`, async () => {
             let retVal = await formula.testFixedExp.call(maxExp, precision);
-            assert(retVal.equals(maxVal), `Result of function fixedExp(${maxExp.toFixed()}, ${precision}) is wrong`);
+            assert(retVal.equals(maxVal), `${test1}: output is wrong`);
         });
 
-        it('Verify function fixedExp illegal input', async () => {
-            let retVal = await formula.testFixedExp.call(maxExp.plus(1), precision);
-            assert(retVal.lessThan(maxVal), `Result of function fixedExp(${maxExp.plus(1).toFixed()}, ${precision}) indicates that maxExpArray[${precision}] is wrong`);
+        let test2 = `Function fixedExp(${errExp.toFixed()}, ${precision})`;
+        it(`${test2}:`, async () => {
+            let retVal = await formula.testFixedExp.call(errExp, precision);
+            assert(retVal.lessThan(maxVal), `${test2}:  output indicates that maxExpArray[${precision}] is wrong`);
         });
     }
 
