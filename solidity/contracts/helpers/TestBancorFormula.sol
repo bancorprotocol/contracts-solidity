@@ -8,8 +8,8 @@ contract TestBancorFormula is BancorFormula {
     function TestBancorFormula() {
     }
 
-    function testLn(uint256 _numerator, uint256 _denominator, uint8 _precision) public constant returns (uint256) {
-        return super.ln(_numerator, _denominator, _precision);
+    function testLn(uint256 _numerator, uint256 _denominator) public constant returns (uint256) {
+        return super.ln(_numerator, _denominator);
     }
 
     function testFixedExp(uint256 _x, uint8 _precision) public constant returns (uint256) {
