@@ -13,6 +13,7 @@ contract('BancorFormula', () => {
     });
 
     let MAX_NUMERATOR = web3.toBigNumber(2).toPower(256 - constants.MAX_PRECISION).minus(1);
+    let MIN_DENOMINATOR = web3.toBigNumber(1);
 
     for (let ratio = 1; ratio <= 99; ratio++) {
         it('Verify function power(minimum base, exponent smaller than 1)', async () => {
@@ -49,7 +50,7 @@ contract('BancorFormula', () => {
     for (let ratio = 1; ratio <= 99; ratio++) {
         it('Verify function power(maximum base, exponent smaller than 1)', async () => {
             let baseN = MAX_NUMERATOR;
-            let baseD = 1;
+            let baseD = MIN_DENOMINATOR;
             let expN  = ratio;
             let expD  = 100;
             try {
@@ -65,7 +66,7 @@ contract('BancorFormula', () => {
     for (let ratio = 1; ratio <= 99; ratio++) {
         it('Verify function power(maximum base, exponent larger than 1)', async () => {
             let baseN = MAX_NUMERATOR;
-            let baseD = 1;
+            let baseD = MIN_DENOMINATOR;
             let expN  = 100;
             let expD  = ratio;
             try {
@@ -80,18 +81,18 @@ contract('BancorFormula', () => {
 
     it('Verify function ln legal input', async () => {
         try {
-            let retVal = await formula.testLn.call(MAX_NUMERATOR, 1);
-            assert(retVal.times(255).lessThan(web3.toBigNumber(2).toPower(256)), `Result of function ln(${MAX_NUMERATOR}, 1) is too large`);
+            let retVal = await formula.testLn.call(MAX_NUMERATOR, MIN_DENOMINATOR);
+            assert(retVal.times(255).lessThan(web3.toBigNumber(2).toPower(256)), `Result of function ln(${MAX_NUMERATOR}, ${MIN_DENOMINATOR}) is too large`);
         }
         catch (error) {
-            assert(false, `Function ln(${MAX_NUMERATOR}, 1) failed when it should have passed`);
+            assert(false, `Function ln(${MAX_NUMERATOR}, ${MIN_DENOMINATOR}) failed when it should have passed`);
         }
     });
 
     it('Verify function ln illegal input', async () => {
         try {
-            let retVal = await formula.testLn.call(MAX_NUMERATOR.plus(1), 1);
-            assert(false, `Function ln(${MAX_NUMERATOR.plus(1)}, 1) passed when it should have failed`);
+            let retVal = await formula.testLn.call(MAX_NUMERATOR.plus(1), MIN_DENOMINATOR);
+            assert(false, `Function ln(${MAX_NUMERATOR.plus(1)}, ${MIN_DENOMINATOR}) passed when it should have failed`);
         }
         catch (error) {
             return utils.ensureException(error);
