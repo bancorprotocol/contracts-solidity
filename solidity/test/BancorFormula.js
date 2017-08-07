@@ -23,10 +23,10 @@ contract('BancorFormula', () => {
             let expD  = 100;
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
-                assert(ratio <= 99, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) passed when it should have failed`);
+                assert(ratio <= 99, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 100, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) failed when it should have passed`);
+                assert(ratio >= 100, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) failed when it should have passed`);
             }
         });
     }
@@ -39,10 +39,10 @@ contract('BancorFormula', () => {
             let expD  = ratio;
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
-                assert(ratio <= 99, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) passed when it should have failed`);
+                assert(ratio <= 99, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 100, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) failed when it should have passed`);
+                assert(ratio >= 100, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) failed when it should have passed`);
             }
         });
     }
@@ -55,10 +55,10 @@ contract('BancorFormula', () => {
             let expD  = 100;
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
-                assert(ratio <= 63, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) passed when it should have failed`);
+                assert(ratio <= 63, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 64, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) failed when it should have passed`);
+                assert(ratio >= 64, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) failed when it should have passed`);
             }
         });
     }
@@ -71,10 +71,10 @@ contract('BancorFormula', () => {
             let expD  = ratio;
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
-                assert(ratio <= 0, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) passed when it should have failed`);
+                assert(ratio <= 0, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 1, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) failed when it should have passed`);
+                assert(ratio >= 1, `Function power(${baseN.toFixed()}, ${baseD.toFixed()}, ${expN}, ${expD}) failed when it should have passed`);
             }
         });
     }
@@ -82,17 +82,17 @@ contract('BancorFormula', () => {
     it('Verify function ln legal input', async () => {
         try {
             let retVal = await formula.testLn.call(MAX_NUMERATOR, MIN_DENOMINATOR);
-            assert(retVal.times(255).lessThan(web3.toBigNumber(2).toPower(256)), `Result of function ln(${MAX_NUMERATOR}, ${MIN_DENOMINATOR}) is too large`);
+            assert(retVal.times(255).lessThan(web3.toBigNumber(2).toPower(256)), `Result of function ln(${MAX_NUMERATOR.toFixed()}, ${MIN_DENOMINATOR.toFixed()}) is too large`);
         }
         catch (error) {
-            assert(false, `Function ln(${MAX_NUMERATOR}, ${MIN_DENOMINATOR}) failed when it should have passed`);
+            assert(false, `Function ln(${MAX_NUMERATOR.toFixed()}, ${MIN_DENOMINATOR.toFixed()}) failed when it should have passed`);
         }
     });
 
     it('Verify function ln illegal input', async () => {
         try {
             let retVal = await formula.testLn.call(MAX_NUMERATOR.plus(1), MIN_DENOMINATOR);
-            assert(false, `Function ln(${MAX_NUMERATOR.plus(1)}, ${MIN_DENOMINATOR}) passed when it should have failed`);
+            assert(false, `Function ln(${MAX_NUMERATOR.plus(1).toFixed()}, ${MIN_DENOMINATOR.toFixed()}) passed when it should have failed`);
         }
         catch (error) {
             return utils.ensureException(error);
@@ -112,11 +112,11 @@ contract('BancorFormula', () => {
             it('Verify function findPositionInMaxExpArray legal input', async () => {
                 try {
                     let retVal = await formula.testFindPositionInMaxExpArray.call(tuples[index]['input']);
-                    assert(retVal.equals(tuples[index]['output']), `Result of function findPositionInMaxExpArray(${tuples[index]['input']}) should be ${tuples[index]['output']} but is ${retVal}`);
-                    assert(precision > constants.MIN_PRECISION || !tuples[index]['output'].lessThan(web3.toBigNumber(precision)), `Function findPositionInMaxExpArray(${tuples[index]['input']}) passed when it should have failed`);
+                    assert(retVal.equals(tuples[index]['output']), `Result of function findPositionInMaxExpArray(${tuples[index]['input'].toFixed()}) should be ${tuples[index]['output'].toFixed()} but is ${retVal.toFixed()}`);
+                    assert(precision > constants.MIN_PRECISION || !tuples[index]['output'].lessThan(web3.toBigNumber(precision)), `Function findPositionInMaxExpArray(${tuples[index]['input'].toFixed()}) passed when it should have failed`);
                 }
                 catch (error) {
-                    assert(precision == constants.MIN_PRECISION && tuples[index]['output'].lessThan(web3.toBigNumber(precision)), `Function findPositionInMaxExpArray(${tuples[index]['input']}) failed when it should have passed`);
+                    assert(precision == constants.MIN_PRECISION && tuples[index]['output'].lessThan(web3.toBigNumber(precision)), `Function findPositionInMaxExpArray(${tuples[index]['input'].toFixed()}) failed when it should have passed`);
                 }
             });
         }
@@ -128,12 +128,12 @@ contract('BancorFormula', () => {
 
         it('Verify function fixedExp legal input', async () => {
             let retVal = await formula.testFixedExp.call(maxExp, precision);
-            assert(retVal.equals(maxVal), `Result of function fixedExp(${maxExp}, ${precision}) is wrong`);
+            assert(retVal.equals(maxVal), `Result of function fixedExp(${maxExp.toFixed()}, ${precision}) is wrong`);
         });
 
         it('Verify function fixedExp illegal input', async () => {
             let retVal = await formula.testFixedExp.call(maxExp.plus(1), precision);
-            assert(retVal.lessThan(maxVal), `Result of function fixedExp(${maxExp.plus(1)}, ${precision}) indicates that maxExpArray[${precision}] is wrong`);
+            assert(retVal.lessThan(maxVal), `Result of function fixedExp(${maxExp.plus(1).toFixed()}, ${precision}) indicates that maxExpArray[${precision}] is wrong`);
         });
     }
 
@@ -147,7 +147,7 @@ contract('BancorFormula', () => {
         for (let index = 0; index < tuples.length; index++) {
             it('Verify function floorLog2 legal input', async () => {
                 let retVal = await formula.testFloorLog2.call(tuples[index]['input']);
-                assert(retVal.equals(tuples[index]['output']), `Result of function floorLog2(${tuples[index]['input']}) should be ${tuples[index]['output']} but is ${retVal}`);
+                assert(retVal.equals(tuples[index]['output']), `Result of function floorLog2(${tuples[index]['input'].toFixed()}) should be ${tuples[index]['output'].toFixed()} but is ${retVal.toFixed()}`);
             });
         }
     }
