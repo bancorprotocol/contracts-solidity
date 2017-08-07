@@ -73,17 +73,17 @@ contract('BancorFormula', () => {
     }
 
     for (let n = 1; n <= 255; n++) {
-        let val1 = web3.toBigNumber(2).toPower(n);
-        let val2 = web3.toBigNumber(2).toPower(n).plus(1);
-        let val3 = web3.toBigNumber(2).toPower(n+1).minus(1);
+        let tuples = [
+            {'input' : web3.toBigNumber(2).toPower(n)           , 'output' : web3.toBigNumber(n)},
+            {'input' : web3.toBigNumber(2).toPower(n).plus(1)   , 'output' : web3.toBigNumber(n)},
+            {'input' : web3.toBigNumber(2).toPower(n+1).minus(1), 'output' : web3.toBigNumber(n)},
+        ];
 
-        it('Verify function floorLog2 legal input', async () => {
-            let retVal1 = await formula.testFloorLog2.call(val1);
-            let retVal2 = await formula.testFloorLog2.call(val2);
-            let retVal3 = await formula.testFloorLog2.call(val3);
-            assert(retVal1.equals(web3.toBigNumber(n)), `Result of function floorLog2(${val1}) is wrong`);
-            assert(retVal2.equals(web3.toBigNumber(n)), `Result of function floorLog2(${val2}) is wrong`);
-            assert(retVal3.equals(web3.toBigNumber(n)), `Result of function floorLog2(${val3}) is wrong`);
-        });
+        for (let index = 0; index < tuples.length; index++) {
+            it('Verify function floorLog2 legal input', async () => {
+                let retVal = await formula.testFloorLog2.call(tuples[index]['input']);
+                assert(retVal.equals(tuples[index]['output']), `Result of function floorLog2(${tuples[index]['input']}) should be ${tuples[index]['output']}$ but is ${retVal}$`);
+            });
+        }
     }
 });
