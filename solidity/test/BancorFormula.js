@@ -12,6 +12,7 @@ contract('BancorFormula', () => {
         formula = await TestBancorFormula.new();
     });
 
+    let ILLEGAL_VALUE = web3.toBigNumber(2).toPower(256);
     let MAX_NUMERATOR = web3.toBigNumber(2).toPower(256 - constants.MAX_PRECISION).minus(1);
     let MIN_DENOMINATOR = web3.toBigNumber(1);
 
@@ -83,25 +84,35 @@ contract('BancorFormula', () => {
         });
     }
 
-    it('Verify function ln legal input', async () => {
-        try {
-            let retVal = await formula.testLn.call(MAX_NUMERATOR, MIN_DENOMINATOR);
-            assert(retVal.times(255).lessThan(web3.toBigNumber(2).toPower(256)), `Result of function ln(${MAX_NUMERATOR.toFixed()}, ${MIN_DENOMINATOR.toFixed()}) is too large`);
-        }
-        catch (error) {
-            assert(false, `Function ln(${MAX_NUMERATOR.toFixed()}, ${MIN_DENOMINATOR.toFixed()}) failed when it should have passed`);
-        }
-    });
+    for (let dummy = 1; dummy <= 1; dummy++) {
+        let numerator = MAX_NUMERATOR;
+        let denominator = MIN_DENOMINATOR;
+        let test = `Function ln(${numerator.toFixed()}, ${denominator.toFixed()})`;
+        it(`${test}:`, async () => {
+            try {
+                let retVal = await formula.testLn.call(numerator, denominator);
+                assert(retVal.times(255).lessThan(ILLEGAL_VALUE), `${test}: output is too large`);
+            }
+            catch (error) {
+                assert(false, `${test} failed when it should have passed`);
+            }
+        });
+    }
 
-    it('Verify function ln illegal input', async () => {
-        try {
-            let retVal = await formula.testLn.call(MAX_NUMERATOR.plus(1), MIN_DENOMINATOR);
-            assert(false, `Function ln(${MAX_NUMERATOR.plus(1).toFixed()}, ${MIN_DENOMINATOR.toFixed()}) passed when it should have failed`);
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
+    for (let dummy = 1; dummy <= 1; dummy++) {
+        let numerator = MAX_NUMERATOR.plus(1);
+        let denominator = MIN_DENOMINATOR;
+        let test = `Function ln(${numerator.toFixed()}, ${denominator.toFixed()})`;
+        it(`${test}:`, async () => {
+            try {
+                let retVal = await formula.testLn.call(numerator, denominator);
+                assert(false, `${test} passed when it should have failed`);
+            }
+            catch (error) {
+                return utils.ensureException(error);
+            }
+        });
+    }
 
     for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
         let maxExp = web3.toBigNumber(constants.maxExpArray[precision]);
