@@ -111,7 +111,7 @@ contract('BancorFormula', () => {
             it('Verify function findPositionInMaxExpArray legal input', async () => {
                 try {
                     let retVal = await formula.testFindPositionInMaxExpArray.call(tuples[index]['input']);
-                    assert(retVal.equals(tuples[index]['output']), `Result of function findPositionInMaxExpArray(${tuples[index]['input']}) should be ${tuples[index]['output']}$ but is ${retVal}$`);
+                    assert(retVal.equals(tuples[index]['output']), `Result of function findPositionInMaxExpArray(${tuples[index]['input']}) should be ${tuples[index]['output']} but is ${retVal}`);
                     assert(precision > constants.MIN_PRECISION || !tuples[index]['output'].lessThan(web3.toBigNumber(precision)), `Function findPositionInMaxExpArray(${tuples[index]['input']}) passed when it should have failed`);
                 }
                 catch (error) {
@@ -146,7 +146,7 @@ contract('BancorFormula', () => {
         for (let index = 0; index < tuples.length; index++) {
             it('Verify function floorLog2 legal input', async () => {
                 let retVal = await formula.testFloorLog2.call(tuples[index]['input']);
-                assert(retVal.equals(tuples[index]['output']), `Result of function floorLog2(${tuples[index]['input']}) should be ${tuples[index]['output']}$ but is ${retVal}$`);
+                assert(retVal.equals(tuples[index]['output']), `Result of function floorLog2(${tuples[index]['input']}) should be ${tuples[index]['output']} but is ${retVal}`);
             });
         }
     }
