@@ -14,6 +14,70 @@ contract('BancorFormula', () => {
 
     let MAX_NUMERATOR = web3.toBigNumber(2).toPower(256 - constants.MAX_PRECISION).minus(1);
 
+    for (let ratio = 1; ratio <= 99; ratio++) {
+        it('Verify function power(minimum base, exponent smaller than 1)', async () => {
+            let baseN = MAX_NUMERATOR;
+            let baseD = MAX_NUMERATOR.minus(1);
+            let expN  = ratio;
+            let expD  = 100;
+            try {
+                let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
+                assert(ratio <= 99, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) passed when it should have failed`);
+            }
+            catch (error) {
+                assert(ratio >= 100, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) failed when it should have passed`);
+            }
+        });
+    }
+
+    for (let ratio = 1; ratio <= 99; ratio++) {
+        it('Verify function power(minimum base, exponent larger than 1)', async () => {
+            let baseN = MAX_NUMERATOR;
+            let baseD = MAX_NUMERATOR.minus(1);
+            let expN  = 100;
+            let expD  = ratio;
+            try {
+                let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
+                assert(ratio <= 99, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) passed when it should have failed`);
+            }
+            catch (error) {
+                assert(ratio >= 100, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) failed when it should have passed`);
+            }
+        });
+    }
+
+    for (let ratio = 1; ratio <= 99; ratio++) {
+        it('Verify function power(maximum base, exponent smaller than 1)', async () => {
+            let baseN = MAX_NUMERATOR;
+            let baseD = 1;
+            let expN  = ratio;
+            let expD  = 100;
+            try {
+                let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
+                assert(ratio <= 63, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) passed when it should have failed`);
+            }
+            catch (error) {
+                assert(ratio >= 64, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) failed when it should have passed`);
+            }
+        });
+    }
+
+    for (let ratio = 1; ratio <= 99; ratio++) {
+        it('Verify function power(maximum base, exponent larger than 1)', async () => {
+            let baseN = MAX_NUMERATOR;
+            let baseD = 1;
+            let expN  = 100;
+            let expD  = ratio;
+            try {
+                let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
+                assert(ratio <= 0, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) passed when it should have failed`);
+            }
+            catch (error) {
+                assert(ratio >= 1, `Function power(${baseN}, ${baseD}, ${expN}, ${expD}) failed when it should have passed`);
+            }
+        });
+    }
+
     it('Verify function ln legal input', async () => {
         try {
             let retVal = await formula.testLn.call(MAX_NUMERATOR, 1);
