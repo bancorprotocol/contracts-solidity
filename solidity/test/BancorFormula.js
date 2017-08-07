@@ -16,7 +16,8 @@ contract('BancorFormula', () => {
 
     it('Verify function ln legal input', async () => {
         try {
-            await formula.testLn.call(MAX_NUMERATOR, 1);
+            let retVal = await formula.testLn.call(MAX_NUMERATOR, 1);
+            assert(retVal.times(255).lessThan(web3.toBigNumber(2).toPower(256)), `Result of function ln(${MAX_NUMERATOR}, 1) is too large`);
         }
         catch (error) {
             assert(false, `Function ln(${MAX_NUMERATOR}, 1) failed when it should have passed`);
@@ -25,7 +26,7 @@ contract('BancorFormula', () => {
 
     it('Verify function ln illegal input', async () => {
         try {
-            await formula.testLn.call(MAX_NUMERATOR.plus(1), 1);
+            let retVal = await formula.testLn.call(MAX_NUMERATOR.plus(1), 1);
             assert(false, `Function ln(${MAX_NUMERATOR.plus(1)}, 1) passed when it should have failed`);
         }
         catch (error) {
