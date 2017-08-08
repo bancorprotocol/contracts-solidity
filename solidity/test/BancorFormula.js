@@ -25,7 +25,7 @@ contract('BancorFormula', () => {
 
         it(`${test}:`, async () => {
             try {
-                let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
+                let retVal = await formula.powerTest.call(baseN, baseD, expN, expD);
                 assert(ratio <= 100, `${test} passed when it should have failed`);
             }
             catch (error) {
@@ -43,7 +43,7 @@ contract('BancorFormula', () => {
 
         it(`${test}:`, async () => {
             try {
-                let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
+                let retVal = await formula.powerTest.call(baseN, baseD, expN, expD);
                 assert(ratio <= 100, `${test} passed when it should have failed`);
             }
             catch (error) {
@@ -61,7 +61,7 @@ contract('BancorFormula', () => {
 
         it(`${test}:`, async () => {
             try {
-                let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
+                let retVal = await formula.powerTest.call(baseN, baseD, expN, expD);
                 assert(ratio <= 63, `${test} passed when it should have failed`);
             }
             catch (error) {
@@ -79,7 +79,7 @@ contract('BancorFormula', () => {
 
         it(`${test}:`, async () => {
             try {
-                let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
+                let retVal = await formula.powerTest.call(baseN, baseD, expN, expD);
                 assert(ratio <= 0, `${test} passed when it should have failed`);
             }
             catch (error) {
@@ -102,7 +102,7 @@ contract('BancorFormula', () => {
 
         it(`${test}:`, async () => {
             try {
-                let retVal = await formula.testLn.call(numerator, denominator);
+                let retVal = await formula.lnTest.call(numerator, denominator);
                 assert(retVal.times(255).lessThan(ILLEGAL_VALUE), `${test}: output is too large`);
                 assert(assertion, `${test} failed when it should have passed`);
             }
@@ -129,7 +129,7 @@ contract('BancorFormula', () => {
 
             it(`${test}:`, async () => {
                 try {
-                    let retVal = await formula.testFindPositionInMaxExpArray.call(input);
+                    let retVal = await formula.findPositionInMaxExpArrayTest.call(input);
                     assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
                     assert(precision > constants.MIN_PRECISION || !output.lessThan(web3.toBigNumber(precision)), `${test} passed when it should have failed`);
                 }
@@ -148,12 +148,12 @@ contract('BancorFormula', () => {
         let test2  = `Function fixedExp(0x${errExp.toString(16)}, ${precision})`;
 
         it(`${test1}:`, async () => {
-            let retVal = await formula.testFixedExp.call(maxExp, precision);
+            let retVal = await formula.fixedExpTest.call(maxExp, precision);
             assert(retVal.equals(maxVal), `${test1}: output is wrong`);
         });
 
         it(`${test2}:`, async () => {
-            let retVal = await formula.testFixedExp.call(errExp, precision);
+            let retVal = await formula.fixedExpTest.call(errExp, precision);
             assert(retVal.lessThan(maxVal), `${test2}:  output indicates that maxExpArray[${precision}] is wrong`);
         });
     }
@@ -171,7 +171,7 @@ contract('BancorFormula', () => {
             let test   = `Function floorLog2(0x${input.toString(16)})`;
 
             it(`${test}:`, async () => {
-                let retVal = await formula.testFloorLog2.call(input);
+                let retVal = await formula.floorLog2Test.call(input);
                     assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
             });
         }
