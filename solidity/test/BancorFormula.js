@@ -90,9 +90,9 @@ contract('BancorFormula', () => {
         {'numerator' : MAX_NUMERATOR.plus(1), 'denominator' : MIN_DENOMINATOR       , 'assertion' : false},
     ];
     for (let index = 0; index < cases.length; index++) {
-        let numerator   = cases[index]['numerator'];
+        let numerator   = cases[index]['numerator'  ];
         let denominator = cases[index]['denominator'];
-        let assertion   = cases[index]['assertion'];
+        let assertion   = cases[index]['assertion'  ];
         let test        = `Function ln(${numerator.toString(16)}, ${denominator.toString(16)})`;
         it(`${test}:`, async () => {
             try {
@@ -117,9 +117,9 @@ contract('BancorFormula', () => {
         ];
 
         for (let index = 0; index < tuples.length; index++) {
-            let input = tuples[index]['input'];
+            let input  = tuples[index]['input' ];
             let output = tuples[index]['output'];
-            let test = `Function findPositionInMaxExpArray(${input.toString(16)})`;
+            let test   = `Function findPositionInMaxExpArray(${input.toString(16)})`;
             it(`${test}:`, async () => {
                 try {
                     let retVal = await formula.testFindPositionInMaxExpArray.call(input);
@@ -159,9 +159,9 @@ contract('BancorFormula', () => {
         ];
 
         for (let index = 0; index < tuples.length; index++) {
-            let input = tuples[index]['input'];
+            let input  = tuples[index]['input' ];
             let output = tuples[index]['output'];
-            let test = `Function floorLog2(${input.toString(16)})`;
+            let test   = `Function floorLog2(${input.toString(16)})`;
             it(`${test}:`, async () => {
                 let retVal = await formula.testFloorLog2.call(input);
                     assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
