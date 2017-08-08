@@ -16,7 +16,7 @@ contract('BancorFormula', () => {
     let MAX_NUMERATOR = web3.toBigNumber(2).toPower(256 - constants.MAX_PRECISION).minus(1);
     let MIN_DENOMINATOR = web3.toBigNumber(1);
 
-    for (let ratio = 1; ratio <= 99; ratio++) {
+    for (let ratio = 1; ratio <= 100; ratio++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MAX_NUMERATOR.minus(1);
         let expN  = ratio;
@@ -25,15 +25,15 @@ contract('BancorFormula', () => {
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
-                assert(ratio <= 99, `${test} passed when it should have failed`);
+                assert(ratio <= 100, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 100, `${test} failed when it should have passed`);
+                assert(ratio >= 101, `${test} failed when it should have passed`);
             }
         });
     }
 
-    for (let ratio = 1; ratio <= 99; ratio++) {
+    for (let ratio = 1; ratio <= 100; ratio++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MAX_NUMERATOR.minus(1);
         let expN  = 100;
@@ -42,15 +42,15 @@ contract('BancorFormula', () => {
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testPower.call(baseN, baseD, expN, expD);
-                assert(ratio <= 99, `${test} passed when it should have failed`);
+                assert(ratio <= 100, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 100, `${test} failed when it should have passed`);
+                assert(ratio >= 101, `${test} failed when it should have passed`);
             }
         });
     }
 
-    for (let ratio = 1; ratio <= 99; ratio++) {
+    for (let ratio = 1; ratio <= 100; ratio++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MIN_DENOMINATOR;
         let expN  = ratio;
@@ -67,7 +67,7 @@ contract('BancorFormula', () => {
         });
     }
 
-    for (let ratio = 1; ratio <= 99; ratio++) {
+    for (let ratio = 1; ratio <= 100; ratio++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MIN_DENOMINATOR;
         let expN  = 100;
@@ -84,32 +84,24 @@ contract('BancorFormula', () => {
         });
     }
 
-    for (let dummy = 1; dummy <= 1; dummy++) {
-        let numerator = MAX_NUMERATOR;
-        let denominator = MIN_DENOMINATOR;
-        let test = `Function ln(${numerator.toString(16)}, ${denominator.toString(16)})`;
+    let cases = [
+        {'numerator' : MAX_NUMERATOR        , 'denominator' : MAX_NUMERATOR.minus(1), 'assertion' : true },
+        {'numerator' : MAX_NUMERATOR        , 'denominator' : MIN_DENOMINATOR       , 'assertion' : true },
+        {'numerator' : MAX_NUMERATOR.plus(1), 'denominator' : MIN_DENOMINATOR       , 'assertion' : false},
+    ];
+    for (let index = 0; index < cases.length; index++) {
+        let numerator   = cases[index]['numerator'];
+        let denominator = cases[index]['denominator'];
+        let assertion   = cases[index]['assertion'];
+        let test        = `Function ln(${numerator.toString(16)}, ${denominator.toString(16)})`;
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.testLn.call(numerator, denominator);
                 assert(retVal.times(255).lessThan(ILLEGAL_VALUE), `${test}: output is too large`);
+                assert(assertion, `${test} failed when it should have passed`);
             }
             catch (error) {
-                assert(false, `${test} failed when it should have passed`);
-            }
-        });
-    }
-
-    for (let dummy = 1; dummy <= 1; dummy++) {
-        let numerator = MAX_NUMERATOR.plus(1);
-        let denominator = MIN_DENOMINATOR;
-        let test = `Function ln(${numerator.toString(16)}, ${denominator.toString(16)})`;
-        it(`${test}:`, async () => {
-            try {
-                let retVal = await formula.testLn.call(numerator, denominator);
-                assert(false, `${test} passed when it should have failed`);
-            }
-            catch (error) {
-                return utils.ensureException(error);
+                assert(!assertion, `${test} failed when it should have passed`);
             }
         });
     }
