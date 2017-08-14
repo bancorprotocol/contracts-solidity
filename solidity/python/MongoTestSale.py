@@ -55,7 +55,7 @@ def Main():
 
 
 def TestAll(collection):
-    collection.ensure_index([(key,pymongo.ASCENDING) for key in 'supply,reserve,ratio,amount'.split(',')])
+    collection.ensure_index([(key,pymongo.ASCENDING) for key in ['supply','reserve','ratio','amount']])
     range_supply  = GenerateRange(MINIMUM_VALUE_SUPPLY ,MAXIMUM_VALUE_SUPPLY ,GROWTH_FACTOR_SUPPLY )
     range_reserve = GenerateRange(MINIMUM_VALUE_RESERVE,MAXIMUM_VALUE_RESERVE,GROWTH_FACTOR_RESERVE)
     range_ratio   = GenerateRange(MINIMUM_VALUE_RATIO  ,MAXIMUM_VALUE_RATIO  ,GROWTH_FACTOR_RATIO  )
@@ -92,7 +92,7 @@ def TestAll(collection):
                             'loss'  :loss  ,
                         }
                         document = collection.find_one_and_update(filter,{'$set':update},upsert=True,return_document=pymongo.ReturnDocument.AFTER)
-                        print ', '.join('{}: {}'.format(field,document[field]) for field in 'supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,status,loss'.split(','))
+                        print ', '.join('{}: {}'.format(field,document[field]) for field in ['supply','reserve','ratio','amount','resultSolidityPort','resultNativePython','status','loss'])
 
 
 def Run(module,supply,reserve,ratio,amount):
