@@ -55,6 +55,7 @@ def Main():
 
 
 def TestAll(collection):
+    collection.ensure_index([(key,pymongo.ASCENDING) for key in 'supply,reserve,ratio,amount'.split(',')])
     range_supply  = GenerateRange(MINIMUM_VALUE_SUPPLY ,MAXIMUM_VALUE_SUPPLY ,GROWTH_FACTOR_SUPPLY )
     range_reserve = GenerateRange(MINIMUM_VALUE_RESERVE,MAXIMUM_VALUE_RESERVE,GROWTH_FACTOR_RESERVE)
     range_ratio   = GenerateRange(MINIMUM_VALUE_RATIO  ,MAXIMUM_VALUE_RATIO  ,GROWTH_FACTOR_RATIO  )
@@ -78,18 +79,20 @@ def TestAll(collection):
                         else: # 0 <= resultSolidityPort <= resultNativePython
                             status = TRANSACTION_SUCCESS
                             loss = {'absolute':float(resultNativePython-resultSolidityPort),'relative':1-float(resultSolidityPort/resultNativePython)}
-                        entry = {
+                        filter = {
                             'supply' :'{}'.format(supply ),
                             'reserve':'{}'.format(reserve),
                             'ratio'  :'{}'.format(ratio  ),
                             'amount' :'{}'.format(amount ),
+                        }
+                        update = {
                             'resultSolidityPort':'{}'    .format(resultSolidityPort),
                             'resultNativePython':'{:.2f}'.format(resultNativePython),
                             'status':status,
                             'loss'  :loss  ,
                         }
-                        id = collection.insert(entry)
-                        print ', '.join('{}: {}'.format(key,entry[key]) for key in ['supply','reserve','ratio','amount','resultSolidityPort','resultNativePython','status','loss'])
+                        document = collection.find_one_and_update(filter,{'$set':update},upsert=True,return_document=pymongo.ReturnDocument.AFTER)
+                        print ', '.join('{}: {}'.format(field,document[field]) for field in 'supply,reserve,ratio,amount,resultSolidityPort,resultNativePython,status,loss'.split(','))
 
 
 def Run(module,supply,reserve,ratio,amount):
