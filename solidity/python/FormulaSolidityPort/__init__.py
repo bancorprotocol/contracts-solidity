@@ -273,6 +273,26 @@ def ln(_numerator, _denominator):
     return (res * LN2_MANTISSA) >> LN2_EXPONENT;
 
 '''
+    Compute the largest integer smaller than or equal to the binary logarithm of the input.
+'''
+def floorLog2(_n):
+    res = 0;
+
+    if (_n < 256):
+        # At most 8 iterations
+        while (_n > 1):
+            _n >>= 1;
+            res += 1;
+    else:
+        # Exactly 8 iterations
+        for s in [1 << (8 - 1 - k) for k in range(8)]:
+            if (_n >= (ONE << s)):
+                _n >>= s;
+                res |= s;
+
+    return res;
+
+'''
     The global "maxExpArray" is sorted in descending order, and therefore the following statements are equivalent:
     - This function finds the position of [the smallest value in "maxExpArray" larger than or equal to "x"]
     - This function finds the highest position of [a value in "maxExpArray" larger than or equal to "x"]
@@ -374,26 +394,6 @@ def fixedExp(_x, _precision):
     res += xi * 0x22;
 
     return res / 0xde1bc4d19efcac82445da75b00000000;
-
-'''
-    Compute the largest integer smaller than or equal to the binary logarithm of the input.
-'''
-def floorLog2(_n):
-    res = 0;
-
-    if (_n < 256):
-        # At most 8 iterations
-        while (_n > 1):
-            _n >>= 1;
-            res += 1;
-    else:
-        # Exactly 8 iterations
-        for s in [1 << (8 - 1 - k) for k in range(8)]:
-            if (_n >= (ONE << s)):
-                _n >>= s;
-                res |= s;
-
-    return res;
 
 
 def safeMul(x,y):
