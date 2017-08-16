@@ -295,6 +295,32 @@ contract BancorFormula is IBancorFormula, Utils {
     }
 
     /**
+        Compute the largest integer smaller than or equal to the binary logarithm of the input.
+    */
+    function floorLog2(uint256 _n) internal constant returns (uint8) {
+        uint8 res = 0;
+
+        if (_n < 256) {
+            // At most 8 iterations
+            while (_n > 1) {
+                _n >>= 1;
+                res += 1;
+            }
+        }
+        else {
+            // Exactly 8 iterations
+            for (uint8 s = 128; s > 0; s >>= 1) {
+                if (_n >= (ONE << s)) {
+                    _n >>= s;
+                    res |= s;
+                }
+            }
+        }
+
+        return res;
+    }
+
+    /**
         The global "maxExpArray" is sorted in descending order, and therefore the following statements are equivalent:
         - This function finds the position of [the smallest value in "maxExpArray" larger than or equal to "x"]
         - This function finds the highest position of [a value in "maxExpArray" larger than or equal to "x"]
@@ -398,31 +424,5 @@ contract BancorFormula is IBancorFormula, Utils {
         res += xi * 0x22;
 
         return res / 0xde1bc4d19efcac82445da75b00000000;
-    }
-
-    /**
-        Compute the largest integer smaller than or equal to the binary logarithm of the input.
-    */
-    function floorLog2(uint256 _n) internal constant returns (uint8) {
-        uint8 res = 0;
-
-        if (_n < 256) {
-            // At most 8 iterations
-            while (_n > 1) {
-                _n >>= 1;
-                res += 1;
-            }
-        }
-        else {
-            // Exactly 8 iterations
-            for (uint8 s = 128; s > 0; s >>= 1) {
-                if (_n >= (ONE << s)) {
-                    _n >>= s;
-                    res |= s;
-                }
-            }
-        }
-
-        return res;
     }
 }
