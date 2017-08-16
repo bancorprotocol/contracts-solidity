@@ -5,8 +5,7 @@ import FormulaNativePython
 
 
 def powerTest(baseN,baseD,expN,expD):
-    precision = FormulaSolidityPort.calculateBestPrecision(baseN,baseD,expN,expD)
-    resultSolidityPort = FormulaSolidityPort.power(baseN,baseD,expN,expD,precision)
+    resultSolidityPort,precision = FormulaSolidityPort.power(baseN,baseD,expN,expD)
     resultNativePython = FormulaNativePython.power(baseN,baseD,expN,expD,precision)
     if resultSolidityPort > resultNativePython:
         error = ['Implementation Error:']

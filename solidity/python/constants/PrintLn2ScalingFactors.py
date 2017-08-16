@@ -4,7 +4,6 @@ from decimal import ROUND_FLOOR
 from decimal import ROUND_CEILING
 
 
-MIN_PRECISION = 32
 MAX_PRECISION = 127
 
 
@@ -30,11 +29,9 @@ getcontext().prec = MAX_PRECISION
 maxVal = floor(log2(2**(256-MAX_PRECISION)-1)*2**MAX_PRECISION)-1
 
 
-FLOOR_LN2_EXPONENT   = floor(log2((2**256-1)/(maxVal*ln(2))))
-FLOOR_LN2_MANTISSA   = floor(2**FLOOR_LN2_EXPONENT*ln(2))
-CEILING_LN2_MANTISSA = ceiling(2**MIN_PRECISION*ln(2))
+LN2_EXPONENT = floor(log2((2**256-1)/(maxVal*ln(2))))
+LN2_MANTISSA = floor(2**LN2_EXPONENT*ln(2))
 
 
-print '    uint256 constant CEILING_LN2_MANTISSA = 0x{:x};'.format(CEILING_LN2_MANTISSA)
-print '    uint256 constant FLOOR_LN2_MANTISSA   = 0x{:x};'.format(FLOOR_LN2_MANTISSA  )
-print '    uint8   constant FLOOR_LN2_EXPONENT   = {:d};'  .format(FLOOR_LN2_EXPONENT  )
+print '    uint256 constant LN2_MANTISSA = 0x{:x};'.format(LN2_MANTISSA)
+print '    uint8   constant LN2_EXPONENT = {:d};'  .format(LN2_EXPONENT)

@@ -260,4 +260,3 @@ module.exports.maxValArray = [
     /* 126 */    '0xbde80a98943810876a7852209de22be2',
     /* 127 */    '0x12710231c0fd7a13f8a2b4af9d6b70c87',
 ];
-module.exports.FLOOR_LN2_MANTISSA = '0x2c5c85fdf473de6af278ece600fcbda';

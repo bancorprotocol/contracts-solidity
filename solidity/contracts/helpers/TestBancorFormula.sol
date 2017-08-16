@@ -8,23 +8,23 @@ contract TestBancorFormula is BancorFormula {
     function TestBancorFormula() {
     }
 
-    function testLn(uint256 _numerator, uint256 _denominator, uint8 _precision) public constant returns (uint256) {
-        return super.ln(_numerator, _denominator, _precision);
+    function powerTest(uint256 _baseN, uint256 _baseD, uint8 _expN, uint8 _expD) public constant returns (uint256, uint8) {
+        return super.power(_baseN, _baseD, _expN, _expD);
     }
 
-    function testFixedLoge(uint256 _x, uint8 _precision) public constant returns (uint256) {
-        return super.fixedLoge(_x, _precision);
+    function lnTest(uint256 _numerator, uint256 _denominator) public constant returns (uint256) {
+        return super.ln(_numerator, _denominator);
     }
 
-    function testFixedLog2(uint256 _x, uint8 _precision) public constant returns (uint256) {
-        return super.fixedLog2(_x, _precision);
+    function findPositionInMaxExpArrayTest(uint256 _x) public constant returns (uint8) {
+        return super.findPositionInMaxExpArray(_x);
     }
 
-    function testFixedExp(uint256 _x, uint8 _precision) public constant returns (uint256) {
+    function fixedExpTest(uint256 _x, uint8 _precision) public constant returns (uint256) {
         return super.fixedExp(_x, _precision);
     }
 
-    function testFixedExpUnsafe(uint256 _x, uint8 _precision) public constant returns (uint256) {
-        return super.fixedExpUnsafe(_x, _precision);
+    function floorLog2Test(uint256 _n) public constant returns (uint8) {
+        return super.floorLog2(_n);
     }
 }
