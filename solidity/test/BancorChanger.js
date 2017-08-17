@@ -4,6 +4,7 @@
 const BancorChanger = artifacts.require('BancorChanger.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
+const BancorFormulaProxy = artifacts.require('BancorFormulaProxy.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const utils = require('./helpers/Utils');
 
@@ -58,9 +59,10 @@ contract('BancorChanger', (accounts) => {
     before(async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         let formula = await BancorFormula.new();
+        let formulaProxy = await BancorFormulaProxy.new(formula.address);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
         tokenAddress = token.address;
-        formulaAddress = formula.address;
+        formulaAddress = formulaProxy.address;
         reserveTokenAddress = reserveToken.address;
     });
 
