@@ -148,7 +148,6 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         validAddress(_formula)
         notThis(_formula)
     {
-        require(_formula != formula); // validate input
         formula = _formula;
     }
 
@@ -228,7 +227,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         validReserve(_reserveToken)
         validReserveRatio(_ratio)
     {
-        Reserve reserve = reserves[_reserveToken];
+        Reserve storage reserve = reserves[_reserveToken];
         require(totalReserveRatio - reserve.ratio + _ratio <= 100); // validate input
 
         totalReserveRatio = totalReserveRatio - reserve.ratio + _ratio;
@@ -266,7 +265,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         validReserve(_reserveToken)
         returns (uint256 balance)
     {
-        Reserve reserve = reserves[_reserveToken];
+        Reserve storage reserve = reserves[_reserveToken];
         return reserve.isVirtualBalanceEnabled ? reserve.virtualBalance : _reserveToken.balanceOf(this);
     }
 
@@ -314,7 +313,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         validReserve(_reserveToken)
         returns (uint256 amount)
     {
-        Reserve reserve = reserves[_reserveToken];
+        Reserve storage reserve = reserves[_reserveToken];
         require(reserve.isPurchaseEnabled); // validate input
 
         uint256 tokenSupply = token.totalSupply();
@@ -381,12 +380,13 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         public
         changingAllowed
         greaterThanZero(_minReturn)
-        returns (uint256 amount) {
+        returns (uint256 amount)
+    {
         amount = getPurchaseReturn(_reserveToken, _depositAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
         // update virtual balance if relevant
-        Reserve reserve = reserves[_reserveToken];
+        Reserve storage reserve = reserves[_reserveToken];
         if (reserve.isVirtualBalanceEnabled)
             reserve.virtualBalance = safeAdd(reserve.virtualBalance, _depositAmount);
 
@@ -411,7 +411,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         public
         changingAllowed
         greaterThanZero(_minReturn)
-        returns (uint256 amount) {
+        returns (uint256 amount)
+    {
         require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
 
         amount = getSaleReturn(_reserveToken, _sellAmount);
@@ -424,7 +425,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         assert(amount < reserveBalance || _sellAmount == tokenSupply); // ensure that the trade will only deplete the reserve if the total supply is depleted as well
 
         // update virtual balance if relevant
-        Reserve reserve = reserves[_reserveToken];
+        Reserve storage reserve = reserves[_reserveToken];
         if (reserve.isVirtualBalanceEnabled)
             reserve.virtualBalance = safeSub(reserve.virtualBalance, amount);
 
@@ -453,7 +454,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         greaterThanZero(_totalSupply)
         returns (uint256 amount)
     {
-        Reserve reserve = reserves[_reserveToken];
+        Reserve storage reserve = reserves[_reserveToken];
         uint256 reserveBalance = getReserveBalance(_reserveToken);
         amount = formula.calculateSaleReturn(_totalSupply, reserveBalance, reserve.ratio, _sellAmount);
         if (changeFeePercentage == 0)

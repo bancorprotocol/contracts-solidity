@@ -42,30 +42,13 @@ contract BancorBuyer is TokenHolder {
     }
 
     /**
-        @dev buys the smart token with ETH
-        note that the purchase will use the price at the time of the purchase
-
-        @return tokens issued in return
-    */
-    function buy() public payable returns (uint256 amount) {
-        etherToken.deposit.value(msg.value)(); // deposit ETH in the reserve
-        assert(etherToken.approve(tokenChanger, 0)); // need to reset the allowance to 0 before setting a new one
-        assert(etherToken.approve(tokenChanger, msg.value)); // approve the changer to use the ETH amount for the purchase
-
-        ISmartToken smartToken = tokenChanger.token();
-        uint256 returnAmount = tokenChanger.change(etherToken, smartToken, msg.value, 1); // do the actual change using the current price
-        assert(smartToken.transfer(msg.sender, returnAmount)); // transfer the tokens to the sender
-        return returnAmount;
-    }
-
-    /**
         @dev buys the smart token with ETH if the return amount meets the minimum requested
 
         @param _minReturn  if the change results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
         @return tokens issued in return
     */
-    function buyMin(uint256 _minReturn) public payable returns (uint256 amount) {
+    function buy(uint256 _minReturn) public payable returns (uint256 amount) {
         etherToken.deposit.value(msg.value)(); // deposit ETH in the reserve
         assert(etherToken.approve(tokenChanger, 0)); // need to reset the allowance to 0 before setting a new one
         assert(etherToken.approve(tokenChanger, msg.value)); // approve the changer to use the ETH amount for the purchase
@@ -76,8 +59,13 @@ contract BancorBuyer is TokenHolder {
         return returnAmount;
     }
 
-    // fallback
+    /**
+        @dev fallback, buys the smart token with ETH
+        note that the purchase will use the price at the time of the purchase
+
+        @return tokens issued in return
+    */
     function() payable {
-        buy();
+        buy(1);
     }
 }
