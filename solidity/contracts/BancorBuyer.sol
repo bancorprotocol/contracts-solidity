@@ -48,7 +48,7 @@ contract BancorBuyer is TokenHolder {
         @return tokens issued in return
     */
     function buy() public payable returns (uint256 amount) {
-        return buy(1);
+        return buyMin(1);
     }
 
     /**
