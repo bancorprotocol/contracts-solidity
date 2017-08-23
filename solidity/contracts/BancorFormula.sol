@@ -166,18 +166,18 @@ contract BancorFormula is IBancorFormula, Utils {
         @dev given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the return for a given change (in the main token)
 
         Formula:
-        Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 100) - 1)
+        Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 1000000) - 1)
 
         @param _supply             token total supply
         @param _reserveBalance     total reserve
-        @param _reserveRatio       constant reserve ratio, 1-100
+        @param _reserveRatio       constant reserve ratio, 1-1000000
         @param _depositAmount      deposit amount, in reserve token
 
         @return purchase return amount
     */
-    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint8 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
+    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint256 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
         // validate input
-        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= 100);
+        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= 1000000);
 
         // special case for 0 deposit amount
         if (_depositAmount == 0)
@@ -186,13 +186,13 @@ contract BancorFormula is IBancorFormula, Utils {
         uint256 baseN = safeAdd(_depositAmount, _reserveBalance);
         uint256 temp;
 
-        // special case if the CRR = 100
-        if (_reserveRatio == 100) {
+        // special case if the CRR = 1000000
+        if (_reserveRatio == 1000000) {
             temp = safeMul(_supply, baseN) / _reserveBalance;
             return safeSub(temp, _supply);
         }
 
-        var(result, precision) = power(baseN, _reserveBalance, _reserveRatio, 100);
+        var(result, precision) = power(baseN, _reserveBalance, _reserveRatio, 1000000);
         temp = safeMul(_supply, result) >> precision;
         return safeSub(temp, _supply);
      }
@@ -201,18 +201,18 @@ contract BancorFormula is IBancorFormula, Utils {
         @dev given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
 
         Formula:
-        Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 100)))
+        Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 1000000)))
 
         @param _supply             token total supply
         @param _reserveBalance     total reserve
-        @param _reserveRatio       constant reserve ratio, 1-100
+        @param _reserveRatio       constant reserve ratio, 1-1000000
         @param _sellAmount         sell amount, in the token itself
 
         @return sale return amount
     */
-    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint8 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
+    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint256 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
         // validate input
-        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= 100 && _sellAmount <= _supply);
+        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= 1000000 && _sellAmount <= _supply);
 
         // special case for 0 sell amount
         if (_sellAmount == 0)
@@ -226,14 +226,14 @@ contract BancorFormula is IBancorFormula, Utils {
         uint256 temp1;
         uint256 temp2;
 
-        // special case if the CRR = 100
-        if (_reserveRatio == 100) {
+        // special case if the CRR = 1000000
+        if (_reserveRatio == 1000000) {
             temp1 = safeMul(_reserveBalance, _supply);
             temp2 = safeMul(_reserveBalance, baseD);
             return safeSub(temp1, temp2) / _supply;
         }
 
-        var(result, precision) = power(_supply, baseD, 100, _reserveRatio);
+        var(result, precision) = power(_supply, baseD, 1000000, _reserveRatio);
         temp1 = safeMul(_reserveBalance, result);
         temp2 = safeMul(_reserveBalance, ONE << precision);
         return safeSub(temp1, temp2) / result;
@@ -254,7 +254,7 @@ contract BancorFormula is IBancorFormula, Utils {
             Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
             This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
     */
-    function power(uint256 _baseN, uint256 _baseD, uint8 _expN, uint8 _expD) internal constant returns (uint256, uint8) {
+    function power(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) internal constant returns (uint256, uint8) {
         uint256 lnBaseTimesExp = ln(_baseN, _baseD) * _expN / _expD;
         uint8 precision = findPositionInMaxExpArray(lnBaseTimesExp);
         return (fixedExp(lnBaseTimesExp >> (MAX_PRECISION - precision), precision), precision);

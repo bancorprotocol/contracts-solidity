@@ -8,7 +8,7 @@ contract TestBancorFormula is BancorFormula {
     function TestBancorFormula() {
     }
 
-    function powerTest(uint256 _baseN, uint256 _baseD, uint8 _expN, uint8 _expD) public constant returns (uint256, uint8) {
+    function powerTest(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) public constant returns (uint256, uint8) {
         return super.power(_baseN, _baseD, _expN, _expD);
     }
 

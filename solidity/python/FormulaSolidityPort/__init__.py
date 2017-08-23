@@ -157,18 +157,18 @@ def BancorFormula():
     @dev given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the return for a given change (in the main token)
 
     Formula:
-    Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 100) - 1)
+    Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 1000000) - 1)
 
     @param _supply             token total supply
     @param _reserveBalance     total reserve
-    @param _reserveRatio       constant reserve ratio, 1-100
+    @param _reserveRatio       constant reserve ratio, 1-1000000
     @param _depositAmount      deposit amount, in reserve token
 
     @return purchase return amount
 '''
 def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= 100);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= 1000000);
 
     # special case for 0 deposit amount
     if (_depositAmount == 0):
@@ -176,12 +176,12 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
 
     baseN = safeAdd(_depositAmount, _reserveBalance);
 
-    # special case if the CRR = 100
-    if (_reserveRatio == 100):
+    # special case if the CRR = 1000000
+    if (_reserveRatio == 1000000):
         temp = safeMul(_supply, baseN) / _reserveBalance;
         return safeSub(temp, _supply);
 
-    (result, precision) = power(baseN, _reserveBalance, _reserveRatio, 100);
+    (result, precision) = power(baseN, _reserveBalance, _reserveRatio, 1000000);
     temp = safeMul(_supply, result) >> precision;
     return safeSub(temp, _supply);
 
@@ -189,18 +189,18 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
     @dev given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
 
     Formula:
-    Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 100)))
+    Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 1000000)))
 
     @param _supply             token total supply
     @param _reserveBalance     total reserve
-    @param _reserveRatio       constant reserve ratio, 1-100
+    @param _reserveRatio       constant reserve ratio, 1-1000000
     @param _sellAmount         sell amount, in the token itself
 
     @return sale return amount
 '''
 def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= 100 and _sellAmount <= _supply);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= 1000000 and _sellAmount <= _supply);
 
     # special case for 0 sell amount
     if (_sellAmount == 0):
@@ -212,13 +212,13 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
 
     baseD = safeSub(_supply, _sellAmount);
 
-    # special case if the CRR = 100
-    if (_reserveRatio == 100):
+    # special case if the CRR = 1000000
+    if (_reserveRatio == 1000000):
         temp1 = safeMul(_reserveBalance, _supply);
         temp2 = safeMul(_reserveBalance, baseD);
         return safeSub(temp1, temp2) / _supply;
 
-    (result, precision) = power(_supply, baseD, 100, _reserveRatio);
+    (result, precision) = power(_supply, baseD, 1000000, _reserveRatio);
     temp1 = safeMul(_reserveBalance, result);
     temp2 = safeMul(_reserveBalance, ONE << precision);
     return safeSub(temp1, temp2) / result;

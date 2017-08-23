@@ -35,7 +35,7 @@ numOfFailures = 0
 for n in xrange(size):
     supply  = 10**26
     reserve = 10**23
-    ratio   = 10
+    ratio   = 100000
     amount  = bgn+gap*n
     try:
         accuracy = formulaTest(supply,reserve,ratio,amount)

@@ -43,12 +43,12 @@ contract BancorFormulaProxy is IBancorFormula, Owned, Utils {
 
         @param _supply             token total supply
         @param _reserveBalance     total reserve
-        @param _reserveRatio       constant reserve ratio, 1-100
+        @param _reserveRatio       constant reserve ratio, 1-1000000
         @param _depositAmount      deposit amount, in reserve token
 
         @return purchase return amount
     */
-    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint8 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
+    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint256 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
         return formula.calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmount);
      }
 
@@ -57,12 +57,12 @@ contract BancorFormulaProxy is IBancorFormula, Owned, Utils {
 
         @param _supply             token total supply
         @param _reserveBalance     total reserve
-        @param _reserveRatio       constant reserve ratio, 1-100
+        @param _reserveRatio       constant reserve ratio, 1-1000000
         @param _sellAmount         sell amount, in the token itself
 
         @return sale return amount
     */
-    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint8 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
+    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint256 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
         return formula.calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount);
     }
 }

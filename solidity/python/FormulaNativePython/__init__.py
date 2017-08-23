@@ -6,11 +6,11 @@ getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits f
 
 
 def calculatePurchaseReturn(supply, reserve, ratio, amount):
-    return Decimal(supply)*((1+Decimal(amount)/Decimal(reserve))**(Decimal(ratio)/100)-1)
+    return Decimal(supply)*((1+Decimal(amount)/Decimal(reserve))**(Decimal(ratio)/1000000)-1)
 
 
 def calculateSaleReturn(supply, reserve, ratio, amount):
-    return Decimal(reserve)*(1-(1-Decimal(amount)/Decimal(supply))**(100/Decimal(ratio)))
+    return Decimal(reserve)*(1-(1-Decimal(amount)/Decimal(supply))**(1000000/Decimal(ratio)))
 
 
 def power(baseN, baseD, expN, expD, precision):

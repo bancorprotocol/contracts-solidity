@@ -19,8 +19,8 @@ contract('BancorFormula', () => {
     for (let ratio = 1; ratio <= 100; ratio++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MAX_NUMERATOR.minus(1);
-        let expN  = ratio;
-        let expD  = 100;
+        let expN  = ratio * 10000;
+        let expD  = 1000000;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
@@ -37,8 +37,8 @@ contract('BancorFormula', () => {
     for (let ratio = 1; ratio <= 100; ratio++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MAX_NUMERATOR.minus(1);
-        let expN  = 100;
-        let expD  = ratio;
+        let expN  = 1000000;
+        let expD  = ratio * 10000;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
@@ -55,8 +55,8 @@ contract('BancorFormula', () => {
     for (let ratio = 1; ratio <= 100; ratio++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MIN_DENOMINATOR;
-        let expN  = ratio;
-        let expD  = 100;
+        let expN  = ratio * 10000;
+        let expD  = 1000000;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
@@ -73,8 +73,8 @@ contract('BancorFormula', () => {
     for (let ratio = 1; ratio <= 100; ratio++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MIN_DENOMINATOR;
-        let expN  = 100;
-        let expD  = ratio;
+        let expN  = 1000000;
+        let expD  = ratio * 10000;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
@@ -103,7 +103,7 @@ contract('BancorFormula', () => {
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.lnTest.call(numerator, denominator);
-                assert(retVal.times(255).lessThan(ILLEGAL_VALUE), `${test}: output is too large`);
+                assert(retVal.times(1000000).lessThan(ILLEGAL_VALUE), `${test}: output is too large`);
                 assert(assertion, `${test} failed when it should have passed`);
             }
             catch (error) {
