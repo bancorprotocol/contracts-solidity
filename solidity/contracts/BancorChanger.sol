@@ -71,9 +71,11 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     /**
         @dev constructor
 
-        @param _token                   smart token governed by the changer
-        @param _formula                 address of a bancor formula contract
-        @param _maxChangeFeePercentage  maximum change fee percentage
+        @param  _token                      smart token governed by the changer
+        @param  _formula                    address of a bancor formula contract
+        @param  _maxChangeFeePercentage     maximum change fee percentage
+        @param  _reserveToken               optional, initial reserve, allows defining the first reserve at deployment time
+        @param  _reserveRatio               optional, ratio for the initial reserve
     */
     function BancorChanger(ISmartToken _token, IBancorFormula _formula, uint16 _maxChangeFeePercentage, IERC20Token _reserveToken, uint8 _reserveRatio)
         SmartTokenController(_token)
@@ -324,13 +326,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return expected change return amount
     */
-    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount)
-        public
-        constant
-        validToken(_fromToken)
-        validToken(_toToken)
-        returns (uint256 amount)
-    {
+    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public constant returns (uint256 amount) {
         require(_fromToken != _toToken); // validate input
 
         // change between the token and one of its reserves
@@ -394,12 +390,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return change return amount
     */
-    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn)
-        public
-        validToken(_fromToken)
-        validToken(_toToken)
-        returns (uint256 amount)
-    {
+    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256 amount) {
         require(_fromToken != _toToken); // validate input
 
         // change between the token and one of its reserves
@@ -440,6 +431,10 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         token.issue(msg.sender, amount); // issue new funds to the caller in the smart token
 
         Change(_reserveToken, token, msg.sender, _depositAmount, amount);
+
+        // calculate the new price using the simple price formula
+        // price = reserve balance / (supply * CRR)
+        // CRR is a percentage, so multiplying by 100
         PriceChange(_reserveToken, token, safeMul(getReserveBalance(_reserveToken), 100), safeMul(token.totalSupply(), reserve.ratio));
         return amount;
     }
@@ -464,11 +459,10 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         amount = getSaleReturn(_reserveToken, _sellAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
-        uint256 reserveBalance = getReserveBalance(_reserveToken);
-        assert(amount <= reserveBalance); // ensure that the trade won't result in negative reserve
-
         uint256 tokenSupply = token.totalSupply();
-        assert(amount < reserveBalance || _sellAmount == tokenSupply); // ensure that the trade will only deplete the reserve if the total supply is depleted as well
+        uint256 reserveBalance = getReserveBalance(_reserveToken);
+        // ensure that the trade will only deplete the reserve if the total supply is depleted as well
+        assert(amount < reserveBalance || (amount == reserveBalance && _sellAmount == tokenSupply));
 
         // update virtual balance if relevant
         Reserve storage reserve = reserves[_reserveToken];
@@ -479,6 +473,10 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         assert(_reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
                                                             // note that it might fail if the actual reserve balance is smaller than the virtual balance
         Change(token, _reserveToken, msg.sender, _sellAmount, amount);
+
+        // calculate the new price using the simple price formula
+        // price = reserve balance / (supply * CRR)
+        // CRR is a percentage, so multiplying by 100
         PriceChange(token, _reserveToken, safeMul(token.totalSupply(), reserve.ratio), safeMul(getReserveBalance(_reserveToken), 100));
         return amount;
     }
