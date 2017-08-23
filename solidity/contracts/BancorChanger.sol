@@ -361,9 +361,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         uint256 tokenSupply = token.totalSupply();
         uint256 reserveBalance = getReserveBalance(_reserveToken);
         amount = formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
-        if (changeFeePercentage == 0)
-            return amount;
 
+        // deduct the fee from the return amount
         uint256 fee = getChangeFee(amount);
         return safeSub(amount, fee);
     }
@@ -594,9 +593,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         Reserve storage reserve = reserves[_reserveToken];
         uint256 reserveBalance = getReserveBalance(_reserveToken);
         amount = formula.calculateSaleReturn(_totalSupply, reserveBalance, reserve.ratio, _sellAmount);
-        if (changeFeePercentage == 0)
-            return amount;
 
+        // deduct the fee from the return amount
         uint256 fee = getChangeFee(amount);
         return safeSub(amount, fee);
     }
