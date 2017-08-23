@@ -16,74 +16,74 @@ contract('BancorFormula', () => {
     let MAX_NUMERATOR = web3.toBigNumber(2).toPower(256 - constants.MAX_PRECISION).minus(1);
     let MIN_DENOMINATOR = web3.toBigNumber(1);
 
-    for (let ratio = 1; ratio <= 100; ratio++) {
+    for (let percent = 1; percent <= 100; percent++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MAX_NUMERATOR.minus(1);
-        let expN  = ratio * 10000;
+        let expN  = percent * 10000;
         let expD  = 1000000;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.powerTest.call(baseN, baseD, expN, expD);
-                assert(ratio <= 100, `${test} passed when it should have failed`);
+                assert(percent <= 100, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 101, `${test} failed when it should have passed`);
+                assert(percent >= 101, `${test} failed when it should have passed`);
             }
         });
     }
 
-    for (let ratio = 1; ratio <= 100; ratio++) {
+    for (let percent = 1; percent <= 100; percent++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MAX_NUMERATOR.minus(1);
         let expN  = 1000000;
-        let expD  = ratio * 10000;
+        let expD  = percent * 10000;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.powerTest.call(baseN, baseD, expN, expD);
-                assert(ratio <= 100, `${test} passed when it should have failed`);
+                assert(percent <= 100, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 101, `${test} failed when it should have passed`);
+                assert(percent >= 101, `${test} failed when it should have passed`);
             }
         });
     }
 
-    for (let ratio = 1; ratio <= 100; ratio++) {
+    for (let percent = 1; percent <= 100; percent++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MIN_DENOMINATOR;
-        let expN  = ratio * 10000;
+        let expN  = percent * 10000;
         let expD  = 1000000;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.powerTest.call(baseN, baseD, expN, expD);
-                assert(ratio <= 63, `${test} passed when it should have failed`);
+                assert(percent <= 63, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 64, `${test} failed when it should have passed`);
+                assert(percent >= 64, `${test} failed when it should have passed`);
             }
         });
     }
 
-    for (let ratio = 1; ratio <= 100; ratio++) {
+    for (let percent = 1; percent <= 100; percent++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MIN_DENOMINATOR;
         let expN  = 1000000;
-        let expD  = ratio * 10000;
+        let expD  = percent * 10000;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.powerTest.call(baseN, baseD, expN, expD);
-                assert(ratio <= 0, `${test} passed when it should have failed`);
+                assert(percent <= 0, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(ratio >= 1, `${test} failed when it should have passed`);
+                assert(percent >= 1, `${test} failed when it should have passed`);
             }
         });
     }
