@@ -5,6 +5,7 @@ import './Utils.sol';
 import './interfaces/ITokenChanger.sol';
 import './interfaces/ISmartToken.sol';
 import './interfaces/IBancorFormula.sol';
+import './interfaces/IEtherToken.sol';
 
 /*
     Open issues:
@@ -21,6 +22,22 @@ import './interfaces/IBancorFormula.sol';
     the actual reserve balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract.
 
     The changer is upgradable (just like any SmartTokenController).
+
+    A note on change paths -
+    Change path is a data structure that's used when changing a token to another token in the bancor network
+    when the change cannot necessarily be done by single changer and might require multiple 'hops'.
+    The path defines which changers should be used and what kind of change should be done in each step.
+
+    The path format doesn't include complex structure and instead, it is represented by a single array
+    in which each 'hop' is represented by a triplet - smart token, from token, to token.
+    The smart token is only used as a pointer to a changer (since changer addresses are more likely to change).
+
+    Format:
+
+    |______|______|______|______|______|______|...
+     smart   from    to   smart   from    to
+     token   token  token token   token  token
+
 
     WARNING: It is NOT RECOMMENDED to use the changer with Smart Tokens that have less than 8 decimal digits
              or with very small numbers because of precision loss
@@ -39,6 +56,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
     IBancorFormula public formula;                  // bancor calculation formula contract
     address[] public reserveTokens;                 // ERC20 standard token addresses
+    address[] public quickBuyPath;                  // change path that's used in order to buy the token with ETH
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
     uint8 private totalReserveRatio = 0;            // used to efficiently prevent increasing the total reserve ratio above 100%
     uint16 public maxChangeFeePercentage = 0;       // maximum change fee percentage for the lifetime of the contract, 0...10000 (0 = no fee, 1 = 0.01%, 10000 = 100%)
@@ -99,6 +117,12 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         _;
     }
 
+    // validates a change path
+    modifier validChangePath(address[] _path) {
+        require(_path.length > 1 && _path.length <= 30 && _path.length % 3 == 0);
+        _;
+    }
+
     // allows execution only when changing isn't disabled
     modifier changingAllowed {
         assert(changingEnabled);
@@ -149,6 +173,28 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         notThis(_formula)
     {
         formula = _formula;
+    }
+
+    /*
+        @dev allows the manager to update the quick buy path
+
+        @param _path    new quick buy path. See change path format above
+    */
+    function setQuickBuyPath(address[] _path)
+        public
+        managerOnly
+        validChangePath(_path)
+    {
+        quickBuyPath = _path;
+    }
+
+    /**
+        @dev returns the length of the quick buy path array
+
+        @return quick buy path length
+    */
+    function getQuickBuyPathLength() public constant returns (uint256 length) {
+        return quickBuyPath.length;
     }
 
     /**
@@ -438,6 +484,99 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     }
 
     /**
+        @dev changes the token to any other token in the bancor network by following a predefined change path
+        note that when changing from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
+
+        @param _amount      amount to change from (in the initial change from token)
+        @param _path        change path. See format above
+        @param _minReturn   if the change results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+
+        @return tokens issued in return
+    */
+    function quickChange(uint256 _amount, address[] _path, uint256 _minReturn)
+        public
+        validChangePath(_path)
+        returns (uint256 amount)
+    {
+        // we need to transfer the tokens from the caller to the local contract before we
+        // follow the change path, to allow it to execute the change on behalf of the caller
+        // if the initial change in the path is a purchase, we assume that the local contract already received allowance
+        // if the initial change in the path is a sale, we ensure that the local contract is the changer (which doesn't require allowance)
+        require(_path[0] == _path[2] || _path[0] == address(token));
+
+        ISmartToken smartToken = ISmartToken(_path[0]);
+        IERC20Token fromToken;
+        IERC20Token toToken;
+        BancorChanger changer;
+
+        // transfer the tokens from the caller to the local contract
+        // initial change is a purchase
+        if (smartToken == _path[2]) {
+            fromToken = IERC20Token(_path[1]);
+            assert(fromToken.transferFrom(msg.sender, this, _amount));
+        }
+        // initial change is a sale
+        else {
+            token.destroy(msg.sender, _amount); // destroy _amount from the caller's balance in the smart token
+            token.issue(this, _amount); // issue _amount new tokens to the local contract
+        }
+
+        // iterate over the change path
+        for (uint8 i = 0; i < _path.length; i += 3) {
+            smartToken = ISmartToken(_path[i]);
+            fromToken = IERC20Token(_path[i + 1]);
+            toToken = IERC20Token(_path[i + 2]);
+            changer = BancorChanger(smartToken.owner());
+
+            // if it's a purchase, we need to approve the request
+            if (smartToken == toToken)
+                ensureAllowance(fromToken, changer, _amount);
+
+            // make the change - if it's the last one, also provide the minimum return value
+            _amount = changer.change(fromToken, toToken, _amount, i == _path.length - 3 ? _minReturn : 1);
+        }
+
+        // finished the change, transfer the funds back to the caller
+        // if the last change resulted in ether tokens, withdraw them and send them as ETH to the caller
+        // we assume that the first element in the last changer's quick buy path is the ether token (if a path exists)
+        if (changer.getQuickBuyPathLength() > 0 && changer.quickBuyPath(1) == address(toToken)) {
+            IEtherToken etherToken = IEtherToken(toToken);
+            etherToken.withdraw(_amount);
+            msg.sender.transfer(_amount);
+            return;
+        }
+
+        // not ETH, transfer the tokens to the caller
+        assert(toToken.transfer(msg.sender, _amount));
+        amount = _amount;
+    }
+
+    /**
+        @dev buys the smart token with ETH if the return amount meets the minimum requested
+        note that this function can eventually be moved into a separate contract
+
+        @param _minReturn  if the change results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+
+        @return tokens issued in return
+    */
+    function quickBuy(uint256 _minReturn) public payable returns (uint256 amount) {
+        // ensure that the quick buy path was set
+        assert(quickBuyPath.length > 0);
+        // we assume that the from token in the initial change is always an ether token
+        IEtherToken etherToken = IEtherToken(quickBuyPath[1]);
+        // deposit ETH in the ether token
+        etherToken.deposit.value(msg.value)();
+        // approve allowance for the local contract in the ether token
+        ensureAllowance(etherToken, this, msg.value);
+        // execute the change
+        BancorChanger changer = BancorChanger(quickBuyPath[0]);
+        uint256 returnAmount = changer.quickChange(msg.value, quickBuyPath, _minReturn);
+        // transfer the tokens to the caller
+        assert(token.transfer(msg.sender, returnAmount));
+        return returnAmount;
+    }
+
+    /**
         @dev utility, returns the expected return for selling the token for one of its reserve tokens, given a total supply override
 
         @param _reserveToken   reserve token contract address
@@ -462,5 +601,33 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         uint256 fee = getChangeFee(amount);
         return safeSub(amount, fee);
+    }
+
+    /**
+        @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't
+
+        @param _token   token to check the allowance in
+        @param _spender approved address
+        @param _value   allowance amount
+    */
+    function ensureAllowance(IERC20Token _token, address _spender, uint256 _value) private {
+        // check if allowance for the given amount already exists
+        if (_token.allowance(this, _spender) >= _value)
+            return;
+
+        // if the allowance is nonzero, must reset it to 0 first
+        if (_token.allowance(this, _spender) != 0)
+            assert(_token.approve(_spender, 0));
+
+        // approve the new allowance
+        assert(_token.approve(_spender, _value));
+    }
+
+    /**
+        @dev fallback, buys the smart token with ETH
+        note that the purchase will use the price at the time of the purchase
+    */
+    function() payable {
+        quickBuy(1);
     }
 }
