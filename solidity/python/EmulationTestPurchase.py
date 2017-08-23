@@ -1,6 +1,6 @@
 import web3
 import json
-import math
+import InputGenerator
 import FormulaSolidityPort
 
 
@@ -25,10 +25,10 @@ GROWTH_FACTOR_AMOUNT  = 2.5
 
 
 def Main():    
-    range_supply  = GenerateRange(MINIMUM_VALUE_SUPPLY ,MAXIMUM_VALUE_SUPPLY ,GROWTH_FACTOR_SUPPLY )
-    range_reserve = GenerateRange(MINIMUM_VALUE_RESERVE,MAXIMUM_VALUE_RESERVE,GROWTH_FACTOR_RESERVE)
-    range_ratio   = GenerateRange(MINIMUM_VALUE_RATIO  ,MAXIMUM_VALUE_RATIO  ,GROWTH_FACTOR_RATIO  )
-    range_amount  = GenerateRange(MINIMUM_VALUE_AMOUNT ,MAXIMUM_VALUE_AMOUNT ,GROWTH_FACTOR_AMOUNT )
+    range_supply  = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_SUPPLY ,MAXIMUM_VALUE_SUPPLY ,GROWTH_FACTOR_SUPPLY )
+    range_reserve = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_RESERVE,MAXIMUM_VALUE_RESERVE,GROWTH_FACTOR_RESERVE)
+    range_ratio   = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_RATIO  ,MAXIMUM_VALUE_RATIO  ,GROWTH_FACTOR_RATIO  )
+    range_amount  = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_AMOUNT ,MAXIMUM_VALUE_AMOUNT ,GROWTH_FACTOR_AMOUNT )
     
     testNum = 0
     numOfTests = len(range_supply)*len(range_reserve)*len(range_ratio)*len(range_amount)
@@ -62,10 +62,6 @@ def Run(module,supply,reserve,ratio,amount):
         return module.calculatePurchaseReturn(supply,reserve,ratio,amount)
     except Exception:
         return -1
-
-
-def GenerateRange(minimumValue,maximumValue,growthFactor):
-    return [int(minimumValue*growthFactor**n) for n in range(int(math.log(float(maximumValue)/float(minimumValue),growthFactor))+1)]
 
 
 Main()

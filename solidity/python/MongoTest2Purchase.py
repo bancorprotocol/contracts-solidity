@@ -13,22 +13,22 @@ DATABASE_NAME = 'test'
 
 MINIMUM_VALUE_SUPPLY  = 100
 MAXIMUM_VALUE_SUPPLY  = 10**34
-GROWTH_FACTOR_SUPPLY  = 1.5
+SAMPLES_COUNT_SUPPLY  = 150
 
 
 MINIMUM_VALUE_RESERVE = 100
 MAXIMUM_VALUE_RESERVE = 10**34
-GROWTH_FACTOR_RESERVE = 1.5
+SAMPLES_COUNT_RESERVE = 150
 
 
 MINIMUM_VALUE_RATIO   = 10
 MAXIMUM_VALUE_RATIO   = 90
-GROWTH_FACTOR_RATIO   = 1.25
+SAMPLES_COUNT_RATIO   = 10
 
 
 MINIMUM_VALUE_AMOUNT  = 1
 MAXIMUM_VALUE_AMOUNT  = 10**34
-GROWTH_FACTOR_AMOUNT  = 1.5
+SAMPLES_COUNT_AMOUNT  = 150
 
 
 TRANSACTION_SUCCESS  = 0
@@ -51,20 +51,20 @@ def Main():
         uri = 'mongodb://{}:{}@{}/{}'.format(username,password,server_name,database_name)
     else:
         uri = 'mongodb://{}/{}'.format(server_name,database_name)
-    TestAll(pymongo.MongoClient(uri)[database_name]['sale'])
+    TestAll(pymongo.MongoClient(uri)[database_name]['purchase'])
 
 
 def TestAll(collection):
     collection.ensure_index([(key,pymongo.ASCENDING) for key in ['supply','reserve','ratio','amount']])
-    range_supply  = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_SUPPLY ,MAXIMUM_VALUE_SUPPLY ,GROWTH_FACTOR_SUPPLY )
-    range_reserve = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_RESERVE,MAXIMUM_VALUE_RESERVE,GROWTH_FACTOR_RESERVE)
-    range_ratio   = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_RATIO  ,MAXIMUM_VALUE_RATIO  ,GROWTH_FACTOR_RATIO  )
-    range_amount  = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_AMOUNT ,MAXIMUM_VALUE_AMOUNT ,GROWTH_FACTOR_AMOUNT )
+    range_supply  = InputGenerator.UniformDistribution(MINIMUM_VALUE_SUPPLY ,MAXIMUM_VALUE_SUPPLY ,SAMPLES_COUNT_SUPPLY )
+    range_reserve = InputGenerator.UniformDistribution(MINIMUM_VALUE_RESERVE,MAXIMUM_VALUE_RESERVE,SAMPLES_COUNT_RESERVE)
+    range_ratio   = InputGenerator.UniformDistribution(MINIMUM_VALUE_RATIO  ,MAXIMUM_VALUE_RATIO  ,SAMPLES_COUNT_RATIO  )
+    range_amount  = InputGenerator.UniformDistribution(MINIMUM_VALUE_AMOUNT ,MAXIMUM_VALUE_AMOUNT ,SAMPLES_COUNT_AMOUNT )
     for             supply  in range_supply :
         for         reserve in range_reserve:
             for     ratio   in range_ratio  :
                 for amount  in range_amount :
-                    if amount <= supply:
+                    if True:
                         resultSolidityPort = Run(FormulaSolidityPort,supply,reserve,ratio,amount)
                         resultNativePython = Run(FormulaNativePython,supply,reserve,ratio,amount)
                         if resultNativePython < 0:
@@ -97,7 +97,7 @@ def TestAll(collection):
 
 def Run(module,supply,reserve,ratio,amount):
     try:
-        return module.calculateSaleReturn(supply,reserve,ratio,amount)
+        return module.calculatePurchaseReturn(supply,reserve,ratio,amount)
     except Exception:
         return -1
 
