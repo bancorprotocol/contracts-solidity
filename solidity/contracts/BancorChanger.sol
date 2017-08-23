@@ -57,7 +57,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         @param _formula                 address of a bancor formula contract
         @param _maxChangeFeePercentage  maximum change fee percentage
     */
-    function BancorChanger(ISmartToken _token, IBancorFormula _formula, uint16 _maxChangeFeePercentage, IERC20Token _reserveToken, uint8 _reserveRatio)
+    function BancorChanger(ISmartToken _token, IBancorFormula _formula, uint16 _maxChangeFeePercentage, IERC20Token _reserveToken, uint256 _reserveRatio)
         SmartTokenController(_token)
         validAddress(_formula)
         validMaxChangeFeePercentage(_maxChangeFeePercentage)
