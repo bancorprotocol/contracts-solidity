@@ -175,7 +175,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
         @return purchase return amount
     */
-    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint256 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
+    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
         // validate input
         require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= 1000000);
 
@@ -210,7 +210,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
         @return sale return amount
     */
-    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint256 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
+    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
         // validate input
         require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= 1000000 && _sellAmount <= _supply);
 
@@ -254,7 +254,7 @@ contract BancorFormula is IBancorFormula, Utils {
             Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
             This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
     */
-    function power(uint256 _baseN, uint256 _baseD, uint256 _expN, uint256 _expD) internal constant returns (uint256, uint8) {
+    function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) internal constant returns (uint256, uint8) {
         uint256 lnBaseTimesExp = ln(_baseN, _baseD) * _expN / _expD;
         uint8 precision = findPositionInMaxExpArray(lnBaseTimesExp);
         return (fixedExp(lnBaseTimesExp >> (MAX_PRECISION - precision), precision), precision);

@@ -77,7 +77,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         @param  _reserveToken               optional, initial reserve, allows defining the first reserve at deployment time
         @param  _reserveRatio               optional, ratio for the initial reserve
     */
-    function BancorChanger(ISmartToken _token, IBancorFormula _formula, uint16 _maxChangeFeePercentage, IERC20Token _reserveToken, uint256 _reserveRatio)
+    function BancorChanger(ISmartToken _token, IBancorFormula _formula, uint16 _maxChangeFeePercentage, IERC20Token _reserveToken, uint32 _reserveRatio)
         SmartTokenController(_token)
         validAddress(_formula)
         validMaxChangeFeePercentage(_maxChangeFeePercentage)

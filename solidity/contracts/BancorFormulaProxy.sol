@@ -48,7 +48,7 @@ contract BancorFormulaProxy is IBancorFormula, Owned, Utils {
 
         @return purchase return amount
     */
-    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint256 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
+    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
         return formula.calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmount);
      }
 
@@ -62,7 +62,7 @@ contract BancorFormulaProxy is IBancorFormula, Owned, Utils {
 
         @return sale return amount
     */
-    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint256 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
+    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
         return formula.calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount);
     }
 }
