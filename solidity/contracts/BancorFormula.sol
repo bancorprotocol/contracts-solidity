@@ -3,10 +3,10 @@ import './Utils.sol';
 import './interfaces/IBancorFormula.sol';
 
 contract BancorFormula is IBancorFormula, Utils {
-    uint32 public constant MAX_CRR = 1000000;
-    uint256 public constant ONE = 1;
-    uint8 public constant MIN_PRECISION = 32;
-    uint8 public constant MAX_PRECISION = 127;
+    uint32 private constant MAX_CRR = 1000000;
+    uint256 private constant ONE = 1;
+    uint8 private constant MIN_PRECISION = 32;
+    uint8 private constant MAX_PRECISION = 127;
 
     string public version = '0.2';
 

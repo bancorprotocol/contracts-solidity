@@ -43,8 +43,8 @@ import './interfaces/IEtherToken.sol';
              or with very small numbers because of precision loss
 */
 contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
-    uint32 public constant MAX_CRR = 1000000;
-    uint32 public constant MAX_CHANGE_FEE = 1000000;
+    uint32 private constant MAX_CRR = 1000000;
+    uint32 private constant MAX_CHANGE_FEE = 1000000;
 
     struct Reserve {
         uint256 virtualBalance;         // virtual balance
