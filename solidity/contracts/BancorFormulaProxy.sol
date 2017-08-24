@@ -34,7 +34,6 @@ contract BancorFormulaProxy is IBancorFormula, Owned, Utils {
         validAddress(_formula)
         notThis(_formula)
     {
-        require(_formula != formula); // validate input
         formula = _formula;
     }
 
