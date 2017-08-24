@@ -74,8 +74,8 @@ contract('BancorChanger', (accounts) => {
         assert.equal(token, tokenAddress);
         let formula = await changer.formula.call();
         assert.equal(formula, formulaAddress);
-        let maxChangeFeePercentage = await changer.maxChangeFeePercentage.call();
-        assert.equal(maxChangeFeePercentage, 0);
+        let maxChangeFee = await changer.maxChangeFee.call();
+        assert.equal(maxChangeFee, 0);
         let changingEnabled = await changer.changingEnabled.call();
         assert.equal(changingEnabled, true);
     });
@@ -100,9 +100,9 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to construct a changer with invalid max fee percentage', async () => {
+    it('should throw when attempting to construct a changer with invalid max fee', async () => {
         try {
-            await BancorChanger.new(tokenAddress, formulaAddress, 1000000, '0x0', 0);
+            await BancorChanger.new(tokenAddress, formulaAddress, 1000000000, '0x0', 0);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -210,18 +210,18 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('verifies the owner can update the fee percentage', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 2000, '0x0', 0);
-        await changer.setChangeFeePercentage(300);
-        let changeFeePercentage = await changer.changeFeePercentage.call();
-        assert.equal(changeFeePercentage, 300);
+    it('verifies the owner can update the fee', async () => {
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 200000, '0x0', 0);
+        await changer.setChangeFee(30000);
+        let changeFee = await changer.changeFee.call();
+        assert.equal(changeFee, 30000);
     });
 
-    it('should throw when attempting to change the fee percentage to an invalid value', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 2000, '0x0', 0);
+    it('should throw when attempting to change the fee to an invalid value', async () => {
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 200000, '0x0', 0);
 
         try {
-            await changer.setChangeFeePercentage(2001);
+            await changer.setChangeFee(200001);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -229,11 +229,11 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when a non owner attempts to change the fee percentage', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 2000, '0x0', 0);
+    it('should throw when a non owner attempts to change the fee', async () => {
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 200000, '0x0', 0);
 
         try {
-            await changer.setChangeFeePercentage(300, { from: accounts[1] });
+            await changer.setChangeFee(30000, { from: accounts[1] });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -241,11 +241,11 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('verifies that getChangeFee returns the correct amount', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 2000, '0x0', 0);
-        await changer.setChangeFeePercentage(100);
-        let changeFee = await changer.getChangeFee.call(5000);
-        assert.equal(changeFee, 50);
+    it('verifies that getChangeFeeAmount returns the correct amount', async () => {
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 200000, '0x0', 0);
+        await changer.setChangeFee(10000);
+        let changeFeeAmount = await changer.getChangeFeeAmount.call(500000);
+        assert.equal(changeFeeAmount, 5000);
     });
 
     it('verifies that 2 reserves are added correctly', async () => {

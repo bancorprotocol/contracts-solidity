@@ -44,6 +44,7 @@ import './interfaces/IEtherToken.sol';
 */
 contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     uint32 public constant MAX_CRR = 1000000;
+    uint32 public constant MAX_CHANGE_FEE = 1000000;
 
     struct Reserve {
         uint256 virtualBalance;         // virtual balance
@@ -61,8 +62,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     address[] public quickBuyPath;                  // change path that's used in order to buy the token with ETH
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
     uint32 private totalReserveRatio = 0;           // used to efficiently prevent increasing the total reserve ratio above 100%
-    uint16 public maxChangeFeePercentage = 0;       // maximum change fee percentage for the lifetime of the contract, 0...10000 (0 = no fee, 1 = 0.01%, 10000 = 100%)
-    uint16 public changeFeePercentage = 0;          // current change fee percentage, 0...maxChangeFeePercentage
+    uint32 public maxChangeFee = 0;                 // maximum change fee for the lifetime of the contract, represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
+    uint32 public changeFee = 0;                    // current change fee percentage, 0...maxChangeFee
     bool public changingEnabled = true;             // true if token changing is enabled, false if not
 
     // triggered when a change between two tokens occurs
@@ -73,19 +74,19 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     /**
         @dev constructor
 
-        @param  _token                      smart token governed by the changer
-        @param  _formula                    address of a bancor formula contract
-        @param  _maxChangeFeePercentage     maximum change fee percentage
-        @param  _reserveToken               optional, initial reserve, allows defining the first reserve at deployment time
-        @param  _reserveRatio               optional, ratio for the initial reserve
+        @param  _token          smart token governed by the changer
+        @param  _formula        address of a bancor formula contract
+        @param  _maxChangeFee   maximum change fee, represented in ppm
+        @param  _reserveToken   optional, initial reserve, allows defining the first reserve at deployment time
+        @param  _reserveRatio   optional, ratio for the initial reserve
     */
-    function BancorChanger(ISmartToken _token, IBancorFormula _formula, uint16 _maxChangeFeePercentage, IERC20Token _reserveToken, uint32 _reserveRatio)
+    function BancorChanger(ISmartToken _token, IBancorFormula _formula, uint32 _maxChangeFee, IERC20Token _reserveToken, uint32 _reserveRatio)
         SmartTokenController(_token)
         validAddress(_formula)
-        validMaxChangeFeePercentage(_maxChangeFeePercentage)
+        validMaxChangeFee(_maxChangeFee)
     {
         formula = _formula;
-        maxChangeFeePercentage = _maxChangeFeePercentage;
+        maxChangeFee = _maxChangeFee;
 
         if (address(_reserveToken) != 0x0)
             addReserve(_reserveToken, _reserveRatio, false);
@@ -103,15 +104,15 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         _;
     }
 
-    // validates maximum change fee percentage
-    modifier validMaxChangeFeePercentage(uint16 _changeFeePercentage) {
-        require(_changeFeePercentage >= 0 && _changeFeePercentage <= 10000);
+    // validates maximum change fee
+    modifier validMaxChangeFee(uint32 _changeFee) {
+        require(_changeFee >= 0 && _changeFee <= MAX_CHANGE_FEE);
         _;
     }
 
-    // validates change fee percentage
-    modifier validChangeFeePercentage(uint16 _changeFeePercentage) {
-        require(_changeFeePercentage >= 0 && _changeFeePercentage <= maxChangeFeePercentage);
+    // validates change fee
+    modifier validChangeFee(uint32 _changeFee) {
+        require(_changeFee >= 0 && _changeFee <= maxChangeFee);
         _;
     }
 
@@ -213,26 +214,26 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     }
 
     /**
-        @dev updates the current change fee percentage
+        @dev updates the current change fee
         can only be called by the manager
 
-        @param _changeFeePercentage new change fee percentage
+        @param _changeFee new change fee, represented in ppm
     */
-    function setChangeFeePercentage(uint16 _changeFeePercentage)
+    function setChangeFee(uint32 _changeFee)
         public
         managerOnly
-        validChangeFeePercentage(_changeFeePercentage)
+        validChangeFee(_changeFee)
     {
-        changeFeePercentage = _changeFeePercentage;
+        changeFee = _changeFee;
     }
 
     /*
-        @dev returns the change fee for a given return amount
+        @dev returns the change fee amount for a given return amount
 
-        @return change fee
+        @return change fee amount
     */
-    function getChangeFee(uint256 _amount) public constant returns (uint256 fee) {
-        return safeMul(_amount, changeFeePercentage) / 10000;
+    function getChangeFeeAmount(uint256 _amount) public constant returns (uint256 feeAmount) {
+        return safeMul(_amount, changeFee) / MAX_CHANGE_FEE;
     }
 
     /**
@@ -365,8 +366,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         amount = formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
 
         // deduct the fee from the return amount
-        uint256 fee = getChangeFee(amount);
-        return safeSub(amount, fee);
+        uint256 feeAmount = getChangeFeeAmount(amount);
+        return safeSub(amount, feeAmount);
     }
 
     /**
@@ -597,8 +598,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         amount = formula.calculateSaleReturn(_totalSupply, reserveBalance, reserve.ratio, _sellAmount);
 
         // deduct the fee from the return amount
-        uint256 fee = getChangeFee(amount);
-        return safeSub(amount, fee);
+        uint256 feeAmount = getChangeFeeAmount(amount);
+        return safeSub(amount, feeAmount);
     }
 
     /**
