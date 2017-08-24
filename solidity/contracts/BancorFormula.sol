@@ -191,7 +191,7 @@ contract BancorFormula is IBancorFormula, Utils {
             return safeSub(temp, _supply);
         }
 
-        var(result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_CRR_PPM);
+        var (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_CRR_PPM);
         temp = safeMul(_supply, result) >> precision;
         return safeSub(temp, _supply);
      }
@@ -232,7 +232,7 @@ contract BancorFormula is IBancorFormula, Utils {
             return safeSub(temp1, temp2) / _supply;
         }
 
-        var(result, precision) = power(_supply, baseD, MAX_CRR_PPM, _reserveRatio);
+        var (result, precision) = power(_supply, baseD, MAX_CRR_PPM, _reserveRatio);
         temp1 = safeMul(_reserveBalance, result);
         temp2 = safeMul(_reserveBalance, ONE << precision);
         return safeSub(temp1, temp2) / result;
