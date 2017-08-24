@@ -547,7 +547,6 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         // finished the change, transfer the funds back to the caller
         // if the last change resulted in ether tokens, withdraw them and send them as ETH to the caller
-        // we assume that the first element in the last changer's quick buy path is the ether token (if a path exists)
         if (changer.getQuickBuyEtherTokenAddress() == address(toToken)) {
             IEtherToken etherToken = IEtherToken(toToken);
             etherToken.withdraw(_amount);
