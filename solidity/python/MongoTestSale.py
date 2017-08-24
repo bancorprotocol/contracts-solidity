@@ -43,10 +43,10 @@ def Main():
     server_name   = SERVER_NAME  
     database_name = DATABASE_NAME
     for arg in sys.argv[1:]:
-        username      = arg[len('username='     ):] if arg.startswith('username='     ) else username     
-        password      = arg[len('password='     ):] if arg.startswith('password='     ) else password     
-        server_name   = arg[len('server_name='  ):] if arg.startswith('server_name='  ) else server_name  
-        database_name = arg[len('database_name='):] if arg.startswith('database_name=') else database_name
+        username      = arg[len('username     '.rstrip()+'='):] if arg.startswith('username     '.rstrip()+'=') else username     
+        password      = arg[len('password     '.rstrip()+'='):] if arg.startswith('password     '.rstrip()+'=') else password     
+        server_name   = arg[len('server_name  '.rstrip()+'='):] if arg.startswith('server_name  '.rstrip()+'=') else server_name  
+        database_name = arg[len('database_name'.rstrip()+'='):] if arg.startswith('database_name'.rstrip()+'=') else database_name
     if username and password:
         uri = 'mongodb://{}:{}@{}/{}'.format(username,password,server_name,database_name)
     else:
