@@ -30,6 +30,7 @@ contract BancorFormula is IBancorFormula, Utils {
         Apply the same change in file 'PrintFunctionBancorFormula.py', run it and paste the results below.
     */
     uint256[128] private maxExpArray;
+
     function BancorFormula() {
     //  maxExpArray[  0] = 0x60ffffffffffffffffffffffffffffffff;
     //  maxExpArray[  1] = 0x5ebfffffffffffffffffffffffffffffff;
