@@ -1,5 +1,7 @@
-ONE = 1;
+version = '0.2';
 
+MAX_CRR = 1000000;
+ONE = 1;
 MIN_PRECISION = 32;
 MAX_PRECISION = 127;
 
@@ -23,6 +25,7 @@ LN2_EXPONENT = 122;
     Apply the same change in file 'PrintFunctionBancorFormula.py', run it and paste the results below.
 '''
 maxExpArray = [0] * 128;
+
 def BancorFormula():
 #   maxExpArray[  0] = 0x60ffffffffffffffffffffffffffffffff;
 #   maxExpArray[  1] = 0x5ebfffffffffffffffffffffffffffffff;
@@ -161,14 +164,14 @@ def BancorFormula():
 
     @param _supply             token total supply
     @param _reserveBalance     total reserve
-    @param _reserveRatio       constant reserve ratio, 1-1000000
+    @param _reserveRatio       constant reserve ratio, represented in ppm, 1-1000000
     @param _depositAmount      deposit amount, in reserve token
 
     @return purchase return amount
 '''
 def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= 1000000);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= MAX_CRR);
 
     # special case for 0 deposit amount
     if (_depositAmount == 0):
@@ -176,12 +179,12 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
 
     baseN = safeAdd(_depositAmount, _reserveBalance);
 
-    # special case if the CRR = 1000000
-    if (_reserveRatio == 1000000):
+    # special case if the CRR = 100%
+    if (_reserveRatio == MAX_CRR):
         temp = safeMul(_supply, baseN) / _reserveBalance;
         return safeSub(temp, _supply);
 
-    (result, precision) = power(baseN, _reserveBalance, _reserveRatio, 1000000);
+    (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_CRR);
     temp = safeMul(_supply, result) >> precision;
     return safeSub(temp, _supply);
 
@@ -193,14 +196,14 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
 
     @param _supply             token total supply
     @param _reserveBalance     total reserve
-    @param _reserveRatio       constant reserve ratio, 1-1000000
+    @param _reserveRatio       constant reserve ratio, represented in ppm, 1-1000000
     @param _sellAmount         sell amount, in the token itself
 
     @return sale return amount
 '''
 def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= 1000000 and _sellAmount <= _supply);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= MAX_CRR and _sellAmount <= _supply);
 
     # special case for 0 sell amount
     if (_sellAmount == 0):
@@ -212,13 +215,13 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
 
     baseD = safeSub(_supply, _sellAmount);
 
-    # special case if the CRR = 1000000
-    if (_reserveRatio == 1000000):
+    # special case if the CRR = 100%
+    if (_reserveRatio == MAX_CRR):
         temp1 = safeMul(_reserveBalance, _supply);
         temp2 = safeMul(_reserveBalance, baseD);
         return safeSub(temp1, temp2) / _supply;
 
-    (result, precision) = power(_supply, baseD, 1000000, _reserveRatio);
+    (result, precision) = power(_supply, baseD, MAX_CRR, _reserveRatio);
     temp1 = safeMul(_reserveBalance, result);
     temp2 = safeMul(_reserveBalance, ONE << precision);
     return safeSub(temp1, temp2) / result;
