@@ -61,13 +61,12 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
     uint32 private totalReserveRatio = 0;           // used to efficiently prevent increasing the total reserve ratio above 100%
     uint32 public maxChangeFee = 0;                 // maximum change fee for the lifetime of the contract, represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
-    uint32 public changeFee = 0;                    // current change fee percentage, 0...maxChangeFee
+    uint32 public changeFee = 0;                    // current change fee, represented in ppm, 0...maxChangeFee
     bool public changingEnabled = true;             // true if token changing is enabled, false if not
 
-    // triggered when a change between two tokens occurs
-    event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return);
-    // triggered when the price between two tokens changes
-    event PriceChange(address indexed _token1, address indexed _token2, uint256 _token1Amount, uint256 _token2Amount);
+    // triggered when a change between two tokens occurs (TokenChanger event)
+    event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return,
+                 uint256 _currentPriceN, uint256 _currentPriceD);
 
     /**
         @dev constructor
@@ -442,12 +441,12 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         assert(_reserveToken.transferFrom(msg.sender, this, _depositAmount)); // transfer _depositAmount funds from the caller in the reserve token
         token.issue(msg.sender, amount); // issue new funds to the caller in the smart token
 
-        Change(_reserveToken, token, msg.sender, _depositAmount, amount);
-
         // calculate the new price using the simple price formula
         // price = reserve balance / (supply * CRR)
-        // CRR is a percentage represented in ppm, so multiplying by 1000000
-        PriceChange(_reserveToken, token, safeMul(getReserveBalance(_reserveToken), MAX_CRR), safeMul(token.totalSupply(), reserve.ratio));
+        // CRR is represented in ppm, so multiplying by 1000000
+        uint256 reserveAmount = safeMul(getReserveBalance(_reserveToken), MAX_CRR);
+        uint256 tokenAmount = safeMul(token.totalSupply(), reserve.ratio);
+        Change(_reserveToken, token, msg.sender, _depositAmount, amount, reserveAmount, tokenAmount);
         return amount;
     }
 
@@ -484,12 +483,12 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         token.destroy(msg.sender, _sellAmount); // destroy _sellAmount from the caller's balance in the smart token
         assert(_reserveToken.transfer(msg.sender, amount)); // transfer funds to the caller in the reserve token
                                                             // note that it might fail if the actual reserve balance is smaller than the virtual balance
-        Change(token, _reserveToken, msg.sender, _sellAmount, amount);
-
         // calculate the new price using the simple price formula
         // price = reserve balance / (supply * CRR)
-        // CRR is a percentage represented in ppm, so multiplying by 1000000
-        PriceChange(token, _reserveToken, safeMul(token.totalSupply(), reserve.ratio), safeMul(getReserveBalance(_reserveToken), MAX_CRR));
+        // CRR is represented in ppm, so multiplying by 1000000
+        uint256 reserveAmount = safeMul(getReserveBalance(_reserveToken), MAX_CRR);
+        uint256 tokenAmount = safeMul(token.totalSupply(), reserve.ratio);
+        Change(token, _reserveToken, msg.sender, _sellAmount, amount, tokenAmount, reserveAmount);
         return amount;
     }
 

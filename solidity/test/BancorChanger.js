@@ -781,7 +781,7 @@ contract('BancorChanger', (accounts) => {
         await reserveToken.approve(changer.address, 500);
 
         let changeRes = await changer.change(reserveTokenAddress, reserveTokenAddress2, 500, 1);
-        let changeAmount = getChangeAmount(changeRes, 2);
+        let changeAmount = getChangeAmount(changeRes, 1);
         assert.isNumber(changeAmount);
         assert.notEqual(changeAmount, 0);
 
