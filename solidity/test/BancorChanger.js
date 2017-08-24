@@ -8,6 +8,8 @@ const BancorFormulaProxy = artifacts.require('BancorFormulaProxy.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const utils = require('./helpers/Utils');
 
+const CRR10Percent = 100000;
+
 let token;
 let tokenAddress;
 let formulaAddress;
@@ -27,9 +29,9 @@ async function initChanger(accounts, activate) {
     reserveToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
     reserveTokenAddress2 = reserveToken2.address;
 
-    let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, reserveTokenAddress, 25);
+    let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, reserveTokenAddress, 250000);
     let changerAddress = changer.address;
-    await changer.addReserve(reserveTokenAddress2, 15, false);
+    await changer.addReserve(reserveTokenAddress2, 150000, false);
 
     await token.issue(accounts[0], 20000);
     await reserveToken.transfer(changerAddress, 5000);
@@ -109,16 +111,16 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies the first reserve when provided at construction time', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, reserveTokenAddress, 20);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, reserveTokenAddress, 200000);
         let reserveToken = await changer.reserveTokens.call(0);
         assert.equal(reserveToken, reserveTokenAddress);
         let reserve = await changer.reserves.call(reserveToken);
-        verifyReserve(reserve, true, true, 20, false, 0);
+        verifyReserve(reserve, true, true, 200000, false, 0);
     });
 
     it('should throw when attempting to construct a changer with reserve with invalid ratio', async () => {
         try {
-            await BancorChanger.new(tokenAddress, formulaAddress, 0, reserveTokenAddress, 101);
+            await BancorChanger.new(tokenAddress, formulaAddress, 0, reserveTokenAddress, 1000001);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -130,7 +132,7 @@ contract('BancorChanger', (accounts) => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
         let reserveTokenCount = await changer.reserveTokenCount.call();
         assert.equal(reserveTokenCount, 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
         reserveTokenCount = await changer.reserveTokenCount.call();
         assert.equal(reserveTokenCount, 1);
     });
@@ -139,14 +141,14 @@ contract('BancorChanger', (accounts) => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
         let changeableTokenCount = await changer.changeableTokenCount.call();
         assert.equal(changeableTokenCount, 1);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
         changeableTokenCount = await changer.changeableTokenCount.call();
         assert.equal(changeableTokenCount, 2);
     });
 
     it('verifies the changeable token addresses', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
         let changeableTokenAddress = await changer.changeableToken.call(0);
         assert.equal(changeableTokenAddress, tokenAddress);
         changeableTokenAddress = await changer.changeableToken.call(1);
@@ -248,19 +250,19 @@ contract('BancorChanger', (accounts) => {
 
     it('verifies that 2 reserves are added correctly', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
         let reserve = await changer.reserves.call(reserveTokenAddress);
-        verifyReserve(reserve, true, true, 10, false, 0);
-        await changer.addReserve(reserveTokenAddress2, 20, false);
+        verifyReserve(reserve, true, true, CRR10Percent, false, 0);
+        await changer.addReserve(reserveTokenAddress2, 200000, false);
         reserve = await changer.reserves.call(reserveTokenAddress2);
-        verifyReserve(reserve, true, true, 20, false, 0);
+        verifyReserve(reserve, true, true, 200000, false, 0);
     });
 
     it('should throw when a non owner attempts to add a reserve', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
 
         try {
-            await changer.addReserve(reserveTokenAddress, 10, false, { from: accounts[1] });
+            await changer.addReserve(reserveTokenAddress, CRR10Percent, false, { from: accounts[1] });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -275,7 +277,7 @@ contract('BancorChanger', (accounts) => {
         changer.acceptTokenOwnership();
 
         try {
-            await changer.addReserve(reserveTokenAddress, 10, false);
+            await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -287,7 +289,7 @@ contract('BancorChanger', (accounts) => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
 
         try {
-            await changer.addReserve('0x0', 10, false);
+            await changer.addReserve('0x0', CRR10Percent, false);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -307,11 +309,11 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to add a reserve with ratio greater than 100', async () => {
+    it('should throw when attempting to add a reserve with ratio greater than 100%', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
 
         try {
-            await changer.addReserve(reserveTokenAddress, 101, false);
+            await changer.addReserve(reserveTokenAddress, 1000001, false);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -323,7 +325,7 @@ contract('BancorChanger', (accounts) => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
 
         try {
-            await changer.addReserve(tokenAddress, 10, false);
+            await changer.addReserve(tokenAddress, CRR10Percent, false);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -335,7 +337,7 @@ contract('BancorChanger', (accounts) => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
 
         try {
-            await changer.addReserve(changer.address, 10, false);
+            await changer.addReserve(changer.address, CRR10Percent, false);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -345,10 +347,10 @@ contract('BancorChanger', (accounts) => {
 
     it('should throw when attempting to add a reserve that already exists', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
-            await changer.addReserve(reserveTokenAddress, 20, false);
+            await changer.addReserve(reserveTokenAddress, 200000, false);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -356,12 +358,12 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to add multiple reserves with total ratio greater than 100', async () => {
+    it('should throw when attempting to add multiple reserves with total ratio greater than 100%', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 50, false);
+        await changer.addReserve(reserveTokenAddress, 500000, false);
 
         try {
-            await changer.addReserve(reserveTokenAddress2, 51, false);
+            await changer.addReserve(reserveTokenAddress2, 500001, false);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -371,20 +373,20 @@ contract('BancorChanger', (accounts) => {
 
     it('verifies that the owner can update a reserve', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
         let reserve = await changer.reserves.call(reserveTokenAddress);
-        verifyReserve(reserve, true, true, 10, false, 0);
-        await changer.updateReserve(reserveTokenAddress, 20, true, 50);
+        verifyReserve(reserve, true, true, CRR10Percent, false, 0);
+        await changer.updateReserve(reserveTokenAddress, 200000, true, 50);
         reserve = await changer.reserves.call(reserveTokenAddress);
-        verifyReserve(reserve, true, true, 20, true, 50);
+        verifyReserve(reserve, true, true, 200000, true, 50);
     });
 
     it('should throw when a non owner attempts to update a reserve', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
-            await changer.updateReserve(reserveTokenAddress, 20, false, 0, { from: accounts[1] });
+            await changer.updateReserve(reserveTokenAddress, 200000, false, 0, { from: accounts[1] });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -394,10 +396,10 @@ contract('BancorChanger', (accounts) => {
 
     it('should throw when attempting to update a reserve that does not exist', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
-            await changer.updateReserve(reserveTokenAddress2, 20, false, 0);
+            await changer.updateReserve(reserveTokenAddress2, 200000, false, 0);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -407,7 +409,7 @@ contract('BancorChanger', (accounts) => {
 
     it('should throw when attempting to update a reserve with ratio = 0', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
             await changer.updateReserve(reserveTokenAddress, 0, false, 0);
@@ -418,12 +420,12 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to update a reserve with ratio greater than 100', async () => {
+    it('should throw when attempting to update a reserve with ratio greater than 100%', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
-            await changer.updateReserve(reserveTokenAddress, 101, false, 0);
+            await changer.updateReserve(reserveTokenAddress, 1000001, false, 0);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -431,13 +433,13 @@ contract('BancorChanger', (accounts) => {
         }
     });
 
-    it('should throw when attempting to update a reserve that will result in total ratio greater than 100', async () => {
+    it('should throw when attempting to update a reserve that will result in total ratio greater than 100%', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 50, false);
-        await changer.addReserve(reserveTokenAddress2, 40, false);
+        await changer.addReserve(reserveTokenAddress, 500000, false);
+        await changer.addReserve(reserveTokenAddress2, 400000, false);
 
         try {
-            await changer.updateReserve(reserveTokenAddress2, 51, false, 0);
+            await changer.updateReserve(reserveTokenAddress2, 500001, false, 0);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -476,20 +478,20 @@ contract('BancorChanger', (accounts) => {
 
     it('verifies that the owner can disable / re-enable reserve purchases', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
         let reserve = await changer.reserves.call(reserveTokenAddress);
-        verifyReserve(reserve, true, true, 10, false, 0);
+        verifyReserve(reserve, true, true, CRR10Percent, false, 0);
         await changer.disableReservePurchases(reserveTokenAddress, true);
         reserve = await changer.reserves.call(reserveTokenAddress);
-        verifyReserve(reserve, true, false, 10, false, 0);
+        verifyReserve(reserve, true, false, CRR10Percent, false, 0);
         await changer.disableReservePurchases(reserveTokenAddress, false);
         reserve = await changer.reserves.call(reserveTokenAddress);
-        verifyReserve(reserve, true, true, 10, false, 0);
+        verifyReserve(reserve, true, true, CRR10Percent, false, 0);
     });
 
     it('should throw when a non owner attempts to disable reserve purchases', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
             await changer.disableReservePurchases(reserveTokenAddress, true, { from: accounts[1] });
@@ -502,7 +504,7 @@ contract('BancorChanger', (accounts) => {
 
     it('should throw when attempting to disable reserve purchases for a reserve that does not exist', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
             await changer.disableReservePurchases(reserveTokenAddress2, true);
@@ -516,24 +518,24 @@ contract('BancorChanger', (accounts) => {
     it('verifies that the correct reserve balance is returned regardless of whether virtual balance is set or not', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-        await changer.addReserve(reserveToken.address, 10, false);
+        await changer.addReserve(reserveToken.address, CRR10Percent, false);
         let reserveBalance;
         reserveBalance = await changer.getReserveBalance.call(reserveToken.address);
         assert.equal(reserveBalance, 0);
         await reserveToken.transfer(changer.address, 1000);
         reserveBalance = await changer.getReserveBalance.call(reserveToken.address);
         assert.equal(reserveBalance, 1000);
-        await changer.updateReserve(reserveToken.address, 20, true, 5000);
+        await changer.updateReserve(reserveToken.address, 200000, true, 5000);
         reserveBalance = await changer.getReserveBalance.call(reserveToken.address);
         assert.equal(reserveBalance, 5000);
-        await changer.updateReserve(reserveToken.address, 20, false, 5000);
+        await changer.updateReserve(reserveToken.address, 200000, false, 5000);
         reserveBalance = await changer.getReserveBalance.call(reserveToken.address);
         assert.equal(reserveBalance, 1000);
     });
 
     it('should throw when attempting to retrieve the balance for a reserve that does not exist', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
-        await changer.addReserve(reserveTokenAddress, 10, false);
+        await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
             await changer.getReserveBalance.call(reserveTokenAddress2);
@@ -547,7 +549,7 @@ contract('BancorChanger', (accounts) => {
     it('verifies that the owner can withdraw from the reserve', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-        await changer.addReserve(reserveToken.address, 10, false);
+        await changer.addReserve(reserveToken.address, CRR10Percent, false);
         await reserveToken.transfer(changer.address, 1000);
         let changerBalance = await reserveToken.balanceOf(changer.address);
         assert.equal(changerBalance, 1000);
@@ -561,7 +563,7 @@ contract('BancorChanger', (accounts) => {
     it('should throw when a non owner attempts to withdraw from the reserve', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-        await changer.addReserve(reserveToken.address, 10, false);
+        await changer.addReserve(reserveToken.address, CRR10Percent, false);
         await reserveToken.transfer(changer.address, 1000);
 
         try {
@@ -576,7 +578,7 @@ contract('BancorChanger', (accounts) => {
     it('should throw when attempting to withdraw from a reserve to an invalid address', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-        await changer.addReserve(reserveToken.address, 10, false);
+        await changer.addReserve(reserveToken.address, CRR10Percent, false);
         await reserveToken.transfer(changer.address, 1000);
 
         try {
@@ -591,7 +593,7 @@ contract('BancorChanger', (accounts) => {
     it('should throw when attempting to withdraw from a reserve to the changer address', async () => {
         let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-        await changer.addReserve(reserveToken.address, 10, false);
+        await changer.addReserve(reserveToken.address, CRR10Percent, false);
         await reserveToken.transfer(changer.address, 1000);
 
         try {

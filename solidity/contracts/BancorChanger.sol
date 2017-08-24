@@ -43,9 +43,11 @@ import './interfaces/IEtherToken.sol';
              or with very small numbers because of precision loss
 */
 contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
+    uint32 public constant MAX_CRR_PPM = 1000000;
+
     struct Reserve {
         uint256 virtualBalance;         // virtual balance
-        uint8 ratio;                    // constant reserve ratio (CRR), 1-100
+        uint32 ratio;                   // constant reserve ratio (CRR), represented in ppm, 1-1000000
         bool isVirtualBalanceEnabled;   // true if virtual balance is enabled, false if not
         bool isPurchaseEnabled;         // is purchase of the smart token enabled with the reserve, can be set by the owner
         bool isSet;                     // used to tell if the mapping element is defined
@@ -58,7 +60,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     address[] public reserveTokens;                 // ERC20 standard token addresses
     address[] public quickBuyPath;                  // change path that's used in order to buy the token with ETH
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
-    uint8 private totalReserveRatio = 0;            // used to efficiently prevent increasing the total reserve ratio above 100%
+    uint32 private totalReserveRatio = 0;           // used to efficiently prevent increasing the total reserve ratio above 100%
     uint16 public maxChangeFeePercentage = 0;       // maximum change fee percentage for the lifetime of the contract, 0...10000 (0 = no fee, 1 = 0.01%, 10000 = 100%)
     uint16 public changeFeePercentage = 0;          // current change fee percentage, 0...maxChangeFeePercentage
     bool public changingEnabled = true;             // true if token changing is enabled, false if not
@@ -114,8 +116,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     }
 
     // validates reserve ratio range
-    modifier validReserveRatio(uint8 _ratio) {
-        require(_ratio > 0 && _ratio <= 100);
+    modifier validReserveRatio(uint32 _ratio) {
+        require(_ratio > 0 && _ratio <= MAX_CRR_PPM);
         _;
     }
 
@@ -238,10 +240,10 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         can only be called by the owner while the changer is inactive
 
         @param _token                  address of the reserve token
-        @param _ratio                  constant reserve ratio, 1-100
+        @param _ratio                  constant reserve ratio, represented in ppm, 1-1000000
         @param _enableVirtualBalance   true to enable virtual balance for the reserve, false to disable it
     */
-    function addReserve(IERC20Token _token, uint8 _ratio, bool _enableVirtualBalance)
+    function addReserve(IERC20Token _token, uint32 _ratio, bool _enableVirtualBalance)
         public
         ownerOnly
         inactive
@@ -249,7 +251,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         notThis(_token)
         validReserveRatio(_ratio)
     {
-        require(_token != address(token) && !reserves[_token].isSet && totalReserveRatio + _ratio <= 100); // validate input
+        require(_token != address(token) && !reserves[_token].isSet && totalReserveRatio + _ratio <= MAX_CRR_PPM); // validate input
 
         reserves[_token].virtualBalance = 0;
         reserves[_token].ratio = _ratio;
@@ -265,18 +267,18 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         can only be called by the owner
 
         @param _reserveToken           address of the reserve token
-        @param _ratio                  constant reserve ratio, 1-100
+        @param _ratio                  constant reserve ratio, represented in ppm, 1-1000000
         @param _enableVirtualBalance   true to enable virtual balance for the reserve, false to disable it
         @param _virtualBalance         new reserve's virtual balance
     */
-    function updateReserve(IERC20Token _reserveToken, uint8 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)
+    function updateReserve(IERC20Token _reserveToken, uint32 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)
         public
         ownerOnly
         validReserve(_reserveToken)
         validReserveRatio(_ratio)
     {
         Reserve storage reserve = reserves[_reserveToken];
-        require(totalReserveRatio - reserve.ratio + _ratio <= 100); // validate input
+        require(totalReserveRatio - reserve.ratio + _ratio <= MAX_CRR_PPM); // validate input
 
         totalReserveRatio = totalReserveRatio - reserve.ratio + _ratio;
         reserve.ratio = _ratio;
@@ -433,8 +435,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         // calculate the new price using the simple price formula
         // price = reserve balance / (supply * CRR)
-        // CRR is a percentage, so multiplying by 100
-        PriceChange(_reserveToken, token, safeMul(getReserveBalance(_reserveToken), 100), safeMul(token.totalSupply(), reserve.ratio));
+        // CRR is a percentage represented in ppm, so multiplying by 1000000
+        PriceChange(_reserveToken, token, safeMul(getReserveBalance(_reserveToken), MAX_CRR_PPM), safeMul(token.totalSupply(), reserve.ratio));
         return amount;
     }
 
@@ -475,8 +477,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         // calculate the new price using the simple price formula
         // price = reserve balance / (supply * CRR)
-        // CRR is a percentage, so multiplying by 100
-        PriceChange(token, _reserveToken, safeMul(token.totalSupply(), reserve.ratio), safeMul(getReserveBalance(_reserveToken), 100));
+        // CRR is a percentage represented in ppm, so multiplying by 1000000
+        PriceChange(token, _reserveToken, safeMul(token.totalSupply(), reserve.ratio), safeMul(getReserveBalance(_reserveToken), MAX_CRR_PPM));
         return amount;
     }
 

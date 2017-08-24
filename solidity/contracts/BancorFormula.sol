@@ -3,34 +3,33 @@ import './Utils.sol';
 import './interfaces/IBancorFormula.sol';
 
 contract BancorFormula is IBancorFormula, Utils {
+    uint32 public constant MAX_CRR_PPM = 1000000;
+    uint256 public constant ONE = 1;
+    uint8 public constant MIN_PRECISION = 32;
+    uint8 public constant MAX_PRECISION = 127;
 
     string public version = '0.2';
-
-    uint256 constant ONE = 1;
-
-    uint8 constant MIN_PRECISION = 32;
-    uint8 constant MAX_PRECISION = 127;
 
     /**
         The values below depend on MAX_PRECISION. If you choose to change it:
         Apply the same change in file 'PrintIntScalingFactors.py', run it and paste the results below.
     */
-    uint256 constant FIXED_1 = 0x080000000000000000000000000000000;
-    uint256 constant FIXED_2 = 0x100000000000000000000000000000000;
-    uint256 constant MAX_NUM = 0x1ffffffffffffffffffffffffffffffff;
+    uint256 public constant FIXED_1 = 0x080000000000000000000000000000000;
+    uint256 public constant FIXED_2 = 0x100000000000000000000000000000000;
+    uint256 public constant MAX_NUM = 0x1ffffffffffffffffffffffffffffffff;
 
     /**
         The values below depend on MAX_PRECISION. If you choose to change it:
         Apply the same change in file 'PrintLn2ScalingFactors.py', run it and paste the results below.
     */
-    uint256 constant LN2_MANTISSA = 0x2c5c85fdf473de6af278ece600fcbda;
-    uint8   constant LN2_EXPONENT = 122;
+    uint256 public constant LN2_MANTISSA = 0x2c5c85fdf473de6af278ece600fcbda;
+    uint8   public constant LN2_EXPONENT = 122;
 
     /**
         The values below depend on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
         Apply the same change in file 'PrintFunctionBancorFormula.py', run it and paste the results below.
     */
-    uint256[128] maxExpArray;
+    uint256[128] public maxExpArray;
     function BancorFormula() {
     //  maxExpArray[  0] = 0x60ffffffffffffffffffffffffffffffff;
     //  maxExpArray[  1] = 0x5ebfffffffffffffffffffffffffffffff;
@@ -170,14 +169,14 @@ contract BancorFormula is IBancorFormula, Utils {
 
         @param _supply             token total supply
         @param _reserveBalance     total reserve
-        @param _reserveRatio       constant reserve ratio, 1-1000000
+        @param _reserveRatio       constant reserve ratio, represented in ppm, 1-1000000
         @param _depositAmount      deposit amount, in reserve token
 
         @return purchase return amount
     */
     function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
         // validate input
-        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= 1000000);
+        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= MAX_CRR_PPM);
 
         // special case for 0 deposit amount
         if (_depositAmount == 0)
@@ -187,12 +186,12 @@ contract BancorFormula is IBancorFormula, Utils {
         uint256 temp;
 
         // special case if the CRR = 1000000
-        if (_reserveRatio == 1000000) {
+        if (_reserveRatio == MAX_CRR_PPM) {
             temp = safeMul(_supply, baseN) / _reserveBalance;
             return safeSub(temp, _supply);
         }
 
-        var(result, precision) = power(baseN, _reserveBalance, _reserveRatio, 1000000);
+        var(result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_CRR_PPM);
         temp = safeMul(_supply, result) >> precision;
         return safeSub(temp, _supply);
      }
@@ -205,14 +204,14 @@ contract BancorFormula is IBancorFormula, Utils {
 
         @param _supply             token total supply
         @param _reserveBalance     total reserve
-        @param _reserveRatio       constant reserve ratio, 1-1000000
+        @param _reserveRatio       constant reserve ratio, represented in ppm, 1-1000000
         @param _sellAmount         sell amount, in the token itself
 
         @return sale return amount
     */
     function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
         // validate input
-        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= 1000000 && _sellAmount <= _supply);
+        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= MAX_CRR_PPM && _sellAmount <= _supply);
 
         // special case for 0 sell amount
         if (_sellAmount == 0)
@@ -227,13 +226,13 @@ contract BancorFormula is IBancorFormula, Utils {
         uint256 temp2;
 
         // special case if the CRR = 1000000
-        if (_reserveRatio == 1000000) {
+        if (_reserveRatio == MAX_CRR_PPM) {
             temp1 = safeMul(_reserveBalance, _supply);
             temp2 = safeMul(_reserveBalance, baseD);
             return safeSub(temp1, temp2) / _supply;
         }
 
-        var(result, precision) = power(_supply, baseD, 1000000, _reserveRatio);
+        var(result, precision) = power(_supply, baseD, MAX_CRR_PPM, _reserveRatio);
         temp1 = safeMul(_reserveBalance, result);
         temp2 = safeMul(_reserveBalance, ONE << precision);
         return safeSub(temp1, temp2) / result;
