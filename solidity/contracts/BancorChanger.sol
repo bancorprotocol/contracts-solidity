@@ -29,14 +29,12 @@ import './interfaces/IEtherToken.sol';
     The path defines which changers should be used and what kind of change should be done in each step.
 
     The path format doesn't include complex structure and instead, it is represented by a single array
-    in which each 'hop' is represented by a triplet - smart token, from token, to token.
+    in which each 'hop' is represented by a 2-tuple - smart token & to token.
+    In addition, the first element is always the source token.
     The smart token is only used as a pointer to a changer (since changer addresses are more likely to change).
 
     Format:
-
-    |______|______|______|______|______|______|...
-     smart   from    to   smart   from    to
-     token   token  token token   token  token
+    [source, smart token, to token, smart token, to token...]
 
 
     WARNING: It is NOT RECOMMENDED to use the changer with Smart Tokens that have less than 8 decimal digits
@@ -122,9 +120,9 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         _;
     }
 
-    // validates a change path
+    // validates a change path - verifies that the number of elements is odd and that maximum number of 'hops' is 10
     modifier validChangePath(address[] _path) {
-        require(_path.length > 1 && _path.length <= 30 && _path.length % 3 == 0);
+        require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
         _;
     }
 
@@ -200,6 +198,18 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     */
     function getQuickBuyPathLength() public constant returns (uint256 length) {
         return quickBuyPath.length;
+    }
+
+    /**
+        @dev returns the address of the ether token used by the quick buy functionality
+        note that it should always be the first element in the quick buy path, if one is set
+
+        @return ether token address
+    */
+    function getQuickBuyEtherTokenAddress() public constant returns (address etherToken) {
+        if (quickBuyPath.length == 0)
+            return 0x0;
+        return quickBuyPath[0];
     }
 
     /**
@@ -500,46 +510,46 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     {
         // we need to transfer the tokens from the caller to the local contract before we
         // follow the change path, to allow it to execute the change on behalf of the caller
-        // if the initial change in the path is a purchase, we assume that the local contract already received allowance
-        // if the initial change in the path is a sale, we ensure that the local contract is the changer (which doesn't require allowance)
-        require(_path[0] == _path[2] || _path[0] == address(token));
+        // if the initial source in the change path is the smart token, we ensure that the local contract is the changer (which doesn't require allowance)
+        require(_path[0] != _path[1] || _path[0] == address(token));
 
-        ISmartToken smartToken = ISmartToken(_path[0]);
+        ISmartToken smartToken;
         IERC20Token fromToken;
         IERC20Token toToken;
         BancorChanger changer;
 
         // transfer the tokens from the caller to the local contract
-        // initial change is a purchase
-        if (smartToken == _path[2]) {
-            fromToken = IERC20Token(_path[1]);
-            assert(fromToken.transferFrom(msg.sender, this, _amount));
-        }
-        // initial change is a sale
-        else {
+        
+        // initial source is the smart token, destroy the amount from the caller and issue tokens to the local contract
+        if (_path[0] == address(token)) {
             token.destroy(msg.sender, _amount); // destroy _amount from the caller's balance in the smart token
             token.issue(this, _amount); // issue _amount new tokens to the local contract
         }
+        // for any other initial source, we assume we already have allowance
+        else {
+            fromToken = IERC20Token(_path[0]);
+            assert(fromToken.transferFrom(msg.sender, this, _amount));
+        }
 
         // iterate over the change path
-        for (uint8 i = 0; i < _path.length; i += 3) {
+        for (uint8 i = 1; i < _path.length; i += 2) {
+            fromToken = toToken;
             smartToken = ISmartToken(_path[i]);
-            fromToken = IERC20Token(_path[i + 1]);
-            toToken = IERC20Token(_path[i + 2]);
+            toToken = IERC20Token(_path[i + 1]);
             changer = BancorChanger(smartToken.owner());
 
-            // if it's a purchase, we need to approve the request
-            if (smartToken == toToken)
+            // if the smart token isn't the source (from token), the changer doesn't have control over it and thus we need to approve the request
+            if (smartToken != fromToken)
                 ensureAllowance(fromToken, changer, _amount);
 
             // make the change - if it's the last one, also provide the minimum return value
-            _amount = changer.change(fromToken, toToken, _amount, i == _path.length - 3 ? _minReturn : 1);
+            _amount = changer.change(fromToken, toToken, _amount, i == _path.length - 2 ? _minReturn : 1);
         }
 
         // finished the change, transfer the funds back to the caller
         // if the last change resulted in ether tokens, withdraw them and send them as ETH to the caller
         // we assume that the first element in the last changer's quick buy path is the ether token (if a path exists)
-        if (changer.getQuickBuyPathLength() > 0 && changer.quickBuyPath(1) == address(toToken)) {
+        if (changer.getQuickBuyEtherTokenAddress() == address(toToken)) {
             IEtherToken etherToken = IEtherToken(toToken);
             etherToken.withdraw(_amount);
             msg.sender.transfer(_amount);
