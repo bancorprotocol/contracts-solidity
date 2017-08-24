@@ -5,6 +5,8 @@ const BancorFormulaProxy = artifacts.require('BancorFormulaProxy.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const utils = require('./helpers/Utils');
 
+const CRR40Percent = 400000;
+
 let formula;
 let formulaAddress;
 
@@ -73,29 +75,17 @@ contract('BancorFormulaProxy', (accounts) => {
         }
     });
 
-    it('should throw when the owner attempts update the formula contract address with the current formula address', async () => {
-        let proxy = await BancorFormulaProxy.new(formulaAddress);
-
-        try {
-            await proxy.setFormula(formulaAddress);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
     it('verifies that the purchase return proxy calls the formula purchase return', async () => {
         let proxy = await BancorFormulaProxy.new(formulaAddress);
-        let proxyPurchaseReturn = await proxy.calculatePurchaseReturn(1000, 1000, 50, 20);
-        let formulaPurchaseReturn = await formula.calculatePurchaseReturn(1000, 1000, 50, 20);
+        let proxyPurchaseReturn = await proxy.calculatePurchaseReturn(1000, 1000, CRR40Percent, 20);
+        let formulaPurchaseReturn = await formula.calculatePurchaseReturn(1000, 1000, CRR40Percent, 20);
         assert.equal(proxyPurchaseReturn.toNumber(), formulaPurchaseReturn.toNumber());
     });
 
     it('verifies that the sale return proxy calls the formula sale return', async () => {
         let proxy = await BancorFormulaProxy.new(formulaAddress);
-        let proxySaleReturn = await proxy.calculateSaleReturn(1000, 1000, 50, 40);
-        let formulaSaleReturn = await formula.calculateSaleReturn(1000, 1000, 50, 40);
+        let proxySaleReturn = await proxy.calculateSaleReturn(1000, 1000, CRR40Percent, 40);
+        let formulaSaleReturn = await formula.calculateSaleReturn(1000, 1000, CRR40Percent, 40);
         assert.equal(proxySaleReturn.toNumber(), formulaSaleReturn.toNumber());
     });
 });
