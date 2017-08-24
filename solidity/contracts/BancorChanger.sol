@@ -511,29 +511,27 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         // we need to transfer the tokens from the caller to the local contract before we
         // follow the change path, to allow it to execute the change on behalf of the caller
         // if the initial source in the change path is the smart token, we ensure that the local contract is the changer (which doesn't require allowance)
-        require(_path[0] != _path[1] || _path[0] == address(token));
-
-        ISmartToken smartToken;
-        IERC20Token fromToken;
-        IERC20Token toToken;
-        BancorChanger changer;
+        IERC20Token fromToken = IERC20Token(_path[0]);
+        require(fromToken != _path[1] || fromToken == address(token));
 
         // transfer the tokens from the caller to the local contract
         
-        // initial source is the smart token, destroy the amount from the caller and issue tokens to the local contract
-        if (_path[0] == address(token)) {
-            token.destroy(msg.sender, _amount); // destroy _amount from the caller's balance in the smart token
+        // initial source is the smart token, destroy the tokens from the caller and issue them to the local contract
+        if (fromToken == address(token)) {
+            token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
             token.issue(this, _amount); // issue _amount new tokens to the local contract
         }
         // for any other initial source, we assume we already have allowance
         else {
-            fromToken = IERC20Token(_path[0]);
             assert(fromToken.transferFrom(msg.sender, this, _amount));
         }
 
+        ISmartToken smartToken;
+        IERC20Token toToken;
+        BancorChanger changer;
+
         // iterate over the change path
         for (uint8 i = 1; i < _path.length; i += 2) {
-            fromToken = toToken;
             smartToken = ISmartToken(_path[i]);
             toToken = IERC20Token(_path[i + 1]);
             changer = BancorChanger(smartToken.owner());
@@ -544,6 +542,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
             // make the change - if it's the last one, also provide the minimum return value
             _amount = changer.change(fromToken, toToken, _amount, i == _path.length - 2 ? _minReturn : 1);
+            fromToken = toToken;
         }
 
         // finished the change, transfer the funds back to the caller
