@@ -185,7 +185,7 @@ contract BancorFormula is IBancorFormula, Utils {
         uint256 baseN = safeAdd(_depositAmount, _reserveBalance);
         uint256 temp;
 
-        // special case if the CRR = 1000000
+        // special case if the CRR = 100%
         if (_reserveRatio == MAX_CRR_PPM) {
             temp = safeMul(_supply, baseN) / _reserveBalance;
             return safeSub(temp, _supply);
@@ -225,7 +225,7 @@ contract BancorFormula is IBancorFormula, Utils {
         uint256 temp1;
         uint256 temp2;
 
-        // special case if the CRR = 1000000
+        // special case if the CRR = 100%
         if (_reserveRatio == MAX_CRR_PPM) {
             temp1 = safeMul(_reserveBalance, _supply);
             temp2 = safeMul(_reserveBalance, baseD);
