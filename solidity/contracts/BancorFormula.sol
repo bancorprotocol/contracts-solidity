@@ -3,7 +3,7 @@ import './Utils.sol';
 import './interfaces/IBancorFormula.sol';
 
 contract BancorFormula is IBancorFormula, Utils {
-    uint32 public constant MAX_CRR_PPM = 1000000;
+    uint32 public constant MAX_CRR = 1000000;
     uint256 public constant ONE = 1;
     uint8 public constant MIN_PRECISION = 32;
     uint8 public constant MAX_PRECISION = 127;
@@ -176,7 +176,7 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
         // validate input
-        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= MAX_CRR_PPM);
+        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= MAX_CRR);
 
         // special case for 0 deposit amount
         if (_depositAmount == 0)
@@ -186,12 +186,12 @@ contract BancorFormula is IBancorFormula, Utils {
         uint256 temp;
 
         // special case if the CRR = 100%
-        if (_reserveRatio == MAX_CRR_PPM) {
+        if (_reserveRatio == MAX_CRR) {
             temp = safeMul(_supply, baseN) / _reserveBalance;
             return safeSub(temp, _supply);
         }
 
-        var (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_CRR_PPM);
+        var (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_CRR);
         temp = safeMul(_supply, result) >> precision;
         return safeSub(temp, _supply);
      }
@@ -211,7 +211,7 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
         // validate input
-        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= MAX_CRR_PPM && _sellAmount <= _supply);
+        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= MAX_CRR && _sellAmount <= _supply);
 
         // special case for 0 sell amount
         if (_sellAmount == 0)
@@ -226,13 +226,13 @@ contract BancorFormula is IBancorFormula, Utils {
         uint256 temp2;
 
         // special case if the CRR = 100%
-        if (_reserveRatio == MAX_CRR_PPM) {
+        if (_reserveRatio == MAX_CRR) {
             temp1 = safeMul(_reserveBalance, _supply);
             temp2 = safeMul(_reserveBalance, baseD);
             return safeSub(temp1, temp2) / _supply;
         }
 
-        var (result, precision) = power(_supply, baseD, MAX_CRR_PPM, _reserveRatio);
+        var (result, precision) = power(_supply, baseD, MAX_CRR, _reserveRatio);
         temp1 = safeMul(_reserveBalance, result);
         temp2 = safeMul(_reserveBalance, ONE << precision);
         return safeSub(temp1, temp2) / result;

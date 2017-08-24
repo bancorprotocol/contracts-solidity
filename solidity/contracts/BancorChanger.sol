@@ -43,7 +43,7 @@ import './interfaces/IEtherToken.sol';
              or with very small numbers because of precision loss
 */
 contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
-    uint32 public constant MAX_CRR_PPM = 1000000;
+    uint32 public constant MAX_CRR = 1000000;
 
     struct Reserve {
         uint256 virtualBalance;         // virtual balance
@@ -117,7 +117,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
     // validates reserve ratio range
     modifier validReserveRatio(uint32 _ratio) {
-        require(_ratio > 0 && _ratio <= MAX_CRR_PPM);
+        require(_ratio > 0 && _ratio <= MAX_CRR);
         _;
     }
 
@@ -251,7 +251,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         notThis(_token)
         validReserveRatio(_ratio)
     {
-        require(_token != address(token) && !reserves[_token].isSet && totalReserveRatio + _ratio <= MAX_CRR_PPM); // validate input
+        require(_token != address(token) && !reserves[_token].isSet && totalReserveRatio + _ratio <= MAX_CRR); // validate input
 
         reserves[_token].virtualBalance = 0;
         reserves[_token].ratio = _ratio;
@@ -278,7 +278,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         validReserveRatio(_ratio)
     {
         Reserve storage reserve = reserves[_reserveToken];
-        require(totalReserveRatio - reserve.ratio + _ratio <= MAX_CRR_PPM); // validate input
+        require(totalReserveRatio - reserve.ratio + _ratio <= MAX_CRR); // validate input
 
         totalReserveRatio = totalReserveRatio - reserve.ratio + _ratio;
         reserve.ratio = _ratio;
@@ -436,7 +436,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         // calculate the new price using the simple price formula
         // price = reserve balance / (supply * CRR)
         // CRR is a percentage represented in ppm, so multiplying by 1000000
-        PriceChange(_reserveToken, token, safeMul(getReserveBalance(_reserveToken), MAX_CRR_PPM), safeMul(token.totalSupply(), reserve.ratio));
+        PriceChange(_reserveToken, token, safeMul(getReserveBalance(_reserveToken), MAX_CRR), safeMul(token.totalSupply(), reserve.ratio));
         return amount;
     }
 
@@ -478,7 +478,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         // calculate the new price using the simple price formula
         // price = reserve balance / (supply * CRR)
         // CRR is a percentage represented in ppm, so multiplying by 1000000
-        PriceChange(token, _reserveToken, safeMul(token.totalSupply(), reserve.ratio), safeMul(getReserveBalance(_reserveToken), MAX_CRR_PPM));
+        PriceChange(token, _reserveToken, safeMul(token.totalSupply(), reserve.ratio), safeMul(getReserveBalance(_reserveToken), MAX_CRR));
         return amount;
     }
 
