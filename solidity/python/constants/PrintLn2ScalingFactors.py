@@ -33,5 +33,5 @@ LN2_EXPONENT = floor(log2((2**256-1)/(maxVal*ln(2))))
 LN2_MANTISSA = floor(2**LN2_EXPONENT*ln(2))
 
 
-print '    uint256 constant LN2_MANTISSA = 0x{:x};'.format(LN2_MANTISSA)
-print '    uint8   constant LN2_EXPONENT = {:d};'  .format(LN2_EXPONENT)
+print '    uint256 private constant LN2_MANTISSA = 0x{:x};'.format(LN2_MANTISSA)
+print '    uint8   private constant LN2_EXPONENT = {:d};'  .format(LN2_EXPONENT)
