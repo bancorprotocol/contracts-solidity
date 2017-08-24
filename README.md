@@ -145,7 +145,7 @@ The change will only take place if it returns a value greater or equal to `_minR
 
 **Change**
 ```cs
-event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return);
+event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return, uint256 _currentPriceN, uint256 _currentPriceD);
 ```
 Triggered when a change between one of the changeable tokens takes place.
 
