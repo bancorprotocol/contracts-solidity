@@ -184,7 +184,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     */
     function setQuickBuyPath(address[] _path)
         public
-        managerOnly
+        ownerOnly
         validChangePath(_path)
     {
         quickBuyPath = _path;
