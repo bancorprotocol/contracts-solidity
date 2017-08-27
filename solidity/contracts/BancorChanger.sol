@@ -535,9 +535,10 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         ISmartToken smartToken;
         IERC20Token toToken;
         BancorChanger changer;
+        uint256 pathLength = _path.length;
 
         // iterate over the change path
-        for (uint8 i = 1; i < _path.length; i += 2) {
+        for (uint8 i = 1; i < pathLength; i += 2) {
             smartToken = ISmartToken(_path[i]);
             toToken = IERC20Token(_path[i + 1]);
             changer = BancorChanger(smartToken.owner());
@@ -547,7 +548,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
                 ensureAllowance(fromToken, changer, _amount);
 
             // make the change - if it's the last one, also provide the minimum return value
-            _amount = changer.change(fromToken, toToken, _amount, i == _path.length - 2 ? _minReturn : 1);
+            _amount = changer.change(fromToken, toToken, _amount, i == pathLength - 2 ? _minReturn : 1);
             fromToken = toToken;
         }
 
