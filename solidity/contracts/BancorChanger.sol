@@ -180,7 +180,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     /*
         @dev allows the manager to update the quick buy path
 
-        @param _path    new quick buy path. See change path format above
+        @param _path    new quick buy path, see change path format above
     */
     function setQuickBuyPath(IERC20Token[] _path)
         public
@@ -503,7 +503,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         @dev changes the token to any other token in the bancor network by following a predefined change path
         note that when changing from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
 
-        @param _path        change path. See format above
+        @param _path        change path, see change path format above
         @param _amount      amount to change from (in the initial source token)
         @param _minReturn   if the change results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
