@@ -63,6 +63,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     uint32 public maxChangeFee = 0;                 // maximum change fee for the lifetime of the contract, represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public changeFee = 0;                    // current change fee, represented in ppm, 0...maxChangeFee
     bool public changingEnabled = true;             // true if token changing is enabled, false if not
+    bool private withdrawingEther = false;          // used to prevent re-entry while the contract is withdrawing from an ether token
 
     // triggered when a change between two tokens occurs (TokenChanger event)
     event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return,
@@ -517,7 +518,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         // we need to transfer the tokens from the caller to the local contract before we
         // follow the change path, to allow it to execute the change on behalf of the caller
         IERC20Token fromToken = _path[0];
-        claimTokens(fromToken, _amount);
+        claimTokens(fromToken, msg.sender, _amount);
 
         ISmartToken smartToken;
         IERC20Token toToken;
@@ -543,7 +544,11 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         // if the last change resulted in ether tokens, withdraw them and send them as ETH to the caller
         if (changer.getQuickBuyEtherToken() == toToken) {
             IEtherToken etherToken = IEtherToken(toToken);
+
+            // prevent the withdrawal from executing the quick buy function
+            withdrawingEther = true;
             etherToken.withdraw(_amount);
+            withdrawingEther = false;
             msg.sender.transfer(_amount);
         }
         else {
@@ -628,21 +633,22 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     }
 
     /**
-        @dev utility, transfers tokens from the sender to the local contract
+        @dev utility, transfers tokens from an account to the local contract
 
         @param _token   token to claim
+        @param _from    account to claim the tokens from
         @param _amount  amount to claim
     */
-    function claimTokens(IERC20Token _token, uint256 _amount) private {
+    function claimTokens(IERC20Token _token, address _from, uint256 _amount) private {
         // if the token is the smart token, no allowance is required - destroy the tokens from the caller and issue them to the local contract
         if (_token == token) {
-            token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
+            token.destroy(_from, _amount); // destroy _amount tokens from the caller's balance in the smart token
             token.issue(this, _amount); // issue _amount new tokens to the local contract
             return;
         }
 
         // otherwise, we assume we already have allowance
-        assert(_token.transferFrom(msg.sender, this, _amount));
+        assert(_token.transferFrom(_from, this, _amount));
     }
 
     /**
@@ -650,6 +656,10 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         note that the purchase will use the price at the time of the purchase
     */
     function() payable {
+        // disable quick buy if the changer is simply withdrawing ether from an ether token
+        if (withdrawingEther)
+            return;
+
         quickBuy(1);
     }
 }
