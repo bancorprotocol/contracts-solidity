@@ -34,7 +34,7 @@ import './interfaces/IEtherToken.sol';
     The smart token is only used as a pointer to a changer (since changer addresses are more likely to change).
 
     Format:
-    [source, smart token, to token, smart token, to token...]
+    [source token, smart token, to token, smart token, to token...]
 
 
     WARNING: It is NOT RECOMMENDED to use the changer with Smart Tokens that have less than 8 decimal digits
@@ -56,8 +56,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     string public changerType = 'bancor';
 
     IBancorFormula public formula;                  // bancor calculation formula contract
-    address[] public reserveTokens;                 // ERC20 standard token addresses
-    address[] public quickBuyPath;                  // change path that's used in order to buy the token with ETH
+    IERC20Token[] public reserveTokens;             // ERC20 standard token addresses
+    IERC20Token[] public quickBuyPath;              // change path that's used in order to buy the token with ETH
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
     uint32 private totalReserveRatio = 0;           // used to efficiently prevent increasing the total reserve ratio above 100%
     uint32 public maxChangeFee = 0;                 // maximum change fee for the lifetime of the contract, represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
@@ -90,14 +90,14 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     }
 
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
-    modifier validReserve(address _address) {
+    modifier validReserve(IERC20Token _address) {
         require(reserves[_address].isSet);
         _;
     }
 
     // validates a token address - verifies that the address belongs to one of the changeable tokens
-    modifier validToken(address _address) {
-        require(_address == address(token) || reserves[_address].isSet);
+    modifier validToken(IERC20Token _address) {
+        require(_address == token || reserves[_address].isSet);
         _;
     }
 
@@ -120,7 +120,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     }
 
     // validates a change path - verifies that the number of elements is odd and that maximum number of 'hops' is 10
-    modifier validChangePath(address[] _path) {
+    modifier validChangePath(IERC20Token[] _path) {
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
         _;
     }
@@ -182,7 +182,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @param _path    new quick buy path. See change path format above
     */
-    function setQuickBuyPath(address[] _path)
+    function setQuickBuyPath(IERC20Token[] _path)
         public
         ownerOnly
         validChangePath(_path)
@@ -212,10 +212,10 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return ether token address
     */
-    function getQuickBuyEtherTokenAddress() public constant returns (address etherToken) {
+    function getQuickBuyEtherToken() public constant returns (IERC20Token etherToken) {
         if (quickBuyPath.length == 0)
-            return 0x0;
-        return quickBuyPath[0];
+            return IERC20Token(0x0);
+        return IERC20Token(quickBuyPath[0]);
     }
 
     /**
@@ -268,7 +268,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         notThis(_token)
         validReserveRatio(_ratio)
     {
-        require(_token != address(token) && !reserves[_token].isSet && totalReserveRatio + _ratio <= MAX_CRR); // validate input
+        require(_token != token && !reserves[_token].isSet && totalReserveRatio + _ratio <= MAX_CRR); // validate input
 
         reserves[_token].virtualBalance = 0;
         reserves[_token].ratio = _ratio;
@@ -509,7 +509,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return tokens issued in return
     */
-    function quickChange(address[] _path, uint256 _amount, uint256 _minReturn)
+    function quickChange(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
         public
         validChangePath(_path)
         returns (uint256 amount)
@@ -517,13 +517,13 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         // we need to transfer the tokens from the caller to the local contract before we
         // follow the change path, to allow it to execute the change on behalf of the caller
         // if the initial source in the change path is the smart token, we ensure that the local contract is the changer (which doesn't require allowance)
-        IERC20Token fromToken = IERC20Token(_path[0]);
-        require(fromToken != _path[1] || fromToken == address(token));
+        IERC20Token fromToken = _path[0];
+        require(fromToken != _path[1] || fromToken == token);
 
         // transfer the tokens from the caller to the local contract
 
         // initial source is the smart token, destroy the tokens from the caller and issue them to the local contract
-        if (fromToken == address(token)) {
+        if (fromToken == token) {
             token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
             token.issue(this, _amount); // issue _amount new tokens to the local contract
         }
@@ -540,7 +540,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         // iterate over the change path
         for (uint8 i = 1; i < pathLength; i += 2) {
             smartToken = ISmartToken(_path[i]);
-            toToken = IERC20Token(_path[i + 1]);
+            toToken = _path[i + 1];
             changer = BancorChanger(smartToken.owner());
 
             // if the smart token isn't the source (from token), the changer doesn't have control over it and thus we need to approve the request
@@ -554,16 +554,17 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         // finished the change, transfer the funds back to the caller
         // if the last change resulted in ether tokens, withdraw them and send them as ETH to the caller
-        if (changer.getQuickBuyEtherTokenAddress() == address(toToken)) {
+        if (changer.getQuickBuyEtherToken() == toToken) {
             IEtherToken etherToken = IEtherToken(toToken);
             etherToken.withdraw(_amount);
             msg.sender.transfer(_amount);
-            return;
+        }
+        else {
+            // not ETH, transfer the tokens to the caller
+            assert(toToken.transfer(msg.sender, _amount));
         }
 
-        // not ETH, transfer the tokens to the caller
-        assert(toToken.transfer(msg.sender, _amount));
-        amount = _amount;
+        return _amount;
     }
 
     /**
