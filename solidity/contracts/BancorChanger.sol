@@ -212,10 +212,10 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return ether token address
     */
-    function getQuickBuyEtherToken() public constant returns (IERC20Token etherToken) {
+    function getQuickBuyEtherToken() public constant returns (IEtherToken etherToken) {
         if (quickBuyPath.length == 0)
-            return IERC20Token(0x0);
-        return IERC20Token(quickBuyPath[0]);
+            return IEtherToken(0x0);
+        return IEtherToken(quickBuyPath[0]);
     }
 
     /**
@@ -516,21 +516,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     {
         // we need to transfer the tokens from the caller to the local contract before we
         // follow the change path, to allow it to execute the change on behalf of the caller
-        // if the initial source in the change path is the smart token, we ensure that the local contract is the changer (which doesn't require allowance)
         IERC20Token fromToken = _path[0];
-        require(fromToken != _path[1] || fromToken == token);
-
-        // transfer the tokens from the caller to the local contract
-
-        // initial source is the smart token, destroy the tokens from the caller and issue them to the local contract
-        if (fromToken == token) {
-            token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
-            token.issue(this, _amount); // issue _amount new tokens to the local contract
-        }
-        // for any other initial source, we assume we already have allowance
-        else {
-            assert(fromToken.transferFrom(msg.sender, this, _amount));
-        }
+        claimTokens(fromToken, _amount);
 
         ISmartToken smartToken;
         IERC20Token toToken;
@@ -638,6 +625,24 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         // approve the new allowance
         assert(_token.approve(_spender, _value));
+    }
+
+    /**
+        @dev utility, transfers tokens from the sender to the local contract
+
+        @param _token   token to claim
+        @param _amount  amount to claim
+    */
+    function claimTokens(IERC20Token _token, uint256 _amount) private {
+        // if the token is the smart token, no allowance is required - destroy the tokens from the caller and issue them to the local contract
+        if (_token == token) {
+            token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
+            token.issue(this, _amount); // issue _amount new tokens to the local contract
+            return;
+        }
+
+        // otherwise, we assume we already have allowance
+        assert(_token.transferFrom(msg.sender, this, _amount));
     }
 
     /**
