@@ -503,13 +503,13 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         @dev changes the token to any other token in the bancor network by following a predefined change path
         note that when changing from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
 
-        @param _amount      amount to change from (in the initial change from token)
         @param _path        change path. See format above
+        @param _amount      amount to change from (in the initial source token)
         @param _minReturn   if the change results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
         @return tokens issued in return
     */
-    function quickChange(uint256 _amount, address[] _path, uint256 _minReturn)
+    function quickChange(address[] _path, uint256 _amount, uint256 _minReturn)
         public
         validChangePath(_path)
         returns (uint256 amount)
@@ -521,7 +521,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         require(fromToken != _path[1] || fromToken == address(token));
 
         // transfer the tokens from the caller to the local contract
-        
+
         // initial source is the smart token, destroy the tokens from the caller and issue them to the local contract
         if (fromToken == address(token)) {
             token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
@@ -586,7 +586,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         // approve allowance for the changer in the ether token
         ensureAllowance(etherToken, changer, msg.value);
         // execute the change
-        uint256 returnAmount = changer.quickChange(msg.value, quickBuyPath, _minReturn);
+        uint256 returnAmount = changer.quickChange(quickBuyPath, msg.value, _minReturn);
         // transfer the tokens to the caller
         assert(token.transfer(msg.sender, returnAmount));
         return returnAmount;
