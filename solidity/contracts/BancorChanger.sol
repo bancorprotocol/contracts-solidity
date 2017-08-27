@@ -190,6 +190,13 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         quickBuyPath = _path;
     }
 
+    /*
+        @dev allows the manager to clear the quick buy path
+    */
+    function clearQuickBuyPath() public ownerOnly {
+        quickBuyPath.length = 0;
+    }
+
     /**
         @dev returns the length of the quick buy path array
 
