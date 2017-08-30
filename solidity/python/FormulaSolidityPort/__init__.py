@@ -182,11 +182,11 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
     # special case if the CRR = 100%
     if (_reserveRatio == MAX_CRR):
         temp = safeMul(_supply, baseN) / _reserveBalance;
-        return safeSub(temp, _supply);
+        return temp - _supply;
 
     (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_CRR);
     temp = safeMul(_supply, result) >> precision;
-    return safeSub(temp, _supply);
+    return temp - _supply;
 
 '''
     @dev given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given change (in the reserve token)
@@ -213,18 +213,18 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     if (_sellAmount == _supply):
         return _reserveBalance;
 
-    baseD = safeSub(_supply, _sellAmount);
+    baseD = _supply - _sellAmount;
 
     # special case if the CRR = 100%
     if (_reserveRatio == MAX_CRR):
         temp1 = safeMul(_reserveBalance, _supply);
-        temp2 = safeMul(_reserveBalance, baseD);
-        return safeSub(temp1, temp2) / _supply;
+        temp2 = _reserveBalance * baseD;
+        return (temp1 - temp2) / _supply;
 
     (result, precision) = power(_supply, baseD, MAX_CRR, _reserveRatio);
     temp1 = safeMul(_reserveBalance, result);
-    temp2 = safeMul(_reserveBalance, ONE << precision);
-    return safeSub(temp1, temp2) / result;
+    temp2 = _reserveBalance << precision;
+    return (temp1 - temp2) / result;
 
 '''
     General Description:
