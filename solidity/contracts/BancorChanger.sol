@@ -534,7 +534,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         uint256 pathLength = _path.length;
 
         // iterate over the change path
-        for (uint8 i = 1; i < pathLength; i += 2) {
+        for (uint256 i = 1; i < pathLength; i += 2) {
             smartToken = ISmartToken(_path[i]);
             toToken = _path[i + 1];
             changer = BancorChanger(smartToken.owner());
