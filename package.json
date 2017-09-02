@@ -1,10 +1,10 @@
 {
   "name": "bancor-contracts",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "Yudi Levi",
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/bancorprotocol/contracts"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bancorprotocol/contracts"
   },
   "engines": {
     "npm": "^3.0.0"
