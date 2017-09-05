@@ -165,7 +165,7 @@ contract('BancorFormula', () => {
 
         it(`${test}:`, async () => {
             let retVal = await formula.fixedExpTest.call(minExp, precision);
-            assert(retVal.greaterThan(minVal), `${test}: output is too small`);
+            assert(retVal.greaterThanOrEqualTo(minVal), `${test}: output is too small`);
         });
     }
 
