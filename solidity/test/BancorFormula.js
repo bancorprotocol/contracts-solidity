@@ -158,6 +158,17 @@ contract('BancorFormula', () => {
         });
     }
 
+    for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
+        let minExp = web3.toBigNumber(constants.maxExpArray[precision-1]).plus(1);
+        let minVal = web3.toBigNumber(2).toPower(precision);
+        let test   = `Function fixedExp(0x${minExp.toString(16)}, ${precision})`;
+
+        it(`${test}:`, async () => {
+            let retVal = await formula.fixedExpTest.call(minExp, precision);
+            assert(retVal.greaterThan(minVal), `${test}: output is too small`);
+        });
+    }
+
     for (let n = 1; n <= 255; n++) {
         let tuples = [
             {'input' : web3.toBigNumber(2).toPower(n)           , 'output' : web3.toBigNumber(n)},
