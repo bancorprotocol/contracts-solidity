@@ -63,7 +63,6 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     uint32 public maxChangeFee = 0;                 // maximum change fee for the lifetime of the contract, represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public changeFee = 0;                    // current change fee, represented in ppm, 0...maxChangeFee
     bool public changingEnabled = true;             // true if token changing is enabled, false if not
-    bool private withdrawingEther = false;          // used to prevent re-entry while the contract is withdrawing from an ether token
 
     // triggered when a change between two tokens occurs (TokenChanger event)
     event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return,
@@ -208,14 +207,23 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     }
 
     /**
+        @dev returns true if ether token exists in the quick buy path, false if not
+        note that there should always be one in the quick buy path, if one is set
+
+        @return true if ether token exists, false if not
+    */
+    function hasQuickBuyEtherToken() public constant returns (bool) {
+        return quickBuyPath.length > 0;
+    }
+
+    /**
         @dev returns the address of the ether token used by the quick buy functionality
         note that it should always be the first element in the quick buy path, if one is set
 
         @return ether token address
     */
     function getQuickBuyEtherToken() public constant returns (IEtherToken etherToken) {
-        if (quickBuyPath.length == 0)
-            return IEtherToken(0x0);
+        assert(quickBuyPath.length > 0);
         return IEtherToken(quickBuyPath[0]);
     }
 
@@ -526,7 +534,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         uint256 pathLength = _path.length;
 
         // iterate over the change path
-        for (uint8 i = 1; i < pathLength; i += 2) {
+        for (uint256 i = 1; i < pathLength; i += 2) {
             smartToken = ISmartToken(_path[i]);
             toToken = _path[i + 1];
             changer = BancorChanger(smartToken.owner());
@@ -542,14 +550,9 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         // finished the change, transfer the funds back to the caller
         // if the last change resulted in ether tokens, withdraw them and send them as ETH to the caller
-        if (changer.getQuickBuyEtherToken() == toToken) {
+        if (changer.hasQuickBuyEtherToken() && changer.getQuickBuyEtherToken() == toToken) {
             IEtherToken etherToken = IEtherToken(toToken);
-
-            // prevent the withdrawal from executing the quick buy function
-            withdrawingEther = true;
-            etherToken.withdraw(_amount);
-            withdrawingEther = false;
-            msg.sender.transfer(_amount);
+            etherToken.withdrawTo(msg.sender, _amount);
         }
         else {
             // not ETH, transfer the tokens to the caller
@@ -656,10 +659,6 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         note that the purchase will use the price at the time of the purchase
     */
     function() payable {
-        // disable quick buy if the changer is simply withdrawing ether from an ether token
-        if (withdrawingEther)
-            return;
-
         quickBuy(1);
     }
 }

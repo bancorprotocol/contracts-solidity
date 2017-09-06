@@ -25,10 +25,7 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     /**
         @dev deposit ether in the account
     */
-    function deposit()
-        public
-        payable
-    {
+    function deposit() public payable {
         balanceOf[msg.sender] = safeAdd(balanceOf[msg.sender], msg.value); // add the value to the account balance
         totalSupply = safeAdd(totalSupply, msg.value); // increase the total supply
 
@@ -42,9 +39,22 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
         @param _amount  amount of ether to withdraw
     */
     function withdraw(uint256 _amount) public {
+        withdrawTo(msg.sender, _amount);
+    }
+
+    /**
+        @dev withdraw ether from the account to a target account
+
+        @param _to      account to receive the ether
+        @param _amount  amount of ether to withdraw
+    */
+    function withdrawTo(address _to, uint256 _amount)
+        public
+        notThis(_to)
+    {
         balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _amount); // deduct the amount from the account balance
         totalSupply = safeSub(totalSupply, _amount); // decrease the total supply
-        assert(msg.sender.send(_amount)); // send the amount
+        _to.transfer(_amount); // send the amount to the target account
 
         Transfer(msg.sender, this, _amount);
         Destruction(_amount);
@@ -63,9 +73,9 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     */
     function transfer(address _to, uint256 _value)
         public
+        notThis(_to)
         returns (bool success)
     {
-        require(_to != address(this));
         assert(super.transfer(_to, _value));
         return true;
     }
@@ -82,9 +92,9 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     */
     function transferFrom(address _from, address _to, uint256 _value)
         public
+        notThis(_to)
         returns (bool success)
     {
-        require(_to != address(this));
         assert(super.transferFrom(_from, _to, _value));
         return true;
     }

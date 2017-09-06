@@ -26,7 +26,7 @@ def ceiling(d):
 getcontext().prec = MAX_PRECISION
 
 
-maxVal = floor(log2(2**(256-MAX_PRECISION)-1)*2**MAX_PRECISION)-1
+maxVal = floor(log2(2**(256-MAX_PRECISION)-1)*2**MAX_PRECISION)
 
 
 LN2_EXPONENT = floor(log2((2**256-1)/(maxVal*ln(2))))

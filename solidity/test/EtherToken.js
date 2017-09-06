@@ -58,17 +58,15 @@ contract('EtherToken', (accounts) => {
         assert.equal(newBalance.toString(), prevBalance.minus(transactionCost).plus(20).toString());
     });
 
-    it('verifies the ether balance after a withdrawal', async () => {
+    it('verifies the ether balance after a withdrawal to target account', async () => {
         let token = await EtherToken.new();
         await token.deposit({ value: 100 });
-        let prevBalance = web3.eth.getBalance(accounts[0]);
-        let res = await token.withdraw(20);
-        let transaction = web3.eth.getTransaction(res.tx);
-        let newBalance = web3.eth.getBalance(accounts[0]);
+        let prevBalance = web3.eth.getBalance(accounts[1]);
+        await token.withdrawTo(accounts[1], 20);
+        let newBalance = web3.eth.getBalance(accounts[1]);
         prevBalance = web3.toBigNumber(prevBalance);
         newBalance = web3.toBigNumber(newBalance);
-        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
-        assert.equal(newBalance.toString(), prevBalance.minus(transactionCost).plus(20).toString());
+        assert.equal(newBalance.toString(), prevBalance.plus(20).toString());
     });
 
     it('verifies the balances after a transfer', async () => {

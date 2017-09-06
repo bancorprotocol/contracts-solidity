@@ -25,13 +25,12 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
         @dev constructor
 
         @param _name       token name
-        @param _symbol     token short symbol, 1-6 characters
+        @param _symbol     token short symbol, minimum 1 character
         @param _decimals   for display purposes only
     */
     function SmartToken(string _name, string _symbol, uint8 _decimals)
         ERC20Token(_name, _symbol, _decimals)
     {
-        require(bytes(_symbol).length <= 6); // validate input
         NewSmartToken(address(this));
     }
 
