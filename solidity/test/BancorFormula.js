@@ -15,12 +15,13 @@ contract('BancorFormula', () => {
     let ILLEGAL_VALUE = web3.toBigNumber(2).toPower(256);
     let MAX_NUMERATOR = web3.toBigNumber(2).toPower(256 - constants.MAX_PRECISION).minus(1);
     let MIN_DENOMINATOR = web3.toBigNumber(1);
+    let MAX_EXPONENT = 1000000;
 
     for (let percent = 1; percent <= 100; percent++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MAX_NUMERATOR.minus(1);
-        let expN  = percent * 10000;
-        let expD  = 1000000;
+        let expN  = MAX_EXPONENT * percent / 100;
+        let expD  = MAX_EXPONENT;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
@@ -37,8 +38,8 @@ contract('BancorFormula', () => {
     for (let percent = 1; percent <= 100; percent++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MAX_NUMERATOR.minus(1);
-        let expN  = 1000000;
-        let expD  = percent * 10000;
+        let expN  = MAX_EXPONENT;
+        let expD  = MAX_EXPONENT * percent / 100;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
@@ -55,8 +56,8 @@ contract('BancorFormula', () => {
     for (let percent = 1; percent <= 100; percent++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MIN_DENOMINATOR;
-        let expN  = percent * 10000;
-        let expD  = 1000000;
+        let expN  = MAX_EXPONENT * percent / 100;
+        let expD  = MAX_EXPONENT;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
@@ -73,8 +74,8 @@ contract('BancorFormula', () => {
     for (let percent = 1; percent <= 100; percent++) {
         let baseN = MAX_NUMERATOR;
         let baseD = MIN_DENOMINATOR;
-        let expN  = 1000000;
-        let expD  = percent * 10000;
+        let expN  = MAX_EXPONENT;
+        let expD  = MAX_EXPONENT * percent / 100;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
@@ -103,7 +104,7 @@ contract('BancorFormula', () => {
         it(`${test}:`, async () => {
             try {
                 let retVal = await formula.lnTest.call(numerator, denominator);
-                assert(retVal.times(1000000).lessThan(ILLEGAL_VALUE), `${test}: output is too large`);
+                assert(retVal.times(MAX_EXPONENT).lessThan(ILLEGAL_VALUE), `${test}: output is too large`);
                 assert(assertion, `${test} failed when it should have passed`);
             }
             catch (error) {
