@@ -4,7 +4,7 @@ import './Owned.sol';
 
 
 contract ENJToken {
-    function balanceOf(address _owner) public constant returns (uint256 balance) { _owner; balance; }
+    function balanceOf(address _owner) public constant returns (uint256 balance);
     function transfer(address _to, uint256 _value) public returns (bool success);
     function totalAllocated() constant public returns (uint256 allocated);
     function addToAllocation(uint256 _amount);
@@ -39,8 +39,10 @@ contract ENJCrowdfund is Utils, Owned {
         @param _totalPresaleTokensYetToAllocate          smart token the crowdsale is for
         @param _beneficiary    address to receive all ether contributions
     */
-    function ENJCrowdfund(uint256 _totalPresaleTokensYetToAllocate, address _beneficiary) validAddress(_beneficiary) {
-        totalPresaleTokensYetToAllocate = _totalPresaleTokensYetToAllocate;     // Input total amount of presale tokens sold
+    function ENJCrowdfund(uint256 _totalPresaleTokensYetToAllocate, address _beneficiary) 
+    validAddress(_beneficiary) 
+    {
+        totalPresaleTokensYetToAllocate = _totalPresaleTokensYetToAllocate;     // Input total amount of presale tokens sold 
         beneficiary = _beneficiary;                                             // Address that will be receiving the ETH contributed
     }
 
@@ -72,7 +74,6 @@ contract ENJCrowdfund is Utils, Owned {
         @param _tokenAddress    ENJ Token Address
     */
     function setToken(address _tokenAddress) validAddress(_tokenAddress) ownerOnly {
-
         require(tokenAddress == 0x0);
         tokenAddress = _tokenAddress;
         token = ENJToken(_tokenAddress);
@@ -94,7 +95,7 @@ contract ENJCrowdfund is Utils, Owned {
         @param _batchOfAddresses list of addresses
         @param _amountofENJ matching list of address balances
     */
-    function deliverPresaleTokens(address[] _batchOfAddresses, uint[] _amountofENJ) external tokenIsSet ownerOnly returns (bool success) {
+    function deliverPresaleTokens(address[] _batchOfAddresses, uint256[] _amountofENJ) external tokenIsSet ownerOnly returns (bool success) {
 
         for (uint256 i = 0; i < _batchOfAddresses.length; i++) {
             deliverPresaleTokenToClient(_batchOfAddresses[i], _amountofENJ[i]);            
@@ -109,7 +110,7 @@ contract ENJCrowdfund is Utils, Owned {
         @param _accountHolder user address
         @param _amountofENJ balance to send out
     */
-    function deliverPresaleTokenToClient(address _accountHolder, uint _amountofENJ) internal ownerOnly {
+    function deliverPresaleTokenToClient(address _accountHolder, uint256 _amountofENJ) internal ownerOnly {
         require(token.balanceOf(_accountHolder) == 0 && totalPresaleTokensYetToAllocate > 0);
         token.transfer(_accountHolder, _amountofENJ);
         token.addToAllocation(_amountofENJ);
@@ -145,6 +146,7 @@ contract ENJCrowdfund is Utils, Owned {
     }
 
 
+
 ///////////////////////////////////////// CONSTANT FUNCTIONS /////////////////////////////////////////
     
     /**
@@ -164,17 +166,16 @@ contract ENJCrowdfund is Utils, Owned {
     */
     function getTotalAmountOfTokens(uint256 _contribution) public constant returns (uint256 amountOfTokens) {
         uint256 currentTokenPrice = 0;
-
         if (now < week2Start) {
-            currentTokenPrice = safeMul(_contribution, 6000);
+            return currentTokenPrice = safeMul(_contribution, 6000);
         } else if (now < week3Start) {
-            currentTokenPrice = safeMul(_contribution, 5000);
+            return currentTokenPrice = safeMul(_contribution, 5000);
         } else if (now < week4Start) {
-            currentTokenPrice = safeMul(_contribution, 4000);
+            return currentTokenPrice = safeMul(_contribution, 4000);
         } else {
-            currentTokenPrice = safeMul(_contribution, 3000);
+            return currentTokenPrice = safeMul(_contribution, 3000);
         }
-        return safeMul(_contribution, currentTokenPrice);
+        
     }
 
     /**
