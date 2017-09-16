@@ -94,7 +94,7 @@ contract ENJToken is ERC20Token, Owned {
         @return true if the transfer was successful, throws if it wasn't
     */
     function transfer(address _to, uint256 _value) greaterThanZero(_value) public returns (bool success) {
-        if (isTransferAllowed() == true || msg.sender == crowdFundAddress) {
+        if (isTransferAllowed() == true || msg.sender == crowdFundAddress || msg.sender == incentivisationFundAddress) {
             assert(super.transfer(_to, _value));
             return true;
         }
@@ -113,7 +113,7 @@ contract ENJToken is ERC20Token, Owned {
         @return true if the transfer was successful, throws if it wasn't
     */
     function transferFrom(address _from, address _to, uint256 _value) greaterThanZero(_value) public returns (bool success) {
-        if (isTransferAllowed() == true || msg.sender == crowdFundAddress) {        
+        if (isTransferAllowed() == true || msg.sender == crowdFundAddress || msg.sender == incentivisationFundAddress) {        
             assert(super.transferFrom(_from, _to, _value));
             return true;
         }
