@@ -1,0 +1,355 @@
+{
+  "contract_name": "ENJCrowdfund",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_tokenAddress",
+          "type": "address"
+        }
+      ],
+      "name": "setToken",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_batchOfAddresses",
+          "type": "address[]"
+        },
+        {
+          "name": "_amountofENJ",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "deliverPresaleTokens",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "totalPresaleTokensYetToAllocate",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "endTime",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "beneficiary",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "totalEnjSold",
+      "outputs": [
+        {
+          "name": "total",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "startTime",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "acceptOwnership",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "tokenAddress",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_contribution",
+          "type": "uint256"
+        }
+      ],
+      "name": "getTotalAmountOfTokens",
+      "outputs": [
+        {
+          "name": "amountOfTokens",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "newOwner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_newBeneficiary",
+          "type": "address"
+        }
+      ],
+      "name": "changeBeneficiary",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_to",
+          "type": "address"
+        }
+      ],
+      "name": "contributeETH",
+      "outputs": [
+        {
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "payable": true,
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_totalPresaleTokensYetToAllocate",
+          "type": "uint256"
+        },
+        {
+          "name": "_beneficiary",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "type": "constructor"
+    },
+    {
+      "payable": true,
+      "type": "fallback"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "_contributor",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "_return",
+          "type": "uint256"
+        }
+      ],
+      "name": "CrowdsaleContribution",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "_contributor",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "_amountOfTokens",
+          "type": "uint256"
+        }
+      ],
+      "name": "PresaleContribution",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "_prevOwner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "_newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnerUpdate",
+      "type": "event"
+    }
+  ],
+  "unlinked_binary": "0x60606040526359d37bc06002556359f90e446003556359dcb6406004556359e5f0c06005556359ef2b4060065560088054600160a060020a0319908116909155600980549091169055341561005357600080fd5b604051604080610bb883398101604052808051919060200180519150505b5b5b5b60008054600160a060020a03191633600160a060020a03161790555b80600160a060020a03811615156100a657600080fd5b600783905560088054600160a060020a031916600160a060020a0384161790555b5b5050505b610add806100db6000396000f300606060405236156100bf5763ffffffff60e060020a600035041663144fa6d781146100cd57806318b7fed8146100ee5780632eee5a3e1461012c5780633197cbb61461015157806338af3eed146101765780634bce2e9b146101a557806378e97925146101ca57806379ba5097146101ef5780638da5cb5b146102045780639d76ea5814610233578063a5ddfef114610262578063d4ee1d901461028a578063dc070657146102b9578063f2fde38b146102da578063ff36cf59146102fb575b5b6100c933610321565b505b005b34156100d857600080fd5b6100cb600160a060020a0360043516610380565b005b34156100f957600080fd5b6101186024600480358281019290820135918135918201910135610403565b604051901515815260200160405180910390f35b341561013757600080fd5b61013f610495565b60405190815260200160405180910390f35b341561015c57600080fd5b61013f61049b565b60405190815260200160405180910390f35b341561018157600080fd5b6101896104a1565b604051600160a060020a03909116815260200160405180910390f35b34156101b057600080fd5b61013f6104b0565b60405190815260200160405180910390f35b34156101d557600080fd5b61013f61051a565b60405190815260200160405180910390f35b34156101fa57600080fd5b6100cb610520565b005b341561020f57600080fd5b6101896105c8565b604051600160a060020a03909116815260200160405180910390f35b341561023e57600080fd5b6101896105d7565b604051600160a060020a03909116815260200160405180910390f35b341561026d57600080fd5b61013f6004356105e6565b60405190815260200160405180910390f35b341561029557600080fd5b61018961066a565b604051600160a060020a03909116815260200160405180910390f35b34156102c457600080fd5b6100cb600160a060020a0360043516610679565b005b34156102e557600080fd5b6100cb600160a060020a03600435166106d6565b005b61013f600160a060020a0360043516610321565b60405190815260200160405180910390f35b600081600160a060020a038116151561033957600080fd5b600254421015801561034c575060035442105b151561035457fe5b600954600160a060020a0316151561036b57600080fd5b61037483610736565b91505b5b5b5b50919050565b80600160a060020a038116151561039657600080fd5b60005433600160a060020a039081169116146103ae57fe5b600954600160a060020a0316156103c457600080fd5b60098054600160a060020a03841673ffffffffffffffffffffffffffffffffffffffff199182168117909255600a805490911690911790555b5b5b5050565b6009546000908190600160a060020a0316151561041f57600080fd5b60005433600160a060020a0390811691161461043757fe5b5060005b848110156104855761047c86868381811061045257fe5b90506020020135600160a060020a0316858584818110151561047057fe5b9050602002013561089d565b5b60010161043b565b600191505b5b5b50949350505050565b60075481565b60035481565b600854600160a060020a031681565b600a54600090600160a060020a03166345f7f24982604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b15156104fa57600080fd5b6102c65a03f1151561050b57600080fd5b50505060405180519150505b90565b60025481565b60015433600160a060020a0390811691161461053b57600080fd5b6000546001547f343765429aea5a34b3ff6a3785a98a5abb2597aca87bfbb58632c173d585373a91600160a060020a039081169116604051600160a060020a039283168152911660208201526040908101905180910390a1600180546000805473ffffffffffffffffffffffffffffffffffffffff19908116600160a060020a038416179091551690555b565b600054600160a060020a031681565b600954600160a060020a031681565b600454600090819042101561060b5761060183611770610a6b565b9050809150610377565b60055442101561062b5761060183611388610a6b565b9050809150610377565b60065442101561064b5761060183610fa0610a6b565b9050809150610377565b61060183610bb8610a6b565b9050809150610377565b5b5b5b50919050565b600154600160a060020a031681565b80600160a060020a038116151561068f57600080fd5b60005433600160a060020a039081169116146106a757fe5b6008805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0384161790555b5b5b5050565b60005433600160a060020a039081169116146106ee57fe5b600054600160a060020a038281169116141561070957600080fd5b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b50565b600080610742346105e6565b600854909150600160a060020a03163480156108fc0290604051600060405180830381858888f19350505050151561077957600080fd5b600a54600160a060020a031663a9059cbb848360006040516020015260405160e060020a63ffffffff8516028152600160a060020a0390921660048301526024820152604401602060405180830381600087803b15156107d857600080fd5b6102c65a03f115156107e957600080fd5b50505060405180515050600a54600160a060020a03166398c20c008260405160e060020a63ffffffff84160281526004810191909152602401600060405180830381600087803b151561083b57600080fd5b6102c65a03f1151561084c57600080fd5b50505082600160a060020a03167f59c2edee20e1156b2d5d0d006ac843ed49ca044ce77be4aa26cba19c64f220be348360405191825260208201526040908101905180910390a28091505b50919050565b60005433600160a060020a039081169116146108b557fe5b600a54600160a060020a03166370a082318360006040516020015260405160e060020a63ffffffff8416028152600160a060020a039091166004820152602401602060405180830381600087803b151561090e57600080fd5b6102c65a03f1151561091f57600080fd5b5050506040518051159050801561093857506000600754115b151561094357600080fd5b600a54600160a060020a031663a9059cbb838360006040516020015260405160e060020a63ffffffff8516028152600160a060020a0390921660048301526024820152604401602060405180830381600087803b15156109a257600080fd5b6102c65a03f115156109b357600080fd5b50505060405180515050600a54600160a060020a03166398c20c008260405160e060020a63ffffffff84160281526004810191909152602401600060405180830381600087803b1515610a0557600080fd5b6102c65a03f11515610a1657600080fd5b505050610a2560075482610a9a565b600755600160a060020a0382167f3d0ab7e8209f975ae8d4c319005ac3a64cf3b4ee6503d416abb001d442eb1abc8260405190815260200160405180910390a25b5b5050565b6000828202831580610a875750828482811515610a8457fe5b04145b1515610a8f57fe5b8091505b5092915050565b600081831015610aa657fe5b508082035b929150505600a165627a7a72305820ad1d2f0085cfb693d1cb64cb400a0276ecef8e6df11c05e72db98d6178b958e30029",
+  "networks": {
+    "1505761635724": {
+      "links": {},
+      "events": {
+        "0x59c2edee20e1156b2d5d0d006ac843ed49ca044ce77be4aa26cba19c64f220be": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "_contributor",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "_amount",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "_return",
+              "type": "uint256"
+            }
+          ],
+          "name": "CrowdsaleContribution",
+          "type": "event"
+        },
+        "0x3d0ab7e8209f975ae8d4c319005ac3a64cf3b4ee6503d416abb001d442eb1abc": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "_contributor",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "_amountOfTokens",
+              "type": "uint256"
+            }
+          ],
+          "name": "PresaleContribution",
+          "type": "event"
+        },
+        "0x343765429aea5a34b3ff6a3785a98a5abb2597aca87bfbb58632c173d585373a": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "_prevOwner",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "_newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnerUpdate",
+          "type": "event"
+        }
+      },
+      "updated_at": 1505761682890
+    }
+  },
+  "schema_version": "0.0.5",
+  "updated_at": 1505761682890
+}

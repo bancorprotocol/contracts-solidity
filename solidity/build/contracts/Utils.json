@@ -1,0 +1,14 @@
+{
+  "contract_name": "Utils",
+  "abi": [
+    {
+      "inputs": [],
+      "payable": false,
+      "type": "constructor"
+    }
+  ],
+  "unlinked_binary": "0x60606040523415600e57600080fd5b5b5b5b603680601e6000396000f30060606040525b600080fd00a165627a7a72305820db33078cbf034db3284b9e72d41ffe6c0adaa66beb8222ad97faf70bc7f99ea10029",
+  "networks": {},
+  "schema_version": "0.0.5",
+  "updated_at": 1505761384009
+}
