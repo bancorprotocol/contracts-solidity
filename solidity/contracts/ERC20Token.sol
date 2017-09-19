@@ -6,9 +6,9 @@ import './interfaces/IERC20Token.sol';
     ERC20 Standard Token implementation
 */
 contract ERC20Token is IERC20Token, Utils {
-    string public standard = 'Token 0.1';
-    string public name = '';
-    string public symbol = '';
+    string public standard = "Token 0.1";
+    string public name = "";
+    string public symbol = "";
     uint8 public decimals = 0;
     uint256 public totalSupply = 0;
     mapping (address => uint256) public balanceOf;
