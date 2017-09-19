@@ -1,4 +1,4 @@
-# Enjin Token And Crowdfund Contract
+# Enjin Token And Crowdfund Contract -- Audit
 
 ## Testing
 Tests are included and can be run using truffle.
