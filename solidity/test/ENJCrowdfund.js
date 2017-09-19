@@ -1,13 +1,13 @@
-import latestTime from './helpers/latestTime'
 const ENJToken = artifacts.require('ENJToken.sol');
-const utils = require('./helpers/Utils');
+const Utils = require('./helpers/Utils');
 const BigNumber = require('bignumber.js');
 const ENJCrowdfund = artifacts.require('ENJCrowdfund.sol');
 
 let tokenAddress;
 let crowdfundAddress;
 let advisorAddress;
-let incentiveAddress
+let incentiveAddress;
+let teamAddress;
 let owner;
 let beneficiary;
 let totalPresaleTokensYetToAllocate = new BigNumber(100000000).times(new BigNumber(10).pow(18));
@@ -40,6 +40,7 @@ contract('ENJCrowdfund', (accounts) => {
         owner = accounts[2];
         beneficiary = accounts[3];
         incentiveAddress = accounts[4];
+        teamAddress = accounts[4];
         batchOfAddress = [accounts[8], accounts[7], accounts[6], accounts[5]];
         batchOfENJ = [
             new BigNumber(100).times(new BigNumber(10).pow(18)),
@@ -49,7 +50,7 @@ contract('ENJCrowdfund', (accounts) => {
         ]
         let crowdfund = await ENJCrowdfund.new(totalPresaleTokensYetToAllocate, beneficiary, {from: owner});
         crowdfundAddress = crowdfund.address;
-        let token = await ENJToken.new(crowdfundAddress, advisorAddress, incentiveAddress, {from: owner});
+        let token = await ENJToken.new(crowdfundAddress, advisorAddress, incentiveAddress, teamAddress, {from: owner});
         tokenAddress = token.address;
     });
 
@@ -80,13 +81,13 @@ contract('ENJCrowdfund', (accounts) => {
         try {
             await crowdfund.changeBeneficiary(accounts[6], {from: accounts[8]});
         } catch (error) {
-            return utils.ensureException(error);
+            return Utils.ensureException(error);
         }
     });
 
-    it('setToken:should change the beneficiary address', async() => {
+    it('setToken:should set the token', async() => {
         let crowdfund = await ENJCrowdfund.new(totalPresaleTokensYetToAllocate, beneficiary, {from: owner});
-        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress, {from: owner});
+        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress, teamAddress, {from: owner});
         await crowdfund.setToken(token.address, {from: owner});
         let _tokenAddress = await crowdfund
             .tokenAddress
@@ -94,21 +95,21 @@ contract('ENJCrowdfund', (accounts) => {
         assert.equal(_tokenAddress, token.address);
     });
 
-    it('setToken:should change the beneficiary address -- fail',
+    it('setToken:should set the token -- fails called other than owner',
     async() => {
         let crowdfund = await ENJCrowdfund.new(totalPresaleTokensYetToAllocate, beneficiary, {from: owner});
-        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress);
+        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress, teamAddress);
 
         try {
             await crowdfund.setToken(token.address, {from: accounts[8]});
         } catch (error) {
-            return utils.ensureException(error);
+            return Utils.ensureException(error);
         }
     });
 
     it('setToken:should fail when token is already set', async() => {
         let crowdfund = await ENJCrowdfund.new(totalPresaleTokensYetToAllocate, beneficiary, {from: owner});
-        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress);
+        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress, teamAddress);
         await crowdfund.setToken(token.address, {from: owner});
         let _tokenAddress = await crowdfund
             .tokenAddress
@@ -117,13 +118,13 @@ contract('ENJCrowdfund', (accounts) => {
         try {
             await crowdfund.setToken(token.address, {from: owner});
         } catch (error) {
-            return utils.ensureException(error);
+            return Utils.ensureException(error);
         }
     })
 
     it('deliverPresaleTokens: should deliver the tokens to the presale contributors', async() => {
         let crowdfund = await ENJCrowdfund.new(totalPresaleTokensYetToAllocate, beneficiary, {from: owner});
-        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress);
+        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress, teamAddress);
         await crowdfund.setToken(token.address, {from: owner});
         let tokenAddress = await crowdfund
             .tokenAddress
@@ -158,7 +159,7 @@ contract('ENJCrowdfund', (accounts) => {
     it('deliverPresaleTokens: should deliver the tokens to the presale contributors --fails called by other than owner',
     async() => {
         let crowdfund = await ENJCrowdfund.new(totalPresaleTokensYetToAllocate, beneficiary, {from: owner});
-        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress);
+        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress, teamAddress);
         await crowdfund.setToken(token.address, {from: owner});
         let tokenAddress = await crowdfund
             .tokenAddress
@@ -170,32 +171,32 @@ contract('ENJCrowdfund', (accounts) => {
                 gas: 3000000
             });
         } catch (error) {
-            return utils.ensureException(error);
+            return Utils.ensureException(error);
         }
     });
 
     it('deliverPresaleTokens: should deliver the tokens to the presale contributors --fails when token is not set',
     async() => {
         let crowdfund = await ENJCrowdfund.new(totalPresaleTokensYetToAllocate, beneficiary, {from: owner});
-        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress);
+        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress, teamAddress);
         try {
             await crowdfund.deliverPresaleTokens(batchOfAddress, batchOfENJ, {
                 from: accounts[4],
                 gas: 3000000
             });
         } catch (error) {
-            return utils.ensureException(error);
+            return Utils.ensureException(error);
         }
     });
 
     it('Jump into the first week of the crowdsale', async() => {
         let crowdfund = await ENJCrowdfund.new(totalPresaleTokensYetToAllocate, beneficiary, {from: owner});        
-        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress);
+        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress, teamAddress);
         let currentTime = Math.floor(Date.now() / 1000);
         let startTime = await token
             .startTime
             .call();
-        let durationDiff = await utils.timeDifference(startTime.toNumber(), currentTime);
+        let durationDiff = await Utils.timeDifference(startTime.toNumber(), currentTime);
         let durationToInc = Math.floor(durationDiff + 2000);
         await timeJump(durationToInc);
     });
@@ -203,7 +204,7 @@ contract('ENJCrowdfund', (accounts) => {
     it('contributeETH: user cannot contribute -- first week -- fails when token is not set',
     async() => {
         let crowdfund = await ENJCrowdfund.new(totalPresaleTokensYetToAllocate, beneficiary, {from: owner});
-        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress);
+        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress, teamAddress);
         try {
             await crowdfund.contributeETH(accounts[8], {
                 from: accounts[8],
@@ -211,13 +212,13 @@ contract('ENJCrowdfund', (accounts) => {
                 value: new BigNumber(11).times(new BigNumber(10).pow(18))
             });
         } catch (error) {
-            return utils.ensureException(error);
+            return Utils.ensureException(error);
         }
     });
 
     it('contributeETH: user can contribute', async() => {
         let crowdfund = await ENJCrowdfund.new(totalPresaleTokensYetToAllocate, beneficiary, {from: owner});
-        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress);
+        let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress, teamAddress);
         await crowdfund.setToken(token.address, {from: owner});
         let balanceSoFar = 0;
         let tokenAddress = await crowdfund

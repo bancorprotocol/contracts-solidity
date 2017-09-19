@@ -19,6 +19,7 @@ contract ENJToken is ERC20Token, Owned {
     address public crowdFundAddress;                                  // Address of the crowdfund
     address public advisorAddress;                                    // Enjin advisor's address
     address public incentivisationFundAddress;                        // Address that holds the incentivization funds
+    address public enjinTeamAddress;                                  // Enjin Team address
 
     //  Variables
     uint256 public totalAllocatedToAdvisors = 0;                      // Counter to keep track of total Advisor allocation
@@ -51,12 +52,6 @@ contract ENJToken is ERC20Token, Owned {
         _;
     }
 
-    // Function only accessible by the Advisor address
-    modifier advisorOnly() {
-        require(msg.sender == advisorAddress);
-        _;
-    }
-
     // Function only accessible by the Crowdfund contract
     modifier crowdfundOnly() {
         require(msg.sender == crowdFundAddress);
@@ -70,11 +65,12 @@ contract ENJToken is ERC20Token, Owned {
         @param _crowdFundAddress   Crowdfund address
         @param _advisorAddress     Advisor address
     */
-    function ENJToken(address _crowdFundAddress, address _advisorAddress, address _incentivisationFundAddress)
+    function ENJToken(address _crowdFundAddress, address _advisorAddress, address _incentivisationFundAddress, address _enjinTeamAddress)
     ERC20Token("ENJ Coin", "ENJ", 18)
      {
         crowdFundAddress = _crowdFundAddress;
         advisorAddress = _advisorAddress;
+        enjinTeamAddress = _enjinTeamAddress;
         incentivisationFundAddress = _incentivisationFundAddress;
         balanceOf[_crowdFundAddress] = minCrowdsaleAllocation + maxPresaleSupply; // Total presale + crowdfund tokens
         balanceOf[_incentivisationFundAddress] = incentivisationAllocation;       // 10% Allocated for Marketing and Incentivisation
@@ -178,8 +174,8 @@ contract ENJToken is ERC20Token, Owned {
         @return true if successful, throws if not
     */
     function transferTeamAllocation(uint256 _amount) ownerOnly internal {
-        balanceOf[msg.sender] = safeAdd(balanceOf[msg.sender], _amount);
-        Transfer(this, msg.sender, _amount);
+        balanceOf[enjinTeamAddress] = safeAdd(balanceOf[enjinTeamAddress], _amount);
+        Transfer(this, enjinTeamAddress, _amount);
         totalAllocated = safeAdd(totalAllocated, _amount);
         totalAllocatedToTeam = safeAdd(totalAllocatedToTeam, _amount);
     }
@@ -192,10 +188,10 @@ contract ENJToken is ERC20Token, Owned {
 
         @return true if successful, throws if not
     */
-    function releaseAdvisorTokens() advisorTimelock advisorOnly returns(bool success) {
+    function releaseAdvisorTokens() advisorTimelock ownerOnly returns(bool success) {
         require(totalAllocatedToAdvisors == 0);
-        balanceOf[msg.sender] = safeAdd(balanceOf[msg.sender], advisorsAllocation);
-        Transfer(this, msg.sender, advisorsAllocation);
+        balanceOf[advisorAddress] = safeAdd(balanceOf[advisorAddress], advisorsAllocation);
+        Transfer(this, advisorAddress, advisorsAllocation);
         totalAllocated = safeAdd(totalAllocated, advisorsAllocation);
         totalAllocatedToAdvisors = advisorsAllocation;
         return true;
@@ -210,7 +206,7 @@ contract ENJToken is ERC20Token, Owned {
     */
     function retrieveUnsoldTokens() safeTimelock ownerOnly returns(bool success) {
         uint256 amountOfTokens = balanceOf[crowdFundAddress];
-        balanceOf[msg.sender] = safeAdd(balanceOf[msg.sender], amountOfTokens);
+        balanceOf[incentivisationFundAddress] = safeAdd(balanceOf[incentivisationFundAddress], amountOfTokens);
         totalAllocated = safeAdd(totalAllocated, amountOfTokens);
         balanceOf[crowdFundAddress] = 0;
         return true;        
@@ -242,14 +238,6 @@ contract ENJToken is ERC20Token, Owned {
             return true;
         }
         return false;
-    }
-
-    /**
-        @dev
-        Function to show the total Incentivisation tokens allocated
-    */
-    function totalAllocatedToIncentives() public constant returns(uint256) {
-        return incentivisationAllocation - balanceOf[incentivisationFundAddress];
     }
 
     function () {

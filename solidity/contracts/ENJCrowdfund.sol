@@ -96,7 +96,7 @@ contract ENJCrowdfund is Utils, Owned {
         @param _amountofENJ matching list of address balances
     */
     function deliverPresaleTokens(address[] _batchOfAddresses, uint256[] _amountofENJ) external tokenIsSet ownerOnly returns (bool success) {
-
+        require(now < startTime);
         for (uint256 i = 0; i < _batchOfAddresses.length; i++) {
             deliverPresaleTokenToClient(_batchOfAddresses[i], _amountofENJ[i]);            
         }
