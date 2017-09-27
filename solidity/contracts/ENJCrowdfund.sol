@@ -1,25 +1,17 @@
 pragma solidity ^0.4.15;
-import './Utils.sol';
-import './Owned.sol';
+import './TokenHolder.sol';
+import './ENJToken.sol';
 
 
-contract ENJToken {
-    function balanceOf(address _owner) public constant returns (uint256 balance);
-    function transfer(address _to, uint256 _value) public returns (bool success);
-    function totalAllocated() constant public returns (uint256 allocated);
-    function addToAllocation(uint256 _amount);
-}
-
-
-contract ENJCrowdfund is Utils, Owned {
+contract ENJCrowdfund is TokenHolder {
 
 ///////////////////////////////////////// VARIABLE INITIALIZATION /////////////////////////////////////////
 
-    uint256 public startTime = 1507032000;              // 10/03/2017 @ 12:00pm (UTC) crowdsale start time (in seconds)
-    uint256 public endTime = 1509494340;                // 10/31/2017 @ 11:59pm (UTC) crowdsale end time (in seconds)
-    uint256 internal week2Start = startTime + (7 days);   // 10/10/2017 @ 12:00pm (UTC) week 2 price begins
-    uint256 internal week3Start = week2Start + (7 days);  // 10/17/2017 @ 12:00pm (UTC) week 3 price begins
-    uint256 internal week4Start = week3Start + (7 days);  // 10/25/2017 @ 12:00pm (UTC) week 4 price begins
+    uint256 constant public startTime = 1507032000;                // 10/03/2017 @ 12:00pm (UTC) crowdsale start time (in seconds)
+    uint256 constant public endTime = 1509494340;                  // 10/31/2017 @ 11:59pm (UTC) crowdsale end time (in seconds)
+    uint256 constant internal week2Start = startTime + (7 days);   // 10/10/2017 @ 12:00pm (UTC) week 2 price begins
+    uint256 constant internal week3Start = week2Start + (7 days);  // 10/17/2017 @ 12:00pm (UTC) week 3 price begins
+    uint256 constant internal week4Start = week3Start + (7 days);  // 10/25/2017 @ 12:00pm (UTC) week 4 price begins
 
     uint256 public totalPresaleTokensYetToAllocate;     // Counter that keeps track of presale tokens yet to allocate
     address public beneficiary = 0x0;                   // address to receive all ether contributions
@@ -81,7 +73,7 @@ contract ENJCrowdfund is Utils, Owned {
 
     /**
         @dev Sets a new Beneficiary address
-        Can only be called once by the owner
+        Can only be called by the owner
         @param _newBeneficiary    Beneficiary Address
     */
     function changeBeneficiary(address _newBeneficiary) validAddress(_newBeneficiary) ownerOnly {
@@ -90,8 +82,7 @@ contract ENJCrowdfund is Utils, Owned {
 
     /**
         @dev Function to send ENJ to presale investors
-        Can only be called while the presale is not over. Any multiple contribution from the same address
-        will be aggregated.
+        Can only be called while the presale is not over.
         @param _batchOfAddresses list of addresses
         @param _amountofENJ matching list of address balances
     */
@@ -165,15 +156,15 @@ contract ENJCrowdfund is Utils, Owned {
         @return computed number of tokens
     */
     function getTotalAmountOfTokens(uint256 _contribution) public constant returns (uint256 amountOfTokens) {
-        uint256 currentTokenPrice = 0;
+        uint256 currentTokenRate = 0;
         if (now < week2Start) {
-            return currentTokenPrice = safeMul(_contribution, 6000);
+            return currentTokenRate = safeMul(_contribution, 6000);
         } else if (now < week3Start) {
-            return currentTokenPrice = safeMul(_contribution, 5000);
+            return currentTokenRate = safeMul(_contribution, 5000);
         } else if (now < week4Start) {
-            return currentTokenPrice = safeMul(_contribution, 4000);
+            return currentTokenRate = safeMul(_contribution, 4000);
         } else {
-            return currentTokenPrice = safeMul(_contribution, 3000);
+            return currentTokenRate = safeMul(_contribution, 3000);
         }
         
     }

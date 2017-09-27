@@ -193,7 +193,7 @@ contract('ENJCrowdfund', (accounts) => {
         let crowdfund = await ENJCrowdfund.new(totalPresaleTokensYetToAllocate, beneficiary, {from: owner});        
         let token = await ENJToken.new(crowdfund.address, advisorAddress, incentiveAddress, teamAddress);
         let currentTime = Math.floor(Date.now() / 1000);
-        let startTime = await token
+        let startTime = await crowdfund
             .startTime
             .call();
         let durationDiff = await Utils.timeDifference(startTime.toNumber(), currentTime);

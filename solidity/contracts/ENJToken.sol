@@ -1,31 +1,33 @@
 pragma solidity ^0.4.15;
 import './ERC20Token.sol';
-import './Owned.sol';
+import './TokenHolder.sol';
 
 
-contract ENJToken is ERC20Token, Owned {
+contract ENJToken is ERC20Token, TokenHolder {
 
 ///////////////////////////////////////// VARIABLE INITIALIZATION /////////////////////////////////////////
 
-    uint256 public totalSupply = 1 * (10**9) * 10**18;
+    uint256 constant public ENJ_UNIT = 10 ** 18;
+    uint256 public totalSupply = 1 * (10**9) * ENJ_UNIT;
 
     //  Constants 
-    uint256 public maxPresaleSupply = 600 * 10**6 * 10**18;           // Total presale supply at max bonus
-    uint256 public minCrowdsaleAllocation = 200 * 10**6 * 10**18;     // Min amount for crowdsale
-    uint256 public incentivisationAllocation = 100 * 10**6 * 10**18;  // Incentivisation Allocation
-    uint256 public advisorsAllocation = 50 * 10**6 * 10**18;          // Advisors Allocation
-    uint256 public enjinTeamAllocation = 50 * 10**6 * 10**18;         // Enjin Team allocation
+    uint256 constant public maxPresaleSupply = 600 * 10**6 * ENJ_UNIT;           // Total presale supply at max bonus
+    uint256 constant public minCrowdsaleAllocation = 200 * 10**6 * ENJ_UNIT;     // Min amount for crowdsale
+    uint256 constant public incentivisationAllocation = 100 * 10**6 * ENJ_UNIT;  // Incentivisation Allocation
+    uint256 constant public advisorsAllocation = 50 * 10**6 * ENJ_UNIT;          // Advisors Allocation
+    uint256 constant public enjinTeamAllocation = 50 * 10**6 * ENJ_UNIT;         // Enjin Team allocation
 
-    address public crowdFundAddress;                                  // Address of the crowdfund
-    address public advisorAddress;                                    // Enjin advisor's address
-    address public incentivisationFundAddress;                        // Address that holds the incentivization funds
-    address public enjinTeamAddress;                                  // Enjin Team address
+    address public crowdFundAddress;                                             // Address of the crowdfund
+    address public advisorAddress;                                               // Enjin advisor's address
+    address public incentivisationFundAddress;                                   // Address that holds the incentivization funds
+    address public enjinTeamAddress;                                             // Enjin Team address
 
     //  Variables
-    uint256 public totalAllocatedToAdvisors = 0;                      // Counter to keep track of total Advisor allocation
-    uint256 public totalAllocatedToTeam = 0;                          // Counter to keep track of team token allocation
-    uint256 public totalAllocated = 0;                                // Counter to keep track of team token allocation
-    uint256 public endTime = 1509494340;                              // 10/31/2017 @ 11:59pm (UTC) crowdsale end time (in seconds)
+
+    uint256 public totalAllocatedToAdvisors = 0;                                 // Counter to keep track of total Advisor allocation
+    uint256 public totalAllocatedToTeam = 0;                                     // Counter to keep track of team token allocation
+    uint256 public totalAllocated = 0;                                           // Counter to keep track of team token allocation
+    uint256 constant public endTime = 1509494340;                                // 10/31/2017 @ 11:59pm (UTC) crowdsale end time (in seconds)
 
     bool internal isReleasedToPublic = false;                         // Flag to allow transfer/transferFrom before the end of the crowdfund
 
@@ -60,7 +62,7 @@ contract ENJToken is ERC20Token, Owned {
         @param _advisorAddress     Advisor address
     */
     function ENJToken(address _crowdFundAddress, address _advisorAddress, address _incentivisationFundAddress, address _enjinTeamAddress)
-    ERC20Token("Enjin Coin", "ENJ", 18)
+    ERC20Token("ENJ Coin", "ENJ", 18)
      {
         crowdFundAddress = _crowdFundAddress;
         advisorAddress = _advisorAddress;
@@ -83,7 +85,7 @@ contract ENJToken is ERC20Token, Owned {
 
         @return true if the transfer was successful, throws if it wasn't
     */
-    function transfer(address _to, uint256 _value) greaterThanZero(_value) public returns (bool success) {
+    function transfer(address _to, uint256 _value) public returns (bool success) {
         if (isTransferAllowed() == true || msg.sender == crowdFundAddress || msg.sender == incentivisationFundAddress) {
             assert(super.transfer(_to, _value));
             return true;
@@ -102,7 +104,7 @@ contract ENJToken is ERC20Token, Owned {
 
         @return true if the transfer was successful, throws if it wasn't
     */
-    function transferFrom(address _from, address _to, uint256 _value) greaterThanZero(_value) public returns (bool success) {
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
         if (isTransferAllowed() == true || msg.sender == crowdFundAddress || msg.sender == incentivisationFundAddress) {        
             assert(super.transferFrom(_from, _to, _value));
             return true;
@@ -150,7 +152,7 @@ contract ENJToken is ERC20Token, Owned {
     */
     function transferTeamAllocation(uint256 _amount) ownerOnly internal {
         balanceOf[enjinTeamAddress] = safeAdd(balanceOf[enjinTeamAddress], _amount);
-        Transfer(this, enjinTeamAddress, _amount);
+        Transfer(0x0, enjinTeamAddress, _amount);
         totalAllocated = safeAdd(totalAllocated, _amount);
         totalAllocatedToTeam = safeAdd(totalAllocatedToTeam, _amount);
     }
@@ -166,9 +168,9 @@ contract ENJToken is ERC20Token, Owned {
     function releaseAdvisorTokens() advisorTimelock ownerOnly returns(bool success) {
         require(totalAllocatedToAdvisors == 0);
         balanceOf[advisorAddress] = safeAdd(balanceOf[advisorAddress], advisorsAllocation);
-        Transfer(this, advisorAddress, advisorsAllocation);
         totalAllocated = safeAdd(totalAllocated, advisorsAllocation);
         totalAllocatedToAdvisors = advisorsAllocation;
+        Transfer(0x0, advisorAddress, advisorsAllocation);
         return true;
     }
 
@@ -181,9 +183,9 @@ contract ENJToken is ERC20Token, Owned {
     */
     function retrieveUnsoldTokens() safeTimelock ownerOnly returns(bool success) {
         uint256 amountOfTokens = balanceOf[crowdFundAddress];
+        balanceOf[crowdFundAddress] = 0;
         balanceOf[incentivisationFundAddress] = safeAdd(balanceOf[incentivisationFundAddress], amountOfTokens);
         totalAllocated = safeAdd(totalAllocated, amountOfTokens);
-        balanceOf[crowdFundAddress] = 0;
         return true;
     }
 
@@ -208,14 +210,10 @@ contract ENJToken is ERC20Token, Owned {
         @dev User transfers are allowed/rejected
         Transfers are forbidden before the end of the crowdfund
     */
-    function isTransferAllowed() internal returns(bool) {
+    function isTransferAllowed() internal constant returns(bool) {
         if (now > endTime || isReleasedToPublic == true) {
             return true;
         }
         return false;
-    }
-
-    function () {
-        revert();
     }
 }
