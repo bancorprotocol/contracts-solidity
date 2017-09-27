@@ -23,10 +23,10 @@ contract ENJToken is ERC20Token, TokenHolder {
     address public enjinTeamAddress;                                             // Enjin Team address
 
     //  Variables
+
     uint256 public totalAllocatedToAdvisors = 0;                                 // Counter to keep track of total Advisor allocation
     uint256 public totalAllocatedToTeam = 0;                                     // Counter to keep track of team token allocation
     uint256 public totalAllocated = 0;                                           // Counter to keep track of team token allocation
-    uint256 constant public startTime = 1507032000;                              // 10/03/2017 @ 12:00pm (UTC) crowdsale start time (in seconds)
     uint256 constant public endTime = 1509494340;                                // 10/31/2017 @ 11:59pm (UTC) crowdsale end time (in seconds)
 
     bool internal isReleasedToPublic = false;                                    // Flag to allow transfer/transferFrom before the end of the crowdfund
@@ -224,7 +224,7 @@ contract ENJToken is ERC20Token, TokenHolder {
     /**
         @dev Function to allow transfers
         can only be called by the owner of the contract
-        Transfers will be allowed regradless after the crowdfund end time.
+        Transfers will be allowed regardless after the crowdfund end time.
     */
     function allowTransfers() ownerOnly {
         isReleasedToPublic = true;
