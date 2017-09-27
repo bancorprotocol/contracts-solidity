@@ -409,7 +409,7 @@ contract('ENJToken', (accounts) => {
         let token = await ENJToken.new(crowdfundAddress, advisorAddress, incentiveAddress, teamAddress, {from: owner});
         let enjinTeamAllocation = (await token.enjinTeamAllocation.call())
             .dividedBy(new BigNumber(10).pow(18))
-            .times(0.25)
+            .times(0.125)
             .toNumber();
         await token.releaseEnjinTeamTokens({from: owner});
         let balance = await token
@@ -510,10 +510,6 @@ contract('ENJToken', (accounts) => {
     it('releaseEnjinTeamTokens: verifies all of the enjin team allocation', async() => {
         let token = await ENJToken.new(crowdfundAddress, advisorAddress, incentiveAddress, teamAddress, {from: owner});
         let balanceSoFar = 0;
-        let enjinTeamAllocationFirstTranche = (await token.enjinTeamAllocation.call())
-            .dividedBy(new BigNumber(10).pow(18))
-            .times(0.25)
-            .toNumber();
         let enjinTeamAllocationOtherTranche = (await token.enjinTeamAllocation.call())
             .dividedBy(new BigNumber(10).pow(18))
             .times(0.125)
@@ -523,19 +519,19 @@ contract('ENJToken', (accounts) => {
         let balance = await token
             .balanceOf
             .call(teamAddress);
-        balanceSoFar = enjinTeamAllocationFirstTranche;
-        assert.strictEqual(balance.dividedBy(new BigNumber(10).pow(18)).toNumber(), balanceSoFar);
-        let allocation = await token
+            balanceSoFar = enjinTeamAllocationOtherTranche;
+            assert.strictEqual(balance.dividedBy(new BigNumber(10).pow(18)).toNumber(), balanceSoFar);
+            let allocation = await token
             .totalAllocated
             .call();
-        assert.strictEqual(allocation.dividedBy(new BigNumber(10).pow(18)).toNumber(), enjinTeamAllocationFirstTranche + incentiveAllocation);
+        assert.strictEqual(allocation.dividedBy(new BigNumber(10).pow(18)).toNumber(), enjinTeamAllocationOtherTranche + incentiveAllocation);
         let totalAllocatedToTeam = await token
             .totalAllocatedToTeam
             .call();
         assert.strictEqual(totalAllocatedToTeam.dividedBy(new BigNumber(10).pow(18)).toNumber(), balanceSoFar);
 
         // Add 3 months
-        for (let i = 0 ; i < 6; i++) {
+        for (let i = 0 ; i < 7; i++) {
             await timeJump(7776000 + 20000);
             await token.releaseEnjinTeamTokens({from: owner});
             balance = await token
@@ -554,5 +550,18 @@ contract('ENJToken', (accounts) => {
 
         }
         assert.strictEqual(totalAllocatedToTeam.dividedBy(new BigNumber(10).pow(18)).toNumber(), (await token.enjinTeamAllocation.call()).dividedBy(new BigNumber(10).pow(18)).toNumber())
+
+        await timeJump(7776000 + 20000);
+        try {
+            await token.retrieveUnsoldTokens({from: accounts[8]});
+        } catch (error) {
+            Utils.ensureException(error);
+        }
+        await timeJump(77760000);
+        try {
+            await token.retrieveUnsoldTokens({from: accounts[8]});
+        } catch (error) {
+            Utils.ensureException(error);
+        }
     });
 });
