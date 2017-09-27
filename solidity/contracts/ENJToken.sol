@@ -28,14 +28,9 @@ contract ENJToken is ERC20Token, Owned {
     uint256 public endTime = 1509494340;                              // 10/31/2017 @ 11:59pm (UTC) crowdsale end time (in seconds)
 
     bool internal isReleasedToPublic = false;                         // Flag to allow transfer/transferFrom before the end of the crowdfund
-    
-    bool internal releaseFirstAllocationTranche = false;              // Flags to keep track of Team allocation tranches
-    bool internal releaseSecondAllocationTranche = false;             // Flags to keep track of Team allocation tranches
-    bool internal releaseThirdAllocationTranche = false;              // Flags to keep track of Team allocation tranches
-    bool internal releaseFourthAllocationTranche = false;             // Flags to keep track of Team allocation tranches
-    bool internal releaseFifthAllocationTranche = false;              // Flags to keep track of Team allocation tranches
-    bool internal releaseSixthAllocationTranche = false;              // Flags to keep track of Team allocation tranches
-    bool internal releaseSeventhAllocationTranche = false;            // Flags to keep track of Team allocation tranches
+
+    uint256 internal teamTranchesReleased = 0;                          // Track how many tranches (allocations of 12.5% team tokens) have been released
+    uint256 internal maxTeamTranches = 8;                               // The number of tranches allowed to the team until depleted
 
 ///////////////////////////////////////// MODIFIERS /////////////////////////////////////////
 
@@ -118,11 +113,12 @@ contract ENJToken is ERC20Token, Owned {
 ///////////////////////////////////////// ALLOCATION FUNCTIONS /////////////////////////////////////////
 
     /**
-        @dev release Enjin Team Token allocation
-        throws if before timelock (6 months) ends and if no initiated by the owner of the contract
+        @dev Release one single tranche of the Enjin Team Token allocation
+        throws if before timelock (6 months) ends and if not initiated by the owner of the contract
         returns true if valid
         Schedule goes as follows:
-        6 months: 25%
+        3 months: 12.5% (this tranche can only be released after the initial 6 months has passed)
+        6 months: 12.5%
         9 months: 12.5%
         12 months: 12.5%
         15 months: 12.5%
@@ -133,35 +129,15 @@ contract ENJToken is ERC20Token, Owned {
     */
     function releaseEnjinTeamTokens() ownerOnly returns(bool success) {
         require(totalAllocatedToTeam < enjinTeamAllocation);
-        uint256 enjinTeamAlloc = enjinTeamAllocation / 1000;
 
-        if (now > endTime + 6 * 4 weeks && !releaseFirstAllocationTranche) {
-            releaseFirstAllocationTranche = true;
-            transferTeamAllocation(safeMul(enjinTeamAlloc, 250));
-            return true;
-        } else  if (now > endTime + 9 * 4 weeks && !releaseSecondAllocationTranche) {
-            releaseSecondAllocationTranche = true;
-            transferTeamAllocation(safeMul(enjinTeamAlloc, 125));
-            return true;
-        } else  if (now > endTime + 12 * 4 weeks && !releaseThirdAllocationTranche) {
-            releaseThirdAllocationTranche = true;
-            transferTeamAllocation(safeMul(enjinTeamAlloc, 125));
-            return true;
-        } else  if (now > endTime + 15 * 4 weeks && !releaseFourthAllocationTranche) {
-            releaseFourthAllocationTranche = true;
-            transferTeamAllocation(safeMul(enjinTeamAlloc, 125));
-            return true;
-        } else  if (now > endTime + 18 * 4 weeks && !releaseFifthAllocationTranche) {
-            releaseFifthAllocationTranche = true;
-            transferTeamAllocation(safeMul(enjinTeamAlloc, 125));
-            return true;
-        } else  if (now > endTime + 21 * 4 weeks && !releaseSixthAllocationTranche) {
-            releaseSixthAllocationTranche = true;
-            transferTeamAllocation(safeMul(enjinTeamAlloc, 125));
-            return true;
-        } else  if (now > endTime + 24 * 4 weeks && !releaseSeventhAllocationTranche) {
-            releaseSeventhAllocationTranche = true;
-            transferTeamAllocation(safeMul(enjinTeamAlloc, 125));
+        uint256 enjinTeamAlloc = enjinTeamAllocation / 1000;
+        uint256 currentTranche = uint256(now - endTime) / 12 weeks;     // "months" after crowdsale end time (division floored)
+
+        if (now > endTime + 6 * 4 weeks) {
+            if(teamTranchesReleased < maxTeamTranches && currentTranche > teamTranchesReleased) {
+                teamTranchesReleased++;
+                transferTeamAllocation(safeMul(enjinTeamAlloc, 125));
+            }
             return true;
         }
         revert();
@@ -197,7 +173,7 @@ contract ENJToken is ERC20Token, Owned {
     }
 
     /**
-        @dev Retrive unsold tokens from the crowdfund
+        @dev Retrieve unsold tokens from the crowdfund
         throws if before timelock (6 months from end of Crowdfund) ends and if no initiated by the owner of the contract
         returns true if valid
 
@@ -208,7 +184,7 @@ contract ENJToken is ERC20Token, Owned {
         balanceOf[incentivisationFundAddress] = safeAdd(balanceOf[incentivisationFundAddress], amountOfTokens);
         totalAllocated = safeAdd(totalAllocated, amountOfTokens);
         balanceOf[crowdFundAddress] = 0;
-        return true;        
+        return true;
     }
 
     /**
