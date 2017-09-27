@@ -28,14 +28,14 @@ contract ENJCrowdfund is TokenHolder {
 
     /**
         @dev constructor
-        @param _totalPresaleTokensYetToAllocate          smart token the crowdsale is for
-        @param _beneficiary    address to receive all ether contributions
+        @param _totalPresaleTokensYetToAllocate     Total amount of presale tokens sold
+        @param _beneficiary                         Address that will be receiving the ETH contributed
     */
     function ENJCrowdfund(uint256 _totalPresaleTokensYetToAllocate, address _beneficiary) 
     validAddress(_beneficiary) 
     {
-        totalPresaleTokensYetToAllocate = _totalPresaleTokensYetToAllocate;     // Input total amount of presale tokens sold 
-        beneficiary = _beneficiary;                                             // Address that will be receiving the ETH contributed
+        totalPresaleTokensYetToAllocate = _totalPresaleTokensYetToAllocate;
+        beneficiary = _beneficiary;
     }
 
 ///////////////////////////////////////// MODIFIERS /////////////////////////////////////////
