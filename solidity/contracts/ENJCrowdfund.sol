@@ -36,14 +36,14 @@ contract ENJCrowdfund is Utils, Owned {
 
     /**
         @dev constructor
-        @param _totalPresaleTokensYetToAllocate          smart token the crowdsale is for
-        @param _beneficiary    address to receive all ether contributions
+        @param _totalPresaleTokensYetToAllocate     Total amount of presale tokens sold
+        @param _beneficiary                         Address that will be receiving the ETH contributed
     */
     function ENJCrowdfund(uint256 _totalPresaleTokensYetToAllocate, address _beneficiary) 
     validAddress(_beneficiary) 
     {
-        totalPresaleTokensYetToAllocate = _totalPresaleTokensYetToAllocate;     // Input total amount of presale tokens sold 
-        beneficiary = _beneficiary;                                             // Address that will be receiving the ETH contributed
+        totalPresaleTokensYetToAllocate = _totalPresaleTokensYetToAllocate;
+        beneficiary = _beneficiary;
     }
 
 ///////////////////////////////////////// MODIFIERS /////////////////////////////////////////
@@ -111,7 +111,7 @@ contract ENJCrowdfund is Utils, Owned {
         @param _amountofENJ balance to send out
     */
     function deliverPresaleTokenToClient(address _accountHolder, uint256 _amountofENJ) internal ownerOnly {
-        require(token.balanceOf(_accountHolder) == 0 && totalPresaleTokensYetToAllocate > 0);
+        require(totalPresaleTokensYetToAllocate > 0);
         token.transfer(_accountHolder, _amountofENJ);
         token.addToAllocation(_amountofENJ);
         totalPresaleTokensYetToAllocate = safeSub(totalPresaleTokensYetToAllocate, _amountofENJ);
