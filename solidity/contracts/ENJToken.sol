@@ -62,7 +62,7 @@ contract ENJToken is ERC20Token, TokenHolder {
         @param _advisorAddress     Advisor address
     */
     function ENJToken(address _crowdFundAddress, address _advisorAddress, address _incentivisationFundAddress, address _enjinTeamAddress)
-    ERC20Token("ENJ Coin", "ENJ", 18)
+    ERC20Token("Enjin Coin", "ENJ", 18)
      {
         crowdFundAddress = _crowdFundAddress;
         advisorAddress = _advisorAddress;
