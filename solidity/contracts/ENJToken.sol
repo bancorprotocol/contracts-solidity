@@ -129,17 +129,15 @@ contract ENJToken is ERC20Token, TokenHolder {
         24 months: 12.5%
         @return true if successful, throws if not
     */
-    function releaseEnjinTeamTokens() ownerOnly returns(bool success) {
+    function releaseEnjinTeamTokens() safeTimelock ownerOnly returns(bool success) {
         require(totalAllocatedToTeam < enjinTeamAllocation);
 
         uint256 enjinTeamAlloc = enjinTeamAllocation / 1000;
         uint256 currentTranche = uint256(now - endTime) / 12 weeks;     // "months" after crowdsale end time (division floored)
 
-        if (now > endTime + 6 * 4 weeks) {
-            if(teamTranchesReleased < maxTeamTranches && currentTranche > teamTranchesReleased) {
-                teamTranchesReleased++;
-                transferTeamAllocation(safeMul(enjinTeamAlloc, 125));
-            }
+        if(teamTranchesReleased < maxTeamTranches && currentTranche > teamTranchesReleased) {
+            teamTranchesReleased++;
+            transferTeamAllocation(safeMul(enjinTeamAlloc, 125));
             return true;
         }
         revert();
