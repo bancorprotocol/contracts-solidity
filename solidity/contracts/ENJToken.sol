@@ -137,22 +137,15 @@ contract ENJToken is ERC20Token, TokenHolder {
 
         if(teamTranchesReleased < maxTeamTranches && currentTranche > teamTranchesReleased) {
             teamTranchesReleased++;
-            transferTeamAllocation(safeMul(enjinTeamAlloc, 125));
+
+            uint256 amount = safeMul(enjinTeamAlloc, 125);
+            balanceOf[enjinTeamAddress] = safeAdd(balanceOf[enjinTeamAddress], amount);
+            Transfer(0x0, enjinTeamAddress, amount);
+            totalAllocated = safeAdd(totalAllocated, amount);
+            totalAllocatedToTeam = safeAdd(totalAllocatedToTeam, amount);
             return true;
         }
         revert();
-    }
-    
-    /**
-        @dev transfers Tokens from Enjin allocation to Team
-        throws if before first timelock (6 months) ends and if no initiated by the owner of the contract
-        @return true if successful, throws if not
-    */
-    function transferTeamAllocation(uint256 _amount) ownerOnly internal {
-        balanceOf[enjinTeamAddress] = safeAdd(balanceOf[enjinTeamAddress], _amount);
-        Transfer(0x0, enjinTeamAddress, _amount);
-        totalAllocated = safeAdd(totalAllocated, _amount);
-        totalAllocatedToTeam = safeAdd(totalAllocatedToTeam, _amount);
     }
 
     /**
