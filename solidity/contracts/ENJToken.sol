@@ -24,9 +24,9 @@ contract ENJToken is ERC20Token, TokenHolder {
 
     //  Variables
 
-    uint256 public totalAllocatedToAdvisors = 0;                                 // Counter to keep track of total Advisor allocation
+    uint256 public totalAllocatedToAdvisors = 0;                                 // Counter to keep track of advisor token allocation
     uint256 public totalAllocatedToTeam = 0;                                     // Counter to keep track of team token allocation
-    uint256 public totalAllocated = 0;                                           // Counter to keep track of team token allocation
+    uint256 public totalAllocated = 0;                                           // Counter to keep track of overall token allocation
     uint256 constant public endTime = 1509494340;                                // 10/31/2017 @ 11:59pm (UTC) crowdsale end time (in seconds)
 
     bool internal isReleasedToPublic = false;                         // Flag to allow transfer/transferFrom before the end of the crowdfund

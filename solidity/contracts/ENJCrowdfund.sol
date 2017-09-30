@@ -15,7 +15,7 @@ contract ENJCrowdfund is TokenHolder {
 
     uint256 public totalPresaleTokensYetToAllocate;     // Counter that keeps track of presale tokens yet to allocate
     address public beneficiary = 0x0;                   // address to receive all ether contributions
-    address public tokenAddress = 0x0;                  // address to receive all ether contributions
+    address public tokenAddress = 0x0;                  // address of the token itself
 
     ENJToken token;                                     // ENJ Token interface
 
