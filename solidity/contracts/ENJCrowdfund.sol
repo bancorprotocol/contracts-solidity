@@ -46,12 +46,6 @@ contract ENJCrowdfund is TokenHolder {
         _;
     }
 
-    // Ensures the current time is after the crowdfund
-    modifier afterCrowdfund() {
-        assert(now >= endTime);
-        _;
-    }
-
     // Ensures the Token address is set
     modifier tokenIsSet() {
         require(tokenAddress != 0x0);

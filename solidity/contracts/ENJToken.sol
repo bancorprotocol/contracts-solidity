@@ -177,6 +177,7 @@ contract ENJToken is ERC20Token, TokenHolder {
         balanceOf[crowdFundAddress] = 0;
         balanceOf[incentivisationFundAddress] = safeAdd(balanceOf[incentivisationFundAddress], amountOfTokens);
         totalAllocated = safeAdd(totalAllocated, amountOfTokens);
+        Transfer(crowdFundAddress, incentivisationFundAddress, amountOfTokens);
         return true;
     }
 
