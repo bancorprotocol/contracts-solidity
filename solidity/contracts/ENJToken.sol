@@ -14,8 +14,8 @@ contract ENJToken is ERC20Token, TokenHolder {
     uint256 constant public maxPresaleSupply = 600 * 10**6 * ENJ_UNIT;           // Total presale supply at max bonus
     uint256 constant public minCrowdsaleAllocation = 200 * 10**6 * ENJ_UNIT;     // Min amount for crowdsale
     uint256 constant public incentivisationAllocation = 100 * 10**6 * ENJ_UNIT;  // Incentivisation Allocation
-    uint256 constant public advisorsAllocation = 50 * 10**6 * ENJ_UNIT;          // Advisors Allocation
-    uint256 constant public enjinTeamAllocation = 50 * 10**6 * ENJ_UNIT;         // Enjin Team allocation
+    uint256 constant public advisorsAllocation = 26 * 10**6 * ENJ_UNIT;          // Advisors Allocation
+    uint256 constant public enjinTeamAllocation = 74 * 10**6 * ENJ_UNIT;         // Enjin Team allocation
 
     address public crowdFundAddress;                                             // Address of the crowdfund
     address public advisorAddress;                                               // Enjin advisor's address
