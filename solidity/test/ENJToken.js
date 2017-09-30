@@ -74,11 +74,11 @@ contract('ENJToken', (accounts) => {
         let _advisorsAllocation = await token
             .advisorsAllocation
             .call();
-        assert.strictEqual(_advisorsAllocation.dividedBy(new BigNumber(10).pow(18)).toNumber(), 50000000);
+        assert.strictEqual(_advisorsAllocation.dividedBy(new BigNumber(10).pow(18)).toNumber(), 26000000);
         let _enjinTeamAllocation = await token
             .enjinTeamAllocation
             .call();
-        assert.strictEqual(_enjinTeamAllocation.dividedBy(new BigNumber(10).pow(18)).toNumber(), 50000000);
+        assert.strictEqual(_enjinTeamAllocation.dividedBy(new BigNumber(10).pow(18)).toNumber(), 74000000);
     })
 
     // ///////////////////////////////////////// Transfer // ///////////////////////////////////////
@@ -458,15 +458,15 @@ contract('ENJToken', (accounts) => {
         let balance = await token
             .balanceOf
             .call(advisorAddress);
-        assert.strictEqual(balance.dividedBy(new BigNumber(10).pow(18)).toNumber(), 50000000);
+        assert.strictEqual(balance.dividedBy(new BigNumber(10).pow(18)).toNumber(), 26000000);
         let allocation = await token
             .totalAllocated
             .call();
-        assert.strictEqual(allocation.dividedBy(new BigNumber(10).pow(18)).toNumber(), 50000000 + incentiveAllocation);
+        assert.strictEqual(allocation.dividedBy(new BigNumber(10).pow(18)).toNumber(), 26000000 + incentiveAllocation);
         let _advisorsAllocation = await token
             .totalAllocatedToAdvisors
             .call();
-        assert.strictEqual(_advisorsAllocation.dividedBy(new BigNumber(10).pow(18)).toNumber(), 50000000);
+        assert.strictEqual(_advisorsAllocation.dividedBy(new BigNumber(10).pow(18)).toNumber(), 26000000);
     });
 
     it('releaseAdvisorTokens: verifies the enjin team allocation after six months -- fails called by other than user',
@@ -550,7 +550,6 @@ contract('ENJToken', (accounts) => {
 
         }
         assert.strictEqual(totalAllocatedToTeam.dividedBy(new BigNumber(10).pow(18)).toNumber(), (await token.enjinTeamAllocation.call()).dividedBy(new BigNumber(10).pow(18)).toNumber())
-
         await timeJump(7776000 + 20000);
         try {
             await token.retrieveUnsoldTokens({from: accounts[8]});
