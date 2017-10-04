@@ -159,7 +159,7 @@ contract BancorFormula is IBancorFormula, Utils {
         maxExpArray[124] = 0x00976bd9952c7aa957f5937d790ef65037;
         maxExpArray[125] = 0x009131271922eaa6064b73a22d0bd4f2bf;
         maxExpArray[126] = 0x008b380f3558668c46c91c49a2f8e967b9;
-        maxExpArray[127] = 0x006ae67b5f2f528d5f3189036ee0f27453;
+        maxExpArray[127] = 0x00857ddf0117efa215952912839f6473e6;
     }
 
     /**
@@ -345,9 +345,8 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     function fixedExp(uint256 _x, uint8 _precision) internal constant returns (uint256) {
         uint256 xi = _x;
-        uint256 res = uint256(0xde1bc4d19efcac82445da75b00000000) << _precision;
+        uint256 res = 0;
 
-        res += xi * 0xde1bc4d19efcac82445da75b00000000;
         xi = (xi * _x) >> _precision;
         res += xi * 0x6f0de268cf7e5641222ed3ad80000000;
         xi = (xi * _x) >> _precision;
@@ -413,6 +412,6 @@ contract BancorFormula is IBancorFormula, Utils {
         xi = (xi * _x) >> _precision;
         res += xi * 0x22;
 
-        return res / 0xde1bc4d19efcac82445da75b00000000;
+        return res / 0xde1bc4d19efcac82445da75b00000000 + _x + (ONE << _precision);
     }
 }

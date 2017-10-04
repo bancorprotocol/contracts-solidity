@@ -154,7 +154,7 @@ def BancorFormula():
     maxExpArray[124] = 0x00976bd9952c7aa957f5937d790ef65037;
     maxExpArray[125] = 0x009131271922eaa6064b73a22d0bd4f2bf;
     maxExpArray[126] = 0x008b380f3558668c46c91c49a2f8e967b9;
-    maxExpArray[127] = 0x006ae67b5f2f528d5f3189036ee0f27453;
+    maxExpArray[127] = 0x00857ddf0117efa215952912839f6473e6;
 
 '''
     @dev given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the return for a given change (in the main token)
@@ -323,9 +323,8 @@ def findPositionInMaxExpArray(_x):
 '''
 def fixedExp(_x, _precision):
     xi = _x;
-    res = (0xde1bc4d19efcac82445da75b00000000) << _precision;
+    res = 0;
 
-    res += xi * 0xde1bc4d19efcac82445da75b00000000;
     xi = (xi * _x) >> _precision;
     res += xi * 0x6f0de268cf7e5641222ed3ad80000000;
     xi = (xi * _x) >> _precision;
@@ -391,7 +390,7 @@ def fixedExp(_x, _precision):
     xi = (xi * _x) >> _precision;
     res += xi * 0x22;
 
-    return res / 0xde1bc4d19efcac82445da75b00000000;
+    return res / 0xde1bc4d19efcac82445da75b00000000 + _x + (ONE << _precision);
 
 
 def safeMul(x,y):

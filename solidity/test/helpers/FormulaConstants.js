@@ -128,7 +128,7 @@ module.exports.maxExpArray = [
     /* 124 */    '0x12ed7b32a58f552afeb26faf21deca06',
     /* 125 */    '0x244c49c648baa98192dce88b42f53caf',
     /* 126 */    '0x459c079aac334623648e24d17c74b3dc',
-    /* 127 */    '0x6ae67b5f2f528d5f3189036ee0f27453',
+    /* 127 */    '0x857ddf0117efa215952912839f6473e6',
 ];
 module.exports.maxValArray = [
     /*   0 */    '0x114b06b554307756ca04f4cba9a73491a',
@@ -258,5 +258,5 @@ module.exports.maxValArray = [
     /* 124 */    '0x3439aeef615a970c9678397b6ad71179',
     /* 125 */    '0x637d37d6cb204d7419ac094d7e89f0dd',
     /* 126 */    '0xbde80a98943810876a7852209de22be2',
-    /* 127 */    '0x12710231c0fd7a13f8a2b4af9d6b70c87',
+    /* 127 */    '0x16b3160a3c604c6667ff40ff1882b0fcf',
 ];
