@@ -2,7 +2,7 @@ from math import factorial
 
 
 NUM_OF_COEFS = 34
-maxFactorial = factorial(NUM_OF_COEFS)
+maxFactorial = factorial(NUM_OF_COEFS-1)
 coefficients = [maxFactorial/factorial(i) for i in range(1,NUM_OF_COEFS)]
 
 
