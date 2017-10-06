@@ -5,32 +5,25 @@ const BancorChanger = artifacts.require('BancorChanger.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
+const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const utils = require('./helpers/Utils');
 
-let zeroAddress = '0x0000000000000000000000000000000000000000';
 let etherToken;
-let etherTokenAddress;
 let smartToken1;
-let smartToken1Address;
 let smartToken2;
-let smartToken2Address;
 let smartToken3;
-let smartToken3Address;
 let smartToken4;
-let smartToken4Address;
+let erc20Token;
 let formulaAddress;
 let changer1;
-let changer1Address;
 let changer2;
-let changer2Address;
 let changer3;
-let changer3Address;
 let changer4;
-let changer4Address;
 let smartToken1QuickBuyPath;
 let smartToken2QuickBuyPath;
 let smartToken3QuickBuyPath;
 let smartToken4QuickBuyPath;
+let erc20QuickBuyPath;
 let smartToken1QuickSellPath;
 let smartToken2QuickSellPath;
 
@@ -42,8 +35,8 @@ Token network structure:
     SmartToken1   SmartToken3
           \          \
            \        SmartToken4
-            \        /
-            EtherToken
+            \        /      \
+            EtherToken     ERC20Token
 
 */
 
@@ -53,68 +46,68 @@ contract('BancorChanger', (accounts) => {
         formulaAddress = formula.address;
 
         etherToken = await EtherToken.new();
-        etherTokenAddress = etherToken.address;
         await etherToken.deposit({ value: 1000000 });
 
         smartToken1 = await SmartToken.new('Token1', 'TKN1', 2);
-        smartToken1Address = smartToken1.address;
         await smartToken1.issue(accounts[0], 1000000);
 
         smartToken2 = await SmartToken.new('Token2', 'TKN2', 2);
-        smartToken2Address = smartToken2.address;
         await smartToken2.issue(accounts[0], 2000000);
 
         smartToken3 = await SmartToken.new('Token3', 'TKN3', 2);
-        smartToken3Address = smartToken3.address;
         await smartToken3.issue(accounts[0], 3000000);
 
         smartToken4 = await SmartToken.new('Token4', 'TKN4', 2);
-        smartToken4Address = smartToken4.address;
         await smartToken4.issue(accounts[0], 2500000);
 
-        changer1 = await BancorChanger.new(smartToken1Address, formulaAddress, 0, etherTokenAddress, 250000);
-        changer1Address = changer1.address;
+        erc20Token = await TestERC20Token.new('ERC20Token', 'ERC5', 1000000);
 
-        changer2 = await BancorChanger.new(smartToken2Address, formulaAddress, 0, smartToken1Address, 300000);
-        changer2Address = changer2.address;
-        await changer2.addReserve(smartToken3Address, 150000, false);
+        changer1 = await BancorChanger.new(smartToken1.address, formulaAddress, 0, etherToken.address, 250000);
+        changer1.address = changer1.address;
 
-        changer3 = await BancorChanger.new(smartToken3Address, formulaAddress, 0, smartToken4Address, 350000);
-        changer3Address = changer3.address;
+        changer2 = await BancorChanger.new(smartToken2.address, formulaAddress, 0, smartToken1.address, 300000);
+        changer2.address = changer2.address;
+        await changer2.addReserve(smartToken3.address, 150000, false);
 
-        changer4 = await BancorChanger.new(smartToken4Address, formulaAddress, 0, etherTokenAddress, 150000);
-        changer4Address = changer4.address;
+        changer3 = await BancorChanger.new(smartToken3.address, formulaAddress, 0, smartToken4.address, 350000);
+        changer3.address = changer3.address;
 
-        await etherToken.transfer(changer1Address, 50000);
-        await smartToken1.transfer(changer2Address, 40000);
-        await smartToken3.transfer(changer2Address, 25000);
-        await smartToken4.transfer(changer3Address, 30000);
-        await etherToken.transfer(changer4Address, 20000);
+        changer4 = await BancorChanger.new(smartToken4.address, formulaAddress, 0, etherToken.address, 150000);
+        changer4.address = changer4.address;
+        await changer4.addReserve(erc20Token.address, 220000, false);
 
-        await smartToken1.transferOwnership(changer1Address);
+        await etherToken.transfer(changer1.address, 50000);
+        await smartToken1.transfer(changer2.address, 40000);
+        await smartToken3.transfer(changer2.address, 25000);
+        await smartToken4.transfer(changer3.address, 30000);
+        await etherToken.transfer(changer4.address, 20000);
+        await erc20Token.transfer(changer4.address, 35000);
+
+        await smartToken1.transferOwnership(changer1.address);
         await changer1.acceptTokenOwnership();
 
-        await smartToken2.transferOwnership(changer2Address);
+        await smartToken2.transferOwnership(changer2.address);
         await changer2.acceptTokenOwnership();
 
-        await smartToken3.transferOwnership(changer3Address);
+        await smartToken3.transferOwnership(changer3.address);
         await changer3.acceptTokenOwnership();
 
-        await smartToken4.transferOwnership(changer4Address);
+        await smartToken4.transferOwnership(changer4.address);
         await changer4.acceptTokenOwnership();
 
-        smartToken1QuickBuyPath = [etherTokenAddress, smartToken1Address, smartToken1Address];
-        smartToken2QuickBuyPath = [etherTokenAddress, smartToken1Address, smartToken1Address, smartToken2Address, smartToken2Address];
-        smartToken3QuickBuyPath = [etherTokenAddress, smartToken4Address, smartToken4Address, smartToken3Address, smartToken4Address];
-        smartToken4QuickBuyPath = [etherTokenAddress, smartToken4Address, smartToken4Address];
+        smartToken1QuickBuyPath = [etherToken.address, smartToken1.address, smartToken1.address];
+        smartToken2QuickBuyPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken2.address];
+        smartToken3QuickBuyPath = [etherToken.address, smartToken4.address, smartToken4.address, smartToken3.address, smartToken4.address];
+        smartToken4QuickBuyPath = [etherToken.address, smartToken4.address, smartToken4.address];
+        erc20QuickBuyPath = [etherToken.address, smartToken4.address, erc20Token.address];
 
         await changer1.setQuickBuyPath(smartToken1QuickBuyPath);
         await changer2.setQuickBuyPath(smartToken2QuickBuyPath);
         await changer3.setQuickBuyPath(smartToken3QuickBuyPath);
         await changer4.setQuickBuyPath(smartToken4QuickBuyPath);
 
-        smartToken1QuickSellPath = [smartToken1Address, smartToken1Address, etherTokenAddress];
-        smartToken2QuickSellPath = [smartToken2Address, smartToken2Address, smartToken1Address, smartToken1Address, etherTokenAddress];
+        smartToken1QuickSellPath = [smartToken1.address, smartToken1.address, etherToken.address];
+        smartToken2QuickSellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address];
     });
 
     it('verifies that the owner can set the quick buy path', async () => {
@@ -166,7 +159,7 @@ contract('BancorChanger', (accounts) => {
 
     it('should throw when the owner attempts to set an invalid short quick buy path', async () => {
         try {
-            await changer1.setQuickBuyPath([etherTokenAddress]);
+            await changer1.setQuickBuyPath([etherToken.address]);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -177,7 +170,7 @@ contract('BancorChanger', (accounts) => {
     it('should throw when the owner attempts to set an invalid long quick buy path', async () => {
         let longQuickBuyPath = [];
         for (let i = 0; i < 51; ++i)
-            longQuickBuyPath.push(etherTokenAddress);
+            longQuickBuyPath.push(etherToken.address);
 
         try {
             await changer1.setQuickBuyPath(longQuickBuyPath);
@@ -190,7 +183,7 @@ contract('BancorChanger', (accounts) => {
 
     it('should throw when the owner attempts to set a quick buy path with an invalid length', async () => {
         try {
-            await changer1.setQuickBuyPath([etherTokenAddress, smartToken1Address]);
+            await changer1.setQuickBuyPath([etherToken.address, smartToken1.address]);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -225,7 +218,7 @@ contract('BancorChanger', (accounts) => {
         await changer1.clearQuickBuyPath();
         await changer1.setQuickBuyPath(smartToken1QuickBuyPath);
         let quickBuyEtherToken = await changer1.getQuickBuyEtherToken.call();
-        assert.equal(quickBuyEtherToken, etherTokenAddress);
+        assert.equal(quickBuyEtherToken, etherToken.address);
     });
 
     it('show throw when requesting the quick buy ether token when no quick buy path is set', async () => {
@@ -266,6 +259,16 @@ contract('BancorChanger', (accounts) => {
 
         await changer2.send(100);
         let newBalance = await smartToken2.balanceOf.call(accounts[0]);
+
+        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
+    it('verifies that quick buy of an ERC20 token through the fallback function results in increased balance for the buyer', async () => {
+        await changer4.setQuickBuyPath(erc20QuickBuyPath);
+        let prevBalance = await erc20Token.balanceOf.call(accounts[0]);
+
+        await changer4.send(100);
+        let newBalance = await erc20Token.balanceOf.call(accounts[0]);
 
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });
@@ -327,10 +330,10 @@ contract('BancorChanger', (accounts) => {
     it('verifies the caller balances after changing from one token to another with multiple changers', async () => {
         await changer1.setQuickBuyPath(smartToken1QuickBuyPath);
 
-        let path = [smartToken1Address,
-                    smartToken2Address, smartToken2Address,
-                    smartToken2Address, smartToken3Address,
-                    smartToken3Address, smartToken4Address];
+        let path = [smartToken1.address,
+                    smartToken2.address, smartToken2.address,
+                    smartToken2.address, smartToken3.address,
+                    smartToken3.address, smartToken4.address];
 
         let prevToken1Balance = await smartToken1.balanceOf.call(accounts[0]);
         let prevToken4Balance = await smartToken4.balanceOf.call(accounts[0]);
