@@ -554,7 +554,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
             IEtherToken etherToken = IEtherToken(toToken);
             etherToken.withdrawTo(msg.sender, _amount);
         }
-        else {
+        // no need to transfer the tokens if the sender is the local contract
+        else if (msg.sender != address(this)) {
             // not ETH, transfer the tokens to the caller
             assert(toToken.transfer(msg.sender, _amount));
         }
@@ -645,7 +646,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         @param _amount  amount to claim
     */
     function claimTokens(IERC20Token _token, address _from, uint256 _amount) private {
-        // no need to do a transfer if the source is the local contract
+        // no need to claim the tokens if the source is the local contract
         if (_from == address(this))
             return;
 
