@@ -643,6 +643,10 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         @param _amount  amount to claim
     */
     function claimTokens(IERC20Token _token, address _from, uint256 _amount) private {
+        // no need to do a transfer if the source is the local contract
+        if (_from == address(this))
+            return;
+
         // if the token is the smart token, no allowance is required - destroy the tokens from the caller and issue them to the local contract
         if (_token == token) {
             token.destroy(_from, _amount); // destroy _amount tokens from the caller's balance in the smart token
