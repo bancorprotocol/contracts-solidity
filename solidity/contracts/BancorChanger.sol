@@ -14,7 +14,7 @@ import './interfaces/IEtherToken.sol';
 */
 
 /*
-    Bancor Changer v0.2
+    Bancor Changer v0.3
 
     The Bancor version of the token changer, allows changing between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
@@ -52,7 +52,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    string public version = '0.2';
+    string public version = '0.3';
     string public changerType = 'bancor';
 
     IBancorFormula public formula;                  // bancor calculation formula contract
@@ -584,8 +584,10 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         ensureAllowance(etherToken, changer, msg.value);
         // execute the change
         uint256 returnAmount = changer.quickChange(quickBuyPath, msg.value, _minReturn);
+        // get the target token
+        IERC20Token toToken = quickBuyPath[quickBuyPath.length - 1];
         // transfer the tokens to the caller
-        assert(token.transfer(msg.sender, returnAmount));
+        assert(toToken.transfer(msg.sender, returnAmount));
         return returnAmount;
     }
 
