@@ -574,17 +574,12 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     function quickBuy(uint256 _minReturn) public payable returns (uint256 amount) {
         // ensure that the quick buy path was set
         assert(quickBuyPath.length > 0);
-        // we assume that the initial source in the quick buy path is always an ether token
-        IEtherToken etherToken = IEtherToken(quickBuyPath[0]);
+        // get the ether token
+        IEtherToken etherToken = getQuickBuyEtherToken();
         // deposit ETH in the ether token
         etherToken.deposit.value(msg.value)();
-        // get the initial changer in the path
-        ISmartToken smartToken = ISmartToken(quickBuyPath[1]);
-        BancorChanger changer = BancorChanger(smartToken.owner());
-        // approve allowance for the changer in the ether token
-        ensureAllowance(etherToken, changer, msg.value);
         // execute the change
-        uint256 returnAmount = changer.quickChange(quickBuyPath, msg.value, _minReturn);
+        uint256 returnAmount = this.quickChange(quickBuyPath, msg.value, _minReturn);
         // get the target token
         IERC20Token toToken = quickBuyPath[quickBuyPath.length - 1];
         // transfer the tokens to the caller
