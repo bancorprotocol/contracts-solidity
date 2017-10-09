@@ -5,11 +5,12 @@ import './Utils.sol';
 import './interfaces/ITokenChanger.sol';
 import './interfaces/ISmartToken.sol';
 import './interfaces/IBancorFormula.sol';
+import './interfaces/IBancorGasPriceLimit.sol';
 import './interfaces/IEtherToken.sol';
 
 /*
     Open issues:
-    - Add miner front-running attack protection. The issue is somewhat mitigated by the use of _minReturn when changing
+    - Front-running attack protection isn't perfect yet. The issue is mitigated by the use of _minReturn & gas price limit.
     - Possibly add getters for reserve fields so that the client won't need to rely on the order in the struct
 */
 
@@ -56,6 +57,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     string public changerType = 'bancor';
 
     IBancorFormula public formula;                  // bancor calculation formula contract
+    IBancorGasPriceLimit public gasPriceLimit;      // bancor universal gas price limit contract
     IERC20Token[] public reserveTokens;             // ERC20 standard token addresses
     IERC20Token[] public quickBuyPath;              // change path that's used in order to buy the token with ETH
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
@@ -73,16 +75,19 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @param  _token          smart token governed by the changer
         @param  _formula        address of a bancor formula contract
+        @param  _gasPriceLimit  address of a bancor gas price limit contract
         @param  _maxChangeFee   maximum change fee, represented in ppm
         @param  _reserveToken   optional, initial reserve, allows defining the first reserve at deployment time
         @param  _reserveRatio   optional, ratio for the initial reserve
     */
-    function BancorChanger(ISmartToken _token, IBancorFormula _formula, uint32 _maxChangeFee, IERC20Token _reserveToken, uint32 _reserveRatio)
+    function BancorChanger(ISmartToken _token, IBancorFormula _formula, IBancorGasPriceLimit _gasPriceLimit, uint32 _maxChangeFee, IERC20Token _reserveToken, uint32 _reserveRatio)
         SmartTokenController(_token)
         validAddress(_formula)
+        validAddress(_gasPriceLimit)
         validMaxChangeFee(_maxChangeFee)
     {
         formula = _formula;
+        gasPriceLimit = _gasPriceLimit;
         maxChangeFee = _maxChangeFee;
 
         if (address(_reserveToken) != 0x0)
@@ -98,6 +103,12 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     // validates a token address - verifies that the address belongs to one of the changeable tokens
     modifier validToken(IERC20Token _address) {
         require(_address == token || reserves[_address].isSet);
+        _;
+    }
+
+    // verifies that the gas price is lower than the universal limit
+    modifier validGasPrice() {
+        assert(tx.gasprice <= gasPriceLimit.gasPrice());
         _;
     }
 
@@ -443,6 +454,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     function buy(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn)
         public
         changingAllowed
+        validGasPrice
         greaterThanZero(_minReturn)
         returns (uint256 amount)
     {
@@ -482,6 +494,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn)
         public
         changingAllowed
+        validGasPrice
         greaterThanZero(_minReturn)
         returns (uint256 amount)
     {

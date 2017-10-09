@@ -5,6 +5,7 @@ const BancorChanger = artifacts.require('BancorChanger.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorFormulaProxy = artifacts.require('BancorFormulaProxy.sol');
+const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const utils = require('./helpers/Utils');
 
@@ -13,6 +14,7 @@ const CRR10Percent = 100000;
 let token;
 let tokenAddress;
 let formulaAddress;
+let gasPriceLimitAddress;
 let reserveToken;
 let reserveToken2;
 let reserveTokenAddress;
@@ -29,7 +31,7 @@ async function initChanger(accounts, activate) {
     reserveToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
     reserveTokenAddress2 = reserveToken2.address;
 
-    let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, reserveTokenAddress, 250000);
+    let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, reserveTokenAddress, 250000);
     let changerAddress = changer.address;
     await changer.addReserve(reserveTokenAddress2, 150000, false);
 
@@ -62,14 +64,16 @@ contract('BancorChanger', (accounts) => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         let formula = await BancorFormula.new();
         let formulaProxy = await BancorFormulaProxy.new(formula.address);
+        let gasPriceLimit = await BancorGasPriceLimit.new(22000000000);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
         tokenAddress = token.address;
         formulaAddress = formulaProxy.address;
+        gasPriceLimitAddress = gasPriceLimit.address;
         reserveTokenAddress = reserveToken.address;
     });
 
     it('verifies the changer data after construction', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         let token = await changer.token.call();
         assert.equal(token, tokenAddress);
         let formula = await changer.formula.call();
@@ -82,7 +86,7 @@ contract('BancorChanger', (accounts) => {
 
     it('should throw when attempting to construct a changer with no token', async () => {
         try {
-            await BancorChanger.new('0x0', formulaAddress, 0, '0x0', 0);
+            await BancorChanger.new('0x0', formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -92,7 +96,7 @@ contract('BancorChanger', (accounts) => {
 
     it('should throw when attempting to construct a changer with no formula', async () => {
         try {
-            await BancorChanger.new(tokenAddress, '0x0', 0, '0x0', 0);
+            await BancorChanger.new(tokenAddress, '0x0', gasPriceLimitAddress, 0, '0x0', 0);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -102,7 +106,7 @@ contract('BancorChanger', (accounts) => {
 
     it('should throw when attempting to construct a changer with invalid max fee', async () => {
         try {
-            await BancorChanger.new(tokenAddress, formulaAddress, 1000000000, '0x0', 0);
+            await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 1000000000, '0x0', 0);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -111,7 +115,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies the first reserve when provided at construction time', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, reserveTokenAddress, 200000);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, reserveTokenAddress, 200000);
         let reserveToken = await changer.reserveTokens.call(0);
         assert.equal(reserveToken, reserveTokenAddress);
         let reserve = await changer.reserves.call(reserveToken);
@@ -120,7 +124,7 @@ contract('BancorChanger', (accounts) => {
 
     it('should throw when attempting to construct a changer with reserve with invalid ratio', async () => {
         try {
-            await BancorChanger.new(tokenAddress, formulaAddress, 0, reserveTokenAddress, 1000001);
+            await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, reserveTokenAddress, 1000001);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -129,7 +133,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies the reserve token count before / after adding a reserve', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         let reserveTokenCount = await changer.reserveTokenCount.call();
         assert.equal(reserveTokenCount, 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
@@ -138,7 +142,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies the changeable token count before / after adding a reserve', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         let changeableTokenCount = await changer.changeableTokenCount.call();
         assert.equal(changeableTokenCount, 1);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
@@ -147,7 +151,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies the changeable token addresses', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
         let changeableTokenAddress = await changer.changeableToken.call(0);
         assert.equal(changeableTokenAddress, tokenAddress);
@@ -156,14 +160,14 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies the owner can update the formula contract address', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.setFormula(accounts[3]);
         let formula = await changer.formula.call();
         assert.notEqual(formula, formulaAddress);
     });
 
     it('should throw when a non owner attempts update the formula contract address', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
 
         try {
             await changer.setFormula(accounts[3], { from: accounts[1] });
@@ -175,7 +179,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when a non owner attempts update the formula contract address with an invalid address', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
 
         try {
             await changer.setFormula('0x0', { from: accounts[1] });
@@ -187,7 +191,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when a non owner attempts update the formula contract address with the changer address', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
 
         try {
             await changer.setFormula(changer.address, { from: accounts[1] });
@@ -199,7 +203,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when a non owner attempts update the formula contract address with the same existing address', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
 
         try {
             await changer.setFormula(formulaAddress, { from: accounts[1] });
@@ -211,14 +215,14 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies the owner can update the fee', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 200000, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 200000, '0x0', 0);
         await changer.setChangeFee(30000);
         let changeFee = await changer.changeFee.call();
         assert.equal(changeFee, 30000);
     });
 
     it('should throw when attempting to change the fee to an invalid value', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 200000, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 200000, '0x0', 0);
 
         try {
             await changer.setChangeFee(200001);
@@ -230,7 +234,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when a non owner attempts to change the fee', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 200000, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 200000, '0x0', 0);
 
         try {
             await changer.setChangeFee(30000, { from: accounts[1] });
@@ -242,14 +246,14 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies that getChangeFeeAmount returns the correct amount', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 200000, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 200000, '0x0', 0);
         await changer.setChangeFee(10000);
         let changeFeeAmount = await changer.getChangeFeeAmount.call(500000);
         assert.equal(changeFeeAmount, 5000);
     });
 
     it('verifies that 2 reserves are added correctly', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
         let reserve = await changer.reserves.call(reserveTokenAddress);
         verifyReserve(reserve, true, true, CRR10Percent, false, 0);
@@ -259,7 +263,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when a non owner attempts to add a reserve', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
 
         try {
             await changer.addReserve(reserveTokenAddress, CRR10Percent, false, { from: accounts[1] });
@@ -272,7 +276,7 @@ contract('BancorChanger', (accounts) => {
 
     it('should throw when attempting to add a reserve when the changer is active', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
-        let changer = await BancorChanger.new(token.address, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(token.address, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         token.transferOwnership(changer.address);
         changer.acceptTokenOwnership();
 
@@ -286,7 +290,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to add a reserve with invalid address', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
 
         try {
             await changer.addReserve('0x0', CRR10Percent, false);
@@ -298,7 +302,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to add a reserve with ratio = 0', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
 
         try {
             await changer.addReserve(reserveTokenAddress, 0, false);
@@ -310,7 +314,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to add a reserve with ratio greater than 100%', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
 
         try {
             await changer.addReserve(reserveTokenAddress, 1000001, false);
@@ -322,7 +326,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to add the token as a reserve', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
 
         try {
             await changer.addReserve(tokenAddress, CRR10Percent, false);
@@ -334,7 +338,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to add the changer as a reserve', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
 
         try {
             await changer.addReserve(changer.address, CRR10Percent, false);
@@ -346,7 +350,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to add a reserve that already exists', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
@@ -359,7 +363,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to add multiple reserves with total ratio greater than 100%', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, 500000, false);
 
         try {
@@ -372,7 +376,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies that the owner can update a reserve', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
         let reserve = await changer.reserves.call(reserveTokenAddress);
         verifyReserve(reserve, true, true, CRR10Percent, false, 0);
@@ -382,7 +386,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when a non owner attempts to update a reserve', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
@@ -395,7 +399,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to update a reserve that does not exist', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
@@ -408,7 +412,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to update a reserve with ratio = 0', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
@@ -421,7 +425,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to update a reserve with ratio greater than 100%', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
@@ -434,7 +438,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to update a reserve that will result in total ratio greater than 100%', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, 500000, false);
         await changer.addReserve(reserveTokenAddress2, 400000, false);
 
@@ -448,7 +452,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies that the manager can disable / re-enable changing', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.transferManagement(accounts[4]);
         await changer.acceptManagement({ from: accounts[4] });
 
@@ -465,7 +469,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when a non owner attempts to disable changing', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
 
         try {
             await changer.disableChanging(true, { from: accounts[1] });
@@ -477,7 +481,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies that the owner can disable / re-enable reserve purchases', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
         let reserve = await changer.reserves.call(reserveTokenAddress);
         verifyReserve(reserve, true, true, CRR10Percent, false, 0);
@@ -490,7 +494,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when a non owner attempts to disable reserve purchases', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
@@ -503,7 +507,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to disable reserve purchases for a reserve that does not exist', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
@@ -516,7 +520,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies that the correct reserve balance is returned regardless of whether virtual balance is set or not', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
         await changer.addReserve(reserveToken.address, CRR10Percent, false);
         let reserveBalance;
@@ -534,7 +538,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to retrieve the balance for a reserve that does not exist', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         await changer.addReserve(reserveTokenAddress, CRR10Percent, false);
 
         try {
@@ -547,7 +551,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('verifies that the owner can withdraw from the reserve', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
         await changer.addReserve(reserveToken.address, CRR10Percent, false);
         await reserveToken.transfer(changer.address, 1000);
@@ -561,7 +565,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when a non owner attempts to withdraw from the reserve', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
         await changer.addReserve(reserveToken.address, CRR10Percent, false);
         await reserveToken.transfer(changer.address, 1000);
@@ -576,7 +580,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to withdraw from a reserve to an invalid address', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
         await changer.addReserve(reserveToken.address, CRR10Percent, false);
         await reserveToken.transfer(changer.address, 1000);
@@ -591,7 +595,7 @@ contract('BancorChanger', (accounts) => {
     });
 
     it('should throw when attempting to withdraw from a reserve to the changer address', async () => {
-        let changer = await BancorChanger.new(tokenAddress, formulaAddress, 0, '0x0', 0);
+        let changer = await BancorChanger.new(tokenAddress, formulaAddress, gasPriceLimitAddress, 0, '0x0', 0);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
         await changer.addReserve(reserveToken.address, CRR10Percent, false);
         await reserveToken.transfer(changer.address, 1000);

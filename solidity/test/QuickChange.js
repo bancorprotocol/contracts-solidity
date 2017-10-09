@@ -4,6 +4,7 @@
 const BancorChanger = artifacts.require('BancorChanger.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
+const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const utils = require('./helpers/Utils');
@@ -15,6 +16,7 @@ let smartToken3;
 let smartToken4;
 let erc20Token;
 let formulaAddress;
+let gasPriceLimitAddress;
 let changer1;
 let changer2;
 let changer3;
@@ -45,6 +47,9 @@ contract('BancorChanger', (accounts) => {
         let formula = await BancorFormula.new();
         formulaAddress = formula.address;
 
+        let gasPriceLimit = await BancorGasPriceLimit.new(22000000000);
+        gasPriceLimitAddress = gasPriceLimit.address;
+
         etherToken = await EtherToken.new();
         await etherToken.deposit({ value: 1000000 });
 
@@ -62,17 +67,17 @@ contract('BancorChanger', (accounts) => {
 
         erc20Token = await TestERC20Token.new('ERC20Token', 'ERC5', 1000000);
 
-        changer1 = await BancorChanger.new(smartToken1.address, formulaAddress, 0, etherToken.address, 250000);
+        changer1 = await BancorChanger.new(smartToken1.address, formulaAddress, gasPriceLimitAddress, 0, etherToken.address, 250000);
         changer1.address = changer1.address;
 
-        changer2 = await BancorChanger.new(smartToken2.address, formulaAddress, 0, smartToken1.address, 300000);
+        changer2 = await BancorChanger.new(smartToken2.address, formulaAddress, gasPriceLimitAddress, 0, smartToken1.address, 300000);
         changer2.address = changer2.address;
         await changer2.addReserve(smartToken3.address, 150000, false);
 
-        changer3 = await BancorChanger.new(smartToken3.address, formulaAddress, 0, smartToken4.address, 350000);
+        changer3 = await BancorChanger.new(smartToken3.address, formulaAddress, gasPriceLimitAddress, 0, smartToken4.address, 350000);
         changer3.address = changer3.address;
 
-        changer4 = await BancorChanger.new(smartToken4.address, formulaAddress, 0, etherToken.address, 150000);
+        changer4 = await BancorChanger.new(smartToken4.address, formulaAddress, gasPriceLimitAddress, 0, etherToken.address, 150000);
         changer4.address = changer4.address;
         await changer4.addReserve(erc20Token.address, 220000, false);
 
