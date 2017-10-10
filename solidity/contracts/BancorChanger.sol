@@ -150,7 +150,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return number of reserve tokens
     */
-    function reserveTokenCount() public constant returns (uint16 count) {
+    function reserveTokenCount() public constant returns (uint16) {
         return uint16(reserveTokens.length);
     }
 
@@ -160,7 +160,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return number of changeable tokens
     */
-    function changeableTokenCount() public constant returns (uint16 count) {
+    function changeableTokenCount() public constant returns (uint16) {
         return reserveTokenCount() + 1;
     }
 
@@ -171,7 +171,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return number of changeable tokens
     */
-    function changeableToken(uint16 _tokenIndex) public constant returns (address tokenAddress) {
+    function changeableToken(uint16 _tokenIndex) public constant returns (address) {
         if (_tokenIndex == 0)
             return token;
         return reserveTokens[_tokenIndex - 1];
@@ -216,7 +216,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return quick buy path length
     */
-    function getQuickBuyPathLength() public constant returns (uint256 length) {
+    function getQuickBuyPathLength() public constant returns (uint256) {
         return quickBuyPath.length;
     }
 
@@ -236,7 +236,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return ether token address
     */
-    function getQuickBuyEtherToken() public constant returns (IEtherToken etherToken) {
+    function getQuickBuyEtherToken() public constant returns (IEtherToken) {
         assert(quickBuyPath.length > 0);
         return IEtherToken(quickBuyPath[0]);
     }
@@ -271,7 +271,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return change fee amount
     */
-    function getChangeFeeAmount(uint256 _amount) public constant returns (uint256 feeAmount) {
+    function getChangeFeeAmount(uint256 _amount) public constant returns (uint256) {
         return safeMul(_amount, changeFee) / MAX_CHANGE_FEE;
     }
 
@@ -353,7 +353,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         public
         constant
         validReserve(_reserveToken)
-        returns (uint256 balance)
+        returns (uint256)
     {
         Reserve storage reserve = reserves[_reserveToken];
         return reserve.isVirtualBalanceEnabled ? reserve.virtualBalance : _reserveToken.balanceOf(this);
@@ -368,7 +368,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return expected change return amount
     */
-    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public constant returns (uint256 amount) {
+    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public constant returns (uint256) {
         require(_fromToken != _toToken); // validate input
 
         // change between the token and one of its reserves
@@ -395,14 +395,14 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         constant
         active
         validReserve(_reserveToken)
-        returns (uint256 amount)
+        returns (uint256)
     {
         Reserve storage reserve = reserves[_reserveToken];
         require(reserve.isPurchaseEnabled); // validate input
 
         uint256 tokenSupply = token.totalSupply();
         uint256 reserveBalance = getReserveBalance(_reserveToken);
-        amount = formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
+        uint256 amount = formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
 
         // deduct the fee from the return amount
         uint256 feeAmount = getChangeFeeAmount(amount);
@@ -417,7 +417,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return expected sale return amount
     */
-    function getSaleReturn(IERC20Token _reserveToken, uint256 _sellAmount) public constant returns (uint256 amount) {
+    function getSaleReturn(IERC20Token _reserveToken, uint256 _sellAmount) public constant returns (uint256) {
         return getSaleReturn(_reserveToken, _sellAmount, token.totalSupply());
     }
 
@@ -431,7 +431,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return change return amount
     */
-    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256 amount) {
+    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
         require(_fromToken != _toToken); // validate input
 
         // change between the token and one of its reserves
@@ -459,9 +459,9 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         changingAllowed
         validGasPrice
         greaterThanZero(_minReturn)
-        returns (uint256 amount)
+        returns (uint256)
     {
-        amount = getPurchaseReturn(_reserveToken, _depositAmount);
+        uint256 amount = getPurchaseReturn(_reserveToken, _depositAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
         // update virtual balance if relevant
@@ -499,11 +499,11 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         changingAllowed
         validGasPrice
         greaterThanZero(_minReturn)
-        returns (uint256 amount)
+        returns (uint256)
     {
         require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
 
-        amount = getSaleReturn(_reserveToken, _sellAmount);
+        uint256 amount = getSaleReturn(_reserveToken, _sellAmount);
         assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
         uint256 tokenSupply = token.totalSupply();
@@ -546,7 +546,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     function quickChange(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
         public
         validChangePath(_path)
-        returns (uint256 amount)
+        returns (uint256)
     {
         // we need to transfer the tokens from the caller to the local contract before we
         // follow the change path, to allow it to execute the change on behalf of the caller
@@ -596,7 +596,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @return tokens issued in return
     */
-    function quickBuy(uint256 _minReturn) public payable returns (uint256 amount) {
+    function quickBuy(uint256 _minReturn) public payable returns (uint256) {
         // ensure that the quick buy path was set
         assert(quickBuyPath.length > 0);
         // get the ether token
@@ -627,11 +627,11 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         active
         validReserve(_reserveToken)
         greaterThanZero(_totalSupply)
-        returns (uint256 amount)
+        returns (uint256)
     {
         Reserve storage reserve = reserves[_reserveToken];
         uint256 reserveBalance = getReserveBalance(_reserveToken);
-        amount = formula.calculateSaleReturn(_totalSupply, reserveBalance, reserve.ratio, _sellAmount);
+        uint256 amount = formula.calculateSaleReturn(_totalSupply, reserveBalance, reserve.ratio, _sellAmount);
 
         // deduct the fee from the return amount
         uint256 feeAmount = getChangeFeeAmount(amount);

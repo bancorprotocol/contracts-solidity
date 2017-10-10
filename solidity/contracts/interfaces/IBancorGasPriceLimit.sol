@@ -4,5 +4,5 @@ pragma solidity ^0.4.11;
     Bancor Gas Price Limit interface
 */
 contract IBancorGasPriceLimit {
-    function gasPrice() public constant returns (uint256 gasPrice) { gasPrice; }
+    function gasPrice() public constant returns (uint256) {}
 }
