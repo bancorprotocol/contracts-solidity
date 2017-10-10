@@ -10,12 +10,15 @@ import './interfaces/IEtherToken.sol';
 
 /*
     Open issues:
-    - Front-running attack protection isn't perfect yet. The issue is mitigated by the use of _minReturn & gas price limit.
+    - Front-running attacks are currently mitigated by the following mechanisms:
+        - _minReturn argument for each change provides a way to define a minimum/maximum price for the transaction
+        - gas price limit prevents users from having control over the order of execution
+      Other potential solutions might include a commit/reveal based schemes
     - Possibly add getters for reserve fields so that the client won't need to rely on the order in the struct
 */
 
 /*
-    Bancor Changer v0.3
+    Bancor Changer v0.4
 
     The Bancor version of the token changer, allows changing between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
@@ -53,7 +56,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    string public version = '0.3';
+    string public version = '0.4';
     string public changerType = 'bancor';
 
     IBancorFormula public formula;                  // bancor calculation formula contract
