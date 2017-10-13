@@ -1,0 +1,11 @@
+[
+	{"operation":"load"   ,"fileName":"model1.json"},
+	{"operation":"execute","explicit":true ,"update":false,"path":["BNT","GNOBNT","GNO"],"amount":1000000000000000},
+	{"operation":"execute","explicit":false,"update":false,"path":["GNO","GNOBNT","BNT"],"amount":1000000000000000},
+	{"operation":"save"   ,"fileName":"model2.json"},
+	{"operation":"execute","explicit":true ,"update":true ,"path":["BNT","GNOBNT","GNO"],"amount":1000000000000000},
+	{"operation":"execute","explicit":true ,"update":true ,"path":["BNT","GNOBNT","GNO"],"amount":1000000000000000},
+	{"operation":"execute","explicit":true ,"update":true ,"path":["BNT","GNOBNT","GNO"],"amount":1000000000000000},
+	{"operation":"execute","explicit":true ,"update":true ,"path":["BNT","GNOBNT","GNO"],"amount":1000000000000000},
+	{"operation":"save"   ,"fileName":"model3.json"}
+]
