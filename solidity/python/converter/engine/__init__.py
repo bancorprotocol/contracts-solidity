@@ -31,12 +31,12 @@ class Engine():
         fileDesc = open(fileName,'r')
         self.model = loads(fileDesc.read())
         fileDesc.close()
-        print 'load '+fileName
+        print 'Load '+fileName
     def save(self,fileName):
         fileDesc = open(fileName,'w')
         fileDesc.write(dumps(self.model,indent=4,sort_keys=True))
         fileDesc.close()
-        print 'save '+fileName
+        print 'Save '+fileName
     def execute(self,explicit,update,path,amount):
         old_amount = amount
         sign = [-1,+1][explicit]
