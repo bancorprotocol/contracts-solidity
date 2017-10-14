@@ -52,7 +52,7 @@ class Engine():
             amount = new_amount
         if update:
             self.model = model
-        print 'Explicit = {:5s}, Update = {:5s}: {} {} = {} {}'.format(str(explicit),str(update),old_amount,trade[0],new_amount,trade[1])
+        print 'Explicit = {:5s}, Update = {:5s}: {} {} = {} {}'.format(str(explicit),str(update),old_amount,trade[1-explicit],new_amount,trade[explicit])
     def __find_paths__(self):
         self.paths = {}
         for outer_key,outer_val in self.model.iteritems():
