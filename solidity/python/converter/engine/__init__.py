@@ -30,26 +30,6 @@ class Engine():
                         added = True
             if not added:
                 break
-    @classmethod
-    def run(cls,databaseFileName,commandsFileName):
-        databaseFileDesc = open(databaseFileName)
-        commandsFileDesc = open(commandsFileName)
-        database = loads(databaseFileDesc.read())
-        commands = loads(commandsFileDesc.read())
-        databaseFileDesc.close()
-        commandsFileDesc.close()
-        engine = cls(database)
-        for command in commands:
-            operation = command['operation']
-            if operation == 'save_db':
-                engine.save_db(command['fileName'])
-            if operation == 'convert':
-                engine.convert(command['explicit'],command['source'],command['target'],command['amount'],command['update'])
-    def save_db(self,fileName):
-        fileDesc = open(fileName,'w')
-        fileDesc.write(dumps(self.model,indent=4,sort_keys=True))
-        fileDesc.close()
-        print 'Saved '+fileName
     def convert(self,explicit,source,target,amount,update):
         old_amount = amount
         sign = [-1,+1][explicit]
@@ -65,3 +45,20 @@ class Engine():
         if update:
             self.model = model
         print 'Explicit = {:5s}, Update = {:5s}: {} {} = {} {}'.format(str(explicit),str(update),old_amount,trade[0],new_amount,trade[1])
+    def save_db(self,fileName):
+        fileDesc = open(fileName,'w')
+        fileDesc.write(dumps(self.model,indent=4,sort_keys=True))
+        fileDesc.close()
+        print 'Saved '+fileName
+    @classmethod
+    def run(cls,databaseFileName,commandsFileName):
+        databaseFileDesc = open(databaseFileName)
+        commandsFileDesc = open(commandsFileName)
+        database = loads(databaseFileDesc.read())
+        commands = loads(commandsFileDesc.read())
+        databaseFileDesc.close()
+        commandsFileDesc.close()
+        engine = cls(database)
+        for command in commands:
+            if command['operation'] == 'convert': engine.convert(command['explicit'],command['source'],command['target'],command['amount'],command['update'])
+            if command['operation'] == 'save_db': engine.save_db(command['fileName'])
