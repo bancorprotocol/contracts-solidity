@@ -1,11 +1,11 @@
 [
 	{"operation":"load"   ,"fileName":"model1.json"},
-	{"operation":"convert","explicit":true ,"trade":["BNT","GNO"],"amount":1000000000000000,"update":false},
-	{"operation":"convert","explicit":false,"trade":["GNO","BNT"],"amount":1000000000000000,"update":false},
+	{"operation":"convert","explicit":true ,"source":"BNT","target":"GNO","amount":1000000000000000,"update":false},
+	{"operation":"convert","explicit":false,"source":"GNO","target":"BNT","amount":1000000000000000,"update":false},
 	{"operation":"save"   ,"fileName":"model2.json"},
-	{"operation":"convert","explicit":true ,"trade":["BNT","GNO"],"amount":1000000000000000,"update":true },
-	{"operation":"convert","explicit":true ,"trade":["BNT","GNO"],"amount":1000000000000000,"update":true },
-	{"operation":"convert","explicit":true ,"trade":["BNT","GNO"],"amount":1000000000000000,"update":true },
-	{"operation":"convert","explicit":true ,"trade":["BNT","GNO"],"amount":1000000000000000,"update":true },
+	{"operation":"convert","explicit":true ,"source":"BNT","target":"GNO","amount":1000000000000000,"update":true },
+	{"operation":"convert","explicit":true ,"source":"BNT","target":"GNO","amount":1000000000000000,"update":true },
+	{"operation":"convert","explicit":true ,"source":"BNT","target":"GNO","amount":1000000000000000,"update":true },
+	{"operation":"convert","explicit":true ,"source":"BNT","target":"GNO","amount":1000000000000000,"update":true },
 	{"operation":"save"   ,"fileName":"model3.json"}
 ]

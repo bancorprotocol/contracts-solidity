@@ -27,7 +27,7 @@ class Engine():
             if operation == 'save':
                 self.save(command['fileName'])
             if operation == 'convert':
-                self.convert(command['explicit'],command['trade'],command['amount'],command['update'])
+                self.convert(command['explicit'],command['source'],command['target'],command['amount'],command['update'])
     def load(self,fileName):
         fileDesc = open(fileName,'r')
         self.model = loads(fileDesc.read())
@@ -39,11 +39,12 @@ class Engine():
         fileDesc.write(dumps(self.model,indent=4,sort_keys=True))
         fileDesc.close()
         print 'Save '+fileName
-    def convert(self,explicit,trade,amount,update):
+    def convert(self,explicit,source,target,amount,update):
         old_amount = amount
         sign = [-1,+1][explicit]
         model = deepcopy(self.model)
-        path = self.paths[tuple(trade[::sign])]
+        trade = [source,target][::sign]
+        path = self.paths[tuple(trade)]
         for first,second in zip(path,path[1:]):
             func,outer,inner = (sell,model[first],model[first][second]) if first in model and second in model[first] else (buy,model[second],model[second][first])
             new_amount = func(outer['supply'],inner['reserve'],inner['ratio'],amount*sign)*sign
@@ -52,7 +53,7 @@ class Engine():
             amount = new_amount
         if update:
             self.model = model
-        print 'Explicit = {:5s}, Update = {:5s}: {} {} = {} {}'.format(str(explicit),str(update),old_amount,trade[1-explicit],new_amount,trade[explicit])
+        print 'Explicit = {:5s}, Update = {:5s}: {} {} = {} {}'.format(str(explicit),str(update),old_amount,trade[0],new_amount,trade[1])
     def __find_paths__(self):
         self.paths = {}
         for outer_key,outer_val in self.model.iteritems():
