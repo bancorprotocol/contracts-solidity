@@ -8,8 +8,8 @@ from decimal import getcontext
 getcontext().prec = 100
 
 
-def buy (supply, reserve, ratio, amount): return int(Decimal(supply)*((1+Decimal(amount)/Decimal(reserve))**(Decimal(ratio)/1000000)-1))
-def sell(supply, reserve, ratio, amount): return int(Decimal(reserve)*(1-(1-Decimal(amount)/Decimal(supply))**(1000000/Decimal(ratio))))
+def buy (supply, balance, ratio, amount): return int(Decimal(supply)*((1+Decimal(amount)/Decimal(balance))**(Decimal(ratio)/1000000)-1))
+def sell(supply, balance, ratio, amount): return int(Decimal(balance)*(1-(1-Decimal(amount)/Decimal(supply))**(1000000/Decimal(ratio))))
 
 
 class Engine():
@@ -38,9 +38,9 @@ class Engine():
         path = self.paths[tuple(trade)]
         for first,second in zip(path,path[1:]):
             func,outer,inner = (sell,model[first],model[first][second]) if first in model and second in model[first] else (buy,model[second],model[second][first])
-            new_amount = func(outer['supply'],inner['reserve'],inner['ratio'],amount*sign)*sign
+            new_amount = func(outer['supply'],inner['balance'],inner['ratio'],amount*sign)*sign
             outer['supply' ] += {buy:+new_amount*sign,sell:-amount*sign}[func]
-            inner['reserve'] += {buy:+amount*sign,sell:-new_amount*sign}[func]
+            inner['balance'] += {buy:+amount*sign,sell:-new_amount*sign}[func]
             amount = new_amount
         if update:
             self.model = model

@@ -16,9 +16,9 @@ MAXIMUM_VALUE_SUPPLY  = 10**34
 SAMPLES_COUNT_SUPPLY  = 150
 
 
-MINIMUM_VALUE_RESERVE = 100
-MAXIMUM_VALUE_RESERVE = 10**34
-SAMPLES_COUNT_RESERVE = 150
+MINIMUM_VALUE_BALANCE = 100
+MAXIMUM_VALUE_BALANCE = 10**34
+SAMPLES_COUNT_BALANCE = 150
 
 
 MINIMUM_VALUE_RATIO   = 100000
@@ -55,18 +55,18 @@ def Main():
 
 
 def TestAll(collection):
-    collection.ensure_index([(key,pymongo.ASCENDING) for key in ['supply','reserve','ratio','amount']])
+    collection.ensure_index([(key,pymongo.ASCENDING) for key in ['supply','balance','ratio','amount']])
     range_supply  = InputGenerator.UniformDistribution(MINIMUM_VALUE_SUPPLY ,MAXIMUM_VALUE_SUPPLY ,SAMPLES_COUNT_SUPPLY )
-    range_reserve = InputGenerator.UniformDistribution(MINIMUM_VALUE_RESERVE,MAXIMUM_VALUE_RESERVE,SAMPLES_COUNT_RESERVE)
+    range_balance = InputGenerator.UniformDistribution(MINIMUM_VALUE_BALANCE,MAXIMUM_VALUE_BALANCE,SAMPLES_COUNT_BALANCE)
     range_ratio   = InputGenerator.UniformDistribution(MINIMUM_VALUE_RATIO  ,MAXIMUM_VALUE_RATIO  ,SAMPLES_COUNT_RATIO  )
     range_amount  = InputGenerator.UniformDistribution(MINIMUM_VALUE_AMOUNT ,MAXIMUM_VALUE_AMOUNT ,SAMPLES_COUNT_AMOUNT )
     for             supply  in range_supply :
-        for         reserve in range_reserve:
+        for         balance in range_balance:
             for     ratio   in range_ratio  :
                 for amount  in range_amount :
                     if True:
-                        resultSolidityPort = Run(FormulaSolidityPort,supply,reserve,ratio,amount)
-                        resultNativePython = Run(FormulaNativePython,supply,reserve,ratio,amount)
+                        resultSolidityPort = Run(FormulaSolidityPort,supply,balance,ratio,amount)
+                        resultNativePython = Run(FormulaNativePython,supply,balance,ratio,amount)
                         if resultNativePython < 0:
                             status = TRANSACTION_INVALID
                             loss = {'absolute':0,'relative':0}
@@ -81,7 +81,7 @@ def TestAll(collection):
                             loss = {'absolute':float(resultNativePython-resultSolidityPort),'relative':1-float(resultSolidityPort/resultNativePython)}
                         filter = {
                             'supply' :'{}'.format(supply ),
-                            'reserve':'{}'.format(reserve),
+                            'balance':'{}'.format(balance),
                             'ratio'  :'{}'.format(ratio  ),
                             'amount' :'{}'.format(amount ),
                         }
@@ -92,12 +92,12 @@ def TestAll(collection):
                             'loss'  :loss  ,
                         }
                         document = collection.find_one_and_update(filter,{'$set':update},upsert=True,return_document=pymongo.ReturnDocument.AFTER)
-                        print ', '.join('{}: {}'.format(field,document[field]) for field in ['supply','reserve','ratio','amount','resultSolidityPort','resultNativePython','status','loss'])
+                        print ', '.join('{}: {}'.format(field,document[field]) for field in ['supply','balance','ratio','amount','resultSolidityPort','resultNativePython','status','loss'])
 
 
-def Run(module,supply,reserve,ratio,amount):
+def Run(module,supply,balance,ratio,amount):
     try:
-        return module.calculatePurchaseReturn(supply,reserve,ratio,amount)
+        return module.calculatePurchaseReturn(supply,balance,ratio,amount)
     except Exception:
         return -1
 

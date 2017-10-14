@@ -9,9 +9,9 @@ MAXIMUM_VALUE_SUPPLY  = 10**34
 SAMPLES_COUNT_SUPPLY  = 50
 
 
-MINIMUM_VALUE_RESERVE = 100
-MAXIMUM_VALUE_RESERVE = 10**34
-SAMPLES_COUNT_RESERVE = 50
+MINIMUM_VALUE_BALANCE = 100
+MAXIMUM_VALUE_BALANCE = 10**34
+SAMPLES_COUNT_BALANCE = 50
 
 
 MINIMUM_VALUE_RATIO   = 100000
@@ -26,12 +26,12 @@ SAMPLES_COUNT_AMOUNT  = 50
 
 def Main():    
     range_supply  = InputGenerator.UniformDistribution(MINIMUM_VALUE_SUPPLY ,MAXIMUM_VALUE_SUPPLY ,SAMPLES_COUNT_SUPPLY )
-    range_reserve = InputGenerator.UniformDistribution(MINIMUM_VALUE_RESERVE,MAXIMUM_VALUE_RESERVE,SAMPLES_COUNT_RESERVE)
+    range_balance = InputGenerator.UniformDistribution(MINIMUM_VALUE_BALANCE,MAXIMUM_VALUE_BALANCE,SAMPLES_COUNT_BALANCE)
     range_ratio   = InputGenerator.UniformDistribution(MINIMUM_VALUE_RATIO  ,MAXIMUM_VALUE_RATIO  ,SAMPLES_COUNT_RATIO  )
     range_amount  = InputGenerator.UniformDistribution(MINIMUM_VALUE_AMOUNT ,MAXIMUM_VALUE_AMOUNT ,SAMPLES_COUNT_AMOUNT )
     
     testNum = 0
-    numOfTests = len(range_supply)*len(range_reserve)*len(range_ratio)*len(range_amount)
+    numOfTests = len(range_supply)*len(range_balance)*len(range_ratio)*len(range_amount)
     
     web3RPCProvider = web3.Web3(web3.RPCProvider())
     abi = open('../contracts/build/BancorFormula.abi').read()
@@ -40,26 +40,26 @@ def Main():
     FormulaContractAddr = contract(web3RPCProvider.eth.getTransactionReceipt(contract.deploy())['contractAddress']).call()
     
     for             supply  in range_supply :
-        for         reserve in range_reserve:
+        for         balance in range_balance:
             for     ratio   in range_ratio  :
                 for amount  in range_amount :
                     testNum += 1
                     if amount <= supply:
-                        resultSolidityPort = Run(FormulaSolidityPort,supply,reserve,ratio,amount)
-                        resultContractAddr = Run(FormulaContractAddr,supply,reserve,ratio,amount)
+                        resultSolidityPort = Run(FormulaSolidityPort,supply,balance,ratio,amount)
+                        resultContractAddr = Run(FormulaContractAddr,supply,balance,ratio,amount)
                         print 'Test {} out of {}: resultSolidityPort = {}, resultContractAddr = {}'.format(testNum,numOfTests,resultSolidityPort,resultContractAddr)
                         if resultSolidityPort != resultContractAddr:
                             print 'Emulation Error:'
                             print 'supply  = {}'.format(supply )
-                            print 'reserve = {}'.format(reserve)
+                            print 'balance = {}'.format(balance)
                             print 'ratio   = {}'.format(ratio  )
                             print 'amount  = {}'.format(amount )
                             return
 
 
-def Run(module,supply,reserve,ratio,amount):
+def Run(module,supply,balance,ratio,amount):
     try:
-        return module.calculateSaleReturn(supply,reserve,ratio,amount)
+        return module.calculateSaleReturn(supply,balance,ratio,amount)
     except Exception:
         return -1
 

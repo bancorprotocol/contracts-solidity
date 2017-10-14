@@ -3,13 +3,13 @@ import FormulaSolidityPort
 import FormulaNativePython
 
 
-def formulaTest(supply,reserve,ratio,amount):
-    resultSolidityPort = FormulaSolidityPort.calculatePurchaseReturn(supply,reserve,ratio,amount)
-    resultNativePython = FormulaNativePython.calculatePurchaseReturn(supply,reserve,ratio,amount)
+def formulaTest(supply,balance,ratio,amount):
+    resultSolidityPort = FormulaSolidityPort.calculatePurchaseReturn(supply,balance,ratio,amount)
+    resultNativePython = FormulaNativePython.calculatePurchaseReturn(supply,balance,ratio,amount)
     if resultSolidityPort > resultNativePython:
         error = ['Implementation Error:']
         error.append('supply             = {}'.format(supply            ))
-        error.append('reserve            = {}'.format(reserve           ))
+        error.append('balance            = {}'.format(balance           ))
         error.append('ratio              = {}'.format(ratio             ))
         error.append('amount             = {}'.format(amount            ))
         error.append('resultSolidityPort = {}'.format(resultSolidityPort))
@@ -34,11 +34,11 @@ numOfFailures = 0
 
 for n in xrange(size):
     supply  = 10**26
-    reserve = 10**23
+    balance = 10**23
     ratio   = 100000
     amount  = bgn+gap*n
     try:
-        accuracy = formulaTest(supply,reserve,ratio,amount)
+        accuracy = formulaTest(supply,balance,ratio,amount)
         worstAccuracy = min(worstAccuracy,accuracy)
     except Exception,error:
         accuracy = 0
