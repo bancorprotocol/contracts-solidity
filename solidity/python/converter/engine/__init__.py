@@ -26,8 +26,8 @@ class Engine():
                 self.load(command['fileName'])
             if operation == 'save':
                 self.save(command['fileName'])
-            if operation == 'execute':
-                self.execute(command['explicit'],command['update'],command['trade'],command['amount'])
+            if operation == 'convert':
+                self.convert(command['explicit'],command['trade'],command['amount'],command['update'])
     def load(self,fileName):
         fileDesc = open(fileName,'r')
         self.model = loads(fileDesc.read())
@@ -39,7 +39,7 @@ class Engine():
         fileDesc.write(dumps(self.model,indent=4,sort_keys=True))
         fileDesc.close()
         print 'Save '+fileName
-    def execute(self,explicit,update,trade,amount):
+    def convert(self,explicit,trade,amount,update):
         old_amount = amount
         sign = [-1,+1][explicit]
         model = deepcopy(self.model)
