@@ -8,8 +8,8 @@ from decimal import getcontext
 getcontext().prec = 100
 
 
-def buy (supply, balance, ratio, amount): return int(Decimal(supply)*((1+Decimal(amount)/Decimal(balance))**(Decimal(ratio)/1000000)-1))
-def sell(supply, balance, ratio, amount): return int(Decimal(balance)*(1-(1-Decimal(amount)/Decimal(supply))**(1000000/Decimal(ratio))))
+def buy (supply,balance,ratio,amount): return int(Decimal(supply)*((1+Decimal(amount)/Decimal(balance))**(Decimal(ratio)/1000000)-1))
+def sell(supply,balance,ratio,amount): return int(Decimal(balance)*(1-(1-Decimal(amount)/Decimal(supply))**(1000000/Decimal(ratio))))
 
 
 class Engine():
