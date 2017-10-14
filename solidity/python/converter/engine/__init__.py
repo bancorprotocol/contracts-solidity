@@ -13,48 +13,8 @@ def sell(supply, reserve, ratio, amount): return int(Decimal(reserve)*(1-(1-Deci
 
 
 class Engine():
-    def __init__(self,model={}):
+    def __init__(self,model):
         self.model = deepcopy(model)
-        self.__find_paths__()
-    def run(self,fileName):
-        fileDesc = open(fileName,'r')
-        commands = loads(fileDesc.read())
-        fileDesc.close()
-        for command in commands:
-            operation = command['operation']
-            if operation == 'load':
-                self.load(command['fileName'])
-            if operation == 'save':
-                self.save(command['fileName'])
-            if operation == 'convert':
-                self.convert(command['explicit'],command['source'],command['target'],command['amount'],command['update'])
-    def load(self,fileName):
-        fileDesc = open(fileName,'r')
-        self.model = loads(fileDesc.read())
-        fileDesc.close()
-        self.__find_paths__()
-        print 'Load '+fileName
-    def save(self,fileName):
-        fileDesc = open(fileName,'w')
-        fileDesc.write(dumps(self.model,indent=4,sort_keys=True))
-        fileDesc.close()
-        print 'Save '+fileName
-    def convert(self,explicit,source,target,amount,update):
-        old_amount = amount
-        sign = [-1,+1][explicit]
-        model = deepcopy(self.model)
-        trade = [source,target][::sign]
-        path = self.paths[tuple(trade)]
-        for first,second in zip(path,path[1:]):
-            func,outer,inner = (sell,model[first],model[first][second]) if first in model and second in model[first] else (buy,model[second],model[second][first])
-            new_amount = func(outer['supply'],inner['reserve'],inner['ratio'],amount*sign)*sign
-            outer['supply' ] += {buy:+new_amount*sign,sell:-amount*sign}[func]
-            inner['reserve'] += {buy:+amount*sign,sell:-new_amount*sign}[func]
-            amount = new_amount
-        if update:
-            self.model = model
-        print 'Explicit = {:5s}, Update = {:5s}: {} {} = {} {}'.format(str(explicit),str(update),old_amount,trade[0],new_amount,trade[1])
-    def __find_paths__(self):
         self.paths = {}
         for outer_key,outer_val in self.model.iteritems():
             for inner_key,inner_val in outer_val.iteritems():
@@ -70,3 +30,38 @@ class Engine():
                         added = True
             if not added:
                 break
+    @classmethod
+    def run(cls,databaseFileName,commandsFileName):
+        databaseFileDesc = open(databaseFileName)
+        commandsFileDesc = open(commandsFileName)
+        database = loads(databaseFileDesc.read())
+        commands = loads(commandsFileDesc.read())
+        databaseFileDesc.close()
+        commandsFileDesc.close()
+        engine = cls(database)
+        for command in commands:
+            operation = command['operation']
+            if operation == 'save_db':
+                engine.save_db(command['fileName'])
+            if operation == 'convert':
+                engine.convert(command['explicit'],command['source'],command['target'],command['amount'],command['update'])
+    def save_db(self,fileName):
+        fileDesc = open(fileName,'w')
+        fileDesc.write(dumps(self.model,indent=4,sort_keys=True))
+        fileDesc.close()
+        print 'Saved '+fileName
+    def convert(self,explicit,source,target,amount,update):
+        old_amount = amount
+        sign = [-1,+1][explicit]
+        model = deepcopy(self.model)
+        trade = [source,target][::sign]
+        path = self.paths[tuple(trade)]
+        for first,second in zip(path,path[1:]):
+            func,outer,inner = (sell,model[first],model[first][second]) if first in model and second in model[first] else (buy,model[second],model[second][first])
+            new_amount = func(outer['supply'],inner['reserve'],inner['ratio'],amount*sign)*sign
+            outer['supply' ] += {buy:+new_amount*sign,sell:-amount*sign}[func]
+            inner['reserve'] += {buy:+amount*sign,sell:-new_amount*sign}[func]
+            amount = new_amount
+        if update:
+            self.model = model
+        print 'Explicit = {:5s}, Update = {:5s}: {} {} = {} {}'.format(str(explicit),str(update),old_amount,trade[0],new_amount,trade[1])
