@@ -15,6 +15,7 @@ def sell(supply, reserve, ratio, amount): return int(Decimal(reserve)*(1-(1-Deci
 class Engine():
     def __init__(self,model={}):
         self.model = deepcopy(model)
+        self.__find_paths__()
     def run(self,fileName):
         fileDesc = open(fileName,'r')
         commands = loads(fileDesc.read())
@@ -26,22 +27,24 @@ class Engine():
             if operation == 'save':
                 self.save(command['fileName'])
             if operation == 'execute':
-                self.execute(command['explicit'],command['update'],command['path'],command['amount'])
+                self.execute(command['explicit'],command['update'],command['trade'],command['amount'])
     def load(self,fileName):
         fileDesc = open(fileName,'r')
         self.model = loads(fileDesc.read())
         fileDesc.close()
+        self.__find_paths__()
         print 'Load '+fileName
     def save(self,fileName):
         fileDesc = open(fileName,'w')
         fileDesc.write(dumps(self.model,indent=4,sort_keys=True))
         fileDesc.close()
         print 'Save '+fileName
-    def execute(self,explicit,update,path,amount):
+    def execute(self,explicit,update,trade,amount):
         old_amount = amount
         sign = [-1,+1][explicit]
         model = deepcopy(self.model)
-        for first,second in zip(path[::sign],path[::sign][1:]):
+        path = self.paths[tuple(trade[::sign])]
+        for first,second in zip(path,path[1:]):
             func,outer,inner = (sell,model[first],model[first][second]) if first in model and second in model[first] else (buy,model[second],model[second][first])
             new_amount = func(outer['supply'],inner['reserve'],inner['ratio'],amount*sign)*sign
             outer['supply' ] += {buy:+new_amount*sign,sell:-amount*sign}[func]
@@ -49,4 +52,20 @@ class Engine():
             amount = new_amount
         if update:
             self.model = model
-        print 'Explicit = {:5s}, Update = {:5s}: {} {} = {} {}'.format(str(explicit),str(update),old_amount,path[explicit-1],new_amount,path[0-explicit])
+        print 'Explicit = {:5s}, Update = {:5s}: {} {} = {} {}'.format(str(explicit),str(update),old_amount,trade[0],new_amount,trade[1])
+    def __find_paths__(self):
+        self.paths = {}
+        for outer_key,outer_val in self.model.iteritems():
+            for inner_key,inner_val in outer_val.iteritems():
+                if type(inner_val) is dict:
+                    self.paths[(outer_key,inner_key)] = [outer_key,inner_key]
+                    self.paths[(inner_key,outer_key)] = [inner_key,outer_key]
+        while True:
+            added = False
+            for a in self.paths.values():
+                for b in self.paths.values():
+                    if a[0] != b[-1] and a[-1] == b[0] and (a[0],b[-1]) not in self.paths:
+                        self.paths[(a[0],b[-1])] = a+b[1:]
+                        added = True
+            if not added:
+                break
