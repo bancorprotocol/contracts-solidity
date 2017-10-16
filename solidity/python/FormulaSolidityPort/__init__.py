@@ -1,7 +1,7 @@
 version = '0.2';
 
-MAX_CRR = 1000000;
 ONE = 1;
+MAX_CRR = 1000000;
 MIN_PRECISION = 32;
 MAX_PRECISION = 127;
 

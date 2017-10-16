@@ -5,8 +5,8 @@ import './interfaces/IBancorFormula.sol';
 contract BancorFormula is IBancorFormula, Utils {
     string public version = '0.2';
 
-    uint32 private constant MAX_CRR = 1000000;
     uint256 private constant ONE = 1;
+    uint32 private constant MAX_CRR = 1000000;
     uint8 private constant MIN_PRECISION = 32;
     uint8 private constant MAX_PRECISION = 127;
 
