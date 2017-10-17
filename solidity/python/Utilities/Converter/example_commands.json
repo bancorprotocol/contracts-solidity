@@ -1,10 +1,10 @@
 [
 	{"operation":"convert","explicit":true ,"source":"BNT","target":"GNO","amount":1000000000000000,"update":false},
 	{"operation":"convert","explicit":false,"source":"GNO","target":"BNT","amount":1000000000000000,"update":false},
-	{"operation":"save_db","fileName":"database1.json"},
+	{"operation":"save_db","fileName":"example_database1.json"},
 	{"operation":"convert","explicit":true ,"source":"BNT","target":"GNO","amount":1000000000000000,"update":true },
 	{"operation":"convert","explicit":true ,"source":"BNT","target":"GNO","amount":1000000000000000,"update":true },
 	{"operation":"convert","explicit":true ,"source":"BNT","target":"GNO","amount":1000000000000000,"update":true },
 	{"operation":"convert","explicit":true ,"source":"BNT","target":"GNO","amount":1000000000000000,"update":true },
-	{"operation":"save_db","fileName":"database2.json"}
+	{"operation":"save_db","fileName":"example_database2.json"}
 ]
