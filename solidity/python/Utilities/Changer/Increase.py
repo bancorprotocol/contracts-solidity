@@ -4,7 +4,7 @@ from decimal import Decimal
 from decimal import getcontext
 
 
-def Main(supply,balance,ratio,change):
+def calculate(supply,balance,ratio,change):
     ratio  /= 100
     change /= 100
     cur_amount = balance*((1+change)**(1/(1-ratio))-1)
@@ -26,6 +26,6 @@ if len(argv) == 5:
     getcontext().prec = 30
     supply,balance,ratio,change = [Decimal(arg) for arg in argv[1:]]
     assert(0 < supply and 0 < balance and 0 < ratio <= 100 and 0 <= change)
-    Main(supply,balance,ratio,change)
+    calculate(supply,balance,ratio,change)
 else:
     print '{} <supply> <balance> <ratio> <desired price change>'.format(basename(__file__))
