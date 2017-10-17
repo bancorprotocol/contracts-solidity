@@ -1,12 +1,12 @@
 module.exports.MIN_PRECISION = 32;
 module.exports.MAX_PRECISION = 127;
 module.exports.maxExpArray = [
-    /*   0 */    '0xc1',
-    /*   1 */    '0x17a',
-    /*   2 */    '0x2e5',
-    /*   3 */    '0x5ab',
-    /*   4 */    '0xb1b',
-    /*   5 */    '0x15bf',
+    /*   0 */    '0xd7',
+    /*   1 */    '0x19f',
+    /*   2 */    '0x31b',
+    /*   3 */    '0x5f6',
+    /*   4 */    '0xb6e',
+    /*   5 */    '0x15ec',
     /*   6 */    '0x2a0c',
     /*   7 */    '0x50a2',
     /*   8 */    '0x9aa2',
@@ -128,15 +128,15 @@ module.exports.maxExpArray = [
     /* 124 */    '0x12ed7b32a58f552afeb26faf21deca06',
     /* 125 */    '0x244c49c648baa98192dce88b42f53caf',
     /* 126 */    '0x459c079aac334623648e24d17c74b3dc',
-    /* 127 */    '0x6ae67b5f2f528d5f3189036ee0f27453',
+    /* 127 */    '0x857ddf0117efa215952912839f6473e6',
 ];
 module.exports.maxValArray = [
-    /*   0 */    '0x114b06b554307756ca04f4cba9a73491a',
-    /*   1 */    '0x116725662328c918cc52a23d39760e5b9',
-    /*   2 */    '0x120a92c8c432654ba21dcdb328faecff8',
-    /*   3 */    '0x120b168bc2dcf50ec6a41c4c207124358',
-    /*   4 */    '0x1267c5d67acef5c18aba51d228f9f502f',
-    /*   5 */    '0x1267ae3becb1b8844eb792511b7bb538f',
+    /*   0 */    '0x2550a7d99147ce113d27f304d24a422c3d',
+    /*   1 */    '0x1745f7d567fdd8c93da354496cf4dddf34',
+    /*   2 */    '0xb5301cf4bf20167721bcdbe218a66f1e0',
+    /*   3 */    '0x5e2d2ca56fae9ef2e524ba4d0f75b8754',
+    /*   4 */    '0x2f45acad795bce6dcd748391bb828dcea',
+    /*   5 */    '0x17f631b6609d1047920e1a1f9613f870d',
     /*   6 */    '0xc29d4a7745ae89ef20a05db656441649',
     /*   7 */    '0x6242dea9277cf2d473468985313625bb',
     /*   8 */    '0x31aef9b37fbc57d1ca51c53eb472c345',
@@ -258,5 +258,5 @@ module.exports.maxValArray = [
     /* 124 */    '0x3439aeef615a970c9678397b6ad71179',
     /* 125 */    '0x637d37d6cb204d7419ac094d7e89f0dd',
     /* 126 */    '0xbde80a98943810876a7852209de22be2',
-    /* 127 */    '0x12710231c0fd7a13f8a2b4af9d6b70c87',
+    /* 127 */    '0x16b3160a3c604c6667ff40ff1882b0fcf',
 ];

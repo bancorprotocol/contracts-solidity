@@ -3,13 +3,13 @@ import random
 import FormulaSolidityPort
 
 
-def formulaTest(supply,reserve,ratio,amount):
-    newAmount = FormulaSolidityPort.calculatePurchaseReturn(supply,reserve,ratio,amount)
-    oldAmount = FormulaSolidityPort.calculateSaleReturn(supply+newAmount,reserve+amount,ratio,newAmount)
+def formulaTest(supply,balance,ratio,amount):
+    newAmount = FormulaSolidityPort.calculatePurchaseReturn(supply,balance,ratio,amount)
+    oldAmount = FormulaSolidityPort.calculateSaleReturn(supply+newAmount,balance+amount,ratio,newAmount)
     if oldAmount > amount:
         error = ['Implementation Error:']
         error.append('supply    = {}'.format(supply   ))
-        error.append('reserve   = {}'.format(reserve  ))
+        error.append('balance   = {}'.format(balance  ))
         error.append('ratio     = {}'.format(ratio    ))
         error.append('amount    = {}'.format(amount   ))
         error.append('newAmount = {}'.format(newAmount))
@@ -29,11 +29,11 @@ numOfFailures = 0
 
 for n in xrange(size):
     supply  = random.randrange(2,10**26)
-    reserve = random.randrange(1,10**23)
+    balance = random.randrange(1,10**23)
     ratio   = random.randrange(1,1000000)
     amount  = random.randrange(1,supply)
     try:
-        accuracy = formulaTest(supply,reserve,ratio,amount)
+        accuracy = formulaTest(supply,balance,ratio,amount)
         worstAccuracy = min(worstAccuracy,accuracy)
     except Exception,error:
         accuracy = 0

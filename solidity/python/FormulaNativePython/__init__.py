@@ -5,12 +5,12 @@ from decimal import getcontext
 getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
 
 
-def calculatePurchaseReturn(supply, reserve, ratio, amount):
-    return Decimal(supply)*((1+Decimal(amount)/Decimal(reserve))**(Decimal(ratio)/1000000)-1)
+def calculatePurchaseReturn(supply, balance, ratio, amount):
+    return Decimal(supply)*((1+Decimal(amount)/Decimal(balance))**(Decimal(ratio)/1000000)-1)
 
 
-def calculateSaleReturn(supply, reserve, ratio, amount):
-    return Decimal(reserve)*(1-(1-Decimal(amount)/Decimal(supply))**(1000000/Decimal(ratio)))
+def calculateSaleReturn(supply, balance, ratio, amount):
+    return Decimal(balance)*(1-(1-Decimal(amount)/Decimal(supply))**(1000000/Decimal(ratio)))
 
 
 def power(baseN, baseD, expN, expD, precision):

@@ -6,29 +6,29 @@ import FormulaSolidityPort
 
 MINIMUM_VALUE_SUPPLY  = 100
 MAXIMUM_VALUE_SUPPLY  = 10**34
-GROWTH_FACTOR_SUPPLY  = 2.5
+SAMPLES_COUNT_SUPPLY  = 50
 
 
 MINIMUM_VALUE_BALANCE = 100
 MAXIMUM_VALUE_BALANCE = 10**34
-GROWTH_FACTOR_BALANCE = 2.5
+SAMPLES_COUNT_BALANCE = 50
 
 
 MINIMUM_VALUE_RATIO   = 100000
 MAXIMUM_VALUE_RATIO   = 900000
-GROWTH_FACTOR_RATIO   = 1.5
+SAMPLES_COUNT_RATIO   = 10
 
 
 MINIMUM_VALUE_AMOUNT  = 1
 MAXIMUM_VALUE_AMOUNT  = 10**34
-GROWTH_FACTOR_AMOUNT  = 2.5
+SAMPLES_COUNT_AMOUNT  = 50
 
 
 def Main():    
-    range_supply  = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_SUPPLY ,MAXIMUM_VALUE_SUPPLY ,GROWTH_FACTOR_SUPPLY )
-    range_balance = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_BALANCE,MAXIMUM_VALUE_BALANCE,GROWTH_FACTOR_BALANCE)
-    range_ratio   = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_RATIO  ,MAXIMUM_VALUE_RATIO  ,GROWTH_FACTOR_RATIO  )
-    range_amount  = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_AMOUNT ,MAXIMUM_VALUE_AMOUNT ,GROWTH_FACTOR_AMOUNT )
+    range_supply  = InputGenerator.UniformDistribution(MINIMUM_VALUE_SUPPLY ,MAXIMUM_VALUE_SUPPLY ,SAMPLES_COUNT_SUPPLY )
+    range_balance = InputGenerator.UniformDistribution(MINIMUM_VALUE_BALANCE,MAXIMUM_VALUE_BALANCE,SAMPLES_COUNT_BALANCE)
+    range_ratio   = InputGenerator.UniformDistribution(MINIMUM_VALUE_RATIO  ,MAXIMUM_VALUE_RATIO  ,SAMPLES_COUNT_RATIO  )
+    range_amount  = InputGenerator.UniformDistribution(MINIMUM_VALUE_AMOUNT ,MAXIMUM_VALUE_AMOUNT ,SAMPLES_COUNT_AMOUNT )
     
     testNum = 0
     numOfTests = len(range_supply)*len(range_balance)*len(range_ratio)*len(range_amount)
@@ -44,7 +44,7 @@ def Main():
             for     ratio   in range_ratio  :
                 for amount  in range_amount :
                     testNum += 1
-                    if True:
+                    if amount <= supply:
                         resultSolidityPort = Run(FormulaSolidityPort,supply,balance,ratio,amount)
                         resultContractAddr = Run(FormulaContractAddr,supply,balance,ratio,amount)
                         print 'Test {} out of {}: resultSolidityPort = {}, resultContractAddr = {}'.format(testNum,numOfTests,resultSolidityPort,resultContractAddr)
@@ -59,7 +59,7 @@ def Main():
 
 def Run(module,supply,balance,ratio,amount):
     try:
-        return module.calculatePurchaseReturn(supply,balance,ratio,amount)
+        return module.calculateSaleReturn(supply,balance,ratio,amount)
     except Exception:
         return -1
 
