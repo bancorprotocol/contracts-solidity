@@ -4,9 +4,6 @@ from decimal import Decimal
 from decimal import getcontext
 
 
-getcontext().prec = 30
-
-
 def Main(supply,balance,ratio,change):
     ratio  /= 100
     change /= 100
@@ -26,6 +23,7 @@ def Main(supply,balance,ratio,change):
 
 
 if len(argv) == 5:
+    getcontext().prec = 30
     supply,balance,ratio,change = [Decimal(arg) for arg in argv[1:]]
     assert(0 < supply and 0 < balance and 0 < ratio <= 100 and 0 <= change)
     Main(supply,balance,ratio,change)
