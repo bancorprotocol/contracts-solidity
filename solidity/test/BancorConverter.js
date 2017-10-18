@@ -11,6 +11,8 @@ const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const utils = require('./helpers/Utils');
 
 const CRR10Percent = 100000;
+const gasPrice = 22000000000;
+const gasPriceBad = 22000000001;
 
 let token;
 let tokenAddress;
@@ -63,7 +65,7 @@ contract('BancorConverter', (accounts) => {
     before(async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         let formula = await BancorFormula.new();
-        let gasPriceLimit = await BancorGasPriceLimit.new(22000000000);
+        let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
         let quickConverter = await BancorQuickConverter.new();
         let converterExtensions = await BancorConverterExtensions.new(formula.address, gasPriceLimit.address, quickConverter.address);
         let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
@@ -953,6 +955,19 @@ contract('BancorConverter', (accounts) => {
 
         try {
             await converter.buy(reserveTokenAddress, 500, 1);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with gas price higher than the universal limit', async () => {
+        let converter = await initConverter(accounts, true);
+        await reserveToken.approve(converter.address, 500);
+
+        try {
+            await converter.buy(reserveTokenAddress, 500, 1, { gasPrice: gasPriceBad });
             assert(false, "didn't throw");
         }
         catch (error) {
