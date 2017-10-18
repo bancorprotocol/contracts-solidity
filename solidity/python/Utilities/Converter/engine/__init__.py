@@ -1,5 +1,3 @@
-from json import loads
-from json import dumps
 from copy import deepcopy
 
 
@@ -30,9 +28,8 @@ class Engine():
                         added = True
             if not added:
                 break
-    def convert(self,explicit,source,target,amount,update):
+    def convert(self,sign,source,target,amount,update):
         amounts = [amount]
-        sign = [-1,+1][explicit]
         model = deepcopy(self.model)
         trade = [source,target][::sign]
         path = self.paths[tuple(trade)]
@@ -43,21 +40,4 @@ class Engine():
             inner['balance'] += {buy:+amounts[-2]*sign,sell:-amounts[-1]*sign}[func]
         if update:
             self.model = model
-        print ' = '.join(['{} {}'.format(amount,currency) for amount,currency in zip(amounts[::sign],path[::sign])])
-    def save_db(self,fileName):
-        fileDesc = open(fileName,'w')
-        fileDesc.write(dumps(self.model,indent=4,sort_keys=True))
-        fileDesc.close()
-        print 'Saved '+fileName
-    @classmethod
-    def run(cls,databaseFileName,commandsFileName):
-        databaseFileDesc = open(databaseFileName)
-        commandsFileDesc = open(commandsFileName)
-        database = loads(databaseFileDesc.read())
-        commands = loads(commandsFileDesc.read())
-        databaseFileDesc.close()
-        commandsFileDesc.close()
-        engine = cls(database)
-        for command in commands:
-            if command['operation'] == 'convert': engine.convert(command['explicit'],command['source'],command['target'],command['amount'],command['update'])
-            if command['operation'] == 'save_db': engine.save_db(command['fileName'])
+        return path[::sign],amounts[::sign]
