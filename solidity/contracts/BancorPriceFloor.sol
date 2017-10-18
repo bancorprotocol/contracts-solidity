@@ -49,7 +49,7 @@ contract BancorPriceFloor is Owned, TokenHolder {
         @param _amount  amount of ETH to withdraw
     */
     function withdraw(uint256 _amount) public ownerOnly {
-        assert(msg.sender.send(_amount)); // send the amount
+        msg.sender.transfer(_amount); // send the amount
     }
 
     /**

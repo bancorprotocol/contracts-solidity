@@ -179,7 +179,7 @@ contract CrowdsaleController is SmartTokenController {
         returns (uint256 amount)
     {
         uint256 tokenAmount = computeReturn(msg.value);
-        assert(beneficiary.send(msg.value)); // transfer the ether to the beneficiary account
+        beneficiary.transfer(msg.value); // transfer the ether to the beneficiary account
         totalEtherContributed = safeAdd(totalEtherContributed, msg.value); // update the total contribution amount
         token.issue(msg.sender, tokenAmount); // issue new funds to the contributor in the smart token
         token.issue(beneficiary, tokenAmount); // issue tokens to the beneficiary
