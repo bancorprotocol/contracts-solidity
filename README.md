@@ -1,8 +1,6 @@
 ﻿# Bancor Protocol Contracts v0.3 (alpha)
 
-Bancor is a **smart-contract-based token conversion protocol**, which enables a single party to convert any 
-token to another, without requiring a second party to exchange with. It achieves this through the use of 
-reserve-tokens, which provide liquidity through autonomous algorithmic price discovery, regardless of trade volume.
+Bancor Protocol™ is a standard for the creation of Smart Tokens™, cryptocurrencies with built-in convertibility directly through their smart contracts. Bancor utilizes an innovative token "Connector" method to enable formulaic price-calculation and continuous liquidity to/from all tokens in the Bancor Network™, without needing to match two parties in an exchange. Smart Tokens™ interconnect to form token liquidity networks, allowing user-generated cryptocurrencies to thrive. For more information, visit the [website](https://www.bancor.network) and read the Bancor Protocol™ [Whitepaper](https://www.bancor.network/whitepaper).
 
 ## Overview
 The Bancor protocol represents the first technological solution for the classic problem in economics known as the “Double Coincidence of Wants”, in the domain of asset exchange. For barter, the coincidence of wants problem was solved through money. For money, exchanges still rely on labor, via bid/ask orders and trade between external agents, to make markets and supply liquidity. 
@@ -15,9 +13,9 @@ Bancor is a work in progress. Make sure you understand the risks before using it
 
 # The Bancor Standards
 
-Bancor protocol is implemented using multiple contracts. The main ones are SmartToken and BancorChanger.
-BancorChanger implements the token changer standard (See https://github.com/ethereum/EIPs/issues/228) and is responsible for converting between a token and its reserves.
-SmartToken represents a changer aware ERC-20 compliant token.
+Bancor protocol is implemented using multiple contracts. The main ones are SmartToken and BancorConverter.
+BancorConverter implements the [token converter standard](https://github.com/ethereum/EIPs/issues/228) and is responsible for converting between a token and its reserves.
+SmartToken represents a converter aware ERC-20 compliant token.
 
 # The Smart Token Standard
 
@@ -88,22 +86,22 @@ Triggered when the total supply is decreased.
 <br>
 <br>
 
-# The Bancor Changer Standard
+# The Bancor Converter Standard
 
-The following section describes standard functions a bancor changer can implement.
+The following section describes standard functions a bancor converter can implement.
 
 ## Motivation
 
 Those will allow dapps and wallets to buy and sell the token.
 
-The most important here is `change`.
+The most important here is `convert`.
 
 ## Specification
 
 ### BancorToken
 
-First and foremost, a Bancor Changer is also an EIP-228 compliant changer.
-As such, it implements both the standard changer methods and the standard changer events.
+First and foremost, a Bancor Converter is also an EIP-228 compliant converter.
+As such, it implements both the standard converter methods and the standard converter events.
 
 ### Methods
 
@@ -131,23 +129,23 @@ Gets the reserve token details.
 <br>
 <br>
 <br>
-**change**
+**convert**
 ```cs
-function change(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn)
+function convert(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn)
 ```
-changes a specific amount of _fromToken to _toToken
-The change will only take place if it returns a value greater or equal to `_minReturn`.
+converts a specific amount of _fromToken to _toToken
+The conversion will only take place if it returns a value greater or equal to `_minReturn`.
 <br>
 <br>
 <br>
 
 ### Events
 
-**Change**
+**Conversion**
 ```cs
-event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return, uint256 _currentPriceN, uint256 _currentPriceD);
+event Conversion(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return, uint256 _currentPriceN, uint256 _currentPriceD);
 ```
-Triggered when a change between one of the changeable tokens takes place.
+Triggered when a conversion between one of the convertible tokens takes place.
 
 ## Testing
 Tests are included and can be run using truffle.
