@@ -2,51 +2,49 @@ pragma solidity ^0.4.11;
 import './SmartTokenController.sol';
 import './Managed.sol';
 import './Utils.sol';
-import './interfaces/ITokenChanger.sol';
+import './interfaces/ITokenConverter.sol';
 import './interfaces/ISmartToken.sol';
-import './interfaces/IBancorFormula.sol';
-import './interfaces/IBancorGasPriceLimit.sol';
+import './interfaces/IBancorConverterExtensions.sol';
 import './interfaces/IEtherToken.sol';
 
 /*
-    Open issues:
-    - Front-running attacks are currently mitigated by the following mechanisms:
-        - _minReturn argument for each change provides a way to define a minimum/maximum price for the transaction
-        - gas price limit prevents users from having control over the order of execution
-      Other potential solutions might include a commit/reveal based schemes
-    - Possibly add getters for reserve fields so that the client won't need to rely on the order in the struct
-*/
+    Bancor Converter v0.4
 
-/*
-    Bancor Changer v0.4
-
-    The Bancor version of the token changer, allows changing between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
+    The Bancor version of the token converter, allows conversion between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
     ERC20 reserve token balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on
     the actual reserve balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract.
 
-    The changer is upgradable (just like any SmartTokenController).
+    The converter is upgradable (just like any SmartTokenController).
 
-    A note on change paths -
-    Change path is a data structure that's used when changing a token to another token in the bancor network
-    when the change cannot necessarily be done by single changer and might require multiple 'hops'.
-    The path defines which changers should be used and what kind of change should be done in each step.
+    A note on conversion paths -
+    Conversion path is a data structure that's used when converting a token to another token in the bancor network
+    when the conversion cannot necessarily be done by single converter and might require multiple 'hops'.
+    The path defines which converters should be used and what kind of conversion should be done in each step.
 
     The path format doesn't include complex structure and instead, it is represented by a single array
     in which each 'hop' is represented by a 2-tuple - smart token & to token.
     In addition, the first element is always the source token.
-    The smart token is only used as a pointer to a changer (since changer addresses are more likely to change).
+    The smart token is only used as a pointer to a converter (since converter addresses are more likely to change).
 
     Format:
     [source token, smart token, to token, smart token, to token...]
 
 
-    WARNING: It is NOT RECOMMENDED to use the changer with Smart Tokens that have less than 8 decimal digits
+    WARNING: It is NOT RECOMMENDED to use the converter with Smart Tokens that have less than 8 decimal digits
              or with very small numbers because of precision loss
+
+
+    Open issues:
+    - Front-running attacks are currently mitigated by the following mechanisms:
+        - minimum return argument for each conversion provides a way to define a minimum/maximum price for the transaction
+        - gas price limit prevents users from having control over the order of execution
+      Other potential solutions might include a commit/reveal based schemes
+    - Possibly add getters for reserve fields so that the client won't need to rely on the order in the struct
 */
-contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
+contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     uint32 private constant MAX_CRR = 1000000;
-    uint32 private constant MAX_CHANGE_FEE = 1000000;
+    uint32 private constant MAX_CONVERSION_FEE = 1000000;
 
     struct Reserve {
         uint256 virtualBalance;         // virtual balance
@@ -57,41 +55,40 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     }
 
     string public version = '0.4';
-    string public changerType = 'bancor';
+    string public converterType = 'bancor';
 
-    IBancorFormula public formula;                  // bancor calculation formula contract
-    IBancorGasPriceLimit public gasPriceLimit;      // bancor universal gas price limit contract
+    IBancorConverterExtensions public extensions;   // bancor converter extensions contract
     IERC20Token[] public reserveTokens;             // ERC20 standard token addresses
-    IERC20Token[] public quickBuyPath;              // change path that's used in order to buy the token with ETH
+    IERC20Token[] public quickBuyPath;              // conversion path that's used in order to buy the token with ETH
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data
     uint32 private totalReserveRatio = 0;           // used to efficiently prevent increasing the total reserve ratio above 100%
-    uint32 public maxChangeFee = 0;                 // maximum change fee for the lifetime of the contract, represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
-    uint32 public changeFee = 0;                    // current change fee, represented in ppm, 0...maxChangeFee
-    bool public changingEnabled = true;             // true if token changing is enabled, false if not
+    uint32 public maxConversionFee = 0;             // maximum conversion fee for the lifetime of the contract, represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
+    uint32 public conversionFee = 0;                // current conversion fee, represented in ppm, 0...maxConversionFee
+    bool public conversionsEnabled = true;          // true if token conversions is enabled, false if not
 
-    // triggered when a change between two tokens occurs (TokenChanger event)
+    // triggered when a conversion between two tokens occurs (TokenConverter event)
+    event Conversion(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return,
+                     uint256 _currentPriceN, uint256 _currentPriceD);
+    // deprecated, backward compatibility
     event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return,
                  uint256 _currentPriceN, uint256 _currentPriceD);
 
     /**
         @dev constructor
 
-        @param  _token          smart token governed by the changer
-        @param  _formula        address of a bancor formula contract
-        @param  _gasPriceLimit  address of a bancor gas price limit contract
-        @param  _maxChangeFee   maximum change fee, represented in ppm
-        @param  _reserveToken   optional, initial reserve, allows defining the first reserve at deployment time
-        @param  _reserveRatio   optional, ratio for the initial reserve
+        @param  _token              smart token governed by the converter
+        @param  _extensions         address of a bancor converter extensions contract
+        @param  _maxConversionFee   maximum conversion fee, represented in ppm
+        @param  _reserveToken       optional, initial reserve, allows defining the first reserve at deployment time
+        @param  _reserveRatio       optional, ratio for the initial reserve
     */
-    function BancorChanger(ISmartToken _token, IBancorFormula _formula, IBancorGasPriceLimit _gasPriceLimit, uint32 _maxChangeFee, IERC20Token _reserveToken, uint32 _reserveRatio)
+    function BancorConverter(ISmartToken _token, IBancorConverterExtensions _extensions, uint32 _maxConversionFee, IERC20Token _reserveToken, uint32 _reserveRatio)
         SmartTokenController(_token)
-        validAddress(_formula)
-        validAddress(_gasPriceLimit)
-        validMaxChangeFee(_maxChangeFee)
+        validAddress(_extensions)
+        validMaxConversionFee(_maxConversionFee)
     {
-        formula = _formula;
-        gasPriceLimit = _gasPriceLimit;
-        maxChangeFee = _maxChangeFee;
+        extensions = _extensions;
+        maxConversionFee = _maxConversionFee;
 
         if (address(_reserveToken) != 0x0)
             addReserve(_reserveToken, _reserveRatio, false);
@@ -103,7 +100,7 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         _;
     }
 
-    // validates a token address - verifies that the address belongs to one of the changeable tokens
+    // validates a token address - verifies that the address belongs to one of the convertible tokens
     modifier validToken(IERC20Token _address) {
         require(_address == token || reserves[_address].isSet);
         _;
@@ -111,19 +108,19 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
     // verifies that the gas price is lower than the universal limit
     modifier validGasPrice() {
-        assert(tx.gasprice <= gasPriceLimit.gasPrice());
+        assert(tx.gasprice <= extensions.gasPriceLimit().gasPrice());
         _;
     }
 
-    // validates maximum change fee
-    modifier validMaxChangeFee(uint32 _changeFee) {
-        require(_changeFee >= 0 && _changeFee <= MAX_CHANGE_FEE);
+    // validates maximum conversion fee
+    modifier validMaxConversionFee(uint32 _conversionFee) {
+        require(_conversionFee >= 0 && _conversionFee <= MAX_CONVERSION_FEE);
         _;
     }
 
-    // validates change fee
-    modifier validChangeFee(uint32 _changeFee) {
-        require(_changeFee >= 0 && _changeFee <= maxChangeFee);
+    // validates conversion fee
+    modifier validConversionFee(uint32 _conversionFee) {
+        require(_conversionFee >= 0 && _conversionFee <= maxConversionFee);
         _;
     }
 
@@ -133,15 +130,15 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         _;
     }
 
-    // validates a change path - verifies that the number of elements is odd and that maximum number of 'hops' is 10
-    modifier validChangePath(IERC20Token[] _path) {
+    // validates a conversion path - verifies that the number of elements is odd and that maximum number of 'hops' is 10
+    modifier validConversionPath(IERC20Token[] _path) {
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
         _;
     }
 
-    // allows execution only when changing isn't disabled
-    modifier changingAllowed {
-        assert(changingEnabled);
+    // allows execution only when conversions aren't disabled
+    modifier conversionsAllowed {
+        assert(conversionsEnabled);
         _;
     }
 
@@ -155,51 +152,51 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     }
 
     /**
-        @dev returns the number of changeable tokens supported by the contract
-        note that the number of changeable tokens is the number of reserve token, plus 1 (that represents the smart token)
+        @dev returns the number of convertible tokens supported by the contract
+        note that the number of convertible tokens is the number of reserve token, plus 1 (that represents the smart token)
 
-        @return number of changeable tokens
+        @return number of convertible tokens
     */
-    function changeableTokenCount() public constant returns (uint16) {
+    function convertibleTokenCount() public constant returns (uint16) {
         return reserveTokenCount() + 1;
     }
 
     /**
-        @dev given a changeable token index, returns the changeable token contract address
+        @dev given a convertible token index, returns its contract address
 
-        @param _tokenIndex  changeable token index
+        @param _tokenIndex  convertible token index
 
-        @return number of changeable tokens
+        @return convertible token address
     */
-    function changeableToken(uint16 _tokenIndex) public constant returns (address) {
+    function convertibleToken(uint16 _tokenIndex) public constant returns (address) {
         if (_tokenIndex == 0)
             return token;
         return reserveTokens[_tokenIndex - 1];
     }
 
     /*
-        @dev allows the owner to update the formula contract address
+        @dev allows the owner to update the extensions contract address
 
-        @param _formula    address of a bancor formula contract
+        @param _extensions    address of a bancor converter extensions contract
     */
-    function setFormula(IBancorFormula _formula)
+    function setExtensions(IBancorConverterExtensions _extensions)
         public
         ownerOnly
-        validAddress(_formula)
-        notThis(_formula)
+        validAddress(_extensions)
+        notThis(_extensions)
     {
-        formula = _formula;
+        extensions = _extensions;
     }
 
     /*
         @dev allows the manager to update the quick buy path
 
-        @param _path    new quick buy path, see change path format above
+        @param _path    new quick buy path, see conversion path format above
     */
     function setQuickBuyPath(IERC20Token[] _path)
         public
         ownerOnly
-        validChangePath(_path)
+        validConversionPath(_path)
     {
         quickBuyPath = _path;
     }
@@ -242,42 +239,42 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     }
 
     /**
-        @dev disables the entire change functionality
+        @dev disables the entire conversion functionality
         this is a safety mechanism in case of a emergency
         can only be called by the manager
 
-        @param _disable true to disable changing, false to re-enable it
+        @param _disable true to disable conversions, false to re-enable them
     */
-    function disableChanging(bool _disable) public managerOnly {
-        changingEnabled = !_disable;
+    function disableConversions(bool _disable) public managerOnly {
+        conversionsEnabled = !_disable;
     }
 
     /**
-        @dev updates the current change fee
+        @dev updates the current conversion fee
         can only be called by the manager
 
-        @param _changeFee new change fee, represented in ppm
+        @param _conversionFee new conversion fee, represented in ppm
     */
-    function setChangeFee(uint32 _changeFee)
+    function setConversionFee(uint32 _conversionFee)
         public
         managerOnly
-        validChangeFee(_changeFee)
+        validConversionFee(_conversionFee)
     {
-        changeFee = _changeFee;
+        conversionFee = _conversionFee;
     }
 
     /*
-        @dev returns the change fee amount for a given return amount
+        @dev returns the conversion fee amount for a given return amount
 
-        @return change fee amount
+        @return conversion fee amount
     */
-    function getChangeFeeAmount(uint256 _amount) public constant returns (uint256) {
-        return safeMul(_amount, changeFee) / MAX_CHANGE_FEE;
+    function getConversionFeeAmount(uint256 _amount) public constant returns (uint256) {
+        return safeMul(_amount, conversionFee) / MAX_CONVERSION_FEE;
     }
 
     /**
         @dev defines a new reserve for the token
-        can only be called by the owner while the changer is inactive
+        can only be called by the owner while the converter is inactive
 
         @param _token                  address of the reserve token
         @param _ratio                  constant reserve ratio, represented in ppm, 1-1000000
@@ -360,24 +357,24 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     }
 
     /**
-        @dev returns the expected return for changing a specific amount of _fromToken to _toToken
+        @dev returns the expected return for converting a specific amount of _fromToken to _toToken
 
-        @param _fromToken  ERC20 token to change from
-        @param _toToken    ERC20 token to change to
-        @param _amount     amount to change, in fromToken
+        @param _fromToken  ERC20 token to convert from
+        @param _toToken    ERC20 token to convert to
+        @param _amount     amount to convert, in fromToken
 
-        @return expected change return amount
+        @return expected conversion return amount
     */
     function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public constant returns (uint256) {
         require(_fromToken != _toToken); // validate input
 
-        // change between the token and one of its reserves
+        // conversion between the token and one of its reserves
         if (_toToken == token)
             return getPurchaseReturn(_fromToken, _amount);
         else if (_fromToken == token)
             return getSaleReturn(_toToken, _amount);
 
-        // change between 2 reserves
+        // conversion between 2 reserves
         uint256 purchaseReturnAmount = getPurchaseReturn(_fromToken, _amount);
         return getSaleReturn(_toToken, purchaseReturnAmount, safeAdd(token.totalSupply(), purchaseReturnAmount));
     }
@@ -402,10 +399,10 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         uint256 tokenSupply = token.totalSupply();
         uint256 reserveBalance = getReserveBalance(_reserveToken);
-        uint256 amount = formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
+        uint256 amount = extensions.formula().calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
 
         // deduct the fee from the return amount
-        uint256 feeAmount = getChangeFeeAmount(amount);
+        uint256 feeAmount = getConversionFeeAmount(amount);
         return safeSub(amount, feeAmount);
     }
 
@@ -422,25 +419,25 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     }
 
     /**
-        @dev changes a specific amount of _fromToken to _toToken
+        @dev converts a specific amount of _fromToken to _toToken
 
-        @param _fromToken  ERC20 token to change from
-        @param _toToken    ERC20 token to change to
-        @param _amount     amount to change, in fromToken
-        @param _minReturn  if the change results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _fromToken  ERC20 token to convert from
+        @param _toToken    ERC20 token to convert to
+        @param _amount     amount to convert, in fromToken
+        @param _minReturn  if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
-        @return change return amount
+        @return conversion return amount
     */
-    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+    function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
         require(_fromToken != _toToken); // validate input
 
-        // change between the token and one of its reserves
+        // conversion between the token and one of its reserves
         if (_toToken == token)
             return buy(_fromToken, _amount, _minReturn);
         else if (_fromToken == token)
             return sell(_toToken, _amount, _minReturn);
 
-        // change between 2 reserves
+        // conversion between 2 reserves
         uint256 purchaseAmount = buy(_fromToken, _amount, 1);
         return sell(_toToken, purchaseAmount, _minReturn);
     }
@@ -450,13 +447,13 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @param _reserveToken   reserve token contract address
         @param _depositAmount  amount to deposit (in the reserve token)
-        @param _minReturn      if the change results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _minReturn      if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
         @return buy return amount
     */
     function buy(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn)
         public
-        changingAllowed
+        conversionsAllowed
         validGasPrice
         greaterThanZero(_minReturn)
         returns (uint256)
@@ -481,6 +478,8 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         // CRR is represented in ppm, so multiplying by 1000000
         uint256 reserveAmount = safeMul(getReserveBalance(_reserveToken), MAX_CRR);
         uint256 tokenAmount = safeMul(token.totalSupply(), reserve.ratio);
+        Conversion(_reserveToken, token, msg.sender, _depositAmount, amount, reserveAmount, tokenAmount);
+        // deprecated, backward compatibility
         Change(_reserveToken, token, msg.sender, _depositAmount, amount, reserveAmount, tokenAmount);
         return amount;
     }
@@ -490,13 +489,13 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
 
         @param _reserveToken   reserve token contract address
         @param _sellAmount     amount to sell (in the smart token)
-        @param _minReturn      if the change results in an amount smaller the minimum return - it is cancelled, must be nonzero
+        @param _minReturn      if the conversion results in an amount smaller the minimum return - it is cancelled, must be nonzero
 
         @return sell return amount
     */
     function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn)
         public
-        changingAllowed
+        conversionsAllowed
         validGasPrice
         greaterThanZero(_minReturn)
         returns (uint256)
@@ -529,58 +528,58 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         // CRR is represented in ppm, so multiplying by 1000000
         uint256 reserveAmount = safeMul(getReserveBalance(_reserveToken), MAX_CRR);
         uint256 tokenAmount = safeMul(token.totalSupply(), reserve.ratio);
+        Conversion(token, _reserveToken, msg.sender, _sellAmount, amount, tokenAmount, reserveAmount);
+        // deprecated, backward compatibility
         Change(token, _reserveToken, msg.sender, _sellAmount, amount, tokenAmount, reserveAmount);
         return amount;
     }
 
     /**
-        @dev changes the token to any other token in the bancor network by following a predefined change path
-        note that when changing from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
+        @dev converts the token to any other token in the bancor network by following a predefined conversion path
+        note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
 
-        @param _path        change path, see change path format above
-        @param _amount      amount to change from (in the initial source token)
-        @param _minReturn   if the change results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _path        conversion path, see conversion path format above
+        @param _amount      amount to convert from (in the initial source token)
+        @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
         @return tokens issued in return
     */
-    function quickChange(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
+    function quickConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
         public
-        validChangePath(_path)
+        payable
+        validConversionPath(_path)
         returns (uint256)
     {
         // we need to transfer the tokens from the caller to the local contract before we
-        // follow the change path, to allow it to execute the change on behalf of the caller
+        // follow the conversion path, to allow it to execute the conversion on behalf of the caller
         IERC20Token fromToken = _path[0];
-        claimTokens(fromToken, msg.sender, _amount);
+        IERC20Token toToken = _path[_path.length - 1];
+        IEtherToken etherToken;
 
-        ISmartToken smartToken;
-        IERC20Token toToken;
-        BancorChanger changer;
-        uint256 pathLength = _path.length;
-
-        // iterate over the change path
-        for (uint256 i = 1; i < pathLength; i += 2) {
-            smartToken = ISmartToken(_path[i]);
-            toToken = _path[i + 1];
-            changer = BancorChanger(smartToken.owner());
-
-            // if the smart token isn't the source (from token), the changer doesn't have control over it and thus we need to approve the request
-            if (smartToken != fromToken)
-                ensureAllowance(fromToken, changer, _amount);
-
-            // make the change - if it's the last one, also provide the minimum return value
-            _amount = changer.change(fromToken, toToken, _amount, i == pathLength - 2 ? _minReturn : 1);
-            fromToken = toToken;
+        // source is ETH
+        if (msg.value > 0) {
+            // get the ether token
+            etherToken = getQuickBuyEtherToken();
+            // ensure that the source token is the quick buy ether token and that the amount provided is identical to the ETH amount
+            require(fromToken == etherToken && _amount == msg.value);
+            // deposit ETH in the ether token
+            etherToken.deposit.value(msg.value)();
+        }
+        else {
+            claimTokens(fromToken, msg.sender, _amount);
         }
 
-        // finished the change, transfer the funds back to the caller
-        // if the last change resulted in ether tokens, withdraw them and send them as ETH to the caller
-        if (changer.hasQuickBuyEtherToken() && changer.getQuickBuyEtherToken() == toToken) {
-            IEtherToken etherToken = IEtherToken(toToken);
+        IBancorQuickConverter quickConverter = extensions.quickConverter();
+        ensureAllowance(fromToken, quickConverter, _amount);
+        _amount = quickConverter.quickConvert(_path, _amount, _minReturn);
+
+        // finished the conversion, transfer the funds back to the caller
+        // if the target token is an ether token, withdraw the tokens and send them as ETH to the caller
+        if (hasQuickBuyEtherToken() && getQuickBuyEtherToken() == toToken) {
+            etherToken = IEtherToken(toToken);
             etherToken.withdrawTo(msg.sender, _amount);
         }
-        // no need to transfer the tokens if the sender is the local contract
-        else if (msg.sender != address(this)) {
+        else {
             // not ETH, transfer the tokens to the caller
             assert(toToken.transfer(msg.sender, _amount));
         }
@@ -588,28 +587,19 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         return _amount;
     }
 
-    /**
-        @dev buys the smart token with ETH if the return amount meets the minimum requested
-        note that this function can eventually be moved into a separate contract
+    // deprecated, backward compatibility
+    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+        return convert(_fromToken, _toToken, _amount, _minReturn);
+    }
 
-        @param _minReturn  if the change results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+    // deprecated, backward compatibility
+    function quickChange(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+        return quickConvert(_path, _amount, _minReturn);
+    }
 
-        @return tokens issued in return
-    */
+    // deprecated, backward compatibility
     function quickBuy(uint256 _minReturn) public payable returns (uint256) {
-        // ensure that the quick buy path was set
-        assert(quickBuyPath.length > 0);
-        // get the ether token
-        IEtherToken etherToken = getQuickBuyEtherToken();
-        // deposit ETH in the ether token
-        etherToken.deposit.value(msg.value)();
-        // execute the change
-        uint256 returnAmount = this.quickChange(quickBuyPath, msg.value, _minReturn);
-        // get the target token
-        IERC20Token toToken = quickBuyPath[quickBuyPath.length - 1];
-        // transfer the tokens to the caller
-        assert(toToken.transfer(msg.sender, returnAmount));
-        return returnAmount;
+        return quickConvert(quickBuyPath, msg.value, _minReturn);
     }
 
     /**
@@ -631,10 +621,10 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
     {
         Reserve storage reserve = reserves[_reserveToken];
         uint256 reserveBalance = getReserveBalance(_reserveToken);
-        uint256 amount = formula.calculateSaleReturn(_totalSupply, reserveBalance, reserve.ratio, _sellAmount);
+        uint256 amount = extensions.formula().calculateSaleReturn(_totalSupply, reserveBalance, reserve.ratio, _sellAmount);
 
         // deduct the fee from the return amount
-        uint256 feeAmount = getChangeFeeAmount(amount);
+        uint256 feeAmount = getConversionFeeAmount(amount);
         return safeSub(amount, feeAmount);
     }
 
@@ -670,10 +660,6 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         @param _amount  amount to claim
     */
     function claimTokens(IERC20Token _token, address _from, uint256 _amount) private {
-        // no need to claim the tokens if the source is the local contract
-        if (_from == address(this))
-            return;
-
         // if the token is the smart token, no allowance is required - destroy the tokens from the caller and issue them to the local contract
         if (_token == token) {
             token.destroy(_from, _amount); // destroy _amount tokens from the caller's balance in the smart token
@@ -690,6 +676,6 @@ contract BancorChanger is ITokenChanger, SmartTokenController, Managed {
         note that the purchase will use the price at the time of the purchase
     */
     function() payable {
-        quickBuy(1);
+        quickConvert(quickBuyPath, msg.value, 1);
     }
 }
