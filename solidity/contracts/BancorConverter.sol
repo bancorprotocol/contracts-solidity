@@ -467,9 +467,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
             reserve.virtualBalance = safeAdd(reserve.virtualBalance, _depositAmount);
 
         // transfer _depositAmount funds from the caller in the reserve token
-        // note that there's no need to execute the transfer if the sender is the local contract
-        if (msg.sender != address(this))
-            assert(_reserveToken.transferFrom(msg.sender, this, _depositAmount));
+        assert(_reserveToken.transferFrom(msg.sender, this, _depositAmount));
         // issue new funds to the caller in the smart token
         token.issue(msg.sender, amount);
 
@@ -519,9 +517,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         token.destroy(msg.sender, _sellAmount);
         // transfer funds to the caller in the reserve token
         // the transfer might fail if the actual reserve balance is smaller than the virtual balance
-        // note that there's no need to execute the transfer if the sender is the local contract
-        if (msg.sender != address(this))
-            assert(_reserveToken.transfer(msg.sender, amount));
+        assert(_reserveToken.transfer(msg.sender, amount));
 
         // calculate the new price using the simple price formula
         // price = reserve balance / (supply * CRR)
@@ -636,10 +632,6 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         @param _value   allowance amount
     */
     function ensureAllowance(IERC20Token _token, address _spender, uint256 _value) private {
-        // no need to set an allowance if the spender is the local contract
-        if (_spender == address(this))
-            return;
-
         // check if allowance for the given amount already exists
         if (_token.allowance(this, _spender) >= _value)
             return;
