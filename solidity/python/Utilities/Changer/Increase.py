@@ -12,14 +12,14 @@ def calculate(supply,balance,ratio,change):
     cur_price = balance/(supply*ratio)
     new_price = (balance+cur_amount)/((supply+new_amount)*ratio)
     print 'At present:'
-    print '- The supply  = {:.20f}'.format(supply)
-    print '- The balance = {:.20f}'.format(balance)
-    print '- The price   = {:.20f}'.format(cur_price)
-    print 'If you buy an amount of {:.20f}, then:'.format(cur_amount)
-    print '- The supply  = {:.20f}'.format(supply+new_amount)
-    print '- The balance = {:.20f}'.format(balance+cur_amount)
-    print '- The price   = {:.20f}'.format(new_price)
-    print 'Which reflects a price increase of {:.20f} percent'.format((new_price-cur_price)/cur_price*100)
+    print '- The supply  = {:.10f}'.format(supply)
+    print '- The balance = {:.10f}'.format(balance)
+    print '- The price   = {:.10f}'.format(cur_price)
+    print 'If you buy an amount of {:.10f}, then:'.format(cur_amount)
+    print '- The supply  = {:.10f}'.format(supply+new_amount)
+    print '- The balance = {:.10f}'.format(balance+cur_amount)
+    print '- The price   = {:.10f}'.format(new_price)
+    print 'Which reflects a price increase of {:.10f} percent'.format((new_price-cur_price)/cur_price*100)
 
 
 if len(argv) == 5:
