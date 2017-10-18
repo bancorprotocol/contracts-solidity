@@ -31,7 +31,7 @@ contract BancorQuickConverter is IBancorQuickConverter, Utils {
 
         @return tokens issued in return
     */
-    function quickConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
+    function convert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
         public
         validConversionPath(_path)
         returns (uint256)

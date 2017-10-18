@@ -570,7 +570,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         // approve allowance for the quick converter to allow it to claim the tokens
         ensureAllowance(fromToken, quickConverter, _amount);
         // execute the conversion
-        _amount = quickConverter.quickConvert(_path, _amount, _minReturn);
+        _amount = quickConverter.convert(_path, _amount, _minReturn);
 
         // finished the conversion, transfer the funds back to the caller
         // if the target token is an ether token, withdraw the tokens and send them as ETH to the caller
