@@ -31,20 +31,19 @@ class Engine():
             if not added:
                 break
     def convert(self,explicit,source,target,amount,update):
-        old_amount = amount
+        amounts = [amount]
         sign = [-1,+1][explicit]
         model = deepcopy(self.model)
         trade = [source,target][::sign]
         path = self.paths[tuple(trade)]
         for first,second in zip(path,path[1:]):
             func,outer,inner = (sell,model[first],model[first][second]) if first in model and second in model[first] else (buy,model[second],model[second][first])
-            new_amount = func(outer['supply'],inner['balance'],inner['ratio'],amount*sign)*sign
-            outer['supply' ] += {buy:+new_amount*sign,sell:-amount*sign}[func]
-            inner['balance'] += {buy:+amount*sign,sell:-new_amount*sign}[func]
-            amount = new_amount
+            amounts += [func(outer['supply'],inner['balance'],inner['ratio'],amounts[-1]*sign)*sign]
+            outer['supply' ] += {buy:+amounts[-1]*sign,sell:-amounts[-2]*sign}[func]
+            inner['balance'] += {buy:+amounts[-2]*sign,sell:-amounts[-1]*sign}[func]
         if update:
             self.model = model
-        print 'Explicit = {:5s}, Update = {:5s}: {} {} = {} {}'.format(str(explicit),str(update),old_amount,trade[0],new_amount,trade[1])
+        print ' = '.join(['{} {}'.format(amount,currency) for amount,currency in zip(amounts[::sign],path[::sign])])
     def save_db(self,fileName):
         fileDesc = open(fileName,'w')
         fileDesc.write(dumps(self.model,indent=4,sort_keys=True))
