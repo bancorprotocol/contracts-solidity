@@ -7,7 +7,7 @@ import './interfaces/IBancorGasPriceLimit.sol';
     The BancorGasPriceLimit contract serves as an extra front-running attack mitigation mechanism.
     It sets a maximum gas price on all bancor conversions, which prevents users from "cutting in line"
     in order to front-run other transactions.
-    The gas price limit is universal to all changers and it can be updated by the owner to be in line
+    The gas price limit is universal to all converters and it can be updated by the owner to be in line
     with the network's current gas price.
 */
 contract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {
