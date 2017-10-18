@@ -23,7 +23,7 @@ def calculate(supply,balance,ratio,change):
 
 
 if len(argv) == 5:
-    getcontext().prec = 30
+    getcontext().prec = 80
     supply,balance,ratio,change = [Decimal(arg) for arg in argv[1:]]
     assert(0 < supply and 0 < balance and 0 < ratio <= 100 and 0 <= change)
     calculate(supply,balance,ratio,change)
