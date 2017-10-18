@@ -243,7 +243,7 @@ contract('BancorConverter', (accounts) => {
         await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
-        await converter1.quickBuy(1, { from: accounts[1], value: 100 });
+        await converter1.quickConvert(smartToken1QuickBuyPath, 100, 1, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
@@ -253,7 +253,7 @@ contract('BancorConverter', (accounts) => {
         await converter2.setQuickBuyPath(smartToken2QuickBuyPath);
         let prevBalance = await smartToken2.balanceOf.call(accounts[1]);
 
-        await converter2.quickBuy(1, { from: accounts[1], value: 100 });
+        await converter2.quickConvert(smartToken2QuickBuyPath, 100, 1, { from: accounts[1], value: 100 });
         let newBalance = await smartToken2.balanceOf.call(accounts[1]);
 
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
@@ -286,7 +286,7 @@ contract('BancorConverter', (accounts) => {
         let token1Return = await converter1.getPurchaseReturn(etherToken.address, 100000);
         let token2Return = await converter2.getPurchaseReturn(smartToken1.address, token1Return);
 
-        await converter2.quickBuy(token2Return, { value: 100000 });
+        await converter2.quickConvert(smartToken2QuickBuyPath, 100000, token2Return, { value: 100000 });
         let newBalance = await smartToken2.balanceOf.call(accounts[0]);
 
         assert.equal(token2Return.toNumber(), newBalance.toNumber() - prevBalance.toNumber(), "new balance isn't equal to the expected purchase return");
@@ -296,7 +296,19 @@ contract('BancorConverter', (accounts) => {
         await converter2.setQuickBuyPath(smartToken2QuickBuyPath);
 
         try {
-            await converter2.quickBuy(1000000, { from: accounts[1], value: 100 });
+            await converter2.quickConvert(smartToken2QuickBuyPath, 100, 1000000, { from: accounts[1], value: 100 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to quick buy and passing an amount higher than the ETH amount sent with the request', async () => {
+        await converter2.setQuickBuyPath(smartToken2QuickBuyPath);
+
+        try {
+            await converter2.quickConvert(smartToken2QuickBuyPath, 100001, 1, { from: accounts[1], value: 100000 });
             assert(false, "didn't throw");
         }
         catch (error) {
