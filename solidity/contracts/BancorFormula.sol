@@ -187,8 +187,10 @@ contract BancorFormula is IBancorFormula, Utils {
         if (_reserveRatio == MAX_CRR)
             return safeMul(_supply, _depositAmount) / _reserveBalance;
 
+        uint256 result;
+        uint8 precision;
         uint256 baseN = safeAdd(_depositAmount, _reserveBalance);
-        var (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_CRR);
+        (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_CRR);
         uint256 temp = safeMul(_supply, result) >> precision;
         return temp - _supply;
      }
@@ -222,8 +224,10 @@ contract BancorFormula is IBancorFormula, Utils {
         if (_reserveRatio == MAX_CRR)
             return safeMul(_reserveBalance, _sellAmount) / _supply;
 
+        uint256 result;
+        uint8 precision;
         uint256 baseD = _supply - _sellAmount;
-        var (result, precision) = power(_supply, baseD, MAX_CRR, _reserveRatio);
+        (result, precision) = power(_supply, baseD, MAX_CRR, _reserveRatio);
         uint256 temp1 = safeMul(_reserveBalance, result);
         uint256 temp2 = _reserveBalance << precision;
         return (temp1 - temp2) / result;
