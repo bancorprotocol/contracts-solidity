@@ -546,13 +546,14 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         validConversionPath(_path)
         returns (uint256)
     {
-        // we need to transfer the tokens from the caller to the local contract before we
-        // follow the conversion path, to allow it to execute the conversion on behalf of the caller
+        IEtherToken etherToken;
         IERC20Token fromToken = _path[0];
         IERC20Token toToken = _path[_path.length - 1];
-        IEtherToken etherToken;
+        IBancorQuickConverter quickConverter = extensions.quickConverter();
 
-        // source is ETH
+        // we need to transfer the tokens from the caller to the local contract before we
+        // follow the conversion path, to allow it to execute the conversion on behalf of the caller
+        // if the source is ETH, we deposit it in the ether token
         if (msg.value > 0) {
             // get the ether token
             etherToken = getQuickBuyEtherToken();
@@ -562,11 +563,13 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
             etherToken.deposit.value(msg.value)();
         }
         else {
+            // not ETH, claim the source tokens
             claimTokens(fromToken, msg.sender, _amount);
         }
 
-        IBancorQuickConverter quickConverter = extensions.quickConverter();
+        // approve allowance for the quick converter to allow it to claim the tokens
         ensureAllowance(fromToken, quickConverter, _amount);
+        // execute the conversion
         _amount = quickConverter.quickConvert(_path, _amount, _minReturn);
 
         // finished the conversion, transfer the funds back to the caller
