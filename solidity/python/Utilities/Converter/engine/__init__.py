@@ -1,5 +1,3 @@
-from json import loads
-from json import dumps
 from copy import deepcopy
 
 
@@ -30,35 +28,16 @@ class Engine():
                         added = True
             if not added:
                 break
-    def convert(self,explicit,source,target,amount,update):
-        old_amount = amount
-        sign = [-1,+1][explicit]
+    def convert(self,sign,source,target,amount,update):
+        amounts = [amount]
         model = deepcopy(self.model)
         trade = [source,target][::sign]
         path = self.paths[tuple(trade)]
         for first,second in zip(path,path[1:]):
             func,outer,inner = (sell,model[first],model[first][second]) if first in model and second in model[first] else (buy,model[second],model[second][first])
-            new_amount = func(outer['supply'],inner['balance'],inner['ratio'],amount*sign)*sign
-            outer['supply' ] += {buy:+new_amount*sign,sell:-amount*sign}[func]
-            inner['balance'] += {buy:+amount*sign,sell:-new_amount*sign}[func]
-            amount = new_amount
+            amounts += [func(outer['supply'],inner['balance'],inner['ratio'],amounts[-1]*sign)*sign]
+            outer['supply' ] += {buy:+amounts[-1]*sign,sell:-amounts[-2]*sign}[func]
+            inner['balance'] += {buy:+amounts[-2]*sign,sell:-amounts[-1]*sign}[func]
         if update:
             self.model = model
-        print 'Explicit = {:5s}, Update = {:5s}: {} {} = {} {}'.format(str(explicit),str(update),old_amount,trade[0],new_amount,trade[1])
-    def save_db(self,fileName):
-        fileDesc = open(fileName,'w')
-        fileDesc.write(dumps(self.model,indent=4,sort_keys=True))
-        fileDesc.close()
-        print 'Saved '+fileName
-    @classmethod
-    def run(cls,databaseFileName,commandsFileName):
-        databaseFileDesc = open(databaseFileName)
-        commandsFileDesc = open(commandsFileName)
-        database = loads(databaseFileDesc.read())
-        commands = loads(commandsFileDesc.read())
-        databaseFileDesc.close()
-        commandsFileDesc.close()
-        engine = cls(database)
-        for command in commands:
-            if command['operation'] == 'convert': engine.convert(command['explicit'],command['source'],command['target'],command['amount'],command['update'])
-            if command['operation'] == 'save_db': engine.save_db(command['fileName'])
+        return path[::sign],amounts[::sign]
