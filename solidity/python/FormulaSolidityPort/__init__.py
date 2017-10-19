@@ -157,51 +157,51 @@ def BancorFormula():
     maxExpArray[127] = 0x00857ddf0117efa215952912839f6473e6;
 
 '''
-    @dev given a token supply, balance, CRR and a deposit amount (in the balance token), calculates the return for a given change (in the main token)
+    @dev given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the return for a given conversion (in the main token)
 
     Formula:
-    Return = _supply * ((1 + _depositAmount / _balanceBalance) ^ (_balanceRatio / 1000000) - 1)
+    Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 1000000) - 1)
 
     @param _supply             token total supply
-    @param _balanceBalance     total balance
-    @param _balanceRatio       constant balance ratio, represented in ppm, 1-1000000
-    @param _depositAmount      deposit amount, in balance token
+    @param _reserveBalance     total reserve
+    @param _reserveRatio       constant reserve ratio, represented in ppm, 1-1000000
+    @param _depositAmount      deposit amount, in reserve token
 
     @return purchase return amount
 '''
-def calculatePurchaseReturn(_supply, _balanceBalance, _balanceRatio, _depositAmount):
+def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmount):
     # validate input
-    assert(_supply > 0 and _balanceBalance > 0 and _balanceRatio > 0 and _balanceRatio <= MAX_CRR);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= MAX_CRR);
 
     # special case for 0 deposit amount
     if (_depositAmount == 0):
         return 0;
 
     # special case if the CRR = 100%
-    if (_balanceRatio == MAX_CRR):
-        return safeMul(_supply, _depositAmount) / _balanceBalance;
+    if (_reserveRatio == MAX_CRR):
+        return safeMul(_supply, _depositAmount) / _reserveBalance;
 
-    baseN = safeAdd(_depositAmount, _balanceBalance);
-    (result, precision) = power(baseN, _balanceBalance, _balanceRatio, MAX_CRR);
+    baseN = safeAdd(_depositAmount, _reserveBalance);
+    (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_CRR);
     temp = safeMul(_supply, result) >> precision;
     return temp - _supply;
 
 '''
-    @dev given a token supply, balance, CRR and a sell amount (in the main token), calculates the return for a given change (in the balance token)
+    @dev given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given conversion (in the reserve token)
 
     Formula:
-    Return = _balanceBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_balanceRatio / 1000000)))
+    Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 1000000)))
 
     @param _supply             token total supply
-    @param _balanceBalance     total balance
-    @param _balanceRatio       constant balance ratio, represented in ppm, 1-1000000
+    @param _reserveBalance     total reserve
+    @param _reserveRatio       constant reserve ratio, represented in ppm, 1-1000000
     @param _sellAmount         sell amount, in the token itself
 
     @return sale return amount
 '''
-def calculateSaleReturn(_supply, _balanceBalance, _balanceRatio, _sellAmount):
+def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     # validate input
-    assert(_supply > 0 and _balanceBalance > 0 and _balanceRatio > 0 and _balanceRatio <= MAX_CRR and _sellAmount <= _supply);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= MAX_CRR and _sellAmount <= _supply);
 
     # special case for 0 sell amount
     if (_sellAmount == 0):
@@ -209,16 +209,16 @@ def calculateSaleReturn(_supply, _balanceBalance, _balanceRatio, _sellAmount):
 
     # special case for selling the entire supply
     if (_sellAmount == _supply):
-        return _balanceBalance;
+        return _reserveBalance;
 
     # special case if the CRR = 100%
-    if (_balanceRatio == MAX_CRR):
-        return safeMul(_balanceBalance, _sellAmount) / _supply;
+    if (_reserveRatio == MAX_CRR):
+        return safeMul(_reserveBalance, _sellAmount) / _supply;
 
     baseD = _supply - _sellAmount;
-    (result, precision) = power(_supply, baseD, MAX_CRR, _balanceRatio);
-    temp1 = safeMul(_balanceBalance, result);
-    temp2 = _balanceBalance << precision;
+    (result, precision) = power(_supply, baseD, MAX_CRR, _reserveRatio);
+    temp1 = safeMul(_reserveBalance, result);
+    temp2 = _reserveBalance << precision;
     return (temp1 - temp2) / result;
 
 '''

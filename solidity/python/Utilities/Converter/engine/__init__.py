@@ -29,7 +29,7 @@ class Engine():
             if not added:
                 break
     def convert(self,sign,source,target,amount,update):
-        amounts = [amount]
+        amounts = [int(amount)]
         model = deepcopy(self.model)
         trade = [source,target][::sign]
         path = self.paths[tuple(trade)]

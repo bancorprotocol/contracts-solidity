@@ -4,8 +4,12 @@ from decimal import Decimal
 from decimal import getcontext
 
 
+MAX_CRR = 1000000
+
+
 def calculate(supply,balance,ratio,change):
-    ratio  /= 100
+    assert(0 < supply and 0 < balance and 0 < ratio <= MAX_CRR and 0 <= change < 100)
+    ratio  /= MAX_CRR
     change /= 100
     cur_amount = supply*(1-(1-change)**(ratio/(1-ratio)))
     new_amount = balance*(1-(1-cur_amount/supply)**(1/ratio))
@@ -25,7 +29,6 @@ def calculate(supply,balance,ratio,change):
 if len(argv) == 5:
     getcontext().prec = 80
     supply,balance,ratio,change = [Decimal(arg) for arg in argv[1:]]
-    assert(0 < supply and 0 < balance and 0 < ratio <= 100 and 0 <= change < 100)
     calculate(supply,balance,ratio,change)
 else:
     print '{} <supply> <balance> <ratio> <desired price change>'.format(basename(__file__))
