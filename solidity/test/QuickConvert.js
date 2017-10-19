@@ -209,38 +209,6 @@ contract('BancorConverter', (accounts) => {
         }
     });
 
-    it('verifies that the quick buy ether token existence check returns true if one exists', async () => {
-        await converter1.clearQuickBuyPath();
-        await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
-        let exists = await converter1.hasQuickBuyEtherToken.call();
-        assert(exists);
-    });
-
-    it('verifies that the quick buy ether token existence check returns false if one does not exist', async () => {
-        await converter1.clearQuickBuyPath();
-        let exists = await converter1.hasQuickBuyEtherToken.call();
-        assert(!exists);
-    });
-
-    it('verifies that ether token address is returned correctly', async () => {
-        await converter1.clearQuickBuyPath();
-        await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
-        let quickBuyEtherToken = await converter1.getQuickBuyEtherToken.call();
-        assert.equal(quickBuyEtherToken, etherToken.address);
-    });
-
-    it('show throw when requesting the quick buy ether token when no quick buy path is set', async () => {
-        await converter1.clearQuickBuyPath();
-
-        try {
-            await converter1.getQuickBuyEtherToken.call();
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
     it('verifies that quick buy with a single converter results in increased balance for the buyer', async () => {
         await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
