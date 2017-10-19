@@ -9,9 +9,9 @@ def main():
     fileDesc = open(fileName)
     fileData = fileDesc.read()
     fileDesc.close()
-    variables = {}
-    engine    = Engine({})
-    commands  = loads(fileData)
+    store    = {}
+    engine   = Engine({})
+    commands = loads(fileData)
     for command in commands:
         if command['operation'] == 'print':
             print command['info']
@@ -30,22 +30,20 @@ def main():
             fileDesc.close()
             print 'Save',fileName
         elif command['operation'] == 'convert':
-            convertArgs  = command['line'].split()
-            sourceAmount = variables[convertArgs[0]] if convertArgs[0] in variables else convertArgs[0]
-            targetAmount = variables[convertArgs[3]] if convertArgs[3] in variables else convertArgs[3]
-            convertType  = [sourceAmount.isdigit(),targetAmount.isdigit()]
-            if convertType == [True ,True ]: print 'Cannot convert specified amount to specified amount'
-            if convertType == [True ,False]: print 'Explicit:',convert(engine,+1,convertArgs[1],convertArgs[4],sourceAmount,command['update'],targetAmount,variables)
-            if convertType == [False,True ]: print 'Implicit:',convert(engine,-1,convertArgs[1],convertArgs[4],targetAmount,command['update'],sourceAmount,variables)
-            if convertType == [False,False]: print 'Cannot convert unspecified amount to unspecified amount'
+            args = command['line'].split()
+            case = [all(c == '?' for c in args[n]) for n in [0,3]]
+            if case == [False,False]: print 'Cannot convert specified amount to specified amount'
+            if case == [False,True ]: print 'Explicit:',convert(engine,+1,args[1],args[4],args[0],command['result'],command['update'],store)
+            if case == [True ,False]: print 'Implicit:',convert(engine,-1,args[1],args[4],args[3],command['result'],command['update'],store)
+            if case == [True ,True ]: print 'Cannot convert unspecified amount to unspecified amount'
         else:
             print 'Undefined operation'
 
 
-def convert(engine,sign,source,target,amount,update,variable,variables):
-    path,amounts = engine.convert(sign,source,target,int(amount),update)
-    if '?' not in variable:
-        variables[variable] = str(amounts[-(sign+1)/2])
+def convert(engine,sign,source,target,input,output,update,store):
+    path,amounts = engine.convert(sign,source,target,store[input] if input in store else input,update)
+    if output:
+        store[output] = amounts[-(sign+1)/2]
     return ' = '.join(['{} {}'.format(amount,currency) for amount,currency in zip(amounts,path)])
 
 
