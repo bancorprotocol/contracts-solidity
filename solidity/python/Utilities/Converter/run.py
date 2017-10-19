@@ -10,7 +10,7 @@ def main():
     fileData = fileDesc.read()
     fileDesc.close()
     store    = {}
-    engine   = Engine({})
+    engine   = Engine()
     commands = loads(fileData)
     for command in commands:
         if command['operation'] == 'print':
@@ -20,11 +20,11 @@ def main():
             fileDesc = open(fileName,'r')
             fileData = fileDesc.read()
             fileDesc.close()
-            engine = Engine(loads(fileData))
+            engine.set(loads(fileData))
             print 'Load',fileName
         elif command['operation'] == 'save':
             fileName = command['file']
-            fileData = dumps(engine.model,indent=4,sort_keys=True)
+            fileData = dumps(engine.get(),indent=4,sort_keys=True)
             fileDesc = open(fileName,'w')
             fileDesc.write(fileData)
             fileDesc.close()
@@ -44,7 +44,7 @@ def convert(engine,sign,source,target,input,output,update,store):
     path,amounts = engine.convert(sign,source,target,store[input] if input in store else input,update)
     if output:
         store[output] = amounts[-(sign+1)/2]
-    return ' = '.join(['{} {}'.format(amount,currency) for amount,currency in zip(amounts,path)])
+    return ' = '.join(['{:.2f} {}'.format(amount,currency) for amount,currency in zip(amounts,path)])
 
 
 main()
