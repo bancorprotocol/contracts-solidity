@@ -17,20 +17,6 @@ import './interfaces/IEtherToken.sol';
 
     The converter is upgradable (just like any SmartTokenController).
 
-    A note on conversion paths -
-    Conversion path is a data structure that's used when converting a token to another token in the bancor network
-    when the conversion cannot necessarily be done by single converter and might require multiple 'hops'.
-    The path defines which converters should be used and what kind of conversion should be done in each step.
-
-    The path format doesn't include complex structure and instead, it is represented by a single array
-    in which each 'hop' is represented by a 2-tuple - smart token & to token.
-    In addition, the first element is always the source token.
-    The smart token is only used as a pointer to a converter (since converter addresses are more likely to change).
-
-    Format:
-    [source token, smart token, to token, smart token, to token...]
-
-
     WARNING: It is NOT RECOMMENDED to use the converter with Smart Tokens that have less than 8 decimal digits
              or with very small numbers because of precision loss
 
@@ -69,9 +55,6 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     // triggered when a conversion between two tokens occurs (TokenConverter event)
     event Conversion(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return,
                      uint256 _currentPriceN, uint256 _currentPriceD);
-    // deprecated, backward compatibility
-    event Change(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return,
-                 uint256 _currentPriceN, uint256 _currentPriceD);
 
     /**
         @dev constructor
@@ -191,7 +174,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     /*
         @dev allows the manager to update the quick buy path
 
-        @param _path    new quick buy path, see conversion path format above
+        @param _path    new quick buy path, see conversion path format in the BancorQuickConverter contract
     */
     function setQuickBuyPath(IERC20Token[] _path)
         public
@@ -477,8 +460,6 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         uint256 reserveAmount = safeMul(getReserveBalance(_reserveToken), MAX_CRR);
         uint256 tokenAmount = safeMul(token.totalSupply(), reserve.ratio);
         Conversion(_reserveToken, token, msg.sender, _depositAmount, amount, reserveAmount, tokenAmount);
-        // deprecated, backward compatibility
-        Change(_reserveToken, token, msg.sender, _depositAmount, amount, reserveAmount, tokenAmount);
         return amount;
     }
 
@@ -525,8 +506,6 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         uint256 reserveAmount = safeMul(getReserveBalance(_reserveToken), MAX_CRR);
         uint256 tokenAmount = safeMul(token.totalSupply(), reserve.ratio);
         Conversion(token, _reserveToken, msg.sender, _sellAmount, amount, tokenAmount, reserveAmount);
-        // deprecated, backward compatibility
-        Change(token, _reserveToken, msg.sender, _sellAmount, amount, tokenAmount, reserveAmount);
         return amount;
     }
 
@@ -534,7 +513,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         @dev converts the token to any other token in the bancor network by following a predefined conversion path
         note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
 
-        @param _path        conversion path, see conversion path format above
+        @param _path        conversion path, see conversion path format in the BancorQuickConverter contract
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
@@ -546,44 +525,26 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         validConversionPath(_path)
         returns (uint256)
     {
-        IEtherToken etherToken;
         IERC20Token fromToken = _path[0];
-        IERC20Token toToken = _path[_path.length - 1];
         IBancorQuickConverter quickConverter = extensions.quickConverter();
 
-        // we need to transfer the tokens from the caller to the local contract before we
-        // follow the conversion path, to allow it to execute the conversion on behalf of the caller
-        // if the source is ETH, we deposit it in the ether token
-        if (msg.value > 0) {
-            // get the ether token
-            etherToken = getQuickBuyEtherToken();
-            // ensure that the source token is the quick buy ether token and that the amount provided is identical to the ETH amount
-            require(fromToken == etherToken && _amount == msg.value);
-            // deposit ETH in the ether token
-            etherToken.deposit.value(msg.value)();
-        }
-        else {
-            // not ETH, claim the source tokens
-            claimTokens(fromToken, msg.sender, _amount);
-        }
-
-        // approve allowance for the quick converter to allow it to claim the tokens
-        ensureAllowance(fromToken, quickConverter, _amount);
-        // execute the conversion
-        _amount = quickConverter.convert(_path, _amount, _minReturn);
-
-        // finished the conversion, transfer the funds back to the caller
-        // if the target token is an ether token, withdraw the tokens and send them as ETH to the caller
-        if (hasQuickBuyEtherToken() && getQuickBuyEtherToken() == toToken) {
-            etherToken = IEtherToken(toToken);
-            etherToken.withdrawTo(msg.sender, _amount);
-        }
-        else {
-            // not ETH, transfer the tokens to the caller
-            assert(toToken.transfer(msg.sender, _amount));
+        // we need to transfer the source tokens from the caller to the quick converter,
+        // so it can execute the conversion on behalf of the caller
+        if (msg.value == 0) {
+            // not ETH, send the source tokens to the quick converter
+            // if the token is the smart token, no allowance is required - destroy the tokens from the caller and issue them to the quick converter
+            if (fromToken == token) {
+                token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
+                token.issue(quickConverter, _amount); // issue _amount new tokens to the quick converter
+            }
+            else {
+                // otherwise, we assume we already have allowance, transfer the tokens directly to the quick converter
+                assert(fromToken.transferFrom(msg.sender, quickConverter, _amount));
+            }
         }
 
-        return _amount;
+        // execute the conversion and pass on the ETH with the call
+        return quickConverter.convertFor.value(msg.value)(_path, _amount, _minReturn, msg.sender);
     }
 
     // deprecated, backward compatibility
@@ -625,45 +586,6 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         // deduct the fee from the return amount
         uint256 feeAmount = getConversionFeeAmount(amount);
         return safeSub(amount, feeAmount);
-    }
-
-    /**
-        @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't
-
-        @param _token   token to check the allowance in
-        @param _spender approved address
-        @param _value   allowance amount
-    */
-    function ensureAllowance(IERC20Token _token, address _spender, uint256 _value) private {
-        // check if allowance for the given amount already exists
-        if (_token.allowance(this, _spender) >= _value)
-            return;
-
-        // if the allowance is nonzero, must reset it to 0 first
-        if (_token.allowance(this, _spender) != 0)
-            assert(_token.approve(_spender, 0));
-
-        // approve the new allowance
-        assert(_token.approve(_spender, _value));
-    }
-
-    /**
-        @dev utility, transfers tokens from an account to the local contract
-
-        @param _token   token to claim
-        @param _from    account to claim the tokens from
-        @param _amount  amount to claim
-    */
-    function claimTokens(IERC20Token _token, address _from, uint256 _amount) private {
-        // if the token is the smart token, no allowance is required - destroy the tokens from the caller and issue them to the local contract
-        if (_token == token) {
-            token.destroy(_from, _amount); // destroy _amount tokens from the caller's balance in the smart token
-            token.issue(this, _amount); // issue _amount new tokens to the local contract
-            return;
-        }
-
-        // otherwise, we assume we already have allowance
-        assert(_token.transferFrom(_from, this, _amount));
     }
 
     /**

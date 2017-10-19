@@ -54,6 +54,8 @@ contract('BancorConverter', (accounts) => {
         etherToken = await EtherToken.new();
         await etherToken.deposit({ value: 10000000 });
 
+        await quickConverter.registerEtherToken(etherToken.address, true);
+
         smartToken1 = await SmartToken.new('Token1', 'TKN1', 2);
         await smartToken1.issue(accounts[0], 1000000);
 
