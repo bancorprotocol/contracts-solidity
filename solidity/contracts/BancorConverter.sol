@@ -201,27 +201,6 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     }
 
     /**
-        @dev returns true if ether token exists in the quick buy path, false if not
-        note that there should always be one in the quick buy path, if one is set
-
-        @return true if ether token exists, false if not
-    */
-    function hasQuickBuyEtherToken() public constant returns (bool) {
-        return quickBuyPath.length > 0;
-    }
-
-    /**
-        @dev returns the address of the ether token used by the quick buy functionality
-        note that it should always be the first element in the quick buy path, if one is set
-
-        @return ether token address
-    */
-    function getQuickBuyEtherToken() public constant returns (IEtherToken) {
-        assert(quickBuyPath.length > 0);
-        return IEtherToken(quickBuyPath[0]);
-    }
-
-    /**
         @dev disables the entire conversion functionality
         this is a safety mechanism in case of a emergency
         can only be called by the manager
