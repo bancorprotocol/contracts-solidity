@@ -787,7 +787,7 @@ contract('BancorConverter', (accounts) => {
         await reserveToken.approve(converter.address, 500);
 
         let conversionRes = await converter.convert(reserveTokenAddress, reserveTokenAddress2, 500, 1);
-        let conversionAmount = getConversionAmount(conversionRes, 3);
+        let conversionAmount = getConversionAmount(conversionRes, 1);
         assert.isNumber(conversionAmount);
         assert.notEqual(conversionAmount, 0);
 
