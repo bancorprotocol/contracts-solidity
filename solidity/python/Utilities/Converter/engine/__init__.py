@@ -6,13 +6,16 @@ from decimal import getcontext
 getcontext().prec = 100
 
 
-def buy (supply,balance,ratio,amount): return int(Decimal(supply)*((1+Decimal(amount)/Decimal(balance))**(Decimal(ratio)/1000000)-1))
-def sell(supply,balance,ratio,amount): return int(Decimal(balance)*(1-(1-Decimal(amount)/Decimal(supply))**(1000000/Decimal(ratio))))
+def buy (supply,balance,ratio,amount): return Decimal(supply)*((1+Decimal(amount)/Decimal(balance))**(Decimal(ratio)/1000000)-1)
+def sell(supply,balance,ratio,amount): return Decimal(balance)*(1-(1-Decimal(amount)/Decimal(supply))**(1000000/Decimal(ratio)))
 
 
 class Engine():
-    def __init__(self,model):
-        self.model = deepcopy(model)
+    def __init__(self):
+        self.model = {}
+        self.paths = {}
+    def set(self,model):
+        self.model = cast(deepcopy(model),Decimal)
         self.paths = {}
         for outer_key,outer_val in self.model.iteritems():
             for inner_key,inner_val in outer_val.iteritems():
@@ -28,8 +31,10 @@ class Engine():
                         added = True
             if not added:
                 break
+    def get(self):
+        return cast(deepcopy(self.model),str)
     def convert(self,sign,source,target,amount,update):
-        amounts = [int(amount)]
+        amounts = [Decimal(amount)]
         model = deepcopy(self.model)
         trade = [source,target][::sign]
         path = self.paths[tuple(trade)]
@@ -41,3 +46,12 @@ class Engine():
         if update:
             self.model = model
         return path[::sign],amounts[::sign]
+
+
+def cast(model,cls):
+    for key,val in model.iteritems():
+        if type(val) is dict:
+            model[key] = cast(val,cls)
+        elif key in ['supply','balance']:
+            model[key] = cls(val)
+    return model
