@@ -65,11 +65,10 @@ def report2csv():
             rows += ['{:.2f},{},{:.2f},{},{:.2f},,,,'.format(first['amount'],first['currency'],second['amount'],second['currency'],first['amount']/second['amount'])]
         for first,second in zip(entries,entries[1:]):
             rows += ['{:.2f},{},{:.2f},{},,{:.2f},{:.2f},{:.2f},{:.2f}'.format(first['amount'],first['currency'],second['amount'],second['currency'],first['supply'],first['balance'],second['supply'],second['balance'])]
-    maxLens = [len(col) for col in rows[0].split(',')]
-    for row in rows[1:]:
-        maxLens = [max(first,second) for first,second in zip(maxLens,[len(col) for col in row.split(',')])]
-    formatStrings = ['{}{}{}'.format('{:',maxLen,'s}') for maxLen in maxLens]
-    return '\n'.join([' , '.join([first.format(second) for first,second in zip(formatStrings,row.split(','))]) for row in rows])+'\n'
+    allLens = [[len(col) for col in row.split(',')] for row in rows]
+    maxLens = [max([row[n] for row in allLens]) for n in range(len(allLens[0]))]
+    fmtStrs = ['{}{}{}'.format('{:',maxLen,'s}') for maxLen in maxLens]
+    return '\n'.join([' , '.join([first.format(second) for first,second in zip(fmtStrs,row.split(','))]) for row in rows])+'\n'
 
 
 main()
