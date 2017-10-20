@@ -14,7 +14,15 @@ def main():
     fileDesc = open(fileName)
     fileData = fileDesc.read()
     fileDesc.close()
-    for command in loads(fileData):
+    execute(loads(fileData))
+    fileName = argv[2] if len(argv) > 2 else 'example_report.csv'
+    fileDesc = open(fileName,'w')
+    fileDesc.write(report2csv())
+    fileDesc.close()
+
+
+def execute(commands):
+    for command in commands:
         if command['operation'] == 'print':
             print command['info']
         elif command['operation'] == 'load':
@@ -40,10 +48,6 @@ def main():
             if case == [True ,True ]: print 'Cannot convert unspecified amount to unspecified amount'
         else:
             print 'Undefined operation'
-    fileName = argv[2] if len(argv) > 2 else 'example_report.csv'
-    fileDesc = open(fileName,'w')
-    fileDesc.write(report2csv())
-    fileDesc.close()
 
 
 def convert(sign,source,target,input,output,update):
