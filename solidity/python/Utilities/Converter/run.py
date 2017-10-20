@@ -41,10 +41,10 @@ def main():
 
 
 def convert(engine,sign,source,target,input,output,update,store):
-    path,amounts = engine.convert(sign,source,target,store[input] if input in store else input,update)
+    entries = engine.convert(sign,source,target,store[input] if input in store else input,update)
     if output:
-        store[output] = amounts[-(sign+1)/2]
-    return ' = '.join(['{:.2f} {}'.format(amount,currency) for amount,currency in zip(amounts,path)])
+        store[output] = entries[-(sign+1)/2]['amount']
+    return ' = '.join(['{:.2f} {}'.format(entry['amount'],entry['currency']) for entry in entries])
 
 
 main()
