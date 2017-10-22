@@ -1,6 +1,5 @@
 pragma solidity ^0.4.11;
-import './Owned.sol';
-import './Utils.sol';
+import './TokenHolder.sol';
 import './interfaces/IBancorConverterExtensions.sol';
 
 /**
@@ -9,7 +8,7 @@ import './interfaces/IBancorConverterExtensions.sol';
     it allows upgrading these contracts without the need to update each and every
     BancorConverter contract instance individually.
 */
-contract BancorConverterExtensions is IBancorConverterExtensions, Owned, Utils {
+contract BancorConverterExtensions is IBancorConverterExtensions, TokenHolder {
     IBancorFormula public formula;  // bancor calculation formula contract
     IBancorGasPriceLimit public gasPriceLimit; // bancor universal gas price limit contract
     IBancorQuickConverter public quickConverter; // bancor quick converter contract
