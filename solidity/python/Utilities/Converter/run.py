@@ -52,23 +52,37 @@ def execute(commands):
 
 def convert(sign,source,target,input,output,update):
     entries = engine.convert(sign,source,target,store[input] if input in store else input,update)
-    report.append(entries)
+    report.append([sign,entries])
     if output:
         store[output] = entries[-(sign+1)/2]['amount']
     return ' = '.join(['{:.2f} {}'.format(entry['amount'],entry['currency']) for entry in entries])
 
 
 def report2csv():
-    rows = ['Source Amount,Source Token,Target Amount,Target Token,Rate,Supply Before,Balance Before,Supply After,Balance After']
-    for entries in report:
-        for first,second in [(entries[0],entries[-1])]:
-            rows += ['{:.2f},{},{:.2f},{},{:.2f},,,,'.format(first['amount'],first['currency'],second['amount'],second['currency'],first['amount']/second['amount'])]
-        for first,second in zip(entries,entries[1:]):
-            rows += ['{:.2f},{},{:.2f},{},,{:.2f},{:.2f},{:.2f},{:.2f}'.format(first['amount'],first['currency'],second['amount'],second['currency'],first['supply'],first['balance'],second['supply'],second['balance'])]
+    rows = ['Source Amount,Source Token,Target Amount,Target Token,Output Amount,Rate,Supply Before,Balance Before,Supply After,Balance After']
+    for sign,entries in report:
+        rows += [line2csv(sign,first,second,True) for first,second in [(entries[0],entries[-1])]]
+        rows += [line2csv(sign,first,second,False) for first,second in zip(entries,entries[1:])]
     allLens = [[len(col) for col in row.split(',')] for row in rows]
     maxLens = [max([row[n] for row in allLens]) for n in range(len(allLens[0]))]
     fmtStrs = ['{}{}{}'.format('{:',maxLen,'s}') for maxLen in maxLens]
     return '\n'.join([' , '.join([first.format(second) for first,second in zip(fmtStrs,row.split(','))]) for row in rows])+'\n'
+
+
+def line2csv(sign,first,second,title):
+	return ','.join(col for col in
+    [
+		'{:.2f}'.format(first['amount']),
+		'{}'    .format(first['currency']),
+		'{:.2f}'.format(second['amount']),
+		'{}'    .format(second['currency']),
+		'{:.2f}'.format([first,second][(sign+1)/2]['amount']),
+		'{:.2f}'.format(first['amount']/second['amount']) if title else '',
+		'{:.2f}'.format(first['supply']),
+		'{:.2f}'.format(first['balance']),
+		'{:.2f}'.format(second['supply']),
+		'{:.2f}'.format(second['balance'])
+	])
 
 
 main()
