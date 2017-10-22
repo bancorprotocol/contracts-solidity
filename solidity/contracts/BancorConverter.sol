@@ -541,6 +541,17 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         return quickConvert(quickBuyPath, msg.value, _minReturn);
     }
 
+    // deprecated, backward compatibility
+    function hasQuickBuyEtherToken() public constant returns (bool) {
+        return quickBuyPath.length > 0;
+    }
+
+    // deprecated, backward compatibility
+    function getQuickBuyEtherToken() public constant returns (IEtherToken) {
+        assert(quickBuyPath.length > 0);
+        return IEtherToken(quickBuyPath[0]);
+    }
+
     /**
         @dev utility, returns the expected return for selling the token for one of its reserve tokens, given a total supply override
 
