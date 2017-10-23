@@ -61,8 +61,9 @@ def convert(sign,source,target,input,output,update):
 def report2csv():
     rows = ['Source Amount,Source Token,Target Amount,Target Token,Output Amount,Output Token,Rate,Supply Before,Balance Before,Supply After,Balance After']
     for sign,entries in report:
-        rows += [tuple2csv(sign,first,second,True) for first,second in [(entries[0],entries[-1])]]
-        rows += [tuple2csv(sign,first,second,False) for first,second in zip(entries,entries[1:])]
+        rows += [tuple2csv(sign,entries[0],entries[-1],True)]
+        if len(entries) > 2:
+            rows += [tuple2csv(sign,first,second,False) for first,second in zip(entries,entries[1:])]
     allLens = [[len(col) for col in row.split(',')] for row in rows]
     maxLens = [max([row[n] for row in allLens]) for n in range(len(allLens[0]))]
     fmtStrs = ['{}{}{}'.format('{:',maxLen,'s}') for maxLen in maxLens]
