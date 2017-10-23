@@ -34,18 +34,21 @@ class Engine():
     def get(self):
         return cast(deepcopy(self.model),str)
     def convert(self,sign,source,target,amount,update):
+        entries = []
         amounts = [Decimal(amount)]
         model = deepcopy(self.model)
         trade = [source,target][::sign]
         path = self.paths[tuple(trade)]
         for first,second in zip(path,path[1:]):
             func,outer,inner = (sell,model[first],model[first][second]) if first in model and second in model[first] else (buy,model[second],model[second][first])
+            entries += [{'currency':first,'supply':outer['supply'],'balance':inner['balance'],'ratio':inner['ratio'],'amount':amounts[-1]}]
             amounts += [func(outer['supply'],inner['balance'],inner['ratio'],amounts[-1]*sign)*sign]
             outer['supply' ] += {buy:+amounts[-1]*sign,sell:-amounts[-2]*sign}[func]
             inner['balance'] += {buy:+amounts[-2]*sign,sell:-amounts[-1]*sign}[func]
+        entries += [{'currency':second,'supply':outer['supply'],'balance':inner['balance'],'ratio':inner['ratio'],'amount':amounts[-1]}]
         if update:
             self.model = model
-        return path[::sign],amounts[::sign]
+        return entries[::sign]
 
 
 def cast(model,cls):
