@@ -59,7 +59,7 @@ def convert(sign,source,target,input,output,update):
 
 
 def report2csv():
-    rows = ['Source Amount,Source Token,Target Amount,Target Token,Output Amount,Rate,Supply Before,Balance Before,Supply After,Balance After']
+    rows = ['Source Amount,Source Token,Target Amount,Target Token,Output Amount,Output Token,Rate,Supply Before,Balance Before,Supply After,Balance After']
     for sign,entries in report:
         rows += [tuple2csv(sign,first,second,True) for first,second in [(entries[0],entries[-1])]]
         rows += [tuple2csv(sign,first,second,False) for first,second in zip(entries,entries[1:])]
@@ -77,6 +77,7 @@ def tuple2csv(sign,first,second,title):
 		'{:.2f}'.format(second['amount']),
 		'{}'    .format(second['currency']),
 		'{:.2f}'.format([first,second][(sign+1)/2]['amount']),
+		'{}'    .format([first,second][(sign+1)/2]['currency']),
 		'{:.2f}'.format(first['amount']/second['amount']) if title else '',
 		'{:.2f}'.format(first['supply']),
 		'{:.2f}'.format(first['balance']),
