@@ -71,20 +71,20 @@ def report2csv():
 
 
 def tuple2csv(sign,first,second,title):
-	return ','.join(col for col in
+    return ','.join(col for col in
     [
-		'{:.2f}'.format(first['amount']),
-		'{}'    .format(first['currency']),
-		'{:.2f}'.format(second['amount']),
-		'{}'    .format(second['currency']),
-		'{:.2f}'.format([first,second][(sign+1)/2]['amount']),
-		'{}'    .format([first,second][(sign+1)/2]['currency']),
-		'{:.2f}'.format(first['amount']/second['amount']) if title else '',
-		'{:.2f}'.format(first['supply']),
-		'{:.2f}'.format(first['balance']),
-		'{:.2f}'.format(second['supply']),
-		'{:.2f}'.format(second['balance'])
-	])
+        '{:.2f}'.format(first['amount']),
+        '{}'    .format(first['currency']),
+        '{:.2f}'.format(second['amount']),
+        '{}'    .format(second['currency']),
+        '{:.2f}'.format([first,second][(sign+1)/2]['amount']),
+        '{}'    .format([first,second][(sign+1)/2]['currency']),
+        '{:.2f}'.format(first['amount']/second['amount']) if title else '',
+        '{:.2f}'.format(first['supply']),
+        '{:.2f}'.format(first['balance']),
+        '{:.2f}'.format(second['supply']),
+        '{:.2f}'.format(second['balance'])
+    ])
 
 
 main()
