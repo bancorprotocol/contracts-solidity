@@ -3,10 +3,10 @@ import './Utils.sol';
 import './interfaces/IBancorFormula.sol';
 
 contract BancorFormula is IBancorFormula, Utils {
-    string public version = '0.2';
+    string public version = '0.3';
 
     uint256 private constant ONE = 1;
-    uint32 private constant MAX_CRR = 1000000;
+    uint32 private constant MAX_WEIGHT = 1000000;
     uint8 private constant MIN_PRECISION = 32;
     uint8 private constant MAX_PRECISION = 127;
 
@@ -163,54 +163,56 @@ contract BancorFormula is IBancorFormula, Utils {
     }
 
     /**
-        @dev given a token supply, reserve, CRR and a deposit amount (in the reserve token), calculates the return for a given conversion (in the main token)
+        @dev given a token supply, connector balance, weight and a deposit amount (in the connector token),
+        calculates the return for a given conversion (in the main token)
 
         Formula:
-        Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 1000000) - 1)
+        Return = _supply * ((1 + _depositAmount / _connectorBalance) ^ (_connectorWeight / 1000000) - 1)
 
-        @param _supply             token total supply
-        @param _reserveBalance     total reserve
-        @param _reserveRatio       constant reserve ratio, represented in ppm, 1-1000000
-        @param _depositAmount      deposit amount, in reserve token
+        @param _supply              token total supply
+        @param _connectorBalance    total connector balance
+        @param _connectorWeight     connector weight, represented in ppm, 1-1000000
+        @param _depositAmount       deposit amount, in connector token
 
         @return purchase return amount
     */
-    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _depositAmount) public constant returns (uint256) {
+    function calculatePurchaseReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _depositAmount) public constant returns (uint256) {
         // validate input
-        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= MAX_CRR);
+        require(_supply > 0 && _connectorBalance > 0 && _connectorWeight > 0 && _connectorWeight <= MAX_WEIGHT);
 
         // special case for 0 deposit amount
         if (_depositAmount == 0)
             return 0;
 
-        // special case if the CRR = 100%
-        if (_reserveRatio == MAX_CRR)
-            return safeMul(_supply, _depositAmount) / _reserveBalance;
+        // special case if the weight = 100%
+        if (_connectorWeight == MAX_WEIGHT)
+            return safeMul(_supply, _depositAmount) / _connectorBalance;
 
         uint256 result;
         uint8 precision;
-        uint256 baseN = safeAdd(_depositAmount, _reserveBalance);
-        (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_CRR);
+        uint256 baseN = safeAdd(_depositAmount, _connectorBalance);
+        (result, precision) = power(baseN, _connectorBalance, _connectorWeight, MAX_WEIGHT);
         uint256 temp = safeMul(_supply, result) >> precision;
         return temp - _supply;
      }
 
     /**
-        @dev given a token supply, reserve, CRR and a sell amount (in the main token), calculates the return for a given conversion (in the reserve token)
+        @dev given a token supply, connector balance, weight and a sell amount (in the main token),
+        calculates the return for a given conversion (in the connector token)
 
         Formula:
-        Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 1000000)))
+        Return = _connectorBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_connectorWeight / 1000000)))
 
-        @param _supply             token total supply
-        @param _reserveBalance     total reserve
-        @param _reserveRatio       constant reserve ratio, represented in ppm, 1-1000000
-        @param _sellAmount         sell amount, in the token itself
+        @param _supply              token total supply
+        @param _connectorBalance    total connector
+        @param _connectorWeight     constant connector Weight, represented in ppm, 1-1000000
+        @param _sellAmount          sell amount, in the token itself
 
         @return sale return amount
     */
-    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _sellAmount) public constant returns (uint256) {
+    function calculateSaleReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _sellAmount) public constant returns (uint256) {
         // validate input
-        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= MAX_CRR && _sellAmount <= _supply);
+        require(_supply > 0 && _connectorBalance > 0 && _connectorWeight > 0 && _connectorWeight <= MAX_WEIGHT && _sellAmount <= _supply);
 
         // special case for 0 sell amount
         if (_sellAmount == 0)
@@ -218,18 +220,18 @@ contract BancorFormula is IBancorFormula, Utils {
 
         // special case for selling the entire supply
         if (_sellAmount == _supply)
-            return _reserveBalance;
+            return _connectorBalance;
 
-        // special case if the CRR = 100%
-        if (_reserveRatio == MAX_CRR)
-            return safeMul(_reserveBalance, _sellAmount) / _supply;
+        // special case if the weight = 100%
+        if (_connectorWeight == MAX_WEIGHT)
+            return safeMul(_connectorBalance, _sellAmount) / _supply;
 
         uint256 result;
         uint8 precision;
         uint256 baseD = _supply - _sellAmount;
-        (result, precision) = power(_supply, baseD, MAX_CRR, _reserveRatio);
-        uint256 temp1 = safeMul(_reserveBalance, result);
-        uint256 temp2 = _reserveBalance << precision;
+        (result, precision) = power(_supply, baseD, MAX_WEIGHT, _connectorWeight);
+        uint256 temp1 = safeMul(_connectorBalance, result);
+        uint256 temp2 = _connectorBalance << precision;
         return (temp1 - temp2) / result;
     }
 
@@ -238,6 +240,7 @@ contract BancorFormula is IBancorFormula, Utils {
             Determine a value of precision.
             Calculate an integer approximation of (_baseN / _baseD) ^ (_expN / _expD) * 2 ^ precision.
             Return the result along with the precision used.
+
         Detailed Description:
             Instead of calculating "base ^ exp", we calculate "e ^ (ln(base) * exp)".
             The value of "ln(base)" is represented with an integer slightly smaller than "ln(base) * 2 ^ precision".

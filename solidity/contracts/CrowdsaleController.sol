@@ -8,7 +8,7 @@ import './interfaces/ISmartToken.sol';
 
     The crowdsale version of the smart token controller, allows contributing ether in exchange for Bancor tokens
     The price remains fixed for the entire duration of the crowdsale
-    Note that 20% of the contributions are the Bancor token's reserve
+    Note that 20% of the contributions are the BNT token's ETH connector balance
 */
 contract CrowdsaleController is SmartTokenController {
     uint256 public constant DURATION = 14 days;                 // crowdsale duration
