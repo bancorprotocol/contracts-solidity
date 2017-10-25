@@ -3,32 +3,30 @@ from os.path import basename
 from decimal import Decimal
 from decimal import getcontext
 
+MAX_WEIGHT = 1000000
 
-MAX_CRR = 1000000
-
-
-def calculate(supply,balance,ratio,change):
-    assert(0 < supply and 0 < balance and 0 < ratio <= MAX_CRR and 0 <= change < 100)
-    ratio  /= MAX_CRR
+def calculate(supply, connectorBalance, weight, change):
+    assert(0 < supply and 0 < connectorBalance and 0 < weight <= MAX_WEIGHT and 0 <= change < 100)
+    weight /= MAX_WEIGHT
     change /= 100
-    cur_amount = supply*(1-(1-change)**(ratio/(1-ratio)))
-    new_amount = balance*(1-(1-cur_amount/supply)**(1/ratio))
-    cur_price = balance/(supply*ratio)
-    new_price = (balance-new_amount)/((supply-cur_amount)*ratio)
+    cur_amount = supply * (1 - (1 - change) ** (weight / (1 - weight)))
+    new_amount = connectorBalance * (1 - (1 - cur_amount / supply) ** (1 / weight))
+    cur_price = connectorBalance / (supply * weight)
+    new_price = (connectorBalance - new_amount) / ((supply - cur_amount) * weight)
     print 'At present:'
-    print '- The supply  = {:.10f}'.format(supply)
-    print '- The balance = {:.10f}'.format(balance)
-    print '- The price   = {:.10f}'.format(cur_price)
+    print '- supply            = {:.10f}'.format(supply)
+    print '- connector balance = {:.10f}'.format(connectorBalance)
+    print '- price             = {:.10f}'.format(cur_price)
     print 'If you sell an amount of {:.10f}, then:'.format(cur_amount)
-    print '- The supply  = {:.10f}'.format(supply-cur_amount)
-    print '- The balance = {:.10f}'.format(balance-new_amount)
-    print '- The price   = {:.10f}'.format(new_price)
-    print 'Which reflects a price decrease of {:.10f} percent'.format((cur_price-new_price)/cur_price*100)
+    print '- supply            = {:.10f}'.format(supply-cur_amount)
+    print '- connector balance = {:.10f}'.format(connectorBalance-new_amount)
+    print '- price             = {:.10f}'.format(new_price)
+    print 'Which reflects a price decrease of {:.10f} percent'.format((cur_price - new_price) / cur_price * 100)
 
 
 if len(argv) == 5:
     getcontext().prec = 80
-    supply,balance,ratio,change = [Decimal(arg) for arg in argv[1:]]
-    calculate(supply,balance,ratio,change)
+    supply, connectorBalance, weight, change = [Decimal(arg) for arg in argv[1:]]
+    calculate(supply, connectorBalance, weight, change)
 else:
-    print '{} <supply> <balance> <ratio> <desired price change>'.format(basename(__file__))
+    print '{} <supply> <connectorBalance> <weight> <desired price change>'.format(basename(__file__))

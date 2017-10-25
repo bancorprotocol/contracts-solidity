@@ -5,7 +5,7 @@ Bancor Protocol™ is a standard for the creation of Smart Tokens™, cryptocurr
 ## Overview
 The Bancor protocol represents the first technological solution for the classic problem in economics known as the “Double Coincidence of Wants”, in the domain of asset exchange. For barter, the coincidence of wants problem was solved through money. For money, exchanges still rely on labor, via bid/ask orders and trade between external agents, to make markets and supply liquidity. 
 
-Through the use of smart-contracts, Smart Tokens can be created that hold one or more other tokens in their reserve. Tokens may represent existing national currencies or other types of assets. By using a reserve token model and algorithmically-calculated conversion rates, the Bancor Protocol creates a new type of ecosystem for asset exchange, with no central control. This decentralized hierarchical monetary system lays the foundation for an autonomous decentralized global exchange with numerous and substantial advantages.
+Through the use of smart-contracts, Smart Tokens can be created that hold one or more other tokens as connectors. Tokens may represent existing national currencies or other types of assets. By using a connector token model and algorithmically-calculated conversion rates, the Bancor Protocol creates a new type of ecosystem for asset exchange, with no central control. This decentralized hierarchical monetary system lays the foundation for an autonomous decentralized global exchange with numerous and substantial advantages.
 
 ## Warning
 
@@ -14,7 +14,7 @@ Bancor is a work in progress. Make sure you understand the risks before using it
 # The Bancor Standards
 
 Bancor protocol is implemented using multiple contracts. The main ones are SmartToken and BancorConverter.
-BancorConverter implements the [token converter standard](https://github.com/ethereum/EIPs/issues/228) and is responsible for converting between a token and its reserves.
+BancorConverter implements the [token converter standard](https://github.com/ethereum/EIPs/issues/228) and is responsible for converting between a token and its connectors.
 SmartToken represents a converter aware ERC-20 compliant token.
 
 # The Smart Token Standard
@@ -105,27 +105,27 @@ As such, it implements both the standard converter methods and the standard conv
 
 ### Methods
 
-**reserveTokenCount**
+**connectorTokenCount**
 ```cs
-function reserveTokenCount() public constant returns (uint16 count)
+function connectorTokenCount() public constant returns (uint16 count)
 ```
-Gets the number of reserve tokens defined for the token.
+Gets the number of connector tokens defined for the token.
 <br>
 <br>
 <br>
-**reserveTokens**
+**connectorTokens**
 ```cs
-function reserveTokens() public constant returns (address[] reserveTokens)
+function connectorTokens() public constant returns (address[] connectorTokens)
 ```
-Gets an array of the reserve token contract addresses.
+Gets an array of the connector token contract addresses.
 <br>
 <br>
 <br>
-**reserves**
+**connectors**
 ```cs
-function reserves(address _reserveToken) public constant
+function connectors(address _connectorToken) public constant
 ```
-Gets the reserve token details.
+Gets the connector token details.
 <br>
 <br>
 <br>

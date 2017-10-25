@@ -2,20 +2,19 @@ import sys
 import FormulaSolidityPort
 import FormulaNativePython
 
-
-def formulaTest(supply,balance,ratio,amount):
-    resultSolidityPort = FormulaSolidityPort.calculatePurchaseReturn(supply,balance,ratio,amount)
-    resultNativePython = FormulaNativePython.calculatePurchaseReturn(supply,balance,ratio,amount)
+def formulaTest(supply, connectorBalance, weight, amount):
+    resultSolidityPort = FormulaSolidityPort.calculatePurchaseReturn(supply, connectorBalance, weight, amount)
+    resultNativePython = FormulaNativePython.calculatePurchaseReturn(supply, connectorBalance, weight, amount)
     if resultSolidityPort > resultNativePython:
         error = ['Implementation Error:']
-        error.append('supply             = {}'.format(supply            ))
-        error.append('balance            = {}'.format(balance           ))
-        error.append('ratio              = {}'.format(ratio             ))
-        error.append('amount             = {}'.format(amount            ))
+        error.append('supply             = {}'.format(supply))
+        error.append('connector balance  = {}'.format(connectorBalance))
+        error.append('weight             = {}'.format(weight))
+        error.append('amount             = {}'.format(amount))
         error.append('resultSolidityPort = {}'.format(resultSolidityPort))
         error.append('resultNativePython = {}'.format(resultNativePython))
         raise BaseException('\n'.join(error))
-    return resultSolidityPort/resultNativePython
+    return resultSolidityPort / resultNativePython
 
 
 size = int(sys.argv[1]) if len(sys.argv) > 1 else 0
@@ -23,27 +22,26 @@ if size == 0:
     size = input('How many test-cases would you like to execute? ')
 
 
-bgn = 10**14
-end = 10**23
-gap = (end-bgn)/size
+bgn = 10 ** 14
+end = 10 ** 23
+gap = (end-bgn) / size
 
 
 worstAccuracy = 1
 numOfFailures = 0
 
-
 for n in xrange(size):
-    supply  = 10**26
-    balance = 10**23
-    ratio   = 100000
-    amount  = bgn+gap*n
+    supply = 10 ** 26
+    connectorBalance = 10 ** 23
+    weight = 100000
+    amount = bgn + gap * n
     try:
-        accuracy = formulaTest(supply,balance,ratio,amount)
-        worstAccuracy = min(worstAccuracy,accuracy)
-    except Exception,error:
+        accuracy = formulaTest(supply, connectorBalance, weight, amount)
+        worstAccuracy = min(worstAccuracy, accuracy)
+    except Exception, error:
         accuracy = 0
         numOfFailures += 1
-    except BaseException,error:
+    except BaseException, error:
         print error
         break
-    print 'Test #{}: amount = {:23d}, accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n,amount,accuracy,worstAccuracy,numOfFailures)
+    print 'Test #{}: amount = {:23d}, accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n, amount, accuracy, worstAccuracy, numOfFailures)
