@@ -1,16 +1,15 @@
 from copy import deepcopy
-
 from decimal import Decimal
 from decimal import getcontext
 getcontext().prec = 100
 
 
-def buy(supply, connectorBalance, weight, amount):
-    return Decimal(supply) * ((1 + Decimal(amount) / Decimal(connectorBalance))**(Decimal(weight) / 1000000) - 1)
+def buy(supply, balance, weight, amount):
+    return Decimal(supply) * ((1 + Decimal(amount) / Decimal(balance))**(Decimal(weight) / 1000000) - 1)
 
 
-def sell(supply, connectorBalance, weight, amount):
-    return Decimal(connectorBalance) * (1 - (1 - Decimal(amount) / Decimal(supply))**(1000000 / Decimal(weight)))
+def sell(supply, balance, weight, amount):
+    return Decimal(balance) * (1 - (1 - Decimal(amount) / Decimal(supply))**(1000000 / Decimal(weight)))
 
 
 class Engine():
@@ -47,11 +46,11 @@ class Engine():
         path = self.paths[tuple(trade)]
         for first, second in zip(path, path[1:]):
             func, outer, inner = (sell, model[first], model[first][second]) if first in model and second in model[first] else (buy, model[second], model[second][first])
-            entries += [{'currency': first, 'supply': outer['supply'], 'connectorBalance': inner['connectorBalance'], 'weight': inner['weight'], 'amount': amounts[-1]}]
-            amounts += [func(outer['supply'], inner['connectorBalance'], inner['weight'], amounts[-1] * sign) * sign]
+            entries += [{'currency': first, 'supply': outer['supply'], 'balance': inner['balance'], 'weight': inner['weight'], 'amount': amounts[-1]}]
+            amounts += [func(outer['supply'], inner['balance'], inner['weight'], amounts[-1] * sign) * sign]
             outer['supply'] += {buy: +amounts[-1] * sign, sell: -amounts[-2] * sign}[func]
-            inner['connectorBalance'] += {buy: +amounts[-2] * sign, sell: -amounts[-1] * sign}[func]
-        entries += [{'currency': second, 'supply': outer['supply'], 'connectorBalance': inner['connectorBalance'], 'weight': inner['weight'], 'amount': amounts[-1]}]
+            inner['balance'] += {buy: +amounts[-2] * sign, sell: -amounts[-1] * sign}[func]
+        entries += [{'currency': second, 'supply': outer['supply'], 'balance': inner['balance'], 'weight': inner['weight'], 'amount': amounts[-1]}]
         if update:
             self.model = model
         return entries[::sign]
@@ -61,6 +60,6 @@ def cast(model, cls):
     for key, val in model.iteritems():
         if type(val) is dict:
             model[key] = cast(val, cls)
-        elif key in ['supply', 'connectorBalance']:
+        elif key in ['supply', 'balance']:
             model[key] = cls(val)
     return model
