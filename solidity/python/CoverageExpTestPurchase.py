@@ -2,6 +2,7 @@ import InputGenerator
 import FormulaSolidityPort
 import FormulaNativePython
 
+
 MINIMUM_VALUE_SUPPLY = 100
 MAXIMUM_VALUE_SUPPLY = 10**34
 GROWTH_FACTOR_SUPPLY = 1.5

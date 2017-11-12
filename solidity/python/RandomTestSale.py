@@ -4,13 +4,13 @@ import FormulaSolidityPort
 import FormulaNativePython
 
 
-def formulaTest(supply, connectorBalance, weight, amount):
-    resultSolidityPort = FormulaSolidityPort.calculateSaleReturn(supply, connectorBalance, weight, amount)
-    resultNativePython = FormulaNativePython.calculateSaleReturn(supply, connectorBalance, weight, amount)
+def formulaTest(supply, balance, weight, amount):
+    resultSolidityPort = FormulaSolidityPort.calculateSaleReturn(supply, balance, weight, amount)
+    resultNativePython = FormulaNativePython.calculateSaleReturn(supply, balance, weight, amount)
     if resultSolidityPort > resultNativePython:
         error = ['Implementation Error:']
         error.append('supply             = {}'.format(supply))
-        error.append('connector balance  = {}'.format(connectorBalance))
+        error.append('balance            = {}'.format(balance))
         error.append('weight             = {}'.format(weight))
         error.append('amount             = {}'.format(amount))
         error.append('resultSolidityPort = {}'.format(resultSolidityPort))
@@ -28,11 +28,11 @@ numOfFailures = 0
 
 for n in xrange(size):
     supply = random.randrange(2, 10**26)
-    connectorBalance = random.randrange(1, 10**23)
+    balance = random.randrange(1, 10**23)
     weight = random.randrange(1, 1000000)
     amount = random.randrange(1, supply)
     try:
-        accuracy = formulaTest(supply, connectorBalance, weight, amount)
+        accuracy = formulaTest(supply, balance, weight, amount)
         worstAccuracy = min(worstAccuracy, accuracy)
     except Exception, error:
         accuracy = 0

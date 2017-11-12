@@ -3,6 +3,7 @@ import json
 import InputGenerator
 import FormulaSolidityPort
 
+
 MINIMUM_VALUE_SUPPLY = 100
 MAXIMUM_VALUE_SUPPLY = 10**34
 GROWTH_FACTOR_SUPPLY = 2.5

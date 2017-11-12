@@ -1,4 +1,4 @@
-version = '0.2';
+version = '0.3';
 
 ONE = 1;
 MAX_WEIGHT = 1000000;
