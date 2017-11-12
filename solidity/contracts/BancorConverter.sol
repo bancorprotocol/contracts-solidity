@@ -8,7 +8,7 @@ import './interfaces/IBancorConverterExtensions.sol';
 import './interfaces/IEtherToken.sol';
 
 /*
-    Bancor Converter v0.4
+    Bancor Converter v0.5
 
     The Bancor version of the token converter, allows conversion between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
