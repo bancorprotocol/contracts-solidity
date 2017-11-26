@@ -22,6 +22,7 @@ let converter1;
 let converter2;
 let converter3;
 let converter4;
+let quickConverter;
 let smartToken1QuickBuyPath;
 let smartToken2QuickBuyPath;
 let smartToken3QuickBuyPath;
@@ -47,7 +48,7 @@ contract('BancorConverter', (accounts) => {
     before(async () => {
         let formula = await BancorFormula.new();
         let gasPriceLimit = await BancorGasPriceLimit.new(22000000000);
-        let quickConverter = await BancorQuickConverter.new();
+        quickConverter = await BancorQuickConverter.new();
         let converterExtensions = await BancorConverterExtensions.new(formula.address, gasPriceLimit.address, quickConverter.address);
         converterExtensionsAddress = converterExtensions.address;
 
@@ -345,5 +346,62 @@ contract('BancorConverter', (accounts) => {
 
         assert(newToken4Balance.greaterThan(prevToken4Balance), "bought token balance isn't higher than previous balance");
         assert(newToken1Balance.lessThan(prevToken1Balance), "sold token balance isn't lower than previous balance");
+    });
+
+    it('verifies valid ether token registration', async () => {
+        let etherToken1 = await EtherToken.new();
+        await etherToken1.deposit({ value: 10000000 });
+        let quickConverter1 = await BancorQuickConverter.new();
+        await quickConverter1.registerEtherToken(etherToken1.address, true);
+        let validEtherToken = await quickConverter1.etherTokens.call(etherToken1.address);
+        assert.isTrue(validEtherToken, 'registered etherToken address verification');
+    });
+
+    it('should throw when attempting register ether token with invalid address', async () => {
+        try {
+            let quickConverter1 = await BancorQuickConverter.new();
+            await quickConverter1.registerEtherToken('0x0', true);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when non owner attempting register ether token', async () => {
+        try {
+            let etherToken1 = await EtherToken.new();
+            await etherToken1.deposit({ value: 10000000 });
+            let quickConverter1 = await BancorQuickConverter.new();
+            await quickConverter1.registerEtherToken(etherToken1.address, true, { from: accounts[1] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('verifies valid ether token unregistration', async () => {
+        let etherToken1 = await EtherToken.new();
+        await etherToken1.deposit({ value: 10000000 });
+        let quickConverter1 = await BancorQuickConverter.new();
+        await quickConverter1.registerEtherToken(etherToken1.address, true);
+        await quickConverter1.registerEtherToken(etherToken1.address, false);
+        let validEtherToken = await quickConverter1.etherTokens.call(etherToken1.address);
+        assert.isNotTrue(validEtherToken, 'unregistered etherToken address verification');
+    });
+
+    it('should throw when non owner attempting to unregister ether token', async () => {
+        try {
+            let etherToken1 = await EtherToken.new();
+            await etherToken1.deposit({ value: 10000000 });
+            let quickConverter1 = await BancorQuickConverter.new();
+            await quickConverter1.registerEtherToken(etherToken1.address, true);
+            await quickConverter1.registerEtherToken(etherToken1.address, false, { from: accounts[1] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
     });
 });
