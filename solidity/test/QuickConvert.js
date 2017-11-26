@@ -404,4 +404,78 @@ contract('BancorConverter', (accounts) => {
             return utils.ensureException(error);
         }
     });
+
+    it('verifies convert for transfer converted amount correctly', async () => {
+        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        await quickConverter.convertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
+        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
+    });
+
+    it('verifies convert with path begins in smart token and ends in smart token', async () => {
+        await smartToken4.approve(quickConverter.address, 10000);
+        let path = [smartToken4.address, smartToken3.address, smartToken3.address, smartToken2.address, smartToken2.address];
+        let balanceBeforeTransfer = await smartToken2.balanceOf.call(accounts[1]);
+        await quickConverter.claimAndConvertFor(path, 10000, 1, accounts[1]);
+        let balanceAfterTransfer = await smartToken2.balanceOf.call(accounts[1]);
+        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
+    });
+
+    it('verifies convert for return valid converted amount', async () => {
+        let amount = await quickConverter.convertFor.call(smartToken1QuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
+        assert.isAbove(amount.toNumber(), 1, 'amount converted');
+    });
+
+    it('should throw when trying convert ether token without sending ether', async () => {
+        try {
+            await quickConverter.convertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1], { });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when trying convert with invalid path', async () => {
+        try {
+            let invalidPath = [etherToken.address, smartToken1.address];
+            await quickConverter.convertFor(invalidPath, 10000, 1, accounts[1], { value: 10000 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when trying convert with invalid long path', async () => {
+        let longQuickBuyPath = [];
+        for (let i = 0; i < 100; ++i)
+            longQuickBuyPath.push(etherToken.address);
+
+        try {
+            await quickConverter.convertFor(longQuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('verifies convert for transfer converted amount correctly', async () => {
+        await etherToken.approve(quickConverter.address, 10000);
+        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        await quickConverter.claimAndConvertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1]);
+        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
+    });
+
+    it('should throw when trying claim and convert without approval', async () => {
+        try {
+            await quickConverter.claimAndConvertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1]);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
 });
