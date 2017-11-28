@@ -254,6 +254,57 @@ contract('BancorConverter', (accounts) => {
         assert.equal(conversionFeeAmount, 5000);
     });
 
+    it('verifies that an event is fired when the owner update the fee', async () => {
+        let converter = await BancorConverter.new(tokenAddress, converterExtensionsAddress, 200000, '0x0', 0);
+        let watcher = converter.ConversionFeeUpdate();
+        await converter.setConversionFee(30000);
+        let events = await watcher.get();
+        assert.equal(events[0].args._currentFee.valueOf(), 0);
+        assert.equal(events[0].args._updatedFee.valueOf(), 30000);
+    });
+
+    it('verifies that an event is fired when the owner update the fee multiple times', async () => {
+        let converter = await BancorConverter.new(tokenAddress, converterExtensionsAddress, 200000, '0x0', 0);
+        let watcher = converter.ConversionFeeUpdate();
+        let events;
+        for (let i = 1; i <= 10; ++i) {
+            await converter.setConversionFee(10000 * i);
+            events = await watcher.get();
+            assert.equal(events[0].args._currentFee.valueOf(), 10000 * (i - 1));
+            assert.equal(events[0].args._updatedFee.valueOf(), 10000 * i);
+        }
+    });
+
+    it('should not fire an event when attempting to update the fee to an invalid value', async () => {
+        let converter = await BancorConverter.new(tokenAddress, converterExtensionsAddress, 200000, '0x0', 0);
+        let watcher = converter.ConversionFeeUpdate();
+
+        try {
+            await converter.setConversionFee(200001);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            let events = await watcher.get();
+            assert.equal(events.length, 0);
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should not fire an event when a non owner attempts to update the fee', async () => {
+        let converter = await BancorConverter.new(tokenAddress, converterExtensionsAddress, 200000, '0x0', 0);
+        let watcher = converter.ConversionFeeUpdate();
+
+        try {
+            await converter.setConversionFee(30000, { from: accounts[1] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            let events = await watcher.get();
+            assert.equal(events.length, 0);
+            return utils.ensureException(error);
+        }
+    });
+
     it('verifies that 2 connectors are added correctly', async () => {
         let converter = await BancorConverter.new(tokenAddress, converterExtensionsAddress, 0, '0x0', 0);
         await converter.addConnector(connectorTokenAddress, weight10Percent, false);
