@@ -55,6 +55,8 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     // triggered when a conversion between two tokens occurs (TokenConverter event)
     event Conversion(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return,
                      uint256 _currentPriceN, uint256 _currentPriceD);
+    // triggered when the manager assign new value to the conversion fee
+    event ConversionFeeUpdate(uint32 _currentFee, uint32 _updatedFee);
 
     /**
         @dev constructor
@@ -222,6 +224,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         managerOnly
         validConversionFee(_conversionFee)
     {
+        ConversionFeeUpdate(conversionFee, _conversionFee);
         conversionFee = _conversionFee;
     }
 
