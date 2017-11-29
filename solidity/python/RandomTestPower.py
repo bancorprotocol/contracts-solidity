@@ -4,9 +4,9 @@ import FormulaSolidityPort
 import FormulaNativePython
 
 
-def powerTest(baseN,baseD,expN,expD):
-    resultSolidityPort,precision = FormulaSolidityPort.power(baseN,baseD,expN,expD)
-    resultNativePython = FormulaNativePython.power(baseN,baseD,expN,expD,precision)
+def powerTest(baseN, baseD, expN, expD):
+    resultSolidityPort, precision = FormulaSolidityPort.power(baseN, baseD, expN, expD)
+    resultNativePython = FormulaNativePython.power(baseN, baseD, expN, expD, precision)
     if resultSolidityPort > resultNativePython:
         error = ['Implementation Error:']
         error.append('baseN              = {}'.format(baseN             ))
@@ -29,17 +29,17 @@ numOfFailures = 0
 
 
 for n in xrange(size):
-    baseN = random.randrange(2,10**26)
-    baseD = random.randrange(1,baseN)
-    expN  = random.randrange(1,1000000)
-    expD  = random.randrange(expN,1000001)
+    baseN = random.randrange(2, 10**26)
+    baseD = random.randrange(1, baseN)
+    expN  = random.randrange(1, 1000000)
+    expD  = random.randrange(expN, 1000001)
     try:
-        accuracy = powerTest(baseN,baseD,expN,expD)
-        worstAccuracy = min(worstAccuracy,accuracy)
-    except Exception,error:
+        accuracy = powerTest(baseN, baseD, expN, expD)
+        worstAccuracy = min(worstAccuracy, accuracy)
+    except Exception, error:
         accuracy = 0
         numOfFailures += 1
-    except BaseException,error:
+    except BaseException, error:
         print error
         break
-    print 'Test #{}: accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n,accuracy,worstAccuracy,numOfFailures)
+    print 'Test #{}: accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n, accuracy, worstAccuracy, numOfFailures)

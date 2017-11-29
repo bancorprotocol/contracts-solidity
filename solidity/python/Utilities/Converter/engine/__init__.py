@@ -9,11 +9,11 @@ def factor(fee, sign, direction):
 
 
 def buy(supply, balance, weight, amount):
-    return Decimal(supply) * ((1 + Decimal(amount) / Decimal(balance))**(Decimal(weight) / 1000000) - 1)
+    return Decimal(supply) * ((1 + Decimal(amount) / Decimal(balance)) ** (Decimal(weight) / 1000000) - 1)
 
 
 def sell(supply, balance, weight, amount):
-    return Decimal(balance) * (1 - (1 - Decimal(amount) / Decimal(supply))**(1000000 / Decimal(weight)))
+    return Decimal(balance) * (1 - (1 - Decimal(amount) / Decimal(supply)) ** (1000000 / Decimal(weight)))
 
 
 class Engine():

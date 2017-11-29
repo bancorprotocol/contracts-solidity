@@ -26,8 +26,8 @@ worstAccuracy = 1
 numOfFailures = 0
 
 for n in xrange(size):
-    supply = random.randrange(2, 10**26)
-    balance = random.randrange(1, 10**23)
+    supply = random.randrange(2, 10 ** 26)
+    balance = random.randrange(1, 10 ** 23)
     weight = random.randrange(1, 1000000)
     amount = random.randrange(1, supply)
     try:
