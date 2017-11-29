@@ -8,7 +8,7 @@ import './interfaces/IBancorConverterExtensions.sol';
 import './interfaces/IEtherToken.sol';
 
 /*
-    Bancor Converter v0.5
+    Bancor Converter v0.6
 
     The Bancor version of the token converter, allows conversion between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
@@ -40,7 +40,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    string public version = '0.5';
+    string public version = '0.6';
     string public converterType = 'bancor';
 
     IBancorConverterExtensions public extensions;       // bancor converter extensions contract
@@ -433,12 +433,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         // issue new funds to the caller in the smart token
         token.issue(msg.sender, amount);
 
-        // calculate the new price using the simple price formula
-        // price = connector balance / (supply * weight)
-        // weight is represented in ppm, so multiplying by 1000000
-        uint256 connectorAmount = safeMul(getConnectorBalance(_connectorToken), MAX_WEIGHT);
-        uint256 tokenAmount = safeMul(token.totalSupply(), connector.weight);
-        Conversion(_connectorToken, token, msg.sender, _depositAmount, amount, connectorAmount, tokenAmount);
+        dispatchConversionEvent(_connectorToken, _depositAmount, amount, true);
         return amount;
     }
 
@@ -479,12 +474,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         // the transfer might fail if the actual connector balance is smaller than the virtual balance
         assert(_connectorToken.transfer(msg.sender, amount));
 
-        // calculate the new price using the simple price formula
-        // price = connector balance / (supply * weight)
-        // weight is represented in ppm, so multiplying by 1000000
-        uint256 connectorAmount = safeMul(getConnectorBalance(_connectorToken), MAX_WEIGHT);
-        uint256 tokenAmount = safeMul(token.totalSupply(), connector.weight);
-        Conversion(token, _connectorToken, msg.sender, _sellAmount, amount, tokenAmount, connectorAmount);
+        dispatchConversionEvent(_connectorToken, _sellAmount, amount, false);
         return amount;
     }
 
@@ -555,6 +545,40 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         // deduct the fee from the return amount
         uint256 feeAmount = getConversionFeeAmount(amount);
         return safeSub(amount, feeAmount);
+    }
+
+    /**
+        @dev helper, dispatches the Conversion event
+        The function also takes the tokens' decimals into account when calculating the current price
+
+        @param _connectorToken  connector token contract address
+        @param _amount          amount purchased/sold (in the source token)
+        @param _returnAmount    amount returned (in the target token)
+        @param isPurchase       true if it's a purchase, false if it's a sale
+    */
+    function dispatchConversionEvent(IERC20Token _connectorToken, uint256 _amount, uint256 _returnAmount, bool isPurchase) private {
+        Connector storage connector = connectors[_connectorToken];
+
+        // calculate the new price using the simple price formula
+        // price = connector balance / (supply * weight)
+        // weight is represented in ppm, so multiplying by 1000000
+        uint256 connectorAmount = safeMul(getConnectorBalance(_connectorToken), MAX_WEIGHT);
+        uint256 tokenAmount = safeMul(token.totalSupply(), connector.weight);
+
+        // normalize values
+        uint8 tokenDecimals = token.decimals();
+        uint8 connectorTokenDecimals = _connectorToken.decimals();
+        if (tokenDecimals != connectorTokenDecimals) {
+            if (tokenDecimals > connectorTokenDecimals)
+                connectorAmount = safeMul(connectorAmount, 10 ** uint256(tokenDecimals - connectorTokenDecimals));
+            else
+                tokenAmount = safeMul(tokenAmount, 10 ** uint256(connectorTokenDecimals - tokenDecimals));
+        }
+
+        if (isPurchase)
+            Conversion(_connectorToken, token, msg.sender, _amount, _returnAmount, connectorAmount, tokenAmount);
+        else
+            Conversion(token, _connectorToken, msg.sender, _amount, _returnAmount, tokenAmount, connectorAmount);
     }
 
     /**
