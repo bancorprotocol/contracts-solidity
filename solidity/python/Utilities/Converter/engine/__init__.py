@@ -4,6 +4,10 @@ from decimal import getcontext
 getcontext().prec = 100
 
 
+def factor(fee, sign, direction):
+    return ((1000000 - Decimal(fee)) / 1000000) ** ((sign + direction) / 2) * sign
+
+
 def buy(supply, balance, weight, amount):
     return Decimal(supply) * ((1 + Decimal(amount) / Decimal(balance))**(Decimal(weight) / 1000000) - 1)
 
@@ -46,8 +50,8 @@ class Engine():
         path = self.paths[tuple(trade)]
         for first, second in zip(path, path[1:]):
             func, outer, inner = (sell, model[first], model[first][second]) if first in model and second in model[first] else (buy, model[second], model[second][first])
-            entries += [{'currency': first, 'supply': outer['supply'], 'balance': inner['balance'], 'weight': inner['weight'], 'amount': amounts[-1]}]
-            amounts += [func(outer['supply'], inner['balance'], inner['weight'], amounts[-1] * sign) * sign]
+            entries += [{'currency': first, 'fee': outer['fee'], 'supply': outer['supply'], 'balance': inner['balance'], 'weight': inner['weight'], 'amount': amounts[-1]}]
+            amounts += [func(outer['supply'], inner['balance'], inner['weight'], amounts[-1] * factor(outer['fee'], sign, -1)) * factor(outer['fee'], sign, +1)]
             outer['supply'] += {buy: +amounts[-1] * sign, sell: -amounts[-2] * sign}[func]
             inner['balance'] += {buy: +amounts[-2] * sign, sell: -amounts[-1] * sign}[func]
         entries += [{'currency': second, 'supply': outer['supply'], 'balance': inner['balance'], 'weight': inner['weight'], 'amount': amounts[-1]}]
