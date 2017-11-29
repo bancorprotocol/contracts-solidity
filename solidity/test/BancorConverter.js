@@ -259,8 +259,8 @@ contract('BancorConverter', (accounts) => {
         let watcher = converter.ConversionFeeUpdate();
         await converter.setConversionFee(30000);
         let events = await watcher.get();
-        assert.equal(events[0].args._currentFee.valueOf(), 0);
-        assert.equal(events[0].args._updatedFee.valueOf(), 30000);
+        assert.equal(events[0].args._prevFee.valueOf(), 0);
+        assert.equal(events[0].args._newFee.valueOf(), 30000);
     });
 
     it('verifies that an event is fired when the owner update the fee multiple times', async () => {
@@ -270,8 +270,8 @@ contract('BancorConverter', (accounts) => {
         for (let i = 1; i <= 10; ++i) {
             await converter.setConversionFee(10000 * i);
             events = await watcher.get();
-            assert.equal(events[0].args._currentFee.valueOf(), 10000 * (i - 1));
-            assert.equal(events[0].args._updatedFee.valueOf(), 10000 * i);
+            assert.equal(events[0].args._prevFee.valueOf(), 10000 * (i - 1));
+            assert.equal(events[0].args._newFee.valueOf(), 10000 * i);
         }
     });
 
