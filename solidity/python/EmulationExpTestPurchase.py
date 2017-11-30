@@ -5,11 +5,11 @@ import FormulaSolidityPort
 
 
 MINIMUM_VALUE_SUPPLY = 100
-MAXIMUM_VALUE_SUPPLY = 10**34
+MAXIMUM_VALUE_SUPPLY = 10 ** 34
 GROWTH_FACTOR_SUPPLY = 2.5
 
 MINIMUM_VALUE_BALANCE = 100
-MAXIMUM_VALUE_BALANCE = 10**34
+MAXIMUM_VALUE_BALANCE = 10 ** 34
 GROWTH_FACTOR_BALANCE = 2.5
 
 MINIMUM_VALUE_WEIGHT = 100000
@@ -17,7 +17,7 @@ MAXIMUM_VALUE_WEIGHT = 900000
 GROWTH_FACTOR_WEIGHT = 1.5
 
 MINIMUM_VALUE_AMOUNT = 1
-MAXIMUM_VALUE_AMOUNT = 10**34
+MAXIMUM_VALUE_AMOUNT = 10 ** 34
 GROWTH_FACTOR_AMOUNT = 2.5
 
 
@@ -49,7 +49,7 @@ def Main():
                             print 'Emulation Error:'
                             print 'supply  = {}'.format(supply)
                             print 'balance = {}'.format(balance)
-                            print 'weight   = {}'.format(weight)
+                            print 'weight  = {}'.format(weight)
                             print 'amount  = {}'.format(amount)
                             return
 

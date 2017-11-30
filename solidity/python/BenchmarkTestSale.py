@@ -45,4 +45,4 @@ for n in xrange(size):
     except BaseException, error:
         print error
         break
-    print 'Test #{}: amount = {:26d}, accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n,amount,accuracy,worstAccuracy,numOfFailures)
+    print 'Test #{}: amount = {:26d}, accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n, amount, accuracy, worstAccuracy, numOfFailures)
