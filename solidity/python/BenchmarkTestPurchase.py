@@ -25,7 +25,7 @@ if size == 0:
 
 bgn = 10 ** 14
 end = 10 ** 23
-gap = (end-bgn) / size
+gap = (end - bgn) / size
 
 
 worstAccuracy = 1
