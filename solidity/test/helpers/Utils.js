@@ -2,7 +2,7 @@
 
 function isException(error) {
     let strError = error.toString();
-    return strError.includes('invalid opcode') || strError.includes('invalid JUMP');
+    return strError.includes('VM Exception') || strError.includes('invalid opcode') || strError.includes('invalid JUMP');
 }
 
 function ensureException(error) {
