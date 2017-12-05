@@ -386,9 +386,11 @@ contract('BancorConverter', (accounts) => {
         await etherToken1.deposit({ value: 10000000 });
         let quickConverter1 = await BancorQuickConverter.new();
         await quickConverter1.registerEtherToken(etherToken1.address, true);
-        await quickConverter1.registerEtherToken(etherToken1.address, false);
         let validEtherToken = await quickConverter1.etherTokens.call(etherToken1.address);
-        assert.isNotTrue(validEtherToken, 'unregistered etherToken address verification');
+        assert.isTrue(validEtherToken, 'registered etherToken address verification');
+        await quickConverter1.registerEtherToken(etherToken1.address, false);
+        let validEtherToken2 = await quickConverter1.etherTokens.call(etherToken1.address);
+        assert.isNotTrue(validEtherToken2, 'unregistered etherToken address verification');
     });
 
     it('should throw when non owner attempting to unregister ether token', async () => {
@@ -397,6 +399,8 @@ contract('BancorConverter', (accounts) => {
             await etherToken1.deposit({ value: 10000000 });
             let quickConverter1 = await BancorQuickConverter.new();
             await quickConverter1.registerEtherToken(etherToken1.address, true);
+            let validEtherToken = await quickConverter1.etherTokens.call(etherToken1.address);
+            assert.isTrue(validEtherToken, 'registered etherToken address verification');
             await quickConverter1.registerEtherToken(etherToken1.address, false, { from: accounts[1] });
             assert(false, "didn't throw");
         }
@@ -405,14 +409,14 @@ contract('BancorConverter', (accounts) => {
         }
     });
 
-    it('verifies convert for transfer converted amount correctly', async () => {
+    it('verifies convertFor transfer converted amount correctly', async () => {
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
         await quickConverter.convertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
         let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
 
-    it('verifies convert with path begins in smart token and ends in smart token', async () => {
+    it('verifies converting process which recieve a path that starts with a smart token and ends with another smart token', async () => {
         await smartToken4.approve(quickConverter.address, 10000);
         let path = [smartToken4.address, smartToken3.address, smartToken3.address, smartToken2.address, smartToken2.address];
         let balanceBeforeTransfer = await smartToken2.balanceOf.call(accounts[1]);
@@ -421,7 +425,7 @@ contract('BancorConverter', (accounts) => {
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
 
-    it('verifies convert for return valid converted amount', async () => {
+    it('verifies convertFor return valid converted amount', async () => {
         let amount = await quickConverter.convertFor.call(smartToken1QuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
         assert.isAbove(amount.toNumber(), 1, 'amount converted');
     });
@@ -429,6 +433,16 @@ contract('BancorConverter', (accounts) => {
     it('should throw when trying convert ether token without sending ether', async () => {
         try {
             await quickConverter.convertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1], { });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when ether is different than the amount sent ', async () => {
+        try {
+            let amount = await quickConverter.convertFor.call(smartToken1QuickBuyPath, 20000, 1, accounts[1], { value: 10000 });
             assert(false, "didn't throw");
         }
         catch (error) {
