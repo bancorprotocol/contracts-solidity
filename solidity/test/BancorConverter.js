@@ -23,7 +23,7 @@ let connectorTokenAddress;
 let connectorTokenAddress2 = '0x32f0f93396f0865d7ce412695beb3c3ad9ccca75';
 
 // used by purchase/sale tests
-async function initConverter(accounts, activate) {
+async function initConverter(accounts, activate, maxConversionFee = 0) {
     token = await SmartToken.new('Token1', 'TKN1', 2);
     tokenAddress = token.address;
 
@@ -33,7 +33,7 @@ async function initConverter(accounts, activate) {
     connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
     connectorTokenAddress2 = connectorToken2.address;
 
-    let converter = await BancorConverter.new(tokenAddress, converterExtensionsAddress, 0, connectorTokenAddress, 250000);
+    let converter = await BancorConverter.new(tokenAddress, converterExtensionsAddress, maxConversionFee, connectorTokenAddress, 250000);
     let converterAddress = converter.address;
     await converter.addConnector(connectorTokenAddress2, 150000, false);
 
@@ -697,6 +697,24 @@ contract('BancorConverter', (accounts) => {
         let saleAmount = getConversionAmount(saleRes);
 
         assert.equal(returnAmount, saleAmount);
+    });
+
+    it('verifies that Conversion event returns conversion fee after buying', async () => {
+        let converter = await initConverter(accounts, true, 5000);
+        await converter.setConversionFee(3000);
+        await connectorToken.approve(converter.address, 500);
+        let purchaseRes = await converter.buy(connectorTokenAddress, 500, 1);
+        assert(purchaseRes.logs.length > 0 && purchaseRes.logs[0].event == 'Conversion');
+        assert('_conversionFee' in purchaseRes.logs[0].args);
+    });
+
+    it('verifies that Conversion event returns conversion fee after selling', async () => {
+        let converter = await initConverter(accounts, true, 5000);
+        await converter.setConversionFee(3000);
+        await connectorToken.approve(converter.address, 500);
+        let saleRes = await converter.sell(connectorTokenAddress, 500, 1);
+        assert(saleRes.logs.length > 0 && saleRes.logs[0].event == 'Conversion');
+        assert('_conversionFee' in saleRes.logs[0].args);
     });
 
     it('should throw when attempting to get the return with an invalid from token adress', async () => {
