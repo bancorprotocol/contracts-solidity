@@ -579,6 +579,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         }
 
         uint256 feeAmount = getConversionFeeAmount(_returnAmount);
+        // ensure that the fee is capped at 255 bits to prevent overflow when converting it to a signed int
         assert(feeAmount <= 2 ** 255);
 
         if (isPurchase)
