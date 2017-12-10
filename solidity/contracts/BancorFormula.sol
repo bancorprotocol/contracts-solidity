@@ -250,6 +250,7 @@ contract BancorFormula is IBancorFormula, Utils {
             This maximum exponent depends on the "precision" used, and it is given by "maxExpArray[precision] >> (MAX_PRECISION - precision)".
             Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
             This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
+            This functions assumes that "_expN < (1 << 256) / ln(MAX_NUM, 1)", otherwise the multiplication should be replaced with a "safeMul".
     */
     function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) internal constant returns (uint256, uint8) {
         uint256 lnBaseTimesExp = ln(_baseN, _baseD) * _expN / _expD;

@@ -238,6 +238,7 @@ def calculateSaleReturn(_supply, _connectorBalance, _connectorWeight, _sellAmoun
         This maximum exponent depends on the "precision" used, and it is given by "maxExpArray[precision] >> (MAX_PRECISION - precision)".
         Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
         This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
+        This functions assumes that "_expN < (1 << 256) / ln(MAX_NUM, 1)", otherwise the multiplication should be replaced with a "safeMul".
 '''
 def power(_baseN, _baseD, _expN, _expD):
     lnBaseTimesExp = ln(_baseN, _baseD) * _expN / _expD;
