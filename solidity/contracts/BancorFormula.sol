@@ -194,7 +194,7 @@ contract BancorFormula is IBancorFormula, Utils {
         (result, precision) = power(baseN, _connectorBalance, _connectorWeight, MAX_WEIGHT);
         uint256 temp = safeMul(_supply, result) >> precision;
         return temp - _supply;
-     }
+    }
 
     /**
         @dev given a token supply, connector balance, weight and a sell amount (in the main token),
