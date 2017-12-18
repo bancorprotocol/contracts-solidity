@@ -30,11 +30,11 @@ def Main():
     testNum = 0
     numOfTests = len(rangeSupply) * len(rangeBalance) * len(rangeWeight) * len(rangeAmount)
 
-    web3RPCProvider = web3.Web3(web3.RPCProvider())
+    eth = web3.Web3(web3.RPCProvider()).eth
     abi = open('../contracts/build/BancorFormula.abi').read()
     bin = open('../contracts/build/BancorFormula.bin').read()
-    contract = web3RPCProvider.eth.contract(abi=json.loads(abi), bytecode=bin)
-    FormulaContractAddr = contract(web3RPCProvider.eth.getTransactionReceipt(contract.deploy())['contractAddress']).call()
+    contract = eth.contract(abi=json.loads(abi), bytecode=bin)
+    FormulaContractAddr = contract(eth.getTransactionReceipt(contract.deploy())['contractAddress']).call()
 
     for supply in rangeSupply:
         for balance in rangeBalance:
