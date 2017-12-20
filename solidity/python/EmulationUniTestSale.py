@@ -34,7 +34,9 @@ def Main():
     abi = open('../contracts/build/BancorFormula.abi').read()
     bin = open('../contracts/build/BancorFormula.bin').read()
     contract = eth.contract(abi=json.loads(abi), bytecode=bin)
-    FormulaContractAddr = contract(eth.getTransactionReceipt(contract.deploy())['contractAddress']).call()
+    tx_hash = contract.deploy(transaction={'from':eth.accounts[0]})
+    address = eth.getTransactionReceipt(tx_hash)['contractAddress']
+    FormulaContractAddr = contract(address).call()
 
     for supply in rangeSupply:
         for balance in rangeBalance:
