@@ -6,7 +6,7 @@ FIXED_2 = 2<<MAX_PRECISION
 MAX_NUM = (1<<(256-MAX_PRECISION))-1
 
 
-totalLen = len('0x{:x}'.format(MAX_NUM))
+totalLen = len(hex(MAX_NUM))
 
 
 print '    uint256 private constant FIXED_1 = {0:#0{1}x};'.format(FIXED_1,totalLen)
