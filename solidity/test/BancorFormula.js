@@ -184,7 +184,7 @@ contract('BancorFormula', () => {
 
             it(`${test}:`, async () => {
                 let retVal = await formula.floorLog2Test.call(input);
-                    assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
+                assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
             });
         }
     }
