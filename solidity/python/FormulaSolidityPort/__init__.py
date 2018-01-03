@@ -17,8 +17,8 @@ MAX_NUM = 0x1ffffffffffffffffffffffffffffffff;
     The values below depend on MAX_PRECISION. If you choose to change it:
     Apply the same change in file 'PrintLn2ScalingFactors.py', run it and paste the results below.
 '''
-LN2_MANTISSA = 0x2c5c85fdf473de6af278ece600fcbda;
-LN2_EXPONENT = 122;
+LN2_NUMERATOR   = 0x3f80fe03f80fe03f80fe03f80fe03f8;
+LN2_DENOMINATOR = 0x5b9de1d10bf4103d647b0955897ba80;
 
 '''
     The values below depend on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
@@ -272,7 +272,7 @@ def ln(_numerator, _denominator):
                 x >>= 1; # now 1 < x < 2
                 res += ONE << (i - 1);
 
-    return (res * LN2_MANTISSA) >> LN2_EXPONENT;
+    return res * LN2_NUMERATOR / LN2_DENOMINATOR;
 
 '''
     Compute the largest integer smaller than or equal to the binary logarithm of the input.
