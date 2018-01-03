@@ -105,7 +105,7 @@ contract('BancorFormula', () => {
             try {
                 let retVal = await formula.lnTest.call(numerator, denominator);
                 assert(retVal.times(MAX_EXPONENT).lessThan(ILLEGAL_VALUE), `${test}: output is too large`);
-                assert(assertion, `${test} failed when it should have passed`);
+                assert(assertion, `${test} passed when it should have failed`);
             }
             catch (error) {
                 assert(!assertion, `${test} failed when it should have passed`);
