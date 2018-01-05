@@ -75,7 +75,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         extensions = _extensions;
         maxConversionFee = _maxConversionFee;
 
-        if (address(_connectorToken) != 0x0)
+        if (_connectorToken != address(0))
             addConnector(_connectorToken, _connectorWeight, false);
     }
 

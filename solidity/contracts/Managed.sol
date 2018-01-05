@@ -41,6 +41,6 @@ contract Managed {
         require(msg.sender == newManager);
         ManagerUpdate(manager, newManager);
         manager = newManager;
-        newManager = 0x0;
+        newManager = address(0);
     }
 }

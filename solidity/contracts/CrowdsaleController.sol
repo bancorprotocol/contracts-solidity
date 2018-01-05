@@ -24,8 +24,8 @@ contract CrowdsaleController is SmartTokenController {
     uint256 public totalEtherCap = 1000000 ether;   // current ether contribution cap, initialized with a temp value as a safety mechanism until the real cap is revealed
     uint256 public totalEtherContributed = 0;       // ether contributed so far
     bytes32 public realEtherCapHash;                // ensures that the real cap is predefined on deployment and cannot be changed later
-    address public beneficiary = 0x0;               // address to receive all ether contributions
-    address public btcs = 0x0;                      // bitcoin suisse address
+    address public beneficiary = address(0);        // address to receive all ether contributions
+    address public btcs = address(0);               // bitcoin suisse address
 
     // triggered on each contribution
     event Contribution(address indexed _contributor, uint256 _amount, uint256 _return);

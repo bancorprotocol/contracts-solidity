@@ -42,6 +42,6 @@ contract Owned is IOwned {
         require(msg.sender == newOwner);
         OwnerUpdate(owner, newOwner);
         owner = newOwner;
-        newOwner = 0x0;
+        newOwner = address(0);
     }
 }
