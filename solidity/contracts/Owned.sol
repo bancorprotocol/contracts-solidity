@@ -8,7 +8,7 @@ contract Owned is IOwned {
     address public owner;
     address public newOwner;
 
-    event OwnerUpdate(address _prevOwner, address _newOwner);
+    event OwnerUpdate(address indexed _prevOwner, address indexed _newOwner);
 
     /**
         @dev constructor

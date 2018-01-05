@@ -7,7 +7,7 @@ contract Managed {
     address public manager;
     address public newManager;
 
-    event ManagerUpdate(address _prevManager, address _newManager);
+    event ManagerUpdate(address indexed _prevManager, address indexed _newManager);
 
     /**
         @dev constructor
