@@ -25,11 +25,12 @@ if size == 0:
 
 bgn = 10 ** 17
 end = 10 ** 26
-gap = (end-bgn) / size
+gap = (end - bgn) / size
 
 
 worstAccuracy = 1
 numOfFailures = 0
+
 
 for n in xrange(size):
     supply = 10 ** 26

@@ -16,7 +16,7 @@ def powerTest(baseN, baseD, expN, expD):
         error.append('resultSolidityPort = {}'.format(resultSolidityPort))
         error.append('resultNativePython = {}'.format(resultNativePython))
         raise BaseException('\n'.join(error))
-    return resultSolidityPort/resultNativePython
+    return resultSolidityPort / resultNativePython
 
 
 size = int(sys.argv[1]) if len(sys.argv) > 1 else 0
@@ -31,8 +31,8 @@ numOfFailures = 0
 for n in xrange(size):
     baseN = random.randrange(2, 10**26)
     baseD = random.randrange(1, baseN)
-    expN  = random.randrange(1, 1000000)
-    expD  = random.randrange(expN, 1000001)
+    expN = random.randrange(1, 1000000)
+    expD = random.randrange(expN, 1000001)
     try:
         accuracy = powerTest(baseN, baseD, expN, expD)
         worstAccuracy = min(worstAccuracy, accuracy)

@@ -22,12 +22,12 @@ def binarySearch(func,args):
         try:
             func(mid,args)
             lo = mid
-        except Exception,error:
+        except:
             hi = mid
     try:
         func(hi,args)
         return hi
-    except Exception,error:
+    except:
         func(lo,args)
         return lo
 

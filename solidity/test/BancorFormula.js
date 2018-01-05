@@ -105,7 +105,7 @@ contract('BancorFormula', () => {
             try {
                 let retVal = await formula.lnTest.call(numerator, denominator);
                 assert(retVal.times(MAX_EXPONENT).lessThan(ILLEGAL_VALUE), `${test}: output is too large`);
-                assert(assertion, `${test} failed when it should have passed`);
+                assert(assertion, `${test} passed when it should have failed`);
             }
             catch (error) {
                 assert(!assertion, `${test} failed when it should have passed`);
@@ -184,7 +184,7 @@ contract('BancorFormula', () => {
 
             it(`${test}:`, async () => {
                 let retVal = await formula.floorLog2Test.call(input);
-                    assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
+                assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
             });
         }
     }

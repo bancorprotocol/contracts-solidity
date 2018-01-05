@@ -22,8 +22,10 @@ size = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 if size == 0:
     size = input('How many test-cases would you like to execute? ')
 
+
 worstAccuracy = 1
 numOfFailures = 0
+
 
 for n in xrange(size):
     supply = random.randrange(2, 10 ** 26)
