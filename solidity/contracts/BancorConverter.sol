@@ -424,7 +424,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         returns (uint256)
     {
         uint256 amount = getPurchaseReturn(_connectorToken, _depositAmount);
-        assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
+        require(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
         // update virtual balance if relevant
         Connector storage connector = connectors[_connectorToken];
@@ -459,7 +459,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
 
         uint256 amount = getSaleReturn(_connectorToken, _sellAmount);
-        assert(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
+        require(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
         uint256 tokenSupply = token.totalSupply();
         uint256 connectorBalance = getConnectorBalance(_connectorToken);
