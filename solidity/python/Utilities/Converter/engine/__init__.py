@@ -30,13 +30,14 @@ class Engine():
                     self.paths[(outer_key, inner_key)] = [outer_key, inner_key]
                     self.paths[(inner_key, outer_key)] = [inner_key, outer_key]
         while True:
-            added = False
+            paths = {}
             for a in self.paths.values():
                 for b in self.paths.values():
                     if a[0] != b[-1] and a[-1] == b[0] and (a[0], b[-1]) not in self.paths:
-                        self.paths[(a[0], b[-1])] = a + b[1:]
-                        added = True
-            if not added:
+                        paths[(a[0], b[-1])] = a + b[1:]
+            if paths:
+                self.paths = {**self.paths, **paths}
+            else:
                 break
 
     def get(self):
