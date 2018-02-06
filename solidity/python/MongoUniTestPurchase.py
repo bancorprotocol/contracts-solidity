@@ -88,13 +88,13 @@ def TestAll(collection):
                             'loss': loss,
                         }
                         document = collection.find_one_and_update(filter, {'$set': update}, upsert=True, return_document=pymongo.ReturnDocument.AFTER)
-                        print ', '.join('{}: {}'.format(field, document[field]) for field in ['supply', 'balance', 'weight', 'amount', 'resultSolidityPort', 'resultNativePython', 'status', 'loss'])
+                        print(', '.join('{}: {}'.format(field, document[field]) for field in ['supply', 'balance', 'weight', 'amount', 'resultSolidityPort', 'resultNativePython', 'status', 'loss']))
 
 
 def Run(module, supply, balance, weight, amount):
     try:
         return module.calculatePurchaseReturn(supply, balance, weight, amount)
-    except Exception:
+    except:
         return -1
 
 

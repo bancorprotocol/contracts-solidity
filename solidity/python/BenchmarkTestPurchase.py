@@ -20,19 +20,19 @@ def formulaTest(supply, balance, weight, amount):
 
 size = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 if size == 0:
-    size = input('How many test-cases would you like to execute? ')
+    size = int(input('How many test-cases would you like to execute? '))
 
 
 bgn = 10 ** 14
 end = 10 ** 23
-gap = (end - bgn) / size
+gap = (end - bgn) // size
 
 
 worstAccuracy = 1
 numOfFailures = 0
 
 
-for n in xrange(size):
+for n in range(size):
     supply = 10 ** 26
     balance = 10 ** 23
     weight = 100000
@@ -40,10 +40,10 @@ for n in xrange(size):
     try:
         accuracy = formulaTest(supply, balance, weight, amount)
         worstAccuracy = min(worstAccuracy, accuracy)
-    except Exception, error:
+    except Exception as error:
         accuracy = 0
         numOfFailures += 1
-    except BaseException, error:
-        print error
+    except BaseException as error:
+        print(error)
         break
-    print 'Test #{}: amount = {:23d}, accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n, amount, accuracy, worstAccuracy, numOfFailures)
+    print('Test #{}: amount = {:23d}, accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n, amount, accuracy, worstAccuracy, numOfFailures))

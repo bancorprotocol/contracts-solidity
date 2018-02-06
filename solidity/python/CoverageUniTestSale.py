@@ -49,7 +49,7 @@ def Main():
                             elif resultSolidityPort < 0:
                                 failureTransactionCount += 1
                             elif resultNativePython < resultSolidityPort:
-                                print 'Implementation Error:', Record(supply, balance, weight, amount, resultSolidityPort, resultNativePython)
+                                print('Implementation Error: {}'.format(Record(supply, balance, weight, amount, resultSolidityPort, resultNativePython)))
                                 return
                             else:  # 0 <= resultSolidityPort <= resultNativePython
                                 absoluteLoss = resultNativePython - resultSolidityPort
@@ -58,21 +58,21 @@ def Main():
                                 worstRelativeLoss.Update(supply, balance, weight, amount, resultSolidityPort, resultNativePython, relativeLoss, absoluteLoss)
                                 worstAbsoluteLossStr = 'worstAbsoluteLoss = {:.0f} (relativeLoss = {:.0f}%)'.format(worstAbsoluteLoss.major, worstAbsoluteLoss.minor * 100)
                                 worstRelativeLossStr = 'worstRelativeLoss = {:.0f}% (absoluteLoss = {:.0f})'.format(worstRelativeLoss.major * 100, worstRelativeLoss.minor)
-                                print 'Test {} out of {}: {}, {}'.format(testNum, numOfTests, worstAbsoluteLossStr, worstRelativeLossStr)
+                                print('Test {} out of {}: {}, {}'.format(testNum, numOfTests, worstAbsoluteLossStr, worstRelativeLossStr))
     except KeyboardInterrupt:
-        print 'Process aborted by user request'
+        print('Process aborted by user request')
 
-    print 'worstAbsoluteLoss:', worstAbsoluteLoss
-    print 'worstRelativeLoss:', worstRelativeLoss
+    print('worstAbsoluteLoss: {}'.format(worstAbsoluteLoss))
+    print('worstRelativeLoss: {}'.format(worstRelativeLoss))
 
-    print 'failureTransactionCount:', failureTransactionCount
-    print 'invalidTransactionCount:', invalidTransactionCount
+    print('failureTransactionCount: {}'.format(failureTransactionCount))
+    print('invalidTransactionCount: {}'.format(invalidTransactionCount))
 
 
 def Run(module, supply, balance, weight, amount):
     try:
         return module.calculateSaleReturn(supply, balance, weight, amount)
-    except Exception:
+    except:
         return -1
 
 
@@ -88,7 +88,7 @@ class Record():
             self._set(supply, balance, weight, amount, resultSolidityPort, resultNativePython, major, minor)
 
     def _set(self, supply, balance, weight, amount, resultSolidityPort, resultNativePython, major, minor):
-        self.__dict__.update({key: val for key, val in locals().iteritems() if key != 'self'})
+        self.__dict__.update({key: val for key, val in locals().items() if key != 'self'})
 
 
 Main()

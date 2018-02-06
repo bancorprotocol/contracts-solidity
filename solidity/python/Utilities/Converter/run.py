@@ -24,37 +24,37 @@ def main():
 def execute(commands):
     for command in commands:
         if command['operation'] == 'print':
-            print command['info']
+            print(command['info'])
         elif command['operation'] == 'load':
             fileName = command['file']
             fileDesc = open(fileName,'r')
             fileData = fileDesc.read()
             fileDesc.close()
             engine.set(loads(fileData))
-            print 'Load',fileName
+            print('Load {}'.format(fileName))
         elif command['operation'] == 'save':
             fileName = command['file']
             fileData = dumps(engine.get(),indent=4,sort_keys=True)
             fileDesc = open(fileName,'w')
             fileDesc.write(fileData)
             fileDesc.close()
-            print 'Save',fileName
+            print('Save {}'.format(fileName))
         elif command['operation'] == 'convert':
             args = command['line'].split()
             case = [all(c == '?' for c in args[n]) for n in [0,3]]
-            if case == [False,False]: print 'Cannot convert specified amount to specified amount'
-            if case == [False,True ]: print 'Explicit:',convert(+1,args[1],args[4],args[0],command['result'],command['update'])
-            if case == [True ,False]: print 'Implicit:',convert(-1,args[1],args[4],args[3],command['result'],command['update'])
-            if case == [True ,True ]: print 'Cannot convert unspecified amount to unspecified amount'
+            if case == [False,False]: print('Cannot convert specified amount to specified amount')
+            if case == [False,True ]: print('Explicit: {}'.format(convert(+1,args[1],args[4],args[0],command['result'],command['update'])))
+            if case == [True ,False]: print('Implicit: {}'.format(convert(-1,args[1],args[4],args[3],command['result'],command['update'])))
+            if case == [True ,True ]: print('Cannot convert unspecified amount to unspecified amount')
         else:
-            print 'Undefined operation'
+            print('Undefined operation')
 
 
 def convert(sign,source,target,input,output,update):
     entries = engine.convert(sign,source,target,store[input] if input in store else input,update)
     report.append([sign,entries])
     if output:
-        store[output] = entries[-(sign+1)/2]['amount']
+        store[output] = entries[-(sign+1)//2]['amount']
     return ' = '.join(['{:.2f} {}'.format(entry['amount'],entry['currency']) for entry in entries])
 
 
@@ -77,9 +77,9 @@ def tuple2csv(sign,first,second,title):
         '{}'    .format(first['currency']),
         '{:.2f}'.format(second['amount']),
         '{}'    .format(second['currency']),
-        '{:.2f}'.format([first,second][(sign+1)/2]['amount']),
-        '{}'    .format([first,second][(sign+1)/2]['currency']),
-        '{:.2f}'.format(first['amount']/second['amount']) if title else '',
+        '{:.2f}'.format([first,second][(sign+1)//2]['amount']),
+        '{}'    .format([first,second][(sign+1)//2]['currency']),
+        '{:.2f}'.format(first['amount']//second['amount']) if title else '',
         '{:.2f}'.format(first['supply']),
         '{:.2f}'.format(first['balance']),
         '{:.2f}'.format(second['supply']),
