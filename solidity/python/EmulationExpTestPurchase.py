@@ -46,13 +46,13 @@ def Main():
                     if True:
                         resultSolidityPort = Run(FormulaSolidityPort, supply, balance, weight, amount)
                         resultContractAddr = Run(FormulaContractAddr, supply, balance, weight, amount)
-                        print 'Test {} out of {}: resultSolidityPort = {}, resultContractAddr = {}'.format(testNum, numOfTests, resultSolidityPort, resultContractAddr)
+                        print('Test {} out of {}: resultSolidityPort = {}, resultContractAddr = {}'.format(testNum, numOfTests, resultSolidityPort, resultContractAddr))
                         if resultSolidityPort != resultContractAddr:
-                            print 'Emulation Error:'
-                            print 'supply  = {}'.format(supply)
-                            print 'balance = {}'.format(balance)
-                            print 'weight  = {}'.format(weight)
-                            print 'amount  = {}'.format(amount)
+                            print('Emulation Error:')
+                            print('supply  = {}'.format(supply))
+                            print('balance = {}'.format(balance))
+                            print('weight  = {}'.format(weight))
+                            print('amount  = {}'.format(amount))
                             return
 
 
