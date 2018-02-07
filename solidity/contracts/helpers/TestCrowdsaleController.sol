@@ -12,6 +12,7 @@ contract TestCrowdsaleController is CrowdsaleController {
         address _btcs,
         bytes32 _realEtherCapHash,
         uint256 _startTimeOverride)
+        public
         CrowdsaleController(_token, _startTime, _beneficiary, _btcs, _realEtherCapHash)
     {
         startTime = _startTimeOverride;

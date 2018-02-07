@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 import './Utils.sol';
 import './interfaces/IBancorFormula.sol';
 
@@ -31,7 +31,7 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     uint256[128] private maxExpArray;
 
-    function BancorFormula() {
+    function BancorFormula() public {
     //  maxExpArray[  0] = 0x6bffffffffffffffffffffffffffffffff;
     //  maxExpArray[  1] = 0x67ffffffffffffffffffffffffffffffff;
     //  maxExpArray[  2] = 0x637fffffffffffffffffffffffffffffff;
@@ -176,7 +176,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
         @return purchase return amount
     */
-    function calculatePurchaseReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _depositAmount) public constant returns (uint256) {
+    function calculatePurchaseReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _depositAmount) public view returns (uint256) {
         // validate input
         require(_supply > 0 && _connectorBalance > 0 && _connectorWeight > 0 && _connectorWeight <= MAX_WEIGHT);
 
@@ -210,7 +210,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
         @return sale return amount
     */
-    function calculateSaleReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _sellAmount) public constant returns (uint256) {
+    function calculateSaleReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _sellAmount) public view returns (uint256) {
         // validate input
         require(_supply > 0 && _connectorBalance > 0 && _connectorWeight > 0 && _connectorWeight <= MAX_WEIGHT && _sellAmount <= _supply);
 
@@ -252,7 +252,7 @@ contract BancorFormula is IBancorFormula, Utils {
             This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
             This functions assumes that "_expN < (1 << 256) / ln(MAX_NUM, 1)", otherwise the multiplication should be replaced with a "safeMul".
     */
-    function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) internal constant returns (uint256, uint8) {
+    function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) internal view returns (uint256, uint8) {
         uint256 lnBaseTimesExp = ln(_baseN, _baseD) * _expN / _expD;
         uint8 precision = findPositionInMaxExpArray(lnBaseTimesExp);
         return (fixedExp(lnBaseTimesExp >> (MAX_PRECISION - precision), precision), precision);
@@ -265,7 +265,7 @@ contract BancorFormula is IBancorFormula, Utils {
         - The output      is a value between 0 and floor(ln(2 ^ (256 - MAX_PRECISION) - 1) * 2 ^ MAX_PRECISION)
         This functions assumes that the numerator is larger than or equal to the denominator, because the output would be negative otherwise.
     */
-    function ln(uint256 _numerator, uint256 _denominator) internal constant returns (uint256) {
+    function ln(uint256 _numerator, uint256 _denominator) internal pure returns (uint256) {
         assert(_numerator <= MAX_NUM);
 
         uint256 res = 0;
@@ -295,7 +295,7 @@ contract BancorFormula is IBancorFormula, Utils {
     /**
         Compute the largest integer smaller than or equal to the binary logarithm of the input.
     */
-    function floorLog2(uint256 _n) internal constant returns (uint8) {
+    function floorLog2(uint256 _n) internal pure returns (uint8) {
         uint8 res = 0;
 
         if (_n < 256) {
@@ -323,7 +323,7 @@ contract BancorFormula is IBancorFormula, Utils {
         - This function finds the position of [the smallest value in "maxExpArray" larger than or equal to "x"]
         - This function finds the highest position of [a value in "maxExpArray" larger than or equal to "x"]
     */
-    function findPositionInMaxExpArray(uint256 _x) internal constant returns (uint8) {
+    function findPositionInMaxExpArray(uint256 _x) internal view returns (uint8) {
         uint8 lo = MIN_PRECISION;
         uint8 hi = MAX_PRECISION;
 
@@ -351,7 +351,7 @@ contract BancorFormula is IBancorFormula, Utils {
         The global "maxExpArray" maps each "precision" to "((maximumExponent + 1) << (MAX_PRECISION - precision)) - 1".
         The maximum permitted value for "x" is therefore given by "maxExpArray[precision] >> (MAX_PRECISION - precision)".
     */
-    function fixedExp(uint256 _x, uint8 _precision) internal constant returns (uint256) {
+    function fixedExp(uint256 _x, uint8 _precision) internal pure returns (uint256) {
         uint256 xi = _x;
         uint256 res = 0;
 
