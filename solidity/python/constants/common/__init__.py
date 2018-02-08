@@ -3,7 +3,7 @@ from math import factorial
 
 NUM_OF_COEFS = 34
 maxFactorial = factorial(NUM_OF_COEFS-1)
-coefficients = [maxFactorial/factorial(i) for i in range(1,NUM_OF_COEFS)]
+coefficients = [maxFactorial//factorial(i) for i in range(1,NUM_OF_COEFS)]
 
 
 def getMaxExpArray(numOfPrecisions):
@@ -18,7 +18,7 @@ def binarySearch(func,args):
     lo = 0
     hi = (1<<256)-1
     while lo+1 < hi:
-        mid = (lo+hi)/2
+        mid = (lo+hi)//2
         try:
             func(mid,args)
             lo = mid
@@ -38,14 +38,14 @@ def fixedExpSafe(x,precision):
     for coefficient in coefficients[1:]:
         xi = safeMul(xi,x) >> precision
         res = safeAdd(res,safeMul(xi,coefficient))
-    return safeAdd(safeAdd(res / coefficients[0],x),1 << precision)
+    return safeAdd(safeAdd(res // coefficients[0],x),1 << precision)
 
 
 def safeMul(x,y):
-    assert(x * y < (1 << 256))
+    assert x * y < (1 << 256)
     return x * y
 
 
 def safeAdd(x,y):
-    assert(x + y < (1 << 256))
+    assert x + y < (1 << 256)
     return x + y

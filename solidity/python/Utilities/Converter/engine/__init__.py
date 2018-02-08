@@ -5,7 +5,7 @@ getcontext().prec = 100
 
 
 def factor(fee, sign, direction):
-    return ((1000000 - Decimal(fee)) / 1000000) ** ((sign + direction) / 2) * sign
+    return ((1000000 - Decimal(fee)) / 1000000) ** ((sign + direction) // 2) * sign
 
 
 def buy(supply, balance, weight, amount):
@@ -24,19 +24,20 @@ class Engine():
     def set(self, model):
         self.model = cast(deepcopy(model), Decimal)
         self.paths = {}
-        for outer_key, outer_val in self.model.iteritems():
-            for inner_key, inner_val in outer_val.iteritems():
+        for outer_key, outer_val in self.model.items():
+            for inner_key, inner_val in outer_val.items():
                 if type(inner_val) is dict:
                     self.paths[(outer_key, inner_key)] = [outer_key, inner_key]
                     self.paths[(inner_key, outer_key)] = [inner_key, outer_key]
         while True:
-            added = False
+            paths = {}
             for a in self.paths.values():
                 for b in self.paths.values():
                     if a[0] != b[-1] and a[-1] == b[0] and (a[0], b[-1]) not in self.paths:
-                        self.paths[(a[0], b[-1])] = a + b[1:]
-                        added = True
-            if not added:
+                        paths[(a[0], b[-1])] = a + b[1:]
+            if paths:
+                self.paths = {**self.paths, **paths}
+            else:
                 break
 
     def get(self):
@@ -61,7 +62,7 @@ class Engine():
 
 
 def cast(model, cls):
-    for key, val in model.iteritems():
+    for key, val in model.items():
         if type(val) is dict:
             model[key] = cast(val, cls)
         elif key in ['supply', 'balance']:

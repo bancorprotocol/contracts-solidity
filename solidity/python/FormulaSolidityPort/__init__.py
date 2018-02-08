@@ -180,7 +180,7 @@ def calculatePurchaseReturn(_supply, _connectorBalance, _connectorWeight, _depos
 
     # special case if the weight = 100%
     if (_connectorWeight == MAX_WEIGHT):
-        return safeMul(_supply, _depositAmount) / _connectorBalance;
+        return safeMul(_supply, _depositAmount) // _connectorBalance;
 
     baseN = safeAdd(_depositAmount, _connectorBalance);
     (result, precision) = power(baseN, _connectorBalance, _connectorWeight, MAX_WEIGHT);
@@ -215,13 +215,13 @@ def calculateSaleReturn(_supply, _connectorBalance, _connectorWeight, _sellAmoun
 
     # special case if the weight = 100%
     if (_connectorWeight == MAX_WEIGHT):
-        return safeMul(_connectorBalance, _sellAmount) / _supply;
+        return safeMul(_connectorBalance, _sellAmount) // _supply;
 
     baseD = _supply - _sellAmount;
     (result, precision) = power(_supply, baseD, MAX_WEIGHT, _connectorWeight);
     temp1 = safeMul(_connectorBalance, result);
     temp2 = _connectorBalance << precision;
-    return (temp1 - temp2) / result;
+    return (temp1 - temp2) // result;
 
 '''
     General Description:
@@ -241,7 +241,7 @@ def calculateSaleReturn(_supply, _connectorBalance, _connectorWeight, _sellAmoun
         This functions assumes that "_expN < (1 << 256) / ln(MAX_NUM, 1)", otherwise the multiplication should be replaced with a "safeMul".
 '''
 def power(_baseN, _baseD, _expN, _expD):
-    lnBaseTimesExp = ln(_baseN, _baseD) * _expN / _expD;
+    lnBaseTimesExp = ln(_baseN, _baseD) * _expN // _expD;
     precision = findPositionInMaxExpArray(lnBaseTimesExp);
     return (fixedExp(lnBaseTimesExp >> (MAX_PRECISION - precision), precision), precision);
 
@@ -256,23 +256,23 @@ def ln(_numerator, _denominator):
     assert(_numerator <= MAX_NUM);
 
     res = 0;
-    x = _numerator * FIXED_1 / _denominator;
+    x = _numerator * FIXED_1 // _denominator;
 
     # If x >= 2, then we compute the integer part of log2(x), which is larger than 0.
     if (x >= FIXED_2):
-        count = floorLog2(x / FIXED_1);
+        count = floorLog2(x // FIXED_1);
         x >>= count; # now x < 2
         res = count * FIXED_1;
 
     # If x > 1, then we compute the fraction part of log2(x), which is larger than 0.
     if (x > FIXED_1):
         for i in range(MAX_PRECISION, 0, -1):
-            x = (x * x) / FIXED_1; # now 1 < x < 4
+            x = (x * x) // FIXED_1; # now 1 < x < 4
             if (x >= FIXED_2):
                 x >>= 1; # now 1 < x < 2
                 res += ONE << (i - 1);
 
-    return res * LN2_NUMERATOR / LN2_DENOMINATOR;
+    return res * LN2_NUMERATOR // LN2_DENOMINATOR;
 
 '''
     Compute the largest integer smaller than or equal to the binary logarithm of the input.
@@ -304,7 +304,7 @@ def findPositionInMaxExpArray(_x):
     hi = MAX_PRECISION;
 
     while (lo + 1 < hi):
-        mid = (lo + hi) / 2;
+        mid = (lo + hi) // 2;
         if (maxExpArray[mid] >= _x):
             lo = mid;
         else:
@@ -394,7 +394,7 @@ def fixedExp(_x, _precision):
     xi = (xi * _x) >> _precision;
     res += xi * 0x00000000000000000000000000000001; # add x^33 * (33! / 33!)
 
-    return res / 0x688589cc0e9505e2f2fee5580000000 + _x + (ONE << _precision); # divide by 33! and then add x^1 / 1! + x^0 / 0!
+    return res // 0x688589cc0e9505e2f2fee5580000000 + _x + (ONE << _precision); # divide by 33! and then add x^1 / 1! + x^0 / 0!
 
 
 def safeMul(x,y):

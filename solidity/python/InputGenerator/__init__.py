@@ -2,7 +2,7 @@ from math import log
 
 
 def UniformDistribution(minimumValue,maximumValue,samplesCount):
-    return [minimumValue+n*(maximumValue-minimumValue)/(samplesCount-1) for n in range(samplesCount)]
+    return [minimumValue+n*(maximumValue-minimumValue)//(samplesCount-1) for n in range(samplesCount)]
 
 
 def ExponentialDistribution(minimumValue,maximumValue,growthFactor):
