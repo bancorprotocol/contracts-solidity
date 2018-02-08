@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 import './TokenHolder.sol';
 import './interfaces/IBancorQuickConverter.sol';
 import './interfaces/IEtherToken.sol';
@@ -28,7 +28,7 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
     /**
         @dev constructor
     */
-    function BancorQuickConverter() {
+    function BancorQuickConverter() public {
     }
 
     // validates a conversion path - verifies that the number of elements is odd and that maximum number of 'hops' is 10

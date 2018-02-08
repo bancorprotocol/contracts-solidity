@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 import './SmartTokenController.sol';
 import './Utils.sol';
 import './interfaces/ISmartToken.sol';
@@ -39,6 +39,7 @@ contract CrowdsaleController is SmartTokenController {
         @param _btcs           bitcoin suisse address
     */
     function CrowdsaleController(ISmartToken _token, uint256 _startTime, address _beneficiary, address _btcs, bytes32 _realEtherCapHash)
+        public
         SmartTokenController(_token)
         validAddress(_beneficiary)
         validAddress(_btcs)
@@ -102,7 +103,7 @@ contract CrowdsaleController is SmartTokenController {
 
         @return computed real cap hash
     */
-    function computeRealCap(uint256 _cap, uint256 _key) public constant returns (bytes32) {
+    function computeRealCap(uint256 _cap, uint256 _key) public pure returns (bytes32) {
         return keccak256(_cap, _key);
     }
 
@@ -130,7 +131,7 @@ contract CrowdsaleController is SmartTokenController {
 
         @return computed number of tokens
     */
-    function computeReturn(uint256 _contribution) public constant returns (uint256) {
+    function computeReturn(uint256 _contribution) public pure returns (uint256) {
         return safeMul(_contribution, TOKEN_PRICE_D) / TOKEN_PRICE_N;
     }
 
@@ -189,7 +190,7 @@ contract CrowdsaleController is SmartTokenController {
     }
 
     // fallback
-    function() payable {
+    function() payable public {
         contributeETH();
     }
 }

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 import './interfaces/IOwned.sol';
 
 /*
@@ -13,7 +13,7 @@ contract Owned is IOwned {
     /**
         @dev constructor
     */
-    function Owned() {
+    function Owned() public {
         owner = msg.sender;
     }
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 import './Owned.sol';
 import './Utils.sol';
 import './interfaces/IERC20Token.sol';
@@ -15,7 +15,7 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
     /**
         @dev constructor
     */
-    function TokenHolder() {
+    function TokenHolder() public {
     }
 
     /**

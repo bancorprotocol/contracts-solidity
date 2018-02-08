@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 import './Owned.sol';
 import './Utils.sol';
 import './interfaces/IBancorGasPriceLimit.sol';
@@ -19,6 +19,7 @@ contract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {
         @param _gasPrice    gas price limit
     */
     function BancorGasPriceLimit(uint256 _gasPrice)
+        public
         greaterThanZero(_gasPrice)
     {
         gasPrice = _gasPrice;

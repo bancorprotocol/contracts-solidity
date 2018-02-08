@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 import './SmartTokenController.sol';
 import './Managed.sol';
 import './Utils.sol';
@@ -8,7 +8,7 @@ import './interfaces/IBancorConverterExtensions.sol';
 import './interfaces/IEtherToken.sol';
 
 /*
-    Bancor Converter v0.6
+    Bancor Converter v0.7
 
     The Bancor version of the token converter, allows conversion between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
@@ -40,7 +40,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    string public version = '0.6';
+    string public version = '0.7';
     string public converterType = 'bancor';
 
     IBancorConverterExtensions public extensions;       // bancor converter extensions contract
@@ -68,6 +68,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         @param  _connectorWeight    optional, weight for the initial connector
     */
     function BancorConverter(ISmartToken _token, IBancorConverterExtensions _extensions, uint32 _maxConversionFee, IERC20Token _connectorToken, uint32 _connectorWeight)
+        public
         SmartTokenController(_token)
         validAddress(_extensions)
         validMaxConversionFee(_maxConversionFee)
@@ -132,7 +133,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
 
         @return number of connector tokens
     */
-    function connectorTokenCount() public constant returns (uint16) {
+    function connectorTokenCount() public view returns (uint16) {
         return uint16(connectorTokens.length);
     }
 
@@ -142,7 +143,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
 
         @return number of convertible tokens
     */
-    function convertibleTokenCount() public constant returns (uint16) {
+    function convertibleTokenCount() public view returns (uint16) {
         return connectorTokenCount() + 1;
     }
 
@@ -153,7 +154,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
 
         @return convertible token address
     */
-    function convertibleToken(uint16 _tokenIndex) public constant returns (address) {
+    function convertibleToken(uint16 _tokenIndex) public view returns (address) {
         if (_tokenIndex == 0)
             return token;
         return connectorTokens[_tokenIndex - 1];
@@ -198,7 +199,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
 
         @return quick buy path length
     */
-    function getQuickBuyPathLength() public constant returns (uint256) {
+    function getQuickBuyPathLength() public view returns (uint256) {
         return quickBuyPath.length;
     }
 
@@ -233,7 +234,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
 
         @return conversion fee amount
     */
-    function getConversionFeeAmount(uint256 _amount) public constant returns (uint256) {
+    function getConversionFeeAmount(uint256 _amount) public view returns (uint256) {
         return safeMul(_amount, conversionFee) / MAX_CONVERSION_FEE;
     }
 
@@ -313,7 +314,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     */
     function getConnectorBalance(IERC20Token _connectorToken)
         public
-        constant
+        view
         validConnector(_connectorToken)
         returns (uint256)
     {
@@ -330,7 +331,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
 
         @return expected conversion return amount
     */
-    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public constant returns (uint256) {
+    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256) {
         require(_fromToken != _toToken); // validate input
 
         // conversion between the token and one of its connectors
@@ -354,7 +355,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     */
     function getPurchaseReturn(IERC20Token _connectorToken, uint256 _depositAmount)
         public
-        constant
+        view
         active
         validConnector(_connectorToken)
         returns (uint256)
@@ -379,7 +380,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
 
         @return expected sale return amount
     */
-    function getSaleReturn(IERC20Token _connectorToken, uint256 _sellAmount) public constant returns (uint256) {
+    function getSaleReturn(IERC20Token _connectorToken, uint256 _sellAmount) public view returns (uint256) {
         return getSaleReturn(_connectorToken, _sellAmount, token.totalSupply());
     }
 
@@ -535,7 +536,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     */
     function getSaleReturn(IERC20Token _connectorToken, uint256 _sellAmount, uint256 _totalSupply)
         private
-        constant
+        view
         active
         validConnector(_connectorToken)
         greaterThanZero(_totalSupply)
@@ -592,7 +593,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         @dev fallback, buys the smart token with ETH
         note that the purchase will use the price at the time of the purchase
     */
-    function() payable {
+    function() payable public {
         quickConvert(quickBuyPath, msg.value, 1);
     }
 }

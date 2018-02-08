@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 import './TokenHolder.sol';
 import './interfaces/IBancorConverterExtensions.sol';
 
@@ -21,6 +21,7 @@ contract BancorConverterExtensions is IBancorConverterExtensions, TokenHolder {
         @param _quickConverter  address of a bancor quick converter contract
     */
     function BancorConverterExtensions(IBancorFormula _formula, IBancorGasPriceLimit _gasPriceLimit, IBancorQuickConverter _quickConverter)
+        public
         validAddress(_formula)
         validAddress(_gasPriceLimit)
         validAddress(_quickConverter)

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 import './ERC20Token.sol';
 import './TokenHolder.sol';
 import './Owned.sol';
@@ -29,6 +29,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
         @param _decimals   for display purposes only
     */
     function SmartToken(string _name, string _symbol, uint8 _decimals)
+        public
         ERC20Token(_name, _symbol, _decimals)
     {
         NewSmartToken(address(this));

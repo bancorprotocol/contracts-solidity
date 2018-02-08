@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 
 /*
     Utilities & Common Modifiers
@@ -7,7 +7,7 @@ contract Utils {
     /**
         constructor
     */
-    function Utils() {
+    function Utils() public {
     }
 
     // verifies that an amount is greater than zero
@@ -38,7 +38,7 @@ contract Utils {
 
         @return sum
     */
-    function safeAdd(uint256 _x, uint256 _y) internal constant returns (uint256) {
+    function safeAdd(uint256 _x, uint256 _y) internal pure returns (uint256) {
         uint256 z = _x + _y;
         assert(z >= _x);
         return z;
@@ -52,7 +52,7 @@ contract Utils {
 
         @return difference
     */
-    function safeSub(uint256 _x, uint256 _y) internal constant returns (uint256) {
+    function safeSub(uint256 _x, uint256 _y) internal pure returns (uint256) {
         assert(_x >= _y);
         return _x - _y;
     }
@@ -65,7 +65,7 @@ contract Utils {
 
         @return product
     */
-    function safeMul(uint256 _x, uint256 _y) internal constant returns (uint256) {
+    function safeMul(uint256 _x, uint256 _y) internal pure returns (uint256) {
         uint256 z = _x * _y;
         assert(_x == 0 || z / _x == _y);
         return z;

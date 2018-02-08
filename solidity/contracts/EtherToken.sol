@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 import './ERC20Token.sol';
 import './TokenHolder.sol';
 import './Owned.sol';
@@ -19,6 +19,7 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
         @dev constructor
     */
     function EtherToken()
+        public
         ERC20Token('Ether Token', 'ETH', 18) {
     }
 

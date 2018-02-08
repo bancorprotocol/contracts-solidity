@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 import './TokenHolder.sol';
 import './Owned.sol';
 import './Utils.sol';
@@ -24,6 +24,7 @@ contract BancorPriceFloor is Owned, TokenHolder {
         @param _token   smart token the contract allows selling
     */
     function BancorPriceFloor(ISmartToken _token)
+        public
         validAddress(_token)
     {
         token = _token;

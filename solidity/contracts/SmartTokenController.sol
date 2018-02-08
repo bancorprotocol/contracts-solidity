@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 import './TokenHolder.sol';
 import './interfaces/ISmartToken.sol';
 
@@ -25,6 +25,7 @@ contract SmartTokenController is TokenHolder {
         @dev constructor
     */
     function SmartTokenController(ISmartToken _token)
+        public
         validAddress(_token)
     {
         token = _token;
@@ -79,7 +80,14 @@ contract SmartTokenController is TokenHolder {
         @param _to      account to receive the new amount
         @param _amount  amount to withdraw
     */
-    function withdrawFromToken(IERC20Token _token, address _to, uint256 _amount) public ownerOnly {
+    function withdrawFromToken(
+        IERC20Token _token, 
+        address _to, 
+        uint256 _amount
+    ) 
+        public
+        ownerOnly
+    {
         ITokenHolder(token).withdrawTokens(_token, _to, _amount);
     }
 }
