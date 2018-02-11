@@ -223,6 +223,16 @@ contract('BancorConverter', (accounts) => {
         assert.equal(conversionFee, 30000);
     });
 
+    it('verifies the manager can update the fee', async () => {
+        let converter = await BancorConverter.new(tokenAddress, converterExtensionsAddress, 200000, '0x0', 0);
+        await converter.transferManagement(accounts[4]);
+        await converter.acceptManagement({ from: accounts[4] });
+
+        await converter.setConversionFee(30000, { from: accounts[4] });
+        let conversionFee = await converter.conversionFee.call();
+        assert.equal(conversionFee, 30000);
+    });
+
     it('should throw when attempting to update the fee to an invalid value', async () => {
         let converter = await BancorConverter.new(tokenAddress, converterExtensionsAddress, 200000, '0x0', 0);
 
@@ -235,7 +245,7 @@ contract('BancorConverter', (accounts) => {
         }
     });
 
-    it('should throw when a non owner attempts to update the fee', async () => {
+    it('should throw when a non owner and non manager attempts to update the fee', async () => {
         let converter = await BancorConverter.new(tokenAddress, converterExtensionsAddress, 200000, '0x0', 0);
 
         try {
@@ -502,6 +512,21 @@ contract('BancorConverter', (accounts) => {
         catch (error) {
             return utils.ensureException(error);
         }
+    });
+
+    it('verifies that the owner can disable / re-enable conversions', async () => {
+        let converter = await BancorConverter.new(tokenAddress, converterExtensionsAddress, 0, '0x0', 0);
+
+        let conversionsEnabled = await converter.conversionsEnabled.call();
+        assert.equal(conversionsEnabled, true);
+
+        await converter.disableConversions(true);
+        conversionsEnabled = await converter.conversionsEnabled.call();
+        assert.equal(conversionsEnabled, false);
+
+        await converter.disableConversions(false);
+        conversionsEnabled = await converter.conversionsEnabled.call();
+        assert.equal(conversionsEnabled, true);
     });
 
     it('verifies that the manager can disable / re-enable conversions', async () => {

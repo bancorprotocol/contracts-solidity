@@ -128,6 +128,12 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         _;
     }
 
+    // allows execution only for owner or manager
+    modifier ownerOrManagerOnly {
+        require(msg.sender == owner || msg.sender == manager);
+        _;
+    }
+
     /**
         @dev returns the number of connector tokens defined
 
@@ -210,7 +216,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
 
         @param _disable true to disable conversions, false to re-enable them
     */
-    function disableConversions(bool _disable) public managerOnly {
+    function disableConversions(bool _disable) public ownerOrManagerOnly {
         conversionsEnabled = !_disable;
     }
 
@@ -222,7 +228,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     */
     function setConversionFee(uint32 _conversionFee)
         public
-        managerOnly
+        ownerOrManagerOnly
         validConversionFee(_conversionFee)
     {
         ConversionFeeUpdate(conversionFee, _conversionFee);
