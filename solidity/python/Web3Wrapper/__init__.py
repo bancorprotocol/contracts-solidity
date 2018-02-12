@@ -4,14 +4,14 @@ from json import loads
 
 
 class Contract():
-    ethereum = Web3(RPCProvider()).eth
+    eth = Web3(RPCProvider()).eth
     def __init__(self,moduleName,ownerAddress='',args=[]):
         path = '../../solidity/contracts/build/'
         abi = open(path+moduleName+'.abi').read()
         bin = open(path+moduleName+'.bin').read()
-        self.contract = Contract.ethereum.contract(abi=loads(abi),bytecode=bin)
-        self.transact = {'from':ownerAddress if ownerAddress else Contract.ethereum.accounts[0]}
-        self.address  = Contract.ethereum.getTransactionReceipt(self.contract.deploy(transaction=self.transact,args=args))['contractAddress']
+        self.contract = Contract.eth.contract(abi=loads(abi),bytecode=bin)
+        self.transact = {'from':ownerAddress if ownerAddress else Contract.eth.accounts[0]}
+        self.address  = Contract.eth.getTransactionReceipt(self.contract.deploy(transaction=self.transact,args=args))['contractAddress']
     def owner(self):
         return self.transact['from']
     def getter(self):
@@ -21,4 +21,4 @@ class Contract():
     def tester(self):
         return self.contract(self.address).estimateGas(self.transact)
     def retval(self,hash):
-        return int(Contract.ethereum.getTransactionReceipt(hash)['logs'][-1]['data'],0)
+        return int(Contract.eth.getTransactionReceipt(hash)['logs'][-1]['data'],0)
