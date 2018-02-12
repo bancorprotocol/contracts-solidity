@@ -1,5 +1,4 @@
-import web3
-import json
+import Web3Wrapper
 import InputGenerator
 import FormulaSolidityPort
 
@@ -30,13 +29,7 @@ def Main():
     testNum = 0
     numOfTests = len(rangeSupply) * len(rangeBalance) * len(rangeWeight) * len(rangeAmount)
 
-    eth = web3.Web3(web3.RPCProvider()).eth
-    abi = open('../contracts/build/BancorFormula.abi').read()
-    bin = open('../contracts/build/BancorFormula.bin').read()
-    contract = eth.contract(abi=json.loads(abi), bytecode=bin)
-    tx_hash = contract.deploy(transaction={'from':eth.accounts[0]})
-    address = eth.getTransactionReceipt(tx_hash)['contractAddress']
-    FormulaContractAddr = contract(address).call()
+    FormulaContractAddr = Web3Wrapper.Contract('BancorFormula').getter()
 
     for supply in rangeSupply:
         for balance in rangeBalance:
