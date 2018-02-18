@@ -73,7 +73,7 @@ contract SmartTokenController is TokenHolder {
     }
 
     /**
-        @dev withdraws tokens held by the token and sends them to an account
+        @dev withdraws tokens held by the controller and sends them to an account
         can only be called by the owner
 
         @param _token   ERC20 token contract address
