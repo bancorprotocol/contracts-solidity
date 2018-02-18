@@ -430,6 +430,11 @@ contract('BancorConverter', (accounts) => {
         assert.isAbove(amount.toNumber(), 1, 'amount converted');
     });
 
+    it('verifies convert return valid converted amount', async () => {
+        let amount = await quickConverter.convert.call(smartToken1QuickBuyPath, 10000, 1, { from: accounts[1], value: 10000 });
+        assert.isAbove(amount.toNumber(), 1, 'amount converted');
+    });
+
     it('should throw when trying convert ether token without sending ether', async () => {
         try {
             await quickConverter.convertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1], { });
@@ -486,6 +491,24 @@ contract('BancorConverter', (accounts) => {
     it('should throw when trying claim and convert without approval', async () => {
         try {
             await quickConverter.claimAndConvertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1]);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('verifies convert for transfer converted amount correctly with claimAndConvert', async () => {
+        await etherToken.approve(quickConverter.address, 10000);
+        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[0]);
+        await quickConverter.claimAndConvert(smartToken1QuickBuyPath, 10000, 1);
+        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[0]);
+        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
+    });
+
+    it('should throw when trying claim and convert without approval with claimAndConvert', async () => {
+        try {
+            await quickConverter.claimAndConvert(smartToken1QuickBuyPath, 10000, 1);
             assert(false, "didn't throw");
         }
         catch (error) {
