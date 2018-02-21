@@ -22,5 +22,14 @@ class Contract():
         return self.contract(self.address).transact(self.transact)
     def tester(self):
         return self.contract(self.address).estimateGas(self.transact)
-    def retval(hash):
-        return int(eth.getTransactionReceipt(hash)['logs'][-1]['data'],0)
+    def decode(hash,logIndex,eventParams):
+        event = {}
+        index = 2
+        data = eth.getTransactionReceipt(hash)['logs'][logIndex]['data']
+        for eventParam in eventParams:
+            if not eventParam['indexed']:
+                name = eventParam['name']
+                size = eventParam['size']//4
+                event[name] = int(data[index:index+size],16)
+                index += size
+        return event
