@@ -1,5 +1,3 @@
-version = '0.3';
-
 ONE = 1;
 MAX_WEIGHT = 1000000;
 MIN_PRECISION = 32;
