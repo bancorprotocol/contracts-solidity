@@ -1,5 +1,6 @@
 from web3 import Web3
 from web3 import RPCProvider
+from os.path import dirname
 from json import loads
 
 
@@ -8,7 +9,7 @@ eth = Web3(RPCProvider()).eth
 
 class Contract():
     def __init__(self,moduleName,ownerAddress='',args=[]):
-        path = '../../solidity/contracts/build/'
+        path = dirname(dirname(dirname(__file__)))+'/contracts/build/'
         abi = open(path+moduleName+'.abi').read()
         bin = open(path+moduleName+'.bin').read()
         self.contract = eth.contract(abi=loads(abi),bytecode=bin)
