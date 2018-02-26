@@ -399,7 +399,7 @@ contract BancorFormula is IBancorFormula, Utils {
         return res / 0x688589cc0e9505e2f2fee5580000000 + _x + (ONE << _precision); // divide by 33! and then add x^1 / 1! + x^0 / 0!
     }
 
-    uint256 private constant FIXED_ONE = 0x80000000000000000000000000000000;
+    uint256 public constant FIXED_ONE = 0x80000000000000000000000000000000;
 
     /**
         Optimized version of function 'calculatePurchaseReturn'

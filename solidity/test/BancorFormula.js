@@ -3,6 +3,7 @@
 
 let constants = require('./helpers/FormulaConstants.js');
 let TestBancorFormula = artifacts.require('./helpers/TestBancorFormula.sol');
+let ERROR_MESSAGE = 'VM Exception while processing transaction: invalid opcode';
 
 contract('BancorFormula', () => {
     let formula;
@@ -24,11 +25,11 @@ contract('BancorFormula', () => {
 
         it(`${test}:`, async () => {
             try {
-                let retVal = await formula.powerTest.call(baseN, baseD, expN, expD);
+                let retVal = await formula.powerTest(baseN, baseD, expN, expD);
                 assert(percent <= 100, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(percent >= 101, `${test} failed when it should have passed`);
+                assert(percent >= 101 && error.message == ERROR_MESSAGE, error.message);
             }
         });
     }
@@ -42,11 +43,11 @@ contract('BancorFormula', () => {
 
         it(`${test}:`, async () => {
             try {
-                let retVal = await formula.powerTest.call(baseN, baseD, expN, expD);
+                let retVal = await formula.powerTest(baseN, baseD, expN, expD);
                 assert(percent <= 100, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(percent >= 101, `${test} failed when it should have passed`);
+                assert(percent >= 101 && error.message == ERROR_MESSAGE, error.message);
             }
         });
     }
@@ -60,11 +61,11 @@ contract('BancorFormula', () => {
 
         it(`${test}:`, async () => {
             try {
-                let retVal = await formula.powerTest.call(baseN, baseD, expN, expD);
+                let retVal = await formula.powerTest(baseN, baseD, expN, expD);
                 assert(percent <= 63, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(percent >= 64, `${test} failed when it should have passed`);
+                assert(percent >= 64 && error.message == ERROR_MESSAGE, error.message);
             }
         });
     }
@@ -78,11 +79,11 @@ contract('BancorFormula', () => {
 
         it(`${test}:`, async () => {
             try {
-                let retVal = await formula.powerTest.call(baseN, baseD, expN, expD);
+                let retVal = await formula.powerTest(baseN, baseD, expN, expD);
                 assert(percent <= 0, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(percent >= 1, `${test} failed when it should have passed`);
+                assert(percent >= 1 && error.message == ERROR_MESSAGE, error.message);
             }
         });
     }
@@ -101,12 +102,12 @@ contract('BancorFormula', () => {
 
         it(`${test}:`, async () => {
             try {
-                let retVal = await formula.lnTest.call(numerator, denominator);
+                let retVal = await formula.lnTest(numerator, denominator);
                 assert(retVal.times(MAX_EXPONENT).lessThan(ILLEGAL_VALUE), `${test}: output is too large`);
                 assert(assertion, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(!assertion, `${test} failed when it should have passed`);
+                assert(!assertion && error.message == ERROR_MESSAGE, error.message);
             }
         });
     }
@@ -128,12 +129,12 @@ contract('BancorFormula', () => {
 
             it(`${test}:`, async () => {
                 try {
-                    let retVal = await formula.findPositionInMaxExpArrayTest.call(input);
+                    let retVal = await formula.findPositionInMaxExpArrayTest(input);
                     assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
                     assert(precision > constants.MIN_PRECISION || !output.lessThan(web3.toBigNumber(precision)), `${test} passed when it should have failed`);
                 }
                 catch (error) {
-                    assert(precision == constants.MIN_PRECISION && output.lessThan(web3.toBigNumber(precision)), `${test} failed when it should have passed`);
+                    assert(precision == constants.MIN_PRECISION && output.lessThan(web3.toBigNumber(precision)) && error.message == ERROR_MESSAGE, error.message);
                 }
             });
         }
@@ -147,12 +148,12 @@ contract('BancorFormula', () => {
         let test2  = `Function fixedExp(0x${errExp.toString(16)}, ${precision})`;
 
         it(`${test1}:`, async () => {
-            let retVal = await formula.fixedExpTest.call(maxExp, precision);
+            let retVal = await formula.fixedExpTest(maxExp, precision);
             assert(retVal.equals(maxVal), `${test1}: output is wrong`);
         });
 
         it(`${test2}:`, async () => {
-            let retVal = await formula.fixedExpTest.call(errExp, precision);
+            let retVal = await formula.fixedExpTest(errExp, precision);
             assert(retVal.lessThan(maxVal), `${test2}:  output indicates that maxExpArray[${precision}] is wrong`);
         });
     }
@@ -163,7 +164,7 @@ contract('BancorFormula', () => {
         let test   = `Function fixedExp(0x${minExp.toString(16)}, ${precision})`;
 
         it(`${test}:`, async () => {
-            let retVal = await formula.fixedExpTest.call(minExp, precision);
+            let retVal = await formula.fixedExpTest(minExp, precision);
             assert(retVal.greaterThanOrEqualTo(minVal), `${test}: output is too small`);
         });
     }
@@ -181,9 +182,59 @@ contract('BancorFormula', () => {
             let test   = `Function floorLog2(0x${input.toString(16)})`;
 
             it(`${test}:`, async () => {
-                let retVal = await formula.floorLog2Test.call(input);
+                let retVal = await formula.floorLog2Test(input);
                 assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
             });
         }
     }
+
+    describe(`Optimized Code:`, async () => {
+        let LOG_MIN = 1;
+        let EXP_MIN = 0;
+        let LOG_MAX = Math.exp(1);
+        let EXP_MAX = Math.pow(2,4);
+
+        web3.BigNumber.config({ERRORS:false});
+
+        let FIXED_ONE;
+        before(async () => {
+            FIXED_ONE = await formula.FIXED_ONE();
+        });
+
+        describe(`function log:`, async () => {
+            for (let percent = 0; percent <= 100; percent++) {
+                let x = percent / 100 * (LOG_MAX - LOG_MIN) + LOG_MIN;
+                let cond = percent < 100;
+                let test = `function log(${x})`;
+
+                it(`${test} should ${cond ? "pass" : "fail"}`, async () => {
+                    try {
+                        await formula.logTest(FIXED_ONE.times(x).truncated());
+                        assert(cond, `${test} passed when it should have failed`);
+                    }
+                    catch (error) {
+                        assert(!cond && error.message == ERROR_MESSAGE, error.message);
+                    }
+                });
+            }
+        });
+
+        describe(`function exp:`, async () => {
+            for (let percent = 0; percent <= 100; percent++) {
+                let x = percent / 100 * (EXP_MAX - EXP_MIN) + EXP_MIN;
+                let cond = percent < 100;
+                let test = `function exp(${x})`;
+
+                it(`${test} should ${cond ? "pass" : "fail"}`, async () => {
+                    try {
+                        await formula.expTest(FIXED_ONE.times(x).truncated());
+                        assert(cond, `${test} passed when it should have failed`);
+                    }
+                    catch (error) {
+                        assert(!cond && error.message == ERROR_MESSAGE, error.message);
+                    }
+                });
+            }
+        });
+    });
 });
