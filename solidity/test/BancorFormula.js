@@ -3,11 +3,9 @@
 
 let constants = require('./helpers/FormulaConstants.js');
 let TestBancorFormula = artifacts.require('./helpers/TestBancorFormula.sol');
-const utils = require('./helpers/Utils');
-
-let formula;
 
 contract('BancorFormula', () => {
+    let formula;
     before(async () => {
         formula = await TestBancorFormula.new();
     });
