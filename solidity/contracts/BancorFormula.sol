@@ -188,6 +188,7 @@ contract BancorFormula is IBancorFormula, Utils {
         if (_connectorWeight == MAX_WEIGHT)
             return safeMul(_supply, _depositAmount) / _connectorBalance;
 
+        // special case if amount <= balance
         if (_depositAmount <= _connectorBalance)
             return calculatePurchaseReturnOptimized(_supply, _connectorBalance, _connectorWeight, _depositAmount);
 
@@ -229,7 +230,8 @@ contract BancorFormula is IBancorFormula, Utils {
         if (_connectorWeight == MAX_WEIGHT)
             return safeMul(_connectorBalance, _sellAmount) / _supply;
 
-        if (_sellAmount <= _supply / 2 && _connectorWeight >= MAX_WEIGHT / 100)
+        // special case if amount <= supply / 4 and weight >= 2%
+        if (_sellAmount <= _supply / 4 && _connectorWeight >= MAX_WEIGHT / 50)
             return calculateSaleReturnOptimized(_supply, _connectorBalance, _connectorWeight, _sellAmount);
 
         uint256 result;
@@ -531,7 +533,8 @@ contract BancorFormula is IBancorFormula, Utils {
         if ((x & 0x080000000000000000000000000000000) != 0) res = res * 0x0bc5ab1b16779be3575bd8f0520a9f21e / 0x0454aaa8efe072e7f6ddbab84b40a55c9;
         if ((x & 0x100000000000000000000000000000000) != 0) res = res * 0x0454aaa8efe072e7f6ddbab84b40a55c5 / 0x00960aadc109e7a3bf4578099615711ea;
         if ((x & 0x200000000000000000000000000000000) != 0) res = res * 0x00960aadc109e7a3bf4578099615711d7 / 0x0002bf84208204f5977f9a8cf01fdce3d;
-        assert(x < 0x400000000000000000000000000000000);
+        if ((x & 0x400000000000000000000000000000000) != 0) res = res * 0x0002bf84208204f5977f9a8cf01fdc307 / 0x0000003c6ab775dd0b95b4cbee7e65d11;
+        assert(x < 0x800000000000000000000000000000000);
 
         return res;
     }

@@ -41,7 +41,7 @@ def Main():
                     if amount <= supply:
                         try:
                             gas = module.calculateSaleReturn(supply, balance, weight, amount)
-                            if amount <= supply // 2 and weight >= 1000000 // 100:
+                            if amount <= supply // 4 and weight >= 1000000 // 50:
                                 maxGasOptimal = max(maxGasOptimal,gas)
                                 print('Test {} out of {} (optimal case): gas = {}, maxGasOptimal = {}, maxGasGeneral = {}'.format(testNum, numOfTests, gas, maxGasOptimal, maxGasGeneral))
                             else:
