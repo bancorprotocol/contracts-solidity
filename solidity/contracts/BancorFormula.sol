@@ -434,6 +434,7 @@ contract BancorFormula is IBancorFormula, Utils {
     uint256 private constant FIXED_ONE = 0x80000000000000000000000000000000;
 
     /**
+        Optimized version of function 'calculatePurchaseReturn'
     */
     function calculatePurchaseReturnOptimized(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _depositAmount) public pure returns (uint256) {
         uint256 temp0 = safeAdd(_depositAmount, _connectorBalance);
@@ -443,6 +444,7 @@ contract BancorFormula is IBancorFormula, Utils {
     }
 
     /**
+        Optimized version of function 'calculateSaleReturn'
     */
     function calculateSaleReturnOptimized(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _sellAmount) public pure returns (uint256) {
         uint256 temp0 = _supply - _sellAmount;

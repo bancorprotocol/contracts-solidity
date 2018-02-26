@@ -405,6 +405,7 @@ def fixedExp(_x, _precision):
 FIXED_ONE = 0x80000000000000000000000000000000;
 
 '''
+    Optimized version of function 'calculatePurchaseReturn'
 '''
 def calculatePurchaseReturnOptimized(_supply, _connectorBalance, _connectorWeight, _depositAmount):
     temp0 = safeAdd(_depositAmount, _connectorBalance);
@@ -413,6 +414,7 @@ def calculatePurchaseReturnOptimized(_supply, _connectorBalance, _connectorWeigh
     return temp2 - _supply;
 
 '''
+    Optimized version of function 'calculateSaleReturn'
 '''
 def calculateSaleReturnOptimized(_supply, _connectorBalance, _connectorWeight, _sellAmount):
     temp0 = _supply - _sellAmount;

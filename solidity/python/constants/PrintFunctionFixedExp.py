@@ -1,7 +1,7 @@
 from common import coefficients
 
 
-print('    function fixedExp(uint256 _x, uint8 _precision) internal constant returns (uint256) {')
+print('    function fixedExp(uint256 _x, uint8 _precision) internal pure returns (uint256) {')
 print('        uint256 xi = _x;')
 print('        uint256 res = 0;')
 print('')

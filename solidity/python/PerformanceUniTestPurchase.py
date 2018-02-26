@@ -28,7 +28,7 @@ def Main():
     testNum = 0
     numOfTests = len(rangeSupply) * len(rangeBalance) * len(rangeWeight) * len(rangeAmount)
 
-    module = Web3Wrapper.Contract('BancorFormula').tester()
+    tester = Web3Wrapper.Contract('BancorFormula').tester()
 
     maxGasOptimal = 0
     maxGasGeneral = 0
@@ -40,7 +40,7 @@ def Main():
                     testNum += 1
                     if True:
                         try:
-                            gas = module.calculatePurchaseReturn(supply, balance, weight, amount)
+                            gas = tester.calculatePurchaseReturn(supply, balance, weight, amount)
                             if amount <= balance:
                                 maxGasOptimal = max(maxGasOptimal,gas)
                                 print('Test {} out of {} (optimal case): gas = {}, maxGasOptimal = {}, maxGasGeneral = {}'.format(testNum, numOfTests, gas, maxGasOptimal, maxGasGeneral))
