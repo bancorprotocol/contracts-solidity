@@ -189,12 +189,14 @@ contract('BancorFormula', () => {
     }
 
     describe(`Optimized Code:`, async () => {
+        let Decimal = require("decimal.js");
+        Decimal.set({precision: 100, rounding: Decimal.ROUND_DOWN});
+        web3.BigNumber.config({DECIMAL_PLACES: 100, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+
         let LOG_MIN = 1;
         let EXP_MIN = 0;
-        let LOG_MAX = Math.exp(1);
-        let EXP_MAX = Math.pow(2,4);
-
-        web3.BigNumber.config({ERRORS:false});
+        let LOG_MAX = web3.toBigNumber(Decimal.exp(1).toFixed());
+        let EXP_MAX = web3.toBigNumber(Decimal.pow(2,4).toFixed());
 
         let FIXED_ONE;
         before(async () => {
@@ -203,7 +205,7 @@ contract('BancorFormula', () => {
 
         describe(`function log:`, async () => {
             for (let percent = 0; percent <= 100; percent++) {
-                let x = percent / 100 * (LOG_MAX - LOG_MIN) + LOG_MIN;
+                let x = web3.toBigNumber(percent).dividedBy(100).times(LOG_MAX.minus(LOG_MIN)).plus(LOG_MIN);
                 let cond = percent < 100;
                 let test = `function log(${x})`;
 
@@ -221,7 +223,7 @@ contract('BancorFormula', () => {
 
         describe(`function exp:`, async () => {
             for (let percent = 0; percent <= 100; percent++) {
-                let x = percent / 100 * (EXP_MAX - EXP_MIN) + EXP_MIN;
+                let x = web3.toBigNumber(percent).dividedBy(100).times(EXP_MAX.minus(EXP_MIN)).plus(EXP_MIN);
                 let cond = percent < 100;
                 let test = `function exp(${x})`;
 
