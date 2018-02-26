@@ -18,13 +18,13 @@ hiTerms = []
 loTerms = []
 
 
-top = int(Decimal(2**(0-EXP_MAX_HI_TERM_VAL)).exp()*FIXED_ONE)-1
+top = int(Decimal(2**(0+EXP_MAX_HI_TERM_VAL-EXP_NUM_OF_HI_TERMS)).exp()*FIXED_ONE)-1
 for n in range(EXP_NUM_OF_HI_TERMS+1):
-    cur = Decimal(2**(n-EXP_MAX_HI_TERM_VAL)).exp()
+    cur = Decimal(2**(n+EXP_MAX_HI_TERM_VAL-EXP_NUM_OF_HI_TERMS)).exp()
     den = int(((1<<256)-1)/(cur*top))
     num = int(den*cur)
     top = top*num//den
-    bit = (FIXED_ONE<<n)>>EXP_MAX_HI_TERM_VAL
+    bit = (FIXED_ONE<<(n+EXP_MAX_HI_TERM_VAL))>>EXP_NUM_OF_HI_TERMS
     hiTerms.append(HiTerm(bit,num,den))
 
 
