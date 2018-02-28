@@ -5,6 +5,9 @@ from decimal import ROUND_CEILING
 from constants import MAX_PRECISION
 
 
+getcontext().prec = 100
+
+
 def ln(n):
     return Decimal(n).ln()
 
@@ -21,13 +24,7 @@ def ceiling(d):
     return int(d.to_integral_exact(rounding=ROUND_CEILING))
 
 
-getcontext().prec = 100
-
-
-maxVal = floor(log2(2**(256-MAX_PRECISION)-1)*2**MAX_PRECISION)
-
-
-LN2_NUMERATOR   = (2**256-1)//maxVal
+LN2_NUMERATOR   = (2**256-1)//floor(log2(2**(256-MAX_PRECISION)-1)*2**MAX_PRECISION)
 LN2_DENOMINATOR = ceiling(LN2_NUMERATOR/ln(2))
 
 
