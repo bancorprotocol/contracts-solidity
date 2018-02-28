@@ -11,29 +11,28 @@ contract BancorFormula is IBancorFormula, Utils {
     uint8 private constant MAX_PRECISION = 127;
 
     /**
-        The values below depend on MAX_PRECISION. If you choose to change it:
-        Apply the same change in file 'PrintIntScalingFactors.py', run it and paste the results below.
+        Auto-generated via 'PrintIntScalingFactors.py'
     */
     uint256 private constant FIXED_1 = 0x080000000000000000000000000000000;
     uint256 private constant FIXED_2 = 0x100000000000000000000000000000000;
     uint256 private constant MAX_NUM = 0x200000000000000000000000000000000;
 
     /**
-        The values below depend on MAX_PRECISION. If you choose to change it:
-        Apply the same change in file 'PrintLn2ScalingFactors.py', run it and paste the results below.
+        Auto-generated via 'PrintLn2ScalingFactors.py'
     */
     uint256 private constant LN2_NUMERATOR   = 0x3f80fe03f80fe03f80fe03f80fe03f8;
     uint256 private constant LN2_DENOMINATOR = 0x5b9de1d10bf4103d647b0955897ba80;
 
+    /**
+        Auto-generated via 'PrintFunctionOptimalLog.py' and 'PrintFunctionOptimalExp.py'
+    */
     uint256 private constant OPT_LOG_MAX_VAL = 0x15bf0a8b1457695355fb8ac404e7a79e3;
     uint256 private constant OPT_EXP_MAX_VAL = 0x800000000000000000000000000000000;
 
     /**
-        The values below depend on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
-        Apply the same change in file 'PrintFunctionBancorFormula.py', run it and paste the results below.
+        Auto-generated via 'PrintFunctionBancorFormula.py'
     */
     uint256[128] private maxExpArray;
-
     function BancorFormula() public {
     //  maxExpArray[  0] = 0x6bffffffffffffffffffffffffffffffff;
     //  maxExpArray[  1] = 0x67ffffffffffffffffffffffffffffffff;
@@ -253,7 +252,7 @@ contract BancorFormula is IBancorFormula, Utils {
             This maximum exponent depends on the "precision" used, and it is given by "maxExpArray[precision] >> (MAX_PRECISION - precision)".
             Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
             This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
-            This functions assumes that "_expN < (1 << 256) / log(MAX_NUM - 1)", otherwise the multiplication should be replaced with a "safeMul".
+            This functions assumes that "_expN < 2 ^ 256 / log(MAX_NUM - 1)", otherwise the multiplication should be replaced with a "safeMul".
     */
     function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) internal view returns (uint256, uint8) {
         assert(_baseN < MAX_NUM);
