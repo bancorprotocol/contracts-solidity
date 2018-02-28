@@ -437,19 +437,14 @@ def optimalExp(x):
     return res;
 
 
-def safeMul(x,y):
-    assert x * y < (1 << 256)
-    return x * y
-
-
 def safeAdd(x,y):
     assert x + y < (1 << 256)
     return x + y
 
 
-def safeSub(x,y):
-    assert x - y >= 0
-    return x - y
+def safeMul(x,y):
+    assert x * y < (1 << 256)
+    return x * y
 
 
 BancorFormula()
