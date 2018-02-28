@@ -9,14 +9,17 @@ MAX_PRECISION = 127;
 '''
 FIXED_1 = 0x080000000000000000000000000000000;
 FIXED_2 = 0x100000000000000000000000000000000;
-MAX_NUM = 0x1ffffffffffffffffffffffffffffffff;
+MAX_NUM = 0x200000000000000000000000000000000;
 
 '''
     The values below depend on MAX_PRECISION. If you choose to change it:
     Apply the same change in file 'PrintLn2ScalingFactors.py', run it and paste the results below.
 '''
-LN2_NUMERATOR   = 0x3f80fe03f80fe03f80fe03f80fe03f8;
-LN2_DENOMINATOR = 0x5b9de1d10bf4103d647b0955897ba80;
+LOG_NUMERATOR   = 0x3f80fe03f80fe03f80fe03f80fe03f8;
+LOG_DENOMINATOR = 0x5b9de1d10bf4103d647b0955897ba80;
+
+OPT_LOG_MAX_VAL = 0x15bf0a8b1457695355fb8ac404e7a79e3;
+OPT_EXP_MAX_VAL = 0x800000000000000000000000000000000;
 
 '''
     The values below depend on MIN_PRECISION and MAX_PRECISION. If you choose to change either one of them:
@@ -180,10 +183,6 @@ def calculatePurchaseReturn(_supply, _connectorBalance, _connectorWeight, _depos
     if (_connectorWeight == MAX_WEIGHT):
         return safeMul(_supply, _depositAmount) // _connectorBalance;
 
-    # special case if amount <= balance
-    if (_depositAmount <= _connectorBalance):
-        return calculatePurchaseReturnOptimized(_supply, _connectorBalance, _connectorWeight, _depositAmount);
-
     baseN = safeAdd(_depositAmount, _connectorBalance);
     (result, precision) = power(baseN, _connectorBalance, _connectorWeight, MAX_WEIGHT);
     temp = safeMul(_supply, result) >> precision;
@@ -219,10 +218,6 @@ def calculateSaleReturn(_supply, _connectorBalance, _connectorWeight, _sellAmoun
     if (_connectorWeight == MAX_WEIGHT):
         return safeMul(_connectorBalance, _sellAmount) // _supply;
 
-    # special case if amount <= supply / 4 and weight >= 2%
-    if (_sellAmount <= _supply // 4 and _connectorWeight >= MAX_WEIGHT // 50):
-        return calculateSaleReturnOptimized(_supply, _connectorBalance, _connectorWeight, _sellAmount);
-
     baseD = _supply - _sellAmount;
     (result, precision) = power(_supply, baseD, MAX_WEIGHT, _connectorWeight);
     temp1 = safeMul(_connectorBalance, result);
@@ -236,33 +231,37 @@ def calculateSaleReturn(_supply, _connectorBalance, _connectorWeight, _sellAmoun
         Return the result along with the precision used.
 
     Detailed Description:
-        Instead of calculating "base ^ exp", we calculate "e ^ (ln(base) * exp)".
-        The value of "ln(base)" is represented with an integer slightly smaller than "ln(base) * 2 ^ precision".
+        Instead of calculating "base ^ exp", we calculate "e ^ (log(base) * exp)".
+        The value of "log(base)" is represented with an integer slightly smaller than "log(base) * 2 ^ precision".
         The larger "precision" is, the more accurately this value represents the real value.
         However, the larger "precision" is, the more bits are required in order to store this value.
         And the exponentiation function, which takes "x" and calculates "e ^ x", is limited to a maximum exponent (maximum value of "x").
         This maximum exponent depends on the "precision" used, and it is given by "maxExpArray[precision] >> (MAX_PRECISION - precision)".
         Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
         This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
-        This functions assumes that "_expN < (1 << 256) / ln(MAX_NUM, 1)", otherwise the multiplication should be replaced with a "safeMul".
+        This functions assumes that "_expN < (1 << 256) / log(MAX_NUM - 1)", otherwise the multiplication should be replaced with a "safeMul".
 '''
 def power(_baseN, _baseD, _expN, _expD):
-    lnBaseTimesExp = ln(_baseN, _baseD) * _expN // _expD;
-    precision = findPositionInMaxExpArray(lnBaseTimesExp);
-    return (fixedExp(lnBaseTimesExp >> (MAX_PRECISION - precision), precision), precision);
+    assert(_baseN < MAX_NUM);
+
+    base = _baseN * FIXED_1 // _baseD;
+    if (base < OPT_LOG_MAX_VAL):
+        baseLog = optimalLog(base);
+    else:
+        baseLog = generalLog(base);
+
+    baseLogTimesExp = baseLog * _expN // _expD;
+    if (baseLogTimesExp < OPT_EXP_MAX_VAL):
+        return (optimalExp(baseLogTimesExp), MAX_PRECISION);
+    else:
+        precision = findPositionInMaxExpArray(baseLogTimesExp);
+        return (generalExp(baseLogTimesExp >> (MAX_PRECISION - precision), precision), precision);
 
 '''
-    Return floor(ln(numerator / denominator) * 2 ^ MAX_PRECISION), where:
-    - The numerator   is a value between 1 and 2 ^ (256 - MAX_PRECISION) - 1
-    - The denominator is a value between 1 and 2 ^ (256 - MAX_PRECISION) - 1
-    - The output      is a value between 0 and floor(ln(2 ^ (256 - MAX_PRECISION) - 1) * 2 ^ MAX_PRECISION)
-    This functions assumes that the numerator is larger than or equal to the denominator, because the output would be negative otherwise.
+    Compute the largest integer smaller than or equal to the natural logarithm of the input.
 '''
-def ln(_numerator, _denominator):
-    assert(_numerator <= MAX_NUM);
-
+def generalLog(x):
     res = 0;
-    x = _numerator * FIXED_1 // _denominator;
 
     # If x >= 2, then we compute the integer part of log2(x), which is larger than 0.
     if (x >= FIXED_2):
@@ -278,7 +277,7 @@ def ln(_numerator, _denominator):
                 x >>= 1; # now 1 < x < 2
                 res += ONE << (i - 1);
 
-    return res * LN2_NUMERATOR // LN2_DENOMINATOR;
+    return res * LOG_NUMERATOR // LOG_DENOMINATOR;
 
 '''
     Compute the largest integer smaller than or equal to the binary logarithm of the input.
@@ -331,7 +330,7 @@ def findPositionInMaxExpArray(_x):
     The global "maxExpArray" maps each "precision" to "((maximumExponent + 1) << (MAX_PRECISION - precision)) - 1".
     The maximum permitted value for "x" is therefore given by "maxExpArray[precision] >> (MAX_PRECISION - precision)".
 '''
-def fixedExp(_x, _precision):
+def generalExp(_x, _precision):
     xi = _x;
     res = 0;
 
@@ -370,92 +369,63 @@ def fixedExp(_x, _precision):
 
     return res // 0x688589cc0e9505e2f2fee5580000000 + _x + (ONE << _precision); # divide by 33! and then add x^1 / 1! + x^0 / 0!
 
-FIXED_ONE = 0x80000000000000000000000000000000;
-
 '''
-    Optimized version of function 'calculatePurchaseReturn'
-'''
-def calculatePurchaseReturnOptimized(_supply, _connectorBalance, _connectorWeight, _depositAmount):
-    temp0 = safeAdd(_depositAmount, _connectorBalance);
-    temp1 = pow(safeMul(temp0, FIXED_ONE), _connectorBalance, _connectorWeight, MAX_WEIGHT);
-    temp2 = safeMul(_supply, temp1) // FIXED_ONE;
-    return temp2 - _supply;
-
-'''
-    Optimized version of function 'calculateSaleReturn'
-'''
-def calculateSaleReturnOptimized(_supply, _connectorBalance, _connectorWeight, _sellAmount):
-    temp0 = _supply - _sellAmount;
-    temp1 = pow(safeMul(_supply, FIXED_ONE), temp0, MAX_WEIGHT, _connectorWeight);
-    temp2 = safeMul(_connectorBalance, temp1);
-    temp3 = _connectorBalance * FIXED_ONE;
-    return (temp2 - temp3) // temp1;
-
-'''
-    Return (a / b / FIXED_ONE) ^ (c / d) * FIXED_ONE
-'''
-def pow(a, b, c, d):
-    return exp(log(a // b) * c // d);
-
-'''
-    Return log(x / FIXED_ONE) * FIXED_ONE
+    Return log(x / FIXED_1) * FIXED_1
     Auto-generated via 'PrintFunctionLog.py'
 '''
-def log(x):
+def optimalLog(x):
     res = 0;
 
-    assert(x < 0x15bf0a8b1457695355fb8ac404e7a79e3);
-    if (x >= 0xd3094c70f034de4b96ff7d5b6f99fcd8): res += 0x40000000000000000000000000000000; x = x * FIXED_ONE // 0xd3094c70f034de4b96ff7d5b6f99fcd8;
-    if (x >= 0xa45af1e1f40c333b3de1db4dd55f29a7): res += 0x20000000000000000000000000000000; x = x * FIXED_ONE // 0xa45af1e1f40c333b3de1db4dd55f29a7;
-    if (x >= 0x910b022db7ae67ce76b441c27035c6a1): res += 0x10000000000000000000000000000000; x = x * FIXED_ONE // 0x910b022db7ae67ce76b441c27035c6a1;
-    if (x >= 0x88415abbe9a76bead8d00cf112e4d4a8): res += 0x08000000000000000000000000000000; x = x * FIXED_ONE // 0x88415abbe9a76bead8d00cf112e4d4a8;
-    if (x >= 0x84102b00893f64c705e841d5d4064bd3): res += 0x04000000000000000000000000000000; x = x * FIXED_ONE // 0x84102b00893f64c705e841d5d4064bd3;
-    if (x >= 0x8204055aaef1c8bd5c3259f4822735a2): res += 0x02000000000000000000000000000000; x = x * FIXED_ONE // 0x8204055aaef1c8bd5c3259f4822735a2;
-    if (x >= 0x810100ab00222d861931c15e39b44e99): res += 0x01000000000000000000000000000000; x = x * FIXED_ONE // 0x810100ab00222d861931c15e39b44e99;
-    if (x >= 0x808040155aabbbe9451521693554f733): res += 0x00800000000000000000000000000000; x = x * FIXED_ONE // 0x808040155aabbbe9451521693554f733;
+    if (x >= 0xd3094c70f034de4b96ff7d5b6f99fcd8): res += 0x40000000000000000000000000000000; x = x * FIXED_1 // 0xd3094c70f034de4b96ff7d5b6f99fcd8;
+    if (x >= 0xa45af1e1f40c333b3de1db4dd55f29a7): res += 0x20000000000000000000000000000000; x = x * FIXED_1 // 0xa45af1e1f40c333b3de1db4dd55f29a7;
+    if (x >= 0x910b022db7ae67ce76b441c27035c6a1): res += 0x10000000000000000000000000000000; x = x * FIXED_1 // 0x910b022db7ae67ce76b441c27035c6a1;
+    if (x >= 0x88415abbe9a76bead8d00cf112e4d4a8): res += 0x08000000000000000000000000000000; x = x * FIXED_1 // 0x88415abbe9a76bead8d00cf112e4d4a8;
+    if (x >= 0x84102b00893f64c705e841d5d4064bd3): res += 0x04000000000000000000000000000000; x = x * FIXED_1 // 0x84102b00893f64c705e841d5d4064bd3;
+    if (x >= 0x8204055aaef1c8bd5c3259f4822735a2): res += 0x02000000000000000000000000000000; x = x * FIXED_1 // 0x8204055aaef1c8bd5c3259f4822735a2;
+    if (x >= 0x810100ab00222d861931c15e39b44e99): res += 0x01000000000000000000000000000000; x = x * FIXED_1 // 0x810100ab00222d861931c15e39b44e99;
+    if (x >= 0x808040155aabbbe9451521693554f733): res += 0x00800000000000000000000000000000; x = x * FIXED_1 // 0x808040155aabbbe9451521693554f733;
 
-    assert(x >= FIXED_ONE);
-    z = y = x - FIXED_ONE;
-    w = y * y // FIXED_ONE;
-    res += z * (0x100000000000000000000000000000000 - y) // 0x100000000000000000000000000000000; z = z * w // FIXED_ONE;
-    res += z * (0x0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - y) // 0x200000000000000000000000000000000; z = z * w // FIXED_ONE;
-    res += z * (0x099999999999999999999999999999999 - y) // 0x300000000000000000000000000000000; z = z * w // FIXED_ONE;
-    res += z * (0x092492492492492492492492492492492 - y) // 0x400000000000000000000000000000000; z = z * w // FIXED_ONE;
-    res += z * (0x08e38e38e38e38e38e38e38e38e38e38e - y) // 0x500000000000000000000000000000000; z = z * w // FIXED_ONE;
-    res += z * (0x08ba2e8ba2e8ba2e8ba2e8ba2e8ba2e8b - y) // 0x600000000000000000000000000000000; z = z * w // FIXED_ONE;
-    res += z * (0x089d89d89d89d89d89d89d89d89d89d89 - y) // 0x700000000000000000000000000000000; z = z * w // FIXED_ONE;
+    z = y = x - FIXED_1;
+    w = y * y // FIXED_1;
+    res += z * (0x100000000000000000000000000000000 - y) // 0x100000000000000000000000000000000; z = z * w // FIXED_1;
+    res += z * (0x0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - y) // 0x200000000000000000000000000000000; z = z * w // FIXED_1;
+    res += z * (0x099999999999999999999999999999999 - y) // 0x300000000000000000000000000000000; z = z * w // FIXED_1;
+    res += z * (0x092492492492492492492492492492492 - y) // 0x400000000000000000000000000000000; z = z * w // FIXED_1;
+    res += z * (0x08e38e38e38e38e38e38e38e38e38e38e - y) // 0x500000000000000000000000000000000; z = z * w // FIXED_1;
+    res += z * (0x08ba2e8ba2e8ba2e8ba2e8ba2e8ba2e8b - y) // 0x600000000000000000000000000000000; z = z * w // FIXED_1;
+    res += z * (0x089d89d89d89d89d89d89d89d89d89d89 - y) // 0x700000000000000000000000000000000; z = z * w // FIXED_1;
     res += z * (0x088888888888888888888888888888888 - y) // 0x800000000000000000000000000000000;
 
     return res;
 
 '''
-    Return e ^ (x / FIXED_ONE) * FIXED_ONE
+    Return e ^ (x / FIXED_1) * FIXED_1
     Auto-generated via 'PrintFunctionExp.py'
 '''
-def exp(x):
+def optimalExp(x):
     res = 0;
 
     z = y = x % 0x10000000000000000000000000000000;
-    z = z * y // FIXED_ONE; res += z * 0x10e1b3be415a0000; # add y^02 * (20! / 02!)
-    z = z * y // FIXED_ONE; res += z * 0x05a0913f6b1e0000; # add y^03 * (20! / 03!)
-    z = z * y // FIXED_ONE; res += z * 0x0168244fdac78000; # add y^04 * (20! / 04!)
-    z = z * y // FIXED_ONE; res += z * 0x004807432bc18000; # add y^05 * (20! / 05!)
-    z = z * y // FIXED_ONE; res += z * 0x000c0135dca04000; # add y^06 * (20! / 06!)
-    z = z * y // FIXED_ONE; res += z * 0x0001b707b1cdc000; # add y^07 * (20! / 07!)
-    z = z * y // FIXED_ONE; res += z * 0x000036e0f639b800; # add y^08 * (20! / 08!)
-    z = z * y // FIXED_ONE; res += z * 0x00000618fee9f800; # add y^09 * (20! / 09!)
-    z = z * y // FIXED_ONE; res += z * 0x0000009c197dcc00; # add y^10 * (20! / 10!)
-    z = z * y // FIXED_ONE; res += z * 0x0000000e30dce400; # add y^11 * (20! / 11!)
-    z = z * y // FIXED_ONE; res += z * 0x000000012ebd1300; # add y^12 * (20! / 12!)
-    z = z * y // FIXED_ONE; res += z * 0x0000000017499f00; # add y^13 * (20! / 13!)
-    z = z * y // FIXED_ONE; res += z * 0x0000000001a9d480; # add y^14 * (20! / 14!)
-    z = z * y // FIXED_ONE; res += z * 0x00000000001c6380; # add y^15 * (20! / 15!)
-    z = z * y // FIXED_ONE; res += z * 0x000000000001c638; # add y^16 * (20! / 16!)
-    z = z * y // FIXED_ONE; res += z * 0x0000000000001ab8; # add y^17 * (20! / 17!)
-    z = z * y // FIXED_ONE; res += z * 0x000000000000017c; # add y^18 * (20! / 18!)
-    z = z * y // FIXED_ONE; res += z * 0x0000000000000014; # add y^19 * (20! / 19!)
-    z = z * y // FIXED_ONE; res += z * 0x0000000000000001; # add y^20 * (20! / 20!)
-    res = res // 0x21c3677c82b40000 + y + FIXED_ONE; # divide by 20! and then add y^1 / 1! + y^0 / 0!
+    z = z * y // FIXED_1; res += z * 0x10e1b3be415a0000; # add y^02 * (20! / 02!)
+    z = z * y // FIXED_1; res += z * 0x05a0913f6b1e0000; # add y^03 * (20! / 03!)
+    z = z * y // FIXED_1; res += z * 0x0168244fdac78000; # add y^04 * (20! / 04!)
+    z = z * y // FIXED_1; res += z * 0x004807432bc18000; # add y^05 * (20! / 05!)
+    z = z * y // FIXED_1; res += z * 0x000c0135dca04000; # add y^06 * (20! / 06!)
+    z = z * y // FIXED_1; res += z * 0x0001b707b1cdc000; # add y^07 * (20! / 07!)
+    z = z * y // FIXED_1; res += z * 0x000036e0f639b800; # add y^08 * (20! / 08!)
+    z = z * y // FIXED_1; res += z * 0x00000618fee9f800; # add y^09 * (20! / 09!)
+    z = z * y // FIXED_1; res += z * 0x0000009c197dcc00; # add y^10 * (20! / 10!)
+    z = z * y // FIXED_1; res += z * 0x0000000e30dce400; # add y^11 * (20! / 11!)
+    z = z * y // FIXED_1; res += z * 0x000000012ebd1300; # add y^12 * (20! / 12!)
+    z = z * y // FIXED_1; res += z * 0x0000000017499f00; # add y^13 * (20! / 13!)
+    z = z * y // FIXED_1; res += z * 0x0000000001a9d480; # add y^14 * (20! / 14!)
+    z = z * y // FIXED_1; res += z * 0x00000000001c6380; # add y^15 * (20! / 15!)
+    z = z * y // FIXED_1; res += z * 0x000000000001c638; # add y^16 * (20! / 16!)
+    z = z * y // FIXED_1; res += z * 0x0000000000001ab8; # add y^17 * (20! / 17!)
+    z = z * y // FIXED_1; res += z * 0x000000000000017c; # add y^18 * (20! / 18!)
+    z = z * y // FIXED_1; res += z * 0x0000000000000014; # add y^19 * (20! / 19!)
+    z = z * y // FIXED_1; res += z * 0x0000000000000001; # add y^20 * (20! / 20!)
+    res = res // 0x21c3677c82b40000 + y + FIXED_1; # divide by 20! and then add y^1 / 1! + y^0 / 0!
 
     if ((x & 0x010000000000000000000000000000000) != 0): res = res * 0x1c3d6a24ed82218787d624d3e5eba95f9 // 0x18ebef9eac820ae8682b9793ac6d1e776;
     if ((x & 0x020000000000000000000000000000000) != 0): res = res * 0x18ebef9eac820ae8682b9793ac6d1e778 // 0x1368b2fc6f9609fe7aceb46aa619baed4;
@@ -464,7 +434,6 @@ def exp(x):
     if ((x & 0x100000000000000000000000000000000) != 0): res = res * 0x0454aaa8efe072e7f6ddbab84b40a55c5 // 0x00960aadc109e7a3bf4578099615711ea;
     if ((x & 0x200000000000000000000000000000000) != 0): res = res * 0x00960aadc109e7a3bf4578099615711d7 // 0x0002bf84208204f5977f9a8cf01fdce3d;
     if ((x & 0x400000000000000000000000000000000) != 0): res = res * 0x0002bf84208204f5977f9a8cf01fdc307 // 0x0000003c6ab775dd0b95b4cbee7e65d11;
-    assert(x < 0x800000000000000000000000000000000);
 
     return res;
 

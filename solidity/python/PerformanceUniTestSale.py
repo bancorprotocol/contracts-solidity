@@ -29,9 +29,10 @@ def Main():
     numOfTests = len(rangeSupply) * len(rangeBalance) * len(rangeWeight) * len(rangeAmount)
 
     tester = Web3Wrapper.Contract('BancorFormula').tester()
-
-    maxGasOptimal = 0
-    maxGasGeneral = 0
+    minGas = float('+inf')
+    maxGas = float('-inf')
+    totalGas = 0
+    countGas = 0
 
     for supply in rangeSupply:
         for balance in rangeBalance:
@@ -41,12 +42,11 @@ def Main():
                     if amount <= supply:
                         try:
                             gas = tester.calculateSaleReturn(supply, balance, weight, amount)
-                            if amount <= supply // 4 and weight >= 1000000 // 50:
-                                maxGasOptimal = max(maxGasOptimal,gas)
-                                print('Test {} out of {} (optimal case): gas = {}, maxGasOptimal = {}, maxGasGeneral = {}'.format(testNum, numOfTests, gas, maxGasOptimal, maxGasGeneral))
-                            else:
-                                maxGasGeneral = max(maxGasGeneral,gas)
-                                print('Test {} out of {} (general case): gas = {}, maxGasOptimal = {}, maxGasGeneral = {}'.format(testNum, numOfTests, gas, maxGasOptimal, maxGasGeneral))
+                            minGas = min(minGas, gas)
+                            maxGas = max(maxGas, gas)
+                            totalGas += gas
+                            countGas += 1
+                            print('Test {} out of {}: gas = {}, minimum = {}, maximum = {}, average = {}'.format(testNum, numOfTests, gas, minGas, maxGas, totalGas // countGas))
                         except:
                             pass
 
