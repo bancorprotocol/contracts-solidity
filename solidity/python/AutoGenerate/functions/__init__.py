@@ -1,11 +1,9 @@
-def log(x,hiTerms,loTerms,fixedOne):
+def optimalLog(x,hiTerms,loTerms,fixedOne):
     res = 0
-    assert x < hiTerms[0].exp
     for term in hiTerms[+1:]:
         if x >= term.exp:
             res = add(res,term.val)
             x = mul(x,fixedOne)//term.exp
-    assert x >= fixedOne
     z = y = sub(x,fixedOne)
     w = mul(y,y)//fixedOne
     for term in loTerms[:-1]:
@@ -15,7 +13,7 @@ def log(x,hiTerms,loTerms,fixedOne):
     return res
 
 
-def exp(x,hiTerms,loTerms,fixedOne):
+def optimalExp(x,hiTerms,loTerms,fixedOne):
     res = 0
     z = y = x % hiTerms[0].bit
     for term in loTerms[+1:]:
@@ -25,19 +23,24 @@ def exp(x,hiTerms,loTerms,fixedOne):
     for term in hiTerms[:-1]:
         if x & term.bit:
             res = mul(res,term.num)//term.den
-    assert x < hiTerms[-1].bit
     return res
 
 
 def add(x,y):
     assert (x + y) < (1 << 256)
     return (x + y)
+
+
 def sub(x,y):
     assert (x - y) >= 0
     return (x - y)
+
+
 def mul(x,y):
     assert (x * y) < (1 << 256)
     return (x * y)
+
+
 def shl(x,y):
     assert (x << y) < (1 << 256)
     return (x << y)

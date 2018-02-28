@@ -1,5 +1,5 @@
 from constants import *
-from functions import exp
+from functions import *
 from math import factorial
 from decimal import Decimal
 from decimal import getcontext
@@ -30,12 +30,12 @@ for n in range(EXP_NUM_OF_HI_TERMS+1):
 
 MAX_VAL = hiTerms[-1].bit-1
 loTerms = [LoTerm(1,1)]
-res = exp(MAX_VAL,hiTerms,loTerms,FIXED_ONE)
+res = optimalExp(MAX_VAL,hiTerms,loTerms,FIXED_ONE)
 while True:
     n = len(loTerms)+1
     val = factorial(n)
     loTermsNext = [LoTerm(val//factorial(i+1),i+1) for i in range(n)]
-    resNext = exp(MAX_VAL,hiTerms,loTermsNext,FIXED_ONE)
+    resNext = optimalExp(MAX_VAL,hiTerms,loTermsNext,FIXED_ONE)
     if res < resNext:
         res = resNext
         loTerms = loTermsNext
@@ -57,4 +57,5 @@ print('        res = res / 0x{:x} + y + FIXED_ONE; // divide by {}! and then add
 print('')
 for term in hiTerms[:-1]:
     print('        if ((x & {0:#0{1}x}) != 0) res = res * {2:#0{3}x} / {4:#0{5}x};'.format(term.bit,hiTermBitMaxLen,term.num,hiTermNumMaxLen,term.den,hiTermDenMaxLen))
-print('        assert(x < 0x{:x});'.format(hiTerms[-1].bit))
+print('')
+print('    uint256 private constant OPT_EXP_MAX_VAL = 0x{:x};'.format(hiTerms[-1].bit))

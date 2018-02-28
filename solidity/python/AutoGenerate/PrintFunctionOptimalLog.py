@@ -1,5 +1,5 @@
 from constants import *
-from functions import log
+from functions import *
 from decimal import Decimal
 from decimal import getcontext
 from collections import namedtuple
@@ -26,12 +26,12 @@ for n in range(LOG_NUM_OF_HI_TERMS+1):
 
 MAX_VAL = hiTerms[0].exp-1
 loTerms = [LoTerm(FIXED_ONE*2,FIXED_ONE*2)]
-res = log(MAX_VAL,hiTerms,loTerms,FIXED_ONE)
+res = optimalLog(MAX_VAL,hiTerms,loTerms,FIXED_ONE)
 while True:
     n = len(loTerms)
     val = FIXED_ONE*(2*n+2)
     loTermsNext = loTerms+[LoTerm(val//(2*n+1),val)]
-    resNext = log(MAX_VAL,hiTerms,loTermsNext,FIXED_ONE)
+    resNext = optimalLog(MAX_VAL,hiTerms,loTermsNext,FIXED_ONE)
     if res < resNext:
         res = resNext
         loTerms = loTermsNext
@@ -45,11 +45,11 @@ loTermNumMaxLen = max([len(hex(term.num)) for term in loTerms])
 loTermDenMaxLen = max([len(hex(term.den)) for term in loTerms])
 
 
-print('        assert(x < 0x{:x});'.format(hiTerms[0].exp))
+print('    uint256 private constant OPT_LOG_MAX_VAL = 0x{:x};'.format(hiTerms[0].exp))
+print('')
 for term in hiTerms[+1:]:
     print('        if (x >= {2:#0{3}x}) {{res += {0:#0{1}x}; x = x * FIXED_ONE / {2:#0{3}x};}}'.format(term.val,hiTermValMaxLen,term.exp,hiTermExpMaxLen))
 print('')
-print('        assert(x >= FIXED_ONE);')
 print('        z = y = x - FIXED_ONE;')
 print('        w = y * y / FIXED_ONE;')
 for term in loTerms[:-1]:
