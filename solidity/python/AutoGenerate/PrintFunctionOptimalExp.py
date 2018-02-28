@@ -50,6 +50,14 @@ loTermValMaxLen = max([len(hex(term.val)) for term in loTerms[+1:]])
 loTermIndMaxLen = max([len(str(term.ind)) for term in loTerms[+1:]])
 
 
+print('    uint256 private constant OPT_EXP_MAX_VAL = 0x{:x};'.format(hiTerms[-1].bit))
+print('')
+print('    function optimalExp(uint256 x) internal pure returns (uint256) {')
+print('        uint256 res = 0;')
+print('')
+print('        uint256 y;')
+print('        uint256 z;')
+print('')
 print('        z = y = x % 0x{:x};'.format(hiTerms[0].bit))
 for term in loTerms[+1:]:
     print('        z = z * y / FIXED_1; res += z * {0:#0{4}x}; // add y^{1:0{5}d} * ({2:0{5}d}! / {3:0{5}d}!)'.format(term.val,term.ind,len(loTerms),term.ind,loTermValMaxLen,loTermIndMaxLen))
@@ -58,4 +66,5 @@ print('')
 for term in hiTerms[:-1]:
     print('        if ((x & {0:#0{1}x}) != 0) res = res * {2:#0{3}x} / {4:#0{5}x};'.format(term.bit,hiTermBitMaxLen,term.num,hiTermNumMaxLen,term.den,hiTermDenMaxLen))
 print('')
-print('    uint256 private constant OPT_EXP_MAX_VAL = 0x{:x};'.format(hiTerms[-1].bit))
+print('        return res;')
+print('    }')

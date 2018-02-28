@@ -4,6 +4,7 @@ from common import coefficients
 valueMaxLen = len(hex(coefficients[1]))
 indexMaxLen = len(str(len(coefficients)))
 
+print('    function generalExp(uint256 _x, uint8 _precision) internal pure returns (uint256) {')
 print('        uint256 xi = _x;')
 print('        uint256 res = 0;')
 print('')

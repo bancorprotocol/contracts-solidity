@@ -1,7 +1,5 @@
 from common import getMaxExpArray
 from common import getMaxValArray
-
-
 from constants import MIN_PRECISION
 from constants import MAX_PRECISION
 
