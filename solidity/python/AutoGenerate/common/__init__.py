@@ -7,11 +7,11 @@ coefficients = [maxFactorial//factorial(i) for i in range(1,NUM_OF_COEFS)]
 
 
 def getMaxExpArray(numOfPrecisions):
-    return [binarySearch(fixedExpSafe,precision) for precision in range(numOfPrecisions)]
+    return [binarySearch(optimalExp,precision) for precision in range(numOfPrecisions)]
 
 
 def getMaxValArray(maxExpArray):
-    return [fixedExpSafe(maxExpArray[precision],precision) for precision in range(len(maxExpArray))]
+    return [optimalExp(maxExpArray[precision],precision) for precision in range(len(maxExpArray))]
 
 
 def binarySearch(func,args):
@@ -32,7 +32,7 @@ def binarySearch(func,args):
         return lo
 
 
-def fixedExpSafe(x,precision):
+def optimalExp(x,precision):
     xi = x
     res = 0
     for coefficient in coefficients[1:]:

@@ -1,6 +1,6 @@
 from common import getMaxExpArray
 from common import binarySearch
-from common import fixedExpSafe
+from common import optimalExp
 from common import safeMul
 
 
@@ -16,7 +16,7 @@ def getMaxExp(precision,factor):
     maxExp = maxExpArray[MIN_PRECISION]
     for p in range (MIN_PRECISION,precision):
         maxExp = safeMul(maxExp,factor) >> MAX_PRECISION
-        fixedExpSafe(maxExp,precision)
+        optimalExp(maxExp,precision)
     return maxExp
 
 
