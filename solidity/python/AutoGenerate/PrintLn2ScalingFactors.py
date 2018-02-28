@@ -4,7 +4,7 @@ from decimal import ROUND_FLOOR
 from decimal import ROUND_CEILING
 
 
-MAX_PRECISION = 127
+from constants import MAX_PRECISION
 
 
 def ln(n):

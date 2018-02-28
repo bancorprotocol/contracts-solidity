@@ -1,8 +1,8 @@
 from common import getMaxExpArray
 
 
-MIN_PRECISION = 32
-MAX_PRECISION = 127
+from constants import MIN_PRECISION
+from constants import MAX_PRECISION
 
 
 maxExpArray = getMaxExpArray(MAX_PRECISION+1)
@@ -17,8 +17,7 @@ len2 = len('0x{:x}'.format(maxExpArrayShl(0)))
 
 
 print('    uint256[{}] private maxExpArray;'.format(len(maxExpArray)))
-print('')
-print('    function BancorFormula() {')
+print('    function BancorFormula() public {')
 for precision in range(len(maxExpArray)):
     prefix = '  ' if MIN_PRECISION <= precision <= MAX_PRECISION else '//'
     print('    {0:s}  maxExpArray[{1:{2}d}] = {3:#0{4}x};'.format(prefix,precision,len1,maxExpArrayShl(precision),len2))

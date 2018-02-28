@@ -1,4 +1,4 @@
-MAX_PRECISION = 127
+from constants import MAX_PRECISION
 
 
 FIXED_1 = 1<<MAX_PRECISION

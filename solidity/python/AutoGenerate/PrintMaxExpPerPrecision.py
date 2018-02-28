@@ -4,8 +4,8 @@ from common import generalExp
 from common import safeMul
 
 
-MIN_PRECISION = 32
-MAX_PRECISION = 127
+from constants import MIN_PRECISION
+from constants import MAX_PRECISION
 
 
 NUM_OF_VALUES_PER_ROW = 4

@@ -1,4 +1,5 @@
-PRECISION = 127
+MIN_PRECISION = 32
+MAX_PRECISION = 127
 
 
 LOG_MAX_HI_TERM_VAL = 1 # The input to function 'log' must be smaller than e ^ LOG_MAX_HI_TERM_VAL

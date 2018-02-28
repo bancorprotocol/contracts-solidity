@@ -2,8 +2,8 @@ from common import getMaxExpArray
 from common import getMaxValArray
 
 
-MIN_PRECISION = 32
-MAX_PRECISION = 127
+from constants import MIN_PRECISION
+from constants import MAX_PRECISION
 
 
 maxExpArray = getMaxExpArray(MAX_PRECISION+1)
