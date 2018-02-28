@@ -1,9 +1,9 @@
-from constants import MIN_PRECISION
-from constants import MAX_PRECISION
-from common import getMaxExpArray
-from common import binarySearch
-from common import generalExp
-from common import safeMul
+from common.constants import MIN_PRECISION
+from common.constants import MAX_PRECISION
+from common.functions import getMaxExpArray
+from common.functions import binarySearch
+from common.functions import generalExp
+from common.functions import safeMul
 
 
 NUM_OF_VALUES_PER_ROW = 4

@@ -1,6 +1,6 @@
-from common import getMaxExpArray
-from constants import MIN_PRECISION
-from constants import MAX_PRECISION
+from common.functions import getMaxExpArray
+from common.constants import MIN_PRECISION
+from common.constants import MAX_PRECISION
 
 
 maxExpArray = getMaxExpArray(MAX_PRECISION+1)

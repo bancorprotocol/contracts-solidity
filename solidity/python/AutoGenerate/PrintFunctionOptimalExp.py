@@ -1,9 +1,11 @@
-from constants import *
-from functions import *
 from math import factorial
 from decimal import Decimal
 from decimal import getcontext
 from collections import namedtuple
+from common.functions import optimalExp
+from common.constants import MAX_PRECISION
+from common.constants import EXP_MAX_HI_TERM_VAL
+from common.constants import EXP_NUM_OF_HI_TERMS
 
 
 getcontext().prec = 100

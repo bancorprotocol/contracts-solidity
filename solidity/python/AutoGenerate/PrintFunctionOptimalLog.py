@@ -1,8 +1,10 @@
-from constants import *
-from functions import *
 from decimal import Decimal
 from decimal import getcontext
 from collections import namedtuple
+from common.functions import optimalLog
+from common.constants import MAX_PRECISION
+from common.constants import LOG_MAX_HI_TERM_VAL
+from common.constants import LOG_NUM_OF_HI_TERMS
 
 
 getcontext().prec = 100

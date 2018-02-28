@@ -2,7 +2,7 @@ from decimal import Decimal
 from decimal import getcontext
 from decimal import ROUND_FLOOR
 from decimal import ROUND_CEILING
-from constants import MAX_PRECISION
+from common.constants import MAX_PRECISION
 
 
 getcontext().prec = 100

@@ -1,4 +1,4 @@
-from constants import MAX_PRECISION
+from common.constants import MAX_PRECISION
 
 
 FIXED_1 = 1<<MAX_PRECISION
