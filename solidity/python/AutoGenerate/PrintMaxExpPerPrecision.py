@@ -20,13 +20,13 @@ def getMaxExp(precision,factor):
     return maxExp
 
 
-def assertFactor(factor,args):
+def assertFactor(factor):
     for precision in range(MIN_PRECISION,MAX_PRECISION+1):
         getMaxExp(precision,factor)
 
 
 maxExpArray = getMaxExpArray(MAX_PRECISION+1)
-growthFactor = binarySearch(assertFactor,None)
+growthFactor = binarySearch(assertFactor,{})
 maxMaxExpLen = len('0x{:x}'.format(maxExpArray[-1]))
 
 
