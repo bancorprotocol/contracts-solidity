@@ -12,31 +12,27 @@ contract TestBancorFormula is BancorFormula {
         return super.power(_baseN, _baseD, _expN, _expD);
     }
 
-    function lnTest(uint256 _numerator, uint256 _denominator) external pure returns (uint256) {
-        return super.ln(_numerator, _denominator);
-    }
-
-    function findPositionInMaxExpArrayTest(uint256 _x) external view returns (uint8) {
-        return super.findPositionInMaxExpArray(_x);
-    }
-
-    function fixedExpTest(uint256 _x, uint8 _precision) external pure returns (uint256) {
-        return super.fixedExp(_x, _precision);
+    function generalLogTest(uint256 x) external pure returns (uint256) {
+        return super.generalLog(x);
     }
 
     function floorLog2Test(uint256 _n) external pure returns (uint8) {
         return super.floorLog2(_n);
     }
 
-    function powTest(uint256 a, uint256 b, uint256 c, uint256 d) external pure returns (uint256) {
-        return super.pow(a, b, c, d);
+    function findPositionInMaxExpArrayTest(uint256 _x) external view returns (uint8) {
+        return super.findPositionInMaxExpArray(_x);
     }
 
-    function logTest(uint256 x) external pure returns (uint256) {
-        return super.log(x);
+    function generalExpTest(uint256 _x, uint8 _precision) external pure returns (uint256) {
+        return super.generalExp(_x, _precision);
     }
 
-    function expTest(uint256 x) external pure returns (uint256) {
-        return super.exp(x);
+    function optimalLogTest(uint256 x) external pure returns (uint256) {
+        return super.optimalLog(x);
+    }
+
+    function optimalExpTest(uint256 x) external pure returns (uint256) {
+        return super.optimalExp(x);
     }
 }

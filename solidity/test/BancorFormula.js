@@ -98,11 +98,12 @@ contract('BancorFormula', () => {
         let numerator   = cases[index]['numerator'  ];
         let denominator = cases[index]['denominator'];
         let assertion   = cases[index]['assertion'  ];
-        let test        = `Function ln(0x${numerator.toString(16)}, 0x${denominator.toString(16)})`;
+        let input       = numerator.dividedToIntegerBy(denominator);
+        let test        = `Function generalLog(0x${input.toString(16)})`;
 
         it(`${test}:`, async () => {
             try {
-                let retVal = await formula.lnTest(numerator, denominator);
+                let retVal = await formula.generalLogTest(input);
                 assert(retVal.times(MAX_EXPONENT).lessThan(ILLEGAL_VALUE), `${test}: output is too large`);
                 assert(assertion, `${test} passed when it should have failed`);
             }
@@ -144,16 +145,16 @@ contract('BancorFormula', () => {
         let maxExp = web3.toBigNumber(constants.maxExpArray[precision]);
         let maxVal = web3.toBigNumber(constants.maxValArray[precision]);
         let errExp = maxExp.plus(1);
-        let test1  = `Function fixedExp(0x${maxExp.toString(16)}, ${precision})`;
-        let test2  = `Function fixedExp(0x${errExp.toString(16)}, ${precision})`;
+        let test1  = `Function generalExp(0x${maxExp.toString(16)}, ${precision})`;
+        let test2  = `Function generalExp(0x${errExp.toString(16)}, ${precision})`;
 
         it(`${test1}:`, async () => {
-            let retVal = await formula.fixedExpTest(maxExp, precision);
+            let retVal = await formula.generalExpTest(maxExp, precision);
             assert(retVal.equals(maxVal), `${test1}: output is wrong`);
         });
 
         it(`${test2}:`, async () => {
-            let retVal = await formula.fixedExpTest(errExp, precision);
+            let retVal = await formula.generalExpTest(errExp, precision);
             assert(retVal.lessThan(maxVal), `${test2}:  output indicates that maxExpArray[${precision}] is wrong`);
         });
     }
@@ -161,10 +162,10 @@ contract('BancorFormula', () => {
     for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
         let minExp = web3.toBigNumber(constants.maxExpArray[precision-1]).plus(1);
         let minVal = web3.toBigNumber(2).toPower(precision);
-        let test   = `Function fixedExp(0x${minExp.toString(16)}, ${precision})`;
+        let test   = `Function generalExp(0x${minExp.toString(16)}, ${precision})`;
 
         it(`${test}:`, async () => {
-            let retVal = await formula.fixedExpTest(minExp, precision);
+            let retVal = await formula.generalExpTest(minExp, precision);
             assert(retVal.greaterThanOrEqualTo(minVal), `${test}: output is too small`);
         });
     }
@@ -197,21 +198,17 @@ contract('BancorFormula', () => {
         let EXP_MIN = 0;
         let LOG_MAX = web3.toBigNumber(Decimal.exp(1).toFixed());
         let EXP_MAX = web3.toBigNumber(Decimal.pow(2,4).toFixed());
+        let FIXED_1 = web3.toBigNumber(2).toPower(constants.MAX_PRECISION);
 
-        let FIXED_ONE;
-        before(async () => {
-            FIXED_ONE = await formula.FIXED_ONE();
-        });
-
-        describe(`function log:`, async () => {
+        describe(`function optimalLog:`, async () => {
             for (let percent = 0; percent <= 100; percent++) {
                 let x = web3.toBigNumber(percent).dividedBy(100).times(LOG_MAX.minus(LOG_MIN)).plus(LOG_MIN);
                 let cond = percent < 100;
-                let test = `function log(${x})`;
+                let test = `function optimalLog(${x})`;
 
                 it(`${test} should ${cond ? "pass" : "fail"}`, async () => {
                     try {
-                        await formula.logTest(FIXED_ONE.times(x).truncated());
+                        await formula.optimalLogTest(FIXED_1.times(x).truncated());
                         assert(cond, `${test} passed when it should have failed`);
                     }
                     catch (error) {
@@ -221,15 +218,15 @@ contract('BancorFormula', () => {
             }
         });
 
-        describe(`function exp:`, async () => {
+        describe(`function optimalExp:`, async () => {
             for (let percent = 0; percent <= 100; percent++) {
                 let x = web3.toBigNumber(percent).dividedBy(100).times(EXP_MAX.minus(EXP_MIN)).plus(EXP_MIN);
                 let cond = percent < 100;
-                let test = `function exp(${x})`;
+                let test = `function optimalExp(${x})`;
 
                 it(`${test} should ${cond ? "pass" : "fail"}`, async () => {
                     try {
-                        await formula.expTest(FIXED_ONE.times(x).truncated());
+                        await formula.optimalExpTest(FIXED_1.times(x).truncated());
                         assert(cond, `${test} passed when it should have failed`);
                     }
                     catch (error) {
