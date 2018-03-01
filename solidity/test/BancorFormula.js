@@ -88,27 +88,21 @@ contract('BancorFormula', () => {
         });
     }
 
-    let cases = [
-        {'numerator' : MAX_NUMERATOR        , 'denominator' : MAX_NUMERATOR.minus(1), 'assertion' : true },
-        {'numerator' : MAX_NUMERATOR        , 'denominator' : MIN_DENOMINATOR       , 'assertion' : true },
-        {'numerator' : MAX_NUMERATOR.plus(1), 'denominator' : MIN_DENOMINATOR       , 'assertion' : false},
+    let values = [
+        MAX_NUMERATOR.dividedToIntegerBy(MAX_NUMERATOR.minus(1)),
+        MAX_NUMERATOR.dividedToIntegerBy(MIN_DENOMINATOR       ),
     ];
 
-    for (let index = 0; index < cases.length; index++) {
-        let numerator   = cases[index]['numerator'  ];
-        let denominator = cases[index]['denominator'];
-        let assertion   = cases[index]['assertion'  ];
-        let input       = numerator.dividedToIntegerBy(denominator);
-        let test        = `Function generalLog(0x${input.toString(16)})`;
+    for (let index = 0; index < values.length; index++) {
+        let test = `Function generalLog(0x${values[index].toString(16)})`;
 
         it(`${test}:`, async () => {
             try {
-                let retVal = await formula.generalLogTest(input);
+                let retVal = await formula.generalLogTest(values[index]);
                 assert(retVal.times(MAX_EXPONENT).lessThan(ILLEGAL_VALUE), `${test}: output is too large`);
-                assert(assertion, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(!assertion && error.message == ERROR_MESSAGE, error.message);
+                assert(false, error.message);
             }
         });
     }
@@ -201,36 +195,30 @@ contract('BancorFormula', () => {
         let FIXED_1 = web3.toBigNumber(2).toPower(constants.MAX_PRECISION);
 
         describe(`function optimalLog:`, async () => {
-            for (let percent = 0; percent <= 100; percent++) {
+            for (let percent = 0; percent < 100; percent++) {
                 let x = web3.toBigNumber(percent).dividedBy(100).times(LOG_MAX.minus(LOG_MIN)).plus(LOG_MIN);
-                let cond = percent < 100;
-                let test = `function optimalLog(${x})`;
 
-                it(`${test} should ${cond ? "pass" : "fail"}`, async () => {
+                it(`function optimalLog(${x})`, async () => {
                     try {
                         await formula.optimalLogTest(FIXED_1.times(x).truncated());
-                        assert(cond, `${test} passed when it should have failed`);
                     }
                     catch (error) {
-                        assert(!cond && error.message == ERROR_MESSAGE, error.message);
+                        assert(false, error.message);
                     }
                 });
             }
         });
 
         describe(`function optimalExp:`, async () => {
-            for (let percent = 0; percent <= 100; percent++) {
+            for (let percent = 0; percent < 100; percent++) {
                 let x = web3.toBigNumber(percent).dividedBy(100).times(EXP_MAX.minus(EXP_MIN)).plus(EXP_MIN);
-                let cond = percent < 100;
-                let test = `function optimalExp(${x})`;
 
-                it(`${test} should ${cond ? "pass" : "fail"}`, async () => {
+                it(`function optimalExp(${x})`, async () => {
                     try {
                         await formula.optimalExpTest(FIXED_1.times(x).truncated());
-                        assert(cond, `${test} passed when it should have failed`);
                     }
                     catch (error) {
-                        assert(!cond && error.message == ERROR_MESSAGE, error.message);
+                        assert(false, error.message);
                     }
                 });
             }
