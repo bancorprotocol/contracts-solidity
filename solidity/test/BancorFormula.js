@@ -183,51 +183,45 @@ contract('BancorFormula', () => {
         }
     }
 
-    describe(`Optimized Code:`, async () => {
-        let Decimal = require("decimal.js");
-        Decimal.set({precision: 100, rounding: Decimal.ROUND_DOWN});
-        web3.BigNumber.config({DECIMAL_PLACES: 100, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+    let Decimal = require("decimal.js");
+    Decimal.set({precision: 100, rounding: Decimal.ROUND_DOWN});
+    web3.BigNumber.config({DECIMAL_PLACES: 100, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
 
-        let LOG_MIN = 1;
-        let EXP_MIN = 0;
-        let LOG_MAX = web3.toBigNumber(Decimal.exp(1).toFixed());
-        let EXP_MAX = web3.toBigNumber(Decimal.pow(2,4).toFixed());
-        let FIXED_1 = web3.toBigNumber(2).toPower(constants.MAX_PRECISION);
+    let LOG_MIN = 1;
+    let EXP_MIN = 0;
+    let LOG_MAX = web3.toBigNumber(Decimal.exp(1).toFixed());
+    let EXP_MAX = web3.toBigNumber(Decimal.pow(2,4).toFixed());
+    let FIXED_1 = web3.toBigNumber(2).toPower(constants.MAX_PRECISION);
 
-        describe(`function optimalLog:`, async () => {
-            for (let percent = 0; percent < 100; percent++) {
-                let x = web3.toBigNumber(percent).dividedBy(100).times(LOG_MAX.minus(LOG_MIN)).plus(LOG_MIN);
+    for (let percent = 0; percent < 100; percent++) {
+        let x = web3.toBigNumber(percent).dividedBy(100).times(LOG_MAX.minus(LOG_MIN)).plus(LOG_MIN);
 
-                it(`function optimalLog(${x})`, async () => {
-                    try {
-                        let fixedPoint = await formula.optimalLogTest(FIXED_1.times(x).truncated());
-                        let floatPoint = web3.toBigNumber(Decimal(x.toFixed()).ln().times(FIXED_1.toFixed()).toFixed());
-                        let ratio = fixedPoint.equals(floatPoint) ? web3.toBigNumber(1) : fixedPoint.dividedBy(floatPoint);
-                        assert(ratio.greaterThanOrEqualTo("0.999999999999") && ratio.lessThanOrEqualTo("1"), `ratio = ${ratio.toFixed()}`);
-                    }
-                    catch (error) {
-                        assert(false, error.message);
-                    }
-                });
+        it(`Function optimalLog(${x})`, async () => {
+            try {
+                let fixedPoint = await formula.optimalLogTest(FIXED_1.times(x).truncated());
+                let floatPoint = web3.toBigNumber(Decimal(x.toFixed()).ln().times(FIXED_1.toFixed()).toFixed());
+                let ratio = fixedPoint.equals(floatPoint) ? web3.toBigNumber(1) : fixedPoint.dividedBy(floatPoint);
+                assert(ratio.greaterThanOrEqualTo("0.999999999999") && ratio.lessThanOrEqualTo("1"), `ratio = ${ratio.toFixed()}`);
+            }
+            catch (error) {
+                assert(false, error.message);
             }
         });
+    }
 
-        describe(`function optimalExp:`, async () => {
-            for (let percent = 0; percent < 100; percent++) {
-                let x = web3.toBigNumber(percent).dividedBy(100).times(EXP_MAX.minus(EXP_MIN)).plus(EXP_MIN);
+    for (let percent = 0; percent < 100; percent++) {
+        let x = web3.toBigNumber(percent).dividedBy(100).times(EXP_MAX.minus(EXP_MIN)).plus(EXP_MIN);
 
-                it(`function optimalExp(${x})`, async () => {
-                    try {
-                        let fixedPoint = await formula.optimalExpTest(FIXED_1.times(x).truncated());
-                        let floatPoint = web3.toBigNumber(Decimal(x.toFixed()).exp().times(FIXED_1.toFixed()).toFixed());
-                        let ratio = fixedPoint.equals(floatPoint) ? web3.toBigNumber(1) : fixedPoint.dividedBy(floatPoint);
-                        assert(ratio.greaterThanOrEqualTo("0.999999999999") && ratio.lessThanOrEqualTo("1"), `ratio = ${ratio.toFixed()}`);
-                    }
-                    catch (error) {
-                        assert(false, error.message);
-                    }
-                });
+        it(`Function optimalExp(${x})`, async () => {
+            try {
+                let fixedPoint = await formula.optimalExpTest(FIXED_1.times(x).truncated());
+                let floatPoint = web3.toBigNumber(Decimal(x.toFixed()).exp().times(FIXED_1.toFixed()).toFixed());
+                let ratio = fixedPoint.equals(floatPoint) ? web3.toBigNumber(1) : fixedPoint.dividedBy(floatPoint);
+                assert(ratio.greaterThanOrEqualTo("0.999999999999") && ratio.lessThanOrEqualTo("1"), `ratio = ${ratio.toFixed()}`);
+            }
+            catch (error) {
+                assert(false, error.message);
             }
         });
-    });
+    }
 });
