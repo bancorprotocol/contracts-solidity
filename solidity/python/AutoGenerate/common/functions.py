@@ -1,7 +1,7 @@
 from math import factorial
 
 
-def getExpCoefficients(numOfCoefficients):
+def getCoefficients(numOfCoefficients):
     maxFactorial = factorial(numOfCoefficients-1)
     return [maxFactorial//factorial(i) for i in range(1,numOfCoefficients)]
 

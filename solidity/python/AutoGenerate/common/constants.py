@@ -2,7 +2,7 @@ MIN_PRECISION = 32
 MAX_PRECISION = 127
 
 
-EXP_NUM_OF_COEFFICIENTS = 34
+NUM_OF_COEFFICIENTS = 34
 
 
 LOG_MAX_HI_TERM_VAL = 1 # The input to function 'log' must be smaller than e ^ LOG_MAX_HI_TERM_VAL
