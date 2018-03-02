@@ -404,6 +404,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
     /**
         Return log(x / FIXED_1) * FIXED_1
+        Input range: FIXED_1 <= x <= LOG_EXP_MAX_VAL - 1
         Auto-generated via 'PrintFunctionOptimalLog.py'
     */
     function optimalLog(uint256 x) internal pure returns (uint256) {
@@ -438,6 +439,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
     /**
         Return e ^ (x / FIXED_1) * FIXED_1
+        Input range: 0 <= x <= OPT_EXP_MAX_VAL - 1
         Auto-generated via 'PrintFunctionOptimalExp.py'
     */
     function optimalExp(uint256 x) internal pure returns (uint256) {

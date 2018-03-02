@@ -370,6 +370,7 @@ def generalExp(_x, _precision):
 
 '''
     Return log(x / FIXED_1) * FIXED_1
+    Input range: FIXED_1 <= x <= LOG_EXP_MAX_VAL - 1
     Auto-generated via 'PrintFunctionOptimalLog.py'
 '''
 def optimalLog(x):
@@ -399,6 +400,7 @@ def optimalLog(x):
 
 '''
     Return e ^ (x / FIXED_1) * FIXED_1
+    Input range: 0 <= x <= OPT_EXP_MAX_VAL - 1
     Auto-generated via 'PrintFunctionOptimalExp.py'
 '''
 def optimalExp(x):
