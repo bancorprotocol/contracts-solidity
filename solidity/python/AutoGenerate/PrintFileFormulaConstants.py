@@ -1,11 +1,14 @@
+from common.functions import getExpCoefficients
 from common.functions import getMaxExpArray
 from common.functions import getMaxValArray
+from common.constants import EXP_NUM_OF_COEFFICIENTS
 from common.constants import MIN_PRECISION
 from common.constants import MAX_PRECISION
 
 
-maxExpArray = getMaxExpArray(MAX_PRECISION+1)
-maxValArray = getMaxValArray(maxExpArray)
+coefficients = getExpCoefficients(EXP_NUM_OF_COEFFICIENTS)
+maxExpArray = getMaxExpArray(coefficients,MAX_PRECISION+1)
+maxValArray = getMaxValArray(coefficients,maxExpArray)
 
 
 print('module.exports.MIN_PRECISION = {};'.format(MIN_PRECISION))

@@ -1,17 +1,17 @@
 from math import factorial
 
 
-NUM_OF_COEFS = 34
-maxFactorial = factorial(NUM_OF_COEFS-1)
-coefficients = [maxFactorial//factorial(i) for i in range(1,NUM_OF_COEFS)]
+def getExpCoefficients(numOfCoefficients):
+    maxFactorial = factorial(numOfCoefficients-1)
+    return [maxFactorial//factorial(i) for i in range(1,numOfCoefficients)]
 
 
-def getMaxExpArray(numOfPrecisions):
-    return [binarySearch(generalExp,{'precision':precision}) for precision in range(numOfPrecisions)]
+def getMaxExpArray(coefficients,numOfPrecisions):
+    return [binarySearch(generalExp,[coefficients,precision]) for precision in range(numOfPrecisions)]
 
 
-def getMaxValArray(maxExpArray):
-    return [generalExp(maxExpArray[precision],precision) for precision in range(len(maxExpArray))]
+def getMaxValArray(coefficients,maxExpArray):
+    return [generalExp(maxExpArray[precision],coefficients,precision) for precision in range(len(maxExpArray))]
 
 
 def binarySearch(func,args):
@@ -20,19 +20,19 @@ def binarySearch(func,args):
     while lo+1 < hi:
         mid = (lo+hi)//2
         try:
-            func(mid,**args)
+            func(mid,*args)
             lo = mid
         except:
             hi = mid
     try:
-        func(hi,**args)
+        func(hi,*args)
         return hi
     except:
-        func(lo,**args)
+        func(lo,*args)
         return lo
 
 
-def generalExp(x,precision):
+def generalExp(x,coefficients,precision):
     xi = x
     res = 0
     for coefficient in coefficients[1:]:

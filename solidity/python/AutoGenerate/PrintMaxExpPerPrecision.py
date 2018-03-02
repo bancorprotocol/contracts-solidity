@@ -1,5 +1,7 @@
+from common.constants import EXP_NUM_OF_COEFFICIENTS
 from common.constants import MIN_PRECISION
 from common.constants import MAX_PRECISION
+from common.functions import getExpCoefficients
 from common.functions import getMaxExpArray
 from common.functions import binarySearch
 from common.functions import generalExp
@@ -14,7 +16,7 @@ def getMaxExp(precision,factor):
     maxExp = maxExpArray[MIN_PRECISION]
     for p in range(MIN_PRECISION,precision):
         maxExp = safeMul(maxExp,factor)>>MAX_PRECISION
-        generalExp(maxExp,precision)
+        generalExp(maxExp,coefficients,precision)
     return maxExp
 
 
@@ -23,7 +25,8 @@ def assertFactor(factor):
         getMaxExp(precision,factor)
 
 
-maxExpArray = getMaxExpArray(MAX_PRECISION+1)
+coefficients = getExpCoefficients(EXP_NUM_OF_COEFFICIENTS)
+maxExpArray = getMaxExpArray(coefficients,MAX_PRECISION+1)
 growthFactor = binarySearch(assertFactor,{})
 maxMaxExpLen = len('0x{:x}'.format(maxExpArray[-1]))
 

@@ -1,9 +1,12 @@
+from common.functions import getExpCoefficients
 from common.functions import getMaxExpArray
+from common.constants import EXP_NUM_OF_COEFFICIENTS
 from common.constants import MIN_PRECISION
 from common.constants import MAX_PRECISION
 
 
-maxExpArray = getMaxExpArray(MAX_PRECISION+1)
+coefficients = getExpCoefficients(EXP_NUM_OF_COEFFICIENTS)
+maxExpArray = getMaxExpArray(coefficients,MAX_PRECISION+1)
 maxExpArrayShl = [((maxExpArray[precision]+1)<<(MAX_PRECISION-precision))-1 for precision in range(len(maxExpArray))]
 
 

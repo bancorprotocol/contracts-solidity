@@ -1,4 +1,8 @@
-from common.functions import coefficients
+from common.functions import getExpCoefficients
+from common.constants import EXP_NUM_OF_COEFFICIENTS
+
+
+coefficients = getExpCoefficients(EXP_NUM_OF_COEFFICIENTS)
 
 
 valueMaxLen = len(hex(coefficients[1]))
