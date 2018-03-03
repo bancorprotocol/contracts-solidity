@@ -277,7 +277,8 @@ contract BancorFormula is IBancorFormula, Utils {
     }
 
     /**
-        Compute the largest integer smaller than or equal to the natural logarithm of the input.
+        Compute log(x / FIXED_1) * FIXED_1.
+        This functions assumes that "x >= FIXED_1", because the output would be negative otherwise.
     */
     function generalLog(uint256 x) internal pure returns (uint256) {
         uint256 res = 0;

@@ -257,7 +257,8 @@ def power(_baseN, _baseD, _expN, _expD):
         return (generalExp(baseLogTimesExp >> (MAX_PRECISION - precision), precision), precision);
 
 '''
-    Compute the largest integer smaller than or equal to the natural logarithm of the input.
+    Compute log(x / FIXED_1) * FIXED_1.
+    This functions assumes that "x >= FIXED_1", because the output would be negative otherwise.
 '''
 def generalLog(x):
     res = 0;
