@@ -252,6 +252,9 @@ contract BancorFormula is IBancorFormula, Utils {
         @return output connector amount
     */
     function calculateRelayReturn(uint256 _connector1Balance, uint32 _connector1Weight, uint256 _connector2Balance, uint32 _connector2Weight, uint256 _amount) public view returns (uint256) {
+        // validate input
+        require(_connector1Balance > 0 && _connector1Weight > 0 && _connector1Weight <= MAX_WEIGHT && _connector2Balance > 0 && _connector2Weight > 0 && _connector2Weight <= MAX_WEIGHT);
+
         // special case for equal weights
         if (_connector1Weight == _connector2Weight)
             return safeMul(_connector2Balance, _amount) / safeAdd(_connector1Balance, _amount);
