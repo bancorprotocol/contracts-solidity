@@ -265,7 +265,7 @@ contract BancorFormula is IBancorFormula, Utils {
         (result, precision) = power(baseN, _connector1Balance, _connector1Weight, _connector2Weight);
         uint256 temp1 = safeMul(_connector2Balance, result);
         uint256 temp2 = _connector2Balance << precision;
-        return (temp1 - temp2) >> precision;
+        return (temp1 - temp2) / result;
     }
 
     /**
