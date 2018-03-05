@@ -8,11 +8,19 @@ from decimal import getcontext
 getcontext().prec = 100
 
 
-def formulaTest(supply, balance1, weight1, balance2, weight2, amount):
-    singleHopResult = FormulaSolidityPort.calculateRelayReturn(balance1, weight1, balance2, weight2, amount)
-    newAmount       = FormulaSolidityPort.calculatePurchaseReturn(supply, balance1, weight1, amount)
-    doubleHopResult = FormulaSolidityPort.calculateSaleReturn(supply + newAmount, balance2, weight2, newAmount)
-    return Decimal(singleHopResult) / Decimal(doubleHopResult)
+def singleHopTest(balance1, weight1, balance2, weight2, amount):
+    try:
+        return FormulaSolidityPort.calculateRelayReturn(balance1, weight1, balance2, weight2, amount)
+    except:
+        return -1
+
+
+def doubleHopTest(supply, balance1, weight1, balance2, weight2, amount):
+    try:
+        amount = FormulaSolidityPort.calculatePurchaseReturn(supply, balance1, weight1, amount)
+        return FormulaSolidityPort.calculateSaleReturn(supply + amount, balance2, weight2, amount)
+    except:
+        return -1
 
 
 size = int(sys.argv[1]) if len(sys.argv) > 1 else 0
@@ -22,7 +30,8 @@ if size == 0:
 
 minRatio = Decimal('+inf')
 maxRatio = Decimal('-inf')
-numOfFailures = 0
+singleHopNumOfFailures = 0
+doubleHopNumOfFailures = 0
 
 
 for n in range(size):
@@ -32,10 +41,13 @@ for n in range(size):
     balance2 = random.randrange(1, 10 ** 23)
     weight2 = random.randrange(1, 1000000)
     amount = random.randrange(1, supply)
-    try:
-        ratio = formulaTest(supply, balance1, weight1, balance2, weight2, amount)
+    singleHopResult = singleHopTest(balance1, weight1, balance2, weight2, amount)
+    doubleHopResult = doubleHopTest(supply, balance1, weight1, balance2, weight2, amount)
+    if singleHopResult >= 0 and doubleHopResult >= 0:
+        ratio = Decimal(singleHopResult) / Decimal(doubleHopResult)
         minRatio = min(minRatio, ratio)
         maxRatio = max(maxRatio, ratio)
-    except Exception as error:
-        numOfFailures += 1
-    print('Test #{}: ratio = {:.12f}, minRatio = {:.12f}, maxRatio = {:.12f}, num of failures = {}'.format(n, ratio, minRatio, maxRatio, numOfFailures))
+    else:
+        singleHopNumOfFailures += singleHopResult < 0
+        doubleHopNumOfFailures += doubleHopResult < 0
+    print('Test #{}: ratio = {:.12f}, minRatio = {:.12f}, maxRatio = {:.12f}, num of failures (single-hop/double-hop) = {}/{}'.format(n, ratio, minRatio, maxRatio, singleHopNumOfFailures, doubleHopNumOfFailures))
