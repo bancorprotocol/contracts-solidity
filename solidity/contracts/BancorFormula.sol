@@ -238,6 +238,34 @@ contract BancorFormula is IBancorFormula, Utils {
     }
 
     /**
+        @dev ???
+
+        Formula:
+        Return = _connector2Balance * (1 - (_connector1Balance / (_connector1Balance + _amount)) ^ (_connector1Weight / _connector2Weight))
+
+        @param _connector1Balance    input connector balance
+        @param _connector1Weight     input connector weight, represented in ppm, 1-1000000
+        @param _connector2Balance    output connector balance
+        @param _connector2Weight     output connector weight, represented in ppm, 1-1000000
+        @param _amount               input connector amount
+
+        @return output connector amount
+    */
+    function calculateRelayReturn(uint256 _connector1Balance, uint32 _connector1Weight, uint256 _connector2Balance, uint32 _connector2Weight, uint256 _amount) public view returns (uint256) {
+        // special case for equal weights
+        if (_connector1Weight == _connector2Weight)
+            return safeMul(_connector2Balance, _amount) / safeAdd(_connector1Balance, _amount);
+
+        uint256 result;
+        uint8 precision;
+        uint256 baseD = safeAdd(_connector1Balance, _amount);
+        (result, precision) = power(_connector1Balance, baseD, _connector1Weight, _connector2Weight);
+        uint256 temp1 = _connector2Balance << precision;
+        uint256 temp2 = _connector2Balance * result;
+        return (temp1 - temp2) >> precision;
+    }
+
+    /**
         General Description:
             Determine a value of precision.
             Calculate an integer approximation of (_baseN / _baseD) ^ (_expN / _expD) * 2 ^ precision.

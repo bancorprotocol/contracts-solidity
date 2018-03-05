@@ -224,6 +224,31 @@ def calculateSaleReturn(_supply, _connectorBalance, _connectorWeight, _sellAmoun
     return (temp1 - temp2) // result;
 
 '''
+    @dev ???
+
+    Formula:
+    Return = _connector2Balance * (1 - (_connector1Balance / (_connector1Balance + _amount)) ^ (_connector1Weight / _connector2Weight))
+
+    @param _connector1Balance    input connector balance
+    @param _connector1Weight     input connector weight, represented in ppm, 1-1000000
+    @param _connector2Balance    output connector balance
+    @param _connector2Weight     output connector weight, represented in ppm, 1-1000000
+    @param _amount               input connector amount
+
+    @return output connector amount
+'''
+def calculateRelayReturn(_connector1Balance, _connector1Weight, _connector2Balance, _connector2Weight, _amount):
+    # special case for equal weights
+    if (_connector1Weight == _connector2Weight):
+        return safeMul(_connector2Balance, _amount) // safeAdd(_connector1Balance, _amount);
+
+    baseD = safeAdd(_connector1Balance, _amount);
+    (result, precision) = power(_connector1Balance, baseD, _connector1Weight, _connector2Weight);
+    temp1 = _connector2Balance << precision;
+    temp2 = _connector2Balance * result;
+    return (temp1 - temp2) >> precision;
+
+'''
     General Description:
         Determine a value of precision.
         Calculate an integer approximation of (_baseN / _baseD) ^ (_expN / _expD) * 2 ^ precision.
