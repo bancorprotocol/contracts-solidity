@@ -245,10 +245,10 @@ def calculateRelayReturn(_connector1Balance, _connector1Weight, _connector2Balan
     if (_connector1Weight == _connector2Weight):
         return safeMul(_connector2Balance, _amount) // safeAdd(_connector1Balance, _amount);
 
-    baseD = safeAdd(_connector1Balance, _amount);
-    (result, precision) = power(_connector1Balance, baseD, _connector1Weight, _connector2Weight);
-    temp1 = _connector2Balance << precision;
-    temp2 = _connector2Balance * result;
+    baseN = safeAdd(_connector1Balance, _amount);
+    (result, precision) = power(baseN, _connector1Balance, _connector1Weight, _connector2Weight);
+    temp1 = _connector2Balance * result;
+    temp2 = _connector2Balance << precision;
     return (temp1 - temp2) >> precision;
 
 '''
