@@ -30,8 +30,6 @@ if size == 0:
 
 minRatio = Decimal('+inf')
 maxRatio = Decimal('-inf')
-singleHopNumOfFailures = 0
-doubleHopNumOfFailures = 0
 
 
 for n in range(size):
@@ -41,13 +39,20 @@ for n in range(size):
     balance2 = random.randrange(1, 10 ** 23)
     weight2 = random.randrange(1, 1000000)
     amount = random.randrange(1, supply)
-    singleHopResult = singleHopTest(balance1, weight1, balance2, weight2, amount)
-    doubleHopResult = doubleHopTest(supply, balance1, weight1, balance2, weight2, amount)
-    if singleHopResult >= 0 and doubleHopResult >= 0:
-        ratio = Decimal(singleHopResult) / Decimal(doubleHopResult)
-        minRatio = min(minRatio, ratio)
-        maxRatio = max(maxRatio, ratio)
-    else:
-        singleHopNumOfFailures += singleHopResult < 0
-        doubleHopNumOfFailures += doubleHopResult < 0
-    print('Test #{}: ratio = {:.12f}, minRatio = {:.12f}, maxRatio = {:.12f}, num of failures (single-hop/double-hop) = {}/{}'.format(n, ratio, minRatio, maxRatio, singleHopNumOfFailures, doubleHopNumOfFailures))
+    singleHop = singleHopTest(balance1, weight1, balance2, weight2, amount)
+    doubleHop = doubleHopTest(supply, balance1, weight1, balance2, weight2, amount)
+    if singleHop * doubleHop < 0:
+        print('Implementation Error:')
+        print('supply    = {}'.format(supply))
+        print('balance1  = {}'.format(balance1))
+        print('weight1   = {}'.format(weight1))
+        print('balance2  = {}'.format(balance2))
+        print('weight2   = {}'.format(weight2))
+        print('amount    = {}'.format(amount))
+        print('singleHop = {}'.format(singleHop))
+        print('doubleHop = {}'.format(doubleHop))
+        break
+    ratio = Decimal(singleHop) / Decimal(doubleHop)
+    minRatio = min(minRatio, ratio)
+    maxRatio = max(maxRatio, ratio)
+    print('Test #{}: ratio = {:.24f}, minRatio = {:.24f}, maxRatio = {:.24f}'.format(n, ratio, minRatio, maxRatio))
