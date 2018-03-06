@@ -5,7 +5,7 @@ import FormulaSolidityPort
 
 from decimal import Decimal
 from decimal import getcontext
-getcontext().prec = 100
+getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
 
 
 def singleHopTest(balance1, weight1, balance2, weight2, amount):
