@@ -54,7 +54,7 @@ contract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {
         @param _gasPrice    tested gas price
     */
     function validateGasPrice(uint256 _gasPrice)
-        private
+        public
         view
         greaterThanZero(_gasPrice)
     {
