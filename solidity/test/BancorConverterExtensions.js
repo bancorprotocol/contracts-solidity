@@ -124,6 +124,18 @@ contract('BancorConverterExtensions', (accounts) => {
         assert.equal(gasPrice, 22000000001);
     });
 
+    it('should throw when given gas price is not equal to the gas price parameter', async () => {
+        let gasPriceLimit1 = await BancorGasPriceLimit.new(22000000000);
+
+        try {
+            await gasPriceLimit1.validateGasPrice(22000000001);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
     it('should throw when attempts update the gas price to 0', async () => {
         let gasPriceLimit1 = await BancorGasPriceLimit.new(22000000000);
 
