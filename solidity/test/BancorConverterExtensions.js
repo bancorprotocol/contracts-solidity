@@ -120,7 +120,7 @@ contract('BancorConverterExtensions', (accounts) => {
     it('verifies the owner can update the gas price', async () => {
         let gasPriceLimit1 = await BancorGasPriceLimit.new(22000000000);
         await gasPriceLimit1.setGasPrice(22000000001);
-        let gasPrice = await gasPriceLimit1.gasPrice.call();
+        let gasPrice = await gasPriceLimit1.gasPrice.call({ gasPrice: 22000000001 });
         assert.equal(gasPrice, 22000000001);
     });
 
