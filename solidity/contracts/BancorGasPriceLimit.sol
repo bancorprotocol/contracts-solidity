@@ -26,6 +26,16 @@ contract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {
     }
 
     /*
+        @dev gas price getter
+
+        @return the current gas price
+    */
+    function gasPrice() public view returns (uint256) {
+        validateGasPrice(tx.gasprice);
+        return gasPrice;
+    }
+
+    /*
         @dev allows the owner to update the gas price limit
 
         @param _gasPrice    new gas price limit
@@ -36,5 +46,18 @@ contract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {
         greaterThanZero(_gasPrice)
     {
         gasPrice = _gasPrice;
+    }
+
+    /*
+        @dev validate that the given gas price is equal to the current network gas price
+
+        @param _gasPrice    tested gas price
+    */
+    function validateGasPrice(uint256 _gasPrice)
+        public
+        view
+        greaterThanZero(_gasPrice)
+    {
+        require(_gasPrice == gasPrice);
     }
 }
