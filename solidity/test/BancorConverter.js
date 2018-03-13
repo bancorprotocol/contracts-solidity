@@ -12,7 +12,8 @@ const utils = require('./helpers/Utils');
 
 const weight10Percent = 100000;
 const gasPrice = 22000000000;
-const gasPriceBad = 22000000001;
+const gasPriceBadHigh = 22000000001;
+const gasPriceBadLow = 21999999999;
 
 let token;
 let tokenAddress;
@@ -1061,7 +1062,20 @@ contract('BancorConverter', (accounts) => {
         await connectorToken.approve(converter.address, 500);
 
         try {
-            await converter.buy(connectorTokenAddress, 500, 1, { gasPrice: gasPriceBad });
+            await converter.buy(connectorTokenAddress, 500, 1, { gasPrice: gasPriceBadHigh });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to buy with gas price lower than the universal limit', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+
+        try {
+            await converter.buy(connectorTokenAddress, 500, 1, { gasPrice: gasPriceBadLow });
             assert(false, "didn't throw");
         }
         catch (error) {
