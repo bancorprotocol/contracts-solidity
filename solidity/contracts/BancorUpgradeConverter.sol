@@ -146,8 +146,7 @@ contract BancorUpgradeConverter is Owned {
         @param _formerVersions      true if the converter version is under 0.5
     */
     function copyConnectors(IBancorConverter _fromConverter, IBancorConverter _toConverter, bool _formerVersions)
-        private 
-        view
+        private
     {
         uint256 virtualBalance;
         uint32 weight;
@@ -174,7 +173,6 @@ contract BancorUpgradeConverter is Owned {
     */
     function copyConvertionFee(IBancorConverter _fromConverter, IBancorConverter _toConverter)
         private
-        view
     {
         uint32 conversionFee = _fromConverter.conversionFee();
         _toConverter.setConversionFee(conversionFee);
@@ -188,14 +186,15 @@ contract BancorUpgradeConverter is Owned {
     */
     function copyQuickBuyPath(IBancorConverter _fromConverter, IBancorConverter _toConverter)
         private
-        view
     {
         uint256 quickBuyPathLength = _fromConverter.getQuickBuyPathLength();
-        IERC20Token[] memory path = new IERC20Token[](quickBuyPathLength);
-        for (uint256 i = 0; i < quickBuyPathLength; i++) {
-            path[i] = _fromConverter.quickBuyPath(i);
+        if (quickBuyPathLength > 0) {
+            IERC20Token[] memory path = new IERC20Token[](quickBuyPathLength);
+            for (uint256 i = 0; i < quickBuyPathLength; i++) {
+                path[i] = _fromConverter.quickBuyPath(i);
+            }
+            _toConverter.setQuickBuyPath(path);
         }
-        _toConverter.setQuickBuyPath(path);
     }
 
     /**
@@ -209,7 +208,6 @@ contract BancorUpgradeConverter is Owned {
     */
     function transferConnectorsBalances(IBancorConverter _fromConverter, IBancorConverter _toConverter, bool _formerVersions)
         private
-        view
     {
         uint256 connectorBalance;
         for (uint16 i = 1; i < _fromConverter.convertibleTokenCount(); i++) {
