@@ -109,7 +109,7 @@ contract BancorUpgradeConverter is Owned {
 
         @return the new converter
     */
-    function acceptConverterOwnership(IBancorConverter _fromConverter) private ownerOnly {
+    function acceptConverterOwnership(IBancorConverter _fromConverter) private {
         _fromConverter.acceptOwnership();
         ConverterOwned(_fromConverter, this);
     }
