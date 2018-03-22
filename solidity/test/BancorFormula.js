@@ -3,7 +3,7 @@
 
 let constants = require('./helpers/FormulaConstants.js');
 let TestBancorFormula = artifacts.require('./helpers/TestBancorFormula.sol');
-let ERROR_MESSAGE = 'VM Exception while processing transaction: invalid opcode';
+let ERROR_MESSAGE = 'invalid opcode';
 
 contract('BancorFormula', () => {
     let formula;
@@ -29,7 +29,7 @@ contract('BancorFormula', () => {
                 assert(percent <= 100, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(percent >= 101 && error.message == ERROR_MESSAGE, error.message);
+                assert(percent >= 101 && error.toString().includes(ERROR_MESSAGE), error.message);
             }
         });
     }
@@ -47,7 +47,7 @@ contract('BancorFormula', () => {
                 assert(percent <= 100, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(percent >= 101 && error.message == ERROR_MESSAGE, error.message);
+                assert(percent >= 101 && error.toString().includes(ERROR_MESSAGE), error.message);
             }
         });
     }
@@ -65,7 +65,7 @@ contract('BancorFormula', () => {
                 assert(percent <= 63, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(percent >= 64 && error.message == ERROR_MESSAGE, error.message);
+                assert(percent >= 64 && error.toString().includes(ERROR_MESSAGE), error.message);
             }
         });
     }
@@ -83,7 +83,7 @@ contract('BancorFormula', () => {
                 assert(percent <= 0, `${test} passed when it should have failed`);
             }
             catch (error) {
-                assert(percent >= 1 && error.message == ERROR_MESSAGE, error.message);
+                assert(percent >= 1 && error.toString().includes(ERROR_MESSAGE), error.message);
             }
         });
     }
@@ -130,7 +130,7 @@ contract('BancorFormula', () => {
                     assert(precision > constants.MIN_PRECISION || !output.lessThan(web3.toBigNumber(precision)), `${test} passed when it should have failed`);
                 }
                 catch (error) {
-                    assert(precision == constants.MIN_PRECISION && output.lessThan(web3.toBigNumber(precision)) && error.message == ERROR_MESSAGE, error.message);
+                    assert(precision == constants.MIN_PRECISION && output.lessThan(web3.toBigNumber(precision)) && error.toString().includes(ERROR_MESSAGE), error.message);
                 }
             });
         }
