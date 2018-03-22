@@ -3,6 +3,11 @@ import random
 import FormulaSolidityPort
 
 
+from decimal import Decimal
+from decimal import getcontext
+getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
+
+
 def formulaTest(supply, balance, weight, amount):
     newAmount = FormulaSolidityPort.calculatePurchaseReturn(supply, balance, weight, amount)
     oldAmount = FormulaSolidityPort.calculateSaleReturn(supply + newAmount, balance + amount, weight, newAmount)
@@ -15,7 +20,7 @@ def formulaTest(supply, balance, weight, amount):
         error.append('newAmount = {}'.format(newAmount))
         error.append('oldAmount = {}'.format(oldAmount))
         raise BaseException('\n'.join(error))
-    return float(oldAmount) / amount
+    return Decimal(oldAmount) / Decimal(amount)
 
 
 size = int(sys.argv[1]) if len(sys.argv) > 1 else 0
