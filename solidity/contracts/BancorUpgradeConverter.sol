@@ -13,8 +13,10 @@ contract IBancorConverter is IOwned {
     function maxConversionFee() public view returns (uint32) {}
     function conversionFee() public view returns (uint32) {}
     function version() internal view returns (string);
-    function convertibleTokenCount() public view returns (uint16);
-    function convertibleToken(uint16 _tokenIndex) public view returns (address);
+    function connectorTokenCount() public view returns (uint16);
+    function reserveTokenCount() public view returns (uint16);
+    function connectorTokens(uint256 _index) public view returns (IERC20Token) {}
+    function reserveTokens(uint256 _index) public view returns (IERC20Token) {}
     function setExtensions(IBancorConverterExtensions _extensions) public view;
     function getQuickBuyPathLength() public view returns (uint256);
     function transferTokenOwnership(address _newOwner) public view;
@@ -86,7 +88,7 @@ contract BancorUpgradeConverter is Owned {
         acceptConverterOwnership(_fromConverter);
         IBancorConverter toConverter = createConverter(_fromConverter);
         copyConnectors(_fromConverter, toConverter, formerVersions);
-        copyConvertionFee(_fromConverter, toConverter);
+        copyConversionFee(_fromConverter, toConverter);
         copyQuickBuyPath(_fromConverter, toConverter);
         transferConnectorsBalances(_fromConverter, toConverter, formerVersions);
         _fromConverter.transferTokenOwnership(toConverter);
@@ -124,7 +126,6 @@ contract BancorUpgradeConverter is Owned {
         @return the new converter
     */
     function createConverter(IBancorConverter _fromConverter) private returns(IBancorConverter) {
-        IERC20Token emptyConnector = IERC20Token(address(0));
         ISmartToken token = _fromConverter.token();
         IBancorConverterExtensions extensions = _fromConverter.extensions();
         uint32 maxConversionFee = _fromConverter.maxConversionFee();
@@ -132,14 +133,15 @@ contract BancorUpgradeConverter is Owned {
             token,
             extensions,
             maxConversionFee,
-            emptyConnector,
+            IERC20Token(address(0)),
             0
         );
         return IBancorConverter(converter);
     }
 
     /**
-        @dev copies the connectors from the current converter to the new one
+        @dev copies the connectors from the current converter to the new one.
+        notice that this will not work for an unlimited number of connectors.
 
         @param _fromConverter       current converter to copy from
         @param _toConverter         new converter to add connectors
@@ -153,14 +155,15 @@ contract BancorUpgradeConverter is Owned {
         bool isVirtualBalanceEnabled;
         bool isPurchaseEnabled;
         bool isSet;
-        for (uint16 i = 1; i < _fromConverter.convertibleTokenCount(); i++) {
-            address connectorAddress = _fromConverter.convertibleToken(i);
+        uint16 connectorTokenCount = _formerVersions ? _fromConverter.reserveTokenCount() : _fromConverter.connectorTokenCount();
+        for (uint16 i = 0; i < connectorTokenCount; i++) {
+            address connectorAddress = _formerVersions ? _fromConverter.reserveTokens(i) : _fromConverter.connectorTokens(i);
             (virtualBalance, weight, isVirtualBalanceEnabled, isPurchaseEnabled, isSet) = readConnector(
                 _fromConverter,
                 connectorAddress,
                 _formerVersions
             );
-            ISmartToken connectorToken = ISmartToken(connectorAddress);
+            IERC20Token connectorToken = IERC20Token(connectorAddress);
             _toConverter.addConnector(connectorToken, weight, isVirtualBalanceEnabled);
         }
     }
@@ -171,7 +174,7 @@ contract BancorUpgradeConverter is Owned {
         @param _fromConverter       current converter to copy from
         @param _toConverter         new converter to add a conversion fee
     */
-    function copyConvertionFee(IBancorConverter _fromConverter, IBancorConverter _toConverter)
+    function copyConversionFee(IBancorConverter _fromConverter, IBancorConverter _toConverter)
         private
     {
         uint32 conversionFee = _fromConverter.conversionFee();
@@ -200,7 +203,7 @@ contract BancorUpgradeConverter is Owned {
     /**
         @dev for each connector of the current converter, the function transfers its balance to the new converter.
         notice that the function assumes that the new converter has exact the same connectors as the current
-        converter owned.
+        converter owned and this will not work for an unlimited number of connectors.
 
         @param _fromConverter       current converter to withdraw from
         @param _toConverter         new converter to deposit
@@ -210,8 +213,10 @@ contract BancorUpgradeConverter is Owned {
         private
     {
         uint256 connectorBalance;
-        for (uint16 i = 1; i < _fromConverter.convertibleTokenCount(); i++) {
-            IERC20Token connector = IERC20Token(_fromConverter.convertibleToken(i));
+        uint16 connectorTokenCount = _formerVersions ? _fromConverter.reserveTokenCount() : _fromConverter.connectorTokenCount();
+        for (uint16 i = 0; i < connectorTokenCount; i++) {
+            address connectorAddress = _formerVersions ? _fromConverter.reserveTokens(i) : _fromConverter.connectorTokens(i);
+            IERC20Token connector = IERC20Token(connectorAddress);
             connectorBalance = _formerVersions ? _fromConverter.getReserveBalance(connector) : _fromConverter.getConnectorBalance(connector);
             _fromConverter.withdrawTokens(connector, address(_toConverter), connectorBalance);
         }
