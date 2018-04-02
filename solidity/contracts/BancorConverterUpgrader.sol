@@ -56,7 +56,7 @@ contract IBancorConverter is IOwned {
 
     WARNING: The contract assumes that it owned the current converter.
 */
-contract BancorUpgradeConverter is Owned {
+contract BancorConverterUpgrader is Owned {
 
     // triggered when the contract accept a converter ownership
     event ConverterOwned(address indexed _converter, address indexed _owner);
@@ -66,7 +66,7 @@ contract BancorUpgradeConverter is Owned {
     /**
         @dev constructor
     */
-    function BancorUpgradeConverter()
+    function BancorConverterUpgrader()
         public
     {}
 

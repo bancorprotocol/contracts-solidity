@@ -5,7 +5,7 @@ const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const BancorQuickConverter = artifacts.require('BancorQuickConverter.sol');
 const BancorConverterExtensions = artifacts.require('BancorConverterExtensions.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
-const BancorUpgradeConverter = artifacts.require('BancorUpgradeConverter.sol');
+const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader.sol');
 const utils = require('./helpers/Utils');
 
 /* global artifacts, contract, before, it, assert */
@@ -58,7 +58,7 @@ contract('BancorConverter', (accounts) => {
         let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
         let quickConverter = await BancorQuickConverter.new();
         let converterExtensions = await BancorConverterExtensions.new(formula.address, gasPriceLimit.address, quickConverter.address);
-        upgradeConverter = await BancorUpgradeConverter.new();
+        upgradeConverter = await BancorConverterUpgrader.new();
         converterExtensionsAddress = converterExtensions.address;
     });
 
