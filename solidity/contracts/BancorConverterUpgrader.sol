@@ -79,9 +79,7 @@ contract BancorConverterUpgrader is Owned {
         @param _fromConverter   converter to upgrade
         @param _version         current conveter version
     */
-    function upgradeConverter(IBancorConverter _fromConverter, bytes32 _version)
-        public
-    {
+    function converterUpgrader(IBancorConverter _fromConverter, bytes32 _version) public {
         bool formerVersions = false;
         if (_version == "0.4")
             formerVersions = true;
@@ -175,9 +173,7 @@ contract BancorConverterUpgrader is Owned {
         @param _fromConverter       current converter to copy from
         @param _toConverter         new converter to add a conversion fee
     */
-    function copyConversionFee(IBancorConverter _fromConverter, IBancorConverter _toConverter)
-        private
-    {
+    function copyConversionFee(IBancorConverter _fromConverter, IBancorConverter _toConverter) private {
         uint32 conversionFee = _fromConverter.conversionFee();
         _toConverter.setConversionFee(conversionFee);
     }
@@ -188,9 +184,7 @@ contract BancorConverterUpgrader is Owned {
         @param _fromConverter       current converter to copy from
         @param _toConverter         new converter to add a path
     */
-    function copyQuickBuyPath(IBancorConverter _fromConverter, IBancorConverter _toConverter)
-        private
-    {
+    function copyQuickBuyPath(IBancorConverter _fromConverter, IBancorConverter _toConverter) private {
         uint256 quickBuyPathLength = _fromConverter.getQuickBuyPathLength();
         if (quickBuyPathLength > 0) {
             IERC20Token[] memory path = new IERC20Token[](quickBuyPathLength);
