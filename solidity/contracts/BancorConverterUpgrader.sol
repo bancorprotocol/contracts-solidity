@@ -112,6 +112,7 @@ contract BancorConverterUpgrader is Owned {
         @return the new converter
     */
     function acceptConverterOwnership(IBancorConverter _fromConverter) private {
+        require(msg.sender == _fromConverter.owner());
         _fromConverter.acceptOwnership();
         ConverterOwned(_fromConverter, this);
     }
