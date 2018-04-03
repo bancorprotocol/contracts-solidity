@@ -15,7 +15,7 @@ const gasPrice = 22000000000;
 
 let token;
 let converterExtensionsAddress;
-let upgradeConverter;
+let converterUpgrader;
 let smartToken1QuickBuyPath;
 let converterAbi = [{"constant":false,"inputs":[{"name":"_connectorToken","type":"address"},{"name":"_weight","type":"uint32"},{"name":"_enableVirtualBalance","type":"bool"},{"name":"_virtualBalance","type":"uint256"}],"name":"updateConnector","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"connectors","outputs":[{"name":"virtualBalance","type":"uint256"},{"name":"weight","type":"uint32"},{"name":"isVirtualBalanceEnabled","type":"bool"},{"name":"isPurchaseEnabled","type":"bool"},{"name":"isSet","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"connectorTokens","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_fromToken","type":"address"},{"name":"_toToken","type":"address"},{"name":"_amount","type":"uint256"}],"name":"getReturn","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_newOwner","type":"address"}],"name":"transferTokenOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_disable","type":"bool"}],"name":"disableConversions","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_extensions","type":"address"}],"name":"setExtensions","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"extensions","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_amount","type":"uint256"}],"name":"getConversionFeeAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"acceptTokenOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"converterType","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_token","type":"address"},{"name":"_weight","type":"uint32"},{"name":"_enableVirtualBalance","type":"bool"}],"name":"addConnector","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_token","type":"address"},{"name":"_to","type":"address"},{"name":"_amount","type":"uint256"}],"name":"withdrawFromToken","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"newManager","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"manager","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"clearQuickBuyPath","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_connectorToken","type":"address"},{"name":"_disable","type":"bool"}],"name":"disableConnectorPurchases","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"version","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"conversionFee","outputs":[{"name":"","type":"uint32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_token","type":"address"},{"name":"_to","type":"address"},{"name":"_amount","type":"uint256"}],"name":"withdrawTokens","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_fromToken","type":"address"},{"name":"_toToken","type":"address"},{"name":"_amount","type":"uint256"},{"name":"_minReturn","type":"uint256"}],"name":"change","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_connectorToken","type":"address"},{"name":"_sellAmount","type":"uint256"},{"name":"_minReturn","type":"uint256"}],"name":"sell","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"connectorTokenCount","outputs":[{"name":"","type":"uint16"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_connectorToken","type":"address"},{"name":"_sellAmount","type":"uint256"}],"name":"getSaleReturn","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_fromToken","type":"address"},{"name":"_toToken","type":"address"},{"name":"_amount","type":"uint256"},{"name":"_minReturn","type":"uint256"}],"name":"convert","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"acceptOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_disable","type":"bool"}],"name":"disableTokenTransfers","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getQuickBuyPathLength","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"maxConversionFee","outputs":[{"name":"","type":"uint32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_connectorToken","type":"address"},{"name":"_depositAmount","type":"uint256"}],"name":"getPurchaseReturn","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_connectorToken","type":"address"},{"name":"_depositAmount","type":"uint256"},{"name":"_minReturn","type":"uint256"}],"name":"buy","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"convertibleTokenCount","outputs":[{"name":"","type":"uint16"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"conversionsEnabled","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"acceptManagement","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_path","type":"address[]"}],"name":"setQuickBuyPath","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"newOwner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_connectorToken","type":"address"}],"name":"getConnectorBalance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_newManager","type":"address"}],"name":"transferManagement","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"quickBuyPath","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_conversionFee","type":"uint32"}],"name":"setConversionFee","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_path","type":"address[]"},{"name":"_amount","type":"uint256"},{"name":"_minReturn","type":"uint256"}],"name":"quickConvert","outputs":[{"name":"","type":"uint256"}],"payable":true,"stateMutability":"payable","type":"function"},{"constant":true,"inputs":[{"name":"_tokenIndex","type":"uint16"}],"name":"convertibleToken","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"token","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"_token","type":"address"},{"name":"_extensions","type":"address"},{"name":"_maxConversionFee","type":"uint32"},{"name":"_connectorToken","type":"address"},{"name":"_connectorWeight","type":"uint32"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"payable":true,"stateMutability":"payable","type":"fallback"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_fromToken","type":"address"},{"indexed":true,"name":"_toToken","type":"address"},{"indexed":true,"name":"_trader","type":"address"},{"indexed":false,"name":"_amount","type":"uint256"},{"indexed":false,"name":"_return","type":"uint256"},{"indexed":false,"name":"_conversionFee","type":"int256"},{"indexed":false,"name":"_currentPriceN","type":"uint256"},{"indexed":false,"name":"_currentPriceD","type":"uint256"}],"name":"Conversion","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_prevFee","type":"uint32"},{"indexed":false,"name":"_newFee","type":"uint32"}],"name":"ConversionFeeUpdate","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_prevManager","type":"address"},{"indexed":true,"name":"_newManager","type":"address"}],"name":"ManagerUpdate","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_prevOwner","type":"address"},{"indexed":true,"name":"_newOwner","type":"address"}],"name":"OwnerUpdate","type":"event"}];
 let SmartTokenAbi = [{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_disable","type":"bool"}],"name":"disableTransfers","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"version","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"standard","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_token","type":"address"},{"name":"_to","type":"address"},{"name":"_amount","type":"uint256"}],"name":"withdrawTokens","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"acceptOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_amount","type":"uint256"}],"name":"issue","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_amount","type":"uint256"}],"name":"destroy","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"transfersEnabled","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"newOwner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"},{"name":"","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[{"name":"_name","type":"string"},{"name":"_symbol","type":"string"},{"name":"_decimals","type":"uint8"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_token","type":"address"}],"name":"NewSmartToken","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_amount","type":"uint256"}],"name":"Issuance","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_amount","type":"uint256"}],"name":"Destruction","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":true,"name":"_to","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_owner","type":"address"},{"indexed":true,"name":"_spender","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_prevOwner","type":"address"},{"indexed":true,"name":"_newOwner","type":"address"}],"name":"OwnerUpdate","type":"event"}];
@@ -52,21 +52,21 @@ async function initConverter(accounts, activate, maxConversionFee = 30000) {
     return converter;
 }
 
-contract('BancorConverter', (accounts) => {
+contract('BancorConverterUpgrader', (accounts) => {
     before(async () => {
         let formula = await BancorFormula.new();
         let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
         let quickConverter = await BancorQuickConverter.new();
         let converterExtensions = await BancorConverterExtensions.new(formula.address, gasPriceLimit.address, quickConverter.address);
-        upgradeConverter = await BancorConverterUpgrader.new();
+        converterUpgrader = await BancorConverterUpgrader.new();
         converterExtensionsAddress = converterExtensions.address;
     });
 
     it('verifies that the ownership of the given converter returned to the given address', async () => {
         let converter = await initConverter(accounts, true);
         let initialOwner = await converter.owner.call();
-        await converter.transferOwnership(upgradeConverter.address);
-        let upgradeRes = await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"));
+        await converter.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
         await converter.acceptOwnership();
         let currentOwner = await converter.owner.call();
         assert.equal(initialOwner, currentOwner);
@@ -74,9 +74,9 @@ contract('BancorConverter', (accounts) => {
 
     it('verifies that the ownership of the new converter transfered to sender', async () => {
         let converter = await initConverter(accounts, true);
-        await converter.transferOwnership(upgradeConverter.address);
+        await converter.transferOwnership(converterUpgrader.address);
         let initialOwner = await converter.owner.call();
-        let upgradeRes = await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"));
+        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
         let newConverterAddress = upgradeRes.logs[3].args._toConverter;
         let contract = await web3.eth.contract(converterAbi);
         let newConverter = await contract.at(newConverterAddress);
@@ -91,8 +91,8 @@ contract('BancorConverter', (accounts) => {
         let token1 = tokenContract.at(tokenAddress);
         let initialTokenOwner = await token1.owner.call();
         assert.equal(initialTokenOwner, converter.address);
-        await converter.transferOwnership(upgradeConverter.address);
-        let upgradeRes = await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"));
+        await converter.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
         let newConverterAddress = upgradeRes.logs[3].args._toConverter;
         let currentTokenOwner = await token1.owner.call();
         assert.equal(currentTokenOwner, newConverterAddress);
@@ -100,9 +100,9 @@ contract('BancorConverter', (accounts) => {
 
     it('verifies that the management of the new converter transfered to sender', async () => {
         let converter = await initConverter(accounts, true);
-        await converter.transferOwnership(upgradeConverter.address);
+        await converter.transferOwnership(converterUpgrader.address);
         let initialManager = await converter.manager.call();
-        let upgradeRes = await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"));
+        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
         let newConverterAddress = upgradeRes.logs[3].args._toConverter;
         let contract = await web3.eth.contract(converterAbi);
         let newConverter = await contract.at(newConverterAddress);
@@ -113,8 +113,8 @@ contract('BancorConverter', (accounts) => {
     it('verifies that the quick buy path length of the given converter equal to the path in the new converter', async () => {
         let converter = await initConverter(accounts, true);
         let initialLength = await converter.getQuickBuyPathLength.call();
-        await converter.transferOwnership(upgradeConverter.address);
-        let upgradeRes = await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"));
+        await converter.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
         let newConverterAddress = upgradeRes.logs[3].args._toConverter;
         let contract = await web3.eth.contract(converterAbi);
         let newConverter = await contract.at(newConverterAddress);
@@ -126,8 +126,8 @@ contract('BancorConverter', (accounts) => {
         let converter = await initConverter(accounts, true);
         let initialConversionFee = await converter.conversionFee.call();
         let initialPathLength = await converter.getQuickBuyPathLength.call();
-        await converter.transferOwnership(upgradeConverter.address);
-        let upgradeRes = await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"));
+        await converter.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
         let newConverterAddress = upgradeRes.logs[3].args._toConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
@@ -141,8 +141,8 @@ contract('BancorConverter', (accounts) => {
     it('should throw after the ownership transfered to the contract and upgrade execution triggered from another account', async () => {
         try {
             let converter = await initConverter(accounts, true);
-            await converter.transferOwnership(upgradeConverter.address);
-            await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"), { from: accounts[1] });
+            await converter.transferOwnership(converterUpgrader.address);
+            await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"), { from: accounts[1] });
         }
         catch (error) {
             return utils.ensureException(error);
@@ -152,7 +152,7 @@ contract('BancorConverter', (accounts) => {
     it('should throw when start upgrade execution process without transfer the ownership first', async () => {
         try {
             let converter = await initConverter(accounts, true);
-            await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"));
+            await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
         }
         catch (error) {
             return utils.ensureException(error);
@@ -162,8 +162,8 @@ contract('BancorConverter', (accounts) => {
     it('verifies that the extentions after upgrade is the same', async () => {
         let converter = await initConverter(accounts, true);
         let currentExtensions = await converter.extensions.call();
-        await converter.transferOwnership(upgradeConverter.address);
-        let upgradeRes = await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"));
+        await converter.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
         let newConverterAddress = upgradeRes.logs[3].args._toConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
@@ -173,8 +173,8 @@ contract('BancorConverter', (accounts) => {
 
     it('verifies that the max conversion fee after upgrade is the same', async () => {
         let converter = await initConverter(accounts, true, 20000);
-        await converter.transferOwnership(upgradeConverter.address);
-        let upgradeRes = await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"));
+        await converter.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
         let newConverterAddress = upgradeRes.logs[3].args._toConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
@@ -185,8 +185,8 @@ contract('BancorConverter', (accounts) => {
     it('verifies that the conversion fee after upgrade is the same', async () => {
         let converter = await initConverter(accounts, true);
         let initialConversionFee = await converter.conversionFee.call();
-        await converter.transferOwnership(upgradeConverter.address);
-        let upgradeRes = await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"));
+        await converter.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
         let newConverterAddress = upgradeRes.logs[3].args._toConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
@@ -197,9 +197,9 @@ contract('BancorConverter', (accounts) => {
     it('verifies that the ownership did not changed if the process stopped due to gas limitation', async () => {
         let converter = await initConverter(accounts, true);
         let initialOwner = await converter.owner.call();
-        await converter.transferOwnership(upgradeConverter.address);
+        await converter.transferOwnership(converterUpgrader.address);
         try {
-            await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"), { gas: 2000000 });
+            await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"), { gas: 2000000 });
             assert.fail('Expected throw not received');
         }
         catch (error) {
@@ -218,8 +218,8 @@ contract('BancorConverter', (accounts) => {
         await converter1.acceptTokenOwnership();
         let currentOwner = await converter1.owner.call();
         let currentMaxConversionFee = await converter1.maxConversionFee.call();
-        await converter1.transferOwnership(upgradeConverter.address);
-        let upgradeRes = await upgradeConverter.upgradeConverter(converter1.address, 7);
+        await converter1.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.converterUpgrader(converter1.address, 7);
         await converter1.acceptOwnership();
         let newConverterAddress = upgradeRes.logs[3].args._toConverter;
         let contract = web3.eth.contract(converterAbi);
@@ -235,8 +235,8 @@ contract('BancorConverter', (accounts) => {
     it('verifies that the connectors count after upgrade is the same', async () => {
         let converter = await initConverter(accounts, true);
         let currentConverterConnectorTokenCount = await converter.connectorTokenCount.call();
-        await converter.transferOwnership(upgradeConverter.address);
-        let upgradeRes = await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"));
+        await converter.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
         let newConverterAddress = upgradeRes.logs[3].args._toConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
@@ -250,8 +250,8 @@ contract('BancorConverter', (accounts) => {
         let connector2 = await converter.convertibleToken.call(2);
         let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
         let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
-        await converter.transferOwnership(upgradeConverter.address);
-        let upgradeRes = await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"));
+        await converter.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
         let newConverterAddress = upgradeRes.logs[3].args._toConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
@@ -267,9 +267,9 @@ contract('BancorConverter', (accounts) => {
         let connector2 = await converter.convertibleToken.call(2);
         let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
         let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
-        await converter.transferOwnership(upgradeConverter.address);
+        await converter.transferOwnership(converterUpgrader.address);
         try {
-            await upgradeConverter.upgradeConverter(converter.address, web3.fromUtf8("0.7"), { gas: 2000000 });
+            await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"), { gas: 2000000 });
             assert.fail('Expected throw not received');
         }
         catch (error) {
