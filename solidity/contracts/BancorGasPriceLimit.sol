@@ -12,7 +12,7 @@ import './interfaces/IBancorGasPriceLimit.sol';
 */
 contract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {
     uint256 public gasPrice = 0 wei;    // maximum gas price for bancor transactions
-
+    event Hashed(uint256 _gas);
     /**
         @dev constructor
 
@@ -31,7 +31,6 @@ contract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {
         @return the current gas price
     */
     function gasPrice() public view returns (uint256) {
-        validateGasPrice(tx.gasprice);
         return gasPrice;
     }
 
@@ -58,6 +57,7 @@ contract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {
         view
         greaterThanZero(_gasPrice)
     {
+        Hashed(gasPrice);
         require(_gasPrice == gasPrice);
     }
 }

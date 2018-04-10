@@ -23,7 +23,10 @@ import './interfaces/ITokenConverter.sol';
     [source token, smart token, to token, smart token, to token...]
 */
 contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
+    address public signerAddress = 0x0;
+    IBancorGasPriceLimit public gasPriceLimit; // bancor universal gas price limit contract
     mapping (address => bool) public etherTokens;   // list of all supported ether tokens
+    mapping (bytes32 => bool) public conversions;
 
     /**
         @dev constructor
@@ -35,6 +38,43 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
     modifier validConversionPath(IERC20Token[] _path) {
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
         _;
+    }
+
+    /*
+        @dev signer address getter
+
+        @return the signer address
+    */
+    function signerAddress() public view returns (address) {
+        return signerAddress;
+    }
+
+    /*
+        @dev allows the owner to update the gas price limit contract address
+
+        @param _gasPriceLimit   address of a bancor gas price limit contract
+    */
+    function setGasPriceLimit(IBancorGasPriceLimit _gasPriceLimit)
+        public
+        ownerOnly
+        validAddress(_gasPriceLimit)
+        notThis(_gasPriceLimit)
+    {
+        gasPriceLimit = _gasPriceLimit;
+    }
+
+    /*
+        @dev allows the owner to update the signer address
+
+        @param _signerAddress    new signer address
+    */
+    function setSignerAddress(address _signerAddress)
+        public
+        ownerOnly
+        validAddress(_signerAddress)
+        notThis(_signerAddress)
+    {
+        signerAddress = _signerAddress;
     }
 
     /**
@@ -53,6 +93,25 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
     }
 
     /**
+        @dev verifing the signer address by recover the address associated 
+        with the public key from elliptic curve signature or return zero 
+        on error
+
+
+        @return true if the signer is verified
+    */
+    function verification(address _addr, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s) public constant returns(bool) {
+        bytes32 hash = sha256(_addr, _nonce, tx.gasprice);
+        require(!conversions[hash]);
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 prefixedHash = keccak256(prefix, hash);
+        bool verified = ecrecover(prefixedHash, _v, _r, _s) == signerAddress;
+        if (verified)
+            conversions[hash] = true;
+        return verified;
+    }
+
+/**
         @dev converts the token to any other token in the bancor network by following
         a predefined conversion path and transfers the result tokens to a target account
         note that the converter should already own the source tokens
@@ -67,37 +126,48 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
     function convertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for)
         public
         payable
+        returns (uint256)
+    {
+        return prioritizeConvertFor(_path, _amount, _minReturn, _for, 0x0, 0x0, 0x0, 0x0);
+    }
+
+
+    /**
+        @dev checks if the transaction was verified and than converts the token to any 
+        other token in the bancor network by following a predefined conversion path
+        and transfers the result tokens to a target account
+        note that the converter should already own the source tokens
+
+        @param _path        conversion path, see conversion path format above
+        @param _amount      amount to convert from (in the initial source token)
+        @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _for         account that will receive the conversion result
+
+        @return tokens issued in return
+    */
+    function prioritizeConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s)
+        public
+        payable
         validConversionPath(_path)
         returns (uint256)
     {
+        if (_v == 0x0 && _r == 0x0 && _s == 0x0)
+            gasPriceLimit.validateGasPrice(tx.gasprice);
+        else
+            require(verification(_for, _nonce, _v, _r, _s));
+
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
         IERC20Token fromToken = _path[0];
         require(msg.value == 0 || (_amount == msg.value && etherTokens[fromToken]));
 
-        ISmartToken smartToken;
         IERC20Token toToken;
-        ITokenConverter converter;
-        uint256 pathLength = _path.length;
 
         // if ETH was sent with the call, the source is an ether token - deposit the ETH in it
         // otherwise, we assume we already have the tokens
         if (msg.value > 0)
             IEtherToken(fromToken).deposit.value(msg.value)();
-
-        // iterate over the conversion path
-        for (uint256 i = 1; i < pathLength; i += 2) {
-            smartToken = ISmartToken(_path[i]);
-            toToken = _path[i + 1];
-            converter = ITokenConverter(smartToken.owner());
-
-            // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
-            if (smartToken != fromToken)
-                ensureAllowance(fromToken, converter, _amount);
-
-            // make the conversion - if it's the last one, also provide the minimum return value
-            _amount = converter.change(fromToken, toToken, _amount, i == pathLength - 2 ? _minReturn : 1);
-            fromToken = toToken;
-        }
+        
+        (_amount, toToken) = convertByPath(_path, _amount, _minReturn, fromToken);
 
         // finished the conversion, transfer the funds to the target account
         // if the target token is an ether token, withdraw the tokens and send them as ETH
@@ -108,6 +178,30 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
             assert(toToken.transfer(_for, _amount));
 
         return _amount;
+    }
+
+    function convertByPath(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, IERC20Token _fromToken) private returns (uint256, IERC20Token) {
+        ISmartToken smartToken;
+        IERC20Token toToken;
+        ITokenConverter converter;
+
+        // iterate over the conversion path
+        uint256 pathLength = _path.length;
+
+        for (uint256 i = 1; i < pathLength; i += 2) {
+            smartToken = ISmartToken(_path[i]);
+            toToken = _path[i + 1];
+            converter = ITokenConverter(smartToken.owner());
+
+            // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
+            if (smartToken != _fromToken)
+                ensureAllowance(_fromToken, converter, _amount);
+
+            // make the conversion - if it's the last one, also provide the minimum return value
+            _amount = converter.change(_fromToken, toToken, _amount, i == pathLength - 2 ? _minReturn : 1);
+            _fromToken = toToken;
+        }
+        return (_amount, toToken);
     }
 
     /**
