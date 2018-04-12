@@ -29,7 +29,7 @@ contract BancorConverterFactory is IBancorConverterFactory {
 
         @return a new converter
     */
-    function makeConverter(
+    function createConverter(
         ISmartToken _token,
         IBancorConverterExtensions _extensions,
         uint32 _maxConversionFee,
