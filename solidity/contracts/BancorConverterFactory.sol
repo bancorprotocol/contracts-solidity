@@ -1,12 +1,11 @@
 pragma solidity ^0.4.18;
 import './BancorConverter.sol';
-import './interfaces/ISmartToken.sol';
-import './interfaces/IERC20Token.sol';
+import './interfaces/IBancorConverterFactory.sol';
 
 /*
     Bancor Converter Factory
 */
-contract BancorConverterFactory {
+contract BancorConverterFactory is IBancorConverterFactory {
 
     // triggered when a new converter created
     event ConverterCreated(address indexed _converter, address indexed _owner);
@@ -38,7 +37,7 @@ contract BancorConverterFactory {
         uint32 _connectorWeight
     ) 
         public 
-        returns(BancorConverter) 
+        returns(address converterAddress) 
     {
         BancorConverter converter = new BancorConverter(
             _token,
@@ -51,8 +50,10 @@ contract BancorConverterFactory {
         converter.transferOwnership(msg.sender);
         converter.transferManagement(msg.sender);
 
-        ConverterCreated(address(converter), msg.sender);
+        address _converterAddress = address(converter);
 
-        return converter;
+        ConverterCreated(_converterAddress, msg.sender);
+
+        return _converterAddress;
     }
 }
