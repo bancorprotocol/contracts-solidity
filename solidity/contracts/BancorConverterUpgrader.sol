@@ -77,9 +77,7 @@ contract BancorConverterUpgrader is Owned {
 
         @param _bancorConverterFactory    address of a bancor converter factory contract
     */
-    function setBancorConverterFactory(IBancorConverterFactory _bancorConverterFactory)
-        public
-        ownerOnly
+    function setBancorConverterFactory(IBancorConverterFactory _bancorConverterFactory) public ownerOnly
     {
         bancorConverterFactory = _bancorConverterFactory;
     }
