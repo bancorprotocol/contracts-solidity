@@ -1,7 +1,6 @@
 pragma solidity ^0.4.18;
-import './BancorConverter.sol';
-import './interfaces/ISmartToken.sol';
-import './interfaces/IERC20Token.sol';
+import './Owned.sol';
+import './interfaces/IBancorConverterFactory.sol';
 
 /*
     Bancor converter dedicated interface
@@ -12,7 +11,6 @@ contract IBancorConverter is IOwned {
     function quickBuyPath(uint256 _index) public view returns (IERC20Token) {}
     function maxConversionFee() public view returns (uint32) {}
     function conversionFee() public view returns (uint32) {}
-    function version() internal view returns (string);
     function connectorTokenCount() public view returns (uint16);
     function reserveTokenCount() public view returns (uint16);
     function connectorTokens(uint256 _index) public view returns (IERC20Token) {}
@@ -23,6 +21,7 @@ contract IBancorConverter is IOwned {
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public view;
     function acceptTokenOwnership() public view;
     function transferManagement(address _newManager) public view;
+    function acceptManagement() public;
     function setConversionFee(uint32 _conversionFee) public view;
     function setQuickBuyPath(IERC20Token[] _path) public view;
     function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance) public view;
@@ -52,23 +51,38 @@ contract IBancorConverter is IOwned {
     For begining upgrading a converter with contract instance on the network, first transfer the ownership to
     the upgrade contract instance address and then call to upgradeConverter function.
     Ownership of the current converter will be transfered back to the given new owner as the ownership of the new converter.
-    You can find the address of the new converter at ConverterCreated event.
+    You can find the address of the new converter at ConverterUpgraded event.
 
     WARNING: The contract assumes that it owned the current converter.
 */
 contract BancorConverterUpgrader is Owned {
+    IBancorConverterFactory public bancorConverterFactory;  // bancor converter factory contract
 
     // triggered when the contract accept a converter ownership
     event ConverterOwned(address indexed _converter, address indexed _owner);
     // triggered when the upgrading process is done
-    event ConverterCreated(address indexed _fromConverter, address indexed _toConverter);
+    event ConverterUpgraded(address indexed _fromConverter, address indexed _toConverter);
 
     /**
         @dev constructor
     */
-    function BancorConverterUpgrader()
+    function BancorConverterUpgrader(IBancorConverterFactory _bancorConverterFactory)
         public
-    {}
+    {
+        bancorConverterFactory = _bancorConverterFactory;
+    }
+
+    /*
+        @dev allows the owner to update the factory contract address
+
+        @param _bancorConverterFactory    address of a bancor converter factory contract
+    */
+    function setBancorConverterFactory(IBancorConverterFactory _bancorConverterFactory)
+        public
+        ownerOnly
+    {
+        bancorConverterFactory = _bancorConverterFactory;
+    }
 
     /**
         @dev upgrade from old converter versions to the latest version
@@ -94,7 +108,7 @@ contract BancorConverterUpgrader is Owned {
         _fromConverter.transferOwnership(msg.sender);
         toConverter.transferOwnership(msg.sender);
         toConverter.transferManagement(msg.sender);
-        ConverterCreated(address(_fromConverter), address(toConverter));
+        ConverterUpgraded(address(_fromConverter), address(toConverter));
     }
 
     /**
@@ -128,14 +142,20 @@ contract BancorConverterUpgrader is Owned {
         ISmartToken token = _fromConverter.token();
         IBancorConverterExtensions extensions = _fromConverter.extensions();
         uint32 maxConversionFee = _fromConverter.maxConversionFee();
-        BancorConverter converter = new BancorConverter(
+
+        address converterAdderess  = bancorConverterFactory.createConverter(
             token,
             extensions,
             maxConversionFee,
             IERC20Token(address(0)),
             0
         );
-        return IBancorConverter(converter);
+
+        IBancorConverter converter = IBancorConverter(converterAdderess);
+        converter.acceptOwnership();
+        converter.acceptManagement();
+
+        return converter;
     }
 
     /**
