@@ -1,9 +1,9 @@
-MAX_PRECISION = 127
+from common.constants import MAX_PRECISION
 
 
 FIXED_1 = 1<<MAX_PRECISION
 FIXED_2 = 2<<MAX_PRECISION
-MAX_NUM = (1<<(256-MAX_PRECISION))-1
+MAX_NUM = 1<<(256-MAX_PRECISION)
 
 
 maxLen = len(hex(max([FIXED_1,FIXED_2,MAX_NUM])))
