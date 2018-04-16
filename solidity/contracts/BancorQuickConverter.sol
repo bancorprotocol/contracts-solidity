@@ -84,11 +84,11 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
     }
 
     /**
-        @dev verifies that the signer address is trusted by recover 
+        @dev verifies that the signer address is trusted by recovering 
         the address associated with the public key from elliptic 
-        curve signature or return zero on error.
+        curve signature, returns zero on error.
         notice that the signature is valid only for one conversion
-        and expired after the give block.
+        and expires after the give block.
 
         @return true if the signer is verified
     */
