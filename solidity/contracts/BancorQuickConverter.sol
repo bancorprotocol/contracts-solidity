@@ -23,7 +23,7 @@ import './interfaces/ITokenConverter.sol';
     [source token, smart token, to token, smart token, to token...]
 */
 contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
-    address public signerAddress = 0x0; // verified address that can allows conversions with higher gas price
+    address public signerAddress = 0x0; // verified address that allows conversions with higher gas price
     IBancorGasPriceLimit public gasPriceLimit; // bancor universal gas price limit contract
     mapping (address => bool) public etherTokens;   // list of all supported ether tokens
     mapping (bytes32 => bool) public conversionHashes;
