@@ -40,7 +40,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    string public version = '0.7';
+    string public version = '0.8';
     string public converterType = 'bancor';
 
     IBancorConverterExtensions public extensions;       // bancor converter extensions contract
