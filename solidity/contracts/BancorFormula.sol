@@ -238,7 +238,8 @@ contract BancorFormula is IBancorFormula, Utils {
     }
 
     /**
-        @dev ???
+        @dev given two connector balances/weights and a sell amount (in the first connector token),
+        calculates the return for a conversion from the first connector token to the second connector token (in the second connector token)
 
         Formula:
         Return = _connector2Balance * (1 - (_connector1Balance / (_connector1Balance + _amount)) ^ (_connector1Weight / _connector2Weight))
@@ -249,9 +250,9 @@ contract BancorFormula is IBancorFormula, Utils {
         @param _connector2Weight     output connector weight, represented in ppm, 1-1000000
         @param _amount               input connector amount
 
-        @return output connector amount
+        @return second connector amount
     */
-    function calculateRelayReturn(uint256 _connector1Balance, uint32 _connector1Weight, uint256 _connector2Balance, uint32 _connector2Weight, uint256 _amount) public view returns (uint256) {
+    function calculateCrossConnectorReturn(uint256 _connector1Balance, uint32 _connector1Weight, uint256 _connector2Balance, uint32 _connector2Weight, uint256 _amount) public view returns (uint256) {
         // validate input
         require(_connector1Balance > 0 && _connector1Weight > 0 && _connector1Weight <= MAX_WEIGHT && _connector2Balance > 0 && _connector2Weight > 0 && _connector2Weight <= MAX_WEIGHT);
 

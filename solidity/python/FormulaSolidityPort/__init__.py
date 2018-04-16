@@ -237,7 +237,7 @@ def calculateSaleReturn(_supply, _connectorBalance, _connectorWeight, _sellAmoun
 
     @return output connector amount
 '''
-def calculateRelayReturn(_connector1Balance, _connector1Weight, _connector2Balance, _connector2Weight, _amount):
+def calculateCrossConnectorReturn(_connector1Balance, _connector1Weight, _connector2Balance, _connector2Weight, _amount):
     # validate input
     assert(_connector1Balance > 0 and _connector1Weight > 0 and _connector1Weight <= MAX_WEIGHT and _connector2Balance > 0 and _connector2Weight > 0 and _connector2Weight <= MAX_WEIGHT);
 
