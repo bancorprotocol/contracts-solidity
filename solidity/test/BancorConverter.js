@@ -13,7 +13,6 @@ const utils = require('./helpers/Utils');
 const weight10Percent = 100000;
 const gasPrice = 22000000000;
 const gasPriceBadHigh = 22000000001;
-const gasPriceBadLow = 21999999999;
 
 let token;
 let tokenAddress;
