@@ -26,7 +26,7 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
     address public signerAddress = 0x0;
     IBancorGasPriceLimit public gasPriceLimit; // bancor universal gas price limit contract
     mapping (address => bool) public etherTokens;   // list of all supported ether tokens
-    mapping (bytes32 => bool) public conversions;
+    mapping (bytes32 => bool) public conversionHashes;
 
     /**
         @dev constructor
@@ -38,15 +38,6 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
     modifier validConversionPath(IERC20Token[] _path) {
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
         _;
-    }
-
-    /*
-        @dev signer address getter
-
-        @return the signer address
-    */
-    function signerAddress() public view returns (address) {
-        return signerAddress;
     }
 
     /*
@@ -93,21 +84,22 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
     }
 
     /**
-        @dev verifing the signer address by recover the address associated 
-        with the public key from elliptic curve signature or return zero 
-        on error
-
+        @dev verifies that the signer address is trusted by recover 
+        the address associated with the public key from elliptic 
+        curve signature or return zero on error.
+        notice that the signature is valid only for one conversion
+        and expired after the give block.
 
         @return true if the signer is verified
     */
-    function verification(address _addr, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s) public constant returns(bool) {
-        bytes32 hash = sha256(_addr, _nonce, tx.gasprice);
-        require(!conversions[hash]);
+    function verifyTrustedSender(uint256 _block, address _addr, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
+        bytes32 hash = sha256(_block, tx.gasprice, _addr, _nonce);
+        require(!conversionHashes[hash] && block.number <= _block);
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 prefixedHash = keccak256(prefix, hash);
         bool verified = ecrecover(prefixedHash, _v, _r, _s) == signerAddress;
         if (verified)
-            conversions[hash] = true;
+            conversionHashes[hash] = true;
         return verified;
     }
 
@@ -128,9 +120,8 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
         payable
         returns (uint256)
     {
-        return prioritizeConvertFor(_path, _amount, _minReturn, _for, 0x0, 0x0, 0x0, 0x0);
+        return convertForPrioritized(_path, _amount, _minReturn, _for, 0x0, 0x0, 0x0, 0x0, 0x0);
     }
-
 
     /**
         @dev checks if the transaction was verified and than converts the token to any 
@@ -145,7 +136,7 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
 
         @return tokens issued in return
     */
-    function prioritizeConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s)
+    function convertForPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _block, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s)
         public
         payable
         validConversionPath(_path)
@@ -154,7 +145,7 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
         if (_v == 0x0 && _r == 0x0 && _s == 0x0)
             gasPriceLimit.validateGasPrice(tx.gasprice);
         else
-            require(verification(_for, _nonce, _v, _r, _s));
+            require(verifyTrustedSender(_block, _for, _nonce, _v, _r, _s));
 
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
         IERC20Token fromToken = _path[0];
