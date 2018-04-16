@@ -130,9 +130,11 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
     }
 
     /**
-        @dev checks if the transaction was verified and than converts the token to any 
-        other token in the bancor network by following a predefined conversion path
-        and transfers the result tokens to a target account
+        @dev converts the token to any other token in the bancor network
+        by following a predefined conversion path and transfers the result
+        tokens to a target account.
+        this specific version of the function also allows the verified signer
+        to bypass the universal gas price limit.
         note that the converter should already own the source tokens
 
         @param _path        conversion path, see conversion path format above
