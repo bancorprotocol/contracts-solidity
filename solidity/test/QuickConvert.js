@@ -49,6 +49,7 @@ contract('BancorConverter', (accounts) => {
         let formula = await BancorFormula.new();
         let gasPriceLimit = await BancorGasPriceLimit.new(22000000000);
         quickConverter = await BancorQuickConverter.new();
+        await quickConverter.setGasPriceLimit(gasPriceLimit.address);
         let converterExtensions = await BancorConverterExtensions.new(formula.address, gasPriceLimit.address, quickConverter.address);
         converterExtensionsAddress = converterExtensions.address;
 

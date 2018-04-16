@@ -51,6 +51,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     uint32 public maxConversionFee = 0;                 // maximum conversion fee for the lifetime of the contract, represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public conversionFee = 0;                    // current conversion fee, represented in ppm, 0...maxConversionFee
     bool public conversionsEnabled = true;              // true if token conversions is enabled, false if not
+    IERC20Token[] private convertPath;
 
     // triggered when a conversion between two tokens occurs (TokenConverter event)
     event Conversion(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return,
@@ -92,12 +93,6 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         _;
     }
 
-    // verifies that the gas price is lower than the universal limit
-    modifier validGasPrice() {
-        assert(tx.gasprice <= extensions.gasPriceLimit().gasPrice());
-        _;
-    }
-
     // validates maximum conversion fee
     modifier validMaxConversionFee(uint32 _conversionFee) {
         require(_conversionFee >= 0 && _conversionFee <= MAX_CONVERSION_FEE);
@@ -131,6 +126,12 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     // allows execution only for owner or manager
     modifier ownerOrManagerOnly {
         require(msg.sender == owner || msg.sender == manager);
+        _;
+    }
+
+    // allows execution only for quick convreter
+    modifier quickConverterOnly {
+        require(msg.sender == address(extensions.quickConverter()));
         _;
     }
 
@@ -400,7 +401,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
 
         @return conversion return amount
     */
-    function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+    function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public quickConverterOnly returns (uint256) {
         require(_fromToken != _toToken); // validate input
 
         // conversion between the token and one of its connectors
@@ -415,6 +416,21 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     }
 
     /**
+        @dev converts a specific amount of _fromToken to _toToken
+
+        @param _fromToken  ERC20 token to convert from
+        @param _toToken    ERC20 token to convert to
+        @param _amount     amount to convert, in fromToken
+        @param _minReturn  if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+
+        @return conversion return amount
+    */
+    function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+            convertPath = [_fromToken, token, _toToken];
+            return quickConvert(convertPath, _amount, _minReturn);
+    }
+
+    /**
         @dev buys the token by depositing one of its connector tokens
 
         @param _connectorToken  connector token contract address
@@ -424,9 +440,8 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         @return buy return amount
     */
     function buy(IERC20Token _connectorToken, uint256 _depositAmount, uint256 _minReturn)
-        public
+        internal
         conversionsAllowed
-        validGasPrice
         greaterThanZero(_minReturn)
         returns (uint256)
     {
@@ -457,9 +472,8 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         @return sell return amount
     */
     function sell(IERC20Token _connectorToken, uint256 _sellAmount, uint256 _minReturn)
-        public
+        internal
         conversionsAllowed
-        validGasPrice
         greaterThanZero(_minReturn)
         returns (uint256)
     {
@@ -504,6 +518,30 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         validConversionPath(_path)
         returns (uint256)
     {
+        return quickConvertPrioritized(_path, _amount, _minReturn, 0x0, 0x0, 0x0, 0x0, 0x0);
+    }
+
+    /**
+        @dev converts the token to any other token in the bancor network by following a predefined conversion path
+        note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
+
+        @param _path        conversion path, see conversion path format in the BancorQuickConverter contract
+        @param _amount      amount to convert from (in the initial source token)
+        @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _block       if the current block exceeded the given parameter - it is cancelled
+        @param _nonce       the nonce of the sender address
+        @param _v           parameter that can be parsed from the transaction signature
+        @param _r           parameter that can be parsed from the transaction signature
+        @param _s           parameter that can be parsed from the transaction signature
+
+        @return tokens issued in return
+    */
+    function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s)
+        public
+        payable
+        validConversionPath(_path)
+        returns (uint256)
+    {
         IERC20Token fromToken = _path[0];
         IBancorQuickConverter quickConverter = extensions.quickConverter();
 
@@ -515,20 +553,19 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
             if (fromToken == token) {
                 token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
                 token.issue(quickConverter, _amount); // issue _amount new tokens to the quick converter
-            }
-            else {
+            } else {
                 // otherwise, we assume we already have allowance, transfer the tokens directly to the quick converter
                 assert(fromToken.transferFrom(msg.sender, quickConverter, _amount));
             }
         }
 
         // execute the conversion and pass on the ETH with the call
-        return quickConverter.convertFor.value(msg.value)(_path, _amount, _minReturn, msg.sender);
+        return quickConverter.convertForPrioritized.value(msg.value)(_path, _amount, _minReturn, msg.sender, _block, _nonce, _v, _r, _s);
     }
 
     // deprecated, backward compatibility
     function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        return convert(_fromToken, _toToken, _amount, _minReturn);
+        return convertInternal(_fromToken, _toToken, _amount, _minReturn);
     }
 
     /**
