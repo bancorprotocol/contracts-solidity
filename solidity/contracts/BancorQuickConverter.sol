@@ -23,7 +23,7 @@ import './interfaces/ITokenConverter.sol';
     [source token, smart token, to token, smart token, to token...]
 */
 contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
-    address public signerAddress = 0x0;
+    address public signerAddress = 0x0; // verified address that can allows conversions with higher gas price
     IBancorGasPriceLimit public gasPriceLimit; // bancor universal gas price limit contract
     mapping (address => bool) public etherTokens;   // list of all supported ether tokens
     mapping (bytes32 => bool) public conversionHashes;
@@ -94,10 +94,20 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
     */
     function verifyTrustedSender(uint256 _block, address _addr, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
         bytes32 hash = sha256(_block, tx.gasprice, _addr, _nonce);
+
+        // checking that it is first time conversion with the given signature
+        // and that the current block number not exceeded the maximal block
+        // number that allowed for the current signature
         require(!conversionHashes[hash] && block.number <= _block);
+
+        // recover the signing address and compare it to the trusted signer
+        // address that was set in the contract
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 prefixedHash = keccak256(prefix, hash);
         bool verified = ecrecover(prefixedHash, _v, _r, _s) == signerAddress;
+
+        // in case the signer is a trusted entity - mark the signature since
+        // every valid signature is valid only for one time use
         if (verified)
             conversionHashes[hash] = true;
         return verified;
