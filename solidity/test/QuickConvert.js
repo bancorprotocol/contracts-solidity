@@ -625,7 +625,7 @@ contract('BancorConverter', (accounts) => {
         }
     });
 
-    it('should throw when attempts to call quick converter prioritized with higher block number than what apears in the signing data', async () => {
+    it('should throw when attempts to call quick converter prioritized with higher block number than what appears in the signing data', async () => {
         try {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
@@ -653,7 +653,7 @@ contract('BancorConverter', (accounts) => {
         }
     });
 
-    it('should throw when attempts to call quick converter prioritized with lower block number than what apears in the signing data', async () => {
+    it('should throw when attempts to call quick converter prioritized with lower block number than what appears in the signing data', async () => {
         try {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
@@ -681,7 +681,7 @@ contract('BancorConverter', (accounts) => {
         }
     });
 
-    it('should throw when attempts to call quick converter prioritized with higher gas price than what apears in the signing data', async () => {
+    it('should throw when attempts to call quick converter prioritized with higher gas price than what appears in the signing data', async () => {
         try {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
@@ -708,7 +708,7 @@ contract('BancorConverter', (accounts) => {
         }
     });
 
-    it('should throw when attempts to call quick converter prioritized with lower gas price than what apears in the signing data', async () => {
+    it('should throw when attempts to call quick converter prioritized with lower gas price than what appears in the signing data', async () => {
         try {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
@@ -735,7 +735,7 @@ contract('BancorConverter', (accounts) => {
         }
     });
 
-    it('should throw when attempts to call quick converter prioritized with higher nonce than what apears in the signing data', async () => {
+    it('should throw when attempts to call quick converter prioritized with higher nonce than what appears in the signing data', async () => {
         try {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
@@ -763,7 +763,7 @@ contract('BancorConverter', (accounts) => {
         }
     });
 
-    it('should throw when attempts to call quick converter prioritized with lower nonce than what apears in the signing data', async () => {
+    it('should throw when attempts to call quick converter prioritized with lower nonce than what appears in the signing data', async () => {
         try {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
@@ -791,7 +791,7 @@ contract('BancorConverter', (accounts) => {
         }
     });
 
-    it('should throw when attempts to call quick converter prioritized with different address than what apears in the signing data', async () => {
+    it('should throw when attempts to call quick converter prioritized with different address than what appears in the signing data', async () => {
         try {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
