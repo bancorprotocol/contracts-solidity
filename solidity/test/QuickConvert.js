@@ -10,6 +10,12 @@ const BancorConverterExtensions = artifacts.require('BancorConverterExtensions.s
 const EtherToken = artifacts.require('EtherToken.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const utils = require('./helpers/Utils');
+const leftPad = require('left-pad');
+const ethUtil = require('ethereumjs-util');
+const sha256 = require('js-sha256').sha256;
+
+const accountPrivateKey = '52ca545cf0e7bde7357e2d4a752106bf995a4703d92c448859cef7c67fb7957f';
+const untrustedPrivateKey = '0156f5d7ef74552352abbde8db173f69336d5623e7dd4a9dc7b524feb2d4826f';
 
 let etherToken;
 let smartToken1;
@@ -31,6 +37,55 @@ let erc20QuickBuyPath;
 let smartToken1QuickSellPath;
 let smartToken2QuickSellPath;
 
+async function prepareData(data) {
+    let padedData = '';
+    data.forEach((item) => {
+        if (typeof (item.value) === 'string' && item.value.substring(0, 2) === '0x') {
+            if (item.value.substring(0, 2) === '0x')
+                item.value = item.value.substring(2);
+            padedData += leftPad((item.value).toString(16), item.length / 4, '0');
+        }
+        else if (typeof (item.value) === 'number') {
+            padedData += leftPad((item.value).toString(16), item.length / 4, '0');
+        }
+    });
+    return padedData;
+}
+
+function prefixMessage(msgIn) {
+    let msg = msgIn;
+    msg = new Buffer(msg.slice(2), 'hex');
+    msg = Buffer.concat([
+        new Buffer(`\x19Ethereum Signed Message:\n${msg.length.toString()}`),
+        msg]);
+    msg = web3.sha3(`0x${msg.toString('hex')}`, { encoding: 'hex' });
+    msg = new Buffer(msg.slice(2), 'hex');
+    return `0x${msg.toString('hex')}`;
+}
+
+function sign(msgToSign, privateKey) {
+    if (msgToSign.substring(0, 2) !== '0x')
+        msgToSign = `0x${msgToSign}`;
+    if (privateKey.substring(0, 2) === '0x')
+        privateKey = privateKey.substring(2, privateKey.length);
+
+    msgToSign = prefixMessage(msgToSign);
+
+    try {
+        const sig = ethUtil.ecsign(
+            new Buffer(msgToSign.slice(2), 'hex'),
+            new Buffer(privateKey, 'hex'));
+        const r = `0x${sig.r.toString('hex')}`;
+        const s = `0x${sig.s.toString('hex')}`;
+        const v = sig.v;
+
+        return { v: v, r: r, s: s };
+    }
+    catch (err) {
+        return err;
+    }
+}
+
 /*
 Token network structure:
 
@@ -50,6 +105,7 @@ contract('BancorConverter', (accounts) => {
         let gasPriceLimit = await BancorGasPriceLimit.new(22000000000);
         quickConverter = await BancorQuickConverter.new();
         await quickConverter.setGasPriceLimit(gasPriceLimit.address);
+        await quickConverter.setSignerAddress(accounts[3]);
         let converterExtensions = await BancorConverterExtensions.new(formula.address, gasPriceLimit.address, quickConverter.address);
         converterExtensionsAddress = converterExtensions.address;
 
@@ -510,6 +566,252 @@ contract('BancorConverter', (accounts) => {
     it('should throw when trying claim and convert without approval with claimAndConvert', async () => {
         try {
             await quickConverter.claimAndConvert(smartToken1QuickBuyPath, 10000, 1);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('verifies quick buy prioritized with trusted signature', async () => {
+        await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
+        let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
+
+        let block = await web3.eth.blockNumber;
+        let maximumBlock = block + 100;
+        let gasPrice = 22000000000;
+        let nonce = await web3.eth.getTransactionCount(accounts[1]);
+
+        let data = [
+            { value: maximumBlock, length: 256 },
+            { value: gasPrice, length: 256 },
+            { value: accounts[1], length: 160 },
+            { value: nonce, length: 256 }
+        ];
+
+        const condensed = await prepareData(data);
+        const hash = sha256(new Buffer(condensed, 'hex'));
+        let result = sign(hash, accountPrivateKey);
+
+        await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, nonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+        let newBalance = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
+    it('should throw when attempts to call quick converter prioritized with untrusted signature', async () => {
+        try {
+            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
+            let block = await web3.eth.blockNumber;
+            let maximumBlock = block + 100;
+            let gasPrice = 22000000000;
+            let nonce = await web3.eth.getTransactionCount(accounts[1]);
+
+            let data = [
+                { value: maximumBlock, length: 256 },
+                { value: gasPrice, length: 256 },
+                { value: accounts[1], length: 160 },
+                { value: nonce, length: 256 }
+            ];
+
+            const condensed = await prepareData(data);
+            const hash = sha256(new Buffer(condensed, 'hex'));
+            let result = sign(hash, untrustedPrivateKey);
+
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, nonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempts to call quick converter prioritized with higher block number than what appears in the signing data', async () => {
+        try {
+            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
+            let block = await web3.eth.blockNumber;
+            let maximumBlock = block + 100;
+            let wrongBlockNumber = maximumBlock + 100;
+            let gasPrice = 22000000000;
+            let nonce = await web3.eth.getTransactionCount(accounts[1]);
+
+            let data = [
+                { value: maximumBlock, length: 256 },
+                { value: gasPrice, length: 256 },
+                { value: accounts[1], length: 160 },
+                { value: nonce, length: 256 }
+            ];
+
+            const condensed = await prepareData(data);
+            const hash = sha256(new Buffer(condensed, 'hex'));
+            let result = sign(hash, accountPrivateKey);
+
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, wrongBlockNumber, nonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempts to call quick converter prioritized with lower block number than what appears in the signing data', async () => {
+        try {
+            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
+            let block = await web3.eth.blockNumber;
+            let maximumBlock = block + 100;
+            let wrongBlockNumber = maximumBlock - 1;
+            let gasPrice = 22000000000;
+            let nonce = await web3.eth.getTransactionCount(accounts[1]);
+
+            let data = [
+                { value: maximumBlock, length: 256 },
+                { value: gasPrice, length: 256 },
+                { value: accounts[1], length: 160 },
+                { value: nonce, length: 256 }
+            ];
+
+            const condensed = await prepareData(data);
+            const hash = sha256(new Buffer(condensed, 'hex'));
+            let result = sign(hash, accountPrivateKey);
+
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, wrongBlockNumber, nonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempts to call quick converter prioritized with higher gas price than what appears in the signing data', async () => {
+        try {
+            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
+            let block = await web3.eth.blockNumber;
+            let maximumBlock = block + 100;
+            let gasPrice = 21999999999;
+            let nonce = await web3.eth.getTransactionCount(accounts[1]);
+
+            let data = [
+                { value: maximumBlock, length: 256 },
+                { value: gasPrice, length: 256 },
+                { value: accounts[1], length: 160 },
+                { value: nonce, length: 256 }
+            ];
+
+            const condensed = await prepareData(data);
+            const hash = sha256(new Buffer(condensed, 'hex'));
+            let result = sign(hash, accountPrivateKey);
+
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, nonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempts to call quick converter prioritized with lower gas price than what appears in the signing data', async () => {
+        try {
+            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
+            let block = await web3.eth.blockNumber;
+            let maximumBlock = block + 100;
+            let gasPrice = 22000000001;
+            let nonce = await web3.eth.getTransactionCount(accounts[1]);
+
+            let data = [
+                { value: maximumBlock, length: 256 },
+                { value: gasPrice, length: 256 },
+                { value: accounts[1], length: 160 },
+                { value: nonce, length: 256 }
+            ];
+
+            const condensed = await prepareData(data);
+            const hash = sha256(new Buffer(condensed, 'hex'));
+            let result = sign(hash, accountPrivateKey);
+
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, nonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempts to call quick converter prioritized with higher nonce than what appears in the signing data', async () => {
+        try {
+            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
+            let block = await web3.eth.blockNumber;
+            let maximumBlock = block + 100;
+            let gasPrice = 22000000000;
+            let nonce = await web3.eth.getTransactionCount(accounts[1]);
+            let wrongNonce = nonce + 1;
+
+            let data = [
+                { value: maximumBlock, length: 256 },
+                { value: gasPrice, length: 256 },
+                { value: accounts[1], length: 160 },
+                { value: nonce, length: 256 }
+            ];
+
+            const condensed = await prepareData(data);
+            const hash = sha256(new Buffer(condensed, 'hex'));
+            let result = sign(hash, accountPrivateKey);
+
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, wrongNonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempts to call quick converter prioritized with lower nonce than what appears in the signing data', async () => {
+        try {
+            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
+            let block = await web3.eth.blockNumber;
+            let maximumBlock = block + 100;
+            let gasPrice = 22000000000;
+            let nonce = await web3.eth.getTransactionCount(accounts[1]);
+            let wrongNonce = nonce - 1;
+
+            let data = [
+                { value: maximumBlock, length: 256 },
+                { value: gasPrice, length: 256 },
+                { value: accounts[1], length: 160 },
+                { value: nonce, length: 256 }
+            ];
+
+            const condensed = await prepareData(data);
+            const hash = sha256(new Buffer(condensed, 'hex'));
+            let result = sign(hash, accountPrivateKey);
+
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, wrongNonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempts to call quick converter prioritized with different address than what appears in the signing data', async () => {
+        try {
+            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
+            let block = await web3.eth.blockNumber;
+            let maximumBlock = block + 100;
+            let gasPrice = 22000000000;
+            let nonce = await web3.eth.getTransactionCount(accounts[1]);
+            let wrongNonce = nonce - 1;
+
+            let data = [
+                { value: maximumBlock, length: 256 },
+                { value: gasPrice, length: 256 },
+                { value: accounts[1], length: 160 },
+                { value: nonce, length: 256 }
+            ];
+
+            const condensed = await prepareData(data);
+            const hash = sha256(new Buffer(condensed, 'hex'));
+            let result = sign(hash, accountPrivateKey);
+
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, wrongNonce, result.v, result.r, result.s, { from: accounts[2], value: 100 });
             assert(false, "didn't throw");
         }
         catch (error) {
