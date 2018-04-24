@@ -52,7 +52,7 @@ contract IBancorConverter is IOwned {
     contract and then call the upgrade function.
     At the end of the process, the ownership of the newly upgraded converter will be transferred
     back to the original owner.
-    The address of the new converter is available in the ConverterUpgraded event.
+    The address of the new converter is available in the ConverterUpgrade event.
 */
 contract BancorConverterUpgrader is Owned {
     IBancorConverterFactory public bancorConverterFactory;  // bancor converter factory contract
@@ -60,7 +60,7 @@ contract BancorConverterUpgrader is Owned {
     // triggered when the contract accept a converter ownership
     event ConverterOwned(address indexed _converter, address indexed _owner);
     // triggered when the upgrading process is done
-    event ConverterUpgraded(address indexed _oldConverter, address indexed _newConverter);
+    event ConverterUpgrade(address indexed _oldConverter, address indexed _newConverter);
 
     /**
         @dev constructor
@@ -85,7 +85,7 @@ contract BancorConverterUpgrader is Owned {
         @dev upgrade an old converter to the latest version
         will throw if ownership wasn't transferred to the upgrader before calling this function.
         ownership of the new converter will be transferred back to the original owner.
-        fires the ConverterUpgraded event upon success.
+        fires the ConverterUpgrade event upon success.
 
         @param _oldConverter   old converter contract address
         @param _version        old converter version
@@ -106,7 +106,7 @@ contract BancorConverterUpgrader is Owned {
         toConverter.transferOwnership(msg.sender);
         toConverter.transferManagement(msg.sender);
 
-        ConverterUpgraded(address(_oldConverter), address(toConverter));
+        ConverterUpgrade(address(_oldConverter), address(toConverter));
     }
 
     /**
