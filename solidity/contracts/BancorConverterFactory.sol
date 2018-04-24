@@ -7,8 +7,8 @@ import './interfaces/IBancorConverterFactory.sol';
 */
 contract BancorConverterFactory is IBancorConverterFactory {
 
-    // triggered when a new converter created
-    event ConverterCreated(address indexed _converter, address indexed _owner);
+    // triggered when a new converter is created
+    event NewConverter(address indexed _converter, address indexed _owner);
 
     /**
         @dev constructor
@@ -51,7 +51,7 @@ contract BancorConverterFactory is IBancorConverterFactory {
         converter.transferManagement(msg.sender);
 
         address _converterAddress = address(converter);
-        ConverterCreated(_converterAddress, msg.sender);
+        NewConverter(_converterAddress, msg.sender);
         return _converterAddress;
     }
 }
