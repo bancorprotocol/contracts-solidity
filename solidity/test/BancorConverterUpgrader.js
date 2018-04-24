@@ -69,7 +69,7 @@ contract('BancorConverterUpgrader', (accounts) => {
         let converter = await initConverter(accounts, true);
         let initialOwner = await converter.owner.call();
         await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
         await converter.acceptOwnership();
         let currentOwner = await converter.owner.call();
         assert.equal(initialOwner, currentOwner);
@@ -79,8 +79,8 @@ contract('BancorConverterUpgrader', (accounts) => {
         let converter = await initConverter(accounts, true);
         await converter.transferOwnership(converterUpgrader.address);
         let initialOwner = await converter.owner.call();
-        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._toConverter;
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
         let contract = await web3.eth.contract(converterAbi);
         let newConverter = await contract.at(newConverterAddress);
         let newOwner = await newConverter.newOwner.call();
@@ -95,8 +95,8 @@ contract('BancorConverterUpgrader', (accounts) => {
         let initialTokenOwner = await token1.owner.call();
         assert.equal(initialTokenOwner, converter.address);
         await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._toConverter;
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
         let currentTokenOwner = await token1.owner.call();
         assert.equal(currentTokenOwner, newConverterAddress);
     });
@@ -105,8 +105,8 @@ contract('BancorConverterUpgrader', (accounts) => {
         let converter = await initConverter(accounts, true);
         await converter.transferOwnership(converterUpgrader.address);
         let initialManager = await converter.manager.call();
-        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._toConverter;
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
         let contract = await web3.eth.contract(converterAbi);
         let newConverter = await contract.at(newConverterAddress);
         let newManager = await newConverter.newManager.call();
@@ -117,8 +117,8 @@ contract('BancorConverterUpgrader', (accounts) => {
         let converter = await initConverter(accounts, true);
         let initialLength = await converter.getQuickBuyPathLength.call();
         await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._toConverter;
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
         let contract = await web3.eth.contract(converterAbi);
         let newConverter = await contract.at(newConverterAddress);
         let newLength = await newConverter.getQuickBuyPathLength.call();
@@ -130,8 +130,8 @@ contract('BancorConverterUpgrader', (accounts) => {
         let initialConversionFee = await converter.conversionFee.call();
         let initialPathLength = await converter.getQuickBuyPathLength.call();
         await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._toConverter;
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
         for (let i = 0; i < initialPathLength; i++) {
@@ -145,7 +145,7 @@ contract('BancorConverterUpgrader', (accounts) => {
         try {
             let converter = await initConverter(accounts, true);
             await converter.transferOwnership(converterUpgrader.address);
-            await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"), { from: accounts[1] });
+            await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"), { from: accounts[1] });
         }
         catch (error) {
             return utils.ensureException(error);
@@ -155,7 +155,7 @@ contract('BancorConverterUpgrader', (accounts) => {
     it('should throw when start upgrade execution process without transfer the ownership first', async () => {
         try {
             let converter = await initConverter(accounts, true);
-            await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
+            await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
         }
         catch (error) {
             return utils.ensureException(error);
@@ -166,8 +166,8 @@ contract('BancorConverterUpgrader', (accounts) => {
         let converter = await initConverter(accounts, true);
         let currentExtensions = await converter.extensions.call();
         await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._toConverter;
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
         let newExtensions = await newConverter.extensions.call();
@@ -177,8 +177,8 @@ contract('BancorConverterUpgrader', (accounts) => {
     it('verifies that the max conversion fee after upgrade is the same', async () => {
         let converter = await initConverter(accounts, true, 20000);
         await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._toConverter;
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
         let newVal = await newConverter.maxConversionFee.call();
@@ -189,8 +189,8 @@ contract('BancorConverterUpgrader', (accounts) => {
         let converter = await initConverter(accounts, true);
         let initialConversionFee = await converter.conversionFee.call();
         await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._toConverter;
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
         let currentConversionFee = await newConverter.conversionFee.call();
@@ -202,7 +202,7 @@ contract('BancorConverterUpgrader', (accounts) => {
         let initialOwner = await converter.owner.call();
         await converter.transferOwnership(converterUpgrader.address);
         try {
-            await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"), { gas: 2000000 });
+            await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"), { gas: 2000000 });
             assert.fail('Expected throw not received');
         }
         catch (error) {
@@ -222,9 +222,9 @@ contract('BancorConverterUpgrader', (accounts) => {
         let currentOwner = await converter1.owner.call();
         let currentMaxConversionFee = await converter1.maxConversionFee.call();
         await converter1.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.converterUpgrader(converter1.address, 7);
+        let upgradeRes = await converterUpgrader.upgrade(converter1.address, 7);
         await converter1.acceptOwnership();
-        let newConverterAddress = upgradeRes.logs[4].args._toConverter;
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
         let newConverterConnectorTokenCount = await newConverter.connectorTokenCount.call();
@@ -239,8 +239,8 @@ contract('BancorConverterUpgrader', (accounts) => {
         let converter = await initConverter(accounts, true);
         let currentConverterConnectorTokenCount = await converter.connectorTokenCount.call();
         await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._toConverter;
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
         let newConverterConnectorTokenCount = await newConverter.connectorTokenCount.call();
@@ -254,8 +254,8 @@ contract('BancorConverterUpgrader', (accounts) => {
         let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
         let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
         await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._toConverter;
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
         let contract = web3.eth.contract(converterAbi);
         let newConverter = contract.at(newConverterAddress);
         let currentConnectorBalance1 = await newConverter.getConnectorBalance.call(connector1);
@@ -272,7 +272,7 @@ contract('BancorConverterUpgrader', (accounts) => {
         let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
         await converter.transferOwnership(converterUpgrader.address);
         try {
-            await converterUpgrader.converterUpgrader(converter.address, web3.fromUtf8("0.7"), { gas: 2000000 });
+            await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"), { gas: 2000000 });
             assert.fail('Expected throw not received');
         }
         catch (error) {

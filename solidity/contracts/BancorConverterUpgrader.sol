@@ -44,16 +44,15 @@ contract IBancorConverter is IOwned {
 }
 
 /*
-    Bancor Upgrade Converter
+    Bancor Converter Upgrader
 
-    The Bancor upgrade converter contract allows converter upgrade from old versions (0.4 and up) to the latest version.
-    Contract deployment proccess will be without arguments.
-    For begining upgrading a converter with contract instance on the network, first transfer the ownership to
-    the upgrade contract instance address and then call to upgradeConverter function.
-    Ownership of the current converter will be transfered back to the given new owner as the ownership of the new converter.
-    You can find the address of the new converter at ConverterUpgraded event.
-
-    WARNING: The contract assumes that it owned the current converter.
+    The Bancor converter upgrader contract allows upgrading an older Bancor converter
+    contract (0.4 and up) to the latest version.
+    To begin the upgrade process, first transfer the converter ownership to the upgrader
+    contract and then call the upgrade function.
+    At the end of the process, the ownership of the newly upgraded converter will be transferred
+    back to the original owner.
+    The address of the new converter is available in the ConverterUpgraded event.
 */
 contract BancorConverterUpgrader is Owned {
     IBancorConverterFactory public bancorConverterFactory;  // bancor converter factory contract
@@ -61,7 +60,7 @@ contract BancorConverterUpgrader is Owned {
     // triggered when the contract accept a converter ownership
     event ConverterOwned(address indexed _converter, address indexed _owner);
     // triggered when the upgrading process is done
-    event ConverterUpgraded(address indexed _fromConverter, address indexed _toConverter);
+    event ConverterUpgraded(address indexed _oldConverter, address indexed _newConverter);
 
     /**
         @dev constructor
@@ -83,63 +82,59 @@ contract BancorConverterUpgrader is Owned {
     }
 
     /**
-        @dev upgrade from old converter versions to the latest version
-        will throw if transfer ownership request was not sent before calling this function.
-        ownership of the current and new converter will be transfered to a given owner address.
-        when process is finish the function fired an event.
+        @dev upgrade an old converter to the latest version
+        will throw if ownership wasn't transferred to the upgrader before calling this function.
+        ownership of the new converter will be transferred back to the original owner.
+        fires the ConverterUpgraded event upon success.
 
-        @param _fromConverter   converter to upgrade
-        @param _version         current conveter version
+        @param _oldConverter   old converter contract address
+        @param _version        old converter version
     */
-    function converterUpgrader(IBancorConverter _fromConverter, bytes32 _version) public {
+    function upgrade(IBancorConverter _oldConverter, bytes32 _version) public {
         bool formerVersions = false;
         if (_version == "0.4")
             formerVersions = true;
-        acceptConverterOwnership(_fromConverter);
-        IBancorConverter toConverter = createConverter(_fromConverter);
-        copyConnectors(_fromConverter, toConverter, formerVersions);
-        copyConversionFee(_fromConverter, toConverter);
-        copyQuickBuyPath(_fromConverter, toConverter);
-        transferConnectorsBalances(_fromConverter, toConverter, formerVersions);
-        _fromConverter.transferTokenOwnership(toConverter);
+        acceptConverterOwnership(_oldConverter);
+        IBancorConverter toConverter = createConverter(_oldConverter);
+        copyConnectors(_oldConverter, toConverter, formerVersions);
+        copyConversionFee(_oldConverter, toConverter);
+        copyQuickBuyPath(_oldConverter, toConverter);
+        transferConnectorsBalances(_oldConverter, toConverter, formerVersions);
+        _oldConverter.transferTokenOwnership(toConverter);
         toConverter.acceptTokenOwnership();
-        _fromConverter.transferOwnership(msg.sender);
+        _oldConverter.transferOwnership(msg.sender);
         toConverter.transferOwnership(msg.sender);
         toConverter.transferManagement(msg.sender);
-        ConverterUpgraded(address(_fromConverter), address(toConverter));
+
+        ConverterUpgraded(address(_oldConverter), address(toConverter));
     }
 
     /**
-        @dev first step when upgrading a converter is to transfer the ownership to the upgrade converter
-        contract instance. since transferring ownership has two steps, the instance must to accept the
-        ownership before it can proceed the upgrading process.
-        notice that even that the ownership transfered to the contract, only the current owner can 
-        execute the upgrade process.
-        when the process is finish, the function fired an event.
+        @dev the first step when upgrading a converter is to transfer the ownership to the local contract.
+        the upgrader contract then needs to accept the ownership transfer before initiating
+        the upgrade process.
+        fires the ConverterOwned event upon success
 
-        @param _fromConverter       converter to accept its ownership request
-
-        @return the new converter
+        @param _oldConverter       converter to accept ownership of
     */
-    function acceptConverterOwnership(IBancorConverter _fromConverter) private {
-        require(msg.sender == _fromConverter.owner());
-        _fromConverter.acceptOwnership();
-        ConverterOwned(_fromConverter, this);
+    function acceptConverterOwnership(IBancorConverter _oldConverter) private {
+        require(msg.sender == _oldConverter.owner());
+        _oldConverter.acceptOwnership();
+        ConverterOwned(_oldConverter, this);
     }
 
     /**
-        @dev create a new converter with same token and the same max conversion fee and the same 
-        extensions address as set in the given converter.
-        the new converter has no connectors.
+        @dev creates a new converter with same basic data as the original old converter
+        the newly created converter will have no connectors at this step.
 
-        @param _fromConverter       converter to read from
+        @param _oldConverter       old converter contract address
 
-        @return the new converter
+        @return the new converter  new converter contract address
     */
-    function createConverter(IBancorConverter _fromConverter) private returns(IBancorConverter) {
-        ISmartToken token = _fromConverter.token();
-        IBancorConverterExtensions extensions = _fromConverter.extensions();
-        uint32 maxConversionFee = _fromConverter.maxConversionFee();
+    function createConverter(IBancorConverter _oldConverter) private returns(IBancorConverter) {
+        ISmartToken token = _oldConverter.token();
+        IBancorConverterExtensions extensions = _oldConverter.extensions();
+        uint32 maxConversionFee = _oldConverter.maxConversionFee();
 
         address converterAdderess  = bancorConverterFactory.createConverter(
             token,
@@ -157,14 +152,14 @@ contract BancorConverterUpgrader is Owned {
     }
 
     /**
-        @dev copies the connectors from the current converter to the new one.
-        notice that this will not work for an unlimited number of connectors.
+        @dev copies the connectors from the old converter to the new one.
+        note that this will not work for an unlimited number of connectors due to block gas limit constraints.
 
-        @param _fromConverter       current converter to copy from
-        @param _toConverter         new converter to add connectors
-        @param _formerVersions      true if the converter version is under 0.5
+        @param _oldConverter    old converter contract address
+        @param _newConverter    new converter contract address
+        @param _isLegacyVersion true if the converter version is under 0.5
     */
-    function copyConnectors(IBancorConverter _fromConverter, IBancorConverter _toConverter, bool _formerVersions)
+    function copyConnectors(IBancorConverter _oldConverter, IBancorConverter _newConverter, bool _isLegacyVersion)
         private
     {
         uint256 virtualBalance;
@@ -172,83 +167,88 @@ contract BancorConverterUpgrader is Owned {
         bool isVirtualBalanceEnabled;
         bool isPurchaseEnabled;
         bool isSet;
-        uint16 connectorTokenCount = _formerVersions ? _fromConverter.reserveTokenCount() : _fromConverter.connectorTokenCount();
+        uint16 connectorTokenCount = _isLegacyVersion ? _oldConverter.reserveTokenCount() : _oldConverter.connectorTokenCount();
+
         for (uint16 i = 0; i < connectorTokenCount; i++) {
-            address connectorAddress = _formerVersions ? _fromConverter.reserveTokens(i) : _fromConverter.connectorTokens(i);
+            address connectorAddress = _isLegacyVersion ? _oldConverter.reserveTokens(i) : _oldConverter.connectorTokens(i);
             (virtualBalance, weight, isVirtualBalanceEnabled, isPurchaseEnabled, isSet) = readConnector(
-                _fromConverter,
+                _oldConverter,
                 connectorAddress,
-                _formerVersions
+                _isLegacyVersion
             );
+
             IERC20Token connectorToken = IERC20Token(connectorAddress);
-            _toConverter.addConnector(connectorToken, weight, isVirtualBalanceEnabled);
+            _newConverter.addConnector(connectorToken, weight, isVirtualBalanceEnabled);
         }
     }
 
     /**
-        @dev copies the conversion fee from the current converter to the new one
+        @dev copies the conversion fee from the old converter to the new one
 
-        @param _fromConverter       current converter to copy from
-        @param _toConverter         new converter to add a conversion fee
+        @param _oldConverter    old converter contract address
+        @param _newConverter    new converter contract address
     */
-    function copyConversionFee(IBancorConverter _fromConverter, IBancorConverter _toConverter) private {
-        uint32 conversionFee = _fromConverter.conversionFee();
-        _toConverter.setConversionFee(conversionFee);
+    function copyConversionFee(IBancorConverter _oldConverter, IBancorConverter _newConverter) private {
+        uint32 conversionFee = _oldConverter.conversionFee();
+        _newConverter.setConversionFee(conversionFee);
     }
 
     /**
-        @dev copies the quick buy path array from the current converter to the new one
+        @dev copies the quick buy path from the old converter to the new one
 
-        @param _fromConverter       current converter to copy from
-        @param _toConverter         new converter to add a path
+        @param _oldConverter    old converter contract address
+        @param _newConverter    new converter contract address
     */
-    function copyQuickBuyPath(IBancorConverter _fromConverter, IBancorConverter _toConverter) private {
-        uint256 quickBuyPathLength = _fromConverter.getQuickBuyPathLength();
-        if (quickBuyPathLength > 0) {
-            IERC20Token[] memory path = new IERC20Token[](quickBuyPathLength);
-            for (uint256 i = 0; i < quickBuyPathLength; i++) {
-                path[i] = _fromConverter.quickBuyPath(i);
-            }
-            _toConverter.setQuickBuyPath(path);
+    function copyQuickBuyPath(IBancorConverter _oldConverter, IBancorConverter _newConverter) private {
+        uint256 quickBuyPathLength = _oldConverter.getQuickBuyPathLength();
+        if (quickBuyPathLength <= 0)
+            return;
+
+        IERC20Token[] memory path = new IERC20Token[](quickBuyPathLength);
+        for (uint256 i = 0; i < quickBuyPathLength; i++) {
+            path[i] = _oldConverter.quickBuyPath(i);
         }
+
+        _newConverter.setQuickBuyPath(path);
     }
 
     /**
-        @dev for each connector of the current converter, the function transfers its balance to the new converter.
-        notice that the function assumes that the new converter has exact the same connectors as the current
-        converter owned and this will not work for an unlimited number of connectors.
+        @dev transfers the balance of each connector in the old converter to the new one.
+        note that the function assumes that the new converter already has the exact same number of
+        also, this will not work for an unlimited number of connectors due to block gas limit constraints.
 
-        @param _fromConverter       current converter to withdraw from
-        @param _toConverter         new converter to deposit
-        @param _formerVersions      true if the converter version is under 0.5
+        @param _oldConverter    old converter contract address
+        @param _newConverter    new converter contract address
+        @param _isLegacyVersion true if the converter version is under 0.5
     */
-    function transferConnectorsBalances(IBancorConverter _fromConverter, IBancorConverter _toConverter, bool _formerVersions)
+    function transferConnectorsBalances(IBancorConverter _oldConverter, IBancorConverter _newConverter, bool _isLegacyVersion)
         private
     {
         uint256 connectorBalance;
-        uint16 connectorTokenCount = _formerVersions ? _fromConverter.reserveTokenCount() : _fromConverter.connectorTokenCount();
+        uint16 connectorTokenCount = _isLegacyVersion ? _oldConverter.reserveTokenCount() : _oldConverter.connectorTokenCount();
+
         for (uint16 i = 0; i < connectorTokenCount; i++) {
-            address connectorAddress = _formerVersions ? _fromConverter.reserveTokens(i) : _fromConverter.connectorTokens(i);
+            address connectorAddress = _isLegacyVersion ? _oldConverter.reserveTokens(i) : _oldConverter.connectorTokens(i);
             IERC20Token connector = IERC20Token(connectorAddress);
-            connectorBalance = _formerVersions ? _fromConverter.getReserveBalance(connector) : _fromConverter.getConnectorBalance(connector);
-            _fromConverter.withdrawTokens(connector, address(_toConverter), connectorBalance);
+            connectorBalance = _isLegacyVersion ? _oldConverter.getReserveBalance(connector) : _oldConverter.getConnectorBalance(connector);
+            _oldConverter.withdrawTokens(connector, address(_newConverter), connectorBalance);
         }
     }
 
     /**
         @dev returns the connector settings
 
-        @param _converter           converter to read from
-        @param _address             connector's address to read from
-        @param _formerVersions      true if the converter version is under 0.5
+        @param _converter       old converter contract address
+        @param _address         connector's address to read from
+        @param _isLegacyVersion true if the converter version is under 0.5
 
         @return connector's settings
     */
-    function readConnector(IBancorConverter _converter, address _address, bool _formerVersions) 
+    function readConnector(IBancorConverter _converter, address _address, bool _isLegacyVersion) 
         private
         view
         returns(uint256 virtualBalance, uint32 weight, bool isVirtualBalanceEnabled, bool isPurchaseEnabled, bool isSet)
     {
-        return _formerVersions ? _converter.reserves(_address) : _converter.connectors(_address);
+        return _isLegacyVersion ? _converter.reserves(_address) : _converter.connectors(_address);
     }
 }

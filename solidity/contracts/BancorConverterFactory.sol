@@ -51,9 +51,7 @@ contract BancorConverterFactory is IBancorConverterFactory {
         converter.transferManagement(msg.sender);
 
         address _converterAddress = address(converter);
-
         ConverterCreated(_converterAddress, msg.sender);
-
         return _converterAddress;
     }
 }
