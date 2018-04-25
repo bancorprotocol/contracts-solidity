@@ -5,4 +5,5 @@ pragma solidity ^0.4.18;
 */
 contract IBancorGasPriceLimit {
     function gasPrice() public view returns (uint256) {}
+    function validateGasPrice(uint256) public view;
 }
