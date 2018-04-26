@@ -23,6 +23,7 @@ module.exports = async (deployer) => {
     deployer.deploy(TokenHolder);
     deployer.deploy(ERC20Token, 'DummyToken', 'DUM', 0);
     deployer.deploy(EtherToken);
+    deployer.deploy(Whitelist);
     await deployer.deploy(SmartToken, 'Token1', 'TKN1', 2);
     deployer.deploy(SmartTokenController, SmartToken.address);
     deployer.deploy(BancorFormula);
