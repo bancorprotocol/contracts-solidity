@@ -54,8 +54,15 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     IERC20Token[] private convertPath;
 
     // triggered when a conversion between two tokens occurs (TokenConverter event)
-    event Conversion(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return,
-                     int256 _conversionFee, uint256 _currentPriceN, uint256 _currentPriceD);
+    event Conversion(address indexed _fromToken,
+        address indexed _toToken,
+        address indexed _trader,
+        uint256 _amount,
+        uint256 _return,
+        int256 _conversionFee,
+        uint256 _currentPriceN,
+        uint256 _currentPriceD
+    );
     // triggered when the conversion fee is updated
     event ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee);
 
@@ -426,8 +433,8 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         @return conversion return amount
     */
     function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
-            convertPath = [_fromToken, token, _toToken];
-            return quickConvert(convertPath, _amount, _minReturn);
+        convertPath = [_fromToken, token, _toToken];
+        return quickConvert(convertPath, _amount, _minReturn);
     }
 
     /**
