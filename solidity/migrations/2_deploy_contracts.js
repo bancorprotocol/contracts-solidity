@@ -7,6 +7,7 @@ const Managed = artifacts.require('Managed.sol');
 const TokenHolder = artifacts.require('TokenHolder.sol');
 const ERC20Token = artifacts.require('ERC20Token.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
+const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const Whitelist = artifacts.require('Whitelist.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const SmartTokenController = artifacts.require('SmartTokenController.sol');
@@ -17,13 +18,14 @@ const BancorConverterExtensions = artifacts.require('BancorConverterExtensions.s
 const BancorConverter = artifacts.require('BancorConverter.sol');
 const CrowdsaleController = artifacts.require('CrowdsaleController.sol');
 
-module.exports = async (deployer) => {
+module.exports = async deployer => {
     deployer.deploy(Utils);
     deployer.deploy(Owned);
     deployer.deploy(Managed);
     deployer.deploy(TokenHolder);
     deployer.deploy(ERC20Token, 'DummyToken', 'DUM', 0);
     deployer.deploy(EtherToken);
+    deployer.deploy(ContractFeatures);
     deployer.deploy(Whitelist);
     await deployer.deploy(SmartToken, 'Token1', 'TKN1', 2);
     deployer.deploy(SmartTokenController, SmartToken.address);
