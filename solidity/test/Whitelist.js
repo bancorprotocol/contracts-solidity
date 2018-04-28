@@ -6,7 +6,7 @@ const utils = require('./helpers/Utils');
 
 const invalidAccount = '0x0';
 
-contract('Whitelist', (accounts) => {
+contract('Whitelist', accounts => {
     it('verifies that a given address is not whitelisted after construction', async () => {
         let whitelist = await Whitelist.new();
         let isWhitelisted = await whitelist.isWhitelisted.call(accounts[1]);

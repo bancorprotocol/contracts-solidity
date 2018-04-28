@@ -19,7 +19,7 @@ async function initHolder() {
     return holder;
 }
 
-contract('TokenHolder', (accounts) => {
+contract('TokenHolder', accounts => {
     it('verifies that the owner can withdraw tokens', async () => {
         let holder = await initHolder();
         let prevBalance = await erc20Token.balanceOf.call(accounts[2]);

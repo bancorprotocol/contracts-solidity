@@ -14,7 +14,9 @@ const leftPad = require('left-pad');
 const ethUtil = require('ethereumjs-util');
 const sha256 = require('js-sha256').sha256;
 
-const accountPrivateKey = '52ca545cf0e7bde7357e2d4a752106bf995a4703d92c448859cef7c67fb7957f';
+// mnemonic: rose limit dog cannon adult lizard siege tumble job puzzle only trim
+// account index: 3
+const accountPrivateKey = '24668d3f9c62e5a368640a8d0d858a5c09fd836c8f0f521ed01e6745231df3a4';
 const untrustedPrivateKey = '0156f5d7ef74552352abbde8db173f69336d5623e7dd4a9dc7b524feb2d4826f';
 
 let etherToken;
@@ -36,6 +38,7 @@ let smartToken4QuickBuyPath;
 let erc20QuickBuyPath;
 let smartToken1QuickSellPath;
 let smartToken2QuickSellPath;
+let defaultGasPriceLimit = 20000000000;
 
 async function prepareData(data) {
     let padedData = '';
@@ -99,10 +102,10 @@ Token network structure:
 
 */
 
-contract('BancorConverter', (accounts) => {
+contract('BancorQuickConverter', accounts => {
     before(async () => {
         let formula = await BancorFormula.new();
-        let gasPriceLimit = await BancorGasPriceLimit.new(22000000000);
+        let gasPriceLimit = await BancorGasPriceLimit.new(defaultGasPriceLimit);
         quickConverter = await BancorQuickConverter.new();
         await quickConverter.setGasPriceLimit(gasPriceLimit.address);
         await quickConverter.setSignerAddress(accounts[3]);
@@ -579,7 +582,7 @@ contract('BancorConverter', (accounts) => {
 
         let block = await web3.eth.blockNumber;
         let maximumBlock = block + 100;
-        let gasPrice = 22000000000;
+        let gasPrice = defaultGasPriceLimit;
         let nonce = await web3.eth.getTransactionCount(accounts[1]);
 
         let data = [
@@ -603,7 +606,7 @@ contract('BancorConverter', (accounts) => {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
-            let gasPrice = 22000000000;
+            let gasPrice = defaultGasPriceLimit;
             let nonce = await web3.eth.getTransactionCount(accounts[1]);
 
             let data = [
@@ -631,7 +634,7 @@ contract('BancorConverter', (accounts) => {
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
             let wrongBlockNumber = maximumBlock + 100;
-            let gasPrice = 22000000000;
+            let gasPrice = defaultGasPriceLimit;
             let nonce = await web3.eth.getTransactionCount(accounts[1]);
 
             let data = [
@@ -659,7 +662,7 @@ contract('BancorConverter', (accounts) => {
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
             let wrongBlockNumber = maximumBlock - 1;
-            let gasPrice = 22000000000;
+            let gasPrice = defaultGasPriceLimit;
             let nonce = await web3.eth.getTransactionCount(accounts[1]);
 
             let data = [
@@ -686,7 +689,7 @@ contract('BancorConverter', (accounts) => {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
-            let gasPrice = 21999999999;
+            let gasPrice = defaultGasPriceLimit - 1;
             let nonce = await web3.eth.getTransactionCount(accounts[1]);
 
             let data = [
@@ -713,7 +716,7 @@ contract('BancorConverter', (accounts) => {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
-            let gasPrice = 22000000001;
+            let gasPrice = defaultGasPriceLimit + 1;
             let nonce = await web3.eth.getTransactionCount(accounts[1]);
 
             let data = [
@@ -740,7 +743,7 @@ contract('BancorConverter', (accounts) => {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
-            let gasPrice = 22000000000;
+            let gasPrice = defaultGasPriceLimit;
             let nonce = await web3.eth.getTransactionCount(accounts[1]);
             let wrongNonce = nonce + 1;
 
@@ -768,7 +771,7 @@ contract('BancorConverter', (accounts) => {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
-            let gasPrice = 22000000000;
+            let gasPrice = defaultGasPriceLimit;
             let nonce = await web3.eth.getTransactionCount(accounts[1]);
             let wrongNonce = nonce - 1;
 
@@ -796,7 +799,7 @@ contract('BancorConverter', (accounts) => {
             await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
-            let gasPrice = 22000000000;
+            let gasPrice = defaultGasPriceLimit;
             let nonce = await web3.eth.getTransactionCount(accounts[1]);
             let wrongNonce = nonce - 1;
 

@@ -148,21 +148,21 @@ event Conversion(address indexed _fromToken, address indexed _toToken, address i
 Triggered when a conversion between one of the convertible tokens takes place.
 
 ## Testing
-Tests are included and can be run using truffle.
+Tests are included and can be run using truffle & ganache
 
 ### Prerequisites
 * Node.js v7.6.0+
-* truffle v3.2.2+
-* testrpc v3.0.5+
+* truffle v4.1.5+
+* ganache v1.1.0+
 
-To run the test, execute the following commands from the project's root folder -
-* npm run testrpc
+To run the test, first start ganache and then execute the following command from the project's root folder -
 * npm test
 
 ## Collaborators
 
 * **[Yudi Levi](https://github.com/yudilevi)**
 * **[Ilana Pinhas](https://github.com/ilanapi)**
+* **[Or Dadush](https://github.com/ordd)**
 * **[Barak Manos](https://github.com/barakman)**
 * **[Martin Holst Swende](https://github.com/holiman)**
 

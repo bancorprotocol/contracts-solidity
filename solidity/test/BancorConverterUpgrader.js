@@ -54,7 +54,7 @@ async function initConverter(accounts, activate, maxConversionFee = 30000) {
     return converter;
 }
 
-contract('BancorConverterUpgrader', (accounts) => {
+contract('BancorConverterUpgrader', accounts => {
     before(async () => {
         let formula = await BancorFormula.new();
         let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);

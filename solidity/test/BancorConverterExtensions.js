@@ -15,7 +15,7 @@ async function initConverterExtensions() {
     return await BancorConverterExtensions.new(formulaAddress, gasPriceLimitAddress, quickConverterAddress);
 }
 
-contract('BancorConverterExtensions', (accounts) => {
+contract('BancorConverterExtensions', accounts => {
     before(async () => {
         let formula = await BancorFormula.new();
         let gasPriceLimit = await BancorGasPriceLimit.new(22000000000);

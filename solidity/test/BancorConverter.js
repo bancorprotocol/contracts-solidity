@@ -61,7 +61,7 @@ function getConversionAmount(transaction, logIndex = 0) {
     return transaction.logs[logIndex].args._return.toNumber();
 }
 
-contract('BancorConverter', (accounts) => {
+contract('BancorConverter', accounts => {
     before(async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         let formula = await BancorFormula.new();

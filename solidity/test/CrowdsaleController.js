@@ -14,10 +14,17 @@ let startTime = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // crowdsale 
 let startTimeInProgress = Math.floor(Date.now() / 1000) - 12 * 60 * 60; // ongoing crowdsale
 let startTimeFinished = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60; // ongoing crowdsale
 let realCap = 1000;
+let realCapSmall = 10;
 let realCapLarge = 1000000000000000000000000000000000000;
 let realCapKey = 234;
-let realEtherCapHash = '0xd3a40f1165164f13f237cc938419cc292e66b7bb3aa190f21087a3813c5ae1ca';  // sha3(uint256(1000), uint256(234))
-let realEtherCapHashLarge = '0xe8de42a704eab00275ed4cdc7e4e626633a0ce70bc986007a037e3ff699f4381';  // sha3(uint256(1000000000000000000000000000000000000), uint256(234))
+
+// sha3(uint256(1000), uint256(234))
+let realEtherCapHash = '0xd3a40f1165164f13f237cc938419cc292e66b7bb3aa190f21087a3813c5ae1ca';
+// sha3(uint256(10), uint256(234))
+let realEtherCapHashSmall = '0x6abc5e51eb354f6e72ad5be4976fd8d867b70b09c5cb286a12375fd9a45644b6';
+// sha3(uint256(1000000000000000000000000000000000000), uint256(234))
+let realEtherCapHashLarge = '0xe8de42a704eab00275ed4cdc7e4e626633a0ce70bc986007a037e3ff699f4381';
+
 let badContributionGasPrice = 50000000001;
 
 async function generateDefaultController() {
@@ -25,11 +32,11 @@ async function generateDefaultController() {
 }
 
 // used by contribution tests, creates a controller that's already in progress
-async function initController(accounts, activate, startTimeOverride = startTimeInProgress) {
+async function initController(accounts, activate, startTimeOverride = startTimeInProgress, capHash = realEtherCapHash) {
     token = await SmartToken.new('Token1', 'TKN1', 2);
     tokenAddress = token.address;
 
-    let controller = await TestCrowdsaleController.new(tokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHash, startTimeOverride);
+    let controller = await TestCrowdsaleController.new(tokenAddress, startTime, beneficiaryAddress, btcsAddress, capHash, startTimeOverride);
     let controllerAddress = controller.address;
 
     if (activate) {
@@ -44,7 +51,7 @@ function getContributionAmount(transaction, logIndex = 0) {
     return transaction.logs[logIndex].args._return.toNumber();
 }
 
-contract('CrowdsaleController', (accounts) => {
+contract('CrowdsaleController', accounts => {
     before(async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
@@ -296,8 +303,8 @@ contract('CrowdsaleController', (accounts) => {
     });
 
     it('should throw when attempting to contribute ether while hitting the real ether cap', async () => {
-        let controller = await initController(accounts, true);
-        await controller.enableRealCap(realCap, realCapKey);
+        let controller = await initController(accounts, true, startTimeInProgress, realEtherCapHashSmall);
+        await controller.enableRealCap(realCapSmall, realCapKey);
 
         try {
             await controller.contributeETH({ value: realCap + 1 });
@@ -356,7 +363,7 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to contributing through btcs while the controller is not active', async () => {
+    it('should throw when attempting to contribute through btcs while the controller is not active', async () => {
         let controller = await initController(accounts, false, startTime);
 
         try {
@@ -368,7 +375,7 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to contributing through btcs after the crowdsale has started', async () => {
+    it('should throw when attempting to contribute through btcs after the crowdsale has started', async () => {
         let controller = await initController(accounts, true);
 
         try {
@@ -380,7 +387,7 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to contributing through btcs after the crowdsale has finished', async () => {
+    it('should throw when attempting to contribute through btcs after the crowdsale has finished', async () => {
         let controller = await initController(accounts, true, startTimeFinished);
 
         try {
@@ -392,9 +399,9 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to contributing through btcs while hitting the btcs ether cap', async () => {
+    it('should throw when attempting to contribute through btcs while hitting the btcs ether cap', async () => {
         let controller = await initController(accounts, true, startTime);
-        let btcsEtherCap = await controller.BTCS_ETHER_CAP.call();
+        let btcsEtherCap = await controller.BTCS_ETHER_CAP_SMALL.call();
         let largerThanCap = btcsEtherCap.plus(1);
 
         try {
@@ -406,7 +413,7 @@ contract('CrowdsaleController', (accounts) => {
         }
     });
 
-    it('should throw when attempting to contributing through btcs with large gas price', async () => {
+    it('should throw when attempting to contribute through btcs with large gas price', async () => {
         let controller = await initController(accounts, true, startTime);
 
         try {

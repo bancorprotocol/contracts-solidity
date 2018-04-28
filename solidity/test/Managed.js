@@ -4,7 +4,7 @@
 const Managed = artifacts.require('Managed.sol');
 const utils = require('./helpers/Utils');
 
-contract('Managed', (accounts) => {
+contract('Managed', accounts => {
     it('verifies the manager after construction', async () => {
         let contract = await Managed.new();
         let manager = await contract.manager.call();

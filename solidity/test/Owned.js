@@ -4,7 +4,7 @@
 const Owned = artifacts.require('Owned.sol');
 const utils = require('./helpers/Utils');
 
-contract('Owned', (accounts) => {
+contract('Owned', accounts => {
     it('verifies the owner after construction', async () => {
         let contract = await Owned.new();
         let owner = await contract.owner.call();

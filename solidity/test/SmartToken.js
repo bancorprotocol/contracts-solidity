@@ -4,7 +4,7 @@
 const SmartToken = artifacts.require('SmartToken.sol');
 const utils = require('./helpers/Utils');
 
-contract('SmartToken', (accounts) => {
+contract('SmartToken', accounts => {
     it('verifies the token name, symbol and decimal units after construction', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         let name = await token.name.call();

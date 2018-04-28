@@ -6,7 +6,7 @@ const utils = require('./helpers/Utils');
 
 const invalidAccount = '0x0';
 
-contract('ERC20Token', (accounts) => {
+contract('ERC20Token', accounts => {
     it('verifies the token name after construction', async () => {
         let token = await TestERC20Token.new('Token1', 'TKN1', 0);
         let name = await token.name.call();
