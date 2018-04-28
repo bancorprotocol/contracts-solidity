@@ -7,6 +7,7 @@ const Managed = artifacts.require('Managed.sol');
 const TokenHolder = artifacts.require('TokenHolder.sol');
 const ERC20Token = artifacts.require('ERC20Token.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
+const Whitelist = artifacts.require('Whitelist.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const SmartTokenController = artifacts.require('SmartTokenController.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');

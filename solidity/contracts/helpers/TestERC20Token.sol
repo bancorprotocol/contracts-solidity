@@ -1,5 +1,5 @@
-pragma solidity ^0.4.11;
-import '../ERC20Token.sol';
+pragma solidity ^0.4.21;
+import '../token/ERC20Token.sol';
 
 /*
     Test token with predefined supply
