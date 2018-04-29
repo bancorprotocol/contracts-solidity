@@ -168,29 +168,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed {
         return uint16(connectorTokens.length);
     }
 
-    /**
-        @dev returns the number of convertible tokens supported by the contract
-        note that the number of convertible tokens is the number of connector token, plus 1 (that represents the smart token)
-
-        @return number of convertible tokens
-    */
-    function convertibleTokenCount() public view returns (uint16) {
-        return connectorTokenCount() + 1;
-    }
-
-    /**
-        @dev given a convertible token index, returns its contract address
-
-        @param _tokenIndex  convertible token index
-
-        @return convertible token address
-    */
-    function convertibleToken(uint16 _tokenIndex) public view returns (address) {
-        if (_tokenIndex == 0)
-            return token;
-        return connectorTokens[_tokenIndex - 1];
-    }
-
     /*
         @dev allows the owner to update & enable the conversion whitelist contract address
         when set, only addresses that are whitelisted are actually allowed to use the converter
