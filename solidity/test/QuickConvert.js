@@ -1,6 +1,7 @@
 /* global artifacts, contract, before, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
+const Whitelist = artifacts.require('Whitelist.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
@@ -474,14 +475,14 @@ contract('BancorQuickConverter', accounts => {
         }
     });
 
-    it('verifies convertFor transfer converted amount correctly', async () => {
+    it('verifies that convertFor transfers the converted amount correctly', async () => {
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
         await quickConverter.convertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
         let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
 
-    it('verifies converting process which recieve a path that starts with a smart token and ends with another smart token', async () => {
+    it('verifies converting with a path that starts with a smart token and ends with another smart token', async () => {
         await smartToken4.approve(quickConverter.address, 10000);
         let path = [smartToken4.address, smartToken3.address, smartToken3.address, smartToken2.address, smartToken2.address];
         let balanceBeforeTransfer = await smartToken2.balanceOf.call(accounts[1]);
@@ -490,12 +491,12 @@ contract('BancorQuickConverter', accounts => {
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
 
-    it('verifies convertFor return valid converted amount', async () => {
+    it('verifies that convertFor returns the valid converted amount', async () => {
         let amount = await quickConverter.convertFor.call(smartToken1QuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
         assert.isAbove(amount.toNumber(), 1, 'amount converted');
     });
 
-    it('verifies convert return valid converted amount', async () => {
+    it('verifies that convert returns the valid converted amount', async () => {
         let amount = await quickConverter.convert.call(smartToken1QuickBuyPath, 10000, 1, { from: accounts[1], value: 10000 });
         assert.isAbove(amount.toNumber(), 1, 'amount converted');
     });
@@ -545,7 +546,7 @@ contract('BancorQuickConverter', accounts => {
         }
     });
 
-    it('verifies convert for transfer converted amount correctly', async () => {
+    it('verifies that convertFor transfers the converted amount correctly', async () => {
         await etherToken.approve(quickConverter.address, 10000);
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
         await quickConverter.claimAndConvertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1]);
@@ -563,7 +564,7 @@ contract('BancorQuickConverter', accounts => {
         }
     });
 
-    it('verifies convert for transfer converted amount correctly with claimAndConvert', async () => {
+    it('verifies that convertFor transfers the converted amount correctly with claimAndConvert', async () => {
         await etherToken.approve(quickConverter.address, 10000);
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[0]);
         await quickConverter.claimAndConvert(smartToken1QuickBuyPath, 10000, 1);
@@ -581,7 +582,34 @@ contract('BancorQuickConverter', accounts => {
         }
     });
 
-    it('verifies quick buy prioritized with trusted signature', async () => {
+    it('verifies that convertFor is allowed for a whitelisted account', async () => {
+        let whitelist = await Whitelist.new();
+        await whitelist.addAddress(accounts[1]);
+        await converter1.setConversionWhitelist(whitelist.address);
+
+        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        await quickConverter.convertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
+        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
+
+        await converter1.setConversionWhitelist(utils.zeroAddress);
+    });
+
+    it('should throw when attempting to convert for a non whitelisted account', async () => {
+        let whitelist = await Whitelist.new();
+        await converter1.setConversionWhitelist(whitelist.address);
+
+        try {
+            await quickConverter.convertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            await converter1.setConversionWhitelist(utils.zeroAddress);
+            return utils.ensureException(error);
+        }
+    });
+
+    it('verifies prioritized quick buy with trusted signature', async () => {
         await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
