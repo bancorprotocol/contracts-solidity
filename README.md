@@ -162,7 +162,7 @@ To run the test, first start ganache and then execute the following command from
 
 * **[Yudi Levi](https://github.com/yudilevi)**
 * **[Ilana Pinhas](https://github.com/ilanapi)**
-* **[Or Dadush](https://github.com/ordd)**
+* **[Or Dadosh](https://github.com/ordd)**
 * **[Barak Manos](https://github.com/barakman)**
 * **[Martin Holst Swende](https://github.com/holiman)**
 

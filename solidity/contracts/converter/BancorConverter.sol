@@ -3,12 +3,14 @@ import './interfaces/IBancorConverterExtensions.sol';
 import './interfaces/ITokenConverter.sol';
 import '../utility/Managed.sol';
 import '../utility/Utils.sol';
+import '../utility/interfaces/IContractFeatures.sol';
+import '../utility/interfaces/IWhitelist.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/IEtherToken.sol';
 
 /*
-    Bancor Converter v0.8
+    Bancor Converter v0.9
 
     The Bancor version of the token converter, allows conversion between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
@@ -20,15 +22,17 @@ import '../token/interfaces/IEtherToken.sol';
     WARNING: It is NOT RECOMMENDED to use the converter with Smart Tokens that have less than 8 decimal digits
              or with very small numbers because of precision loss
 
-
     Open issues:
     - Front-running attacks are currently mitigated by the following mechanisms:
         - minimum return argument for each conversion provides a way to define a minimum/maximum price for the transaction
         - gas price limit prevents users from having control over the order of execution
+        - gas price limit check can be skipped if the transaction comes from a trusted, whitelisted signer
       Other potential solutions might include a commit/reveal based schemes
     - Possibly add getters for the connector fields so that the client won't need to rely on the order in the struct
 */
 contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
+    uint256 public constant FEATURE_CONVERSION_WHITELIST = 1 << 0;
+
     uint32 private constant MAX_WEIGHT = 1000000;
     uint32 private constant MAX_CONVERSION_FEE = 1000000;
 
@@ -40,10 +44,12 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    string public version = '0.8';
+    string public version = '0.9';
     string public converterType = 'bancor';
 
+    IContractFeatures public features;                  // contract features contract
     IBancorConverterExtensions public extensions;       // bancor converter extensions contract
+    IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public connectorTokens;               // ERC20 standard token addresses
     IERC20Token[] public quickBuyPath;                  // conversion path that's used in order to buy the token with ETH
     mapping (address => Connector) public connectors;   // connector token addresses -> connector data
@@ -70,17 +76,31 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         @dev constructor
 
         @param  _token              smart token governed by the converter
+        @param  _features           address of a contract features contract
         @param  _extensions         address of a bancor converter extensions contract
         @param  _maxConversionFee   maximum conversion fee, represented in ppm
         @param  _connectorToken     optional, initial connector, allows defining the first connector at deployment time
         @param  _connectorWeight    optional, weight for the initial connector
     */
-    function BancorConverter(ISmartToken _token, IBancorConverterExtensions _extensions, uint32 _maxConversionFee, IERC20Token _connectorToken, uint32 _connectorWeight)
+    function BancorConverter(
+        ISmartToken _token,
+        IContractFeatures _features,
+        IBancorConverterExtensions _extensions,
+        uint32 _maxConversionFee,
+        IERC20Token _connectorToken,
+        uint32 _connectorWeight
+    )
         public
         SmartTokenController(_token)
         validAddress(_extensions)
         validMaxConversionFee(_maxConversionFee)
     {
+        // initialize supported features
+        if (_features != address(0)) {
+            features = _features;
+            features.enableFeatures(FEATURE_CONVERSION_WHITELIST, true);
+        }
+
         extensions = _extensions;
         maxConversionFee = _maxConversionFee;
 
@@ -172,6 +192,21 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         if (_tokenIndex == 0)
             return token;
         return connectorTokens[_tokenIndex - 1];
+    }
+
+    /*
+        @dev allows the owner to update & enable the conversion whitelist contract address
+        when set, only addresses that are whitelisted are actually allowed to use the converter
+        note that the whitelist check is actually done by the quick converter contract
+
+        @param _whitelist    address of a whitelist contract
+    */
+    function setConversionWhitelist(IWhitelist _whitelist)
+        public
+        ownerOnly
+        notThis(_whitelist)
+    {
+        conversionWhitelist = _whitelist;
     }
 
     /*

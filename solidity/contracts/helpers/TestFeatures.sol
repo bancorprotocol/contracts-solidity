@@ -11,7 +11,7 @@ contract TestFeatures {
         features = _features;
     }
 
-    function enableFeature(uint256 _feature, bool _enable) public {
-        features.enableFeature(_feature, _enable);
+    function enableFeatures(uint256 _features, bool _enable) public {
+        features.enableFeatures(_features, _enable);
     }
 }

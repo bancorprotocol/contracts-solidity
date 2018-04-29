@@ -1,12 +1,14 @@
 pragma solidity ^0.4.21;
 import './interfaces/IBancorConverterFactory.sol';
 import '../utility/Owned.sol';
+import '../utility/interfaces/IWhitelist.sol';
 
 /*
     Bancor converter dedicated interface
 */
 contract IBancorConverter is IOwned {
     function token() public view returns (ISmartToken) {}
+    function conversionWhitelist() public view returns (IWhitelist) {}
     function extensions() public view returns (IBancorConverterExtensions) {}
     function quickBuyPath(uint256 _index) public view returns (IERC20Token) { _index; }
     function maxConversionFee() public view returns (uint32) {}
@@ -15,6 +17,7 @@ contract IBancorConverter is IOwned {
     function reserveTokenCount() public view returns (uint16);
     function connectorTokens(uint256 _index) public view returns (IERC20Token) { _index; }
     function reserveTokens(uint256 _index) public view returns (IERC20Token) { _index; }
+    function setConversionWhitelist() public view returns (IWhitelist) {}
     function setExtensions(IBancorConverterExtensions _extensions) public view;
     function getQuickBuyPathLength() public view returns (uint256);
     function transferTokenOwnership(address _newOwner) public view;
@@ -95,18 +98,18 @@ contract BancorConverterUpgrader is Owned {
         if (_version == "0.4")
             formerVersions = true;
         acceptConverterOwnership(_oldConverter);
-        IBancorConverter toConverter = createConverter(_oldConverter);
-        copyConnectors(_oldConverter, toConverter, formerVersions);
-        copyConversionFee(_oldConverter, toConverter);
-        copyQuickBuyPath(_oldConverter, toConverter);
-        transferConnectorsBalances(_oldConverter, toConverter, formerVersions);
-        _oldConverter.transferTokenOwnership(toConverter);
-        toConverter.acceptTokenOwnership();
+        IBancorConverter newConverter = createConverter(_oldConverter, _version);
+        copyConnectors(_oldConverter, newConverter, formerVersions);
+        copyConversionFee(_oldConverter, newConverter);
+        copyQuickBuyPath(_oldConverter, newConverter);
+        transferConnectorsBalances(_oldConverter, newConverter, formerVersions);
+        _oldConverter.transferTokenOwnership(newConverter);
+        newConverter.acceptTokenOwnership();
         _oldConverter.transferOwnership(msg.sender);
-        toConverter.transferOwnership(msg.sender);
-        toConverter.transferManagement(msg.sender);
+        newConverter.transferOwnership(msg.sender);
+        newConverter.transferManagement(msg.sender);
 
-        emit ConverterUpgrade(address(_oldConverter), address(toConverter));
+        emit ConverterUpgrade(address(_oldConverter), address(newConverter));
     }
 
     /**
@@ -127,17 +130,19 @@ contract BancorConverterUpgrader is Owned {
         @dev creates a new converter with same basic data as the original old converter
         the newly created converter will have no connectors at this step.
 
-        @param _oldConverter       old converter contract address
+        @param _oldConverter    old converter contract address
+        @param _version         old converter version
 
         @return the new converter  new converter contract address
     */
-    function createConverter(IBancorConverter _oldConverter) private returns(IBancorConverter) {
+    function createConverter(IBancorConverter _oldConverter, bytes32 _version) private returns(IBancorConverter) {
         ISmartToken token = _oldConverter.token();
         IBancorConverterExtensions extensions = _oldConverter.extensions();
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
 
         address converterAdderess  = bancorConverterFactory.createConverter(
             token,
+            IContractFeatures(address(0)),
             extensions,
             maxConversionFee,
             IERC20Token(address(0)),
@@ -147,7 +152,6 @@ contract BancorConverterUpgrader is Owned {
         IBancorConverter converter = IBancorConverter(converterAdderess);
         converter.acceptOwnership();
         converter.acceptManagement();
-
         return converter;
     }
 

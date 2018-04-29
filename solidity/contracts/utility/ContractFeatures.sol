@@ -11,9 +11,9 @@ import './interfaces/IContractFeatures.sol';
     Features can be only enabled/disabled by the contract they are defined for.
 
     Features should be defined by each contract type as bit flags, e.g. -
-    let FEATURE1 = 1 << 0;
-    let FEATURE2 = 1 << 1;
-    let FEATURE3 = 1 << 2;
+    uint256 public constant FEATURE1 = 1 << 0;
+    uint256 public constant FEATURE1 = 1 << 1;
+    uint256 public constant FEATURE1 = 1 << 2;
     ...
 */
 contract ContractFeatures is IContractFeatures {
@@ -26,34 +26,34 @@ contract ContractFeatures is IContractFeatures {
     }
 
     /**
-        @dev returns true if a given contract supports the given feature, false if not
+        @dev returns true if a given contract supports the given feature(s), false if not
 
         @param _contract    contract address to check support for
-        @param _feature     feature to check for
+        @param _features    feature(s) to check for
 
-        @return true if the contract supports the feature, false if not
+        @return true if the contract supports the feature(s), false if not
     */
-    function isSupported(address _contract, uint256 _feature) public returns (bool) {
-        return (featureFlags[_contract] & _feature) == _feature;
+    function isSupported(address _contract, uint256 _features) public returns (bool) {
+        return (featureFlags[_contract] & _features) == _features;
     }
 
     /**
-        @dev allows a contract to enable/disable a certain feature
+        @dev allows a contract to enable/disable certain feature(s)
 
-        @param _feature feature to enable/disable
-        @param _enable  true to enable the feature, false to disabled it
+        @param _features    feature(s) to enable/disable
+        @param _enable      true to enable the feature(s), false to disabled them
     */
-    function enableFeature(uint256 _feature, bool _enable) public {
+    function enableFeatures(uint256 _features, bool _enable) public {
         if (_enable) {
-            if (isSupported(msg.sender, _feature))
+            if (isSupported(msg.sender, _features))
                 return;
 
-            featureFlags[msg.sender] |= _feature;
+            featureFlags[msg.sender] |= _features;
         } else {
-            if (!isSupported(msg.sender, _feature))
+            if (!isSupported(msg.sender, _features))
                 return;
 
-            featureFlags[msg.sender] &= ~_feature;
+            featureFlags[msg.sender] &= ~_features;
         }
     }
 }

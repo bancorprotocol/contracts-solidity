@@ -5,7 +5,7 @@ import '../crowdsale/CrowdsaleController.sol';
     Test crowdsale controller with start time < now < end time
 */
 contract TestCrowdsaleController is CrowdsaleController {
-    uint256 public constant BTCS_ETHER_CAP_SMALL = 2 ether;       // maximum bitcoin suisse ether contribution
+    uint256 public constant BTCS_ETHER_CAP_SMALL = 2 ether; // maximum bitcoin suisse ether contribution
 
     function TestCrowdsaleController(
         ISmartToken _token,
