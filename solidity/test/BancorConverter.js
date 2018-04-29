@@ -72,12 +72,13 @@ function getConversionAmount(transaction, logIndex = 0) {
 
 contract('BancorConverter', accounts => {
     before(async () => {
+        contractFeatures = await ContractFeatures.new();
+
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         let formula = await BancorFormula.new();
         let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
-        let quickConverter = await BancorQuickConverter.new();
+        let quickConverter = await BancorQuickConverter.new(contractFeatures.address);
         await quickConverter.setGasPriceLimit(gasPriceLimit.address);
-        contractFeatures = await ContractFeatures.new();
         let converterExtensions = await BancorConverterExtensions.new(formula.address, gasPriceLimit.address, quickConverter.address);
         let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
         tokenAddress = token.address;

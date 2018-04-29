@@ -1,6 +1,7 @@
 /* global artifacts, contract, before, it, assert */
 /* eslint-disable prefer-reflect */
 
+const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const BancorConverterExtensions = artifacts.require('BancorConverterExtensions.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
@@ -17,9 +18,10 @@ async function initConverterExtensions() {
 
 contract('BancorConverterExtensions', accounts => {
     before(async () => {
+        let contractFeatures = await ContractFeatures.new();
         let formula = await BancorFormula.new();
         let gasPriceLimit = await BancorGasPriceLimit.new(22000000000);
-        let quickConverter = await BancorQuickConverter.new();
+        let quickConverter = await BancorQuickConverter.new(contractFeatures.address);
         formulaAddress = formula.address;
         gasPriceLimitAddress = gasPriceLimit.address;
         quickConverterAddress = quickConverter.address;

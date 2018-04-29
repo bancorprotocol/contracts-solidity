@@ -220,10 +220,10 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
             toToken = _path[i + 1];
             converter = IBancorConverter(smartToken.owner());
 
-            if (features.isSupported(converter, converter.FEATURE_CONVERSION_WHITELIST)) {
+            if (features.isSupported(converter, converter.FEATURE_CONVERSION_WHITELIST())) {
                 whitelist = converter.conversionWhitelist();
                 if (whitelist != address(0))
-                    require(whitelist[_for]);
+                    require(whitelist.isWhitelisted(_for));
             }
 
             // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request

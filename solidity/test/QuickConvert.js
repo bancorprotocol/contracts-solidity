@@ -106,13 +106,14 @@ Token network structure:
 
 contract('BancorQuickConverter', accounts => {
     before(async () => {
-        let formula = await BancorFormula.new();
-        let gasPriceLimit = await BancorGasPriceLimit.new(defaultGasPriceLimit);
-        quickConverter = await BancorQuickConverter.new();
-        await quickConverter.setGasPriceLimit(gasPriceLimit.address);
-        await quickConverter.setSignerAddress(accounts[3]);
         let contractFeatures = await ContractFeatures.new();
         contractFeaturesAddress = contractFeatures.address;
+
+        let formula = await BancorFormula.new();
+        let gasPriceLimit = await BancorGasPriceLimit.new(defaultGasPriceLimit);
+        quickConverter = await BancorQuickConverter.new(contractFeaturesAddress);
+        await quickConverter.setGasPriceLimit(gasPriceLimit.address);
+        await quickConverter.setSignerAddress(accounts[3]);
         let converterExtensions = await BancorConverterExtensions.new(formula.address, gasPriceLimit.address, quickConverter.address);
         converterExtensionsAddress = converterExtensions.address;
 
@@ -415,7 +416,7 @@ contract('BancorQuickConverter', accounts => {
     it('verifies valid ether token registration', async () => {
         let etherToken1 = await EtherToken.new();
         await etherToken1.deposit({ value: 10000000 });
-        let quickConverter1 = await BancorQuickConverter.new();
+        let quickConverter1 = await BancorQuickConverter.new(contractFeaturesAddress);
         await quickConverter1.registerEtherToken(etherToken1.address, true);
         let validEtherToken = await quickConverter1.etherTokens.call(etherToken1.address);
         assert.isTrue(validEtherToken, 'registered etherToken address verification');
@@ -423,7 +424,7 @@ contract('BancorQuickConverter', accounts => {
 
     it('should throw when attempting register ether token with invalid address', async () => {
         try {
-            let quickConverter1 = await BancorQuickConverter.new();
+            let quickConverter1 = await BancorQuickConverter.new(contractFeaturesAddress);
             await quickConverter1.registerEtherToken('0x0', true);
             assert(false, "didn't throw");
         }
@@ -436,7 +437,7 @@ contract('BancorQuickConverter', accounts => {
         try {
             let etherToken1 = await EtherToken.new();
             await etherToken1.deposit({ value: 10000000 });
-            let quickConverter1 = await BancorQuickConverter.new();
+            let quickConverter1 = await BancorQuickConverter.new(contractFeaturesAddress);
             await quickConverter1.registerEtherToken(etherToken1.address, true, { from: accounts[1] });
             assert(false, "didn't throw");
         }
@@ -448,7 +449,7 @@ contract('BancorQuickConverter', accounts => {
     it('verifies valid ether token unregistration', async () => {
         let etherToken1 = await EtherToken.new();
         await etherToken1.deposit({ value: 10000000 });
-        let quickConverter1 = await BancorQuickConverter.new();
+        let quickConverter1 = await BancorQuickConverter.new(contractFeaturesAddress);
         await quickConverter1.registerEtherToken(etherToken1.address, true);
         let validEtherToken = await quickConverter1.etherTokens.call(etherToken1.address);
         assert.isTrue(validEtherToken, 'registered etherToken address verification');
@@ -461,7 +462,7 @@ contract('BancorQuickConverter', accounts => {
         try {
             let etherToken1 = await EtherToken.new();
             await etherToken1.deposit({ value: 10000000 });
-            let quickConverter1 = await BancorQuickConverter.new();
+            let quickConverter1 = await BancorQuickConverter.new(contractFeaturesAddress);
             await quickConverter1.registerEtherToken(etherToken1.address, true);
             let validEtherToken = await quickConverter1.etherTokens.call(etherToken1.address);
             assert.isTrue(validEtherToken, 'registered etherToken address verification');
