@@ -1,10 +1,9 @@
 pragma solidity ^0.4.21;
+import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorConverterExtensions.sol';
-import './interfaces/ITokenConverter.sol';
 import '../utility/Managed.sol';
 import '../utility/Utils.sol';
 import '../utility/interfaces/IContractFeatures.sol';
-import '../utility/interfaces/IWhitelist.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/IEtherToken.sol';
@@ -30,9 +29,7 @@ import '../token/interfaces/IEtherToken.sol';
       Other potential solutions might include a commit/reveal based schemes
     - Possibly add getters for the connector fields so that the client won't need to rely on the order in the struct
 */
-contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
-    uint256 public constant FEATURE_CONVERSION_WHITELIST = 1 << 0;
-
+contract BancorConverter is IBancorConverter, SmartTokenController, Managed {
     uint32 private constant MAX_WEIGHT = 1000000;
     uint32 private constant MAX_CONVERSION_FEE = 1000000;
 

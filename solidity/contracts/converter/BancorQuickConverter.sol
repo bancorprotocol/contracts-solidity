@@ -1,7 +1,9 @@
 pragma solidity ^0.4.21;
-import './interfaces/ITokenConverter.sol';
+import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorQuickConverter.sol';
 import '../utility/TokenHolder.sol';
+import '../utility/interfaces/IContractFeatures.sol';
+import '../utility/interfaces/IWhitelist.sol';
 import '../token/interfaces/IEtherToken.sol';
 import '../token/interfaces/ISmartToken.sol';
 
@@ -23,21 +25,40 @@ import '../token/interfaces/ISmartToken.sol';
     [source token, smart token, to token, smart token, to token...]
 */
 contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
-    address public signerAddress = 0x0; // verified address that allows conversions with higher gas price
-    IBancorGasPriceLimit public gasPriceLimit; // bancor universal gas price limit contract
-    mapping (address => bool) public etherTokens;   // list of all supported ether tokens
-    mapping (bytes32 => bool) public conversionHashes;
+    address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
+    IContractFeatures public features;          // contract features contract address
+    IBancorGasPriceLimit public gasPriceLimit;  // bancor universal gas price limit contract
+
+    mapping (address => bool) public etherTokens;       // list of all supported ether tokens
+    mapping (bytes32 => bool) public conversionHashes;  // list of conversion hashes, to prevent re-use of the same hash
 
     /**
         @dev constructor
+
+        @param _features    address of a contract features contract
     */
-    function BancorQuickConverter() public {
+    function BancorQuickConverter(IContractFeatures _features) public validAddress(_features) {
+        features = _features;
     }
 
     // validates a conversion path - verifies that the number of elements is odd and that maximum number of 'hops' is 10
     modifier validConversionPath(IERC20Token[] _path) {
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
         _;
+    }
+
+    /*
+        @dev allows the owner to update the contract features contract address
+
+        @param _features   address of a contract features contract
+    */
+    function setContractFeatures(IContractFeatures _features)
+        public
+        ownerOnly
+        validAddress(_features)
+        notThis(_features)
+    {
+        features = _features;
     }
 
     /*
@@ -166,7 +187,7 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
         if (msg.value > 0)
             IEtherToken(fromToken).deposit.value(msg.value)();
         
-        (_amount, toToken) = convertByPath(_path, _amount, _minReturn, fromToken);
+        (_amount, toToken) = convertByPath(_path, _amount, _minReturn, fromToken, _for);
 
         // finished the conversion, transfer the funds to the target account
         // if the target token is an ether token, withdraw the tokens and send them as ETH
@@ -179,18 +200,31 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
         return _amount;
     }
 
-    function convertByPath(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, IERC20Token _fromToken) private returns (uint256, IERC20Token) {
+    function convertByPath(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        IERC20Token _fromToken,
+        address _for
+    ) private returns (uint256, IERC20Token) {
         ISmartToken smartToken;
         IERC20Token toToken;
-        ITokenConverter converter;
+        IBancorConverter converter;
 
         // iterate over the conversion path
         uint256 pathLength = _path.length;
+        IWhitelist whitelist;
 
         for (uint256 i = 1; i < pathLength; i += 2) {
             smartToken = ISmartToken(_path[i]);
             toToken = _path[i + 1];
-            converter = ITokenConverter(smartToken.owner());
+            converter = IBancorConverter(smartToken.owner());
+
+            if (features.isSupported(converter, converter.FEATURE_WHITE_LIST)) {
+                whitelist = converter.conversionWhitelist();
+                if (whitelist != address(0))
+                    require(whitelist[_for]);
+            }
 
             // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
             if (smartToken != _fromToken)
