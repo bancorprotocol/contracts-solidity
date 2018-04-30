@@ -147,12 +147,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed {
         _;
     }
 
-    // allows execution only for owner or manager
-    modifier ownerOrManagerOnly {
-        require(msg.sender == owner || msg.sender == manager);
-        _;
-    }
-
     // allows execution only for quick convreter
     modifier quickConverterOnly {
         require(msg.sender == address(extensions.quickConverter()));

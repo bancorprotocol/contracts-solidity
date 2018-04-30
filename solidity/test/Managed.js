@@ -60,4 +60,14 @@ contract('Managed', accounts => {
         let newManager = await contract.newManager.call();
         assert.equal(newManager, utils.zeroAddress);
     });
+
+    it('verifies that the owner can transfer the management', async () => {
+        let contract = await Managed.new();
+        await contract.transferOwnership(accounts[1]);
+        await contract.acceptOwnership({ from: accounts[1] });
+        await contract.transferManagement(accounts[2], { from: accounts[1] });
+        await contract.acceptManagement({ from: accounts[2] });
+        let manager = await contract.manager.call();
+        assert.equal(manager, accounts[2]);
+    });
 });
