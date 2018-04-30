@@ -1,12 +1,14 @@
 pragma solidity ^0.4.21;
 import './interfaces/IBancorConverterFactory.sol';
 import '../utility/Owned.sol';
+import '../utility/interfaces/IContractFeatures.sol';
 import '../utility/interfaces/IWhitelist.sol';
 
 /*
     Bancor converter dedicated interface
 */
 contract IBancorConverter is IOwned {
+    uint256 public constant FEATURE_CONVERSION_WHITELIST = 1 << 0;
     function token() public view returns (ISmartToken) {}
     function conversionWhitelist() public view returns (IWhitelist) {}
     function extensions() public view returns (IBancorConverterExtensions) {}
@@ -17,7 +19,7 @@ contract IBancorConverter is IOwned {
     function reserveTokenCount() public view returns (uint16);
     function connectorTokens(uint256 _index) public view returns (IERC20Token) { _index; }
     function reserveTokens(uint256 _index) public view returns (IERC20Token) { _index; }
-    function setConversionWhitelist() public view returns (IWhitelist) {}
+    function setConversionWhitelist(IWhitelist _whitelist) public view;
     function setExtensions(IBancorConverterExtensions _extensions) public view;
     function getQuickBuyPathLength() public view returns (uint256);
     function transferTokenOwnership(address _newOwner) public view;
@@ -58,6 +60,9 @@ contract IBancorConverter is IOwned {
     The address of the new converter is available in the ConverterUpgrade event.
 */
 contract BancorConverterUpgrader is Owned {
+    string public version = '0.2';
+
+    IContractFeatures public features;                      // contract features contract address
     IBancorConverterFactory public bancorConverterFactory;  // bancor converter factory contract
 
     // triggered when the contract accept a converter ownership
@@ -68,10 +73,11 @@ contract BancorConverterUpgrader is Owned {
     /**
         @dev constructor
     */
-    function BancorConverterUpgrader(IBancorConverterFactory _bancorConverterFactory)
+    function BancorConverterUpgrader(IBancorConverterFactory _bancorConverterFactory, IContractFeatures _features)
         public
     {
         bancorConverterFactory = _bancorConverterFactory;
+        features = _features;
     }
 
     /*
@@ -82,6 +88,18 @@ contract BancorConverterUpgrader is Owned {
     function setBancorConverterFactory(IBancorConverterFactory _bancorConverterFactory) public ownerOnly
     {
         bancorConverterFactory = _bancorConverterFactory;
+    }
+
+    /*
+        @dev allows the owner to update the contract features contract address
+
+        @param _features   address of a contract features contract
+    */
+    function setContractFeatures(IContractFeatures _features)
+        public
+        ownerOnly
+    {
+        features = _features;
     }
 
     /**
@@ -136,13 +154,14 @@ contract BancorConverterUpgrader is Owned {
         @return the new converter  new converter contract address
     */
     function createConverter(IBancorConverter _oldConverter, bytes32 _version) private returns(IBancorConverter) {
+        IWhitelist whitelist;
         ISmartToken token = _oldConverter.token();
         IBancorConverterExtensions extensions = _oldConverter.extensions();
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
 
         address converterAdderess  = bancorConverterFactory.createConverter(
             token,
-            IContractFeatures(address(0)),
+            features,
             extensions,
             maxConversionFee,
             IERC20Token(address(0)),
@@ -152,6 +171,13 @@ contract BancorConverterUpgrader is Owned {
         IBancorConverter converter = IBancorConverter(converterAdderess);
         converter.acceptOwnership();
         converter.acceptManagement();
+
+        if (features.isSupported(_oldConverter, _oldConverter.FEATURE_CONVERSION_WHITELIST())) {
+            whitelist = _oldConverter.conversionWhitelist();
+            if (whitelist != address(0))
+                converter.setConversionWhitelist(whitelist);
+        }
+
         return converter;
     }
 
