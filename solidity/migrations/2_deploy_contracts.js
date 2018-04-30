@@ -38,7 +38,7 @@ module.exports = async deployer => {
     deployer.deploy(BancorConverter, SmartToken.address, '0x0', '0x124', 0, '0x0', 0);
 
     await deployer.deploy(BancorConverterFactory);
-    await deployer.deploy(BancorConverterUpgrader, BancorConverterFactory.address);
+    await deployer.deploy(BancorConverterUpgrader, BancorConverterFactory.address, ContractFeatures.address);
 
     deployer.deploy(CrowdsaleController, SmartToken.address, 4102444800, '0x125', '0x126', 1);
 };
