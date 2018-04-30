@@ -1,9 +1,10 @@
 pragma solidity ^0.4.21;
+import './Owned.sol';
 
 /*
     Provides support and utilities for contract management
 */
-contract Managed {
+contract Managed is Owned {
     address public manager;
     address public newManager;
 
@@ -22,6 +23,12 @@ contract Managed {
         _;
     }
 
+    // allows execution only for owner or manager
+    modifier ownerOrManagerOnly {
+        require(msg.sender == owner || msg.sender == manager);
+        _;
+    }
+
     /**
         @dev allows transferring the contract management
         the new manager still needs to accept the transfer
@@ -29,7 +36,7 @@ contract Managed {
 
         @param _newManager    new contract manager
     */
-    function transferManagement(address _newManager) public managerOnly {
+    function transferManagement(address _newManager) public ownerOrManagerOnly {
         require(_newManager != manager);
         newManager = _newManager;
     }
