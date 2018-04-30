@@ -24,7 +24,7 @@ contract Managed is Owned {
         _;
     }
 
-    // allows execution only for owner or manager
+    // allows execution by either the owner or the manager only
     modifier ownerOrManagerOnly {
         require(msg.sender == owner || msg.sender == manager);
         _;
