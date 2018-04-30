@@ -95,9 +95,7 @@ contract BancorConverterUpgrader is Owned {
 
         @param _features   address of a contract features contract
     */
-    function setContractFeatures(IContractFeatures _features)
-        public
-        ownerOnly
+    function setContractFeatures(IContractFeatures _features) public ownerOnly
     {
         features = _features;
     }
