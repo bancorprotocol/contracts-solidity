@@ -14,7 +14,7 @@ Bancor is a work in progress. Make sure you understand the risks before using it
 # The Bancor Standards
 
 Bancor protocol is implemented using multiple contracts. The main ones are SmartToken and BancorConverter.
-BancorConverter implements the [token converter standard](https://github.com/ethereum/EIPs/issues/228) and is responsible for converting between a token and its connectors.
+BancorConverter is responsible for converting between a token and its connectors.
 SmartToken represents a converter aware ERC-20 compliant token.
 
 # The Smart Token Standard
@@ -97,11 +97,6 @@ Those will allow dapps and wallets to buy and sell the token.
 The most important here is `convert`.
 
 ## Specification
-
-### BancorToken
-
-First and foremost, a Bancor Converter is also an EIP-228 compliant converter.
-As such, it implements both the standard converter methods and the standard converter events.
 
 ### Methods
 
