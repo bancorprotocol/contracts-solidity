@@ -7,8 +7,6 @@ import '../utility/interfaces/IContractFeatures.sol';
     Bancor Converter Factory
 */
 contract BancorConverterFactory is IBancorConverterFactory {
-    string public version = '0.9';
-
     // triggered when a new converter is created
     event NewConverter(address indexed _converter, address indexed _owner);
 
