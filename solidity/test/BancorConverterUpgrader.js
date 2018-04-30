@@ -132,7 +132,7 @@ contract('BancorConverterUpgrader', accounts => {
         assert.equal(initialLength.toFixed(), newLength.toFixed());
     });
 
-    it('verifies that the whitelist feature set to true in the new converter', async () => {
+    it('verifies that the whitelist feature is enabled in the new converter', async () => {
         let converter = await initConverter(accounts, true);
         let initialLength = await converter.getQuickBuyPathLength.call();
         await converter.transferOwnership(converterUpgrader.address);
@@ -147,7 +147,7 @@ contract('BancorConverterUpgrader', accounts => {
         assert(isSupported);
     });
 
-    it('verifies that the whitelist from the given converter copied to the new converter', async () => {
+    it('verifies that the whitelist from the given converter is copied to the new converter', async () => {
         let converter = await initConverter(accounts, true);
         let initialLength = await converter.getQuickBuyPathLength.call();
         let whitelist = await Whitelist.new();
