@@ -1,4 +1,5 @@
 pragma solidity ^0.4.21;
+import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorConverterFactory.sol';
 import '../utility/Owned.sol';
 import '../utility/interfaces/IContractFeatures.sol';
@@ -7,10 +8,8 @@ import '../utility/interfaces/IWhitelist.sol';
 /*
     Bancor converter dedicated interface
 */
-contract IBancorConverter is IOwned {
-    uint256 public constant FEATURE_CONVERSION_WHITELIST = 1 << 0;
+contract IBancorConverterExtended is IBancorConverter, IOwned {
     function token() public view returns (ISmartToken) {}
-    function conversionWhitelist() public view returns (IWhitelist) {}
     function extensions() public view returns (IBancorConverterExtensions) {}
     function quickBuyPath(uint256 _index) public view returns (IERC20Token) { _index; }
     function maxConversionFee() public view returns (uint32) {}
@@ -109,12 +108,12 @@ contract BancorConverterUpgrader is Owned {
         @param _oldConverter   old converter contract address
         @param _version        old converter version
     */
-    function upgrade(IBancorConverter _oldConverter, bytes32 _version) public {
+    function upgrade(IBancorConverterExtended _oldConverter, bytes32 _version) public {
         bool formerVersions = false;
         if (_version == "0.4")
             formerVersions = true;
         acceptConverterOwnership(_oldConverter);
-        IBancorConverter newConverter = createConverter(_oldConverter, _version);
+        IBancorConverterExtended newConverter = createConverter(_oldConverter, _version);
         copyConnectors(_oldConverter, newConverter, formerVersions);
         copyConversionFee(_oldConverter, newConverter);
         copyQuickBuyPath(_oldConverter, newConverter);
@@ -136,7 +135,7 @@ contract BancorConverterUpgrader is Owned {
 
         @param _oldConverter       converter to accept ownership of
     */
-    function acceptConverterOwnership(IBancorConverter _oldConverter) private {
+    function acceptConverterOwnership(IBancorConverterExtended _oldConverter) private {
         require(msg.sender == _oldConverter.owner());
         _oldConverter.acceptOwnership();
         emit ConverterOwned(_oldConverter, this);
@@ -151,7 +150,7 @@ contract BancorConverterUpgrader is Owned {
 
         @return the new converter  new converter contract address
     */
-    function createConverter(IBancorConverter _oldConverter, bytes32 _version) private returns(IBancorConverter) {
+    function createConverter(IBancorConverterExtended _oldConverter, bytes32 _version) private returns(IBancorConverterExtended) {
         IWhitelist whitelist;
         ISmartToken token = _oldConverter.token();
         IBancorConverterExtensions extensions = _oldConverter.extensions();
@@ -166,7 +165,7 @@ contract BancorConverterUpgrader is Owned {
             0
         );
 
-        IBancorConverter converter = IBancorConverter(converterAdderess);
+        IBancorConverterExtended converter = IBancorConverterExtended(converterAdderess);
         converter.acceptOwnership();
         converter.acceptManagement();
 
@@ -187,7 +186,7 @@ contract BancorConverterUpgrader is Owned {
         @param _newConverter    new converter contract address
         @param _isLegacyVersion true if the converter version is under 0.5
     */
-    function copyConnectors(IBancorConverter _oldConverter, IBancorConverter _newConverter, bool _isLegacyVersion)
+    function copyConnectors(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter, bool _isLegacyVersion)
         private
     {
         uint256 virtualBalance;
@@ -216,7 +215,7 @@ contract BancorConverterUpgrader is Owned {
         @param _oldConverter    old converter contract address
         @param _newConverter    new converter contract address
     */
-    function copyConversionFee(IBancorConverter _oldConverter, IBancorConverter _newConverter) private {
+    function copyConversionFee(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter) private {
         uint32 conversionFee = _oldConverter.conversionFee();
         _newConverter.setConversionFee(conversionFee);
     }
@@ -227,7 +226,7 @@ contract BancorConverterUpgrader is Owned {
         @param _oldConverter    old converter contract address
         @param _newConverter    new converter contract address
     */
-    function copyQuickBuyPath(IBancorConverter _oldConverter, IBancorConverter _newConverter) private {
+    function copyQuickBuyPath(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter) private {
         uint256 quickBuyPathLength = _oldConverter.getQuickBuyPathLength();
         if (quickBuyPathLength <= 0)
             return;
@@ -249,7 +248,7 @@ contract BancorConverterUpgrader is Owned {
         @param _newConverter    new converter contract address
         @param _isLegacyVersion true if the converter version is under 0.5
     */
-    function transferConnectorsBalances(IBancorConverter _oldConverter, IBancorConverter _newConverter, bool _isLegacyVersion)
+    function transferConnectorsBalances(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter, bool _isLegacyVersion)
         private
     {
         uint256 connectorBalance;
@@ -272,7 +271,7 @@ contract BancorConverterUpgrader is Owned {
 
         @return connector's settings
     */
-    function readConnector(IBancorConverter _converter, address _address, bool _isLegacyVersion) 
+    function readConnector(IBancorConverterExtended _converter, address _address, bool _isLegacyVersion) 
         private
         view
         returns(uint256 virtualBalance, uint32 weight, bool isVirtualBalanceEnabled, bool isPurchaseEnabled, bool isSet)
