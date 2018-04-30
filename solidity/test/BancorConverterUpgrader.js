@@ -6,6 +6,7 @@ const BancorQuickConverter = artifacts.require('BancorQuickConverter.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const BancorConverterExtensions = artifacts.require('BancorConverterExtensions.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
+const Whitelist = artifacts.require('Whitelist.sol');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory.sol');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader.sol');
 const utils = require('./helpers/Utils');
@@ -16,6 +17,7 @@ const utils = require('./helpers/Utils');
 const gasPrice = 22000000000;
 
 let token;
+let contractFeatures;
 let contractFeaturesAddress;
 let converterExtensionsAddress;
 let converterUpgrader;
@@ -57,7 +59,7 @@ async function initConverter(accounts, activate, maxConversionFee = 30000) {
 
 contract('BancorConverterUpgrader', accounts => {
     before(async () => {
-        let contractFeatures = await ContractFeatures.new();
+        contractFeatures = await ContractFeatures.new();
         contractFeaturesAddress = contractFeatures.address;
 
         let formula = await BancorFormula.new();
@@ -66,7 +68,7 @@ contract('BancorConverterUpgrader', accounts => {
         let converterExtensions = await BancorConverterExtensions.new(formula.address, gasPriceLimit.address, quickConverter.address);
 
         let converterFactory = await BancorConverterFactory.new();
-        converterUpgrader = await BancorConverterUpgrader.new(converterFactory.address);
+        converterUpgrader = await BancorConverterUpgrader.new(converterFactory.address, contractFeaturesAddress);
         converterExtensionsAddress = converterExtensions.address;
     });
 
@@ -128,6 +130,35 @@ contract('BancorConverterUpgrader', accounts => {
         let newConverter = await contract.at(newConverterAddress);
         let newLength = await newConverter.getQuickBuyPathLength.call();
         assert.equal(initialLength.toFixed(), newLength.toFixed());
+    });
+
+    it('verifies that the whitelist feature is enabled in the new converter', async () => {
+        let converter = await initConverter(accounts, true);
+        let initialLength = await converter.getQuickBuyPathLength.call();
+        await converter.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
+        let contract = await web3.eth.contract(converterAbi);
+        let newConverter = await contract.at(newConverterAddress);
+        let features = await newConverter.features.call();
+        assert.equal(features, contractFeaturesAddress);
+        let featureWhitelist = await newConverter.FEATURE_CONVERSION_WHITELIST.call();
+        let isSupported = await contractFeatures.isSupported.call(newConverter.address, featureWhitelist);
+        assert(isSupported);
+    });
+
+    it('verifies that the whitelist from the given converter is copied to the new converter', async () => {
+        let converter = await initConverter(accounts, true);
+        let initialLength = await converter.getQuickBuyPathLength.call();
+        let whitelist = await Whitelist.new();
+        await converter.setConversionWhitelist(whitelist.address);
+        await converter.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
+        let contract = await web3.eth.contract(converterAbi);
+        let newConverter = await contract.at(newConverterAddress);
+        let conversionWhitelist = await newConverter.conversionWhitelist.call();
+        assert.equal(whitelist.address, conversionWhitelist);
     });
 
     it('verifies that the quick buy path of the new converter is equal to the path in the given converter', async () => {

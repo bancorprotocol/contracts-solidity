@@ -12,8 +12,8 @@ import './interfaces/IContractFeatures.sol';
 
     Features should be defined by each contract type as bit flags, e.g. -
     uint256 public constant FEATURE1 = 1 << 0;
-    uint256 public constant FEATURE1 = 1 << 1;
-    uint256 public constant FEATURE1 = 1 << 2;
+    uint256 public constant FEATURE2 = 1 << 1;
+    uint256 public constant FEATURE3 = 1 << 2;
     ...
 */
 contract ContractFeatures is IContractFeatures {
