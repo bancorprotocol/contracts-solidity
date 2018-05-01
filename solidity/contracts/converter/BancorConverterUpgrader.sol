@@ -117,9 +117,14 @@ contract BancorConverterUpgrader is Owned {
         copyConnectors(_oldConverter, newConverter, formerVersions);
         copyConversionFee(_oldConverter, newConverter);
         copyQuickBuyPath(_oldConverter, newConverter);
-        transferConnectorsBalances(_oldConverter, newConverter, formerVersions);
-        _oldConverter.transferTokenOwnership(newConverter);
-        newConverter.acceptTokenOwnership();
+        transferConnectorsBalances(_oldConverter, newConverter, formerVersions);                
+        ISmartToken token = _oldConverter.token();
+
+        if (token.owner() == address(_oldConverter)) {
+            _oldConverter.transferTokenOwnership(newConverter);
+            newConverter.acceptTokenOwnership();
+        }
+
         _oldConverter.transferOwnership(msg.sender);
         newConverter.transferOwnership(msg.sender);
         newConverter.transferManagement(msg.sender);
