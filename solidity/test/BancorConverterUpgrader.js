@@ -285,8 +285,8 @@ contract('BancorConverterUpgrader', accounts => {
 
     it('verifies that the connectors balances after upgrade is equal', async () => {
         let converter = await initConverter(accounts, true);
-        let connector1 = await converter.convertibleToken.call(1);
-        let connector2 = await converter.convertibleToken.call(2);
+        let connector1 = await converter.connectorTokens.call(0);
+        let connector2 = await converter.connectorTokens.call(1);
         let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
         let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
         await converter.transferOwnership(converterUpgrader.address);
@@ -302,8 +302,8 @@ contract('BancorConverterUpgrader', accounts => {
 
     it('verifies that balances did not changed if the process stopped due to gas limitation', async () => {
         let converter = await initConverter(accounts, true);
-        let connector1 = await converter.convertibleToken.call(1);
-        let connector2 = await converter.convertibleToken.call(2);
+        let connector1 = await converter.connectorTokens.call(0);
+        let connector2 = await converter.connectorTokens.call(1);
         let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
         let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
         await converter.transferOwnership(converterUpgrader.address);
@@ -318,5 +318,35 @@ contract('BancorConverterUpgrader', accounts => {
             assert.equal(initialConnectorBalance2.toFixed(), currentConnectorBalance2.toFixed());
             return utils.ensureException(error);
         }
+    });
+
+    it('verifies that the upgrade process of non active converter success', async () => {
+        let token1 = await SmartToken.new('Token1', 'TKN1', 18);
+        let formula = await BancorFormula.new();
+        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let connectorTokenAddress = connectorToken.address;
+        let connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
+        let connectorTokenAddress2 = connectorToken2.address;
+        let converter1 = await BancorConverter.new(token1.address, contractFeaturesAddress, converterExtensionsAddress, 30000, connectorTokenAddress, 500000);
+        await converter1.addConnector(connectorTokenAddress2, 500000, false);
+        await connectorToken.transfer(converter1.address, 5000);
+        await connectorToken2.transfer(converter1.address, 8000);
+        await token1.issue(accounts[0], 20000);
+        let currentOwner = await converter1.owner.call();
+        let currentMaxConversionFee = await converter1.maxConversionFee.call();
+        await converter1.transferOwnership(converterUpgrader.address);
+        let upgradeRes = await converterUpgrader.upgrade(converter1.address, 7);
+        await converter1.acceptOwnership();
+        let newConverterAddress = upgradeRes.logs[3].args._newConverter;
+        let contract = web3.eth.contract(converterAbi);
+        let newConverter = contract.at(newConverterAddress);
+        let newConverterConnectorTokenCount = await newConverter.connectorTokenCount.call();
+        assert.equal(newConverterConnectorTokenCount.toFixed(), 2);
+        let newMaxConversionFee = await newConverter.maxConversionFee.call();
+        assert.equal(currentMaxConversionFee.toFixed(), newMaxConversionFee.toFixed());
+        let currentConnectorBalance1 = await newConverter.getConnectorBalance.call(connectorToken.address);
+        let currentConnectorBalance2 = await newConverter.getConnectorBalance.call(connectorToken2.address);
+        assert.equal(currentConnectorBalance1.toFixed(), 5000);
+        assert.equal(currentConnectorBalance2.toFixed(), 8000);
     });
 });
