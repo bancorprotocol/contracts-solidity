@@ -13,9 +13,8 @@ contract BancorConverterFactory is IBancorConverterFactory {
     /**
         @dev constructor
     */
-    function BancorConverterFactory()
-        public
-    {}
+    function BancorConverterFactory() public {
+    }
 
     /**
         @dev creates a new converter with the given arguments and transfers
@@ -37,10 +36,7 @@ contract BancorConverterFactory is IBancorConverterFactory {
         uint32 _maxConversionFee,
         IERC20Token _connectorToken,
         uint32 _connectorWeight
-    )
-        public 
-        returns(address converterAddress) 
-    {
+    ) public returns(address converterAddress) {
         BancorConverter converter = new BancorConverter(
             _token,
             _registry,

@@ -21,6 +21,7 @@ let token;
 let tokenAddress;
 let contractRegistry;
 let contractIds;
+let contractFeatures;
 let converterExtensionsAddress;
 let connectorToken;
 let connectorToken2;
@@ -78,7 +79,7 @@ contract('BancorConverter', accounts => {
         contractRegistry = await ContractRegistry.new();
         contractIds = await ContractIds.new();
 
-        let contractFeatures = await ContractFeatures.new();
+        contractFeatures = await ContractFeatures.new();
         let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
         await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
 
@@ -101,8 +102,6 @@ contract('BancorConverter', accounts => {
         let registry = await converter.registry.call();
         assert.equal(registry, contractRegistry.address);
 
-        let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
-        let contractFeatures = await contractRegistry.getAddress(contractFeaturesId);
         let featureWhitelist = await converter.FEATURE_CONVERSION_WHITELIST.call();
         let isSupported = await contractFeatures.isSupported.call(converter.address, featureWhitelist);
         assert(isSupported);
@@ -170,24 +169,6 @@ contract('BancorConverter', accounts => {
         await converter.addConnector(connectorTokenAddress, weight10Percent, false);
         connectorTokenCount = await converter.connectorTokenCount.call();
         assert.equal(connectorTokenCount, 1);
-    });
-
-    it('verifies the convertible token count before / after adding a connector', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, converterExtensionsAddress, 0, '0x0', 0);
-        let convertibleTokenCount = await converter.convertibleTokenCount.call();
-        assert.equal(convertibleTokenCount, 1);
-        await converter.addConnector(connectorTokenAddress, weight10Percent, false);
-        convertibleTokenCount = await converter.convertibleTokenCount.call();
-        assert.equal(convertibleTokenCount, 2);
-    });
-
-    it('verifies the convertible token addresses', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, converterExtensionsAddress, 0, '0x0', 0);
-        await converter.addConnector(connectorTokenAddress, weight10Percent, false);
-        let convertibleTokenAddress = await converter.convertibleToken.call(0);
-        assert.equal(convertibleTokenAddress, tokenAddress);
-        convertibleTokenAddress = await converter.convertibleToken.call(1);
-        assert.equal(convertibleTokenAddress, connectorTokenAddress);
     });
 
     it('verifies the owner can update the converter extensions contract address', async () => {

@@ -1,3 +1,6 @@
+/* global artifacts, contract, before, it, assert */
+/* eslint-disable prefer-reflect */
+
 const BancorConverter = artifacts.require('BancorConverter.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
@@ -10,9 +13,6 @@ const Whitelist = artifacts.require('Whitelist.sol');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory.sol');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader.sol');
 const utils = require('./helpers/Utils');
-
-/* global artifacts, contract, before, it, assert */
-/* eslint-disable prefer-reflect */
 
 const gasPrice = 22000000000;
 

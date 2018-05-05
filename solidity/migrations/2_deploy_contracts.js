@@ -28,7 +28,7 @@ module.exports = async deployer => {
     deployer.deploy(TokenHolder);
     deployer.deploy(ERC20Token, 'DummyToken', 'DUM', 0);
     deployer.deploy(EtherToken);
-    deployer.deploy(ContractRegistry);
+    await deployer.deploy(ContractRegistry);
     deployer.deploy(ContractFeatures);
     deployer.deploy(Whitelist);
     await deployer.deploy(SmartToken, 'Token1', 'TKN1', 2);
@@ -37,10 +37,10 @@ module.exports = async deployer => {
     deployer.deploy(BancorGasPriceLimit, '22000000000');
     deployer.deploy(BancorQuickConverter, '0x827182');
     deployer.deploy(BancorConverterExtensions, '0x125463', '0x145463', '0x125763');
-    deployer.deploy(BancorConverter, SmartToken.address, '0x0', '0x124', 0, '0x0', 0);
+    deployer.deploy(BancorConverter, SmartToken.address, ContractRegistry.address, '0x124', 0, '0x0', 0);
 
     await deployer.deploy(BancorConverterFactory);
-    await deployer.deploy(BancorConverterUpgrader, BancorConverterFactory.address, ContractFeatures.address);
+    await deployer.deploy(BancorConverterUpgrader, BancorConverterFactory.address, ContractRegistry.address);
 
     deployer.deploy(CrowdsaleController, SmartToken.address, 4102444800, '0x125', '0x126', 1);
 };

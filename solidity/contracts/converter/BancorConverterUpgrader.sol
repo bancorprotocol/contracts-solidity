@@ -2,8 +2,10 @@ pragma solidity ^0.4.21;
 import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorConverterFactory.sol';
 import '../utility/Owned.sol';
+import '../utility/interfaces/IContractRegistry.sol';
 import '../utility/interfaces/IContractFeatures.sol';
 import '../utility/interfaces/IWhitelist.sol';
+import '../ContractIds.sol';
 
 /*
     Bancor converter dedicated interface
@@ -58,10 +60,10 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     back to the original owner.
     The address of the new converter is available in the ConverterUpgrade event.
 */
-contract BancorConverterUpgrader is Owned {
+contract BancorConverterUpgrader is Owned, ContractIds {
     string public version = '0.2';
 
-    IContractFeatures public features;                      // contract features contract address
+    IContractRegistry public registry;                      // contract registry contract address
     IBancorConverterFactory public bancorConverterFactory;  // bancor converter factory contract
 
     // triggered when the contract accept a converter ownership
@@ -72,11 +74,9 @@ contract BancorConverterUpgrader is Owned {
     /**
         @dev constructor
     */
-    function BancorConverterUpgrader(IBancorConverterFactory _bancorConverterFactory, IContractFeatures _features)
-        public
-    {
+    function BancorConverterUpgrader(IBancorConverterFactory _bancorConverterFactory, IContractRegistry _registry) public {
         bancorConverterFactory = _bancorConverterFactory;
-        features = _features;
+        registry = _registry;
     }
 
     /*
@@ -84,19 +84,17 @@ contract BancorConverterUpgrader is Owned {
 
         @param _bancorConverterFactory    address of a bancor converter factory contract
     */
-    function setBancorConverterFactory(IBancorConverterFactory _bancorConverterFactory) public ownerOnly
-    {
+    function setBancorConverterFactory(IBancorConverterFactory _bancorConverterFactory) public ownerOnly {
         bancorConverterFactory = _bancorConverterFactory;
     }
 
     /*
-        @dev allows the owner to update the contract features contract address
+        @dev allows the owner to update the contract registry contract address
 
-        @param _features   address of a contract features contract
+        @param _registry   address of a contract registry contract
     */
-    function setContractFeatures(IContractFeatures _features) public ownerOnly
-    {
-        features = _features;
+    function setContractRegistry(IContractRegistry _registry) public ownerOnly {
+        registry = _registry;
     }
 
     /**
@@ -113,7 +111,7 @@ contract BancorConverterUpgrader is Owned {
         if (_version == "0.4")
             formerVersions = true;
         acceptConverterOwnership(_oldConverter);
-        IBancorConverterExtended newConverter = createConverter(_oldConverter, _version);
+        IBancorConverterExtended newConverter = createConverter(_oldConverter);
         copyConnectors(_oldConverter, newConverter, formerVersions);
         copyConversionFee(_oldConverter, newConverter);
         copyQuickBuyPath(_oldConverter, newConverter);
@@ -151,11 +149,10 @@ contract BancorConverterUpgrader is Owned {
         the newly created converter will have no connectors at this step.
 
         @param _oldConverter    old converter contract address
-        @param _version         old converter version
 
         @return the new converter  new converter contract address
     */
-    function createConverter(IBancorConverterExtended _oldConverter, bytes32 _version) private returns(IBancorConverterExtended) {
+    function createConverter(IBancorConverterExtended _oldConverter) private returns(IBancorConverterExtended) {
         IWhitelist whitelist;
         ISmartToken token = _oldConverter.token();
         IBancorConverterExtensions extensions = _oldConverter.extensions();
@@ -163,7 +160,7 @@ contract BancorConverterUpgrader is Owned {
 
         address converterAdderess  = bancorConverterFactory.createConverter(
             token,
-            features,
+            registry,
             extensions,
             maxConversionFee,
             IERC20Token(address(0)),
@@ -173,6 +170,9 @@ contract BancorConverterUpgrader is Owned {
         IBancorConverterExtended converter = IBancorConverterExtended(converterAdderess);
         converter.acceptOwnership();
         converter.acceptManagement();
+
+        // get the contract features address from the registry
+        IContractFeatures features = IContractFeatures(registry.getAddress(ContractIds.CONTRACT_FEATURES));
 
         if (features.isSupported(_oldConverter, _oldConverter.FEATURE_CONVERSION_WHITELIST())) {
             whitelist = _oldConverter.conversionWhitelist();
