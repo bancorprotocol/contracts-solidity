@@ -10,7 +10,6 @@ const BancorQuickConverter = artifacts.require('BancorQuickConverter.sol');
 const ContractRegistry = artifacts.require('ContractRegistry.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
-const BancorConverterExtensions = artifacts.require('BancorConverterExtensions.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const utils = require('./helpers/Utils');
@@ -31,7 +30,6 @@ let smartToken4;
 let erc20Token;
 let contractRegistry;
 let contractIds;
-let converterExtensionsAddress;
 let converter1;
 let converter2;
 let converter3;
@@ -117,13 +115,17 @@ contract('BancorQuickConverter', accounts => {
         let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
         await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
 
-        let formula = await BancorFormula.new();
-        let gasPriceLimit = await BancorGasPriceLimit.new(defaultGasPriceLimit);
         quickConverter = await BancorQuickConverter.new(contractRegistry.address);
+        let gasPriceLimit = await BancorGasPriceLimit.new(defaultGasPriceLimit);
         await quickConverter.setGasPriceLimit(gasPriceLimit.address);
         await quickConverter.setSignerAddress(accounts[3]);
-        let converterExtensions = await BancorConverterExtensions.new(formula.address, gasPriceLimit.address, quickConverter.address);
-        converterExtensionsAddress = converterExtensions.address;
+
+        let quickConverterId = await contractIds.QUICK_CONVERTER.call();
+        await contractRegistry.registerAddress(quickConverterId, quickConverter.address);
+
+        let formula = await BancorFormula.new();
+        let formulaId = await contractIds.BANCOR_FORMULA.call();
+        await contractRegistry.registerAddress(formulaId, formula.address);
 
         etherToken = await EtherToken.new();
         await etherToken.deposit({ value: 10000000 });
@@ -144,17 +146,17 @@ contract('BancorQuickConverter', accounts => {
 
         erc20Token = await TestERC20Token.new('ERC20Token', 'ERC5', 1000000);
 
-        converter1 = await BancorConverter.new(smartToken1.address, contractFeatures.address, converterExtensionsAddress, 0, etherToken.address, 250000);
+        converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000);
         converter1.address = converter1.address;
 
-        converter2 = await BancorConverter.new(smartToken2.address, contractFeatures.address, converterExtensionsAddress, 0, smartToken1.address, 300000);
+        converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000);
         converter2.address = converter2.address;
         await converter2.addConnector(smartToken3.address, 150000, false);
 
-        converter3 = await BancorConverter.new(smartToken3.address, contractFeatures.address, converterExtensionsAddress, 0, smartToken4.address, 350000);
+        converter3 = await BancorConverter.new(smartToken3.address, contractRegistry.address, 0, smartToken4.address, 350000);
         converter3.address = converter3.address;
 
-        converter4 = await BancorConverter.new(smartToken4.address, contractFeatures.address, converterExtensionsAddress, 0, etherToken.address, 150000);
+        converter4 = await BancorConverter.new(smartToken4.address, contractRegistry.address, 0, etherToken.address, 150000);
         converter4.address = converter4.address;
         await converter4.addConnector(erc20Token.address, 220000, false);
 

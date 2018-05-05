@@ -22,7 +22,6 @@ contract BancorConverterFactory is IBancorConverterFactory {
 
         @param  _token              smart token governed by the converter
         @param  _registry           address of a contract registry contract
-        @param  _extensions         address of a bancor converter extensions contract
         @param  _maxConversionFee   maximum conversion fee, represented in ppm
         @param  _connectorToken     optional, initial connector, allows defining the first connector at deployment time
         @param  _connectorWeight    optional, weight for the initial connector
@@ -32,7 +31,6 @@ contract BancorConverterFactory is IBancorConverterFactory {
     function createConverter(
         ISmartToken _token,
         IContractRegistry _registry,
-        IBancorConverterExtensions _extensions,
         uint32 _maxConversionFee,
         IERC20Token _connectorToken,
         uint32 _connectorWeight
@@ -40,7 +38,6 @@ contract BancorConverterFactory is IBancorConverterFactory {
         BancorConverter converter = new BancorConverter(
             _token,
             _registry,
-            _extensions,
             _maxConversionFee,
             _connectorToken,
             _connectorWeight

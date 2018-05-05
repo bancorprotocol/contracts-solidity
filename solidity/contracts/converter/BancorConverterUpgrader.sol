@@ -12,7 +12,6 @@ import '../ContractIds.sol';
 */
 contract IBancorConverterExtended is IBancorConverter, IOwned {
     function token() public view returns (ISmartToken) {}
-    function extensions() public view returns (IBancorConverterExtensions) {}
     function quickBuyPath(uint256 _index) public view returns (IERC20Token) { _index; }
     function maxConversionFee() public view returns (uint32) {}
     function conversionFee() public view returns (uint32) {}
@@ -21,7 +20,6 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function connectorTokens(uint256 _index) public view returns (IERC20Token) { _index; }
     function reserveTokens(uint256 _index) public view returns (IERC20Token) { _index; }
     function setConversionWhitelist(IWhitelist _whitelist) public view;
-    function setExtensions(IBancorConverterExtensions _extensions) public view;
     function getQuickBuyPathLength() public view returns (uint256);
     function transferTokenOwnership(address _newOwner) public view;
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public view;
@@ -155,13 +153,11 @@ contract BancorConverterUpgrader is Owned, ContractIds {
     function createConverter(IBancorConverterExtended _oldConverter) private returns(IBancorConverterExtended) {
         IWhitelist whitelist;
         ISmartToken token = _oldConverter.token();
-        IBancorConverterExtensions extensions = _oldConverter.extensions();
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
 
         address converterAdderess  = bancorConverterFactory.createConverter(
             token,
             registry,
-            extensions,
             maxConversionFee,
             IERC20Token(address(0)),
             0

@@ -1,6 +1,7 @@
 pragma solidity ^0.4.21;
 import './interfaces/IBancorConverter.sol';
-import './interfaces/IBancorConverterExtensions.sol';
+import './interfaces/IBancorQuickConverter.sol';
+import './interfaces/IBancorFormula.sol';
 import '../utility/Managed.sol';
 import '../utility/Utils.sol';
 import '../utility/interfaces/IContractRegistry.sol';
@@ -47,7 +48,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     string public converterType = 'bancor';
 
     IContractRegistry public registry;                  // contract registry contract
-    IBancorConverterExtensions public extensions;       // bancor converter extensions contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public connectorTokens;               // ERC20 standard token addresses
     IERC20Token[] public quickBuyPath;                  // conversion path that's used in order to buy the token with ETH
@@ -76,7 +76,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @param  _token              smart token governed by the converter
         @param  _registry           address of a contract registry contract
-        @param  _extensions         address of a bancor converter extensions contract
         @param  _maxConversionFee   maximum conversion fee, represented in ppm
         @param  _connectorToken     optional, initial connector, allows defining the first connector at deployment time
         @param  _connectorWeight    optional, weight for the initial connector
@@ -84,7 +83,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function BancorConverter(
         ISmartToken _token,
         IContractRegistry _registry,
-        IBancorConverterExtensions _extensions,
         uint32 _maxConversionFee,
         IERC20Token _connectorToken,
         uint32 _connectorWeight
@@ -92,7 +90,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         public
         SmartTokenController(_token)
         validAddress(_registry)
-        validAddress(_extensions)
         validMaxConversionFee(_maxConversionFee)
     {
         registry = _registry;
@@ -102,7 +99,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         if (features != address(0))
             features.enableFeatures(FEATURE_CONVERSION_WHITELIST, true);
 
-        extensions = _extensions;
         maxConversionFee = _maxConversionFee;
 
         if (_connectorToken != address(0))
@@ -151,9 +147,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
-    // allows execution only for quick convreter
+    // allows execution by the quick converter only
     modifier quickConverterOnly {
-        require(msg.sender == address(extensions.quickConverter()));
+        IBancorQuickConverter quickConverter = IBancorQuickConverter(registry.getAddress(ContractIds.QUICK_CONVERTER));
+        require(msg.sender == address(quickConverter));
         _;
     }
 
@@ -164,6 +161,20 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     function connectorTokenCount() public view returns (uint16) {
         return uint16(connectorTokens.length);
+    }
+
+    /*
+        @dev allows the owner to update the registry contract address
+
+        @param _registry    address of a bancor converter registry contract
+    */
+    function setRegistry(IContractRegistry _registry)
+        public
+        ownerOnly
+        validAddress(_registry)
+        notThis(_registry)
+    {
+        registry = _registry;
     }
 
     /*
@@ -179,20 +190,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         notThis(_whitelist)
     {
         conversionWhitelist = _whitelist;
-    }
-
-    /*
-        @dev allows the owner to update the extensions contract address
-
-        @param _extensions    address of a bancor converter extensions contract
-    */
-    function setExtensions(IBancorConverterExtensions _extensions)
-        public
-        ownerOnly
-        validAddress(_extensions)
-        notThis(_extensions)
-    {
-        extensions = _extensions;
     }
 
     /*
@@ -386,7 +383,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         uint256 tokenSupply = token.totalSupply();
         uint256 connectorBalance = getConnectorBalance(_connectorToken);
-        uint256 amount = extensions.formula().calculatePurchaseReturn(tokenSupply, connectorBalance, connector.weight, _depositAmount);
+        IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
+        uint256 amount = formula.calculatePurchaseReturn(tokenSupply, connectorBalance, connector.weight, _depositAmount);
 
         // deduct the fee from the return amount
         uint256 feeAmount = getConversionFeeAmount(amount);
@@ -557,7 +555,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         returns (uint256)
     {
         IERC20Token fromToken = _path[0];
-        IBancorQuickConverter quickConverter = extensions.quickConverter();
+        IBancorQuickConverter quickConverter = IBancorQuickConverter(registry.getAddress(ContractIds.QUICK_CONVERTER));
 
         // we need to transfer the source tokens from the caller to the quick converter,
         // so it can execute the conversion on behalf of the caller
@@ -601,7 +599,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     {
         Connector storage connector = connectors[_connectorToken];
         uint256 connectorBalance = getConnectorBalance(_connectorToken);
-        uint256 amount = extensions.formula().calculateSaleReturn(_totalSupply, connectorBalance, connector.weight, _sellAmount);
+        IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
+        uint256 amount = formula.calculateSaleReturn(_totalSupply, connectorBalance, connector.weight, _sellAmount);
 
         // deduct the fee from the return amount
         uint256 feeAmount = getConversionFeeAmount(amount);
