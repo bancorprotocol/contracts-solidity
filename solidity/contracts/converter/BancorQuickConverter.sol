@@ -2,10 +2,12 @@ pragma solidity ^0.4.21;
 import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorQuickConverter.sol';
 import '../utility/TokenHolder.sol';
+import '../utility/interfaces/IContractRegistry.sol';
 import '../utility/interfaces/IContractFeatures.sol';
 import '../utility/interfaces/IWhitelist.sol';
 import '../token/interfaces/IEtherToken.sol';
 import '../token/interfaces/ISmartToken.sol';
+import '../ContractIds.sol';
 
 /*
     The BancorQuickConverter contract provides allows converting between any token in the 
@@ -24,9 +26,9 @@ import '../token/interfaces/ISmartToken.sol';
     Format:
     [source token, smart token, to token, smart token, to token...]
 */
-contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
+contract BancorQuickConverter is IBancorQuickConverter, TokenHolder, ContractIds {
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
-    IContractFeatures public features;          // contract features contract address
+    IContractRegistry public registry;          // contract registry contract address
     IBancorGasPriceLimit public gasPriceLimit;  // bancor universal gas price limit contract
 
     mapping (address => bool) public etherTokens;       // list of all supported ether tokens
@@ -35,10 +37,10 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
     /**
         @dev constructor
 
-        @param _features    address of a contract features contract
+        @param _registry    address of a contract registry contract
     */
-    function BancorQuickConverter(IContractFeatures _features) public validAddress(_features) {
-        features = _features;
+    function BancorQuickConverter(IContractRegistry _registry) public validAddress(_registry) {
+        registry = _registry;
     }
 
     // validates a conversion path - verifies that the number of elements is odd and that maximum number of 'hops' is 10
@@ -48,17 +50,17 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
     }
 
     /*
-        @dev allows the owner to update the contract features contract address
+        @dev allows the owner to update the contract registry contract address
 
-        @param _features   address of a contract features contract
+        @param _registry   address of a contract registry contract
     */
-    function setContractFeatures(IContractFeatures _features)
+    function setContractRegistry(IContractRegistry _registry)
         public
         ownerOnly
-        validAddress(_features)
-        notThis(_features)
+        validAddress(_registry)
+        notThis(_registry)
     {
-        features = _features;
+        registry = _registry;
     }
 
     /*
@@ -187,7 +189,7 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
         if (msg.value > 0)
             IEtherToken(fromToken).deposit.value(msg.value)();
         
-        (_amount, toToken) = convertByPath(_path, _amount, _minReturn, fromToken, _for);
+        (toToken, _amount) = convertByPath(_path, _amount, _minReturn, fromToken, _for);
 
         // finished the conversion, transfer the funds to the target account
         // if the target token is an ether token, withdraw the tokens and send them as ETH
@@ -200,31 +202,38 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
         return _amount;
     }
 
+    /**
+        @dev executes the actual conversion by following the conversion path
+
+        @param _path        conversion path, see conversion path format above
+        @param _amount      amount to convert from (in the initial source token)
+        @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _fromToken   ERC20 token to convert from (the first element in the path)
+        @param _for         account that will receive the conversion result
+
+        @return ERC20 token to convert to (the last element in the path) & tokens issued in return
+    */
     function convertByPath(
         IERC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
         IERC20Token _fromToken,
         address _for
-    ) private returns (uint256, IERC20Token) {
+    ) private returns (IERC20Token, uint256) {
         ISmartToken smartToken;
         IERC20Token toToken;
         IBancorConverter converter;
 
+        // get the contract features address from the registry
+        IContractFeatures features = IContractFeatures(registry.getAddress(ContractIds.CONTRACT_FEATURES));
+
         // iterate over the conversion path
         uint256 pathLength = _path.length;
-        IWhitelist whitelist;
-
         for (uint256 i = 1; i < pathLength; i += 2) {
             smartToken = ISmartToken(_path[i]);
             toToken = _path[i + 1];
             converter = IBancorConverter(smartToken.owner());
-
-            if (features.isSupported(converter, converter.FEATURE_CONVERSION_WHITELIST())) {
-                whitelist = converter.conversionWhitelist();
-                if (whitelist != address(0))
-                    require(whitelist.isWhitelisted(_for));
-            }
+            checkWhitelist(converter, _for, features);
 
             // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
             if (smartToken != _fromToken)
@@ -234,7 +243,31 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder {
             _amount = converter.change(_fromToken, toToken, _amount, i == pathLength - 2 ? _minReturn : 1);
             _fromToken = toToken;
         }
-        return (_amount, toToken);
+        return (toToken, _amount);
+    }
+
+    /**
+        @dev checks whether the given converter supports a whitelist and if so, ensures that
+        the account that should receive the conversion result is actually whitelisted
+
+        @param _converter   converter to check for whitelist
+        @param _for         account that will receive the conversion result
+        @param _features    contract features contract address
+    */
+    function checkWhitelist(IBancorConverter _converter, address _for, IContractFeatures _features) private view {
+        IWhitelist whitelist;
+
+        // check if the converter supports the conversion whitelist feature
+        if (!_features.isSupported(_converter, _converter.FEATURE_CONVERSION_WHITELIST()))
+            return;
+
+        // get the whitelist contract from the converter
+        whitelist = _converter.conversionWhitelist();
+        if (whitelist == address(0))
+            return;
+
+        // check if the account that should receive the conversion result is actually whitelisted
+        require(whitelist.isWhitelisted(_for));
     }
 
     /**

@@ -1,7 +1,7 @@
 pragma solidity ^0.4.21;
 import './BancorConverter.sol';
 import './interfaces/IBancorConverterFactory.sol';
-import '../utility/interfaces/IContractFeatures.sol';
+import '../utility/interfaces/IContractRegistry.sol';
 
 /*
     Bancor Converter Factory
@@ -23,7 +23,7 @@ contract BancorConverterFactory is IBancorConverterFactory {
         the ownership and management to the sender.
 
         @param  _token              smart token governed by the converter
-        @param  _features           address of a contract features contract
+        @param  _registry           address of a contract registry contract
         @param  _extensions         address of a bancor converter extensions contract
         @param  _maxConversionFee   maximum conversion fee, represented in ppm
         @param  _connectorToken     optional, initial connector, allows defining the first connector at deployment time
@@ -33,7 +33,7 @@ contract BancorConverterFactory is IBancorConverterFactory {
     */
     function createConverter(
         ISmartToken _token,
-        IContractFeatures _features,
+        IContractRegistry _registry,
         IBancorConverterExtensions _extensions,
         uint32 _maxConversionFee,
         IERC20Token _connectorToken,
@@ -44,7 +44,7 @@ contract BancorConverterFactory is IBancorConverterFactory {
     {
         BancorConverter converter = new BancorConverter(
             _token,
-            _features,
+            _registry,
             _extensions,
             _maxConversionFee,
             _connectorToken,

@@ -3,10 +3,12 @@ import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorConverterExtensions.sol';
 import '../utility/Managed.sol';
 import '../utility/Utils.sol';
+import '../utility/interfaces/IContractRegistry.sol';
 import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/IEtherToken.sol';
+import '../ContractIds.sol';
 
 /*
     Bancor Converter v0.9
@@ -29,7 +31,7 @@ import '../token/interfaces/IEtherToken.sol';
       Other potential solutions might include a commit/reveal based schemes
     - Possibly add getters for the connector fields so that the client won't need to rely on the order in the struct
 */
-contract BancorConverter is IBancorConverter, SmartTokenController, Managed {
+contract BancorConverter is IBancorConverter, SmartTokenController, Managed, ContractIds {
     uint32 private constant MAX_WEIGHT = 1000000;
     uint32 private constant MAX_CONVERSION_FEE = 1000000;
 
@@ -44,7 +46,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed {
     string public version = '0.9';
     string public converterType = 'bancor';
 
-    IContractFeatures public features;                  // contract features contract
+    IContractRegistry public registry;                  // contract registry contract
     IBancorConverterExtensions public extensions;       // bancor converter extensions contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public connectorTokens;               // ERC20 standard token addresses
@@ -73,7 +75,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed {
         @dev constructor
 
         @param  _token              smart token governed by the converter
-        @param  _features           address of a contract features contract
+        @param  _registry           address of a contract registry contract
         @param  _extensions         address of a bancor converter extensions contract
         @param  _maxConversionFee   maximum conversion fee, represented in ppm
         @param  _connectorToken     optional, initial connector, allows defining the first connector at deployment time
@@ -81,7 +83,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed {
     */
     function BancorConverter(
         ISmartToken _token,
-        IContractFeatures _features,
+        IContractRegistry _registry,
         IBancorConverterExtensions _extensions,
         uint32 _maxConversionFee,
         IERC20Token _connectorToken,
@@ -89,14 +91,16 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed {
     )
         public
         SmartTokenController(_token)
+        validAddress(_registry)
         validAddress(_extensions)
         validMaxConversionFee(_maxConversionFee)
     {
+        registry = _registry;
+        IContractFeatures features = IContractFeatures(registry.getAddress(ContractIds.CONTRACT_FEATURES));
+
         // initialize supported features
-        if (_features != address(0)) {
-            features = _features;
+        if (features != address(0))
             features.enableFeatures(FEATURE_CONVERSION_WHITELIST, true);
-        }
 
         extensions = _extensions;
         maxConversionFee = _maxConversionFee;

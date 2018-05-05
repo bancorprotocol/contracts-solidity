@@ -19,6 +19,9 @@ import './interfaces/IContractFeatures.sol';
 contract ContractFeatures is IContractFeatures {
     mapping (address => uint256) private featureFlags;
 
+    event FeaturesAddition(address indexed _address, uint256 _features);
+    event FeaturesRemoval(address indexed _address, uint256 _features);
+
     /**
         @dev constructor
     */
@@ -33,7 +36,7 @@ contract ContractFeatures is IContractFeatures {
 
         @return true if the contract supports the feature(s), false if not
     */
-    function isSupported(address _contract, uint256 _features) public returns (bool) {
+    function isSupported(address _contract, uint256 _features) public view returns (bool) {
         return (featureFlags[_contract] & _features) == _features;
     }
 
@@ -49,11 +52,15 @@ contract ContractFeatures is IContractFeatures {
                 return;
 
             featureFlags[msg.sender] |= _features;
+
+            emit FeaturesAddition(msg.sender, _features);
         } else {
             if (!isSupported(msg.sender, _features))
                 return;
 
             featureFlags[msg.sender] &= ~_features;
+
+            emit FeaturesRemoval(msg.sender, _features);
         }
     }
 }

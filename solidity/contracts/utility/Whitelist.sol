@@ -33,7 +33,7 @@ contract Whitelist is IWhitelist, Owned, Utils {
 
         @return true if the address is whitelisted, false if not
     */
-    function isWhitelisted(address _address) public returns (bool) {
+    function isWhitelisted(address _address) public view returns (bool) {
         return whitelist[_address];
     }
 
