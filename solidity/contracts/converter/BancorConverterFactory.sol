@@ -7,7 +7,6 @@ import '../utility/interfaces/IContractRegistry.sol';
     Bancor Converter Factory
 */
 contract BancorConverterFactory is IBancorConverterFactory {
-
     // triggered when a new converter is created
     event NewConverter(address indexed _converter, address indexed _owner);
 
@@ -38,7 +37,7 @@ contract BancorConverterFactory is IBancorConverterFactory {
         uint32 _maxConversionFee,
         IERC20Token _connectorToken,
         uint32 _connectorWeight
-    ) 
+    )
         public 
         returns(address converterAddress) 
     {
