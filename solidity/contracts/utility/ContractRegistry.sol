@@ -16,7 +16,7 @@ import './interfaces/IContractRegistry.sol';
 contract ContractRegistry is IContractRegistry, Owned {
     mapping (bytes32 => address) addresses;
 
-    event AddressUpdate(bytes32 _contractName, address _contractAddress);
+    event AddressUpdate(bytes32 indexed _contractName, address _contractAddress);
 
     /**
         @dev constructor
