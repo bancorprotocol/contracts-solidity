@@ -12,9 +12,9 @@ const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const Whitelist = artifacts.require('Whitelist.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const SmartTokenController = artifacts.require('SmartTokenController.sol');
+const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
-const BancorQuickConverter = artifacts.require('BancorQuickConverter.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory.sol');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader.sol');
@@ -34,7 +34,7 @@ module.exports = async deployer => {
     deployer.deploy(SmartTokenController, SmartToken.address);
     deployer.deploy(BancorFormula);
     deployer.deploy(BancorGasPriceLimit, '22000000000');
-    deployer.deploy(BancorQuickConverter, '0x827182');
+    deployer.deploy(BancorNetwork, '0x827182');
     deployer.deploy(BancorConverter, SmartToken.address, ContractRegistry.address, 0, '0x0', 0);
 
     await deployer.deploy(BancorConverterFactory);

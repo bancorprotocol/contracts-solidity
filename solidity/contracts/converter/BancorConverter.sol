@@ -1,7 +1,8 @@
 pragma solidity ^0.4.21;
 import './interfaces/IBancorConverter.sol';
-import './interfaces/IBancorQuickConverter.sol';
 import './interfaces/IBancorFormula.sol';
+import '../IBancorNetwork.sol';
+import '../ContractIds.sol';
 import '../utility/Managed.sol';
 import '../utility/Utils.sol';
 import '../utility/interfaces/IContractRegistry.sol';
@@ -9,7 +10,6 @@ import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/IEtherToken.sol';
-import '../ContractIds.sol';
 
 /*
     Bancor Converter v0.9
@@ -147,10 +147,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
-    // allows execution by the quick converter only
-    modifier quickConverterOnly {
-        IBancorQuickConverter quickConverter = IBancorQuickConverter(registry.getAddress(ContractIds.QUICK_CONVERTER));
-        require(msg.sender == address(quickConverter));
+    // allows execution by the BancorNetwork contract only
+    modifier bancorNetworkOnly {
+        IBancorNetwork bancorNetwork = IBancorNetwork(registry.getAddress(ContractIds.BANCOR_NETWORK));
+        require(msg.sender == address(bancorNetwork));
         _;
     }
 
@@ -180,7 +180,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /*
         @dev allows the owner to update & enable the conversion whitelist contract address
         when set, only addresses that are whitelisted are actually allowed to use the converter
-        note that the whitelist check is actually done by the quick converter contract
+        note that the whitelist check is actually done by the BancorNetwork contract
 
         @param _whitelist    address of a whitelist contract
     */
@@ -195,7 +195,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /*
         @dev allows the manager to update the quick buy path
 
-        @param _path    new quick buy path, see conversion path format in the BancorQuickConverter contract
+        @param _path    new quick buy path, see conversion path format in the bancorNetwork contract
     */
     function setQuickBuyPath(IERC20Token[] _path)
         public
@@ -413,7 +413,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @return conversion return amount
     */
-    function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public quickConverterOnly returns (uint256) {
+    function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public bancorNetworkOnly returns (uint256) {
         require(_fromToken != _toToken); // validate input
 
         // conversion between the token and one of its connectors
@@ -518,7 +518,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @dev converts the token to any other token in the bancor network by following a predefined conversion path
         note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
 
-        @param _path        conversion path, see conversion path format in the BancorQuickConverter contract
+        @param _path        conversion path, see conversion path format in the BancorNetwork contract
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
@@ -537,7 +537,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @dev converts the token to any other token in the bancor network by following a predefined conversion path
         note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
 
-        @param _path        conversion path, see conversion path format in the BancorQuickConverter contract
+        @param _path        conversion path, see conversion path format in the BancorNetwork contract
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _block       if the current block exceeded the given parameter - it is cancelled
@@ -555,24 +555,25 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         returns (uint256)
     {
         IERC20Token fromToken = _path[0];
-        IBancorQuickConverter quickConverter = IBancorQuickConverter(registry.getAddress(ContractIds.QUICK_CONVERTER));
+        IBancorNetwork bancorNetwork = IBancorNetwork(registry.getAddress(ContractIds.BANCOR_NETWORK));
 
-        // we need to transfer the source tokens from the caller to the quick converter,
+        // we need to transfer the source tokens from the caller to the BancorNetwork contract,
         // so it can execute the conversion on behalf of the caller
         if (msg.value == 0) {
-            // not ETH, send the source tokens to the quick converter
-            // if the token is the smart token, no allowance is required - destroy the tokens from the caller and issue them to the quick converter
+            // not ETH, send the source tokens to the BancorNetwork contract
+            // if the token is the smart token, no allowance is required - destroy the tokens
+            // from the caller and issue them to the BancorNetwork contract
             if (fromToken == token) {
                 token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
-                token.issue(quickConverter, _amount); // issue _amount new tokens to the quick converter
+                token.issue(bancorNetwork, _amount); // issue _amount new tokens to the BancorNetwork contract
             } else {
-                // otherwise, we assume we already have allowance, transfer the tokens directly to the quick converter
-                assert(fromToken.transferFrom(msg.sender, quickConverter, _amount));
+                // otherwise, we assume we already have allowance, transfer the tokens directly to the BancorNetwork contract
+                assert(fromToken.transferFrom(msg.sender, bancorNetwork, _amount));
             }
         }
 
         // execute the conversion and pass on the ETH with the call
-        return quickConverter.convertForPrioritized.value(msg.value)(_path, _amount, _minReturn, msg.sender, _block, _nonce, _v, _r, _s);
+        return bancorNetwork.convertForPrioritized.value(msg.value)(_path, _amount, _minReturn, msg.sender, _block, _nonce, _v, _r, _s);
     }
 
     // deprecated, backward compatibility

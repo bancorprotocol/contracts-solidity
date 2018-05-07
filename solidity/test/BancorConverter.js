@@ -1,13 +1,13 @@
 /* global artifacts, contract, before, it, assert */
 /* eslint-disable prefer-reflect */
 
+const BancorNetwork = artifacts.require('BancorNetwork.sol');
+const ContractIds = artifacts.require('ContractIds.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
-const BancorQuickConverter = artifacts.require('BancorQuickConverter.sol');
 const ContractRegistry = artifacts.require('ContractRegistry.sol');
-const ContractIds = artifacts.require('ContractIds.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const utils = require('./helpers/Utils');
@@ -80,12 +80,12 @@ contract('BancorConverter', accounts => {
         let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
         await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
 
-        let quickConverter = await BancorQuickConverter.new(contractRegistry.address);
+        let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
-        await quickConverter.setGasPriceLimit(gasPriceLimit.address);
+        await bancorNetwork.setGasPriceLimit(gasPriceLimit.address);
 
-        let quickConverterId = await contractIds.QUICK_CONVERTER.call();
-        await contractRegistry.registerAddress(quickConverterId, quickConverter.address);
+        let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
+        await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
 
         let formula = await BancorFormula.new();
         let formulaId = await contractIds.BANCOR_FORMULA.call();

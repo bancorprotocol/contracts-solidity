@@ -1,17 +1,18 @@
 pragma solidity ^0.4.21;
-import './interfaces/IBancorConverter.sol';
-import './interfaces/IBancorQuickConverter.sol';
-import '../utility/TokenHolder.sol';
-import '../utility/interfaces/IContractRegistry.sol';
-import '../utility/interfaces/IContractFeatures.sol';
-import '../utility/interfaces/IWhitelist.sol';
-import '../token/interfaces/IEtherToken.sol';
-import '../token/interfaces/ISmartToken.sol';
-import '../ContractIds.sol';
+import './IBancorNetwork.sol';
+import './ContractIds.sol';
+import './converter/interfaces/IBancorConverter.sol';
+import './utility/TokenHolder.sol';
+import './utility/interfaces/IContractRegistry.sol';
+import './utility/interfaces/IContractFeatures.sol';
+import './utility/interfaces/IWhitelist.sol';
+import './token/interfaces/IEtherToken.sol';
+import './token/interfaces/ISmartToken.sol';
 
 /*
-    The BancorQuickConverter contract provides allows converting between any token in the 
-    bancor network in a single transaction.
+    The BancorNetwork contract is the main entry point for bancor token conversions.
+    It also allows converting between any token in the bancor network to any other token
+    in a single transaction by providing a conversion path.
 
     A note on conversion paths -
     Conversion path is a data structure that's used when converting a token to another token in the bancor network
@@ -26,7 +27,7 @@ import '../ContractIds.sol';
     Format:
     [source token, smart token, to token, smart token, to token...]
 */
-contract BancorQuickConverter is IBancorQuickConverter, TokenHolder, ContractIds {
+contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
     IContractRegistry public registry;          // contract registry contract address
     IBancorGasPriceLimit public gasPriceLimit;  // bancor universal gas price limit contract
@@ -39,7 +40,7 @@ contract BancorQuickConverter is IBancorQuickConverter, TokenHolder, ContractIds
 
         @param _registry    address of a contract registry contract
     */
-    function BancorQuickConverter(IContractRegistry _registry) public validAddress(_registry) {
+    function BancorNetwork(IContractRegistry _registry) public validAddress(_registry) {
         registry = _registry;
     }
 
