@@ -424,7 +424,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         @return buy return amount
     */
     function buy(IERC20Token _connectorToken, uint256 _depositAmount, uint256 _minReturn)
-        public
+        private
         conversionsAllowed
         validGasPrice
         greaterThanZero(_minReturn)
@@ -457,7 +457,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         @return sell return amount
     */
     function sell(IERC20Token _connectorToken, uint256 _sellAmount, uint256 _minReturn)
-        public
+        private
         conversionsAllowed
         validGasPrice
         greaterThanZero(_minReturn)
