@@ -14,7 +14,7 @@ import './token/interfaces/ISmartToken.sol';
     It also allows converting between any token in the bancor network to any other token
     in a single transaction by providing a conversion path.
 
-    A note on conversions paths -
+    A note on conversion path -
     Conversion path is a data structure that's used when converting a token to another token in the bancor network
     when the conversion cannot necessarily be done by single converter and might require multiple 'hops'.
     The path defines which converters should be used and what kind of conversion should be done in each step.
@@ -157,7 +157,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
         @dev converts the token to any other token in the bancor network
         by following a predefined conversion path and transfers the result
         tokens to a target account.
-        this specific version of the function also allows the verified signer
+        this version of the function also allows the verified signer
         to bypass the universal gas price limit.
         note that the converter should already own the source tokens
 
@@ -188,19 +188,20 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
 
     /**
         @dev converts token to any other token in the bancor network
-        by following the predefined conversions paths and transfers the result
+        by following the predefined conversion paths and transfers the result
         tokens to a targeted account.
-        this specific version of the function also allows multiple conversions
+        this version of the function also allows multiple conversions
         in a single atomic transaction.
         note that the converter should already own the source tokens
 
-        @param _paths           merged conversions paths, i.e. [path1, path2, ...]. see conversion path format above
-        @param _pathStartIndex  each item in the array is a coordinate path start index in the _paths array
-        @param _amounts         array of amounts to convert from (in the initial source token)
-        @param _minReturns      if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _paths           merged conversion paths, i.e. [path1, path2, ...]. see conversion path format above
+        @param _pathStartIndex  each item in the array is the start index of the nth path in _paths
+        @param _amounts         amount to convert from (in the initial source token) for each path
+        @param _minReturns      minimum return for each path. if the conversion results in an amount 
+                                smaller than the minimum return - it is cancelled, must be nonzero
         @param _for             account that will receive the conversions result
 
-        @return array of tokens issued in return in each conversion
+        @return amount of conversion result for each path
     */
     function convertForMultiple(IERC20Token[] _paths, uint256[] _pathStartIndex, uint256[] _amounts, uint256[] _minReturns, address _for)
         public
@@ -211,7 +212,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
         uint256 convertedValue = 0;
         uint256 pathEndIndex;
         
-        // iterate over the conversions paths
+        // iterate over the conversion paths
         for (uint256 i = 0; i < _pathStartIndex.length; i += 1) {
             pathEndIndex = i == (_pathStartIndex.length - 1) ? _paths.length : _pathStartIndex[i + 1];
 
@@ -221,12 +222,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
                 path[j - _pathStartIndex[i]] = _paths[j];
             }
 
-            // if ETH is provided, ensure that the amount is lower than _amounts[i] and verify that the source token is an ether token
-            // otherwise ensure that the source is not an ether token
+            // if ETH is provided, ensure that the amount is lower than the path amount and
+            // verify that the source token is an ether token. otherwise ensure that 
+            // the source is not an ether token
             IERC20Token fromToken = path[0];
             require(msg.value == 0 || (_amounts[i] <= msg.value && etherTokens[fromToken]) || !etherTokens[fromToken]);
 
-            // if ETH was sent with the call, the source is an ether token - deposit the coordinate amount of ETH in it.
+            // if ETH was sent with the call, the source is an ether token - deposit the ETH path amount in it.
             // otherwise, we assume we already have the tokens
             if (msg.value > 0 && etherTokens[fromToken]) {
                 IEtherToken(fromToken).deposit.value(_amounts[i])();
@@ -243,13 +245,18 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
 
     /**
         @dev converts token to any other token in the bancor network
-        by following a predefined conversions paths and transfers the result
+        by following a predefined conversion paths and transfers the result
         tokens to a target account.
 
         @param _path        conversion path, see conversion path format above
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _for         account that will receive the conversion result
+        @param _block       if the current block exceeded the given parameter - it is cancelled
+        @param _nonce       the nonce of the sender address
+        @param _v           parameter that can be parsed from the transaction signature
+        @param _r           parameter that can be parsed from the transaction signature
+        @param _s           parameter that can be parsed from the transaction signature
 
         @return tokens issued in return
     */
