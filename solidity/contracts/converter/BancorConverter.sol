@@ -530,7 +530,43 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         validConversionPath(_path)
         returns (uint256)
     {
-        return quickConvertPrioritized(_path, _amount, _minReturn, 0x0, 0x0, 0x0, 0x0, 0x0);
+        return quickConvertPrioritized(_path, _amount, _minReturn, 0x0, 0x0, 0x0, 0x0);
+    }
+
+    /**
+        @dev allows converts multiple tokens to any other token in the bancor network by following a predefined conversion paths
+        when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
+        note that it possible to convert from ether only single time
+
+        @param _paths       concated conversion paths, see conversion path format in the BancorNetwork contract
+        @param _pathIndex   triples array - first item of each is the path start index in _paths array, second is the path length and the third is ether value
+        @param _amounts     array which each item is the amount to convert from (in the initial source token)
+        @param _minReturns  if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+
+        @return array of tokens issued in return
+    */
+    function quickConvertMultiple(IERC20Token[] _paths, uint256[] _pathIndex, uint256[] _amounts, uint256[] _minReturns)
+        public
+        payable
+        // validConversionPath(_path)
+        returns (uint256[])
+    {
+        // iterate over the conversion paths
+        uint256 pathsLength = _pathIndex.length;
+
+        uint256[] memory issuedTokens = new uint256[](pathsLength / 2);
+    
+        for (uint256 i = 0; i < pathsLength; i += 2) {
+            IERC20Token[] memory path = new IERC20Token[](_pathIndex[i + 1]);
+            // uint256 pathLength = _pathIndex[i] + _pathIndex[i + 1];
+            // for (uint256 j = _pathIndex[i]; j < pathLength; j += 1) {
+            for (uint256 j = 0; j < _pathIndex[i + 1]; j += 1) {
+                path[j] = _paths[_pathIndex[i] + j];
+            }
+            issuedTokens[i / 2] = quickConvert(path, _amounts[i / 2], _minReturns[i / 2]);
+        }
+
+        return issuedTokens;
     }
 
     /**
@@ -541,14 +577,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _block       if the current block exceeded the given parameter - it is cancelled
-        @param _nonce       the nonce of the sender address
-        @param _v           parameter that can be parsed from the transaction signature
-        @param _r           parameter that can be parsed from the transaction signature
-        @param _s           parameter that can be parsed from the transaction signature
+        @param _v           (signature[128:130]) associated with the signer address and helps validating if the signature is legit
+        @param _r           (signature[0:64]) associated with the signer address and helps validating if the signature is legit
+        @param _s           (signature[64:128]) associated with the signer address and helps validating if the signature is legit
 
         @return tokens issued in return
     */
-    function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s)
+    function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
         public
         payable
         validConversionPath(_path)
@@ -573,7 +608,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         }
 
         // execute the conversion and pass on the ETH with the call
-        return bancorNetwork.convertForPrioritized.value(msg.value)(_path, _amount, _minReturn, msg.sender, _block, _nonce, _v, _r, _s);
+        return bancorNetwork.convertForPrioritized.value(msg.value)(_path, _amount, _minReturn, msg.sender, _block, _v, _r, _s);
     }
 
     // deprecated, backward compatibility
