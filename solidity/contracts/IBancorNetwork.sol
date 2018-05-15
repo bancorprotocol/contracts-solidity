@@ -14,7 +14,6 @@ contract IBancorNetwork {
         uint256 _minReturn,
         address _for,
         uint256 _block,
-        uint256 _nonce,
         uint8 _v,
         bytes32 _r,
         bytes32 _s)

@@ -741,20 +741,18 @@ contract('BancorNetwork', accounts => {
         let block = await web3.eth.blockNumber;
         let maximumBlock = block + 100;
         let gasPrice = defaultGasPriceLimit;
-        let nonce = await web3.eth.getTransactionCount(accounts[1]);
 
         let data = [
             { value: maximumBlock, length: 256 },
             { value: gasPrice, length: 256 },
-            { value: accounts[1], length: 160 },
-            { value: nonce, length: 256 }
+            { value: accounts[1], length: 160 }
         ];
 
         const condensed = await prepareData(data);
         const hash = sha256(new Buffer(condensed, 'hex'));
         let result = sign(hash, accountPrivateKey);
 
-        await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, nonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+        await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });
@@ -765,20 +763,18 @@ contract('BancorNetwork', accounts => {
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
             let gasPrice = defaultGasPriceLimit;
-            let nonce = await web3.eth.getTransactionCount(accounts[1]);
 
             let data = [
                 { value: maximumBlock, length: 256 },
                 { value: gasPrice, length: 256 },
-                { value: accounts[1], length: 160 },
-                { value: nonce, length: 256 }
+                { value: accounts[1], length: 160 }
             ];
 
             const condensed = await prepareData(data);
             const hash = sha256(new Buffer(condensed, 'hex'));
             let result = sign(hash, untrustedPrivateKey);
 
-            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, nonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -793,20 +789,18 @@ contract('BancorNetwork', accounts => {
             let maximumBlock = block + 100;
             let wrongBlockNumber = maximumBlock + 100;
             let gasPrice = defaultGasPriceLimit;
-            let nonce = await web3.eth.getTransactionCount(accounts[1]);
 
             let data = [
                 { value: maximumBlock, length: 256 },
                 { value: gasPrice, length: 256 },
-                { value: accounts[1], length: 160 },
-                { value: nonce, length: 256 }
+                { value: accounts[1], length: 160 }
             ];
 
             const condensed = await prepareData(data);
             const hash = sha256(new Buffer(condensed, 'hex'));
             let result = sign(hash, accountPrivateKey);
 
-            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, wrongBlockNumber, nonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -821,20 +815,18 @@ contract('BancorNetwork', accounts => {
             let maximumBlock = block + 100;
             let wrongBlockNumber = maximumBlock - 1;
             let gasPrice = defaultGasPriceLimit;
-            let nonce = await web3.eth.getTransactionCount(accounts[1]);
 
             let data = [
                 { value: maximumBlock, length: 256 },
                 { value: gasPrice, length: 256 },
-                { value: accounts[1], length: 160 },
-                { value: nonce, length: 256 }
+                { value: accounts[1], length: 160 }
             ];
 
             const condensed = await prepareData(data);
             const hash = sha256(new Buffer(condensed, 'hex'));
             let result = sign(hash, accountPrivateKey);
 
-            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, wrongBlockNumber, nonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -848,20 +840,18 @@ contract('BancorNetwork', accounts => {
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
             let gasPrice = defaultGasPriceLimit - 1;
-            let nonce = await web3.eth.getTransactionCount(accounts[1]);
 
             let data = [
                 { value: maximumBlock, length: 256 },
                 { value: gasPrice, length: 256 },
-                { value: accounts[1], length: 160 },
-                { value: nonce, length: 256 }
+                { value: accounts[1], length: 160 }
             ];
 
             const condensed = await prepareData(data);
             const hash = sha256(new Buffer(condensed, 'hex'));
             let result = sign(hash, accountPrivateKey);
 
-            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, nonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -875,104 +865,18 @@ contract('BancorNetwork', accounts => {
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
             let gasPrice = defaultGasPriceLimit + 1;
-            let nonce = await web3.eth.getTransactionCount(accounts[1]);
 
             let data = [
                 { value: maximumBlock, length: 256 },
                 { value: gasPrice, length: 256 },
-                { value: accounts[1], length: 160 },
-                { value: nonce, length: 256 }
+                { value: accounts[1], length: 160 }
             ];
 
             const condensed = await prepareData(data);
             const hash = sha256(new Buffer(condensed, 'hex'));
             let result = sign(hash, accountPrivateKey);
 
-            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, nonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when attempts to call quick convert prioritized with higher nonce than what appears in the signing data', async () => {
-        try {
-            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
-            let block = await web3.eth.blockNumber;
-            let maximumBlock = block + 100;
-            let gasPrice = defaultGasPriceLimit;
-            let nonce = await web3.eth.getTransactionCount(accounts[1]);
-            let wrongNonce = nonce + 1;
-
-            let data = [
-                { value: maximumBlock, length: 256 },
-                { value: gasPrice, length: 256 },
-                { value: accounts[1], length: 160 },
-                { value: nonce, length: 256 }
-            ];
-
-            const condensed = await prepareData(data);
-            const hash = sha256(new Buffer(condensed, 'hex'));
-            let result = sign(hash, accountPrivateKey);
-
-            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, wrongNonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when attempts to call quick convert prioritized with lower nonce than what appears in the signing data', async () => {
-        try {
-            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
-            let block = await web3.eth.blockNumber;
-            let maximumBlock = block + 100;
-            let gasPrice = defaultGasPriceLimit;
-            let nonce = await web3.eth.getTransactionCount(accounts[1]);
-            let wrongNonce = nonce - 1;
-
-            let data = [
-                { value: maximumBlock, length: 256 },
-                { value: gasPrice, length: 256 },
-                { value: accounts[1], length: 160 },
-                { value: nonce, length: 256 }
-            ];
-
-            const condensed = await prepareData(data);
-            const hash = sha256(new Buffer(condensed, 'hex'));
-            let result = sign(hash, accountPrivateKey);
-
-            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, wrongNonce, result.v, result.r, result.s, { from: accounts[1], value: 100 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when attempts to call quick convert prioritized with different address than what appears in the signing data', async () => {
-        try {
-            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
-            let block = await web3.eth.blockNumber;
-            let maximumBlock = block + 100;
-            let gasPrice = defaultGasPriceLimit;
-            let nonce = await web3.eth.getTransactionCount(accounts[1]);
-            let wrongNonce = nonce - 1;
-
-            let data = [
-                { value: maximumBlock, length: 256 },
-                { value: gasPrice, length: 256 },
-                { value: accounts[1], length: 160 },
-                { value: nonce, length: 256 }
-            ];
-
-            const condensed = await prepareData(data);
-            const hash = sha256(new Buffer(condensed, 'hex'));
-            let result = sign(hash, accountPrivateKey);
-
-            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, wrongNonce, result.v, result.r, result.s, { from: accounts[2], value: 100 });
+            await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
         }
         catch (error) {

@@ -116,8 +116,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
 
         @return true if the signer is verified
     */
-    function verifyTrustedSender(uint256 _block, address _addr, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
-        bytes32 hash = sha256(_block, tx.gasprice, _addr, _nonce);
+    function verifyTrustedSender(uint256 _block, address _addr, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
+        bytes32 hash = sha256(_block, tx.gasprice, _addr);
 
         // checking that it is the first conversion with the given signature
         // and that the current block number doesn't exceeded the maximum block
@@ -150,7 +150,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
         @return tokens issued in return
     */
     function convertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public payable returns (uint256) {
-        return convertForPrioritized(_path, _amount, _minReturn, _for, 0x0, 0x0, 0x0, 0x0, 0x0);
+        return convertForPrioritized(_path, _amount, _minReturn, _for, 0x0, 0x0, 0x0, 0x0);
     }
 
     /**
@@ -168,7 +168,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
 
         @return tokens issued in return
     */
-    function convertForPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _block, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s)
+    function convertForPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
         public
         payable
         validConversionPath(_path)
@@ -183,7 +183,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
         if (msg.value > 0)
             IEtherToken(fromToken).deposit.value(msg.value)();
 
-        return convertForInternal(_path, _amount, _minReturn, _for, _block, _nonce, _v, _r, _s);
+        return convertForInternal(_path, _amount, _minReturn, _for, _block, _v, _r, _s);
     }
 
     /**
@@ -234,7 +234,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
                 IEtherToken(fromToken).deposit.value(_amounts[i])();
                 convertedValue += _amounts[i];
             }
-            _amounts[i] = convertForInternal(path, _amounts[i], _minReturns[i], _for, 0x0, 0x0, 0x0, 0x0, 0x0);
+            _amounts[i] = convertForInternal(path, _amounts[i], _minReturns[i], _for, 0x0, 0x0, 0x0, 0x0);
         }
 
         // if ETH was provided, ensure that the full amount was converted
@@ -253,7 +253,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _for         account that will receive the conversion result
         @param _block       if the current block exceeded the given parameter - it is cancelled
-        @param _nonce       the nonce of the sender address
         @param _v           parameter that can be parsed from the transaction signature
         @param _r           parameter that can be parsed from the transaction signature
         @param _s           parameter that can be parsed from the transaction signature
@@ -266,7 +265,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
         uint256 _minReturn, 
         address _for, 
         uint256 _block, 
-        uint256 _nonce, 
         uint8 _v, 
         bytes32 _r, 
         bytes32 _s
@@ -278,7 +276,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
         if (_v == 0x0 && _r == 0x0 && _s == 0x0)
             gasPriceLimit.validateGasPrice(tx.gasprice);
         else
-            require(verifyTrustedSender(_block, _for, _nonce, _v, _r, _s));
+            require(verifyTrustedSender(_block, _for, _v, _r, _s));
 
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
         IERC20Token fromToken = _path[0];
