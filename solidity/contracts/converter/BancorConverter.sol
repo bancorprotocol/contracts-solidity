@@ -489,6 +489,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 feeAmount = getConversionFeeAmount(amount);
         feeAmount = safeMul(feeAmount, 2);
         dispatchConversionEvent(_fromToken, _toToken, _amount, amount, feeAmount);
+
+        // dispatch price updates for the smart token / both connectors
         dispatchPriceUpdateEvent(_fromToken, true);
         dispatchPriceUpdateEvent(_toToken, false);
         return amount;
@@ -534,6 +536,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         uint256 feeAmount = getConversionFeeAmount(amount);
         dispatchConversionEvent(_connectorToken, token, _depositAmount, amount, feeAmount);
+
+        // dispatch price update for the smart token/connector
         dispatchPriceUpdateEvent(_connectorToken, true);
         return amount;
     }
@@ -571,6 +575,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         uint256 feeAmount = getConversionFeeAmount(amount);
         dispatchConversionEvent(token, _connectorToken, _sellAmount, amount, feeAmount);
+
+        // dispatch price update for the smart token/connector
         dispatchPriceUpdateEvent(_connectorToken, false);
         return amount;
     }
