@@ -253,9 +253,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _for         account that will receive the conversion result
         @param _block       if the current block exceeded the given parameter - it is cancelled
-        @param _v           parameter that can be parsed from the transaction signature
-        @param _r           parameter that can be parsed from the transaction signature
-        @param _s           parameter that can be parsed from the transaction signature
+        @param _v           (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+        @param _r           (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+        @param _s           (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
 
         @return tokens issued in return
     */
