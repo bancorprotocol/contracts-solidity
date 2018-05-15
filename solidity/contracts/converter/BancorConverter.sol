@@ -759,7 +759,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
             emit PriceUpdate(token, _connectorToken, tokenAmount, connectorAmount);
     }
 
-
     /**
         @dev fallback, buys the smart token with ETH
         note that the purchase will use the price at the time of the purchase
