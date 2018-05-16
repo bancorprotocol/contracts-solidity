@@ -1,9 +1,10 @@
 ﻿### 0.3.19 (2018-05-16)
 
 General:
- * Restructure contract folders
+ * Restructured contract folders
  * Upgraded compiler version to 0.4.21
  * Replaced from testrpc with ganache
+ * Other minor cleanups
  
 Converters:
  * Gas cost optimizations when converting between 2 connectors, now uses an optimized dedicated
