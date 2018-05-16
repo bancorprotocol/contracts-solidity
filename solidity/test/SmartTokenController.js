@@ -22,7 +22,7 @@ async function initController(accounts, activate) {
     return controller;
 }
 
-contract('SmartTokenController', (accounts) => {
+contract('SmartTokenController', accounts => {
     before(async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;

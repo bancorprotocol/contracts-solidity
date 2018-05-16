@@ -14,7 +14,7 @@ Bancor is a work in progress. Make sure you understand the risks before using it
 # The Bancor Standards
 
 Bancor protocol is implemented using multiple contracts. The main ones are SmartToken and BancorConverter.
-BancorConverter implements the [token converter standard](https://github.com/ethereum/EIPs/issues/228) and is responsible for converting between a token and its connectors.
+BancorConverter is responsible for converting between a token and its connectors.
 SmartToken represents a converter aware ERC-20 compliant token.
 
 # The Smart Token Standard
@@ -98,11 +98,6 @@ The most important here is `convert`.
 
 ## Specification
 
-### BancorToken
-
-First and foremost, a Bancor Converter is also an EIP-228 compliant converter.
-As such, it implements both the standard converter methods and the standard converter events.
-
 ### Methods
 
 **connectorTokenCount**
@@ -148,21 +143,21 @@ event Conversion(address indexed _fromToken, address indexed _toToken, address i
 Triggered when a conversion between one of the convertible tokens takes place.
 
 ## Testing
-Tests are included and can be run using truffle.
+Tests are included and can be run using truffle & ganache
 
 ### Prerequisites
 * Node.js v7.6.0+
-* truffle v3.2.2+
-* testrpc v3.0.5+
+* truffle v4.1.5+
+* ganache v1.1.0+
 
-To run the test, execute the following commands from the project's root folder -
-* npm run testrpc
+To run the test, first start ganache and then execute the following command from the project's root folder -
 * npm test
 
 ## Collaborators
 
 * **[Yudi Levi](https://github.com/yudilevi)**
 * **[Ilana Pinhas](https://github.com/ilanapi)**
+* **[Or Dadosh](https://github.com/ordd)**
 * **[Barak Manos](https://github.com/barakman)**
 * **[Martin Holst Swende](https://github.com/holiman)**
 

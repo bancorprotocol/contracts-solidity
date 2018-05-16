@@ -1,5 +1,5 @@
-pragma solidity ^0.4.11;
-import '../BancorFormula.sol';
+pragma solidity ^0.4.21;
+import '../converter/BancorFormula.sol';
 
 /*
     BancorFormula test helper that exposes some BancorFormula functions

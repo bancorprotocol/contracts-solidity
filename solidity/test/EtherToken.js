@@ -4,7 +4,7 @@
 const EtherToken = artifacts.require('EtherToken.sol');
 const utils = require('./helpers/Utils');
 
-contract('EtherToken', (accounts) => {
+contract('EtherToken', accounts => {
     it('verifies the token name after construction', async () => {
         let token = await EtherToken.new();
         let name = await token.name.call();

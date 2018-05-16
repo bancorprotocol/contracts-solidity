@@ -1,10 +1,12 @@
-pragma solidity ^0.4.11;
-import '../CrowdsaleController.sol';
+pragma solidity ^0.4.21;
+import '../crowdsale/CrowdsaleController.sol';
 
 /*
     Test crowdsale controller with start time < now < end time
 */
 contract TestCrowdsaleController is CrowdsaleController {
+    uint256 public constant BTCS_ETHER_CAP_SMALL = 2 ether; // maximum bitcoin suisse ether contribution
+
     function TestCrowdsaleController(
         ISmartToken _token,
         uint256 _startTime,
@@ -17,5 +19,10 @@ contract TestCrowdsaleController is CrowdsaleController {
     {
         startTime = _startTimeOverride;
         endTime = startTime + DURATION;
+    }
+
+    modifier btcsEtherCapNotReached(uint256 _ethContribution) {
+        assert(safeAdd(totalEtherContributed, _ethContribution) <= BTCS_ETHER_CAP_SMALL);
+        _;
     }
 }

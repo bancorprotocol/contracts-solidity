@@ -1,10 +1,10 @@
 from web3 import Web3
-from web3 import RPCProvider
+from web3 import HTTPProvider
 from os.path import dirname
 from json import loads
 
 
-eth = Web3(RPCProvider()).eth
+eth = Web3(HTTPProvider("http://127.0.0.1:8545")).eth
 
 
 class Contract():
@@ -23,14 +23,17 @@ class Contract():
         return self.contract(self.address).transact(self.transact)
     def tester(self):
         return self.contract(self.address).estimateGas(self.transact)
-    def decode(hash,logIndex,eventParams):
+    def decode(hash,index,params):
         event = {}
-        index = 2
-        data = eth.getTransactionReceipt(hash)['logs'][logIndex]['data']
-        for eventParam in eventParams:
-            if not eventParam['indexed']:
-                name = eventParam['name']
-                size = eventParam['size']//4
-                event[name] = int(data[index:index+size],16)
-                index += size
+        index1 = 1
+        index2 = 2
+        log = eth.getTransactionReceipt(hash)['logs'][index]
+        for param in params:
+            if param['indexed']:
+                event[param['name']] = int(log['topics'][index1],16)
+                index1 += 1
+            else:
+                size = param['size']//4
+                event[param['name']] = int(log['data'][index2:index2+size],16)
+                index2 += size
         return event
