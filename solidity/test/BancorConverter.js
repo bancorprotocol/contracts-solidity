@@ -98,7 +98,7 @@ contract('BancorConverter', accounts => {
         connectorTokenAddress = connectorToken.address;
     });
 
-    /*it('verifies the converter data after construction', async () => {
+    it('verifies the converter data after construction', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         let token = await converter.token.call();
         assert.equal(token, tokenAddress);
@@ -749,7 +749,7 @@ contract('BancorConverter', accounts => {
         assert.isNumber(returnAmount.toNumber());
         assert.notEqual(returnAmount.toNumber(), 0);
         assert.equal(returnAmount.toNumber(), saleReturnAmount.toNumber());
-    });*/
+    });
 
     it('verifies that getReturn returns the same amount as buy -> sell when converting from connector 1 to connector 2', async () => {
         let converter = await initConverter(accounts, true);
@@ -763,7 +763,7 @@ contract('BancorConverter', accounts => {
         assert.equal(returnAmount.toNumber(), saleAmount);
     });
 
-    /*it('verifies that Conversion event returns conversion fee after buying', async () => {
+    it('verifies that Conversion event returns conversion fee after buying', async () => {
         let converter = await initConverter(accounts, true, 5000);
         await converter.setConversionFee(3000);
         await connectorToken.approve(converter.address, 500);
@@ -1175,5 +1175,5 @@ contract('BancorConverter', accounts => {
         let returnAmount2 = getConversionAmount(convertRes);
 
         assert.equal(returnAmount.toNumber(), returnAmount2);
-    });*/
+    });
 });
