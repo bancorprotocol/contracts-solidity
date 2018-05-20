@@ -604,7 +604,7 @@ contract('BancorNetwork', accounts => {
         await converter1.setConversionWhitelist(utils.zeroAddress);
     });
 
-    it('should throw when attempting to convert for a non whitelisted account', async () => {
+    it('should throw when attempting to convertFor a non whitelisted account', async () => {
         let whitelist = await Whitelist.new();
         await converter1.setConversionWhitelist(whitelist.address);
 
@@ -618,7 +618,7 @@ contract('BancorNetwork', accounts => {
         }
     });
 
-    it('verifies multiple convert for with multiple paths', async () => {
+    it('verifies multiple convertFor with multiple paths', async () => {
         let prevBalance1 = await smartToken1.balanceOf.call(accounts[0]);
         let prevBalance2 = await smartToken2.balanceOf.call(accounts[0]);
         await smartToken2.transfer(bancorNetwork.address, 20000);
@@ -635,7 +635,7 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(newBalance2.toNumber(), prevBalance2.toNumber(), "smart token 2 new balance isn't higher than previous balance");
     });
 
-    it('verifies multiple convert for with a single path', async () => {
+    it('verifies multiple convertFor with a single path', async () => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[0]);
         await smartToken2.transfer(bancorNetwork.address, 10000);
         let smartTokenQuickBuyPathMultiple = [smartToken2.address, smartToken2.address, smartToken1.address];
@@ -647,7 +647,7 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });
 
-    it('verifies multiple convert for with multiple paths that each of them starts with ether', async () => {
+    it('verifies multiple convertFor with multiple paths that each of them starts with ether', async () => {
         let prevBalance = await smartToken2.balanceOf.call(accounts[1]);
         let smartTokenQuickBuyPathMultiple = [etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken2.address, 
             etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken2.address];
@@ -696,7 +696,7 @@ contract('BancorNetwork', accounts => {
         assert(newToken2Balance.lessThan(prevToken2Balance), "new token 2 balance isn't lower than previous balance");
     });
 
-    it('should throw when attempts to call multiple convert for with too high ether value', async () => {
+    it('should throw when attempts to call multiple convertFor with too high ether value', async () => {
         try {
             let prevBalance = await smartToken2.balanceOf.call(accounts[1]);
             let smartTokenQuickBuyPathMultiple = [etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken2.address, 
@@ -710,7 +710,7 @@ contract('BancorNetwork', accounts => {
         }
     });
 
-    it('should throw when attempts to call multiple convert for with wrong path index', async () => {
+    it('should throw when attempts to call multiple convertFor with wrong path index', async () => {
         try {
             await smartToken2.transfer(bancorNetwork.address, 10000);
 
@@ -723,7 +723,7 @@ contract('BancorNetwork', accounts => {
         }
     });
 
-    it('should throw when attempts to call multiple convert for with zero amount in the amounts array', async () => {
+    it('should throw when attempts to call multiple convertFor with zero amount in the amounts array', async () => {
         try {
             let smartTokenQuickSellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address]
             let res = await bancorNetwork.convertForMultiple(smartTokenQuickSellPath, [0, 4], [0], [1], accounts[0]);
