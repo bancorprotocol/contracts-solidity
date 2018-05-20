@@ -227,28 +227,28 @@ def calculateSaleReturn(_supply, _connectorBalance, _connectorWeight, _sellAmoun
     @dev ???
 
     Formula:
-    Return = _connector2Balance * (1 - (_connector1Balance / (_connector1Balance + _amount)) ^ (_connector1Weight / _connector2Weight))
+    Return = _toConnectorBalance * (1 - (_fromConnectorBalance / (_fromConnectorBalance + _amount)) ^ (_fromConnectorWeight / _toConnectorWeight))
 
-    @param _connector1Balance    input connector balance
-    @param _connector1Weight     input connector weight, represented in ppm, 1-1000000
-    @param _connector2Balance    output connector balance
-    @param _connector2Weight     output connector weight, represented in ppm, 1-1000000
-    @param _amount               input connector amount
+    @param _fromConnectorBalance    input connector balance
+    @param _fromConnectorWeight     input connector weight, represented in ppm, 1-1000000
+    @param _toConnectorBalance      output connector balance
+    @param _toConnectorWeight       output connector weight, represented in ppm, 1-1000000
+    @param _amount                  input connector amount
 
     @return output connector amount
 '''
-def calculateCrossConnectorReturn(_connector1Balance, _connector1Weight, _connector2Balance, _connector2Weight, _amount):
+def calculateCrossConnectorReturn(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount):
     # validate input
-    assert(_connector1Balance > 0 and _connector1Weight > 0 and _connector1Weight <= MAX_WEIGHT and _connector2Balance > 0 and _connector2Weight > 0 and _connector2Weight <= MAX_WEIGHT);
+    assert(_fromConnectorBalance > 0 and _fromConnectorWeight > 0 and _fromConnectorWeight <= MAX_WEIGHT and _toConnectorBalance > 0 and _toConnectorWeight > 0 and _toConnectorWeight <= MAX_WEIGHT);
 
     # special case for equal weights
-    if (_connector1Weight == _connector2Weight):
-        return safeMul(_connector2Balance, _amount) // safeAdd(_connector1Balance, _amount);
+    if (_fromConnectorWeight == _toConnectorWeight):
+        return safeMul(_toConnectorBalance, _amount) // safeAdd(_fromConnectorBalance, _amount);
 
-    baseN = safeAdd(_connector1Balance, _amount);
-    (result, precision) = power(baseN, _connector1Balance, _connector1Weight, _connector2Weight);
-    temp1 = safeMul(_connector2Balance, result);
-    temp2 = _connector2Balance << precision;
+    baseN = safeAdd(_fromConnectorBalance, _amount);
+    (result, precision) = power(baseN, _fromConnectorBalance, _fromConnectorWeight, _toConnectorWeight);
+    temp1 = safeMul(_toConnectorBalance, result);
+    temp2 = _toConnectorBalance << precision;
     return (temp1 - temp2) // result;
 
 '''

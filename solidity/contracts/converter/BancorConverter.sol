@@ -365,8 +365,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
             return getSaleReturn(_toToken, _amount);
 
         // conversion between 2 connectors
-        uint256 purchaseReturnAmount = getPurchaseReturn(_fromToken, _amount);
-        return getSaleReturn(_toToken, purchaseReturnAmount, safeAdd(token.totalSupply(), purchaseReturnAmount));
+        return getCrossConnectorReturn(_fromToken, _toToken, _amount);
     }
 
     /**
@@ -405,29 +404,43 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @return expected sale return amount
     */
-    function getSaleReturn(IERC20Token _connectorToken, uint256 _sellAmount) public view returns (uint256) {
-        return getSaleReturn(_connectorToken, _sellAmount, token.totalSupply());
+    function getSaleReturn(IERC20Token _connectorToken, uint256 _sellAmount)
+        public
+        view
+        active
+        validConnector(_connectorToken)
+        returns (uint256)
+    {
+        Connector storage connector = connectors[_connectorToken];
+        uint256 tokenSupply = token.totalSupply();
+        uint256 connectorBalance = getConnectorBalance(_connectorToken);
+        IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
+        uint256 amount = formula.calculateSaleReturn(tokenSupply, connectorBalance, connector.weight, _sellAmount);
+
+        // deduct the fee from the return amount
+        uint256 feeAmount = getConversionFeeAmount(amount);
+        return safeSub(amount, feeAmount);
     }
 
     /**
         @dev returns the expected return for selling one of the connector tokens for another connector token
 
-        @param _connectorToken1 contract address of the connector token to convert from
-        @param _connectorToken2 contract address of the connector token to convert to
-        @param _sellAmount      amount to sell (in the from connector token)
+        @param _fromConnectorToken  contract address of the connector token to convert from
+        @param _toConnectorToken    contract address of the connector token to convert to
+        @param _sellAmount          amount to sell (in the from connector token)
 
         @return expected sale return amount (in the to connector token)
     */
-    function getCrossConnectorReturn(IERC20Token _connectorToken1, IERC20Token _connectorToken2, uint256 _sellAmount) public view returns (uint256) {
-        Connector storage connector1 = connectors[_connectorToken1];
-        Connector storage connector2 = connectors[_connectorToken2];
-        require(connector2.isPurchaseEnabled); // validate input
+    function getCrossConnectorReturn(IERC20Token _fromConnectorToken, IERC20Token _toConnectorToken, uint256 _sellAmount) public view returns (uint256) {
+        Connector storage fromConnector = connectors[_fromConnectorToken];
+        Connector storage toConnector = connectors[_toConnectorToken];
+        require(toConnector.isPurchaseEnabled); // validate input
 
-        uint256 connector1Balance = getConnectorBalance(_connectorToken1);
-        uint256 connector2Balance = getConnectorBalance(_connectorToken2);
+        uint256 fromConnectorBalance = getConnectorBalance(_fromConnectorToken);
+        uint256 toConnectorBalance = getConnectorBalance(_toConnectorToken);
 
         IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
-        uint256 amount = formula.calculateCrossConnectorReturn(connector1Balance, connector1.weight, connector2Balance, connector2.weight, _sellAmount);
+        uint256 amount = formula.calculateCrossConnectorReturn(fromConnectorBalance, fromConnector.weight, toConnectorBalance, toConnector.weight, _sellAmount);
 
         // deduct the fee from the return amount
         // the fee is doubled since cross connector conversion equals 2 conversions (from / to the smart token)
@@ -466,18 +479,18 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         require(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
 
         // update the source token virtual balance if relevant
-        Connector storage connector1 = connectors[_fromToken];
-        if (connector1.isVirtualBalanceEnabled)
-            connector1.virtualBalance = safeAdd(connector1.virtualBalance, _amount);
+        Connector storage fromConnector = connectors[_fromToken];
+        if (fromConnector.isVirtualBalanceEnabled)
+            fromConnector.virtualBalance = safeAdd(fromConnector.virtualBalance, _amount);
 
         // update the target token virtual balance if relevant
-        Connector storage connector2 = connectors[_toToken];
-        if (connector2.isVirtualBalanceEnabled)
-            connector2.virtualBalance = safeSub(connector2.virtualBalance, amount);
+        Connector storage toConnector = connectors[_toToken];
+        if (toConnector.isVirtualBalanceEnabled)
+            toConnector.virtualBalance = safeSub(toConnector.virtualBalance, amount);
 
         // ensure that the trade won't deplete the connector balance
-        uint256 connector2Balance = getConnectorBalance(_toToken);
-        assert(amount < connector2Balance);
+        uint256 toConnectorBalance = getConnectorBalance(_toToken);
+        assert(amount < toConnectorBalance);
 
         // transfer funds from the caller in the from connector token
         assert(_fromToken.transferFrom(msg.sender, this, _amount));

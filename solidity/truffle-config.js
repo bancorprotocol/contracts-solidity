@@ -5,7 +5,7 @@ module.exports = {
             port: 7545,
             network_id: "*", // Match any network id
             gasPrice: 20000000000,
-            gas: 4712388
+            gas: 5712388
         }
     },
     solc: {
