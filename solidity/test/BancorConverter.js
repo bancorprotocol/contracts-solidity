@@ -751,7 +751,7 @@ contract('BancorConverter', accounts => {
         assert.equal(returnAmount.toNumber(), saleReturnAmount.toNumber());
     });
 
-    it('verifies that getReturn returns the same amount as buy -> sell when converting from connector 1 to connector 2', async () => {
+    it('verifies that getReturn returns the same amount as buy -> sell when converting between 2 connectors', async () => {
         let converter = await initConverter(accounts, true);
         let returnAmount = await converter.getReturn.call(connectorTokenAddress, connectorTokenAddress2, 500);
 
