@@ -760,7 +760,10 @@ contract('BancorConverter', accounts => {
         let purchaseAmount = getConversionAmount(purchaseRes);
         let saleRes = await converter.convert(tokenAddress, connectorTokenAddress2, purchaseAmount, 1);
         let saleAmount = getConversionAmount(saleRes);
-        assert.equal(returnAmount.toNumber(), saleAmount);
+
+        // converting directly between 2 tokens is more efficient than buying and then selling
+        // which might result in a very small rounding difference
+        assert(returnAmount.minus(saleAmount).absoluteValue().toNumber() < 2);
     });
 
     it('verifies that Conversion event returns conversion fee after buying', async () => {
