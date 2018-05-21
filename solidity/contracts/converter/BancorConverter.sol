@@ -392,8 +392,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 amount = formula.calculatePurchaseReturn(tokenSupply, connectorBalance, connector.weight, _depositAmount);
 
         // deduct the fee from the return amount
-        uint256 feeAmount = getConversionFeeAmount(amount);
-        return safeSub(amount, feeAmount);
+        return safeSub(amount, getConversionFeeAmount(amount));
     }
 
     /**
@@ -418,8 +417,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 amount = formula.calculateSaleReturn(tokenSupply, connectorBalance, connector.weight, _sellAmount);
 
         // deduct the fee from the return amount
-        uint256 feeAmount = getConversionFeeAmount(amount);
-        return safeSub(amount, feeAmount);
+        return safeSub(amount, getConversionFeeAmount(amount));
     }
 
     /**
@@ -431,7 +429,14 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @return expected sale return amount (in the to connector token)
     */
-    function getCrossConnectorReturn(IERC20Token _fromConnectorToken, IERC20Token _toConnectorToken, uint256 _sellAmount) public view returns (uint256) {
+    function getCrossConnectorReturn(IERC20Token _fromConnectorToken, IERC20Token _toConnectorToken, uint256 _sellAmount)
+        public
+        view
+        active
+        validConnector(_fromConnectorToken)
+        validConnector(_toConnectorToken)
+        returns (uint256)
+    {
         Connector storage fromConnector = connectors[_fromConnectorToken];
         Connector storage toConnector = connectors[_toConnectorToken];
         require(toConnector.isPurchaseEnabled); // validate input
@@ -444,9 +449,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // deduct the fee from the return amount
         // the fee is doubled since cross connector conversion equals 2 conversions (from / to the smart token)
-        uint256 feeAmount = getConversionFeeAmount(amount);
-        feeAmount = safeMul(feeAmount, 2);
-        return safeSub(amount, feeAmount);
+        return safeSub(amount, safeMul(getConversionFeeAmount(amount), 2));
     }
 
     /**
@@ -476,7 +479,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // conversion between 2 connectors
         uint256 amount = getCrossConnectorReturn(_fromToken, _toToken, _amount);
-        require(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
+        // ensure the trade gives something in return and meets the minimum requested amount
+        require(amount != 0 && amount >= _minReturn);
 
         // update the source token virtual balance if relevant
         Connector storage fromConnector = connectors[_fromToken];
@@ -498,6 +502,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // the transfer might fail if the actual connector balance is smaller than the virtual balance
         assert(_toToken.transfer(msg.sender, amount));
 
+        // calculate conversion fee and dispatch the conversion event
         // the fee is doubled since cross connector conversion equals 2 conversions (from / to the smart token)
         uint256 feeAmount = getConversionFeeAmount(amount);
         feeAmount = safeMul(feeAmount, 2);
@@ -535,7 +540,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     function buy(IERC20Token _connectorToken, uint256 _depositAmount, uint256 _minReturn) internal returns (uint256) {
         uint256 amount = getPurchaseReturn(_connectorToken, _depositAmount);
-        require(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
+        // ensure the trade gives something in return and meets the minimum requested amount
+        require(amount != 0 && amount >= _minReturn);
 
         // update virtual balance if relevant
         Connector storage connector = connectors[_connectorToken];
@@ -547,6 +553,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // issue new funds to the caller in the smart token
         token.issue(msg.sender, amount);
 
+        // calculate conversion fee and dispatch the conversion event
         uint256 feeAmount = getConversionFeeAmount(amount);
         dispatchConversionEvent(_connectorToken, token, _depositAmount, amount, feeAmount);
 
@@ -568,7 +575,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
 
         uint256 amount = getSaleReturn(_connectorToken, _sellAmount);
-        require(amount != 0 && amount >= _minReturn); // ensure the trade gives something in return and meets the minimum requested amount
+        // ensure the trade gives something in return and meets the minimum requested amount
+        require(amount != 0 && amount >= _minReturn);
 
         // ensure that the trade will only deplete the connector balance if the total supply is depleted as well
         uint256 tokenSupply = token.totalSupply();
@@ -586,6 +594,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // the transfer might fail if the actual connector balance is smaller than the virtual balance
         assert(_connectorToken.transfer(msg.sender, amount));
 
+        // calculate conversion fee and dispatch the conversion event
         uint256 feeAmount = getConversionFeeAmount(amount);
         dispatchConversionEvent(token, _connectorToken, _sellAmount, amount, feeAmount);
 
@@ -658,33 +667,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     // deprecated, backward compatibility
     function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
         return convertInternal(_fromToken, _toToken, _amount, _minReturn);
-    }
-
-    /**
-        @dev utility, returns the expected return for selling the token for one of its connector tokens, given a total supply override
-
-        @param _connectorToken  connector token contract address
-        @param _sellAmount      amount to sell (in the smart token)
-        @param _totalSupply     total token supply, overrides the actual token total supply when calculating the return
-
-        @return sale return amount
-    */
-    function getSaleReturn(IERC20Token _connectorToken, uint256 _sellAmount, uint256 _totalSupply)
-        private
-        view
-        active
-        validConnector(_connectorToken)
-        greaterThanZero(_totalSupply)
-        returns (uint256)
-    {
-        Connector storage connector = connectors[_connectorToken];
-        uint256 connectorBalance = getConnectorBalance(_connectorToken);
-        IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
-        uint256 amount = formula.calculateSaleReturn(_totalSupply, connectorBalance, connector.weight, _sellAmount);
-
-        // deduct the fee from the return amount
-        uint256 feeAmount = getConversionFeeAmount(amount);
-        return safeSub(amount, feeAmount);
     }
 
     /**
