@@ -1,6 +1,7 @@
 import sys
 import random
 import FormulaSolidityPort
+import FormulaNativePython
 
 
 from decimal import Decimal
@@ -16,11 +17,8 @@ def singleHopTest(balance1, weight1, balance2, weight2, amount):
 
 
 def doubleHopTest(supply, balance1, weight1, balance2, weight2, amount):
-    try:
-        amount = FormulaSolidityPort.calculatePurchaseReturn(supply, balance1, weight1, amount)
-        return FormulaSolidityPort.calculateSaleReturn(supply + amount, balance2, weight2, amount)
-    except:
-        return -1
+    amount = FormulaNativePython.calculatePurchaseReturn(supply, balance1, weight1, amount)
+    return FormulaNativePython.calculateSaleReturn(supply + amount, balance2, weight2, amount)
 
 
 size = int(sys.argv[1]) if len(sys.argv) > 1 else 0
@@ -29,7 +27,6 @@ if size == 0:
 
 
 minRatio = Decimal('+inf')
-maxRatio = Decimal('-inf')
 
 
 for n in range(size):
@@ -41,7 +38,14 @@ for n in range(size):
     amount = random.randrange(1, supply)
     singleHop = singleHopTest(balance1, weight1, balance2, weight2, amount)
     doubleHop = doubleHopTest(supply, balance1, weight1, balance2, weight2, amount)
-    if singleHop * doubleHop < 0:
+    if 0 <= singleHop <= doubleHop:
+        ratio = Decimal(singleHop) / Decimal(doubleHop)
+        minRatio = min(minRatio, ratio)
+        print('Test #{}: ratio = {:.24f}, minRatio = {:.24f}'.format(n, ratio, minRatio))
+    elif singleHop < 0:
+        ratio = Decimal(0)
+        print('Test #{}: ratio = {:.24f}, minRatio = {:.24f}'.format(n, ratio, minRatio))
+    else:
         print('Implementation Error:')
         print('supply    = {}'.format(supply))
         print('balance1  = {}'.format(balance1))
@@ -52,7 +56,3 @@ for n in range(size):
         print('singleHop = {}'.format(singleHop))
         print('doubleHop = {}'.format(doubleHop))
         break
-    ratio = Decimal(singleHop) / Decimal(doubleHop)
-    minRatio = min(minRatio, ratio)
-    maxRatio = max(maxRatio, ratio)
-    print('Test #{}: ratio = {:.24f}, minRatio = {:.24f}, maxRatio = {:.24f}'.format(n, ratio, minRatio, maxRatio))
