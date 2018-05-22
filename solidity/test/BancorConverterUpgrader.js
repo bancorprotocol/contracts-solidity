@@ -3,6 +3,7 @@
 
 const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
+const FeaturesIds = artifacts.require('FeaturesIds.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
@@ -55,6 +56,7 @@ contract('BancorConverterUpgrader', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
         let contractIds = await ContractIds.new();
+        let featuresIds = await FeaturesIds.new();
 
         contractFeatures = await ContractFeatures.new();
         let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
@@ -141,7 +143,7 @@ contract('BancorConverterUpgrader', accounts => {
         let contract = await web3.eth.contract(converterAbi);
         let newConverter = await contract.at(newConverterAddress);
 
-        let featureWhitelist = await newConverter.FEATURE_CONVERSION_WHITELIST.call();
+        let featureWhitelist = await featuresIds.CONVERTER_CONVERSION_WHITELIST.call();
         let isSupported = await contractFeatures.isSupported.call(newConverter.address, featureWhitelist);
         assert(isSupported);
     });
