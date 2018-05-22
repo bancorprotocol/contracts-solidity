@@ -105,7 +105,7 @@ contract('BancorConverter', accounts => {
         let registry = await converter.registry.call();
         assert.equal(registry, contractRegistry.address);
 
-        let featureWhitelist = await converter.FEATURE_CONVERSION_WHITELIST.call();
+        let featureWhitelist = await converter.CONVERTER_CONVERSION_WHITELIST.call();
         let isSupported = await contractFeatures.isSupported.call(converter.address, featureWhitelist);
         assert(isSupported);
 

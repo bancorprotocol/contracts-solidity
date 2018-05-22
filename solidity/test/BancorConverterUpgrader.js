@@ -141,7 +141,7 @@ contract('BancorConverterUpgrader', accounts => {
         let contract = await web3.eth.contract(converterAbi);
         let newConverter = await contract.at(newConverterAddress);
 
-        let featureWhitelist = await newConverter.FEATURE_CONVERSION_WHITELIST.call();
+        let featureWhitelist = await newConverter.CONVERTER_CONVERSION_WHITELIST.call();
         let isSupported = await contractFeatures.isSupported.call(newConverter.address, featureWhitelist);
         assert(isSupported);
     });
