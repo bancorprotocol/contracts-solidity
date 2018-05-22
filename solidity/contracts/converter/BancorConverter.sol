@@ -3,6 +3,7 @@ import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorFormula.sol';
 import '../IBancorNetwork.sol';
 import '../ContractIds.sol';
+import '../FeatureIds.sol';
 import '../utility/Managed.sol';
 import '../utility/Utils.sol';
 import '../utility/interfaces/IContractRegistry.sol';
@@ -32,7 +33,7 @@ import '../token/interfaces/IEtherToken.sol';
       Other potential solutions might include a commit/reveal based schemes
     - Possibly add getters for the connector fields so that the client won't need to rely on the order in the struct
 */
-contract BancorConverter is IBancorConverter, SmartTokenController, Managed, ContractIds {
+contract BancorConverter is IBancorConverter, SmartTokenController, Managed, ContractIds, FeatureIds {
     uint32 private constant MAX_WEIGHT = 1000000;
     uint32 private constant MAX_CONVERSION_FEE = 1000000;
 
@@ -103,7 +104,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // initialize supported features
         if (features != address(0))
-            features.enableFeatures(FEATURE_CONVERSION_WHITELIST, true);
+            features.enableFeatures(FeatureIds.CONVERTER_CONVERSION_WHITELIST, true);
 
         maxConversionFee = _maxConversionFee;
 

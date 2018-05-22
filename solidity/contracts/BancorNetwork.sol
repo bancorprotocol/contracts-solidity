@@ -1,6 +1,7 @@
 pragma solidity ^0.4.21;
 import './IBancorNetwork.sol';
 import './ContractIds.sol';
+import './FeatureIds.sol';
 import './converter/interfaces/IBancorConverter.sol';
 import './utility/TokenHolder.sol';
 import './utility/interfaces/IContractRegistry.sol';
@@ -27,7 +28,7 @@ import './token/interfaces/ISmartToken.sol';
     Format:
     [source token, smart token, to token, smart token, to token...]
 */
-contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
+contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
     IContractRegistry public registry;          // contract registry contract address
     IBancorGasPriceLimit public gasPriceLimit;  // bancor universal gas price limit contract
@@ -352,7 +353,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds {
         IWhitelist whitelist;
 
         // check if the converter supports the conversion whitelist feature
-        if (!_features.isSupported(_converter, _converter.FEATURE_CONVERSION_WHITELIST()))
+        if (!_features.isSupported(_converter, FeatureIds.CONVERTER_CONVERSION_WHITELIST))
             return;
 
         // get the whitelist contract from the converter

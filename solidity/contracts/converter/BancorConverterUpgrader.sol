@@ -6,6 +6,7 @@ import '../utility/interfaces/IContractRegistry.sol';
 import '../utility/interfaces/IContractFeatures.sol';
 import '../utility/interfaces/IWhitelist.sol';
 import '../ContractIds.sol';
+import '../FeatureIds.sol';
 
 /*
     Bancor converter dedicated interface
@@ -58,7 +59,7 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     back to the original owner.
     The address of the new converter is available in the ConverterUpgrade event.
 */
-contract BancorConverterUpgrader is Owned, ContractIds {
+contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
     string public version = '0.2';
 
     IContractRegistry public registry;                      // contract registry contract address
@@ -170,7 +171,7 @@ contract BancorConverterUpgrader is Owned, ContractIds {
         // get the contract features address from the registry
         IContractFeatures features = IContractFeatures(registry.getAddress(ContractIds.CONTRACT_FEATURES));
 
-        if (features.isSupported(_oldConverter, _oldConverter.FEATURE_CONVERSION_WHITELIST())) {
+        if (features.isSupported(_oldConverter, FeatureIds.CONVERTER_CONVERSION_WHITELIST)) {
             whitelist = _oldConverter.conversionWhitelist();
             if (whitelist != address(0))
                 converter.setConversionWhitelist(whitelist);
