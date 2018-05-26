@@ -54,7 +54,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     IERC20Token[] public quickBuyPath;                  // conversion path that's used in order to buy the token with ETH
     mapping (address => Connector) public connectors;   // connector token addresses -> connector data
     uint32 private totalConnectorWeight = 0;            // used to efficiently prevent increasing the total connector weight above 100%
-    uint32 public maxConversionFee = 0;                 // maximum conversion fee for the lifetime of the contract, represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
+    uint32 public maxConversionFee = 0;                 // maximum conversion fee for the lifetime of the contract,
+                                                        // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public conversionFee = 0;                    // current conversion fee, represented in ppm, 0...maxConversionFee
     bool public conversionsEnabled = true;              // true if token conversions is enabled, false if not
     IERC20Token[] private convertPath;
@@ -68,12 +69,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 _return,
         int256 _conversionFee
     );
-    // triggered when a price between a token and one of its connectors is updated
-    event PriceUpdate(
-        address indexed _fromToken,
-        address indexed _toToken,
-        uint256 _priceN,
-        uint256 _priceD
+    // triggered after a conversion with new price data
+    event PriceDataUpdate(
+        uint256 _tokenSupply,
+        IERC20Token indexed _connectorToken,
+        uint256 _connectorBalance,
+        uint32 _connectorWeight
     );
     // triggered when the conversion fee is updated
     event ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee);
@@ -509,9 +510,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         feeAmount = safeMul(feeAmount, 2);
         dispatchConversionEvent(_fromToken, _toToken, _amount, amount, feeAmount);
 
-        // dispatch price updates for the smart token / both connectors
-        dispatchPriceUpdateEvent(_fromToken, true);
-        dispatchPriceUpdateEvent(_toToken, false);
+        // dispatch price data updates for the smart token / both connectors
+        emit PriceDataUpdate(token.totalSupply(), _fromToken, getConnectorBalance(_fromToken), fromConnector.weight);
+        emit PriceDataUpdate(token.totalSupply(), _toToken, getConnectorBalance(_toToken), toConnector.weight);
         return amount;
     }
 
@@ -558,8 +559,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 feeAmount = getConversionFeeAmount(amount);
         dispatchConversionEvent(_connectorToken, token, _depositAmount, amount, feeAmount);
 
-        // dispatch price update for the smart token/connector
-        dispatchPriceUpdateEvent(_connectorToken, true);
+        // dispatch price data update for the smart token/connector
+        emit PriceDataUpdate(token.totalSupply(), _connectorToken, getConnectorBalance(_connectorToken), connector.weight);
         return amount;
     }
 
@@ -599,8 +600,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 feeAmount = getConversionFeeAmount(amount);
         dispatchConversionEvent(token, _connectorToken, _sellAmount, amount, feeAmount);
 
-        // dispatch price update for the smart token/connector
-        dispatchPriceUpdateEvent(_connectorToken, false);
+        // dispatch price data update for the smart token/connector
+        emit PriceDataUpdate(token.totalSupply(), _connectorToken, getConnectorBalance(_connectorToken), connector.weight);
         return amount;
     }
 
@@ -685,38 +686,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
         assert(_feeAmount <= 2 ** 255);
         emit Conversion(_fromToken, _toToken, msg.sender, _amount, _returnAmount, int256(_feeAmount));
-    }
-
-    /**
-        @dev helper, dispatches the PriceUpdate event
-        The function also takes the tokens' decimals into account when calculating the current price
-
-        @param _connectorToken  connector token contract address
-        @param _isPurchase      true if it's a purchase, false if it's a sale
-    */
-    function dispatchPriceUpdateEvent(IERC20Token _connectorToken, bool _isPurchase) private {
-        Connector storage connector = connectors[_connectorToken];
-
-        // calculate the new price using the simple price formula
-        // price = connector balance / (supply * weight)
-        // weight is represented in ppm, so multiplying by 1000000
-        uint256 connectorAmount = safeMul(getConnectorBalance(_connectorToken), MAX_WEIGHT);
-        uint256 tokenAmount = safeMul(token.totalSupply(), connector.weight);
-
-        // normalize values
-        uint8 tokenDecimals = token.decimals();
-        uint8 connectorTokenDecimals = _connectorToken.decimals();
-        if (tokenDecimals != connectorTokenDecimals) {
-            if (tokenDecimals > connectorTokenDecimals)
-                connectorAmount = safeMul(connectorAmount, 10 ** uint256(tokenDecimals - connectorTokenDecimals));
-            else
-                tokenAmount = safeMul(tokenAmount, 10 ** uint256(connectorTokenDecimals - tokenDecimals));
-        }
-
-        if (_isPurchase)
-            emit PriceUpdate(_connectorToken, token, connectorAmount, tokenAmount);
-        else
-            emit PriceUpdate(token, _connectorToken, tokenAmount, connectorAmount);
     }
 
     /**
