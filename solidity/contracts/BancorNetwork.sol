@@ -117,8 +117,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return true if the signer is verified
     */
-    function verifyTrustedSender(uint256 _block, address _addr, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
-        bytes32 hash = sha256(_block, tx.gasprice, _addr);
+    function verifyTrustedSender(IERC20Token[] _path, uint256 _amount, uint256 _block, address _addr, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
+        bytes32 hash = keccak256(_block, tx.gasprice, _addr, msg.sender, _amount, _path);
 
         // checking that it is the first conversion with the given signature
         // and that the current block number doesn't exceeded the maximum block
@@ -127,8 +127,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         // recovering the signing address and comparing it to the trusted signer
         // address that was set in the contract
-        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-        bytes32 prefixedHash = keccak256(prefix, hash);
+        bytes32 prefixedHash = keccak256("\x19Ethereum Signed Message:\n32", hash);
         bool verified = ecrecover(prefixedHash, _v, _r, _s) == signerAddress;
 
         // if the signer is the trusted signer - mark the hash so that it can't
@@ -277,7 +276,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         if (_v == 0x0 && _r == 0x0 && _s == 0x0)
             gasPriceLimit.validateGasPrice(tx.gasprice);
         else
-            require(verifyTrustedSender(_block, _for, _v, _r, _s));
+            require(verifyTrustedSender(_path, _amount, _block, _for, _v, _r, _s));
 
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
         IERC20Token fromToken = _path[0];
