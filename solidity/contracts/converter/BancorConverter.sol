@@ -72,7 +72,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     // triggered after a conversion with new price data
     event PriceDataUpdate(
         uint256 _tokenSupply,
-        IERC20Token indexed _connectorToken,
+        address indexed _connectorToken,
         uint256 _connectorBalance,
         uint32 _connectorWeight
     );
