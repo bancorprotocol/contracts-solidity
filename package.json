@@ -13,10 +13,11 @@
     "test": "cd solidity && truffle test"
   },
   "dependencies": {
-    "decimal.js": "^10.0.0",
-    "ethereumjs-util": "^5.1.5",
+    "decimal.js": "^10.0.1",
+    "ethereumjs-util": "^5.2.0",
     "js-sha256": "^0.9.0",
     "left-pad": "^1.3.0",
+    "npm": "^6.1.0",
     "web3-utils": "^1.0.0-beta.34"
   }
 }
