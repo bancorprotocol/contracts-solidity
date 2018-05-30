@@ -1,4 +1,4 @@
-﻿### 0.3.19 (2018-05-16)
+﻿### 0.4.0 (2018-05-16)
 
 General:
  * Restructured contract folders
