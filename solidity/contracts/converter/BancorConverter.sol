@@ -71,8 +71,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     );
     // triggered after a conversion with new price data
     event PriceDataUpdate(
-        uint256 _tokenSupply,
         address indexed _connectorToken,
+        uint256 _tokenSupply,
         uint256 _connectorBalance,
         uint32 _connectorWeight
     );
@@ -511,8 +511,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         dispatchConversionEvent(_fromToken, _toToken, _amount, amount, feeAmount);
 
         // dispatch price data updates for the smart token / both connectors
-        emit PriceDataUpdate(token.totalSupply(), _fromToken, getConnectorBalance(_fromToken), fromConnector.weight);
-        emit PriceDataUpdate(token.totalSupply(), _toToken, getConnectorBalance(_toToken), toConnector.weight);
+        emit PriceDataUpdate(_fromToken, token.totalSupply(), getConnectorBalance(_fromToken), fromConnector.weight);
+        emit PriceDataUpdate(_toToken, token.totalSupply(), getConnectorBalance(_toToken), toConnector.weight);
         return amount;
     }
 
@@ -560,7 +560,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         dispatchConversionEvent(_connectorToken, token, _depositAmount, amount, feeAmount);
 
         // dispatch price data update for the smart token/connector
-        emit PriceDataUpdate(token.totalSupply(), _connectorToken, getConnectorBalance(_connectorToken), connector.weight);
+        emit PriceDataUpdate(_connectorToken, token.totalSupply(), getConnectorBalance(_connectorToken), connector.weight);
         return amount;
     }
 
@@ -601,7 +601,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         dispatchConversionEvent(token, _connectorToken, _sellAmount, amount, feeAmount);
 
         // dispatch price data update for the smart token/connector
-        emit PriceDataUpdate(token.totalSupply(), _connectorToken, getConnectorBalance(_connectorToken), connector.weight);
+        emit PriceDataUpdate(_connectorToken, token.totalSupply(), getConnectorBalance(_connectorToken), connector.weight);
         return amount;
     }
 
