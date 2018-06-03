@@ -301,8 +301,10 @@ contract('BancorConverter', accounts => {
     it('verifies that getConversionFeeAmount returns the correct amount', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
         await converter.setConversionFee(10000);
-        let conversionFeeAmount = await converter.getConversionFeeAmount.call(500000);
-        assert.equal(conversionFeeAmount, 5000);
+        let conversionFeeAmount = await converter.getConversionFeeAmount.call(500000, 1);
+        assert.equal(conversionFeeAmount, 495000);
+        let conversionDoubleFeeAmount = await converter.getConversionFeeAmount.call(500000, 2);
+        assert.equal(conversionFeeAmount, 490050);
     });
 
     it('verifies that an event is fired when the owner update the fee', async () => {

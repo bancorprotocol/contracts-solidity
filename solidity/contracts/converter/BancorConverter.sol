@@ -35,7 +35,7 @@ import '../token/interfaces/IEtherToken.sol';
 */
 contract BancorConverter is IBancorConverter, SmartTokenController, Managed, ContractIds, FeatureIds {
     uint32 private constant MAX_WEIGHT = 1000000;
-    uint32 private constant MAX_CONVERSION_FEE = 1000000;
+    uint64 private constant MAX_CONVERSION_FEE = 1000000;
 
     struct Connector {
         uint256 virtualBalance;         // connector virtual balance
@@ -260,8 +260,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @return conversion fee amount
     */
-    function getConversionFeeAmount(uint256 _amount) public view returns (uint256) {
-        return safeMul(_amount, conversionFee) / MAX_CONVERSION_FEE;
+    function getConversionFeeAmount(uint256 _amount, uint8 _magnitude) public view returns (uint256) {
+        return safeMul(_amount, (MAX_CONVERSION_FEE - conversionFee) ** _magnitude) / MAX_CONVERSION_FEE ** _magnitude;
     }
 
     /**
@@ -394,7 +394,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 amount = formula.calculatePurchaseReturn(tokenSupply, connectorBalance, connector.weight, _depositAmount);
 
         // deduct the fee from the return amount
-        return safeSub(amount, getConversionFeeAmount(amount));
+        return getConversionFeeAmount(amount, 1);
     }
 
     /**
@@ -419,7 +419,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 amount = formula.calculateSaleReturn(tokenSupply, connectorBalance, connector.weight, _sellAmount);
 
         // deduct the fee from the return amount
-        return safeSub(amount, getConversionFeeAmount(amount));
+        return getConversionFeeAmount(amount, 1);
     }
 
     /**
@@ -451,7 +451,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // deduct the fee from the return amount
         // the fee is doubled since cross connector conversion equals 2 conversions (from / to the smart token)
-        return safeSub(amount, safeMul(getConversionFeeAmount(amount), 2));
+        return getConversionFeeAmount(amount, 2);
     }
 
     /**
@@ -506,8 +506,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // calculate conversion fee and dispatch the conversion event
         // the fee is doubled since cross connector conversion equals 2 conversions (from / to the smart token)
-        uint256 feeAmount = getConversionFeeAmount(amount);
-        feeAmount = safeMul(feeAmount, 2);
+        uint256 feeAmount = amount - getConversionFeeAmount(amount, 2);
         dispatchConversionEvent(_fromToken, _toToken, _amount, amount, feeAmount);
 
         // dispatch price data updates for the smart token / both connectors
@@ -556,7 +555,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         token.issue(msg.sender, amount);
 
         // calculate conversion fee and dispatch the conversion event
-        uint256 feeAmount = getConversionFeeAmount(amount);
+        uint256 feeAmount = amount - getConversionFeeAmount(amount, 1);
         dispatchConversionEvent(_connectorToken, token, _depositAmount, amount, feeAmount);
 
         // dispatch price data update for the smart token/connector
@@ -597,7 +596,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         assert(_connectorToken.transfer(msg.sender, amount));
 
         // calculate conversion fee and dispatch the conversion event
-        uint256 feeAmount = getConversionFeeAmount(amount);
+        uint256 feeAmount = amount - getConversionFeeAmount(amount, 1);
         dispatchConversionEvent(token, _connectorToken, _sellAmount, amount, feeAmount);
 
         // dispatch price data update for the smart token/connector
