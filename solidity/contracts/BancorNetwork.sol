@@ -150,7 +150,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @return tokens issued in return
     */
     function convertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public payable returns (uint256) {
-        return convertForPrioritized(_path, _amount, _minReturn, _for, 0x0, 0x0, 0x0, 0x0);
+        return convertForPrioritized2(_path, _amount, _minReturn, _for, 0x0, 0x0, 0x0, 0x0);
     }
 
     /**
@@ -168,7 +168,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return tokens issued in return
     */
-    function convertForPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
+    function convertForPrioritized2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
         public
         payable
         validConversionPath(_path)
@@ -433,5 +433,21 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         // approve the new allowance
         assert(_token.approve(_spender, _value));
+    }
+
+    // deprecated, backward compatibility
+    function convertForPrioritized(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _for,
+        uint256 _block,
+        uint256 _nonce,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s)
+        public payable returns (uint256)
+    {
+        convertForPrioritized2(_path, _amount, _minReturn, _for, _block, _v, _r, _s);
     }
 }

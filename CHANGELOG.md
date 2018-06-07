@@ -1,4 +1,9 @@
-﻿### 0.4.0 (2018-05-16)
+﻿### 0.4.1 (2018-06-07)
+Bug fixes:
+* Fixed BancorNetwork contract backward compatibility with older converters
+
+
+### 0.4.0 (2018-06-06)
 
 General:
  * Restructured contract folders
@@ -9,7 +14,7 @@ General:
 Converters:
  * Gas cost optimizations when converting between 2 connectors, now uses an optimized dedicated
  formula calculation
- * Conversions now trigger 2 separate events - Conversion & PriceUpdate
+ * Conversions now trigger 2 separate events - Conversion & PriceDataUpdate
  * Added support for multiple conversions in a single atomic transaction
  * Added support for conversion whitelist
  * Removed the BancorConverterExtensions contract and replaced it with the new ContractRegistry contract

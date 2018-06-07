@@ -665,7 +665,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         }
 
         // execute the conversion and pass on the ETH with the call
-        return bancorNetwork.convertForPrioritized.value(msg.value)(_path, _amount, _minReturn, msg.sender, _block, _v, _r, _s);
+        return bancorNetwork.convertForPrioritized2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _block, _v, _r, _s);
     }
 
     // deprecated, backward compatibility
