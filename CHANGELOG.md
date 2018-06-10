@@ -1,4 +1,12 @@
-﻿### 0.4.1 (2018-06-07)
+﻿### 0.4.2 (2018-06-10)
+General:
+* Added more predefined contract ids
+
+Bug fixes:
+* Fixed a crash in BancorConverterUpgrader when trying to upgrade converters with virtual connector balance
+
+
+### 0.4.1 (2018-06-07)
 Bug fixes:
 * Fixed BancorNetwork contract backward compatibility with older converters
 
