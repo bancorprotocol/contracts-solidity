@@ -1,6 +1,7 @@
 ﻿### 0.4.3 (2018-06-21)
 General:
 * Upgraded compiler version to 0.4.23
+* Updated all contracts to make use of the new 'constructor' keyword
 
 
 ### 0.4.2 (2018-06-10)
