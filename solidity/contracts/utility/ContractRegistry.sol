@@ -21,7 +21,7 @@ contract ContractRegistry is IContractRegistry, Owned {
     /**
         @dev constructor
     */
-    function ContractRegistry() public {
+    constructor() public {
     }
 
     /**

@@ -41,7 +41,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @param _registry    address of a contract registry contract
     */
-    function BancorNetwork(IContractRegistry _registry) public validAddress(_registry) {
+    constructor(IContractRegistry _registry) public validAddress(_registry) {
         registry = _registry;
     }
 

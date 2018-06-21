@@ -15,7 +15,7 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
     /**
         @dev constructor
     */
-    function TokenHolder() public {
+    constructor() public {
     }
 
     /**

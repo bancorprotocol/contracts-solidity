@@ -74,7 +74,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
     /**
         @dev constructor
     */
-    function BancorConverterUpgrader(IBancorConverterFactory _bancorConverterFactory, IContractRegistry _registry) public {
+    constructor(IBancorConverterFactory _bancorConverterFactory, IContractRegistry _registry) public {
         bancorConverterFactory = _bancorConverterFactory;
         registry = _registry;
     }

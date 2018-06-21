@@ -13,7 +13,7 @@ contract Owned is IOwned {
     /**
         @dev constructor
     */
-    function Owned() public {
+    constructor() public {
         owner = msg.sender;
     }
 

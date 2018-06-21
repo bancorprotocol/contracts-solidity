@@ -37,7 +37,7 @@ contract CrowdsaleController is SmartTokenController {
         @param _beneficiary    address to receive all ether contributions
         @param _btcs           bitcoin suisse address
     */
-    function CrowdsaleController(ISmartToken _token, uint256 _startTime, address _beneficiary, address _btcs, bytes32 _realEtherCapHash)
+    constructor(ISmartToken _token, uint256 _startTime, address _beneficiary, address _btcs, bytes32 _realEtherCapHash)
         public
         SmartTokenController(_token)
         validAddress(_beneficiary)

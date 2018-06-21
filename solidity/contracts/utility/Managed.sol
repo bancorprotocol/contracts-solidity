@@ -14,7 +14,7 @@ contract Managed is Owned {
     /**
         @dev constructor
     */
-    function Managed() public {
+    constructor() public {
         manager = msg.sender;
     }
 

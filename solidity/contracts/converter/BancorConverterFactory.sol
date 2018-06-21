@@ -13,7 +13,7 @@ contract BancorConverterFactory is IBancorConverterFactory {
     /**
         @dev constructor
     */
-    function BancorConverterFactory() public {
+    constructor() public {
     }
 
     /**

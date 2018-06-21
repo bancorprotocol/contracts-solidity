@@ -88,7 +88,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @param  _connectorToken     optional, initial connector, allows defining the first connector at deployment time
         @param  _connectorWeight    optional, weight for the initial connector
     */
-    function BancorConverter(
+    constructor(
         ISmartToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee,

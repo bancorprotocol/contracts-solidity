@@ -7,7 +7,7 @@ import '../utility/interfaces/IContractFeatures.sol';
 contract TestFeatures {
     IContractFeatures public features;
 
-    function TestFeatures(IContractFeatures _features) public {
+    constructor(IContractFeatures _features) public {
         features = _features;
     }
 

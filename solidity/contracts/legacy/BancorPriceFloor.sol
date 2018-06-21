@@ -23,7 +23,7 @@ contract BancorPriceFloor is Owned, TokenHolder {
 
         @param _token   smart token the contract allows selling
     */
-    function BancorPriceFloor(ISmartToken _token)
+    constructor(ISmartToken _token)
         public
         validAddress(_token)
     {

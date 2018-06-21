@@ -24,7 +24,7 @@ contract SmartTokenController is TokenHolder {
     /**
         @dev constructor
     */
-    function SmartTokenController(ISmartToken _token)
+    constructor(ISmartToken _token)
         public
         validAddress(_token)
     {

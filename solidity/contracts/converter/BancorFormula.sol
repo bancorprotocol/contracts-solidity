@@ -33,7 +33,7 @@ contract BancorFormula is IBancorFormula, Utils {
         Auto-generated via 'PrintFunctionBancorFormula.py'
     */
     uint256[128] private maxExpArray;
-    function BancorFormula() public {
+    constructor() public {
     //  maxExpArray[  0] = 0x6bffffffffffffffffffffffffffffffff;
     //  maxExpArray[  1] = 0x67ffffffffffffffffffffffffffffffff;
     //  maxExpArray[  2] = 0x637fffffffffffffffffffffffffffffff;

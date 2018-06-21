@@ -7,7 +7,7 @@ contract Utils {
     /**
         constructor
     */
-    function Utils() public {
+    constructor() public {
     }
 
     // verifies that an amount is greater than zero

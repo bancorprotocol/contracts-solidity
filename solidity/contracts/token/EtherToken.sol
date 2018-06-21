@@ -18,7 +18,7 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     /**
         @dev constructor
     */
-    function EtherToken()
+    constructor()
         public
         ERC20Token('Ether Token', 'ETH', 18) {
     }

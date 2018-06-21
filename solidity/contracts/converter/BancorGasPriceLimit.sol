@@ -18,7 +18,7 @@ contract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {
 
         @param _gasPrice    gas price limit
     */
-    function BancorGasPriceLimit(uint256 _gasPrice)
+    constructor(uint256 _gasPrice)
         public
         greaterThanZero(_gasPrice)
     {

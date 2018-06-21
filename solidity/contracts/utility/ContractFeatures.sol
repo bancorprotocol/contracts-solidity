@@ -25,7 +25,7 @@ contract ContractFeatures is IContractFeatures {
     /**
         @dev constructor
     */
-    function ContractFeatures() public {
+    constructor() public {
     }
 
     /**

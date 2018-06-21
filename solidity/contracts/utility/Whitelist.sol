@@ -17,7 +17,7 @@ contract Whitelist is IWhitelist, Owned, Utils {
     /**
         @dev constructor
     */
-    function Whitelist() public {
+    constructor() public {
     }
 
     // allows execution by a whitelisted address only

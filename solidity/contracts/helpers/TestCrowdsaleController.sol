@@ -7,7 +7,7 @@ import '../crowdsale/CrowdsaleController.sol';
 contract TestCrowdsaleController is CrowdsaleController {
     uint256 public constant BTCS_ETHER_CAP_SMALL = 2 ether; // maximum bitcoin suisse ether contribution
 
-    function TestCrowdsaleController(
+    constructor(
         ISmartToken _token,
         uint256 _startTime,
         address _beneficiary,
