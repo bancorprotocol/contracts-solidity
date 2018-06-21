@@ -1,4 +1,9 @@
-﻿### 0.4.2 (2018-06-10)
+﻿### 0.4.3 (2018-06-21)
+General:
+* Upgraded compiler version to 0.4.23
+
+
+### 0.4.2 (2018-06-10)
 General:
 * Added more predefined contract ids
 

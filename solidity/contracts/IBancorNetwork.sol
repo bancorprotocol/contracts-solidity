@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.23;
 import './converter/interfaces/IBancorGasPriceLimit.sol';
 import './token/interfaces/IERC20Token.sol';
 

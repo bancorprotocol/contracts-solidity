@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.23;
 import './interfaces/IBancorGasPriceLimit.sol';
 import '../utility/Owned.sol';
 import '../utility/Utils.sol';

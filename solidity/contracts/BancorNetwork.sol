@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.23;
 import './IBancorNetwork.sol';
 import './ContractIds.sol';
 import './FeatureIds.sol';
@@ -448,6 +448,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         bytes32 _s)
         public payable returns (uint256)
     {
+        _nonce;
         convertForPrioritized2(_path, _amount, _minReturn, _for, _block, _v, _r, _s);
     }
 }

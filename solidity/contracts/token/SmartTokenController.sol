@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.23;
 import './interfaces/ISmartToken.sol';
 import '../utility/TokenHolder.sol';
 
