@@ -133,17 +133,13 @@ contract('BancorNetwork', accounts => {
         erc20Token = await TestERC20Token.new('ERC20Token', 'ERC5', 1000000);
 
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000);
-        converter1.address = converter1.address;
 
         converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000);
-        converter2.address = converter2.address;
         await converter2.addConnector(smartToken3.address, 150000, false);
 
         converter3 = await BancorConverter.new(smartToken3.address, contractRegistry.address, 0, smartToken4.address, 350000);
-        converter3.address = converter3.address;
 
         converter4 = await BancorConverter.new(smartToken4.address, contractRegistry.address, 0, etherToken.address, 150000);
-        converter4.address = converter4.address;
         await converter4.addConnector(erc20Token.address, 220000, false);
 
         await etherToken.transfer(converter1.address, 50000);
