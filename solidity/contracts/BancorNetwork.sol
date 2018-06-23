@@ -31,7 +31,6 @@ import './token/interfaces/ISmartToken.sol';
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
     IContractRegistry public registry;          // contract registry contract address
-    IBancorGasPriceLimit public gasPriceLimit;  // bancor universal gas price limit contract
 
     mapping (address => bool) public etherTokens;       // list of all supported ether tokens
     mapping (bytes32 => bool) public conversionHashes;  // list of conversion hashes, to prevent re-use of the same hash
@@ -63,20 +62,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         notThis(_registry)
     {
         registry = _registry;
-    }
-
-    /*
-        @dev allows the owner to update the gas price limit contract address
-
-        @param _gasPriceLimit   address of a bancor gas price limit contract
-    */
-    function setGasPriceLimit(IBancorGasPriceLimit _gasPriceLimit)
-        public
-        ownerOnly
-        validAddress(_gasPriceLimit)
-        notThis(_gasPriceLimit)
-    {
-        gasPriceLimit = _gasPriceLimit;
     }
 
     /*
@@ -273,10 +258,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         validConversionPath(_path)
         returns (uint256)
     {
-        if (_v == 0x0 && _r == 0x0 && _s == 0x0)
+        if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
+            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
             gasPriceLimit.validateGasPrice(tx.gasprice);
-        else
+        }
+        else {
             require(verifyTrustedSender(_path, _amount, _block, _for, _v, _r, _s));
+        }
 
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
         IERC20Token fromToken = _path[0];
