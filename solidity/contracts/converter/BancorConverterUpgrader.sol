@@ -61,10 +61,9 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     The address of the new converter is available in the ConverterUpgrade event.
 */
 contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
-    string public version = '0.2';
+    string public version = '0.3';
 
     IContractRegistry public registry;                      // contract registry contract address
-    IBancorConverterFactory public bancorConverterFactory;  // bancor converter factory contract
 
     // triggered when the contract accept a converter ownership
     event ConverterOwned(address indexed _converter, address indexed _owner);
@@ -74,18 +73,8 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
     /**
         @dev constructor
     */
-    constructor(IBancorConverterFactory _bancorConverterFactory, IContractRegistry _registry) public {
-        bancorConverterFactory = _bancorConverterFactory;
+    constructor(IContractRegistry _registry) public {
         registry = _registry;
-    }
-
-    /*
-        @dev allows the owner to update the factory contract address
-
-        @param _bancorConverterFactory    address of a bancor converter factory contract
-    */
-    function setBancorConverterFactory(IBancorConverterFactory _bancorConverterFactory) public ownerOnly {
-        bancorConverterFactory = _bancorConverterFactory;
     }
 
     /*
@@ -157,7 +146,8 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
         ISmartToken token = _oldConverter.token();
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
 
-        address converterAdderess  = bancorConverterFactory.createConverter(
+        IBancorConverterFactory converterFactory = IBancorConverterFactory(registry.addressOf(ContractIds.BANCOR_CONVERTER_FACTORY));
+        address converterAdderess  = converterFactory.createConverter(
             token,
             registry,
             maxConversionFee,

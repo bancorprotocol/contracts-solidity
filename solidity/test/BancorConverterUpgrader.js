@@ -67,16 +67,18 @@ contract('BancorConverterUpgrader', accounts => {
         let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
         await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
 
-        let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-        let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
-        await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
-
         let formula = await BancorFormula.new();
         let formulaId = await contractIds.BANCOR_FORMULA.call();
         await contractRegistry.registerAddress(formulaId, formula.address);
-        
+
+        let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+        await bancorNetwork.setSignerAddress(accounts[3]);
+
         let converterFactory = await BancorConverterFactory.new();
-        converterUpgrader = await BancorConverterUpgrader.new(converterFactory.address, contractRegistry.address);
+        let converterFactoryId = await contractIds.BANCOR_CONVERTER_FACTORY.call();
+        await contractRegistry.registerAddress(converterFactoryId, converterFactory.address);
+
+        converterUpgrader = await BancorConverterUpgrader.new(contractRegistry.address);
     });
 
     it('verifies that the ownership of the given converter returned to the given address', async () => {

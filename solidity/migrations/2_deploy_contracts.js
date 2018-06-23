@@ -34,11 +34,11 @@ module.exports = async deployer => {
     deployer.deploy(SmartTokenController, SmartToken.address);
     deployer.deploy(BancorFormula);
     deployer.deploy(BancorGasPriceLimit, '22000000000');
-    deployer.deploy(BancorNetwork, '0x827182');
+    deployer.deploy(BancorNetwork, ContractRegistry.address);
     deployer.deploy(BancorConverter, SmartToken.address, ContractRegistry.address, 0, '0x0', 0);
 
     await deployer.deploy(BancorConverterFactory);
-    await deployer.deploy(BancorConverterUpgrader, BancorConverterFactory.address, ContractRegistry.address);
+    await deployer.deploy(BancorConverterUpgrader, ContractRegistry.address);
 
     deployer.deploy(CrowdsaleController, SmartToken.address, 4102444800, '0x125', '0x126', 1);
 };

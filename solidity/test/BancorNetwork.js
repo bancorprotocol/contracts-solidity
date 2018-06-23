@@ -13,9 +13,7 @@ const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const utils = require('./helpers/Utils');
-const leftPad = require('left-pad');
 const ethUtil = require('ethereumjs-util');
-const sha256 = require('js-sha256').sha256;
 const web3Utils = require('web3-utils');
 
 // mnemonic: rose limit dog cannon adult lizard siege tumble job puzzle only trim
@@ -101,17 +99,18 @@ contract('BancorNetwork', accounts => {
         let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
         await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
 
-        bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         let gasPriceLimit = await BancorGasPriceLimit.new(defaultGasPriceLimit);
-        await bancorNetwork.setGasPriceLimit(gasPriceLimit.address);
-        await bancorNetwork.setSignerAddress(accounts[3]);
-
-        let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
-        await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
+        let gasPriceLimitId = await contractIds.BANCOR_GAS_PRICE_LIMIT.call();
+        await contractRegistry.registerAddress(gasPriceLimitId, gasPriceLimit.address);
 
         let formula = await BancorFormula.new();
         let formulaId = await contractIds.BANCOR_FORMULA.call();
         await contractRegistry.registerAddress(formulaId, formula.address);
+
+        bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+        let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
+        await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
+        await bancorNetwork.setSignerAddress(accounts[3]);
 
         etherToken = await EtherToken.new();
         await etherToken.deposit({ value: 10000000 });

@@ -80,16 +80,18 @@ contract('BancorConverter', accounts => {
         let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
         await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
 
-        let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
-        await bancorNetwork.setGasPriceLimit(gasPriceLimit.address);
-
-        let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
-        await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
+        let gasPriceLimitId = await contractIds.BANCOR_GAS_PRICE_LIMIT.call();
+        await contractRegistry.registerAddress(gasPriceLimitId, gasPriceLimit.address);
 
         let formula = await BancorFormula.new();
         let formulaId = await contractIds.BANCOR_FORMULA.call();
         await contractRegistry.registerAddress(formulaId, formula.address);
+
+        let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+        let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
+        await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
+        await bancorNetwork.setSignerAddress(accounts[3]);
 
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         

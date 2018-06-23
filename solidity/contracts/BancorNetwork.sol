@@ -3,6 +3,7 @@ import './IBancorNetwork.sol';
 import './ContractIds.sol';
 import './FeatureIds.sol';
 import './converter/interfaces/IBancorConverter.sol';
+import './converter/interfaces/IBancorGasPriceLimit.sol';
 import './utility/TokenHolder.sol';
 import './utility/interfaces/IContractRegistry.sol';
 import './utility/interfaces/IContractFeatures.sol';

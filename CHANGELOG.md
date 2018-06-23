@@ -2,6 +2,7 @@
 General:
 * Upgraded compiler version to 0.4.23
 * Updated all contracts to make use of the new `constructor` keyword
+* Removed more local contract dependencies and replaced them with querying the registry
 
 Utilities:
 * ContractRegistry - added support for querying the number of items/contract names in the registry
