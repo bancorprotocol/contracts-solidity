@@ -82,7 +82,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
 
         @param _registry   address of a contract registry contract
     */
-    function setContractRegistry(IContractRegistry _registry) public ownerOnly {
+    function setRegistry(IContractRegistry _registry) public ownerOnly {
         registry = _registry;
     }
 

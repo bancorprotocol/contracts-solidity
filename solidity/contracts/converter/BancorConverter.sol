@@ -172,9 +172,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /*
-        @dev allows the owner to update the registry contract address
+        @dev allows the owner to update the contract registry contract address
 
-        @param _registry    address of a bancor converter registry contract
+        @param _registry   address of a contract registry contract
     */
     function setRegistry(IContractRegistry _registry)
         public
