@@ -170,7 +170,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
         converter.acceptManagement();
 
         // get the contract features address from the registry
-        IContractFeatures features = IContractFeatures(registry.getAddress(ContractIds.CONTRACT_FEATURES));
+        IContractFeatures features = IContractFeatures(registry.addressOf(ContractIds.CONTRACT_FEATURES));
 
         if (features.isSupported(_oldConverter, FeatureIds.CONVERTER_CONVERSION_WHITELIST)) {
             whitelist = _oldConverter.conversionWhitelist();

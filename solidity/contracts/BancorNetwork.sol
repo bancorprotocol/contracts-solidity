@@ -319,7 +319,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         IBancorConverter converter;
 
         // get the contract features address from the registry
-        IContractFeatures features = IContractFeatures(registry.getAddress(ContractIds.CONTRACT_FEATURES));
+        IContractFeatures features = IContractFeatures(registry.addressOf(ContractIds.CONTRACT_FEATURES));
 
         // iterate over the conversion path
         uint256 pathLength = _path.length;

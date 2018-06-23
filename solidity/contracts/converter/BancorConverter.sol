@@ -101,7 +101,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         validMaxConversionFee(_maxConversionFee)
     {
         registry = _registry;
-        IContractFeatures features = IContractFeatures(registry.getAddress(ContractIds.CONTRACT_FEATURES));
+        IContractFeatures features = IContractFeatures(registry.addressOf(ContractIds.CONTRACT_FEATURES));
 
         // initialize supported features
         if (features != address(0))
@@ -157,7 +157,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     // allows execution by the BancorNetwork contract only
     modifier bancorNetworkOnly {
-        IBancorNetwork bancorNetwork = IBancorNetwork(registry.getAddress(ContractIds.BANCOR_NETWORK));
+        IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
         require(msg.sender == address(bancorNetwork));
         _;
     }
@@ -393,7 +393,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         uint256 tokenSupply = token.totalSupply();
         uint256 connectorBalance = getConnectorBalance(_connectorToken);
-        IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
+        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
         uint256 amount = formula.calculatePurchaseReturn(tokenSupply, connectorBalance, connector.weight, _depositAmount);
 
         // return the amount minus the conversion fee
@@ -418,7 +418,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         Connector storage connector = connectors[_connectorToken];
         uint256 tokenSupply = token.totalSupply();
         uint256 connectorBalance = getConnectorBalance(_connectorToken);
-        IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
+        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
         uint256 amount = formula.calculateSaleReturn(tokenSupply, connectorBalance, connector.weight, _sellAmount);
 
         // return the amount minus the conversion fee
@@ -449,7 +449,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 fromConnectorBalance = getConnectorBalance(_fromConnectorToken);
         uint256 toConnectorBalance = getConnectorBalance(_toConnectorToken);
 
-        IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
+        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
         uint256 amount = formula.calculateCrossConnectorReturn(fromConnectorBalance, fromConnector.weight, toConnectorBalance, toConnector.weight, _sellAmount);
 
         // return the amount minus the conversion fee
@@ -647,7 +647,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         returns (uint256)
     {
         IERC20Token fromToken = _path[0];
-        IBancorNetwork bancorNetwork = IBancorNetwork(registry.getAddress(ContractIds.BANCOR_NETWORK));
+        IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
 
         // we need to transfer the source tokens from the caller to the BancorNetwork contract,
         // so it can execute the conversion on behalf of the caller
