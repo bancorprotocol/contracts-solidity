@@ -1,7 +1,10 @@
-﻿### 0.4.3 (2018-06-21)
+﻿### 0.4.3 (2018-06-23)
 General:
 * Upgraded compiler version to 0.4.23
-* Updated all contracts to make use of the new 'constructor' keyword
+* Updated all contracts to make use of the new `constructor` keyword
+
+Utilities:
+* ContractRegistry - added support for querying the number of items/contract names in the registry
 
 
 ### 0.4.2 (2018-06-10)
