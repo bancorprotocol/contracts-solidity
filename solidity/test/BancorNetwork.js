@@ -599,6 +599,104 @@ contract('BancorNetwork', accounts => {
         }
     });
 
+    it('verifies that getReturnByPath return the correct amount for buying smart token', async () => {
+        let returnByPath = await bancorNetwork.getReturnByPath.call(smartToken1QuickBuyPath, 10000);
+        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        await bancorNetwork.convertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
+        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        assert.equal(returnByPath, balanceAfterTransfer - balanceBeforeTransfer);
+    });
+
+    it('verifies that getReturnByPath return the correct amount for buying smart token through multiple converters', async () => {
+        let returnByPath = await bancorNetwork.getReturnByPath.call(smartToken2QuickBuyPath, 10000);
+        let balanceBeforeTransfer = await smartToken2.balanceOf.call(accounts[1]);
+        await bancorNetwork.convertFor(smartToken2QuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
+        let balanceAfterTransfer = await smartToken2.balanceOf.call(accounts[1]);
+        assert.equal(returnByPath, balanceAfterTransfer - balanceBeforeTransfer);
+    });
+
+    it('verifies that getReturnByPath return the correct amount for connector conversion', async () => {
+        await converter2.quickConvert([etherToken.address, smartToken1.address, smartToken1.address], 1000, 1, { from: accounts[1], value: 1000 });
+        await smartToken1.approve(converter2.address, 100, { from: accounts[1] });
+        let path = [smartToken1.address, smartToken2.address, smartToken3.address];
+        let returnByPath = await bancorNetwork.getReturnByPath.call(path, 100);
+        let balanceBeforeTransfer = await smartToken3.balanceOf.call(accounts[1]);
+        await converter2.quickConvert(path, 100, 1, { from: accounts[1] });
+        let balanceAfterTransfer = await smartToken3.balanceOf.call(accounts[1]);
+        assert.equal(returnByPath, balanceAfterTransfer - balanceBeforeTransfer);
+    });
+
+    it('verifies that getReturnByPath return the correct amount for selling smart token', async () => {
+        await converter1.quickConvert(smartToken1QuickBuyPath, 100, 1, { from: accounts[1], value: 100 });
+        let returnByPath = await bancorNetwork.getReturnByPath.call(smartToken1QuickSellPath, 100);
+        let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
+        let res = await converter1.quickConvert(smartToken1QuickSellPath, 100, 1, { from: accounts[1] });
+        let transaction = web3.eth.getTransaction(res.tx);
+        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
+        let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
+        assert.equal(returnByPath.toNumber(), balanceAfterTransfer.minus(balanceBeforeTransfer).plus(transactionCost).toNumber());
+    });
+
+    it('verifies that getReturnByPath return the correct amount for selling smart token through multiple converters', async () => {
+        await converter2.quickConvert(smartToken2QuickBuyPath, 100, 1, { from: accounts[1], value: 100 });
+        let returnByPath = await bancorNetwork.getReturnByPath.call(smartToken2QuickSellPath, 100);
+        let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
+        let res = await converter2.quickConvert(smartToken2QuickSellPath, 100, 1, { from: accounts[1] });
+        let transaction = web3.eth.getTransaction(res.tx);
+        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
+        let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
+        assert.equal(returnByPath.toNumber(), balanceAfterTransfer.minus(balanceBeforeTransfer).plus(transactionCost).toNumber());
+    });
+
+    it('verifies that getReturnByPath return the correct amount for selling smart token with long selling path', async () => {
+        await converter4.quickConvert([etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken3.address], 1000, 1, { from: accounts[1], value: 1000 });
+        let path = [smartToken3.address, smartToken2.address, smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address];
+        let returnByPath = await bancorNetwork.getReturnByPath.call(path, 100);
+        let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
+        let res = await converter3.quickConvert(path, 100, 1, { from: accounts[1] });
+        let transaction = web3.eth.getTransaction(res.tx);
+        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
+        let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
+        assert.equal(returnByPath.toNumber(), balanceAfterTransfer.minus(balanceBeforeTransfer).plus(transactionCost).toNumber());
+    });
+
+    it('verifies that getReturnByPath returns the same amount as getReturn when converting from a connector to the token', async () => {
+        let getReturn = await converter2.getReturn.call(smartToken1.address, smartToken2.address, 100);
+        let returnByPath = await bancorNetwork.getReturnByPath.call([smartToken1.address, smartToken2.address, smartToken2.address], 100);
+        assert.equal(getReturn.toNumber(), returnByPath.toNumber());
+    });
+
+    it('verifies that getReturnByPath returns the same amount as getReturn when converting from a token to the connector', async () => {
+        let getReturn = await converter2.getReturn.call(smartToken2.address, smartToken1.address, 100);
+        let returnByPath = await bancorNetwork.getReturnByPath.call([smartToken2.address, smartToken2.address, smartToken1.address], 100);
+        assert.equal(getReturn.toNumber(), returnByPath.toNumber());
+    });
+
+    it('should throw when attempting to get the return by path with invalid path', async () => {
+        try {
+            let invalidPath = [etherToken.address, smartToken1.address];
+            await bancorNetwork.getReturnByPath.call(invalidPath, 1000);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to get the return by path with invalid long path', async () => {
+        let longQuickBuyPath = [];
+        for (let i = 0; i < 103; ++i)
+            longQuickBuyPath.push(etherToken.address);
+
+        try {
+            await bancorNetwork.getReturnByPath.call(longQuickBuyPath, 1000);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
     it('verifies multiple convertFor with multiple paths', async () => {
         let prevBalance1 = await smartToken1.balanceOf.call(accounts[0]);
         let prevBalance2 = await smartToken2.balanceOf.call(accounts[0]);
