@@ -11,4 +11,6 @@ contract IBancorConverter {
     function conversionWhitelist() public view returns (IWhitelist) {}
     // deprecated, backward compatibility
     function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256);
+    function getConnectorBalance(IERC20Token _connectorToken) public view returns (uint256);
+    function getFinalAmount(uint256 _amount, uint8 _magnitude) public view returns (uint256);
 }
