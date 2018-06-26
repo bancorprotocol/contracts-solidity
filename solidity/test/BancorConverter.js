@@ -734,22 +734,22 @@ contract('BancorConverter', accounts => {
 
     it('verifies that getReturn returns a valid amount', async () => {
         let converter = await initConverter(accounts, true);
-        let returnAmount = await converter.getReturn.call(connectorTokenAddress, tokenAddress, 500);
+        let returnAmount = (await converter.getReturn.call(connectorTokenAddress, tokenAddress, 500))[0];
         assert.isNumber(returnAmount.toNumber());
         assert.notEqual(returnAmount.toNumber(), 0);
     });
 
     it('verifies that getReturn returns the same amount as getPurchaseReturn when converting from a connector to the token', async () => {
         let converter = await initConverter(accounts, true);
-        let returnAmount = await converter.getReturn.call(connectorTokenAddress, tokenAddress, 500);
-        let purchaseReturnAmount = await converter.getPurchaseReturn.call(connectorTokenAddress, 500);
+        let returnAmount = (await converter.getReturn.call(connectorTokenAddress, tokenAddress, 500))[0];
+        let purchaseReturnAmount = (await converter.getPurchaseReturn.call(connectorTokenAddress, 500))[0];
         assert.equal(returnAmount.toNumber(), purchaseReturnAmount.toNumber());
     });
 
     it('verifies that getReturn returns the same amount as getSaleReturn when converting from the token to a connector', async () => {
         let converter = await initConverter(accounts, true);
-        let returnAmount = await converter.getReturn.call(tokenAddress, connectorTokenAddress, 500);
-        let saleReturnAmount = await converter.getSaleReturn.call(connectorTokenAddress, 500);
+        let returnAmount = (await converter.getReturn.call(tokenAddress, connectorTokenAddress, 500))[0];
+        let saleReturnAmount = (await converter.getSaleReturn.call(connectorTokenAddress, 500))[0];
         assert.isNumber(returnAmount.toNumber());
         assert.notEqual(returnAmount.toNumber(), 0);
         assert.equal(returnAmount.toNumber(), saleReturnAmount.toNumber());
@@ -757,7 +757,7 @@ contract('BancorConverter', accounts => {
 
     it('verifies that getReturn returns the same amount as buy -> sell when converting between 2 connectors', async () => {
         let converter = await initConverter(accounts, true);
-        let returnAmount = await converter.getReturn.call(connectorTokenAddress, connectorTokenAddress2, 500);
+        let returnAmount = (await converter.getReturn.call(connectorTokenAddress, connectorTokenAddress2, 500))[0];
 
         await connectorToken.approve(converter.address, 500);
         let purchaseRes = await converter.convert(connectorTokenAddress, tokenAddress, 500, 1);
@@ -1168,14 +1168,14 @@ contract('BancorConverter', accounts => {
 
     it('verifies that getReturn returns the same amount as getCrossConnectorReturn when converting between 2 connectors', async () => {
         let converter = await initConverter(accounts, true);
-        let returnAmount = await converter.getReturn.call(connectorTokenAddress, connectorTokenAddress2, 500);
-        let returnAmount2 = await converter.getCrossConnectorReturn.call(connectorTokenAddress, connectorTokenAddress2, 500);
+        let returnAmount = (await converter.getReturn.call(connectorTokenAddress, connectorTokenAddress2, 500))[0];
+        let returnAmount2 = (await converter.getCrossConnectorReturn.call(connectorTokenAddress, connectorTokenAddress2, 500))[0];
         assert.equal(returnAmount.toNumber(), returnAmount2.toNumber());
     });
 
     it('verifies that getCrossConnectorReturn returns the same amount as convert between 2 connectors', async () => {
         let converter = await initConverter(accounts, true);
-        let returnAmount = await converter.getCrossConnectorReturn.call(connectorTokenAddress, connectorTokenAddress2, 500);
+        let returnAmount = (await converter.getCrossConnectorReturn.call(connectorTokenAddress, connectorTokenAddress2, 500))[0];
 
         await connectorToken.approve(converter.address, 500);
         let convertRes = await converter.convert(connectorTokenAddress, connectorTokenAddress2, 500, 1);
