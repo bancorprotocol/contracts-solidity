@@ -358,7 +358,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @param _toToken    ERC20 token to convert to
         @param _amount     amount to convert, in fromToken
 
-        @return expected purchase return amount and conversion fee
+        @return expected conversion return amount and conversion fee
     */
     function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256, uint256) {
         require(_fromToken != _toToken); // validate input
@@ -407,7 +407,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @param _connectorToken  connector token contract address
         @param _sellAmount      amount to sell (in the smart token)
 
-        @return expected purchase return amount and conversion fee
+        @return expected sale return amount and conversion fee
     */
     function getSaleReturn(IERC20Token _connectorToken, uint256 _sellAmount)
         public
