@@ -33,13 +33,6 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance) public;
     function getConnectorBalance(IERC20Token _connectorToken) public view returns (uint256);
     function getReserveBalance(IERC20Token _reserveToken) public view returns (uint256);
-    function connectors(address _address) public view returns (
-        uint256 virtualBalance, 
-        uint32 weight, 
-        bool isVirtualBalanceEnabled, 
-        bool isPurchaseEnabled, 
-        bool isSet
-    );
     function reserves(address _address) public view returns (
         uint256 virtualBalance, 
         uint32 weight, 
