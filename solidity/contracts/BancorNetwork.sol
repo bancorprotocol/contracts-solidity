@@ -13,13 +13,6 @@ import './token/interfaces/IEtherToken.sol';
 import './token/interfaces/ISmartToken.sol';
 
 /*
-    Bancor converter dedicated interface
-*/
-contract IBancorConverterExtended is IBancorConverter, IOwned {
-    function connectors(address _address) public view returns (uint256, uint32, bool, bool, bool);
-}
-
-/*
     The BancorNetwork contract is the main entry point for bancor token conversions.
     It also allows converting between any token in the bancor network to any other token
     in a single transaction by providing a conversion path.
@@ -38,6 +31,8 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     [source token, smart token, to token, smart token, to token...]
 */
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
+    uint64 private constant MAX_CONVERSION_FEE = 1000000;
+
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
     IContractRegistry public registry;          // contract registry contract address
 
@@ -338,8 +333,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev returns the expected return for converting a specific amount by following
-        a predefined conversion path.
+        @dev returns the expected return amount for converting a specific amount by following
+        a given conversion path.
         notice that there is no support for circular paths.
 
         @param _path        conversion path, see conversion path format above
@@ -351,7 +346,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         IERC20Token fromToken;
         ISmartToken smartToken; 
         IERC20Token toToken;
-        IBancorConverterExtended converter;
+        IBancorConverter converter;
         uint32 weight;
         uint256 amount;
         uint256 supply;
@@ -366,7 +361,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         for (uint256 i = 1; i < pathLength; i += 2) {
             smartToken = ISmartToken(_path[i]);
             toToken = _path[i + 1];
-            converter = IBancorConverterExtended(smartToken.owner());
+            converter = IBancorConverter(smartToken.owner());
 
             if (toToken == smartToken) { // buy the smart token
                 // check if the current smart token supply had changed in the previous iteration
@@ -379,7 +374,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
                 // calculate the amount minus the conversion fee
                 amount = formula.calculatePurchaseReturn(supply, converter.getConnectorBalance(fromToken), weight, amount);
-                amount = converter.getFinalAmount(amount, 1);
+                amount = safeMul(amount, (MAX_CONVERSION_FEE - converter.conversionFee())) / MAX_CONVERSION_FEE;
 
                 // update the smart token supply for the next iteration
                 supply = smartToken.totalSupply() + amount;
@@ -392,7 +387,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
                 // calculate the amount minus the conversion fee
                 amount = formula.calculateSaleReturn(supply, converter.getConnectorBalance(toToken), weight, amount);
-                amount = converter.getFinalAmount(amount, 1);
+                amount = safeMul(amount, (MAX_CONVERSION_FEE - converter.conversionFee())) / MAX_CONVERSION_FEE;
 
                 // update the smart token supply for the next iteration
                 supply = smartToken.totalSupply() - amount;
@@ -510,7 +505,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return connector's weight
     */
-    function getConnectorWeight(IBancorConverterExtended _converter, IERC20Token _connector) 
+    function getConnectorWeight(IBancorConverter _converter, IERC20Token _connector) 
         private
         view
         returns(uint32)
@@ -532,7 +527,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return true if connector purchase enabled, otherwise - false
     */
-    function getConnectorPurchaseEnabled(IBancorConverterExtended _converter, IERC20Token _connector) 
+    function getConnectorPurchaseEnabled(IBancorConverter _converter, IERC20Token _connector) 
         private
         view
         returns(bool)
