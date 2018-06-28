@@ -364,7 +364,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             converter = IBancorConverter(smartToken.owner());
 
             if (toToken == smartToken) { // buy the smart token
-                // check if the current smart token supply had changed in the previous iteration
+                // check if the current smart token supply was changed in the previous iteration
                 supply = smartToken == prevSmartToken ? supply : smartToken.totalSupply();
 
                 // validate input
@@ -380,7 +380,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 supply = smartToken.totalSupply() + amount;
             }
             else if (fromToken == smartToken) { // sell the smart token
-                // check if the current smart token supply had changed in the previous iteration
+                // check if the current smart token supply was changed in the previous iteration
                 supply = smartToken == prevSmartToken ? supply : smartToken.totalSupply();
 
                 weight = getConnectorWeight(converter, toToken);
@@ -392,7 +392,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 // update the smart token supply for the next iteration
                 supply = smartToken.totalSupply() - amount;
             }
-            else { // conversion between 2 connectors
+            else { // cross connector conversion
                 amount = converter.getReturn(fromToken, toToken, amount);
             }
 

@@ -666,7 +666,7 @@ contract('BancorNetwork', accounts => {
         assert.equal(getReturn.toNumber(), returnByPath.toNumber());
     });
 
-    it('verifies that getReturnByPath returns the same amount as getReturn when converting from a token to the connector', async () => {
+    it('verifies that getReturnByPath returns the same amount as getReturn when converting from a token to a connector', async () => {
         let getReturn = await converter2.getReturn.call(smartToken2.address, smartToken1.address, 100);
         let returnByPath = await bancorNetwork.getReturnByPath.call([smartToken2.address, smartToken2.address, smartToken1.address], 100);
         assert.equal(getReturn.toNumber(), returnByPath.toNumber());
