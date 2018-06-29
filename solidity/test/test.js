@@ -1,16 +1,20 @@
 /* global artifacts, contract, before, it, assert */
 /* eslint-disable prefer-reflect */
 
-const BancorConverter = artifacts.require('BancorConverter.sol');
+const FinancieBancorConverter = artifacts.require('FinancieBancorConverter.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const BancorQuickConverter = artifacts.require('BancorQuickConverter.sol');
 const BancorConverterExtensions = artifacts.require('BancorConverterExtensions.sol');
-const TestERC20Token = artifacts.require('TestERC20Token.sol');
+const FinanciePlatformToken = artifacts.require('FinanciePlatformToken.sol');
+const FinancieCardToken = artifacts.require('FinancieCardToken.sol');
 const utils = require('./helpers/Utils');
 
+const FinancieCore = artifacts.require('FinancieCore.sol');
+
 const DutchAuction = artifacts.require('DutchAuction.sol');
+const DutchAuctionPF = artifacts.require('DutchAuctionPF.sol');
 
 const weight10Percent = 100000;
 const gasPrice = 22000000000;
@@ -25,56 +29,16 @@ let connectorToken2;
 let platformTokenAddress;
 let connectorTokenAddress;
 let connectorTokenAddress2;
+let converter;
+let financieCore;
 
 var auction;
 
 // used by purchase/sale tests
 async function initConverter(accounts, activate, maxConversionFee = 0) {
-    token = await SmartToken.new('Token1', 'TKN1', 0);
-    tokenAddress = token.address;
-    new Promise(() => console.log('[initConverter]SmartToken:' + tokenAddress));
-
-    platformToken = await TestERC20Token.new('PF Token', 'ERC PF', 100000000);
+    platformToken = await FinanciePlatformToken.new('PF Token', 'ERC PF', 10000000000 * (10 ** 18));
     platformTokenAddress = platformToken.address;
     new Promise(() => console.log('[initConverter]PF Token:' + platformTokenAddress));
-
-    connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 1000000);
-    connectorTokenAddress = connectorToken.address;
-    new Promise(() => console.log('[initConverter]ERC Token 1:' + connectorTokenAddress));
-
-    connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 1000000);
-    connectorTokenAddress2 = connectorToken2.address;
-    new Promise(() => console.log('[initConverter]ERC Token 2:' + connectorTokenAddress2));
-
-    let converter = await BancorConverter.new(tokenAddress, converterExtensionsAddress, maxConversionFee, platformTokenAddress, 10000);
-    let converterAddress = converter.address;
-    new Promise(() => console.log('[initConverter]BancorConverter:' + converterAddress));
-    await converter.addConnector(connectorTokenAddress, 10000, false);
-    await converter.addConnector(connectorTokenAddress2, 20000, false);
-
-    await token.issue(converterAddress, 1000000);
-    await platformToken.transfer(converterAddress, 1000000);
-    await connectorToken.transfer(converterAddress, 5000);
-    await connectorToken2.transfer(converterAddress, 5000);
-
-    if (activate) {
-        await token.transferOwnership(converterAddress);
-        await converter.acceptTokenOwnership();
-    }
-
-    return converter;
-}
-
-function verifyConnector(connector, isSet, isEnabled, weight, isVirtualBalanceEnabled, virtualBalance) {
-    assert.equal(connector[0], virtualBalance);
-    assert.equal(connector[1], weight);
-    assert.equal(connector[2], isVirtualBalanceEnabled);
-    assert.equal(connector[3], isEnabled);
-    assert.equal(connector[4], isSet);
-}
-
-function getConversionAmount(transaction, logIndex = 0) {
-    return transaction.logs[logIndex].args._return.toNumber();
 }
 
 contract('BancorConverter', (accounts) => {
@@ -84,37 +48,25 @@ contract('BancorConverter', (accounts) => {
         let quickConverter = await BancorQuickConverter.new();
         let converterExtensions = await BancorConverterExtensions.new(formula.address, gasPriceLimit.address, quickConverter.address);
         converterExtensionsAddress = converterExtensions.address;
+        new Promise(() => console.log('[BancorConverter]Converter Extension:' + converterExtensionsAddress));
     });
 
     it('verifies that getReturn returns a valid amount', async () => {
-        let converter = await initConverter(accounts, true);
-        let returnAmount = await converter.getReturn.call(connectorTokenAddress, tokenAddress, 500);
-        assert.isNumber(returnAmount.toNumber());
-        assert.notEqual(returnAmount.toNumber(), 0);
-
-        await connectorToken2.approve(converter.address, 2000);
-        let bought = await converter.convert(connectorTokenAddress2, platformTokenAddress, 2000, 1);
-        let boughtBody = getConversionAmount(bought);
-        new Promise(() => console.log('[buy]' + boughtBody));
-
-        await platformToken.approve(converter.address, boughtBody);
-        let sold = await converter.convert(platformTokenAddress, connectorTokenAddress, boughtBody, 1);
-        let soldBody = getConversionAmount(sold);
-        new Promise(() => console.log('[sell]' + soldBody));
+        converter = await initConverter(accounts, true);
     });
 
 });
 
-contract('DutchAuction', (accounts) => {
+contract('FinancieCore', (accounts) => {
     before(async () => {
-      auction = await DutchAuction.new(accounts[0], accounts[0], 0x1bc16d674ec80000, 0x5ddb1980, 3);
-      new Promise(() => console.log('[initDutchAuction]DutchAuction:' + auction.address));
+        financieCore = await FinancieCore.new(platformTokenAddress);
+        await financieCore.activateTargetContract(platformTokenAddress, true);
+        new Promise(() => console.log('[initFinancier]FinancieCore:' + financieCore.address));
     });
 
-    it('setup auction', async () => {
-    await connectorToken.transfer(auction.address, 1000000-5000);
-      await auction.setup(connectorTokenAddress);
-      await auction.startAuction();
-    });
+    it('setup financie core', async () => {
+        // 実験的販売
+        await platformToken.transfer(financieCore.address, 100000000 * (10 ** 18));
 
+    });
 });

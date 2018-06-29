@@ -7,10 +7,10 @@ module.exports = {
     },
     private: {
       network_id: 123,
-      host: 'localhost',
+      host: '13.113.253.3',
       port: 8545,
-      gas: 6000000,
-      gasPrice: 4000000000
+      gas: 4700000,
+      gasPrice: 10000000000
     },
     ropsten: {
       network_id: 3,
@@ -23,5 +23,11 @@ module.exports = {
   rpc: {
     host: 'localhost',
     post: 8545
+  },
+  solc: {
+    optimizer: {
+      enabled: true,
+      runs: 200
+    }
   }
 };

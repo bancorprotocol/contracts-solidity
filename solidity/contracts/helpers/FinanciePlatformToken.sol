@@ -4,10 +4,10 @@ import '../ERC20Token.sol';
 /*
     Test token with predefined supply
 */
-contract TestERC20Token is ERC20Token {
-    function TestERC20Token(string _name, string _symbol, uint256 _supply)
+contract FinanciePlatformToken is ERC20Token {
+    function FinanciePlatformToken(string _name, string _symbol, uint256 _supply)
         public
-        ERC20Token(_name, _symbol, 0)
+        ERC20Token(_name, _symbol, 18)
     {
         totalSupply = _supply;
         balanceOf[msg.sender] = _supply;
