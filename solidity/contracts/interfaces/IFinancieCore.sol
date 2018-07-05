@@ -35,7 +35,7 @@ contract IFinancieCore {
 
     function getLogs(address _sender) public returns(EventType[], CurrencyType[], address[], uint256[], uint256[]);
 
-    function getAddressList(uint32 _userId) returns(address[]);
-    function getCardList(address _sender) returns(address[]);
+    function getCardList(address _sender) public returns(address[]);
+    function getTicketList(address _sender) public returns(address[]);
     function getPaidTicketCounts(address _sender, address _ticket) public returns(uint256);
 }

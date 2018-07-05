@@ -58,14 +58,14 @@
     "absolutePath": "/Users/rudo/contracts/solidity/contracts/interfaces/IFinancieIssuerToken.sol",
     "exportedSymbols": {
       "IFinancieIssuerToken": [
-        1146
+        1108
       ]
     },
-    "id": 1147,
+    "id": 1109,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 1128,
+        "id": 1090,
         "literals": [
           "solidity",
           "^",
@@ -81,9 +81,9 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 1146,
+        "id": 1108,
         "linearizedBaseContracts": [
-          1146
+          1108
         ],
         "name": "IFinancieIssuerToken",
         "nodeType": "ContractDefinition",
@@ -91,7 +91,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 1133,
+            "id": 1095,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -99,22 +99,22 @@
             "name": "getIssuer",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1129,
+              "id": 1091,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "125:2:4"
             },
             "payable": false,
             "returnParameters": {
-              "id": 1132,
+              "id": 1094,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1131,
+                  "id": 1093,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1133,
+                  "scope": 1095,
                   "src": "143:7:4",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -123,7 +123,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 1130,
+                    "id": 1092,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "143:7:4",
@@ -138,7 +138,7 @@
               ],
               "src": "142:9:4"
             },
-            "scope": 1146,
+            "scope": 1108,
             "src": "107:45:4",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -147,7 +147,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 1138,
+            "id": 1100,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -155,15 +155,15 @@
             "name": "burn",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1136,
+              "id": 1098,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1135,
+                  "id": 1097,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1138,
+                  "scope": 1100,
                   "src": "171:15:4",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -172,7 +172,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1134,
+                    "id": 1096,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "171:7:4",
@@ -189,12 +189,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1137,
+              "id": 1099,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "194:0:4"
             },
-            "scope": 1146,
+            "scope": 1108,
             "src": "157:38:4",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -203,7 +203,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 1145,
+            "id": 1107,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -211,15 +211,15 @@
             "name": "burnFrom",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1143,
+              "id": 1105,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1140,
+                  "id": 1102,
                   "name": "_from",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1145,
+                  "scope": 1107,
                   "src": "218:13:4",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -228,7 +228,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 1139,
+                    "id": 1101,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "218:7:4",
@@ -242,10 +242,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 1142,
+                  "id": 1104,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1145,
+                  "scope": 1107,
                   "src": "233:15:4",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -254,7 +254,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1141,
+                    "id": 1103,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "233:7:4",
@@ -271,19 +271,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1144,
+              "id": 1106,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "256:0:4"
             },
-            "scope": 1146,
+            "scope": 1108,
             "src": "200:57:4",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 1147,
+        "scope": 1109,
         "src": "70:190:4"
       }
     ],
@@ -293,14 +293,14 @@
     "absolutePath": "/Users/rudo/contracts/solidity/contracts/interfaces/IFinancieIssuerToken.sol",
     "exportedSymbols": {
       "IFinancieIssuerToken": [
-        1146
+        1108
       ]
     },
-    "id": 1147,
+    "id": 1109,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 1128,
+        "id": 1090,
         "literals": [
           "solidity",
           "^",
@@ -316,9 +316,9 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 1146,
+        "id": 1108,
         "linearizedBaseContracts": [
-          1146
+          1108
         ],
         "name": "IFinancieIssuerToken",
         "nodeType": "ContractDefinition",
@@ -326,7 +326,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 1133,
+            "id": 1095,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -334,22 +334,22 @@
             "name": "getIssuer",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1129,
+              "id": 1091,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "125:2:4"
             },
             "payable": false,
             "returnParameters": {
-              "id": 1132,
+              "id": 1094,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1131,
+                  "id": 1093,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1133,
+                  "scope": 1095,
                   "src": "143:7:4",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -358,7 +358,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 1130,
+                    "id": 1092,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "143:7:4",
@@ -373,7 +373,7 @@
               ],
               "src": "142:9:4"
             },
-            "scope": 1146,
+            "scope": 1108,
             "src": "107:45:4",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -382,7 +382,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 1138,
+            "id": 1100,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -390,15 +390,15 @@
             "name": "burn",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1136,
+              "id": 1098,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1135,
+                  "id": 1097,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1138,
+                  "scope": 1100,
                   "src": "171:15:4",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -407,7 +407,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1134,
+                    "id": 1096,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "171:7:4",
@@ -424,12 +424,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1137,
+              "id": 1099,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "194:0:4"
             },
-            "scope": 1146,
+            "scope": 1108,
             "src": "157:38:4",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -438,7 +438,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 1145,
+            "id": 1107,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -446,15 +446,15 @@
             "name": "burnFrom",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1143,
+              "id": 1105,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1140,
+                  "id": 1102,
                   "name": "_from",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1145,
+                  "scope": 1107,
                   "src": "218:13:4",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -463,7 +463,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 1139,
+                    "id": 1101,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "218:7:4",
@@ -477,10 +477,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 1142,
+                  "id": 1104,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1145,
+                  "scope": 1107,
                   "src": "233:15:4",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -489,7 +489,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1141,
+                    "id": 1103,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "233:7:4",
@@ -506,19 +506,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1144,
+              "id": 1106,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "256:0:4"
             },
-            "scope": 1146,
+            "scope": 1108,
             "src": "200:57:4",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 1147,
+        "scope": 1109,
         "src": "70:190:4"
       }
     ],
@@ -530,5 +530,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-06-27T10:13:47.505Z"
+  "updatedAt": "2018-07-05T11:12:39.330Z"
 }

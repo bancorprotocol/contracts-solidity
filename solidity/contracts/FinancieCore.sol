@@ -7,9 +7,9 @@ import './Utils.sol';
 contract FinancieCore is IFinancieCore, Utils {
 
     mapping (address => uint32) userIds;
-    mapping (uint32 => address[]) userAddresses;
     mapping (address => bool) targetContracts;
     mapping (address => address[]) ownedCardList;
+    mapping (address => address[]) ownedTicketList;
     mapping (address => mapping (address => uint256)) paidTicketList;
 
     struct TicketSale {
@@ -53,21 +53,8 @@ contract FinancieCore is IFinancieCore, Utils {
         public
         greaterThanZero(_userId)
     {
-        assert(_userId != userIds[msg.sender]);
-
-        // remove from previous account
-        uint32 prev = userIds[msg.sender];
-        if ( prev > 0 ) {
-            for (uint32 i = 0; i < userAddresses[prev].length; i++) {
-                if ( msg.sender == userAddresses[prev][i] ) {
-                    userAddresses[prev][i] = 0;
-                }
-            }
-        }
-
         // set new account
         userIds[msg.sender] = _userId;
-        userAddresses[_userId].push(msg.sender);
     }
 
     function activateTargetContract(address _contract, bool _enabled)
@@ -201,6 +188,8 @@ contract FinancieCore is IFinancieCore, Utils {
         IFinancieIssuerToken card = IFinancieIssuerToken(ticketSale.card);
         card.burnFrom(msg.sender, ticketSale.price);
 
+        ownedTicketList[msg.sender].push(_ticket);
+
         /**
         * check tickets in stock and transfer a ticket to the buyer
         */
@@ -236,12 +225,16 @@ contract FinancieCore is IFinancieCore, Utils {
           allLogs[_sender].amountTo);
     }
 
-    function getAddressList(uint32 _userId) returns(address[]) {
-        return userAddresses[_userId];
+    function checkUserActivation(address _sender, uint32 _userId) public returns(bool) {
+        return userIds[_sender] == _userId;
     }
 
-    function getCardList(address _sender) returns(address[]) {
+    function getCardList(address _sender) public returns(address[]) {
         return ownedCardList[_sender];
+    }
+
+    function getTicketList(address _sender) public returns(address[]) {
+        return ownedTicketList[_sender];
     }
 
     function getPaidTicketCounts(address _sender, address _ticket) public returns(uint256) {
