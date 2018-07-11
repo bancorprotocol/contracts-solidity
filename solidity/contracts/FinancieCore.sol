@@ -2,9 +2,11 @@ pragma solidity ^0.4.18;
 import './interfaces/IFinancieCore.sol';
 import './interfaces/IFinancieIssuerToken.sol';
 import './interfaces/IERC20Token.sol';
+import './interfaces/IFinancieLog.sol';
 import './Utils.sol';
+import './Owned.sol';
 
-contract FinancieCore is IFinancieCore, Utils {
+contract FinancieCore is IFinancieCore, Owned, Utils {
 
     mapping (address => uint32) userIds;
     mapping (address => bool) targetContracts;
@@ -19,23 +21,26 @@ contract FinancieCore is IFinancieCore, Utils {
     }
 
     mapping (address => TicketSale) ticketSales;
-
-    struct Logs {
-        EventType[] eventType;
-        CurrencyType[] currencyType;
-        address[] target;
-        uint256[] amountFrom;
-        uint256[] amountTo;
-    }
-
-    mapping (address => Logs) allLogs;
+    IFinancieLog log;
 
     IERC20Token platformToken;
-    address public owner_address;
+
+    event ActivateUser(address _sender, uint32 _userId);
+    event ConvertCards(address _sender, address _from, address _to, uint256 _amountFrom, uint256 _amountTo);
+    event BidCards(address _sender, address _to, uint256 _amount);
+    event WithdrawalCards(address _sender, address _to, uint256 _amount);
+    event BurnCards(address _sender, address _card, uint256 _amount);
+    event BurnTickets(address _sender, address _ticket, uint256 _amount);
+    event DepositTickets(address _sender, address _issuer, address _ticket, address _card, uint256 _amount, uint256 _price);
+    event BuyTicket(address _sender, address _issuer, address _ticket);
 
     function FinancieCore(address _token) public {
         platformToken = IERC20Token(_token);
-        owner_address = msg.sender;
+    }
+
+    function setFinancieLog(address _log) public ownerOnly {
+        log = IFinancieLog(_log);
+        log.acceptOwnership();
     }
 
     modifier validTargetContract(address _contract) {
@@ -46,7 +51,7 @@ contract FinancieCore is IFinancieCore, Utils {
     function() payable public {
         uint256 value = safeMul(safeMul(100000, 10 ** 18), msg.value / 1 ether);
         platformToken.transfer(msg.sender, value);
-        owner_address.transfer(msg.value);
+        owner.transfer(msg.value);
     }
 
     function activateUser(uint32 _userId)
@@ -55,6 +60,8 @@ contract FinancieCore is IFinancieCore, Utils {
     {
         // set new account
         userIds[msg.sender] = _userId;
+
+        ActivateUser(msg.sender, _userId);
     }
 
     function activateTargetContract(address _contract, bool _enabled)
@@ -70,20 +77,37 @@ contract FinancieCore is IFinancieCore, Utils {
         uint256 _amountFrom,
         uint256 _amountTo)
         public
+        validTargetContract(msg.sender)
+        validTargetContract(_from)
+        validTargetContract(_to)
     {
         require(_from == address(platformToken) || _to == address(platformToken));
         if ( _from == address(platformToken) ) {
-            recordLog(_sender, EventType.BuyCards, CurrencyType.PlatformCoin, _to, _amountFrom, _amountTo);
+            log.recordLog(
+              _sender,
+              IFinancieLog.EventType.BuyCards,
+              IFinancieLog.CurrencyType.PlatformCoin,
+              _to,
+              _amountFrom,
+              _amountTo);
             addOwnedCardList(_sender, _to);
         } else {
-            recordLog(_sender, EventType.SellCards, CurrencyType.PlatformCoin, _from, _amountFrom, _amountTo);
+            log.recordLog(
+              _sender,
+              IFinancieLog.EventType.SellCards,
+              IFinancieLog.CurrencyType.PlatformCoin,
+              _from,
+              _amountFrom,
+              _amountTo);
         }
+
+        ConvertCards(_sender, _from, _to, _amountFrom, _amountTo);
     }
 
     /**
     *
     */
-    function addOwnedCardList(address _sender, address _address) {
+    function addOwnedCardList(address _sender, address _address) private {
         bool exist = false;
         for (uint32 i = 0; i < ownedCardList[_sender].length; i++) {
             if ( ownedCardList[_sender][i] == _address ) {
@@ -99,11 +123,20 @@ contract FinancieCore is IFinancieCore, Utils {
     /**
     * log the bid of cards for sales contract
     */
-    function notifyBidCards(address _sender, address _to, CurrencyType _type, uint256 _amount)
+    function notifyBidCards(address _sender, address _to, uint256 _amount)
         public
         validTargetContract(msg.sender)
+        validTargetContract(_to)
     {
-        recordLog(_sender, EventType.BidCards, _type, _to, _amount, 0);
+        log.recordLog(
+          _sender,
+          IFinancieLog.EventType.BidCards,
+          IFinancieLog.CurrencyType.Ethereum,
+          _to,
+          _amount,
+          0);
+
+        BidCards(_sender, _to, _amount);
     }
 
     /**
@@ -114,27 +147,47 @@ contract FinancieCore is IFinancieCore, Utils {
         validTargetContract(msg.sender)
     {
         addOwnedCardList(_sender, _to);
-        recordLog(_sender, EventType.WithdrawCards, CurrencyType.None, _to, 0, _amount);
+        log.recordLog(
+          _sender,
+          IFinancieLog.EventType.WithdrawCards,
+          IFinancieLog.CurrencyType.None,
+          _to,
+          0,
+          _amount);
+
+        WithdrawalCards(_sender, _to, _amount);
     }
 
     /**
     * log the burn of cards
     */
-    function notifyBurnCards(address _sender, uint256 _amount)
+    function notifyBurnCards(address _sender, address _card, uint256 _amount)
         public
         validTargetContract(msg.sender)
+        validTargetContract(_card)
     {
-        recordLog(_sender, EventType.BurnCards, CurrencyType.None, msg.sender, _amount, 0);
+        log.recordLog(
+          _sender,
+          IFinancieLog.EventType.BurnCards,
+          IFinancieLog.CurrencyType.None,
+          _card,
+          _amount,
+          0);
+
+        BurnCards(msg.sender, _card, _amount);
     }
 
     /**
     * log the burn of tickets
     */
-    function notifyBurnTickets(address _sender, uint256 _amount)
+    function notifyBurnTickets(address _sender, address _ticket, uint256 _amount)
         public
         validTargetContract(msg.sender)
+        validTargetContract(_ticket)
     {
-        paidTicketList[_sender][msg.sender] = safeAdd(paidTicketList[_sender][msg.sender], _amount);
+        paidTicketList[_ticket][_sender] = safeAdd(paidTicketList[_ticket][_sender], _amount);
+
+        BurnTickets(_sender, _ticket, _amount);
     }
 
     /**
@@ -152,7 +205,7 @@ contract FinancieCore is IFinancieCore, Utils {
         * check ticket issuer and deposit tickets into this contract
         */
         IFinancieIssuerToken ticket = IFinancieIssuerToken(_ticket);
-        require(msg.sender == ticket.getIssuer() || msg.sender == owner_address );
+        require(msg.sender == ticket.getIssuer() || msg.sender == owner );
 
         IERC20Token tokenTicket = IERC20Token(_ticket);
         assert(tokenTicket.transferFrom(msg.sender, this, _amount));
@@ -161,6 +214,8 @@ contract FinancieCore is IFinancieCore, Utils {
         * register it as a sales item
         */
         ticketSales[_ticket] = TicketSale(ticket.getIssuer(), _card, _price);
+
+        DepositTickets(msg.sender, ticket.getIssuer(), _ticket, _card, _amount, _price);
     }
 
     function getTicketPrice(address _ticket) public returns(uint256) {
@@ -196,33 +251,8 @@ contract FinancieCore is IFinancieCore, Utils {
         IERC20Token ticket = IERC20Token(_ticket);
         require(ticket.balanceOf(address(this)) >= 1);
         ticket.transfer(msg.sender, 1);
-    }
 
-    function recordLog(address _sender,
-        EventType _eventType,
-        CurrencyType _currencyType,
-        address _target,
-        uint256 _paidAmount,
-        uint256 _receivedAmount)
-        public
-        validAddress(_target)
-        validTargetContract(_target)
-    {
-        allLogs[_sender].eventType.push(_eventType);
-        allLogs[_sender].currencyType.push(_currencyType);
-        allLogs[_sender].target.push(_target);
-        allLogs[_sender].amountFrom.push(_paidAmount);
-        allLogs[_sender].amountTo.push(_receivedAmount);
-    }
-
-    function getLogs(address _sender)
-        public returns(EventType[], CurrencyType[], address[], uint256[], uint256[])
-    {
-        return (allLogs[_sender].eventType,
-          allLogs[_sender].currencyType,
-          allLogs[_sender].target,
-          allLogs[_sender].amountFrom,
-          allLogs[_sender].amountTo);
+        BuyTicket(msg.sender, card.getIssuer(), _ticket);
     }
 
     function checkUserActivation(address _sender, uint32 _userId) public returns(bool) {

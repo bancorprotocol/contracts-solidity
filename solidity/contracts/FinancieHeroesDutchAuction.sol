@@ -63,8 +63,31 @@ contract FinancieHeroesDutchAuction is DutchAuction {
         uint256 balanceBefore = token.balanceOf(receiver_address);
         if ( super.proxyClaimTokens(receiver_address) ) {
             uint256 balanceAfter = token.balanceOf(receiver_address);
-            core.notifyWithdrawalCards(msg.sender, address(token), SafeSub(balanceAfter, balanceBefore));
+            core.notifyWithdrawalCards(msg.sender, address(token), balanceAfter - balanceBefore);
             return true;
+        }
+        return false;
+    }
+
+    function estimateClaimTokens(address receiver_address)
+        public
+        returns (uint256)
+    {
+        if ( bids[receiver_address] > 0 ) {
+          uint current_price = token_multiplier * received_wei / num_tokens_auctioned;
+          return (token_multiplier * bids[receiver_address]) / current_price;
+        }
+        return 0;
+    }
+
+    function canClaimTokens(address receiver_address)
+        public
+        returns (bool)
+    {
+        if ( stage == Stages.AuctionEnded ) {
+          if ( bids[receiver_address] > 0 ) {
+            return (now > end_time + token_claim_waiting_period);
+          }
         }
         return false;
     }

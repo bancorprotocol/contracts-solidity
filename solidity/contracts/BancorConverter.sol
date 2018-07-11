@@ -482,7 +482,12 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         token.destroy(msg.sender, _sellAmount);
         // transfer funds to the caller in the connector token
         // the transfer might fail if the actual connector balance is smaller than the virtual balance
-        assert(_connectorToken.transfer(msg.sender, amount));
+        if ( _connectorToken == quickBuyPath[0] ) {
+            IEtherToken etherToken = IEtherToken(_connectorToken);
+            etherToken.withdrawTo(msg.sender, amount);
+        } else {
+            assert(_connectorToken.transfer(msg.sender, amount));
+        }
 
         dispatchConversionEvent(_connectorToken, _sellAmount, amount, false);
         return amount;

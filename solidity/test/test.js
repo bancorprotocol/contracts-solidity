@@ -13,6 +13,7 @@ const FinancieCardToken = artifacts.require('FinancieCardToken.sol');
 const utils = require('./helpers/Utils');
 
 const FinancieCore = artifacts.require('FinancieCore.sol');
+const FinancieLog = artifacts.require('FinancieLog.sol');
 
 const DutchAuction = artifacts.require('DutchAuction.sol');
 const DutchAuctionPF = artifacts.require('DutchAuctionPF.sol');
@@ -33,6 +34,7 @@ let connectorTokenAddress2;
 let converter;
 let financieCore;
 let quickConverter;
+let log;
 
 let etherToken;
 let etherTokenAddress
@@ -72,12 +74,17 @@ contract('FinancieCore', (accounts) => {
         financieCore = await FinancieCore.new(platformTokenAddress);
         await financieCore.activateTargetContract(platformTokenAddress, true);
         await financieCore.activateTargetContract(etherTokenAddress, true);
-        new Promise(() => console.log('[initFinancier]FinancieCore:' + financieCore.address));
+
+        log = await FinancieLog.new();
+
+        new Promise(() => console.log('[initFinancie]FinancieCore:' + financieCore.address));
+        new Promise(() => console.log('[initFinancie]FinancieLog:' + log.address));
     });
 
     it('setup financie core', async () => {
         // 実験的販売
         await platformToken.transfer(financieCore.address, 100000000 * (10 ** 18));
-
+        await log.transferOwnership(financieCore.address);
+        await financieCore.setFinancieLog(log.address);
     });
 });
