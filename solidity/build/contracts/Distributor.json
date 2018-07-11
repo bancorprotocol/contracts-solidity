@@ -47,8 +47,8 @@
       "type": "function"
     }
   ],
-  "bytecode": "0x6060604052341561000f57600080fd5b6040516020806102fb83398101604052808051915050600160a060020a038116151561003a57600080fd5b60008054600160a060020a031916600160a060020a0383161790557f3fad920548ed9f22deb8333b4cc1e4f9bc36666a1c2aa30ad59a0a3bb9dcbb9260405160405180910390a15061026a806100916000396000f3006060604052600436106100325763ffffffff60e060020a6000350416636138889b81146100375780637d9f6db514610088575b600080fd5b341561004257600080fd5b61008660046024813581810190830135806020818102016040519081016040528093929190818152602001838360200280828437509496506100c495505050505050565b005b341561009357600080fd5b61009b610222565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b60005b81518163ffffffff16101561021e576000805473ffffffffffffffffffffffffffffffffffffffff166362ea82db8463ffffffff85168151811061010757fe5b9060200190602002015160405160e060020a63ffffffff841602815273ffffffffffffffffffffffffffffffffffffffff9091166004820152602401602060405180830381600087803b151561015c57600080fd5b5af1151561016957600080fd5b5050506040518051905011156102165760005473ffffffffffffffffffffffffffffffffffffffff1663aeaaaa088363ffffffff8416815181106101a957fe5b9060200190602002015160405160e060020a63ffffffff841602815273ffffffffffffffffffffffffffffffffffffffff9091166004820152602401602060405180830381600087803b15156101fe57600080fd5b5af1151561020b57600080fd5b505050604051805150505b6001016100c7565b5050565b60005473ffffffffffffffffffffffffffffffffffffffff16815600a165627a7a7230582059f8a6319e031228feaa7bf6d0ab942152036e97b608d2d6655faa31a51d65040029",
-  "deployedBytecode": "0x6060604052600436106100325763ffffffff60e060020a6000350416636138889b81146100375780637d9f6db514610088575b600080fd5b341561004257600080fd5b61008660046024813581810190830135806020818102016040519081016040528093929190818152602001838360200280828437509496506100c495505050505050565b005b341561009357600080fd5b61009b610222565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b60005b81518163ffffffff16101561021e576000805473ffffffffffffffffffffffffffffffffffffffff166362ea82db8463ffffffff85168151811061010757fe5b9060200190602002015160405160e060020a63ffffffff841602815273ffffffffffffffffffffffffffffffffffffffff9091166004820152602401602060405180830381600087803b151561015c57600080fd5b5af1151561016957600080fd5b5050506040518051905011156102165760005473ffffffffffffffffffffffffffffffffffffffff1663aeaaaa088363ffffffff8416815181106101a957fe5b9060200190602002015160405160e060020a63ffffffff841602815273ffffffffffffffffffffffffffffffffffffffff9091166004820152602401602060405180830381600087803b15156101fe57600080fd5b5af1151561020b57600080fd5b505050604051805150505b6001016100c7565b5050565b60005473ffffffffffffffffffffffffffffffffffffffff16815600a165627a7a7230582059f8a6319e031228feaa7bf6d0ab942152036e97b608d2d6655faa31a51d65040029",
+  "bytecode": "0x6060604052341561000f57600080fd5b6040516020806102fb83398101604052808051915050600160a060020a038116151561003a57600080fd5b60008054600160a060020a031916600160a060020a0383161790557f3fad920548ed9f22deb8333b4cc1e4f9bc36666a1c2aa30ad59a0a3bb9dcbb9260405160405180910390a15061026a806100916000396000f3006060604052600436106100325763ffffffff60e060020a6000350416636138889b81146100375780637d9f6db514610088575b600080fd5b341561004257600080fd5b61008660046024813581810190830135806020818102016040519081016040528093929190818152602001838360200280828437509496506100c495505050505050565b005b341561009357600080fd5b61009b610222565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b60005b81518163ffffffff16101561021e576000805473ffffffffffffffffffffffffffffffffffffffff166362ea82db8463ffffffff85168151811061010757fe5b9060200190602002015160405160e060020a63ffffffff841602815273ffffffffffffffffffffffffffffffffffffffff9091166004820152602401602060405180830381600087803b151561015c57600080fd5b5af1151561016957600080fd5b5050506040518051905011156102165760005473ffffffffffffffffffffffffffffffffffffffff1663aeaaaa088363ffffffff8416815181106101a957fe5b9060200190602002015160405160e060020a63ffffffff841602815273ffffffffffffffffffffffffffffffffffffffff9091166004820152602401602060405180830381600087803b15156101fe57600080fd5b5af1151561020b57600080fd5b505050604051805150505b6001016100c7565b5050565b60005473ffffffffffffffffffffffffffffffffffffffff16815600a165627a7a723058204b823df031e647db88cb7028eacafec09d6d94cf3f4dec8ecf7d069a78778d5c0029",
+  "deployedBytecode": "0x6060604052600436106100325763ffffffff60e060020a6000350416636138889b81146100375780637d9f6db514610088575b600080fd5b341561004257600080fd5b61008660046024813581810190830135806020818102016040519081016040528093929190818152602001838360200280828437509496506100c495505050505050565b005b341561009357600080fd5b61009b610222565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b60005b81518163ffffffff16101561021e576000805473ffffffffffffffffffffffffffffffffffffffff166362ea82db8463ffffffff85168151811061010757fe5b9060200190602002015160405160e060020a63ffffffff841602815273ffffffffffffffffffffffffffffffffffffffff9091166004820152602401602060405180830381600087803b151561015c57600080fd5b5af1151561016957600080fd5b5050506040518051905011156102165760005473ffffffffffffffffffffffffffffffffffffffff1663aeaaaa088363ffffffff8416815181106101a957fe5b9060200190602002015160405160e060020a63ffffffff841602815273ffffffffffffffffffffffffffffffffffffffff9091166004820152602401602060405180830381600087803b15156101fe57600080fd5b5af1151561020b57600080fd5b505050604051805150505b6001016100c7565b5050565b60005473ffffffffffffffffffffffffffffffffffffffff16815600a165627a7a723058204b823df031e647db88cb7028eacafec09d6d94cf3f4dec8ecf7d069a78778d5c0029",
   "sourceMap": "141:1017:10:-;;;467:174;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;;;539:23:10;;;;531:32;;;;;;574:7;:40;;-1:-1:-1;;;;;;574:40:10;-1:-1:-1;;;;;574:40:10;;;;;624:10;;;;;;;;;;467:174;141:1017;;;;;;",
   "deployedSourceMap": "141:1017:10:-;;;;;;;;;-1:-1:-1;;;141:1017:10;;;;;;;;;;;;;;;;;;915:241;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;915:241:10;;-1:-1:-1;915:241:10;;-1:-1:-1;;;;;;915:241:10;;;199:27;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;915:241;978:8;973:177;996:9;:16;992:1;:20;;;973:177;;;1066:1;1037:7;;;;:12;1050:9;:12;;;:9;:12;;;;;;;;;;;;;;;1037:26;;-1:-1:-1;;;1037:26:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:30;1033:107;;;1087:7;;;;:24;1112:9;:12;;;:9;:12;;;;;;;;;;;;;;;1087:38;;-1:-1:-1;;;1087:38:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;1033:107:10;1014:3;;973:177;;;915:241;;:::o;199:27::-;;;;;;:::o",
   "source": "pragma solidity ^0.4.17;\n\nimport './DutchAuction.sol';\n\n/// @title Distributor contract - distribution of tokens after an auction has ended.\ncontract Distributor {\n    /*\n     * Storage\n     */\n\n    DutchAuction public auction;\n\n    /*\n     * Events\n     */\n\n    event Deployed();\n\n    /*\n      * Public functions\n      */\n    /// @dev Contract constructor function, sets the auction contract address.\n    /// @param _auction_address Address of auction contract.\n    function Distributor(address _auction_address) public {\n        require(_auction_address != 0x0);\n\n        auction = DutchAuction(_auction_address);\n        Deployed();\n    }\n\n    /// @notice Claim tokens in behalf of the following token owners: `addresses`.\n    /// @dev Function that is called with an array of addresses for claiming tokens in their behalf.\n    /// @param addresses Addresses of auction bidders that will be assigned tokens.\n    function distribute(address[] addresses) public {\n        for (uint32 i = 0; i < addresses.length; i++) {\n            if (auction.bids(addresses[i]) > 0) {\n                auction.proxyClaimTokens(addresses[i]);\n            }\n        }\n    }\n}\n",
@@ -57,14 +57,14 @@
     "absolutePath": "/Users/rudo/contracts/solidity/contracts/distributor.sol",
     "exportedSymbols": {
       "Distributor": [
-        3095
+        3232
       ]
     },
-    "id": 3096,
+    "id": 3233,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3030,
+        "id": 3167,
         "literals": [
           "solidity",
           "^",
@@ -77,9 +77,9 @@
       {
         "absolutePath": "/Users/rudo/contracts/solidity/contracts/DutchAuction.sol",
         "file": "./DutchAuction.sol",
-        "id": 3031,
+        "id": 3168,
         "nodeType": "ImportDirective",
-        "scope": 3096,
+        "scope": 3233,
         "sourceUnit": 2069,
         "src": "26:28:10",
         "symbolAliases": [],
@@ -91,19 +91,19 @@
         "contractKind": "contract",
         "documentation": "@title Distributor contract - distribution of tokens after an auction has ended.",
         "fullyImplemented": true,
-        "id": 3095,
+        "id": 3232,
         "linearizedBaseContracts": [
-          3095
+          3232
         ],
         "name": "Distributor",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 3033,
+            "id": 3170,
             "name": "auction",
             "nodeType": "VariableDeclaration",
-            "scope": 3095,
+            "scope": 3232,
             "src": "199:27:10",
             "stateVariable": true,
             "storageLocation": "default",
@@ -113,7 +113,7 @@
             },
             "typeName": {
               "contractScope": null,
-              "id": 3032,
+              "id": 3169,
               "name": "DutchAuction",
               "nodeType": "UserDefinedTypeName",
               "referencedDeclaration": 2068,
@@ -129,11 +129,11 @@
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3035,
+            "id": 3172,
             "name": "Deployed",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3034,
+              "id": 3171,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "277:2:10"
@@ -142,7 +142,7 @@
           },
           {
             "body": {
-              "id": 3055,
+              "id": 3192,
               "nodeType": "Block",
               "src": "521:120:10",
               "statements": [
@@ -156,18 +156,18 @@
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         },
-                        "id": 3043,
+                        "id": 3180,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
                         "lValueRequested": false,
                         "leftExpression": {
                           "argumentTypes": null,
-                          "id": 3041,
+                          "id": 3178,
                           "name": "_auction_address",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 3037,
+                          "referencedDeclaration": 3174,
                           "src": "539:16:10",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
@@ -179,7 +179,7 @@
                         "rightExpression": {
                           "argumentTypes": null,
                           "hexValue": "307830",
-                          "id": 3042,
+                          "id": 3179,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
@@ -208,18 +208,18 @@
                           "typeString": "bool"
                         }
                       ],
-                      "id": 3040,
+                      "id": 3177,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3558,
+                      "referencedDeclaration": 3663,
                       "src": "531:7:10",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
                         "typeString": "function (bool) pure"
                       }
                     },
-                    "id": 3044,
+                    "id": 3181,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -233,25 +233,25 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 3045,
+                  "id": 3182,
                   "nodeType": "ExpressionStatement",
                   "src": "531:32:10"
                 },
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 3050,
+                    "id": 3187,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 3046,
+                      "id": 3183,
                       "name": "auction",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3033,
+                      "referencedDeclaration": 3170,
                       "src": "574:7:10",
                       "typeDescriptions": {
                         "typeIdentifier": "t_contract$_DutchAuction_$2068",
@@ -265,11 +265,11 @@
                       "arguments": [
                         {
                           "argumentTypes": null,
-                          "id": 3048,
+                          "id": 3185,
                           "name": "_auction_address",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 3037,
+                          "referencedDeclaration": 3174,
                           "src": "597:16:10",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
@@ -284,7 +284,7 @@
                             "typeString": "address"
                           }
                         ],
-                        "id": 3047,
+                        "id": 3184,
                         "name": "DutchAuction",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -295,7 +295,7 @@
                           "typeString": "type(contract DutchAuction)"
                         }
                       },
-                      "id": 3049,
+                      "id": 3186,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -315,7 +315,7 @@
                       "typeString": "contract DutchAuction"
                     }
                   },
-                  "id": 3051,
+                  "id": 3188,
                   "nodeType": "ExpressionStatement",
                   "src": "574:40:10"
                 },
@@ -325,18 +325,18 @@
                     "arguments": [],
                     "expression": {
                       "argumentTypes": [],
-                      "id": 3052,
+                      "id": 3189,
                       "name": "Deployed",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3035,
+                      "referencedDeclaration": 3172,
                       "src": "624:8:10",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_event_nonpayable$__$returns$__$",
                         "typeString": "function ()"
                       }
                     },
-                    "id": 3053,
+                    "id": 3190,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -350,14 +350,14 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 3054,
+                  "id": 3191,
                   "nodeType": "ExpressionStatement",
                   "src": "624:10:10"
                 }
               ]
             },
             "documentation": "@dev Contract constructor function, sets the auction contract address.\n @param _auction_address Address of auction contract.",
-            "id": 3056,
+            "id": 3193,
             "implemented": true,
             "isConstructor": true,
             "isDeclaredConst": false,
@@ -365,15 +365,15 @@
             "name": "Distributor",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3038,
+              "id": 3175,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3037,
+                  "id": 3174,
                   "name": "_auction_address",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3056,
+                  "scope": 3193,
                   "src": "488:24:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -382,7 +382,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3036,
+                    "id": 3173,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "488:7:10",
@@ -399,12 +399,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 3039,
+              "id": 3176,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "521:0:10"
             },
-            "scope": 3095,
+            "scope": 3232,
             "src": "467:174:10",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -412,13 +412,13 @@
           },
           {
             "body": {
-              "id": 3093,
+              "id": 3230,
               "nodeType": "Block",
               "src": "963:193:10",
               "statements": [
                 {
                   "body": {
-                    "id": 3091,
+                    "id": 3228,
                     "nodeType": "Block",
                     "src": "1019:131:10",
                     "statements": [
@@ -429,7 +429,7 @@
                             "typeIdentifier": "t_uint256",
                             "typeString": "uint256"
                           },
-                          "id": 3080,
+                          "id": 3217,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -441,25 +441,25 @@
                                 "argumentTypes": null,
                                 "baseExpression": {
                                   "argumentTypes": null,
-                                  "id": 3075,
+                                  "id": 3212,
                                   "name": "addresses",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 3059,
+                                  "referencedDeclaration": 3196,
                                   "src": "1050:9:10",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
                                     "typeString": "address[] memory"
                                   }
                                 },
-                                "id": 3077,
+                                "id": 3214,
                                 "indexExpression": {
                                   "argumentTypes": null,
-                                  "id": 3076,
+                                  "id": 3213,
                                   "name": "i",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 3063,
+                                  "referencedDeclaration": 3200,
                                   "src": "1060:1:10",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_uint32",
@@ -487,18 +487,18 @@
                               ],
                               "expression": {
                                 "argumentTypes": null,
-                                "id": 3073,
+                                "id": 3210,
                                 "name": "auction",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 3033,
+                                "referencedDeclaration": 3170,
                                 "src": "1037:7:10",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_contract$_DutchAuction_$2068",
                                   "typeString": "contract DutchAuction"
                                 }
                               },
-                              "id": 3074,
+                              "id": 3211,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": false,
@@ -512,7 +512,7 @@
                                 "typeString": "function (address) view external returns (uint256)"
                               }
                             },
-                            "id": 3078,
+                            "id": 3215,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
@@ -531,7 +531,7 @@
                           "rightExpression": {
                             "argumentTypes": null,
                             "hexValue": "30",
-                            "id": 3079,
+                            "id": 3216,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
@@ -553,11 +553,11 @@
                           }
                         },
                         "falseBody": null,
-                        "id": 3090,
+                        "id": 3227,
                         "nodeType": "IfStatement",
                         "src": "1033:107:10",
                         "trueBody": {
-                          "id": 3089,
+                          "id": 3226,
                           "nodeType": "Block",
                           "src": "1069:71:10",
                           "statements": [
@@ -569,25 +569,25 @@
                                     "argumentTypes": null,
                                     "baseExpression": {
                                       "argumentTypes": null,
-                                      "id": 3084,
+                                      "id": 3221,
                                       "name": "addresses",
                                       "nodeType": "Identifier",
                                       "overloadedDeclarations": [],
-                                      "referencedDeclaration": 3059,
+                                      "referencedDeclaration": 3196,
                                       "src": "1112:9:10",
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
                                         "typeString": "address[] memory"
                                       }
                                     },
-                                    "id": 3086,
+                                    "id": 3223,
                                     "indexExpression": {
                                       "argumentTypes": null,
-                                      "id": 3085,
+                                      "id": 3222,
                                       "name": "i",
                                       "nodeType": "Identifier",
                                       "overloadedDeclarations": [],
-                                      "referencedDeclaration": 3063,
+                                      "referencedDeclaration": 3200,
                                       "src": "1122:1:10",
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_uint32",
@@ -615,18 +615,18 @@
                                   ],
                                   "expression": {
                                     "argumentTypes": null,
-                                    "id": 3081,
+                                    "id": 3218,
                                     "name": "auction",
                                     "nodeType": "Identifier",
                                     "overloadedDeclarations": [],
-                                    "referencedDeclaration": 3033,
+                                    "referencedDeclaration": 3170,
                                     "src": "1087:7:10",
                                     "typeDescriptions": {
                                       "typeIdentifier": "t_contract$_DutchAuction_$2068",
                                       "typeString": "contract DutchAuction"
                                     }
                                   },
-                                  "id": 3083,
+                                  "id": 3220,
                                   "isConstant": false,
                                   "isLValue": false,
                                   "isPure": false,
@@ -640,7 +640,7 @@
                                     "typeString": "function (address) external returns (bool)"
                                   }
                                 },
-                                "id": 3087,
+                                "id": 3224,
                                 "isConstant": false,
                                 "isLValue": false,
                                 "isPure": false,
@@ -654,7 +654,7 @@
                                   "typeString": "bool"
                                 }
                               },
-                              "id": 3088,
+                              "id": 3225,
                               "nodeType": "ExpressionStatement",
                               "src": "1087:38:10"
                             }
@@ -669,18 +669,18 @@
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     },
-                    "id": 3069,
+                    "id": 3206,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftExpression": {
                       "argumentTypes": null,
-                      "id": 3066,
+                      "id": 3203,
                       "name": "i",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3063,
+                      "referencedDeclaration": 3200,
                       "src": "992:1:10",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint32",
@@ -693,18 +693,18 @@
                       "argumentTypes": null,
                       "expression": {
                         "argumentTypes": null,
-                        "id": 3067,
+                        "id": 3204,
                         "name": "addresses",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3059,
+                        "referencedDeclaration": 3196,
                         "src": "996:9:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
                           "typeString": "address[] memory"
                         }
                       },
-                      "id": 3068,
+                      "id": 3205,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -724,18 +724,18 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 3092,
+                  "id": 3229,
                   "initializationExpression": {
                     "assignments": [
-                      3063
+                      3200
                     ],
                     "declarations": [
                       {
                         "constant": false,
-                        "id": 3063,
+                        "id": 3200,
                         "name": "i",
                         "nodeType": "VariableDeclaration",
-                        "scope": 3094,
+                        "scope": 3231,
                         "src": "978:8:10",
                         "stateVariable": false,
                         "storageLocation": "default",
@@ -744,7 +744,7 @@
                           "typeString": "uint32"
                         },
                         "typeName": {
-                          "id": 3062,
+                          "id": 3199,
                           "name": "uint32",
                           "nodeType": "ElementaryTypeName",
                           "src": "978:6:10",
@@ -757,11 +757,11 @@
                         "visibility": "internal"
                       }
                     ],
-                    "id": 3065,
+                    "id": 3202,
                     "initialValue": {
                       "argumentTypes": null,
                       "hexValue": "30",
-                      "id": 3064,
+                      "id": 3201,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -782,7 +782,7 @@
                   "loopExpression": {
                     "expression": {
                       "argumentTypes": null,
-                      "id": 3071,
+                      "id": 3208,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -793,11 +793,11 @@
                       "src": "1014:3:10",
                       "subExpression": {
                         "argumentTypes": null,
-                        "id": 3070,
+                        "id": 3207,
                         "name": "i",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3063,
+                        "referencedDeclaration": 3200,
                         "src": "1014:1:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint32",
@@ -809,7 +809,7 @@
                         "typeString": "uint32"
                       }
                     },
-                    "id": 3072,
+                    "id": 3209,
                     "nodeType": "ExpressionStatement",
                     "src": "1014:3:10"
                   },
@@ -819,7 +819,7 @@
               ]
             },
             "documentation": "@notice Claim tokens in behalf of the following token owners: `addresses`.\n @dev Function that is called with an array of addresses for claiming tokens in their behalf.\n @param addresses Addresses of auction bidders that will be assigned tokens.",
-            "id": 3094,
+            "id": 3231,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -827,15 +827,15 @@
             "name": "distribute",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3060,
+              "id": 3197,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3059,
+                  "id": 3196,
                   "name": "addresses",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3094,
+                  "scope": 3231,
                   "src": "935:19:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -845,7 +845,7 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 3057,
+                      "id": 3194,
                       "name": "address",
                       "nodeType": "ElementaryTypeName",
                       "src": "935:7:10",
@@ -854,7 +854,7 @@
                         "typeString": "address"
                       }
                     },
-                    "id": 3058,
+                    "id": 3195,
                     "length": null,
                     "nodeType": "ArrayTypeName",
                     "src": "935:9:10",
@@ -871,19 +871,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 3061,
+              "id": 3198,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "963:0:10"
             },
-            "scope": 3095,
+            "scope": 3232,
             "src": "915:241:10",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 3096,
+        "scope": 3233,
         "src": "141:1017:10"
       }
     ],
@@ -893,14 +893,14 @@
     "absolutePath": "/Users/rudo/contracts/solidity/contracts/distributor.sol",
     "exportedSymbols": {
       "Distributor": [
-        3095
+        3232
       ]
     },
-    "id": 3096,
+    "id": 3233,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3030,
+        "id": 3167,
         "literals": [
           "solidity",
           "^",
@@ -913,9 +913,9 @@
       {
         "absolutePath": "/Users/rudo/contracts/solidity/contracts/DutchAuction.sol",
         "file": "./DutchAuction.sol",
-        "id": 3031,
+        "id": 3168,
         "nodeType": "ImportDirective",
-        "scope": 3096,
+        "scope": 3233,
         "sourceUnit": 2069,
         "src": "26:28:10",
         "symbolAliases": [],
@@ -927,19 +927,19 @@
         "contractKind": "contract",
         "documentation": "@title Distributor contract - distribution of tokens after an auction has ended.",
         "fullyImplemented": true,
-        "id": 3095,
+        "id": 3232,
         "linearizedBaseContracts": [
-          3095
+          3232
         ],
         "name": "Distributor",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 3033,
+            "id": 3170,
             "name": "auction",
             "nodeType": "VariableDeclaration",
-            "scope": 3095,
+            "scope": 3232,
             "src": "199:27:10",
             "stateVariable": true,
             "storageLocation": "default",
@@ -949,7 +949,7 @@
             },
             "typeName": {
               "contractScope": null,
-              "id": 3032,
+              "id": 3169,
               "name": "DutchAuction",
               "nodeType": "UserDefinedTypeName",
               "referencedDeclaration": 2068,
@@ -965,11 +965,11 @@
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3035,
+            "id": 3172,
             "name": "Deployed",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3034,
+              "id": 3171,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "277:2:10"
@@ -978,7 +978,7 @@
           },
           {
             "body": {
-              "id": 3055,
+              "id": 3192,
               "nodeType": "Block",
               "src": "521:120:10",
               "statements": [
@@ -992,18 +992,18 @@
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         },
-                        "id": 3043,
+                        "id": 3180,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
                         "lValueRequested": false,
                         "leftExpression": {
                           "argumentTypes": null,
-                          "id": 3041,
+                          "id": 3178,
                           "name": "_auction_address",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 3037,
+                          "referencedDeclaration": 3174,
                           "src": "539:16:10",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
@@ -1015,7 +1015,7 @@
                         "rightExpression": {
                           "argumentTypes": null,
                           "hexValue": "307830",
-                          "id": 3042,
+                          "id": 3179,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
@@ -1044,18 +1044,18 @@
                           "typeString": "bool"
                         }
                       ],
-                      "id": 3040,
+                      "id": 3177,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3558,
+                      "referencedDeclaration": 3663,
                       "src": "531:7:10",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
                         "typeString": "function (bool) pure"
                       }
                     },
-                    "id": 3044,
+                    "id": 3181,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1069,25 +1069,25 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 3045,
+                  "id": 3182,
                   "nodeType": "ExpressionStatement",
                   "src": "531:32:10"
                 },
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 3050,
+                    "id": 3187,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 3046,
+                      "id": 3183,
                       "name": "auction",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3033,
+                      "referencedDeclaration": 3170,
                       "src": "574:7:10",
                       "typeDescriptions": {
                         "typeIdentifier": "t_contract$_DutchAuction_$2068",
@@ -1101,11 +1101,11 @@
                       "arguments": [
                         {
                           "argumentTypes": null,
-                          "id": 3048,
+                          "id": 3185,
                           "name": "_auction_address",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 3037,
+                          "referencedDeclaration": 3174,
                           "src": "597:16:10",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
@@ -1120,7 +1120,7 @@
                             "typeString": "address"
                           }
                         ],
-                        "id": 3047,
+                        "id": 3184,
                         "name": "DutchAuction",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -1131,7 +1131,7 @@
                           "typeString": "type(contract DutchAuction)"
                         }
                       },
-                      "id": 3049,
+                      "id": 3186,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -1151,7 +1151,7 @@
                       "typeString": "contract DutchAuction"
                     }
                   },
-                  "id": 3051,
+                  "id": 3188,
                   "nodeType": "ExpressionStatement",
                   "src": "574:40:10"
                 },
@@ -1161,18 +1161,18 @@
                     "arguments": [],
                     "expression": {
                       "argumentTypes": [],
-                      "id": 3052,
+                      "id": 3189,
                       "name": "Deployed",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3035,
+                      "referencedDeclaration": 3172,
                       "src": "624:8:10",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_event_nonpayable$__$returns$__$",
                         "typeString": "function ()"
                       }
                     },
-                    "id": 3053,
+                    "id": 3190,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1186,14 +1186,14 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 3054,
+                  "id": 3191,
                   "nodeType": "ExpressionStatement",
                   "src": "624:10:10"
                 }
               ]
             },
             "documentation": "@dev Contract constructor function, sets the auction contract address.\n @param _auction_address Address of auction contract.",
-            "id": 3056,
+            "id": 3193,
             "implemented": true,
             "isConstructor": true,
             "isDeclaredConst": false,
@@ -1201,15 +1201,15 @@
             "name": "Distributor",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3038,
+              "id": 3175,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3037,
+                  "id": 3174,
                   "name": "_auction_address",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3056,
+                  "scope": 3193,
                   "src": "488:24:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1218,7 +1218,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3036,
+                    "id": 3173,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "488:7:10",
@@ -1235,12 +1235,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 3039,
+              "id": 3176,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "521:0:10"
             },
-            "scope": 3095,
+            "scope": 3232,
             "src": "467:174:10",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -1248,13 +1248,13 @@
           },
           {
             "body": {
-              "id": 3093,
+              "id": 3230,
               "nodeType": "Block",
               "src": "963:193:10",
               "statements": [
                 {
                   "body": {
-                    "id": 3091,
+                    "id": 3228,
                     "nodeType": "Block",
                     "src": "1019:131:10",
                     "statements": [
@@ -1265,7 +1265,7 @@
                             "typeIdentifier": "t_uint256",
                             "typeString": "uint256"
                           },
-                          "id": 3080,
+                          "id": 3217,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -1277,25 +1277,25 @@
                                 "argumentTypes": null,
                                 "baseExpression": {
                                   "argumentTypes": null,
-                                  "id": 3075,
+                                  "id": 3212,
                                   "name": "addresses",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 3059,
+                                  "referencedDeclaration": 3196,
                                   "src": "1050:9:10",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
                                     "typeString": "address[] memory"
                                   }
                                 },
-                                "id": 3077,
+                                "id": 3214,
                                 "indexExpression": {
                                   "argumentTypes": null,
-                                  "id": 3076,
+                                  "id": 3213,
                                   "name": "i",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 3063,
+                                  "referencedDeclaration": 3200,
                                   "src": "1060:1:10",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_uint32",
@@ -1323,18 +1323,18 @@
                               ],
                               "expression": {
                                 "argumentTypes": null,
-                                "id": 3073,
+                                "id": 3210,
                                 "name": "auction",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 3033,
+                                "referencedDeclaration": 3170,
                                 "src": "1037:7:10",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_contract$_DutchAuction_$2068",
                                   "typeString": "contract DutchAuction"
                                 }
                               },
-                              "id": 3074,
+                              "id": 3211,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": false,
@@ -1348,7 +1348,7 @@
                                 "typeString": "function (address) view external returns (uint256)"
                               }
                             },
-                            "id": 3078,
+                            "id": 3215,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
@@ -1367,7 +1367,7 @@
                           "rightExpression": {
                             "argumentTypes": null,
                             "hexValue": "30",
-                            "id": 3079,
+                            "id": 3216,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
@@ -1389,11 +1389,11 @@
                           }
                         },
                         "falseBody": null,
-                        "id": 3090,
+                        "id": 3227,
                         "nodeType": "IfStatement",
                         "src": "1033:107:10",
                         "trueBody": {
-                          "id": 3089,
+                          "id": 3226,
                           "nodeType": "Block",
                           "src": "1069:71:10",
                           "statements": [
@@ -1405,25 +1405,25 @@
                                     "argumentTypes": null,
                                     "baseExpression": {
                                       "argumentTypes": null,
-                                      "id": 3084,
+                                      "id": 3221,
                                       "name": "addresses",
                                       "nodeType": "Identifier",
                                       "overloadedDeclarations": [],
-                                      "referencedDeclaration": 3059,
+                                      "referencedDeclaration": 3196,
                                       "src": "1112:9:10",
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
                                         "typeString": "address[] memory"
                                       }
                                     },
-                                    "id": 3086,
+                                    "id": 3223,
                                     "indexExpression": {
                                       "argumentTypes": null,
-                                      "id": 3085,
+                                      "id": 3222,
                                       "name": "i",
                                       "nodeType": "Identifier",
                                       "overloadedDeclarations": [],
-                                      "referencedDeclaration": 3063,
+                                      "referencedDeclaration": 3200,
                                       "src": "1122:1:10",
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_uint32",
@@ -1451,18 +1451,18 @@
                                   ],
                                   "expression": {
                                     "argumentTypes": null,
-                                    "id": 3081,
+                                    "id": 3218,
                                     "name": "auction",
                                     "nodeType": "Identifier",
                                     "overloadedDeclarations": [],
-                                    "referencedDeclaration": 3033,
+                                    "referencedDeclaration": 3170,
                                     "src": "1087:7:10",
                                     "typeDescriptions": {
                                       "typeIdentifier": "t_contract$_DutchAuction_$2068",
                                       "typeString": "contract DutchAuction"
                                     }
                                   },
-                                  "id": 3083,
+                                  "id": 3220,
                                   "isConstant": false,
                                   "isLValue": false,
                                   "isPure": false,
@@ -1476,7 +1476,7 @@
                                     "typeString": "function (address) external returns (bool)"
                                   }
                                 },
-                                "id": 3087,
+                                "id": 3224,
                                 "isConstant": false,
                                 "isLValue": false,
                                 "isPure": false,
@@ -1490,7 +1490,7 @@
                                   "typeString": "bool"
                                 }
                               },
-                              "id": 3088,
+                              "id": 3225,
                               "nodeType": "ExpressionStatement",
                               "src": "1087:38:10"
                             }
@@ -1505,18 +1505,18 @@
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     },
-                    "id": 3069,
+                    "id": 3206,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftExpression": {
                       "argumentTypes": null,
-                      "id": 3066,
+                      "id": 3203,
                       "name": "i",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3063,
+                      "referencedDeclaration": 3200,
                       "src": "992:1:10",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint32",
@@ -1529,18 +1529,18 @@
                       "argumentTypes": null,
                       "expression": {
                         "argumentTypes": null,
-                        "id": 3067,
+                        "id": 3204,
                         "name": "addresses",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3059,
+                        "referencedDeclaration": 3196,
                         "src": "996:9:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
                           "typeString": "address[] memory"
                         }
                       },
-                      "id": 3068,
+                      "id": 3205,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -1560,18 +1560,18 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 3092,
+                  "id": 3229,
                   "initializationExpression": {
                     "assignments": [
-                      3063
+                      3200
                     ],
                     "declarations": [
                       {
                         "constant": false,
-                        "id": 3063,
+                        "id": 3200,
                         "name": "i",
                         "nodeType": "VariableDeclaration",
-                        "scope": 3094,
+                        "scope": 3231,
                         "src": "978:8:10",
                         "stateVariable": false,
                         "storageLocation": "default",
@@ -1580,7 +1580,7 @@
                           "typeString": "uint32"
                         },
                         "typeName": {
-                          "id": 3062,
+                          "id": 3199,
                           "name": "uint32",
                           "nodeType": "ElementaryTypeName",
                           "src": "978:6:10",
@@ -1593,11 +1593,11 @@
                         "visibility": "internal"
                       }
                     ],
-                    "id": 3065,
+                    "id": 3202,
                     "initialValue": {
                       "argumentTypes": null,
                       "hexValue": "30",
-                      "id": 3064,
+                      "id": 3201,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -1618,7 +1618,7 @@
                   "loopExpression": {
                     "expression": {
                       "argumentTypes": null,
-                      "id": 3071,
+                      "id": 3208,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -1629,11 +1629,11 @@
                       "src": "1014:3:10",
                       "subExpression": {
                         "argumentTypes": null,
-                        "id": 3070,
+                        "id": 3207,
                         "name": "i",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3063,
+                        "referencedDeclaration": 3200,
                         "src": "1014:1:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint32",
@@ -1645,7 +1645,7 @@
                         "typeString": "uint32"
                       }
                     },
-                    "id": 3072,
+                    "id": 3209,
                     "nodeType": "ExpressionStatement",
                     "src": "1014:3:10"
                   },
@@ -1655,7 +1655,7 @@
               ]
             },
             "documentation": "@notice Claim tokens in behalf of the following token owners: `addresses`.\n @dev Function that is called with an array of addresses for claiming tokens in their behalf.\n @param addresses Addresses of auction bidders that will be assigned tokens.",
-            "id": 3094,
+            "id": 3231,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -1663,15 +1663,15 @@
             "name": "distribute",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3060,
+              "id": 3197,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3059,
+                  "id": 3196,
                   "name": "addresses",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3094,
+                  "scope": 3231,
                   "src": "935:19:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1681,7 +1681,7 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 3057,
+                      "id": 3194,
                       "name": "address",
                       "nodeType": "ElementaryTypeName",
                       "src": "935:7:10",
@@ -1690,7 +1690,7 @@
                         "typeString": "address"
                       }
                     },
-                    "id": 3058,
+                    "id": 3195,
                     "length": null,
                     "nodeType": "ArrayTypeName",
                     "src": "935:9:10",
@@ -1707,19 +1707,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 3061,
+              "id": 3198,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "963:0:10"
             },
-            "scope": 3095,
+            "scope": 3232,
             "src": "915:241:10",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 3096,
+        "scope": 3233,
         "src": "141:1017:10"
       }
     ],
@@ -1731,5 +1731,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-07-10T09:28:42.739Z"
+  "updatedAt": "2018-07-11T15:15:48.824Z"
 }
