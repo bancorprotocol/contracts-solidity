@@ -59,20 +59,6 @@ contract FinancieBancorConverter is BancorConverter {
         return safeMul(_amount, financieFee) / MAX_FINANCIE_FEE;
     }
 
-    function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        require( _fromToken == quickBuyPath[0] );
-        require( _toToken == quickBuyPath[2] );
-
-        // take fee after conversion for sale
-        IBancorQuickConverter quickConverter = extensions.quickConverter();
-        uint256 result = quickConverter.convertFor.value(_amount)(quickSellPath, _amount, _minReturn, address(this));
-        uint256 feeAmount = getFinancieFee(result);
-        uint256 net = safeSub(result, feeAmount);
-        msg.sender.transfer(net);
-        distributeFees(feeAmount);
-        return feeAmount;
-    }
-
     /**
         @dev override
     */
@@ -88,7 +74,7 @@ contract FinancieBancorConverter is BancorConverter {
         distributeFees(feeAmount);
         uint256 result = quickConverter.convertFor.value(net)(_path, net, _minReturn, msg.sender);
 
-        core.notifyConvertCards(msg.sender, _path[0], _path[2], _amount, result);
+        core.notifyConvertCards(msg.sender, address(_path[0]), address(_path[2]), _amount, result);
 
         return result;
     }

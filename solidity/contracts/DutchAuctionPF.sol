@@ -276,7 +276,7 @@ contract DutchAuctionPF {
 
         assert(received_wei >= amount);
 
-        core.notifyBidCards(msg.sender, address(token), IFinancieCore.CurrencyType.PlatformCoin, amount);
+        core.notifyBidCards(msg.sender, address(token), amount);
     }
 
     /// @notice Claim auction tokens for `msg.sender` after the auction has ended.

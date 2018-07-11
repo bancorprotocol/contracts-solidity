@@ -51,7 +51,7 @@ contract FinancieHeroesDutchAuction is DutchAuction {
         atStage(Stages.AuctionStarted)
     {
         super.bid();
-        core.notifyBidCards(msg.sender, address(token), IFinancieCore.CurrencyType.Ethereum, msg.value);
+        core.notifyBidCards(msg.sender, address(token), msg.value);
     }
 
     /// @notice overrided from DutchAuction.

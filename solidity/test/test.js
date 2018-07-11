@@ -71,7 +71,7 @@ contract('BancorConverter', (accounts) => {
 
 contract('FinancieCore', (accounts) => {
     before(async () => {
-        financieCore = await FinancieCore.new(platformTokenAddress);
+        financieCore = await FinancieCore.new(platformTokenAddress, etherTokenAddress);
         await financieCore.activateTargetContract(platformTokenAddress, true);
         await financieCore.activateTargetContract(etherTokenAddress, true);
 

@@ -24,6 +24,7 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
     IFinancieLog log;
 
     IERC20Token platformToken;
+    IERC20Token etherToken;
 
     event ActivateUser(address _sender, uint32 _userId);
     event ConvertCards(address _sender, address _from, address _to, uint256 _amountFrom, uint256 _amountTo);
@@ -34,8 +35,9 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
     event DepositTickets(address _sender, address _issuer, address _ticket, address _card, uint256 _amount, uint256 _price);
     event BuyTicket(address _sender, address _issuer, address _ticket);
 
-    function FinancieCore(address _token) public {
-        platformToken = IERC20Token(_token);
+    function FinancieCore(address _pf_token, address _ether_token) public {
+        platformToken = IERC20Token(_pf_token);
+        etherToken = IERC20Token(_ether_token);
     }
 
     function setFinancieLog(address _log) public ownerOnly {
@@ -71,36 +73,14 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
         targetContracts[_contract] = _enabled;
     }
 
-    function notifyConvertCards(address _sender,
+    function notifyConvertCards(
+        address _sender,
         address _from,
         address _to,
         uint256 _amountFrom,
         uint256 _amountTo)
         public
-        validTargetContract(msg.sender)
-        validTargetContract(_from)
-        validTargetContract(_to)
     {
-        require(_from == address(platformToken) || _to == address(platformToken));
-        if ( _from == address(platformToken) ) {
-            log.recordLog(
-              _sender,
-              IFinancieLog.EventType.BuyCards,
-              IFinancieLog.CurrencyType.PlatformCoin,
-              _to,
-              _amountFrom,
-              _amountTo);
-            addOwnedCardList(_sender, _to);
-        } else {
-            log.recordLog(
-              _sender,
-              IFinancieLog.EventType.SellCards,
-              IFinancieLog.CurrencyType.PlatformCoin,
-              _from,
-              _amountFrom,
-              _amountTo);
-        }
-
         ConvertCards(_sender, _from, _to, _amountFrom, _amountTo);
     }
 
