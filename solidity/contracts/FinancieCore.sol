@@ -141,33 +141,31 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
     /**
     * log the burn of cards
     */
-    function notifyBurnCards(address _sender, address _card, uint256 _amount)
+    function notifyBurnCards(address _sender, uint256 _amount)
         public
         validTargetContract(msg.sender)
-        validTargetContract(_card)
     {
         log.recordLog(
           _sender,
           IFinancieLog.EventType.BurnCards,
           IFinancieLog.CurrencyType.None,
-          _card,
+          msg.sender,
           _amount,
           0);
 
-        BurnCards(msg.sender, _card, _amount);
+        BurnCards(msg.sender, msg.sender, _amount);
     }
 
     /**
     * log the burn of tickets
     */
-    function notifyBurnTickets(address _sender, address _ticket, uint256 _amount)
+    function notifyBurnTickets(address _sender, uint256 _amount)
         public
         validTargetContract(msg.sender)
-        validTargetContract(_ticket)
     {
-        paidTicketList[_ticket][_sender] = safeAdd(paidTicketList[_ticket][_sender], _amount);
+        paidTicketList[msg.sender][_sender] = safeAdd(paidTicketList[msg.sender][_sender], _amount);
 
-        BurnTickets(_sender, _ticket, _amount);
+        BurnTickets(_sender, msg.sender, _amount);
     }
 
     /**

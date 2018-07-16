@@ -197,22 +197,22 @@
   ],
   "bytecode": "0x6060604052341561000f57600080fd5b6040516060806106aa83398101604052808051919060200180519190602001805160008054600160a060020a03191633600160a060020a03908116919091179091559092508491508116151561006457600080fd5b82600160a060020a038116151561007a57600080fd5b82600160a060020a038116151561009057600080fd5b505060028054600160a060020a03958616600160a060020a031991821617909155600380549486169482169490941790935550600480549190931691161790556105cb806100df6000396000f3006060604052600436106100ae5763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416634b75f54f81146100b35780635e35359e146100e257806379ba50971461010c5780638da5cb5b1461011f578063961a929c14610132578063bbc5d3d914610145578063c31e054714610164578063d4ee1d9014610177578063e33051dd1461018a578063ecc06c76146101a9578063f2fde38b146101c8575b600080fd5b34156100be57600080fd5b6100c66101e7565b604051600160a060020a03909116815260200160405180910390f35b34156100ed57600080fd5b61010a600160a060020a03600435811690602435166044356101f6565b005b341561011757600080fd5b61010a6102f0565b341561012a57600080fd5b6100c661037e565b341561013d57600080fd5b6100c661038d565b341561015057600080fd5b61010a600160a060020a036004351661039c565b341561016f57600080fd5b6100c661041d565b341561018257600080fd5b6100c661042c565b341561019557600080fd5b61010a600160a060020a036004351661043b565b34156101b457600080fd5b61010a600160a060020a03600435166104bc565b34156101d357600080fd5b61010a600160a060020a036004351661053d565b600254600160a060020a031681565b60005433600160a060020a0390811691161461020e57fe5b82600160a060020a038116151561022457600080fd5b82600160a060020a038116151561023a57600080fd5b8330600160a060020a031681600160a060020a03161415151561025c57600080fd5b85600160a060020a031663a9059cbb86866040517c010000000000000000000000000000000000000000000000000000000063ffffffff8516028152600160a060020a0390921660048301526024820152604401602060405180830381600087803b15156102c957600080fd5b5af115156102d657600080fd5b5050506040518051905015156102e857fe5b505050505050565b60015433600160a060020a0390811691161461030b57600080fd5b600154600054600160a060020a0391821691167f343765429aea5a34b3ff6a3785a98a5abb2597aca87bfbb58632c173d585373a60405160405180910390a3600180546000805473ffffffffffffffffffffffffffffffffffffffff19908116600160a060020a03841617909155169055565b600054600160a060020a031681565b600354600160a060020a031681565b60005433600160a060020a039081169116146103b457fe5b80600160a060020a03811615156103ca57600080fd5b8130600160a060020a031681600160a060020a0316141515156103ec57600080fd5b50506004805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600454600160a060020a031681565b600154600160a060020a031681565b60005433600160a060020a0390811691161461045357fe5b80600160a060020a038116151561046957600080fd5b8130600160a060020a031681600160a060020a03161415151561048b57600080fd5b50506003805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b60005433600160a060020a039081169116146104d457fe5b80600160a060020a03811615156104ea57600080fd5b8130600160a060020a031681600160a060020a03161415151561050c57600080fd5b50506002805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b60005433600160a060020a0390811691161461055557fe5b600054600160a060020a038281169116141561057057600080fd5b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03929092169190911790555600a165627a7a72305820a212b413667b3b2850b9e41dde1233e707ddac4d91ccfdbc13b8225ffa4ffe2f0029",
   "deployedBytecode": "0x6060604052600436106100ae5763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416634b75f54f81146100b35780635e35359e146100e257806379ba50971461010c5780638da5cb5b1461011f578063961a929c14610132578063bbc5d3d914610145578063c31e054714610164578063d4ee1d9014610177578063e33051dd1461018a578063ecc06c76146101a9578063f2fde38b146101c8575b600080fd5b34156100be57600080fd5b6100c66101e7565b604051600160a060020a03909116815260200160405180910390f35b34156100ed57600080fd5b61010a600160a060020a03600435811690602435166044356101f6565b005b341561011757600080fd5b61010a6102f0565b341561012a57600080fd5b6100c661037e565b341561013d57600080fd5b6100c661038d565b341561015057600080fd5b61010a600160a060020a036004351661039c565b341561016f57600080fd5b6100c661041d565b341561018257600080fd5b6100c661042c565b341561019557600080fd5b61010a600160a060020a036004351661043b565b34156101b457600080fd5b61010a600160a060020a03600435166104bc565b34156101d357600080fd5b61010a600160a060020a036004351661053d565b600254600160a060020a031681565b60005433600160a060020a0390811691161461020e57fe5b82600160a060020a038116151561022457600080fd5b82600160a060020a038116151561023a57600080fd5b8330600160a060020a031681600160a060020a03161415151561025c57600080fd5b85600160a060020a031663a9059cbb86866040517c010000000000000000000000000000000000000000000000000000000063ffffffff8516028152600160a060020a0390921660048301526024820152604401602060405180830381600087803b15156102c957600080fd5b5af115156102d657600080fd5b5050506040518051905015156102e857fe5b505050505050565b60015433600160a060020a0390811691161461030b57600080fd5b600154600054600160a060020a0391821691167f343765429aea5a34b3ff6a3785a98a5abb2597aca87bfbb58632c173d585373a60405160405180910390a3600180546000805473ffffffffffffffffffffffffffffffffffffffff19908116600160a060020a03841617909155169055565b600054600160a060020a031681565b600354600160a060020a031681565b60005433600160a060020a039081169116146103b457fe5b80600160a060020a03811615156103ca57600080fd5b8130600160a060020a031681600160a060020a0316141515156103ec57600080fd5b50506004805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600454600160a060020a031681565b600154600160a060020a031681565b60005433600160a060020a0390811691161461045357fe5b80600160a060020a038116151561046957600080fd5b8130600160a060020a031681600160a060020a03161415151561048b57600080fd5b50506003805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b60005433600160a060020a039081169116146104d457fe5b80600160a060020a03811615156104ea57600080fd5b8130600160a060020a031681600160a060020a03161415151561050c57600080fd5b50506002805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b60005433600160a060020a0390811691161461055557fe5b600054600160a060020a038281169116141561057057600080fd5b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03929092169190911790555600a165627a7a72305820a212b413667b3b2850b9e41dde1233e707ddac4d91ccfdbc13b8225ffa4ffe2f0029",
-  "sourceMap": "484:2097:1:-;;;1084:378;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;364:5:16;:18;;-1:-1:-1;;;;;;364:18:16;372:10;-1:-1:-1;;;;;364:18:16;;;;;;;;;;1084:378:1;;-1:-1:-1;1256:8:1;;-1:-1:-1;435:22:20;;;;427:31;;;;;;1287:14:1;-1:-1:-1;;;;;435:22:20;;;;427:31;;;;;;1324:15:1;-1:-1:-1;;;;;435:22:20;;;;427:31;;;;;;-1:-1:-1;;1355:7:1;:18;;-1:-1:-1;;;;;1355:18:1;;;-1:-1:-1;;;;;;1355:18:1;;;;;;;1383:13;:30;;;;;;;;;;;;;;;-1:-1:-1;1423:14:1;:32;;;;;;;;;;;484:2097;;;;;;",
-  "deployedSourceMap": "484:2097:1:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;568:29;;;;;;;;;;;;;;;-1:-1:-1;;;;;568:29:1;;;;;;;;;;;;;;901:241:19;;;;;;;;;;-1:-1:-1;;;;;901:241:19;;;;;;;;;;;;;;965:177:16;;;;;;;;;;;;155:20;;;;;;;;;;;;643:41:1;;;;;;;;;;;;2356:223;;;;;;;;;;-1:-1:-1;;;;;2356:223:1;;;;;735:43;;;;;;;;;;;;181:23:16;;;;;;;;;;;;1965:216:1;;;;;;;;;;-1:-1:-1;;;;;1965:216:1;;;;;1616:174;;;;;;;;;;-1:-1:-1;;;;;1616:174:1;;;;;742:137:16;;;;;;;;;;-1:-1:-1;;;;;742:137:16;;;;;568:29:1;;;-1:-1:-1;;;;;568:29:1;;:::o;901:241:19:-;487:5:16;;473:10;-1:-1:-1;;;;;473:19:16;;;487:5;;473:19;466:27;;;;1029:6:19;-1:-1:-1;;;;;435:22:20;;;;427:31;;;;;;1058:3:19;-1:-1:-1;;;;;435:22:20;;;;427:31;;;;;;1079:3:19;628:4:20;-1:-1:-1;;;;;608:25:20;:8;-1:-1:-1;;;;;608:25:20;;;600:34;;;;;;;;1105:6:19;-1:-1:-1;;;;;1105:15:19;;1121:3;1126:7;1105:29;;;;;;;;;-1:-1:-1;;;;;1105:29:19;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1098:37;;;;;;468:1:20;;503::16;901:241:19;;;:::o;965:177:16:-;1031:8;;1017:10;-1:-1:-1;;;;;1017:22:16;;;1031:8;;1017:22;1009:31;;;;;;1069:8;;;1062:5;-1:-1:-1;;;;;1069:8:16;;;;1062:5;1050:28;;;;;;;;;;1096:8;;;;1088:16;;-1:-1:-1;;1088:16:16;;;-1:-1:-1;;;;;1096:8:16;;1088:16;;;;1114:21;;;965:177::o;155:20::-;;;-1:-1:-1;;;;;155:20:16;;:::o;643:41:1:-;;;-1:-1:-1;;;;;643:41:1;;:::o;2356:223::-;487:5:16;;473:10;-1:-1:-1;;;;;473:19:16;;;487:5;;473:19;466:27;;;;2476:15:1;-1:-1:-1;;;;;435:22:20;;;;427:31;;;;;;2509:15:1;628:4:20;-1:-1:-1;;;;;608:25:20;:8;-1:-1:-1;;;;;608:25:20;;;600:34;;;;;;;;-1:-1:-1;;2540:14:1;:32;;-1:-1:-1;;2540:32:1;-1:-1:-1;;;;;2540:32:1;;;;;;;;;;2356:223::o;735:43::-;;;-1:-1:-1;;;;;735:43:1;;:::o;181:23:16:-;;;-1:-1:-1;;;;;181:23:16;;:::o;1965:216:1:-;487:5:16;;473:10;-1:-1:-1;;;;;473:19:16;;;487:5;;473:19;466:27;;;;2082:14:1;-1:-1:-1;;;;;435:22:20;;;;427:31;;;;;;2114:14:1;628:4:20;-1:-1:-1;;;;;608:25:20;:8;-1:-1:-1;;;;;608:25:20;;;600:34;;;;;;;;-1:-1:-1;;2144:13:1;:30;;-1:-1:-1;;2144:30:1;-1:-1:-1;;;;;2144:30:1;;;;;;;;;;1965:216::o;1616:174::-;487:5:16;;473:10;-1:-1:-1;;;;;473:19:16;;;487:5;;473:19;466:27;;;;1715:8:1;-1:-1:-1;;;;;435:22:20;;;;427:31;;;;;;1741:8:1;628:4:20;-1:-1:-1;;;;;608:25:20;:8;-1:-1:-1;;;;;608:25:20;;;600:34;;;;;;;;-1:-1:-1;;1765:7:1;:18;;-1:-1:-1;;1765:18:1;-1:-1:-1;;;;;1765:18:1;;;;;;;;;;1616:174::o;742:137:16:-;487:5;;473:10;-1:-1:-1;;;;;473:19:16;;;487:5;;473:19;466:27;;;;836:5;;-1:-1:-1;;;;;823:18:16;;;836:5;;823:18;;815:27;;;;;;852:8;:20;;-1:-1:-1;;852:20:16;-1:-1:-1;;;;;852:20:16;;;;;;;;;;742:137::o",
+  "sourceMap": "484:2097:1:-;;;1084:378;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;364:5:18;:18;;-1:-1:-1;;;;;;364:18:18;372:10;-1:-1:-1;;;;;364:18:18;;;;;;;;;;1084:378:1;;-1:-1:-1;1256:8:1;;-1:-1:-1;435:22:22;;;;427:31;;;;;;1287:14:1;-1:-1:-1;;;;;435:22:22;;;;427:31;;;;;;1324:15:1;-1:-1:-1;;;;;435:22:22;;;;427:31;;;;;;-1:-1:-1;;1355:7:1;:18;;-1:-1:-1;;;;;1355:18:1;;;-1:-1:-1;;;;;;1355:18:1;;;;;;;1383:13;:30;;;;;;;;;;;;;;;-1:-1:-1;1423:14:1;:32;;;;;;;;;;;484:2097;;;;;;",
+  "deployedSourceMap": "484:2097:1:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;568:29;;;;;;;;;;;;;;;-1:-1:-1;;;;;568:29:1;;;;;;;;;;;;;;901:241:21;;;;;;;;;;-1:-1:-1;;;;;901:241:21;;;;;;;;;;;;;;965:177:18;;;;;;;;;;;;155:20;;;;;;;;;;;;643:41:1;;;;;;;;;;;;2356:223;;;;;;;;;;-1:-1:-1;;;;;2356:223:1;;;;;735:43;;;;;;;;;;;;181:23:18;;;;;;;;;;;;1965:216:1;;;;;;;;;;-1:-1:-1;;;;;1965:216:1;;;;;1616:174;;;;;;;;;;-1:-1:-1;;;;;1616:174:1;;;;;742:137:18;;;;;;;;;;-1:-1:-1;;;;;742:137:18;;;;;568:29:1;;;-1:-1:-1;;;;;568:29:1;;:::o;901:241:21:-;487:5:18;;473:10;-1:-1:-1;;;;;473:19:18;;;487:5;;473:19;466:27;;;;1029:6:21;-1:-1:-1;;;;;435:22:22;;;;427:31;;;;;;1058:3:21;-1:-1:-1;;;;;435:22:22;;;;427:31;;;;;;1079:3:21;628:4:22;-1:-1:-1;;;;;608:25:22;:8;-1:-1:-1;;;;;608:25:22;;;600:34;;;;;;;;1105:6:21;-1:-1:-1;;;;;1105:15:21;;1121:3;1126:7;1105:29;;;;;;;;;-1:-1:-1;;;;;1105:29:21;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1098:37;;;;;;468:1:22;;503::18;901:241:21;;;:::o;965:177:18:-;1031:8;;1017:10;-1:-1:-1;;;;;1017:22:18;;;1031:8;;1017:22;1009:31;;;;;;1069:8;;;1062:5;-1:-1:-1;;;;;1069:8:18;;;;1062:5;1050:28;;;;;;;;;;1096:8;;;;1088:16;;-1:-1:-1;;1088:16:18;;;-1:-1:-1;;;;;1096:8:18;;1088:16;;;;1114:21;;;965:177::o;155:20::-;;;-1:-1:-1;;;;;155:20:18;;:::o;643:41:1:-;;;-1:-1:-1;;;;;643:41:1;;:::o;2356:223::-;487:5:18;;473:10;-1:-1:-1;;;;;473:19:18;;;487:5;;473:19;466:27;;;;2476:15:1;-1:-1:-1;;;;;435:22:22;;;;427:31;;;;;;2509:15:1;628:4:22;-1:-1:-1;;;;;608:25:22;:8;-1:-1:-1;;;;;608:25:22;;;600:34;;;;;;;;-1:-1:-1;;2540:14:1;:32;;-1:-1:-1;;2540:32:1;-1:-1:-1;;;;;2540:32:1;;;;;;;;;;2356:223::o;735:43::-;;;-1:-1:-1;;;;;735:43:1;;:::o;181:23:18:-;;;-1:-1:-1;;;;;181:23:18;;:::o;1965:216:1:-;487:5:18;;473:10;-1:-1:-1;;;;;473:19:18;;;487:5;;473:19;466:27;;;;2082:14:1;-1:-1:-1;;;;;435:22:22;;;;427:31;;;;;;2114:14:1;628:4:22;-1:-1:-1;;;;;608:25:22;:8;-1:-1:-1;;;;;608:25:22;;;600:34;;;;;;;;-1:-1:-1;;2144:13:1;:30;;-1:-1:-1;;2144:30:1;-1:-1:-1;;;;;2144:30:1;;;;;;;;;;1965:216::o;1616:174::-;487:5:18;;473:10;-1:-1:-1;;;;;473:19:18;;;487:5;;473:19;466:27;;;;1715:8:1;-1:-1:-1;;;;;435:22:22;;;;427:31;;;;;;1741:8:1;628:4:22;-1:-1:-1;;;;;608:25:22;:8;-1:-1:-1;;;;;608:25:22;;;600:34;;;;;;;;-1:-1:-1;;1765:7:1;:18;;-1:-1:-1;;1765:18:1;-1:-1:-1;;;;;1765:18:1;;;;;;;;;;1616:174::o;742:137:18:-;487:5;;473:10;-1:-1:-1;;;;;473:19:18;;;487:5;;473:19;466:27;;;;836:5;;-1:-1:-1;;;;;823:18:18;;;836:5;;823:18;;815:27;;;;;;852:8;:20;;-1:-1:-1;;852:20:18;-1:-1:-1;;;;;852:20:18;;;;;;;;;;742:137::o",
   "source": "pragma solidity ^0.4.18;\nimport './TokenHolder.sol';\nimport './interfaces/IBancorConverterExtensions.sol';\n\n/**\n    @dev the BancorConverterExtensions contract is an owned contract that serves as a single point of access\n    to the BancorFormula, BancorGasPriceLimit and BancorQuickConverter contracts from all BancorConverter contract instances.\n    it allows upgrading these contracts without the need to update each and every\n    BancorConverter contract instance individually.\n*/\ncontract BancorConverterExtensions is IBancorConverterExtensions, TokenHolder {\n    IBancorFormula public formula;  // bancor calculation formula contract\n    IBancorGasPriceLimit public gasPriceLimit; // bancor universal gas price limit contract\n    IBancorQuickConverter public quickConverter; // bancor quick converter contract\n\n    /**\n        @dev constructor\n\n        @param _formula         address of a bancor formula contract\n        @param _gasPriceLimit   address of a bancor gas price limit contract\n        @param _quickConverter  address of a bancor quick converter contract\n    */\n    function BancorConverterExtensions(IBancorFormula _formula, IBancorGasPriceLimit _gasPriceLimit, IBancorQuickConverter _quickConverter)\n        public\n        validAddress(_formula)\n        validAddress(_gasPriceLimit)\n        validAddress(_quickConverter)\n    {\n        formula = _formula;\n        gasPriceLimit = _gasPriceLimit;\n        quickConverter = _quickConverter;\n    }\n\n    /*\n        @dev allows the owner to update the formula contract address\n\n        @param _formula    address of a bancor formula contract\n    */\n    function setFormula(IBancorFormula _formula)\n        public\n        ownerOnly\n        validAddress(_formula)\n        notThis(_formula)\n    {\n        formula = _formula;\n    }\n\n    /*\n        @dev allows the owner to update the gas price limit contract address\n\n        @param _gasPriceLimit   address of a bancor gas price limit contract\n    */\n    function setGasPriceLimit(IBancorGasPriceLimit _gasPriceLimit)\n        public\n        ownerOnly\n        validAddress(_gasPriceLimit)\n        notThis(_gasPriceLimit)\n    {\n        gasPriceLimit = _gasPriceLimit;\n    }\n\n    /*\n        @dev allows the owner to update the quick converter contract address\n\n        @param _quickConverter  address of a bancor quick converter contract\n    */\n    function setQuickConverter(IBancorQuickConverter _quickConverter)\n        public\n        ownerOnly\n        validAddress(_quickConverter)\n        notThis(_quickConverter)\n    {\n        quickConverter = _quickConverter;\n    }\n}\n",
   "sourcePath": "/Users/rudo/contracts/solidity/contracts/BancorConverterExtensions.sol",
   "ast": {
     "absolutePath": "/Users/rudo/contracts/solidity/contracts/BancorConverterExtensions.sol",
     "exportedSymbols": {
       "BancorConverterExtensions": [
-        1402
+        1370
       ]
     },
-    "id": 1403,
+    "id": 1371,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 1304,
+        "id": 1272,
         "literals": [
           "solidity",
           "^",
@@ -225,10 +225,10 @@
       {
         "absolutePath": "/Users/rudo/contracts/solidity/contracts/TokenHolder.sol",
         "file": "./TokenHolder.sol",
-        "id": 1305,
+        "id": 1273,
         "nodeType": "ImportDirective",
-        "scope": 1403,
-        "sourceUnit": 7554,
+        "scope": 1371,
+        "sourceUnit": 8055,
         "src": "25:27:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -236,10 +236,10 @@
       {
         "absolutePath": "/Users/rudo/contracts/solidity/contracts/interfaces/IBancorConverterExtensions.sol",
         "file": "./interfaces/IBancorConverterExtensions.sol",
-        "id": 1306,
+        "id": 1274,
         "nodeType": "ImportDirective",
-        "scope": 1403,
-        "sourceUnit": 8044,
+        "scope": 1371,
+        "sourceUnit": 8545,
         "src": "53:53:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -250,17 +250,17 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 1307,
+              "id": 1275,
               "name": "IBancorConverterExtensions",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8043,
+              "referencedDeclaration": 8544,
               "src": "522:26:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorConverterExtensions_$8043",
+                "typeIdentifier": "t_contract$_IBancorConverterExtensions_$8544",
                 "typeString": "contract IBancorConverterExtensions"
               }
             },
-            "id": 1308,
+            "id": 1276,
             "nodeType": "InheritanceSpecifier",
             "src": "522:26:1"
           },
@@ -268,67 +268,67 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 1309,
+              "id": 1277,
               "name": "TokenHolder",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 7553,
+              "referencedDeclaration": 8054,
               "src": "550:11:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_TokenHolder_$7553",
+                "typeIdentifier": "t_contract$_TokenHolder_$8054",
                 "typeString": "contract TokenHolder"
               }
             },
-            "id": 1310,
+            "id": 1278,
             "nodeType": "InheritanceSpecifier",
             "src": "550:11:1"
           }
         ],
         "contractDependencies": [
-          7183,
-          7553,
-          7674,
-          8043,
-          8393,
-          8490
+          7684,
+          8054,
+          8175,
+          8544,
+          8905,
+          9002
         ],
         "contractKind": "contract",
         "documentation": "@dev the BancorConverterExtensions contract is an owned contract that serves as a single point of access\nto the BancorFormula, BancorGasPriceLimit and BancorQuickConverter contracts from all BancorConverter contract instances.\nit allows upgrading these contracts without the need to update each and every\nBancorConverter contract instance individually.",
         "fullyImplemented": true,
-        "id": 1402,
+        "id": 1370,
         "linearizedBaseContracts": [
-          1402,
-          7553,
-          7674,
-          7183,
-          8490,
-          8393,
-          8043
+          1370,
+          8054,
+          8175,
+          7684,
+          9002,
+          8905,
+          8544
         ],
         "name": "BancorConverterExtensions",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 1312,
+            "id": 1280,
             "name": "formula",
             "nodeType": "VariableDeclaration",
-            "scope": 1402,
+            "scope": 1370,
             "src": "568:29:1",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+              "typeIdentifier": "t_contract$_IBancorFormula_$8573",
               "typeString": "contract IBancorFormula"
             },
             "typeName": {
               "contractScope": null,
-              "id": 1311,
+              "id": 1279,
               "name": "IBancorFormula",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8072,
+              "referencedDeclaration": 8573,
               "src": "568:14:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                 "typeString": "contract IBancorFormula"
               }
             },
@@ -337,26 +337,26 @@
           },
           {
             "constant": false,
-            "id": 1314,
+            "id": 1282,
             "name": "gasPriceLimit",
             "nodeType": "VariableDeclaration",
-            "scope": 1402,
+            "scope": 1370,
             "src": "643:41:1",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+              "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
               "typeString": "contract IBancorGasPriceLimit"
             },
             "typeName": {
               "contractScope": null,
-              "id": 1313,
+              "id": 1281,
               "name": "IBancorGasPriceLimit",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8081,
+              "referencedDeclaration": 8582,
               "src": "643:20:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                 "typeString": "contract IBancorGasPriceLimit"
               }
             },
@@ -365,26 +365,26 @@
           },
           {
             "constant": false,
-            "id": 1316,
+            "id": 1284,
             "name": "quickConverter",
             "nodeType": "VariableDeclaration",
-            "scope": 1402,
+            "scope": 1370,
             "src": "735:43:1",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+              "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
               "typeString": "contract IBancorQuickConverter"
             },
             "typeName": {
               "contractScope": null,
-              "id": 1315,
+              "id": 1283,
               "name": "IBancorQuickConverter",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8111,
+              "referencedDeclaration": 8612,
               "src": "735:21:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                 "typeString": "contract IBancorQuickConverter"
               }
             },
@@ -393,30 +393,30 @@
           },
           {
             "body": {
-              "id": 1346,
+              "id": 1314,
               "nodeType": "Block",
               "src": "1345:117:1",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1336,
+                    "id": 1304,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1334,
+                      "id": 1302,
                       "name": "formula",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1312
+                        1280
                       ],
-                      "referencedDeclaration": 1312,
+                      "referencedDeclaration": 1280,
                       "src": "1355:7:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                        "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                         "typeString": "contract IBancorFormula"
                       }
                     },
@@ -424,47 +424,47 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1335,
+                      "id": 1303,
                       "name": "_formula",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1318,
+                      "referencedDeclaration": 1286,
                       "src": "1365:8:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                        "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                         "typeString": "contract IBancorFormula"
                       }
                     },
                     "src": "1355:18:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   },
-                  "id": 1337,
+                  "id": 1305,
                   "nodeType": "ExpressionStatement",
                   "src": "1355:18:1"
                 },
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1340,
+                    "id": 1308,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1338,
+                      "id": 1306,
                       "name": "gasPriceLimit",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1314
+                        1282
                       ],
-                      "referencedDeclaration": 1314,
+                      "referencedDeclaration": 1282,
                       "src": "1383:13:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                         "typeString": "contract IBancorGasPriceLimit"
                       }
                     },
@@ -472,47 +472,47 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1339,
+                      "id": 1307,
                       "name": "_gasPriceLimit",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1320,
+                      "referencedDeclaration": 1288,
                       "src": "1399:14:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                         "typeString": "contract IBancorGasPriceLimit"
                       }
                     },
                     "src": "1383:30:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   },
-                  "id": 1341,
+                  "id": 1309,
                   "nodeType": "ExpressionStatement",
                   "src": "1383:30:1"
                 },
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1344,
+                    "id": 1312,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1342,
+                      "id": 1310,
                       "name": "quickConverter",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1316
+                        1284
                       ],
-                      "referencedDeclaration": 1316,
+                      "referencedDeclaration": 1284,
                       "src": "1423:14:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                         "typeString": "contract IBancorQuickConverter"
                       }
                     },
@@ -520,31 +520,31 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1343,
+                      "id": 1311,
                       "name": "_quickConverter",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1322,
+                      "referencedDeclaration": 1290,
                       "src": "1440:15:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                         "typeString": "contract IBancorQuickConverter"
                       }
                     },
                     "src": "1423:32:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   },
-                  "id": 1345,
+                  "id": 1313,
                   "nodeType": "ExpressionStatement",
                   "src": "1423:32:1"
                 }
               ]
             },
             "documentation": "@dev constructor\n@param _formula         address of a bancor formula contract\n@param _gasPriceLimit   address of a bancor gas price limit contract\n@param _quickConverter  address of a bancor quick converter contract",
-            "id": 1347,
+            "id": 1315,
             "implemented": true,
             "isConstructor": true,
             "isDeclaredConst": false,
@@ -553,26 +553,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1325,
+                    "id": 1293,
                     "name": "_formula",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1318,
+                    "referencedDeclaration": 1286,
                     "src": "1256:8:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   }
                 ],
-                "id": 1326,
+                "id": 1294,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1324,
+                  "id": 1292,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7585,
+                  "referencedDeclaration": 8086,
                   "src": "1243:12:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -586,26 +586,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1328,
+                    "id": 1296,
                     "name": "_gasPriceLimit",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1320,
+                    "referencedDeclaration": 1288,
                     "src": "1287:14:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   }
                 ],
-                "id": 1329,
+                "id": 1297,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1327,
+                  "id": 1295,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7585,
+                  "referencedDeclaration": 8086,
                   "src": "1274:12:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -619,26 +619,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1331,
+                    "id": 1299,
                     "name": "_quickConverter",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1322,
+                    "referencedDeclaration": 1290,
                     "src": "1324:15:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   }
                 ],
-                "id": 1332,
+                "id": 1300,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1330,
+                  "id": 1298,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7585,
+                  "referencedDeclaration": 8086,
                   "src": "1311:12:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -652,31 +652,31 @@
             "name": "BancorConverterExtensions",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1323,
+              "id": 1291,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1318,
+                  "id": 1286,
                   "name": "_formula",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1347,
+                  "scope": 1315,
                   "src": "1119:23:1",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                    "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                     "typeString": "contract IBancorFormula"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 1317,
+                    "id": 1285,
                     "name": "IBancorFormula",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8072,
+                    "referencedDeclaration": 8573,
                     "src": "1119:14:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   },
@@ -685,26 +685,26 @@
                 },
                 {
                   "constant": false,
-                  "id": 1320,
+                  "id": 1288,
                   "name": "_gasPriceLimit",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1347,
+                  "scope": 1315,
                   "src": "1144:35:1",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                    "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                     "typeString": "contract IBancorGasPriceLimit"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 1319,
+                    "id": 1287,
                     "name": "IBancorGasPriceLimit",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8081,
+                    "referencedDeclaration": 8582,
                     "src": "1144:20:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   },
@@ -713,26 +713,26 @@
                 },
                 {
                   "constant": false,
-                  "id": 1322,
+                  "id": 1290,
                   "name": "_quickConverter",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1347,
+                  "scope": 1315,
                   "src": "1181:37:1",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                    "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                     "typeString": "contract IBancorQuickConverter"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 1321,
+                    "id": 1289,
                     "name": "IBancorQuickConverter",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8111,
+                    "referencedDeclaration": 8612,
                     "src": "1181:21:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   },
@@ -744,12 +744,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1333,
+              "id": 1301,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1345:0:1"
             },
-            "scope": 1402,
+            "scope": 1370,
             "src": "1084:378:1",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -757,30 +757,30 @@
           },
           {
             "body": {
-              "id": 1364,
+              "id": 1332,
               "nodeType": "Block",
               "src": "1755:35:1",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1362,
+                    "id": 1330,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1360,
+                      "id": 1328,
                       "name": "formula",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1312
+                        1280
                       ],
-                      "referencedDeclaration": 1312,
+                      "referencedDeclaration": 1280,
                       "src": "1765:7:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                        "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                         "typeString": "contract IBancorFormula"
                       }
                     },
@@ -788,45 +788,45 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1361,
+                      "id": 1329,
                       "name": "_formula",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1349,
+                      "referencedDeclaration": 1317,
                       "src": "1775:8:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                        "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                         "typeString": "contract IBancorFormula"
                       }
                     },
                     "src": "1765:18:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   },
-                  "id": 1363,
+                  "id": 1331,
                   "nodeType": "ExpressionStatement",
                   "src": "1765:18:1"
                 }
               ]
             },
             "documentation": null,
-            "id": 1365,
+            "id": 1333,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 1352,
+                "id": 1320,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1351,
+                  "id": 1319,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7138,
+                  "referencedDeclaration": 7639,
                   "src": "1684:9:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -840,26 +840,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1354,
+                    "id": 1322,
                     "name": "_formula",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1349,
+                    "referencedDeclaration": 1317,
                     "src": "1715:8:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   }
                 ],
-                "id": 1355,
+                "id": 1323,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1353,
+                  "id": 1321,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7585,
+                  "referencedDeclaration": 8086,
                   "src": "1702:12:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -873,26 +873,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1357,
+                    "id": 1325,
                     "name": "_formula",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1349,
+                    "referencedDeclaration": 1317,
                     "src": "1741:8:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   }
                 ],
-                "id": 1358,
+                "id": 1326,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1356,
+                  "id": 1324,
                   "name": "notThis",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7599,
+                  "referencedDeclaration": 8100,
                   "src": "1733:7:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -906,31 +906,31 @@
             "name": "setFormula",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1350,
+              "id": 1318,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1349,
+                  "id": 1317,
                   "name": "_formula",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1365,
+                  "scope": 1333,
                   "src": "1636:23:1",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                    "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                     "typeString": "contract IBancorFormula"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 1348,
+                    "id": 1316,
                     "name": "IBancorFormula",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8072,
+                    "referencedDeclaration": 8573,
                     "src": "1636:14:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   },
@@ -942,12 +942,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1359,
+              "id": 1327,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1755:0:1"
             },
-            "scope": 1402,
+            "scope": 1370,
             "src": "1616:174:1",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -955,30 +955,30 @@
           },
           {
             "body": {
-              "id": 1382,
+              "id": 1350,
               "nodeType": "Block",
               "src": "2134:47:1",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1380,
+                    "id": 1348,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1378,
+                      "id": 1346,
                       "name": "gasPriceLimit",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1314
+                        1282
                       ],
-                      "referencedDeclaration": 1314,
+                      "referencedDeclaration": 1282,
                       "src": "2144:13:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                         "typeString": "contract IBancorGasPriceLimit"
                       }
                     },
@@ -986,45 +986,45 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1379,
+                      "id": 1347,
                       "name": "_gasPriceLimit",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1367,
+                      "referencedDeclaration": 1335,
                       "src": "2160:14:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                         "typeString": "contract IBancorGasPriceLimit"
                       }
                     },
                     "src": "2144:30:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   },
-                  "id": 1381,
+                  "id": 1349,
                   "nodeType": "ExpressionStatement",
                   "src": "2144:30:1"
                 }
               ]
             },
             "documentation": null,
-            "id": 1383,
+            "id": 1351,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 1370,
+                "id": 1338,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1369,
+                  "id": 1337,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7138,
+                  "referencedDeclaration": 7639,
                   "src": "2051:9:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -1038,26 +1038,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1372,
+                    "id": 1340,
                     "name": "_gasPriceLimit",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1367,
+                    "referencedDeclaration": 1335,
                     "src": "2082:14:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   }
                 ],
-                "id": 1373,
+                "id": 1341,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1371,
+                  "id": 1339,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7585,
+                  "referencedDeclaration": 8086,
                   "src": "2069:12:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -1071,26 +1071,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1375,
+                    "id": 1343,
                     "name": "_gasPriceLimit",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1367,
+                    "referencedDeclaration": 1335,
                     "src": "2114:14:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   }
                 ],
-                "id": 1376,
+                "id": 1344,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1374,
+                  "id": 1342,
                   "name": "notThis",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7599,
+                  "referencedDeclaration": 8100,
                   "src": "2106:7:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -1104,31 +1104,31 @@
             "name": "setGasPriceLimit",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1368,
+              "id": 1336,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1367,
+                  "id": 1335,
                   "name": "_gasPriceLimit",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1383,
+                  "scope": 1351,
                   "src": "1991:35:1",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                    "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                     "typeString": "contract IBancorGasPriceLimit"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 1366,
+                    "id": 1334,
                     "name": "IBancorGasPriceLimit",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8081,
+                    "referencedDeclaration": 8582,
                     "src": "1991:20:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   },
@@ -1140,12 +1140,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1377,
+              "id": 1345,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "2134:0:1"
             },
-            "scope": 1402,
+            "scope": 1370,
             "src": "1965:216:1",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -1153,30 +1153,30 @@
           },
           {
             "body": {
-              "id": 1400,
+              "id": 1368,
               "nodeType": "Block",
               "src": "2530:49:1",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1398,
+                    "id": 1366,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1396,
+                      "id": 1364,
                       "name": "quickConverter",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1316
+                        1284
                       ],
-                      "referencedDeclaration": 1316,
+                      "referencedDeclaration": 1284,
                       "src": "2540:14:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                         "typeString": "contract IBancorQuickConverter"
                       }
                     },
@@ -1184,45 +1184,45 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1397,
+                      "id": 1365,
                       "name": "_quickConverter",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1385,
+                      "referencedDeclaration": 1353,
                       "src": "2557:15:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                         "typeString": "contract IBancorQuickConverter"
                       }
                     },
                     "src": "2540:32:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   },
-                  "id": 1399,
+                  "id": 1367,
                   "nodeType": "ExpressionStatement",
                   "src": "2540:32:1"
                 }
               ]
             },
             "documentation": null,
-            "id": 1401,
+            "id": 1369,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 1388,
+                "id": 1356,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1387,
+                  "id": 1355,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7138,
+                  "referencedDeclaration": 7639,
                   "src": "2445:9:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -1236,26 +1236,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1390,
+                    "id": 1358,
                     "name": "_quickConverter",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1385,
+                    "referencedDeclaration": 1353,
                     "src": "2476:15:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   }
                 ],
-                "id": 1391,
+                "id": 1359,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1389,
+                  "id": 1357,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7585,
+                  "referencedDeclaration": 8086,
                   "src": "2463:12:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -1269,26 +1269,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1393,
+                    "id": 1361,
                     "name": "_quickConverter",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1385,
+                    "referencedDeclaration": 1353,
                     "src": "2509:15:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   }
                 ],
-                "id": 1394,
+                "id": 1362,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1392,
+                  "id": 1360,
                   "name": "notThis",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7599,
+                  "referencedDeclaration": 8100,
                   "src": "2501:7:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -1302,31 +1302,31 @@
             "name": "setQuickConverter",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1386,
+              "id": 1354,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1385,
+                  "id": 1353,
                   "name": "_quickConverter",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1401,
+                  "scope": 1369,
                   "src": "2383:37:1",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                    "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                     "typeString": "contract IBancorQuickConverter"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 1384,
+                    "id": 1352,
                     "name": "IBancorQuickConverter",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8111,
+                    "referencedDeclaration": 8612,
                     "src": "2383:21:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   },
@@ -1338,19 +1338,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1395,
+              "id": 1363,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "2530:0:1"
             },
-            "scope": 1402,
+            "scope": 1370,
             "src": "2356:223:1",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 1403,
+        "scope": 1371,
         "src": "484:2097:1"
       }
     ],
@@ -1360,14 +1360,14 @@
     "absolutePath": "/Users/rudo/contracts/solidity/contracts/BancorConverterExtensions.sol",
     "exportedSymbols": {
       "BancorConverterExtensions": [
-        1402
+        1370
       ]
     },
-    "id": 1403,
+    "id": 1371,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 1304,
+        "id": 1272,
         "literals": [
           "solidity",
           "^",
@@ -1380,10 +1380,10 @@
       {
         "absolutePath": "/Users/rudo/contracts/solidity/contracts/TokenHolder.sol",
         "file": "./TokenHolder.sol",
-        "id": 1305,
+        "id": 1273,
         "nodeType": "ImportDirective",
-        "scope": 1403,
-        "sourceUnit": 7554,
+        "scope": 1371,
+        "sourceUnit": 8055,
         "src": "25:27:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1391,10 +1391,10 @@
       {
         "absolutePath": "/Users/rudo/contracts/solidity/contracts/interfaces/IBancorConverterExtensions.sol",
         "file": "./interfaces/IBancorConverterExtensions.sol",
-        "id": 1306,
+        "id": 1274,
         "nodeType": "ImportDirective",
-        "scope": 1403,
-        "sourceUnit": 8044,
+        "scope": 1371,
+        "sourceUnit": 8545,
         "src": "53:53:1",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1405,17 +1405,17 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 1307,
+              "id": 1275,
               "name": "IBancorConverterExtensions",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8043,
+              "referencedDeclaration": 8544,
               "src": "522:26:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorConverterExtensions_$8043",
+                "typeIdentifier": "t_contract$_IBancorConverterExtensions_$8544",
                 "typeString": "contract IBancorConverterExtensions"
               }
             },
-            "id": 1308,
+            "id": 1276,
             "nodeType": "InheritanceSpecifier",
             "src": "522:26:1"
           },
@@ -1423,67 +1423,67 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 1309,
+              "id": 1277,
               "name": "TokenHolder",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 7553,
+              "referencedDeclaration": 8054,
               "src": "550:11:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_TokenHolder_$7553",
+                "typeIdentifier": "t_contract$_TokenHolder_$8054",
                 "typeString": "contract TokenHolder"
               }
             },
-            "id": 1310,
+            "id": 1278,
             "nodeType": "InheritanceSpecifier",
             "src": "550:11:1"
           }
         ],
         "contractDependencies": [
-          7183,
-          7553,
-          7674,
-          8043,
-          8393,
-          8490
+          7684,
+          8054,
+          8175,
+          8544,
+          8905,
+          9002
         ],
         "contractKind": "contract",
         "documentation": "@dev the BancorConverterExtensions contract is an owned contract that serves as a single point of access\nto the BancorFormula, BancorGasPriceLimit and BancorQuickConverter contracts from all BancorConverter contract instances.\nit allows upgrading these contracts without the need to update each and every\nBancorConverter contract instance individually.",
         "fullyImplemented": true,
-        "id": 1402,
+        "id": 1370,
         "linearizedBaseContracts": [
-          1402,
-          7553,
-          7674,
-          7183,
-          8490,
-          8393,
-          8043
+          1370,
+          8054,
+          8175,
+          7684,
+          9002,
+          8905,
+          8544
         ],
         "name": "BancorConverterExtensions",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 1312,
+            "id": 1280,
             "name": "formula",
             "nodeType": "VariableDeclaration",
-            "scope": 1402,
+            "scope": 1370,
             "src": "568:29:1",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+              "typeIdentifier": "t_contract$_IBancorFormula_$8573",
               "typeString": "contract IBancorFormula"
             },
             "typeName": {
               "contractScope": null,
-              "id": 1311,
+              "id": 1279,
               "name": "IBancorFormula",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8072,
+              "referencedDeclaration": 8573,
               "src": "568:14:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                 "typeString": "contract IBancorFormula"
               }
             },
@@ -1492,26 +1492,26 @@
           },
           {
             "constant": false,
-            "id": 1314,
+            "id": 1282,
             "name": "gasPriceLimit",
             "nodeType": "VariableDeclaration",
-            "scope": 1402,
+            "scope": 1370,
             "src": "643:41:1",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+              "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
               "typeString": "contract IBancorGasPriceLimit"
             },
             "typeName": {
               "contractScope": null,
-              "id": 1313,
+              "id": 1281,
               "name": "IBancorGasPriceLimit",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8081,
+              "referencedDeclaration": 8582,
               "src": "643:20:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                 "typeString": "contract IBancorGasPriceLimit"
               }
             },
@@ -1520,26 +1520,26 @@
           },
           {
             "constant": false,
-            "id": 1316,
+            "id": 1284,
             "name": "quickConverter",
             "nodeType": "VariableDeclaration",
-            "scope": 1402,
+            "scope": 1370,
             "src": "735:43:1",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+              "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
               "typeString": "contract IBancorQuickConverter"
             },
             "typeName": {
               "contractScope": null,
-              "id": 1315,
+              "id": 1283,
               "name": "IBancorQuickConverter",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8111,
+              "referencedDeclaration": 8612,
               "src": "735:21:1",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                 "typeString": "contract IBancorQuickConverter"
               }
             },
@@ -1548,30 +1548,30 @@
           },
           {
             "body": {
-              "id": 1346,
+              "id": 1314,
               "nodeType": "Block",
               "src": "1345:117:1",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1336,
+                    "id": 1304,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1334,
+                      "id": 1302,
                       "name": "formula",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1312
+                        1280
                       ],
-                      "referencedDeclaration": 1312,
+                      "referencedDeclaration": 1280,
                       "src": "1355:7:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                        "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                         "typeString": "contract IBancorFormula"
                       }
                     },
@@ -1579,47 +1579,47 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1335,
+                      "id": 1303,
                       "name": "_formula",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1318,
+                      "referencedDeclaration": 1286,
                       "src": "1365:8:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                        "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                         "typeString": "contract IBancorFormula"
                       }
                     },
                     "src": "1355:18:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   },
-                  "id": 1337,
+                  "id": 1305,
                   "nodeType": "ExpressionStatement",
                   "src": "1355:18:1"
                 },
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1340,
+                    "id": 1308,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1338,
+                      "id": 1306,
                       "name": "gasPriceLimit",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1314
+                        1282
                       ],
-                      "referencedDeclaration": 1314,
+                      "referencedDeclaration": 1282,
                       "src": "1383:13:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                         "typeString": "contract IBancorGasPriceLimit"
                       }
                     },
@@ -1627,47 +1627,47 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1339,
+                      "id": 1307,
                       "name": "_gasPriceLimit",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1320,
+                      "referencedDeclaration": 1288,
                       "src": "1399:14:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                         "typeString": "contract IBancorGasPriceLimit"
                       }
                     },
                     "src": "1383:30:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   },
-                  "id": 1341,
+                  "id": 1309,
                   "nodeType": "ExpressionStatement",
                   "src": "1383:30:1"
                 },
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1344,
+                    "id": 1312,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1342,
+                      "id": 1310,
                       "name": "quickConverter",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1316
+                        1284
                       ],
-                      "referencedDeclaration": 1316,
+                      "referencedDeclaration": 1284,
                       "src": "1423:14:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                         "typeString": "contract IBancorQuickConverter"
                       }
                     },
@@ -1675,31 +1675,31 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1343,
+                      "id": 1311,
                       "name": "_quickConverter",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1322,
+                      "referencedDeclaration": 1290,
                       "src": "1440:15:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                         "typeString": "contract IBancorQuickConverter"
                       }
                     },
                     "src": "1423:32:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   },
-                  "id": 1345,
+                  "id": 1313,
                   "nodeType": "ExpressionStatement",
                   "src": "1423:32:1"
                 }
               ]
             },
             "documentation": "@dev constructor\n@param _formula         address of a bancor formula contract\n@param _gasPriceLimit   address of a bancor gas price limit contract\n@param _quickConverter  address of a bancor quick converter contract",
-            "id": 1347,
+            "id": 1315,
             "implemented": true,
             "isConstructor": true,
             "isDeclaredConst": false,
@@ -1708,26 +1708,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1325,
+                    "id": 1293,
                     "name": "_formula",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1318,
+                    "referencedDeclaration": 1286,
                     "src": "1256:8:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   }
                 ],
-                "id": 1326,
+                "id": 1294,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1324,
+                  "id": 1292,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7585,
+                  "referencedDeclaration": 8086,
                   "src": "1243:12:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -1741,26 +1741,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1328,
+                    "id": 1296,
                     "name": "_gasPriceLimit",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1320,
+                    "referencedDeclaration": 1288,
                     "src": "1287:14:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   }
                 ],
-                "id": 1329,
+                "id": 1297,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1327,
+                  "id": 1295,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7585,
+                  "referencedDeclaration": 8086,
                   "src": "1274:12:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -1774,26 +1774,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1331,
+                    "id": 1299,
                     "name": "_quickConverter",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1322,
+                    "referencedDeclaration": 1290,
                     "src": "1324:15:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   }
                 ],
-                "id": 1332,
+                "id": 1300,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1330,
+                  "id": 1298,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7585,
+                  "referencedDeclaration": 8086,
                   "src": "1311:12:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -1807,31 +1807,31 @@
             "name": "BancorConverterExtensions",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1323,
+              "id": 1291,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1318,
+                  "id": 1286,
                   "name": "_formula",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1347,
+                  "scope": 1315,
                   "src": "1119:23:1",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                    "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                     "typeString": "contract IBancorFormula"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 1317,
+                    "id": 1285,
                     "name": "IBancorFormula",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8072,
+                    "referencedDeclaration": 8573,
                     "src": "1119:14:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   },
@@ -1840,26 +1840,26 @@
                 },
                 {
                   "constant": false,
-                  "id": 1320,
+                  "id": 1288,
                   "name": "_gasPriceLimit",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1347,
+                  "scope": 1315,
                   "src": "1144:35:1",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                    "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                     "typeString": "contract IBancorGasPriceLimit"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 1319,
+                    "id": 1287,
                     "name": "IBancorGasPriceLimit",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8081,
+                    "referencedDeclaration": 8582,
                     "src": "1144:20:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   },
@@ -1868,26 +1868,26 @@
                 },
                 {
                   "constant": false,
-                  "id": 1322,
+                  "id": 1290,
                   "name": "_quickConverter",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1347,
+                  "scope": 1315,
                   "src": "1181:37:1",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                    "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                     "typeString": "contract IBancorQuickConverter"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 1321,
+                    "id": 1289,
                     "name": "IBancorQuickConverter",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8111,
+                    "referencedDeclaration": 8612,
                     "src": "1181:21:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   },
@@ -1899,12 +1899,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1333,
+              "id": 1301,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1345:0:1"
             },
-            "scope": 1402,
+            "scope": 1370,
             "src": "1084:378:1",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -1912,30 +1912,30 @@
           },
           {
             "body": {
-              "id": 1364,
+              "id": 1332,
               "nodeType": "Block",
               "src": "1755:35:1",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1362,
+                    "id": 1330,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1360,
+                      "id": 1328,
                       "name": "formula",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1312
+                        1280
                       ],
-                      "referencedDeclaration": 1312,
+                      "referencedDeclaration": 1280,
                       "src": "1765:7:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                        "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                         "typeString": "contract IBancorFormula"
                       }
                     },
@@ -1943,45 +1943,45 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1361,
+                      "id": 1329,
                       "name": "_formula",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1349,
+                      "referencedDeclaration": 1317,
                       "src": "1775:8:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                        "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                         "typeString": "contract IBancorFormula"
                       }
                     },
                     "src": "1765:18:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   },
-                  "id": 1363,
+                  "id": 1331,
                   "nodeType": "ExpressionStatement",
                   "src": "1765:18:1"
                 }
               ]
             },
             "documentation": null,
-            "id": 1365,
+            "id": 1333,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 1352,
+                "id": 1320,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1351,
+                  "id": 1319,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7138,
+                  "referencedDeclaration": 7639,
                   "src": "1684:9:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -1995,26 +1995,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1354,
+                    "id": 1322,
                     "name": "_formula",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1349,
+                    "referencedDeclaration": 1317,
                     "src": "1715:8:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   }
                 ],
-                "id": 1355,
+                "id": 1323,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1353,
+                  "id": 1321,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7585,
+                  "referencedDeclaration": 8086,
                   "src": "1702:12:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -2028,26 +2028,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1357,
+                    "id": 1325,
                     "name": "_formula",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1349,
+                    "referencedDeclaration": 1317,
                     "src": "1741:8:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   }
                 ],
-                "id": 1358,
+                "id": 1326,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1356,
+                  "id": 1324,
                   "name": "notThis",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7599,
+                  "referencedDeclaration": 8100,
                   "src": "1733:7:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -2061,31 +2061,31 @@
             "name": "setFormula",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1350,
+              "id": 1318,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1349,
+                  "id": 1317,
                   "name": "_formula",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1365,
+                  "scope": 1333,
                   "src": "1636:23:1",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                    "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                     "typeString": "contract IBancorFormula"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 1348,
+                    "id": 1316,
                     "name": "IBancorFormula",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8072,
+                    "referencedDeclaration": 8573,
                     "src": "1636:14:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorFormula_$8072",
+                      "typeIdentifier": "t_contract$_IBancorFormula_$8573",
                       "typeString": "contract IBancorFormula"
                     }
                   },
@@ -2097,12 +2097,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1359,
+              "id": 1327,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1755:0:1"
             },
-            "scope": 1402,
+            "scope": 1370,
             "src": "1616:174:1",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -2110,30 +2110,30 @@
           },
           {
             "body": {
-              "id": 1382,
+              "id": 1350,
               "nodeType": "Block",
               "src": "2134:47:1",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1380,
+                    "id": 1348,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1378,
+                      "id": 1346,
                       "name": "gasPriceLimit",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1314
+                        1282
                       ],
-                      "referencedDeclaration": 1314,
+                      "referencedDeclaration": 1282,
                       "src": "2144:13:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                         "typeString": "contract IBancorGasPriceLimit"
                       }
                     },
@@ -2141,45 +2141,45 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1379,
+                      "id": 1347,
                       "name": "_gasPriceLimit",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1367,
+                      "referencedDeclaration": 1335,
                       "src": "2160:14:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                        "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                         "typeString": "contract IBancorGasPriceLimit"
                       }
                     },
                     "src": "2144:30:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   },
-                  "id": 1381,
+                  "id": 1349,
                   "nodeType": "ExpressionStatement",
                   "src": "2144:30:1"
                 }
               ]
             },
             "documentation": null,
-            "id": 1383,
+            "id": 1351,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 1370,
+                "id": 1338,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1369,
+                  "id": 1337,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7138,
+                  "referencedDeclaration": 7639,
                   "src": "2051:9:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -2193,26 +2193,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1372,
+                    "id": 1340,
                     "name": "_gasPriceLimit",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1367,
+                    "referencedDeclaration": 1335,
                     "src": "2082:14:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   }
                 ],
-                "id": 1373,
+                "id": 1341,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1371,
+                  "id": 1339,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7585,
+                  "referencedDeclaration": 8086,
                   "src": "2069:12:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -2226,26 +2226,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1375,
+                    "id": 1343,
                     "name": "_gasPriceLimit",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1367,
+                    "referencedDeclaration": 1335,
                     "src": "2114:14:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   }
                 ],
-                "id": 1376,
+                "id": 1344,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1374,
+                  "id": 1342,
                   "name": "notThis",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7599,
+                  "referencedDeclaration": 8100,
                   "src": "2106:7:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -2259,31 +2259,31 @@
             "name": "setGasPriceLimit",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1368,
+              "id": 1336,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1367,
+                  "id": 1335,
                   "name": "_gasPriceLimit",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1383,
+                  "scope": 1351,
                   "src": "1991:35:1",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                    "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                     "typeString": "contract IBancorGasPriceLimit"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 1366,
+                    "id": 1334,
                     "name": "IBancorGasPriceLimit",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8081,
+                    "referencedDeclaration": 8582,
                     "src": "1991:20:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8081",
+                      "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8582",
                       "typeString": "contract IBancorGasPriceLimit"
                     }
                   },
@@ -2295,12 +2295,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1377,
+              "id": 1345,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "2134:0:1"
             },
-            "scope": 1402,
+            "scope": 1370,
             "src": "1965:216:1",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -2308,30 +2308,30 @@
           },
           {
             "body": {
-              "id": 1400,
+              "id": 1368,
               "nodeType": "Block",
               "src": "2530:49:1",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 1398,
+                    "id": 1366,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 1396,
+                      "id": 1364,
                       "name": "quickConverter",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1316
+                        1284
                       ],
-                      "referencedDeclaration": 1316,
+                      "referencedDeclaration": 1284,
                       "src": "2540:14:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                         "typeString": "contract IBancorQuickConverter"
                       }
                     },
@@ -2339,45 +2339,45 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 1397,
+                      "id": 1365,
                       "name": "_quickConverter",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 1385,
+                      "referencedDeclaration": 1353,
                       "src": "2557:15:1",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                        "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                         "typeString": "contract IBancorQuickConverter"
                       }
                     },
                     "src": "2540:32:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   },
-                  "id": 1399,
+                  "id": 1367,
                   "nodeType": "ExpressionStatement",
                   "src": "2540:32:1"
                 }
               ]
             },
             "documentation": null,
-            "id": 1401,
+            "id": 1369,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 1388,
+                "id": 1356,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1387,
+                  "id": 1355,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7138,
+                  "referencedDeclaration": 7639,
                   "src": "2445:9:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -2391,26 +2391,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1390,
+                    "id": 1358,
                     "name": "_quickConverter",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1385,
+                    "referencedDeclaration": 1353,
                     "src": "2476:15:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   }
                 ],
-                "id": 1391,
+                "id": 1359,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1389,
+                  "id": 1357,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7585,
+                  "referencedDeclaration": 8086,
                   "src": "2463:12:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -2424,26 +2424,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 1393,
+                    "id": 1361,
                     "name": "_quickConverter",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 1385,
+                    "referencedDeclaration": 1353,
                     "src": "2509:15:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   }
                 ],
-                "id": 1394,
+                "id": 1362,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 1392,
+                  "id": 1360,
                   "name": "notThis",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7599,
+                  "referencedDeclaration": 8100,
                   "src": "2501:7:1",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -2457,31 +2457,31 @@
             "name": "setQuickConverter",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1386,
+              "id": 1354,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1385,
+                  "id": 1353,
                   "name": "_quickConverter",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1401,
+                  "scope": 1369,
                   "src": "2383:37:1",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                    "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                     "typeString": "contract IBancorQuickConverter"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 1384,
+                    "id": 1352,
                     "name": "IBancorQuickConverter",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8111,
+                    "referencedDeclaration": 8612,
                     "src": "2383:21:1",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8111",
+                      "typeIdentifier": "t_contract$_IBancorQuickConverter_$8612",
                       "typeString": "contract IBancorQuickConverter"
                     }
                   },
@@ -2493,19 +2493,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 1395,
+              "id": 1363,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "2530:0:1"
             },
-            "scope": 1402,
+            "scope": 1370,
             "src": "2356:223:1",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 1403,
+        "scope": 1371,
         "src": "484:2097:1"
       }
     ],
@@ -2517,5 +2517,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-06-29T04:54:49.398Z"
+  "updatedAt": "2018-07-16T18:08:26.368Z"
 }

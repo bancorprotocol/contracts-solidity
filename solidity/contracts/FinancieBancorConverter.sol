@@ -60,7 +60,7 @@ contract FinancieBancorConverter is BancorConverter {
     }
 
     /**
-        @dev override
+        @dev overridden
     */
     function quickConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
         public
@@ -69,14 +69,40 @@ contract FinancieBancorConverter is BancorConverter {
         returns (uint256)
     {
         IBancorQuickConverter quickConverter = extensions.quickConverter();
-        uint256 feeAmount = getFinancieFee(_amount);
-        uint256 net = safeSub(_amount, feeAmount);
-        distributeFees(feeAmount);
-        uint256 result = quickConverter.convertFor.value(net)(_path, net, _minReturn, msg.sender);
+        uint256 result = quickConverter.convertFor.value(_amount)(_path, _amount, _minReturn, msg.sender);
 
         core.notifyConvertCards(msg.sender, address(_path[0]), address(_path[2]), _amount, result);
 
         return result;
+    }
+
+    /**
+        @dev overridden
+    */
+    function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+        require(_fromToken != _toToken); // validate input
+
+        uint256 result = super.convert(_fromToken, _toToken, _amount, _minReturn);
+
+        core.notifyConvertCards(msg.sender, address(_fromToken), address(_toToken), _amount, result);
+
+        return result;
+    }
+
+    /**
+        @dev overridden
+    */
+    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256) {
+        require(_fromToken == quickSellPath[0] || _fromToken == quickBuyPath[0]);
+        require(_toToken == quickSellPath[2] || _toToken == quickBuyPath[2]);
+
+        if ( _fromToken == quickSellPath[0] ) {
+            uint256 grossSell = super.getReturn(_fromToken, _toToken, _amount);
+            return safeSub(grossSell, getFinancieFee(grossSell));
+        } else {
+            return super.getReturn(_fromToken, _toToken, safeSub(_amount, getFinancieFee(_amount)));
+        }
+
     }
 
 }

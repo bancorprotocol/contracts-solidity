@@ -26,14 +26,14 @@
     "absolutePath": "/Users/rudo/contracts/solidity/contracts/interfaces/IBancorGasPriceLimit.sol",
     "exportedSymbols": {
       "IBancorGasPriceLimit": [
-        2048
+        2154
       ]
     },
-    "id": 2049,
+    "id": 2155,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 2041,
+        "id": 2147,
         "literals": [
           "solidity",
           "^",
@@ -49,22 +49,22 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 2048,
+        "id": 2154,
         "linearizedBaseContracts": [
-          2048
+          2154
         ],
         "name": "IBancorGasPriceLimit",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "body": {
-              "id": 2046,
+              "id": 2152,
               "nodeType": "Block",
               "src": "155:2:9",
               "statements": []
             },
             "documentation": null,
-            "id": 2047,
+            "id": 2153,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -72,22 +72,22 @@
             "name": "gasPrice",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 2042,
+              "id": 2148,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "122:2:9"
             },
             "payable": false,
             "returnParameters": {
-              "id": 2045,
+              "id": 2151,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 2044,
+                  "id": 2150,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2047,
+                  "scope": 2153,
                   "src": "146:7:9",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -96,7 +96,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 2043,
+                    "id": 2149,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "146:7:9",
@@ -111,14 +111,14 @@
               ],
               "src": "145:9:9"
             },
-            "scope": 2048,
+            "scope": 2154,
             "src": "105:52:9",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 2049,
+        "scope": 2155,
         "src": "69:90:9"
       }
     ],
@@ -128,14 +128,14 @@
     "absolutePath": "/Users/rudo/contracts/solidity/contracts/interfaces/IBancorGasPriceLimit.sol",
     "exportedSymbols": {
       "IBancorGasPriceLimit": [
-        2048
+        2154
       ]
     },
-    "id": 2049,
+    "id": 2155,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 2041,
+        "id": 2147,
         "literals": [
           "solidity",
           "^",
@@ -151,22 +151,22 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 2048,
+        "id": 2154,
         "linearizedBaseContracts": [
-          2048
+          2154
         ],
         "name": "IBancorGasPriceLimit",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "body": {
-              "id": 2046,
+              "id": 2152,
               "nodeType": "Block",
               "src": "155:2:9",
               "statements": []
             },
             "documentation": null,
-            "id": 2047,
+            "id": 2153,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -174,22 +174,22 @@
             "name": "gasPrice",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 2042,
+              "id": 2148,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "122:2:9"
             },
             "payable": false,
             "returnParameters": {
-              "id": 2045,
+              "id": 2151,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 2044,
+                  "id": 2150,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2047,
+                  "scope": 2153,
                   "src": "146:7:9",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -198,7 +198,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 2043,
+                    "id": 2149,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "146:7:9",
@@ -213,14 +213,14 @@
               ],
               "src": "145:9:9"
             },
-            "scope": 2048,
+            "scope": 2154,
             "src": "105:52:9",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 2049,
+        "scope": 2155,
         "src": "69:90:9"
       }
     ],
@@ -232,5 +232,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-07-11T15:52:53.534Z"
+  "updatedAt": "2018-07-16T18:30:02.951Z"
 }
