@@ -1,10 +1,10 @@
 pragma solidity ^0.4.18;
-import './interfaces/IFinancieCore.sol';
-import './interfaces/IFinancieIssuerToken.sol';
-import './interfaces/IERC20Token.sol';
-import './interfaces/IFinancieLog.sol';
-import './Utils.sol';
-import './Owned.sol';
+import '../interfaces/IFinancieCore.sol';
+import '../interfaces/IFinancieIssuerToken.sol';
+import '../interfaces/IERC20Token.sol';
+import '../interfaces/IFinancieLog.sol';
+import '../Utils.sol';
+import '../Owned.sol';
 
 contract FinancieCore is IFinancieCore, Owned, Utils {
 

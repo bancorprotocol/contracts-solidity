@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
-import './interfaces/IFinancieLog.sol';
-import './Owned.sol';
+import '../interfaces/IFinancieLog.sol';
+import '../Owned.sol';
 
 contract FinancieLog is Owned, IFinancieLog {
 
@@ -15,7 +15,7 @@ contract FinancieLog is Owned, IFinancieLog {
     mapping (address => Logs) allLogs;
 
     function FinancieLog() public {
-    
+
     }
 
     function() payable public {

@@ -1,7 +1,7 @@
 pragma solidity ^0.4.17;
 
-import './ERC20Token.sol';
-import './interfaces/IFinancieCore.sol';
+import '../ERC20Token.sol';
+import '../interfaces/IFinancieCore.sol';
 
 /// @title Dutch auction contract - distribution of a fixed number of tokens using an auction.
 /// The contract code is inspired by the Gnosis auction contract. Main difference is that the

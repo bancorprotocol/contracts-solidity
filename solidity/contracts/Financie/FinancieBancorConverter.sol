@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
-import './BancorConverter.sol';
-import './interfaces/IFinancieCore.sol';
-import './interfaces/IEtherToken.sol';
+import '../BancorConverter.sol';
+import '../interfaces/IFinancieCore.sol';
+import '../interfaces/IEtherToken.sol';
 
 contract FinancieBancorConverter is BancorConverter {
 
