@@ -16,24 +16,24 @@
       "type": "function"
     }
   ],
-  "bytecode": "0x60606040523415600e57600080fd5b60968061001c6000396000f300606060405260043610603e5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663fe173b9781146043575b600080fd5b3415604d57600080fd5b60536065565b60405190815260200160405180910390f35b6000905600a165627a7a72305820e98fd89ea57aea81461bcc501c30d9ab0e75fe2ab84179b3e58050981af498f60029",
-  "deployedBytecode": "0x606060405260043610603e5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663fe173b9781146043575b600080fd5b3415604d57600080fd5b60536065565b60405190815260200160405180910390f35b6000905600a165627a7a72305820e98fd89ea57aea81461bcc501c30d9ab0e75fe2ab84179b3e58050981af498f60029",
-  "sourceMap": "69:90:19:-;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "69:90:19:-;;;;;;;;;;;;;;;;;;;;;;;105:52;;;;;;;;;;;;;;;;;;;;;;;;;;;;146:7;105:52;:::o",
+  "bytecode": "0x60606040523415600e57600080fd5b60968061001c6000396000f300606060405260043610603e5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663fe173b9781146043575b600080fd5b3415604d57600080fd5b60536065565b60405190815260200160405180910390f35b6000905600a165627a7a72305820ccdb10fa5b1b5a06af40fb6171010a09846fb1b1a9b1a813893ba8ba0ba3824e0029",
+  "deployedBytecode": "0x606060405260043610603e5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663fe173b9781146043575b600080fd5b3415604d57600080fd5b60536065565b60405190815260200160405180910390f35b6000905600a165627a7a72305820ccdb10fa5b1b5a06af40fb6171010a09846fb1b1a9b1a813893ba8ba0ba3824e0029",
+  "sourceMap": "69:90:9:-;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "69:90:9:-;;;;;;;;;;;;;;;;;;;;;;;105:52;;;;;;;;;;;;;;;;;;;;;;;;;;;;146:7;105:52;:::o",
   "source": "pragma solidity ^0.4.18;\n\n/*\n    Bancor Gas Price Limit interface\n*/\ncontract IBancorGasPriceLimit {\n    function gasPrice() public view returns (uint256) {}\n}\n",
-  "sourcePath": "/Users/rudo/contracts/solidity/contracts/interfaces/IBancorGasPriceLimit.sol",
+  "sourcePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IBancorGasPriceLimit.sol",
   "ast": {
-    "absolutePath": "/Users/rudo/contracts/solidity/contracts/interfaces/IBancorGasPriceLimit.sol",
+    "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IBancorGasPriceLimit.sol",
     "exportedSymbols": {
       "IBancorGasPriceLimit": [
-        5419
+        2244
       ]
     },
-    "id": 5420,
+    "id": 2245,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 5412,
+        "id": 2237,
         "literals": [
           "solidity",
           "^",
@@ -41,7 +41,7 @@
           ".18"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:24:19"
+        "src": "0:24:9"
       },
       {
         "baseContracts": [],
@@ -49,22 +49,22 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 5419,
+        "id": 2244,
         "linearizedBaseContracts": [
-          5419
+          2244
         ],
         "name": "IBancorGasPriceLimit",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "body": {
-              "id": 5417,
+              "id": 2242,
               "nodeType": "Block",
-              "src": "155:2:19",
+              "src": "155:2:9",
               "statements": []
             },
             "documentation": null,
-            "id": 5418,
+            "id": 2243,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -72,23 +72,23 @@
             "name": "gasPrice",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 5413,
+              "id": 2238,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "122:2:19"
+              "src": "122:2:9"
             },
             "payable": false,
             "returnParameters": {
-              "id": 5416,
+              "id": 2241,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5415,
+                  "id": 2240,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5418,
-                  "src": "146:7:19",
+                  "scope": 2243,
+                  "src": "146:7:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -96,10 +96,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5414,
+                    "id": 2239,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "146:7:19",
+                    "src": "146:7:9",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -109,33 +109,33 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "145:9:19"
+              "src": "145:9:9"
             },
-            "scope": 5419,
-            "src": "105:52:19",
+            "scope": 2244,
+            "src": "105:52:9",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 5420,
-        "src": "69:90:19"
+        "scope": 2245,
+        "src": "69:90:9"
       }
     ],
-    "src": "0:160:19"
+    "src": "0:160:9"
   },
   "legacyAST": {
-    "absolutePath": "/Users/rudo/contracts/solidity/contracts/interfaces/IBancorGasPriceLimit.sol",
+    "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IBancorGasPriceLimit.sol",
     "exportedSymbols": {
       "IBancorGasPriceLimit": [
-        5419
+        2244
       ]
     },
-    "id": 5420,
+    "id": 2245,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 5412,
+        "id": 2237,
         "literals": [
           "solidity",
           "^",
@@ -143,7 +143,7 @@
           ".18"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:24:19"
+        "src": "0:24:9"
       },
       {
         "baseContracts": [],
@@ -151,22 +151,22 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 5419,
+        "id": 2244,
         "linearizedBaseContracts": [
-          5419
+          2244
         ],
         "name": "IBancorGasPriceLimit",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "body": {
-              "id": 5417,
+              "id": 2242,
               "nodeType": "Block",
-              "src": "155:2:19",
+              "src": "155:2:9",
               "statements": []
             },
             "documentation": null,
-            "id": 5418,
+            "id": 2243,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -174,23 +174,23 @@
             "name": "gasPrice",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 5413,
+              "id": 2238,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "122:2:19"
+              "src": "122:2:9"
             },
             "payable": false,
             "returnParameters": {
-              "id": 5416,
+              "id": 2241,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5415,
+                  "id": 2240,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5418,
-                  "src": "146:7:19",
+                  "scope": 2243,
+                  "src": "146:7:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -198,10 +198,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5414,
+                    "id": 2239,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "146:7:19",
+                    "src": "146:7:9",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -211,20 +211,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "145:9:19"
+              "src": "145:9:9"
             },
-            "scope": 5419,
-            "src": "105:52:19",
+            "scope": 2244,
+            "src": "105:52:9",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 5420,
-        "src": "69:90:19"
+        "scope": 2245,
+        "src": "69:90:9"
       }
     ],
-    "src": "0:160:19"
+    "src": "0:160:9"
   },
   "compiler": {
     "name": "solc",
@@ -232,5 +232,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-07-17T04:57:20.149Z"
+  "updatedAt": "2018-07-20T05:52:38.392Z"
 }

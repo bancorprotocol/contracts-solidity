@@ -69,19 +69,19 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "pragma solidity ^0.4.18;\n\n/*\n    Bancor Formula interface\n*/\ncontract IBancorFormula {\n    function calculatePurchaseReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _depositAmount) public view returns (uint256);\n    function calculateSaleReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _sellAmount) public view returns (uint256);\n}\n",
-  "sourcePath": "/Users/rudo/contracts/solidity/contracts/interfaces/IBancorFormula.sol",
+  "sourcePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IBancorFormula.sol",
   "ast": {
-    "absolutePath": "/Users/rudo/contracts/solidity/contracts/interfaces/IBancorFormula.sol",
+    "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IBancorFormula.sol",
     "exportedSymbols": {
       "IBancorFormula": [
-        5410
+        2235
       ]
     },
-    "id": 5411,
+    "id": 2236,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 5383,
+        "id": 2208,
         "literals": [
           "solidity",
           "^",
@@ -89,7 +89,7 @@
           ".18"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:24:18"
+        "src": "0:24:8"
       },
       {
         "baseContracts": [],
@@ -97,9 +97,9 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 5410,
+        "id": 2235,
         "linearizedBaseContracts": [
-          5410
+          2235
         ],
         "name": "IBancorFormula",
         "nodeType": "ContractDefinition",
@@ -107,7 +107,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 5396,
+            "id": 2221,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -115,16 +115,16 @@
             "name": "calculatePurchaseReturn",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 5392,
+              "id": 2217,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5385,
+                  "id": 2210,
                   "name": "_supply",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5396,
-                  "src": "124:15:18",
+                  "scope": 2221,
+                  "src": "124:15:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -132,10 +132,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5384,
+                    "id": 2209,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "124:7:18",
+                    "src": "124:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -146,11 +146,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 5387,
+                  "id": 2212,
                   "name": "_connectorBalance",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5396,
-                  "src": "141:25:18",
+                  "scope": 2221,
+                  "src": "141:25:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -158,10 +158,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5386,
+                    "id": 2211,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "141:7:18",
+                    "src": "141:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -172,11 +172,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 5389,
+                  "id": 2214,
                   "name": "_connectorWeight",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5396,
-                  "src": "168:23:18",
+                  "scope": 2221,
+                  "src": "168:23:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -184,10 +184,10 @@
                     "typeString": "uint32"
                   },
                   "typeName": {
-                    "id": 5388,
+                    "id": 2213,
                     "name": "uint32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "168:6:18",
+                    "src": "168:6:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint32",
                       "typeString": "uint32"
@@ -198,11 +198,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 5391,
+                  "id": 2216,
                   "name": "_depositAmount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5396,
-                  "src": "193:22:18",
+                  "scope": 2221,
+                  "src": "193:22:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -210,10 +210,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5390,
+                    "id": 2215,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "193:7:18",
+                    "src": "193:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -223,20 +223,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "123:93:18"
+              "src": "123:93:8"
             },
             "payable": false,
             "returnParameters": {
-              "id": 5395,
+              "id": 2220,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5394,
+                  "id": 2219,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5396,
-                  "src": "238:7:18",
+                  "scope": 2221,
+                  "src": "238:7:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -244,10 +244,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5393,
+                    "id": 2218,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "238:7:18",
+                    "src": "238:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -257,10 +257,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "237:9:18"
+              "src": "237:9:8"
             },
-            "scope": 5410,
-            "src": "91:156:18",
+            "scope": 2235,
+            "src": "91:156:8",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "public"
@@ -268,7 +268,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 5409,
+            "id": 2234,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -276,16 +276,16 @@
             "name": "calculateSaleReturn",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 5405,
+              "id": 2230,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5398,
+                  "id": 2223,
                   "name": "_supply",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5409,
-                  "src": "281:15:18",
+                  "scope": 2234,
+                  "src": "281:15:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -293,10 +293,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5397,
+                    "id": 2222,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "281:7:18",
+                    "src": "281:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -307,11 +307,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 5400,
+                  "id": 2225,
                   "name": "_connectorBalance",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5409,
-                  "src": "298:25:18",
+                  "scope": 2234,
+                  "src": "298:25:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -319,10 +319,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5399,
+                    "id": 2224,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "298:7:18",
+                    "src": "298:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -333,11 +333,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 5402,
+                  "id": 2227,
                   "name": "_connectorWeight",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5409,
-                  "src": "325:23:18",
+                  "scope": 2234,
+                  "src": "325:23:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -345,10 +345,10 @@
                     "typeString": "uint32"
                   },
                   "typeName": {
-                    "id": 5401,
+                    "id": 2226,
                     "name": "uint32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "325:6:18",
+                    "src": "325:6:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint32",
                       "typeString": "uint32"
@@ -359,11 +359,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 5404,
+                  "id": 2229,
                   "name": "_sellAmount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5409,
-                  "src": "350:19:18",
+                  "scope": 2234,
+                  "src": "350:19:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -371,10 +371,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5403,
+                    "id": 2228,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "350:7:18",
+                    "src": "350:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -384,20 +384,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "280:90:18"
+              "src": "280:90:8"
             },
             "payable": false,
             "returnParameters": {
-              "id": 5408,
+              "id": 2233,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5407,
+                  "id": 2232,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5409,
-                  "src": "392:7:18",
+                  "scope": 2234,
+                  "src": "392:7:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -405,10 +405,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5406,
+                    "id": 2231,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "392:7:18",
+                    "src": "392:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -418,33 +418,33 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "391:9:18"
+              "src": "391:9:8"
             },
-            "scope": 5410,
-            "src": "252:149:18",
+            "scope": 2235,
+            "src": "252:149:8",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 5411,
-        "src": "61:342:18"
+        "scope": 2236,
+        "src": "61:342:8"
       }
     ],
-    "src": "0:404:18"
+    "src": "0:404:8"
   },
   "legacyAST": {
-    "absolutePath": "/Users/rudo/contracts/solidity/contracts/interfaces/IBancorFormula.sol",
+    "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IBancorFormula.sol",
     "exportedSymbols": {
       "IBancorFormula": [
-        5410
+        2235
       ]
     },
-    "id": 5411,
+    "id": 2236,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 5383,
+        "id": 2208,
         "literals": [
           "solidity",
           "^",
@@ -452,7 +452,7 @@
           ".18"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:24:18"
+        "src": "0:24:8"
       },
       {
         "baseContracts": [],
@@ -460,9 +460,9 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 5410,
+        "id": 2235,
         "linearizedBaseContracts": [
-          5410
+          2235
         ],
         "name": "IBancorFormula",
         "nodeType": "ContractDefinition",
@@ -470,7 +470,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 5396,
+            "id": 2221,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -478,16 +478,16 @@
             "name": "calculatePurchaseReturn",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 5392,
+              "id": 2217,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5385,
+                  "id": 2210,
                   "name": "_supply",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5396,
-                  "src": "124:15:18",
+                  "scope": 2221,
+                  "src": "124:15:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -495,10 +495,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5384,
+                    "id": 2209,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "124:7:18",
+                    "src": "124:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -509,11 +509,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 5387,
+                  "id": 2212,
                   "name": "_connectorBalance",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5396,
-                  "src": "141:25:18",
+                  "scope": 2221,
+                  "src": "141:25:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -521,10 +521,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5386,
+                    "id": 2211,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "141:7:18",
+                    "src": "141:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -535,11 +535,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 5389,
+                  "id": 2214,
                   "name": "_connectorWeight",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5396,
-                  "src": "168:23:18",
+                  "scope": 2221,
+                  "src": "168:23:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -547,10 +547,10 @@
                     "typeString": "uint32"
                   },
                   "typeName": {
-                    "id": 5388,
+                    "id": 2213,
                     "name": "uint32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "168:6:18",
+                    "src": "168:6:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint32",
                       "typeString": "uint32"
@@ -561,11 +561,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 5391,
+                  "id": 2216,
                   "name": "_depositAmount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5396,
-                  "src": "193:22:18",
+                  "scope": 2221,
+                  "src": "193:22:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -573,10 +573,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5390,
+                    "id": 2215,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "193:7:18",
+                    "src": "193:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -586,20 +586,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "123:93:18"
+              "src": "123:93:8"
             },
             "payable": false,
             "returnParameters": {
-              "id": 5395,
+              "id": 2220,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5394,
+                  "id": 2219,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5396,
-                  "src": "238:7:18",
+                  "scope": 2221,
+                  "src": "238:7:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -607,10 +607,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5393,
+                    "id": 2218,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "238:7:18",
+                    "src": "238:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -620,10 +620,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "237:9:18"
+              "src": "237:9:8"
             },
-            "scope": 5410,
-            "src": "91:156:18",
+            "scope": 2235,
+            "src": "91:156:8",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "public"
@@ -631,7 +631,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 5409,
+            "id": 2234,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -639,16 +639,16 @@
             "name": "calculateSaleReturn",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 5405,
+              "id": 2230,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5398,
+                  "id": 2223,
                   "name": "_supply",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5409,
-                  "src": "281:15:18",
+                  "scope": 2234,
+                  "src": "281:15:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -656,10 +656,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5397,
+                    "id": 2222,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "281:7:18",
+                    "src": "281:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -670,11 +670,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 5400,
+                  "id": 2225,
                   "name": "_connectorBalance",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5409,
-                  "src": "298:25:18",
+                  "scope": 2234,
+                  "src": "298:25:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -682,10 +682,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5399,
+                    "id": 2224,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "298:7:18",
+                    "src": "298:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -696,11 +696,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 5402,
+                  "id": 2227,
                   "name": "_connectorWeight",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5409,
-                  "src": "325:23:18",
+                  "scope": 2234,
+                  "src": "325:23:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -708,10 +708,10 @@
                     "typeString": "uint32"
                   },
                   "typeName": {
-                    "id": 5401,
+                    "id": 2226,
                     "name": "uint32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "325:6:18",
+                    "src": "325:6:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint32",
                       "typeString": "uint32"
@@ -722,11 +722,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 5404,
+                  "id": 2229,
                   "name": "_sellAmount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5409,
-                  "src": "350:19:18",
+                  "scope": 2234,
+                  "src": "350:19:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -734,10 +734,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5403,
+                    "id": 2228,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "350:7:18",
+                    "src": "350:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -747,20 +747,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "280:90:18"
+              "src": "280:90:8"
             },
             "payable": false,
             "returnParameters": {
-              "id": 5408,
+              "id": 2233,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5407,
+                  "id": 2232,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5409,
-                  "src": "392:7:18",
+                  "scope": 2234,
+                  "src": "392:7:8",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -768,10 +768,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5406,
+                    "id": 2231,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "392:7:18",
+                    "src": "392:7:8",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -781,20 +781,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "391:9:18"
+              "src": "391:9:8"
             },
-            "scope": 5410,
-            "src": "252:149:18",
+            "scope": 2235,
+            "src": "252:149:8",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 5411,
-        "src": "61:342:18"
+        "scope": 2236,
+        "src": "61:342:8"
       }
     ],
-    "src": "0:404:18"
+    "src": "0:404:8"
   },
   "compiler": {
     "name": "solc",
@@ -802,5 +802,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-07-17T04:57:20.147Z"
+  "updatedAt": "2018-07-20T05:52:38.394Z"
 }
