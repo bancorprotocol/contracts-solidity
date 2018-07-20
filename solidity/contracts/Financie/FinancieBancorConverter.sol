@@ -59,34 +59,63 @@ contract FinancieBancorConverter is BancorConverter {
         return safeMul(_amount, financieFee) / MAX_FINANCIE_FEE;
     }
 
-    /**
-        @dev overridden
-    */
-    function quickConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
-        public
-        payable
-        validConversionPath(_path)
-        returns (uint256)
-    {
-        IBancorQuickConverter quickConverter = extensions.quickConverter();
-        uint256 result = quickConverter.convertFor.value(_amount)(_path, _amount, _minReturn, msg.sender);
+    function getVersion() public view returns (uint256) {
+        return 4;
+    }
 
-        core.notifyConvertCards(msg.sender, address(_path[0]), address(_path[2]), _amount, result);
+    /**
+
+    */
+    function sellCards(uint256 _amount, uint256 _minReturn) public returns (uint256) {
+        uint256 result = quickConvertInternal(quickSellPath, _amount, 1, this);
+
+        uint256 feeAmount = getFinancieFee(result);
+        uint256 net = safeSub(result, feeAmount);
+        distributeFees(feeAmount);
+
+        msg.sender.transfer(net);
+
+        core.notifyConvertCards(msg.sender, address(quickSellPath[0]), address(quickSellPath[2]), _amount, net);
+        assert(result >= _minReturn);
 
         return result;
     }
 
     /**
-        @dev overridden
+
     */
-    function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        require(_fromToken != _toToken); // validate input
+    function buyCards(uint256 _amount, uint256 _minReturn) payable public returns (uint256) {
+        uint256 feeAmount = getFinancieFee(_amount);
+        uint256 net = safeSub(_amount, feeAmount);
+        distributeFees(feeAmount);
 
-        uint256 result = super.convert(_fromToken, _toToken, _amount, _minReturn);
+        uint256 result = quickConvertInternal(quickBuyPath, net, 1, msg.sender);
 
-        core.notifyConvertCards(msg.sender, address(_fromToken), address(_toToken), _amount, result);
+        core.notifyConvertCards(msg.sender, address(quickBuyPath[0]), address(quickBuyPath[2]), _amount, result);
+        assert(result >= _minReturn);
 
         return result;
+    }
+
+    function quickConvertInternal(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _spender)
+        private
+        validConversionPath(_path)
+        returns (uint256)
+    {
+        IERC20Token fromToken = _path[0];
+        IBancorQuickConverter quickConverter = extensions.quickConverter();
+        if ( msg.value == 0 ) {
+            assert(fromToken.transferFrom(msg.sender, quickConverter, _amount));
+            return quickConverter.convertFor.value(0)(_path, _amount, _minReturn, _spender);
+        } else {
+            return quickConverter.convertFor.value(_amount)(_path, _amount, _minReturn, _spender);
+        }
+    }
+
+    /**
+        @dev overridden
+    */
+    function() payable public {
     }
 
     /**

@@ -424,7 +424,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         @return buy return amount
     */
     function buy(IERC20Token _connectorToken, uint256 _depositAmount, uint256 _minReturn)
-        private
+        public
         conversionsAllowed
         validGasPrice
         greaterThanZero(_minReturn)
@@ -457,7 +457,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         @return sell return amount
     */
     function sell(IERC20Token _connectorToken, uint256 _sellAmount, uint256 _minReturn)
-        private
+        public
         conversionsAllowed
         validGasPrice
         greaterThanZero(_minReturn)
@@ -482,12 +482,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         token.destroy(msg.sender, _sellAmount);
         // transfer funds to the caller in the connector token
         // the transfer might fail if the actual connector balance is smaller than the virtual balance
-        if ( _connectorToken == quickBuyPath[0] ) {
-            IEtherToken etherToken = IEtherToken(_connectorToken);
-            etherToken.withdrawTo(msg.sender, amount);
-        } else {
-            assert(_connectorToken.transfer(msg.sender, amount));
-        }
+        assert(_connectorToken.transfer(msg.sender, amount));
 
         dispatchConversionEvent(_connectorToken, _sellAmount, amount, false);
         return amount;
