@@ -111,8 +111,8 @@
   ],
   "bytecode": "0x60606040526000600255341561001457600080fd5b6040516020806102ff8339810160405280805160008054600160a060020a03191633600160a060020a0316178155909250829150811161005357600080fd5b50600255610299806100666000396000f3006060604052600436106100775763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166379ba5097811461007c5780638da5cb5b14610091578063bf1fe420146100c0578063d4ee1d90146100d6578063f2fde38b146100e9578063fe173b9714610108575b600080fd5b341561008757600080fd5b61008f61012d565b005b341561009c57600080fd5b6100a46101bb565b604051600160a060020a03909116815260200160405180910390f35b34156100cb57600080fd5b61008f6004356101ca565b34156100e157600080fd5b6100a46101f6565b34156100f457600080fd5b61008f600160a060020a0360043516610205565b341561011357600080fd5b61011b610267565b60405190815260200160405180910390f35b60015433600160a060020a0390811691161461014857600080fd5b600154600054600160a060020a0391821691167f343765429aea5a34b3ff6a3785a98a5abb2597aca87bfbb58632c173d585373a60405160405180910390a3600180546000805473ffffffffffffffffffffffffffffffffffffffff19908116600160a060020a03841617909155169055565b600054600160a060020a031681565b60005433600160a060020a039081169116146101e257fe5b80600081116101f057600080fd5b50600255565b600154600160a060020a031681565b60005433600160a060020a0390811691161461021d57fe5b600054600160a060020a038281169116141561023857600080fd5b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600254815600a165627a7a723058208e2807f78825021f142c2790da11b6670fbaa5dcd0ff99d3d430a2816eb965800029",
   "deployedBytecode": "0x6060604052600436106100775763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166379ba5097811461007c5780638da5cb5b14610091578063bf1fe420146100c0578063d4ee1d90146100d6578063f2fde38b146100e9578063fe173b9714610108575b600080fd5b341561008757600080fd5b61008f61012d565b005b341561009c57600080fd5b6100a46101bb565b604051600160a060020a03909116815260200160405180910390f35b34156100cb57600080fd5b61008f6004356101ca565b34156100e157600080fd5b6100a46101f6565b34156100f457600080fd5b61008f600160a060020a0360043516610205565b341561011357600080fd5b61011b610267565b60405190815260200160405180910390f35b60015433600160a060020a0390811691161461014857600080fd5b600154600054600160a060020a0391821691167f343765429aea5a34b3ff6a3785a98a5abb2597aca87bfbb58632c173d585373a60405160405180910390a3600180546000805473ffffffffffffffffffffffffffffffffffffffff19908116600160a060020a03841617909155169055565b600054600160a060020a031681565b60005433600160a060020a039081169116146101e257fe5b80600081116101f057600080fd5b50600255565b600154600160a060020a031681565b60005433600160a060020a0390811691161461021d57fe5b600054600160a060020a038281169116141561023857600080fd5b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600254815600a165627a7a723058208e2807f78825021f142c2790da11b6670fbaa5dcd0ff99d3d430a2816eb965800029",
-  "sourceMap": "518:663:3:-;;;617:5;591:31;;762:139;;;;;;;;;;;;;;;;;;;;;;364:5:20;:18;;-1:-1:-1;;;;;;364:18:20;372:10;-1:-1:-1;;;;;364:18:20;;;;762:139:3;;-1:-1:-1;762:139:3;;-1:-1:-1;270:11:24;;262:20;;;;;;-1:-1:-1;874:8:3;:20;518:663;;;;;;",
-  "deployedSourceMap": "518:663:3:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;965:177:20;;;;;;;;;;;;;;155:20;;;;;;;;;;;;;;;-1:-1:-1;;;;;155:20:20;;;;;;;;;;;;;;1030:149:3;;;;;;;;;;;;;;181:23:20;;;;;;;;;;;;742:137;;;;;;;;;;-1:-1:-1;;;;;742:137:20;;;;;591:31:3;;;;;;;;;;;;;;;;;;;;;;;;;;;965:177:20;1031:8;;1017:10;-1:-1:-1;;;;;1017:22:20;;;1031:8;;1017:22;1009:31;;;;;;1069:8;;;1062:5;-1:-1:-1;;;;;1069:8:20;;;;1062:5;1050:28;;;;;;;;;;1096:8;;;;1088:16;;-1:-1:-1;;1088:16:20;;;-1:-1:-1;;;;;1096:8:20;;1088:16;;;;1114:21;;;965:177::o;155:20::-;;;-1:-1:-1;;;;;155:20:20;;:::o;1030:149:3:-;487:5:20;;473:10;-1:-1:-1;;;;;473:19:20;;;487:5;;473:19;466:27;;;;1127:9:3;280:1:24;270:11;;262:20;;;;;;-1:-1:-1;1152:8:3;:20;1030:149::o;181:23:20:-;;;-1:-1:-1;;;;;181:23:20;;:::o;742:137::-;487:5;;473:10;-1:-1:-1;;;;;473:19:20;;;487:5;;473:19;466:27;;;;836:5;;-1:-1:-1;;;;;823:18:20;;;836:5;;823:18;;815:27;;;;;;852:8;:20;;-1:-1:-1;;852:20:20;-1:-1:-1;;;;;852:20:20;;;;;;;;;;742:137::o;591:31:3:-;;;;:::o",
+  "sourceMap": "518:663:3:-;;;617:5;591:31;;762:139;;;;;;;;;;;;;;;;;;;;;;364:5:21;:18;;-1:-1:-1;;;;;;364:18:21;372:10;-1:-1:-1;;;;;364:18:21;;;;762:139:3;;-1:-1:-1;762:139:3;;-1:-1:-1;270:11:25;;262:20;;;;;;-1:-1:-1;874:8:3;:20;518:663;;;;;;",
+  "deployedSourceMap": "518:663:3:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;965:177:21;;;;;;;;;;;;;;155:20;;;;;;;;;;;;;;;-1:-1:-1;;;;;155:20:21;;;;;;;;;;;;;;1030:149:3;;;;;;;;;;;;;;181:23:21;;;;;;;;;;;;742:137;;;;;;;;;;-1:-1:-1;;;;;742:137:21;;;;;591:31:3;;;;;;;;;;;;;;;;;;;;;;;;;;;965:177:21;1031:8;;1017:10;-1:-1:-1;;;;;1017:22:21;;;1031:8;;1017:22;1009:31;;;;;;1069:8;;;1062:5;-1:-1:-1;;;;;1069:8:21;;;;1062:5;1050:28;;;;;;;;;;1096:8;;;;1088:16;;-1:-1:-1;;1088:16:21;;;-1:-1:-1;;;;;1096:8:21;;1088:16;;;;1114:21;;;965:177::o;155:20::-;;;-1:-1:-1;;;;;155:20:21;;:::o;1030:149:3:-;487:5:21;;473:10;-1:-1:-1;;;;;473:19:21;;;487:5;;473:19;466:27;;;;1127:9:3;280:1:25;270:11;;262:20;;;;;;-1:-1:-1;1152:8:3;:20;1030:149::o;181:23:21:-;;;-1:-1:-1;;;;;181:23:21;;:::o;742:137::-;487:5;;473:10;-1:-1:-1;;;;;473:19:21;;;487:5;;473:19;466:27;;;;836:5;;-1:-1:-1;;;;;823:18:21;;;836:5;;823:18;;815:27;;;;;;852:8;:20;;-1:-1:-1;;852:20:21;-1:-1:-1;;;;;852:20:21;;;;;;;;;;742:137::o;591:31:3:-;;;;:::o",
   "source": "pragma solidity ^0.4.18;\nimport './Owned.sol';\nimport './Utils.sol';\nimport './interfaces/IBancorGasPriceLimit.sol';\n\n/*\n    The BancorGasPriceLimit contract serves as an extra front-running attack mitigation mechanism.\n    It sets a maximum gas price on all bancor conversions, which prevents users from \"cutting in line\"\n    in order to front-run other transactions.\n    The gas price limit is universal to all converters and it can be updated by the owner to be in line\n    with the network's current gas price.\n*/\ncontract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {\n    uint256 public gasPrice = 0 wei;    // maximum gas price for bancor transactions\n\n    /**\n        @dev constructor\n\n        @param _gasPrice    gas price limit\n    */\n    function BancorGasPriceLimit(uint256 _gasPrice)\n        public\n        greaterThanZero(_gasPrice)\n    {\n        gasPrice = _gasPrice;\n    }\n\n    /*\n        @dev allows the owner to update the gas price limit\n\n        @param _gasPrice    new gas price limit\n    */\n    function setGasPrice(uint256 _gasPrice)\n        public\n        ownerOnly\n        greaterThanZero(_gasPrice)\n    {\n        gasPrice = _gasPrice;\n    }\n}\n",
   "sourcePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/BancorGasPriceLimit.sol",
   "ast": {
@@ -142,7 +142,7 @@
         "id": 3001,
         "nodeType": "ImportDirective",
         "scope": 3042,
-        "sourceUnit": 7914,
+        "sourceUnit": 8090,
         "src": "25:21:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -153,7 +153,7 @@
         "id": 3002,
         "nodeType": "ImportDirective",
         "scope": 3042,
-        "sourceUnit": 8405,
+        "sourceUnit": 8581,
         "src": "47:21:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -164,7 +164,7 @@
         "id": 3003,
         "nodeType": "ImportDirective",
         "scope": 3042,
-        "sourceUnit": 8713,
+        "sourceUnit": 8889,
         "src": "69:47:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -178,10 +178,10 @@
               "id": 3004,
               "name": "IBancorGasPriceLimit",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8712,
+              "referencedDeclaration": 8888,
               "src": "550:20:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8712",
+                "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8888",
                 "typeString": "contract IBancorGasPriceLimit"
               }
             },
@@ -196,10 +196,10 @@
               "id": 3006,
               "name": "Owned",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 7913,
+              "referencedDeclaration": 8089,
               "src": "572:5:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Owned_$7913",
+                "typeIdentifier": "t_contract$_Owned_$8089",
                 "typeString": "contract Owned"
               }
             },
@@ -214,10 +214,10 @@
               "id": 3008,
               "name": "Utils",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8404,
+              "referencedDeclaration": 8580,
               "src": "579:5:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Utils_$8404",
+                "typeIdentifier": "t_contract$_Utils_$8580",
                 "typeString": "contract Utils"
               }
             },
@@ -227,10 +227,10 @@
           }
         ],
         "contractDependencies": [
-          7913,
-          8404,
-          8712,
-          9035
+          8089,
+          8580,
+          8888,
+          9211
         ],
         "contractKind": "contract",
         "documentation": null,
@@ -238,10 +238,10 @@
         "id": 3041,
         "linearizedBaseContracts": [
           3041,
-          8404,
-          7913,
-          9035,
-          8712
+          8580,
+          8089,
+          9211,
+          8888
         ],
         "name": "BancorGasPriceLimit",
         "nodeType": "ContractDefinition",
@@ -374,7 +374,7 @@
                   "name": "greaterThanZero",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8301,
+                  "referencedDeclaration": 8477,
                   "src": "833:15:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_uint256_$",
@@ -504,7 +504,7 @@
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7868,
+                  "referencedDeclaration": 8044,
                   "src": "1093:9:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -537,7 +537,7 @@
                   "name": "greaterThanZero",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8301,
+                  "referencedDeclaration": 8477,
                   "src": "1111:15:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_uint256_$",
@@ -630,7 +630,7 @@
         "id": 3001,
         "nodeType": "ImportDirective",
         "scope": 3042,
-        "sourceUnit": 7914,
+        "sourceUnit": 8090,
         "src": "25:21:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -641,7 +641,7 @@
         "id": 3002,
         "nodeType": "ImportDirective",
         "scope": 3042,
-        "sourceUnit": 8405,
+        "sourceUnit": 8581,
         "src": "47:21:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -652,7 +652,7 @@
         "id": 3003,
         "nodeType": "ImportDirective",
         "scope": 3042,
-        "sourceUnit": 8713,
+        "sourceUnit": 8889,
         "src": "69:47:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -666,10 +666,10 @@
               "id": 3004,
               "name": "IBancorGasPriceLimit",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8712,
+              "referencedDeclaration": 8888,
               "src": "550:20:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8712",
+                "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8888",
                 "typeString": "contract IBancorGasPriceLimit"
               }
             },
@@ -684,10 +684,10 @@
               "id": 3006,
               "name": "Owned",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 7913,
+              "referencedDeclaration": 8089,
               "src": "572:5:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Owned_$7913",
+                "typeIdentifier": "t_contract$_Owned_$8089",
                 "typeString": "contract Owned"
               }
             },
@@ -702,10 +702,10 @@
               "id": 3008,
               "name": "Utils",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8404,
+              "referencedDeclaration": 8580,
               "src": "579:5:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Utils_$8404",
+                "typeIdentifier": "t_contract$_Utils_$8580",
                 "typeString": "contract Utils"
               }
             },
@@ -715,10 +715,10 @@
           }
         ],
         "contractDependencies": [
-          7913,
-          8404,
-          8712,
-          9035
+          8089,
+          8580,
+          8888,
+          9211
         ],
         "contractKind": "contract",
         "documentation": null,
@@ -726,10 +726,10 @@
         "id": 3041,
         "linearizedBaseContracts": [
           3041,
-          8404,
-          7913,
-          9035,
-          8712
+          8580,
+          8089,
+          9211,
+          8888
         ],
         "name": "BancorGasPriceLimit",
         "nodeType": "ContractDefinition",
@@ -862,7 +862,7 @@
                   "name": "greaterThanZero",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8301,
+                  "referencedDeclaration": 8477,
                   "src": "833:15:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_uint256_$",
@@ -992,7 +992,7 @@
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7868,
+                  "referencedDeclaration": 8044,
                   "src": "1093:9:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -1025,7 +1025,7 @@
                   "name": "greaterThanZero",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8301,
+                  "referencedDeclaration": 8477,
                   "src": "1111:15:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_uint256_$",
@@ -1097,5 +1097,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-07-20T01:41:37.359Z"
+  "updatedAt": "2018-07-23T12:38:44.213Z"
 }
