@@ -1,10 +1,11 @@
 pragma solidity ^0.4.17;
 
 import './DutchAuction.sol';
+import '../Financie/FinancieFee.sol';
 import '../interfaces/IFinancieCore.sol';
 
 /// @title overrided from DutchAuction.
-contract FinancieHeroesDutchAuction is DutchAuction {
+contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
 
     IFinancieCore core;
 
@@ -20,7 +21,9 @@ contract FinancieHeroesDutchAuction is DutchAuction {
     /// @param _price_exponent Auction price divisor exponent.
     function FinancieHeroesDutchAuction(
         address _wallet_address,
+        address _team_wallet,
         address _whitelister_address,
+        uint32 _teamFee,
         uint _price_start,
         uint _price_constant,
         uint32 _price_exponent)
@@ -32,6 +35,7 @@ contract FinancieHeroesDutchAuction is DutchAuction {
           _price_constant,
           _price_exponent
         )
+        FinancieFee(0, _teamFee, _wallet_address, _team_wallet)
     {
     }
 
@@ -50,8 +54,32 @@ contract FinancieHeroesDutchAuction is DutchAuction {
         payable
         atStage(Stages.AuctionStarted)
     {
-        super.bid();
-        core.notifyBidCards(msg.sender, address(token), msg.value);
+        // Missing funds without the current bid value
+        uint missing_funds = missingFundsToEndAuction();
+
+        uint256 amount = msg.value;
+        if ( msg.value > missing_funds ) {
+            amount = missing_funds;
+            msg.sender.transfer(safeSub(msg.value, amount));
+        }
+
+        require(amount > 0);
+        require(bids[msg.sender] + amount <= bid_threshold || whitelist[msg.sender]);
+        assert(bids[msg.sender] + amount >= amount);
+
+        bids[msg.sender] += amount;
+        received_wei += amount;
+
+        // Send bid amount to wallet
+        uint256 feeAmount = distributeFees(amount);
+        uint256 net = safeSub(amount, feeAmount);
+        wallet_address.transfer(net);
+
+        BidSubmission(msg.sender, amount, missing_funds);
+
+        assert(received_wei >= amount);
+
+        core.notifyBidCards(msg.sender, address(token), amount);
     }
 
     /// @notice overrided from DutchAuction.

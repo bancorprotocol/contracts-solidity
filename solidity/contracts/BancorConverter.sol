@@ -143,98 +143,6 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         return uint16(connectorTokens.length);
     }
 
-    /**
-        @dev returns the number of convertible tokens supported by the contract
-        note that the number of convertible tokens is the number of connector token, plus 1 (that represents the smart token)
-
-        @return number of convertible tokens
-    */
-    function convertibleTokenCount() public view returns (uint16) {
-        return connectorTokenCount() + 1;
-    }
-
-    /**
-        @dev given a convertible token index, returns its contract address
-
-        @param _tokenIndex  convertible token index
-
-        @return convertible token address
-    */
-    function convertibleToken(uint16 _tokenIndex) public view returns (address) {
-        if (_tokenIndex == 0)
-            return token;
-        return connectorTokens[_tokenIndex - 1];
-    }
-
-    /*
-        @dev allows the owner to update the extensions contract address
-
-        @param _extensions    address of a bancor converter extensions contract
-    */
-    function setExtensions(IBancorConverterExtensions _extensions)
-        public
-        ownerOnly
-        validAddress(_extensions)
-        notThis(_extensions)
-    {
-        extensions = _extensions;
-    }
-
-    /*
-        @dev allows the manager to update the quick buy path
-
-        @param _path    new quick buy path, see conversion path format in the BancorQuickConverter contract
-    */
-    function setQuickBuyPath(IERC20Token[] _path)
-        public
-        ownerOnly
-        validConversionPath(_path)
-    {
-        quickBuyPath = _path;
-    }
-
-    /*
-        @dev allows the manager to clear the quick buy path
-    */
-    function clearQuickBuyPath() public ownerOnly {
-        quickBuyPath.length = 0;
-    }
-
-    /**
-        @dev returns the length of the quick buy path array
-
-        @return quick buy path length
-    */
-    function getQuickBuyPathLength() public view returns (uint256) {
-        return quickBuyPath.length;
-    }
-
-    /**
-        @dev disables the entire conversion functionality
-        this is a safety mechanism in case of a emergency
-        can only be called by the manager
-
-        @param _disable true to disable conversions, false to re-enable them
-    */
-    function disableConversions(bool _disable) public ownerOrManagerOnly {
-        conversionsEnabled = !_disable;
-    }
-
-    /**
-        @dev updates the current conversion fee
-        can only be called by the manager
-
-        @param _conversionFee new conversion fee, represented in ppm
-    */
-    function setConversionFee(uint32 _conversionFee)
-        public
-        ownerOrManagerOnly
-        validConversionFee(_conversionFee)
-    {
-        ConversionFeeUpdate(conversionFee, _conversionFee);
-        conversionFee = _conversionFee;
-    }
-
     /*
         @dev returns the conversion fee amount for a given return amount
 
@@ -272,43 +180,26 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
     }
 
     /**
-        @dev updates one of the token connectors
-        can only be called by the owner
+        @dev returns the number of convertible tokens supported by the contract
+        note that the number of convertible tokens is the number of connector token, plus 1 (that represents the smart token)
 
-        @param _connectorToken         address of the connector token
-        @param _weight                 constant connector weight, represented in ppm, 1-1000000
-        @param _enableVirtualBalance   true to enable virtual balance for the connector, false to disable it
-        @param _virtualBalance         new connector's virtual balance
+        @return number of convertible tokens
     */
-    function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance)
-        public
-        ownerOnly
-        validConnector(_connectorToken)
-        validConnectorWeight(_weight)
-    {
-        Connector storage connector = connectors[_connectorToken];
-        require(totalConnectorWeight - connector.weight + _weight <= MAX_WEIGHT); // validate input
-
-        totalConnectorWeight = totalConnectorWeight - connector.weight + _weight;
-        connector.weight = _weight;
-        connector.isVirtualBalanceEnabled = _enableVirtualBalance;
-        connector.virtualBalance = _virtualBalance;
+    function convertibleTokenCount() public view returns (uint16) {
+        return connectorTokenCount() + 1;
     }
 
     /**
-        @dev disables purchasing with the given connector token in case the connector token got compromised
-        can only be called by the owner
-        note that selling is still enabled regardless of this flag and it cannot be disabled by the owner
+        @dev given a convertible token index, returns its contract address
 
-        @param _connectorToken  connector token contract address
-        @param _disable         true to disable the token, false to re-enable it
+        @param _tokenIndex  convertible token index
+
+        @return convertible token address
     */
-    function disableConnectorPurchases(IERC20Token _connectorToken, bool _disable)
-        public
-        ownerOnly
-        validConnector(_connectorToken)
-    {
-        connectors[_connectorToken].isPurchaseEnabled = !_disable;
+    function convertibleToken(uint16 _tokenIndex) public view returns (address) {
+        if (_tokenIndex == 0)
+            return token;
+        return connectorTokens[_tokenIndex - 1];
     }
 
     /**
@@ -327,7 +218,7 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         Connector storage connector = connectors[_connectorToken];
         return connector.isVirtualBalanceEnabled ? connector.virtualBalance : _connectorToken.balanceOf(this);
     }
-
+    
     /**
         @dev returns the expected return for converting a specific amount of _fromToken to _toToken
 
@@ -488,44 +379,6 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         return amount;
     }
 
-    /**
-        @dev converts the token to any other token in the bancor network by following a predefined conversion path
-        note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
-
-        @param _path        conversion path, see conversion path format in the BancorQuickConverter contract
-        @param _amount      amount to convert from (in the initial source token)
-        @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-
-        @return tokens issued in return
-    */
-    function quickConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
-        public
-        payable
-        validConversionPath(_path)
-        returns (uint256)
-    {
-        IERC20Token fromToken = _path[0];
-        IBancorQuickConverter quickConverter = extensions.quickConverter();
-
-        // we need to transfer the source tokens from the caller to the quick converter,
-        // so it can execute the conversion on behalf of the caller
-        if (msg.value == 0) {
-            // not ETH, send the source tokens to the quick converter
-            // if the token is the smart token, no allowance is required - destroy the tokens from the caller and issue them to the quick converter
-            if (fromToken == token) {
-                token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
-                token.issue(quickConverter, _amount); // issue _amount new tokens to the quick converter
-            }
-            else {
-                // otherwise, we assume we already have allowance, transfer the tokens directly to the quick converter
-                assert(fromToken.transferFrom(msg.sender, quickConverter, _amount));
-            }
-        }
-
-        // execute the conversion and pass on the ETH with the call
-        return quickConverter.convertFor.value(msg.value)(_path, _amount, _minReturn, msg.sender);
-    }
-
     // deprecated, backward compatibility
     function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
         return convert(_fromToken, _toToken, _amount, _minReturn);
@@ -600,6 +453,6 @@ contract BancorConverter is ITokenConverter, SmartTokenController, Managed {
         note that the purchase will use the price at the time of the purchase
     */
     function() payable public {
-        quickConvert(quickBuyPath, msg.value, 1);
+        revert();
     }
 }

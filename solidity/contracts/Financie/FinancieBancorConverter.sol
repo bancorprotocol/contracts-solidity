@@ -1,24 +1,22 @@
 pragma solidity ^0.4.18;
 import '../BancorConverter.sol';
+import './FinancieFee.sol';
 import '../interfaces/IFinancieCore.sol';
 import '../interfaces/IEtherToken.sol';
 
-contract FinancieBancorConverter is BancorConverter {
-
-    uint32 private constant MAX_FINANCIE_FEE = 1000000;
+contract FinancieBancorConverter is BancorConverter, FinancieFee {
 
     IFinancieCore core;
-    address hero_wallet;
-    uint32 financieFee;
     IERC20Token[] public quickSellPath;
 
     /**
         @dev constructor
 
         @param  _token              smart token governed by the converter
-        @param  _extensions         address of a bancor converter extensions contract
-        @param  _financieFee        maximum conversion fee for financie platform, represented in ppm
         @param  _connectorToken     optional, initial connector, allows defining the first connector at deployment time
+        @param  _extensions         address of a bancor converter extensions contract
+        @param  _heroFee            fee for financie hero, represented in ppm
+        @param  _teamFee            fee for financie team, represented in ppm
         @param  _connectorWeight    optional, weight for the initial connector
     */
     function FinancieBancorConverter(
@@ -26,16 +24,17 @@ contract FinancieBancorConverter is BancorConverter {
         IEtherToken _etherToken,
         IERC20Token _connectorToken,
         address _hero_wallet,
+        address _team_wallet,
         IBancorConverterExtensions _extensions,
         address _core_address,
-        uint32 _financieFee,
+        uint32 _heroFee,
+        uint32 _teamFee,
         uint32 _connectorWeight)
         public
         BancorConverter(_token, _extensions, 0, _connectorToken, _connectorWeight)
+        FinancieFee(_heroFee, _teamFee, _hero_wallet, _team_wallet)
     {
         core = IFinancieCore(_core_address);
-        hero_wallet = _hero_wallet;
-        financieFee = _financieFee;
 
         // when receiving ether, then deposit to ether token -> change to smart token -> change to connector token
         quickBuyPath.push(_etherToken);
@@ -47,20 +46,8 @@ contract FinancieBancorConverter is BancorConverter {
         quickSellPath.push(_etherToken);
     }
 
-    function distributeFees(uint256 _feeAmount) private {
-        uint256 feeAmountForTeam = _feeAmount / 2;
-        uint256 feeAmountForHero = safeSub(_feeAmount, feeAmountForTeam);
-        IEtherToken etherToken = IEtherToken(quickBuyPath[0]);
-        etherToken.deposit.value(feeAmountForTeam)();
-        hero_wallet.transfer(feeAmountForHero);
-    }
-
-    function getFinancieFee(uint256 _amount) private view returns (uint256) {
-        return safeMul(_amount, financieFee) / MAX_FINANCIE_FEE;
-    }
-
     function getVersion() public view returns (uint256) {
-        return 4;
+        return 5;
     }
 
     /**
@@ -69,9 +56,8 @@ contract FinancieBancorConverter is BancorConverter {
     function sellCards(uint256 _amount, uint256 _minReturn) public returns (uint256) {
         uint256 result = quickConvertInternal(quickSellPath, _amount, 1, this);
 
-        uint256 feeAmount = getFinancieFee(result);
+        uint256 feeAmount = distributeFees(result);
         uint256 net = safeSub(result, feeAmount);
-        distributeFees(feeAmount);
 
         msg.sender.transfer(net);
 
@@ -85,9 +71,8 @@ contract FinancieBancorConverter is BancorConverter {
 
     */
     function buyCards(uint256 _amount, uint256 _minReturn) payable public returns (uint256) {
-        uint256 feeAmount = getFinancieFee(_amount);
+        uint256 feeAmount = distributeFees(_amount);
         uint256 net = safeSub(_amount, feeAmount);
-        distributeFees(feeAmount);
 
         uint256 result = quickConvertInternal(quickBuyPath, net, 1, msg.sender);
 
@@ -98,7 +83,7 @@ contract FinancieBancorConverter is BancorConverter {
     }
 
     function quickConvertInternal(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _spender)
-        private
+        internal
         validConversionPath(_path)
         returns (uint256)
     {
