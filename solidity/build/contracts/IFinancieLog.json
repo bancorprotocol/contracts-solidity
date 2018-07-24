@@ -153,14 +153,14 @@
     "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IFinancieLog.sol",
     "exportedSymbols": {
       "IFinancieLog": [
-        478
+        1277
       ]
     },
-    "id": 479,
+    "id": 1278,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 409,
+        "id": 1208,
         "literals": [
           "solidity",
           "^",
@@ -168,16 +168,16 @@
           ".18"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:24:2"
+        "src": "0:24:6"
       },
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IOwned.sol",
         "file": "./IOwned.sol",
-        "id": 410,
+        "id": 1209,
         "nodeType": "ImportDirective",
-        "scope": 479,
-        "sourceUnit": 496,
-        "src": "25:22:2",
+        "scope": 1278,
+        "sourceUnit": 1295,
+        "src": "25:22:6",
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -187,105 +187,105 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 411,
+              "id": 1210,
               "name": "IOwned",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 495,
-              "src": "116:6:2",
+              "referencedDeclaration": 1294,
+              "src": "116:6:6",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IOwned_$495",
+                "typeIdentifier": "t_contract$_IOwned_$1294",
                 "typeString": "contract IOwned"
               }
             },
-            "id": 412,
+            "id": 1211,
             "nodeType": "InheritanceSpecifier",
-            "src": "116:6:2"
+            "src": "116:6:6"
           }
         ],
         "contractDependencies": [
-          495
+          1294
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 478,
+        "id": 1277,
         "linearizedBaseContracts": [
-          478,
-          495
+          1277,
+          1294
         ],
         "name": "IFinancieLog",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "canonicalName": "IFinancieLog.EventType",
-            "id": 418,
+            "id": 1217,
             "members": [
               {
-                "id": 413,
+                "id": 1212,
                 "name": "BidCards",
                 "nodeType": "EnumValue",
-                "src": "182:8:2"
+                "src": "182:8:6"
               },
               {
-                "id": 414,
+                "id": 1213,
                 "name": "WithdrawCards",
                 "nodeType": "EnumValue",
-                "src": "200:13:2"
+                "src": "200:13:6"
               },
               {
-                "id": 415,
+                "id": 1214,
                 "name": "SellCards",
                 "nodeType": "EnumValue",
-                "src": "223:9:2"
+                "src": "223:9:6"
               },
               {
-                "id": 416,
+                "id": 1215,
                 "name": "BuyCards",
                 "nodeType": "EnumValue",
-                "src": "242:8:2"
+                "src": "242:8:6"
               },
               {
-                "id": 417,
+                "id": 1216,
                 "name": "BurnCards",
                 "nodeType": "EnumValue",
-                "src": "260:9:2"
+                "src": "260:9:6"
               }
             ],
             "name": "EventType",
             "nodeType": "EnumDefinition",
-            "src": "157:118:2"
+            "src": "157:118:6"
           },
           {
             "canonicalName": "IFinancieLog.CurrencyType",
-            "id": 422,
+            "id": 1221,
             "members": [
               {
-                "id": 419,
+                "id": 1218,
                 "name": "None",
                 "nodeType": "EnumValue",
-                "src": "309:4:2"
+                "src": "309:4:6"
               },
               {
-                "id": 420,
+                "id": 1219,
                 "name": "PlatformCoin",
                 "nodeType": "EnumValue",
-                "src": "323:12:2"
+                "src": "323:12:6"
               },
               {
-                "id": 421,
+                "id": 1220,
                 "name": "Ethereum",
                 "nodeType": "EnumValue",
-                "src": "345:8:2"
+                "src": "345:8:6"
               }
             ],
             "name": "CurrencyType",
             "nodeType": "EnumDefinition",
-            "src": "281:78:2"
+            "src": "281:78:6"
           },
           {
             "body": null,
             "documentation": null,
-            "id": 437,
+            "id": 1236,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -293,16 +293,16 @@
             "name": "recordLog",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 435,
+              "id": 1234,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 424,
+                  "id": 1223,
                   "name": "_sender",
                   "nodeType": "VariableDeclaration",
-                  "scope": 437,
-                  "src": "384:15:2",
+                  "scope": 1236,
+                  "src": "384:15:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -310,10 +310,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 423,
+                    "id": 1222,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "384:7:2",
+                    "src": "384:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
@@ -324,26 +324,26 @@
                 },
                 {
                   "constant": false,
-                  "id": 426,
+                  "id": 1225,
                   "name": "_eventType",
                   "nodeType": "VariableDeclaration",
-                  "scope": 437,
-                  "src": "409:20:2",
+                  "scope": 1236,
+                  "src": "409:20:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_enum$_EventType_$418",
+                    "typeIdentifier": "t_enum$_EventType_$1217",
                     "typeString": "enum IFinancieLog.EventType"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 425,
+                    "id": 1224,
                     "name": "EventType",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 418,
-                    "src": "409:9:2",
+                    "referencedDeclaration": 1217,
+                    "src": "409:9:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_enum$_EventType_$418",
+                      "typeIdentifier": "t_enum$_EventType_$1217",
                       "typeString": "enum IFinancieLog.EventType"
                     }
                   },
@@ -352,26 +352,26 @@
                 },
                 {
                   "constant": false,
-                  "id": 428,
+                  "id": 1227,
                   "name": "_currencyType",
                   "nodeType": "VariableDeclaration",
-                  "scope": 437,
-                  "src": "439:26:2",
+                  "scope": 1236,
+                  "src": "439:26:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_enum$_CurrencyType_$422",
+                    "typeIdentifier": "t_enum$_CurrencyType_$1221",
                     "typeString": "enum IFinancieLog.CurrencyType"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 427,
+                    "id": 1226,
                     "name": "CurrencyType",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 422,
-                    "src": "439:12:2",
+                    "referencedDeclaration": 1221,
+                    "src": "439:12:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_enum$_CurrencyType_$422",
+                      "typeIdentifier": "t_enum$_CurrencyType_$1221",
                       "typeString": "enum IFinancieLog.CurrencyType"
                     }
                   },
@@ -380,11 +380,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 430,
+                  "id": 1229,
                   "name": "_target",
                   "nodeType": "VariableDeclaration",
-                  "scope": 437,
-                  "src": "475:15:2",
+                  "scope": 1236,
+                  "src": "475:15:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -392,10 +392,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 429,
+                    "id": 1228,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "475:7:2",
+                    "src": "475:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
@@ -406,11 +406,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 432,
+                  "id": 1231,
                   "name": "_paidAmount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 437,
-                  "src": "500:19:2",
+                  "scope": 1236,
+                  "src": "500:19:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -418,10 +418,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 431,
+                    "id": 1230,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "500:7:2",
+                    "src": "500:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -432,11 +432,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 434,
+                  "id": 1233,
                   "name": "_receivedAmount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 437,
-                  "src": "529:23:2",
+                  "scope": 1236,
+                  "src": "529:23:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -444,10 +444,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 433,
+                    "id": 1232,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "529:7:2",
+                    "src": "529:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -457,17 +457,17 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "383:170:2"
+              "src": "383:170:6"
             },
             "payable": false,
             "returnParameters": {
-              "id": 436,
+              "id": 1235,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "568:0:2"
+              "src": "568:0:6"
             },
-            "scope": 478,
-            "src": "365:204:2",
+            "scope": 1277,
+            "src": "365:204:6",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
@@ -475,7 +475,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 457,
+            "id": 1256,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -483,16 +483,16 @@
             "name": "getTargetLogs",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 440,
+              "id": 1239,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 439,
+                  "id": 1238,
                   "name": "_target",
                   "nodeType": "VariableDeclaration",
-                  "scope": 457,
-                  "src": "597:15:2",
+                  "scope": 1256,
+                  "src": "597:15:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -500,10 +500,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 438,
+                    "id": 1237,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "597:7:2",
+                    "src": "597:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
@@ -513,45 +513,45 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "596:17:2"
+              "src": "596:17:6"
             },
             "payable": false,
             "returnParameters": {
-              "id": 456,
+              "id": 1255,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 443,
+                  "id": 1242,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 457,
-                  "src": "634:11:2",
+                  "scope": 1256,
+                  "src": "634:11:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_enum$_EventType_$418_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_enum$_EventType_$1217_$dyn_memory_ptr",
                     "typeString": "enum IFinancieLog.EventType[] memory"
                   },
                   "typeName": {
                     "baseType": {
                       "contractScope": null,
-                      "id": 441,
+                      "id": 1240,
                       "name": "EventType",
                       "nodeType": "UserDefinedTypeName",
-                      "referencedDeclaration": 418,
-                      "src": "634:9:2",
+                      "referencedDeclaration": 1217,
+                      "src": "634:9:6",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_enum$_EventType_$418",
+                        "typeIdentifier": "t_enum$_EventType_$1217",
                         "typeString": "enum IFinancieLog.EventType"
                       }
                     },
-                    "id": 442,
+                    "id": 1241,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "634:11:2",
+                    "src": "634:11:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_enum$_EventType_$418_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_enum$_EventType_$1217_$dyn_storage_ptr",
                       "typeString": "enum IFinancieLog.EventType[] storage pointer"
                     }
                   },
@@ -560,36 +560,36 @@
                 },
                 {
                   "constant": false,
-                  "id": 446,
+                  "id": 1245,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 457,
-                  "src": "647:14:2",
+                  "scope": 1256,
+                  "src": "647:14:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_enum$_CurrencyType_$422_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_enum$_CurrencyType_$1221_$dyn_memory_ptr",
                     "typeString": "enum IFinancieLog.CurrencyType[] memory"
                   },
                   "typeName": {
                     "baseType": {
                       "contractScope": null,
-                      "id": 444,
+                      "id": 1243,
                       "name": "CurrencyType",
                       "nodeType": "UserDefinedTypeName",
-                      "referencedDeclaration": 422,
-                      "src": "647:12:2",
+                      "referencedDeclaration": 1221,
+                      "src": "647:12:6",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_enum$_CurrencyType_$422",
+                        "typeIdentifier": "t_enum$_CurrencyType_$1221",
                         "typeString": "enum IFinancieLog.CurrencyType"
                       }
                     },
-                    "id": 445,
+                    "id": 1244,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "647:14:2",
+                    "src": "647:14:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_enum$_CurrencyType_$422_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_enum$_CurrencyType_$1221_$dyn_storage_ptr",
                       "typeString": "enum IFinancieLog.CurrencyType[] storage pointer"
                     }
                   },
@@ -598,11 +598,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 449,
+                  "id": 1248,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 457,
-                  "src": "663:9:2",
+                  "scope": 1256,
+                  "src": "663:9:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -611,19 +611,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 447,
+                      "id": 1246,
                       "name": "address",
                       "nodeType": "ElementaryTypeName",
-                      "src": "663:7:2",
+                      "src": "663:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       }
                     },
-                    "id": 448,
+                    "id": 1247,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "663:9:2",
+                    "src": "663:9:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
                       "typeString": "address[] storage pointer"
@@ -634,11 +634,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 452,
+                  "id": 1251,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 457,
-                  "src": "674:9:2",
+                  "scope": 1256,
+                  "src": "674:9:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -647,19 +647,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 450,
+                      "id": 1249,
                       "name": "uint256",
                       "nodeType": "ElementaryTypeName",
-                      "src": "674:7:2",
+                      "src": "674:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       }
                     },
-                    "id": 451,
+                    "id": 1250,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "674:9:2",
+                    "src": "674:9:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
                       "typeString": "uint256[] storage pointer"
@@ -670,11 +670,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 455,
+                  "id": 1254,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 457,
-                  "src": "685:9:2",
+                  "scope": 1256,
+                  "src": "685:9:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -683,19 +683,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 453,
+                      "id": 1252,
                       "name": "uint256",
                       "nodeType": "ElementaryTypeName",
-                      "src": "685:7:2",
+                      "src": "685:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       }
                     },
-                    "id": 454,
+                    "id": 1253,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "685:9:2",
+                    "src": "685:9:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
                       "typeString": "uint256[] storage pointer"
@@ -705,10 +705,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "633:62:2"
+              "src": "633:62:6"
             },
-            "scope": 478,
-            "src": "574:122:2",
+            "scope": 1277,
+            "src": "574:122:6",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "public"
@@ -716,7 +716,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 477,
+            "id": 1276,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -724,16 +724,16 @@
             "name": "getUserLogs",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 460,
+              "id": 1259,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 459,
+                  "id": 1258,
                   "name": "_sender",
                   "nodeType": "VariableDeclaration",
-                  "scope": 477,
-                  "src": "722:15:2",
+                  "scope": 1276,
+                  "src": "722:15:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -741,10 +741,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 458,
+                    "id": 1257,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "722:7:2",
+                    "src": "722:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
@@ -754,45 +754,45 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "721:17:2"
+              "src": "721:17:6"
             },
             "payable": false,
             "returnParameters": {
-              "id": 476,
+              "id": 1275,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 463,
+                  "id": 1262,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 477,
-                  "src": "759:11:2",
+                  "scope": 1276,
+                  "src": "759:11:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_enum$_EventType_$418_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_enum$_EventType_$1217_$dyn_memory_ptr",
                     "typeString": "enum IFinancieLog.EventType[] memory"
                   },
                   "typeName": {
                     "baseType": {
                       "contractScope": null,
-                      "id": 461,
+                      "id": 1260,
                       "name": "EventType",
                       "nodeType": "UserDefinedTypeName",
-                      "referencedDeclaration": 418,
-                      "src": "759:9:2",
+                      "referencedDeclaration": 1217,
+                      "src": "759:9:6",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_enum$_EventType_$418",
+                        "typeIdentifier": "t_enum$_EventType_$1217",
                         "typeString": "enum IFinancieLog.EventType"
                       }
                     },
-                    "id": 462,
+                    "id": 1261,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "759:11:2",
+                    "src": "759:11:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_enum$_EventType_$418_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_enum$_EventType_$1217_$dyn_storage_ptr",
                       "typeString": "enum IFinancieLog.EventType[] storage pointer"
                     }
                   },
@@ -801,36 +801,36 @@
                 },
                 {
                   "constant": false,
-                  "id": 466,
+                  "id": 1265,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 477,
-                  "src": "772:14:2",
+                  "scope": 1276,
+                  "src": "772:14:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_enum$_CurrencyType_$422_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_enum$_CurrencyType_$1221_$dyn_memory_ptr",
                     "typeString": "enum IFinancieLog.CurrencyType[] memory"
                   },
                   "typeName": {
                     "baseType": {
                       "contractScope": null,
-                      "id": 464,
+                      "id": 1263,
                       "name": "CurrencyType",
                       "nodeType": "UserDefinedTypeName",
-                      "referencedDeclaration": 422,
-                      "src": "772:12:2",
+                      "referencedDeclaration": 1221,
+                      "src": "772:12:6",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_enum$_CurrencyType_$422",
+                        "typeIdentifier": "t_enum$_CurrencyType_$1221",
                         "typeString": "enum IFinancieLog.CurrencyType"
                       }
                     },
-                    "id": 465,
+                    "id": 1264,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "772:14:2",
+                    "src": "772:14:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_enum$_CurrencyType_$422_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_enum$_CurrencyType_$1221_$dyn_storage_ptr",
                       "typeString": "enum IFinancieLog.CurrencyType[] storage pointer"
                     }
                   },
@@ -839,11 +839,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 469,
+                  "id": 1268,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 477,
-                  "src": "788:9:2",
+                  "scope": 1276,
+                  "src": "788:9:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -852,19 +852,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 467,
+                      "id": 1266,
                       "name": "address",
                       "nodeType": "ElementaryTypeName",
-                      "src": "788:7:2",
+                      "src": "788:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       }
                     },
-                    "id": 468,
+                    "id": 1267,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "788:9:2",
+                    "src": "788:9:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
                       "typeString": "address[] storage pointer"
@@ -875,11 +875,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 472,
+                  "id": 1271,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 477,
-                  "src": "799:9:2",
+                  "scope": 1276,
+                  "src": "799:9:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -888,19 +888,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 470,
+                      "id": 1269,
                       "name": "uint256",
                       "nodeType": "ElementaryTypeName",
-                      "src": "799:7:2",
+                      "src": "799:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       }
                     },
-                    "id": 471,
+                    "id": 1270,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "799:9:2",
+                    "src": "799:9:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
                       "typeString": "uint256[] storage pointer"
@@ -911,11 +911,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 475,
+                  "id": 1274,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 477,
-                  "src": "810:9:2",
+                  "scope": 1276,
+                  "src": "810:9:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -924,19 +924,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 473,
+                      "id": 1272,
                       "name": "uint256",
                       "nodeType": "ElementaryTypeName",
-                      "src": "810:7:2",
+                      "src": "810:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       }
                     },
-                    "id": 474,
+                    "id": 1273,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "810:9:2",
+                    "src": "810:9:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
                       "typeString": "uint256[] storage pointer"
@@ -946,33 +946,33 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "758:62:2"
+              "src": "758:62:6"
             },
-            "scope": 478,
-            "src": "701:120:2",
+            "scope": 1277,
+            "src": "701:120:6",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 479,
-        "src": "91:732:2"
+        "scope": 1278,
+        "src": "91:732:6"
       }
     ],
-    "src": "0:824:2"
+    "src": "0:824:6"
   },
   "legacyAST": {
     "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IFinancieLog.sol",
     "exportedSymbols": {
       "IFinancieLog": [
-        478
+        1277
       ]
     },
-    "id": 479,
+    "id": 1278,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 409,
+        "id": 1208,
         "literals": [
           "solidity",
           "^",
@@ -980,16 +980,16 @@
           ".18"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:24:2"
+        "src": "0:24:6"
       },
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IOwned.sol",
         "file": "./IOwned.sol",
-        "id": 410,
+        "id": 1209,
         "nodeType": "ImportDirective",
-        "scope": 479,
-        "sourceUnit": 496,
-        "src": "25:22:2",
+        "scope": 1278,
+        "sourceUnit": 1295,
+        "src": "25:22:6",
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -999,105 +999,105 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 411,
+              "id": 1210,
               "name": "IOwned",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 495,
-              "src": "116:6:2",
+              "referencedDeclaration": 1294,
+              "src": "116:6:6",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IOwned_$495",
+                "typeIdentifier": "t_contract$_IOwned_$1294",
                 "typeString": "contract IOwned"
               }
             },
-            "id": 412,
+            "id": 1211,
             "nodeType": "InheritanceSpecifier",
-            "src": "116:6:2"
+            "src": "116:6:6"
           }
         ],
         "contractDependencies": [
-          495
+          1294
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 478,
+        "id": 1277,
         "linearizedBaseContracts": [
-          478,
-          495
+          1277,
+          1294
         ],
         "name": "IFinancieLog",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "canonicalName": "IFinancieLog.EventType",
-            "id": 418,
+            "id": 1217,
             "members": [
               {
-                "id": 413,
+                "id": 1212,
                 "name": "BidCards",
                 "nodeType": "EnumValue",
-                "src": "182:8:2"
+                "src": "182:8:6"
               },
               {
-                "id": 414,
+                "id": 1213,
                 "name": "WithdrawCards",
                 "nodeType": "EnumValue",
-                "src": "200:13:2"
+                "src": "200:13:6"
               },
               {
-                "id": 415,
+                "id": 1214,
                 "name": "SellCards",
                 "nodeType": "EnumValue",
-                "src": "223:9:2"
+                "src": "223:9:6"
               },
               {
-                "id": 416,
+                "id": 1215,
                 "name": "BuyCards",
                 "nodeType": "EnumValue",
-                "src": "242:8:2"
+                "src": "242:8:6"
               },
               {
-                "id": 417,
+                "id": 1216,
                 "name": "BurnCards",
                 "nodeType": "EnumValue",
-                "src": "260:9:2"
+                "src": "260:9:6"
               }
             ],
             "name": "EventType",
             "nodeType": "EnumDefinition",
-            "src": "157:118:2"
+            "src": "157:118:6"
           },
           {
             "canonicalName": "IFinancieLog.CurrencyType",
-            "id": 422,
+            "id": 1221,
             "members": [
               {
-                "id": 419,
+                "id": 1218,
                 "name": "None",
                 "nodeType": "EnumValue",
-                "src": "309:4:2"
+                "src": "309:4:6"
               },
               {
-                "id": 420,
+                "id": 1219,
                 "name": "PlatformCoin",
                 "nodeType": "EnumValue",
-                "src": "323:12:2"
+                "src": "323:12:6"
               },
               {
-                "id": 421,
+                "id": 1220,
                 "name": "Ethereum",
                 "nodeType": "EnumValue",
-                "src": "345:8:2"
+                "src": "345:8:6"
               }
             ],
             "name": "CurrencyType",
             "nodeType": "EnumDefinition",
-            "src": "281:78:2"
+            "src": "281:78:6"
           },
           {
             "body": null,
             "documentation": null,
-            "id": 437,
+            "id": 1236,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -1105,16 +1105,16 @@
             "name": "recordLog",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 435,
+              "id": 1234,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 424,
+                  "id": 1223,
                   "name": "_sender",
                   "nodeType": "VariableDeclaration",
-                  "scope": 437,
-                  "src": "384:15:2",
+                  "scope": 1236,
+                  "src": "384:15:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1122,10 +1122,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 423,
+                    "id": 1222,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "384:7:2",
+                    "src": "384:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
@@ -1136,26 +1136,26 @@
                 },
                 {
                   "constant": false,
-                  "id": 426,
+                  "id": 1225,
                   "name": "_eventType",
                   "nodeType": "VariableDeclaration",
-                  "scope": 437,
-                  "src": "409:20:2",
+                  "scope": 1236,
+                  "src": "409:20:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_enum$_EventType_$418",
+                    "typeIdentifier": "t_enum$_EventType_$1217",
                     "typeString": "enum IFinancieLog.EventType"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 425,
+                    "id": 1224,
                     "name": "EventType",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 418,
-                    "src": "409:9:2",
+                    "referencedDeclaration": 1217,
+                    "src": "409:9:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_enum$_EventType_$418",
+                      "typeIdentifier": "t_enum$_EventType_$1217",
                       "typeString": "enum IFinancieLog.EventType"
                     }
                   },
@@ -1164,26 +1164,26 @@
                 },
                 {
                   "constant": false,
-                  "id": 428,
+                  "id": 1227,
                   "name": "_currencyType",
                   "nodeType": "VariableDeclaration",
-                  "scope": 437,
-                  "src": "439:26:2",
+                  "scope": 1236,
+                  "src": "439:26:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_enum$_CurrencyType_$422",
+                    "typeIdentifier": "t_enum$_CurrencyType_$1221",
                     "typeString": "enum IFinancieLog.CurrencyType"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 427,
+                    "id": 1226,
                     "name": "CurrencyType",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 422,
-                    "src": "439:12:2",
+                    "referencedDeclaration": 1221,
+                    "src": "439:12:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_enum$_CurrencyType_$422",
+                      "typeIdentifier": "t_enum$_CurrencyType_$1221",
                       "typeString": "enum IFinancieLog.CurrencyType"
                     }
                   },
@@ -1192,11 +1192,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 430,
+                  "id": 1229,
                   "name": "_target",
                   "nodeType": "VariableDeclaration",
-                  "scope": 437,
-                  "src": "475:15:2",
+                  "scope": 1236,
+                  "src": "475:15:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1204,10 +1204,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 429,
+                    "id": 1228,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "475:7:2",
+                    "src": "475:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
@@ -1218,11 +1218,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 432,
+                  "id": 1231,
                   "name": "_paidAmount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 437,
-                  "src": "500:19:2",
+                  "scope": 1236,
+                  "src": "500:19:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1230,10 +1230,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 431,
+                    "id": 1230,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "500:7:2",
+                    "src": "500:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1244,11 +1244,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 434,
+                  "id": 1233,
                   "name": "_receivedAmount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 437,
-                  "src": "529:23:2",
+                  "scope": 1236,
+                  "src": "529:23:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1256,10 +1256,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 433,
+                    "id": 1232,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "529:7:2",
+                    "src": "529:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1269,17 +1269,17 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "383:170:2"
+              "src": "383:170:6"
             },
             "payable": false,
             "returnParameters": {
-              "id": 436,
+              "id": 1235,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "568:0:2"
+              "src": "568:0:6"
             },
-            "scope": 478,
-            "src": "365:204:2",
+            "scope": 1277,
+            "src": "365:204:6",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
@@ -1287,7 +1287,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 457,
+            "id": 1256,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -1295,16 +1295,16 @@
             "name": "getTargetLogs",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 440,
+              "id": 1239,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 439,
+                  "id": 1238,
                   "name": "_target",
                   "nodeType": "VariableDeclaration",
-                  "scope": 457,
-                  "src": "597:15:2",
+                  "scope": 1256,
+                  "src": "597:15:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1312,10 +1312,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 438,
+                    "id": 1237,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "597:7:2",
+                    "src": "597:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
@@ -1325,45 +1325,45 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "596:17:2"
+              "src": "596:17:6"
             },
             "payable": false,
             "returnParameters": {
-              "id": 456,
+              "id": 1255,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 443,
+                  "id": 1242,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 457,
-                  "src": "634:11:2",
+                  "scope": 1256,
+                  "src": "634:11:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_enum$_EventType_$418_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_enum$_EventType_$1217_$dyn_memory_ptr",
                     "typeString": "enum IFinancieLog.EventType[] memory"
                   },
                   "typeName": {
                     "baseType": {
                       "contractScope": null,
-                      "id": 441,
+                      "id": 1240,
                       "name": "EventType",
                       "nodeType": "UserDefinedTypeName",
-                      "referencedDeclaration": 418,
-                      "src": "634:9:2",
+                      "referencedDeclaration": 1217,
+                      "src": "634:9:6",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_enum$_EventType_$418",
+                        "typeIdentifier": "t_enum$_EventType_$1217",
                         "typeString": "enum IFinancieLog.EventType"
                       }
                     },
-                    "id": 442,
+                    "id": 1241,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "634:11:2",
+                    "src": "634:11:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_enum$_EventType_$418_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_enum$_EventType_$1217_$dyn_storage_ptr",
                       "typeString": "enum IFinancieLog.EventType[] storage pointer"
                     }
                   },
@@ -1372,36 +1372,36 @@
                 },
                 {
                   "constant": false,
-                  "id": 446,
+                  "id": 1245,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 457,
-                  "src": "647:14:2",
+                  "scope": 1256,
+                  "src": "647:14:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_enum$_CurrencyType_$422_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_enum$_CurrencyType_$1221_$dyn_memory_ptr",
                     "typeString": "enum IFinancieLog.CurrencyType[] memory"
                   },
                   "typeName": {
                     "baseType": {
                       "contractScope": null,
-                      "id": 444,
+                      "id": 1243,
                       "name": "CurrencyType",
                       "nodeType": "UserDefinedTypeName",
-                      "referencedDeclaration": 422,
-                      "src": "647:12:2",
+                      "referencedDeclaration": 1221,
+                      "src": "647:12:6",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_enum$_CurrencyType_$422",
+                        "typeIdentifier": "t_enum$_CurrencyType_$1221",
                         "typeString": "enum IFinancieLog.CurrencyType"
                       }
                     },
-                    "id": 445,
+                    "id": 1244,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "647:14:2",
+                    "src": "647:14:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_enum$_CurrencyType_$422_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_enum$_CurrencyType_$1221_$dyn_storage_ptr",
                       "typeString": "enum IFinancieLog.CurrencyType[] storage pointer"
                     }
                   },
@@ -1410,11 +1410,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 449,
+                  "id": 1248,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 457,
-                  "src": "663:9:2",
+                  "scope": 1256,
+                  "src": "663:9:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1423,19 +1423,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 447,
+                      "id": 1246,
                       "name": "address",
                       "nodeType": "ElementaryTypeName",
-                      "src": "663:7:2",
+                      "src": "663:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       }
                     },
-                    "id": 448,
+                    "id": 1247,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "663:9:2",
+                    "src": "663:9:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
                       "typeString": "address[] storage pointer"
@@ -1446,11 +1446,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 452,
+                  "id": 1251,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 457,
-                  "src": "674:9:2",
+                  "scope": 1256,
+                  "src": "674:9:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1459,19 +1459,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 450,
+                      "id": 1249,
                       "name": "uint256",
                       "nodeType": "ElementaryTypeName",
-                      "src": "674:7:2",
+                      "src": "674:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       }
                     },
-                    "id": 451,
+                    "id": 1250,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "674:9:2",
+                    "src": "674:9:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
                       "typeString": "uint256[] storage pointer"
@@ -1482,11 +1482,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 455,
+                  "id": 1254,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 457,
-                  "src": "685:9:2",
+                  "scope": 1256,
+                  "src": "685:9:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1495,19 +1495,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 453,
+                      "id": 1252,
                       "name": "uint256",
                       "nodeType": "ElementaryTypeName",
-                      "src": "685:7:2",
+                      "src": "685:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       }
                     },
-                    "id": 454,
+                    "id": 1253,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "685:9:2",
+                    "src": "685:9:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
                       "typeString": "uint256[] storage pointer"
@@ -1517,10 +1517,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "633:62:2"
+              "src": "633:62:6"
             },
-            "scope": 478,
-            "src": "574:122:2",
+            "scope": 1277,
+            "src": "574:122:6",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "public"
@@ -1528,7 +1528,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 477,
+            "id": 1276,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -1536,16 +1536,16 @@
             "name": "getUserLogs",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 460,
+              "id": 1259,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 459,
+                  "id": 1258,
                   "name": "_sender",
                   "nodeType": "VariableDeclaration",
-                  "scope": 477,
-                  "src": "722:15:2",
+                  "scope": 1276,
+                  "src": "722:15:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1553,10 +1553,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 458,
+                    "id": 1257,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "722:7:2",
+                    "src": "722:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
@@ -1566,45 +1566,45 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "721:17:2"
+              "src": "721:17:6"
             },
             "payable": false,
             "returnParameters": {
-              "id": 476,
+              "id": 1275,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 463,
+                  "id": 1262,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 477,
-                  "src": "759:11:2",
+                  "scope": 1276,
+                  "src": "759:11:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_enum$_EventType_$418_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_enum$_EventType_$1217_$dyn_memory_ptr",
                     "typeString": "enum IFinancieLog.EventType[] memory"
                   },
                   "typeName": {
                     "baseType": {
                       "contractScope": null,
-                      "id": 461,
+                      "id": 1260,
                       "name": "EventType",
                       "nodeType": "UserDefinedTypeName",
-                      "referencedDeclaration": 418,
-                      "src": "759:9:2",
+                      "referencedDeclaration": 1217,
+                      "src": "759:9:6",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_enum$_EventType_$418",
+                        "typeIdentifier": "t_enum$_EventType_$1217",
                         "typeString": "enum IFinancieLog.EventType"
                       }
                     },
-                    "id": 462,
+                    "id": 1261,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "759:11:2",
+                    "src": "759:11:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_enum$_EventType_$418_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_enum$_EventType_$1217_$dyn_storage_ptr",
                       "typeString": "enum IFinancieLog.EventType[] storage pointer"
                     }
                   },
@@ -1613,36 +1613,36 @@
                 },
                 {
                   "constant": false,
-                  "id": 466,
+                  "id": 1265,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 477,
-                  "src": "772:14:2",
+                  "scope": 1276,
+                  "src": "772:14:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_enum$_CurrencyType_$422_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_enum$_CurrencyType_$1221_$dyn_memory_ptr",
                     "typeString": "enum IFinancieLog.CurrencyType[] memory"
                   },
                   "typeName": {
                     "baseType": {
                       "contractScope": null,
-                      "id": 464,
+                      "id": 1263,
                       "name": "CurrencyType",
                       "nodeType": "UserDefinedTypeName",
-                      "referencedDeclaration": 422,
-                      "src": "772:12:2",
+                      "referencedDeclaration": 1221,
+                      "src": "772:12:6",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_enum$_CurrencyType_$422",
+                        "typeIdentifier": "t_enum$_CurrencyType_$1221",
                         "typeString": "enum IFinancieLog.CurrencyType"
                       }
                     },
-                    "id": 465,
+                    "id": 1264,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "772:14:2",
+                    "src": "772:14:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_enum$_CurrencyType_$422_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_enum$_CurrencyType_$1221_$dyn_storage_ptr",
                       "typeString": "enum IFinancieLog.CurrencyType[] storage pointer"
                     }
                   },
@@ -1651,11 +1651,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 469,
+                  "id": 1268,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 477,
-                  "src": "788:9:2",
+                  "scope": 1276,
+                  "src": "788:9:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1664,19 +1664,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 467,
+                      "id": 1266,
                       "name": "address",
                       "nodeType": "ElementaryTypeName",
-                      "src": "788:7:2",
+                      "src": "788:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       }
                     },
-                    "id": 468,
+                    "id": 1267,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "788:9:2",
+                    "src": "788:9:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
                       "typeString": "address[] storage pointer"
@@ -1687,11 +1687,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 472,
+                  "id": 1271,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 477,
-                  "src": "799:9:2",
+                  "scope": 1276,
+                  "src": "799:9:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1700,19 +1700,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 470,
+                      "id": 1269,
                       "name": "uint256",
                       "nodeType": "ElementaryTypeName",
-                      "src": "799:7:2",
+                      "src": "799:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       }
                     },
-                    "id": 471,
+                    "id": 1270,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "799:9:2",
+                    "src": "799:9:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
                       "typeString": "uint256[] storage pointer"
@@ -1723,11 +1723,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 475,
+                  "id": 1274,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 477,
-                  "src": "810:9:2",
+                  "scope": 1276,
+                  "src": "810:9:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1736,19 +1736,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 473,
+                      "id": 1272,
                       "name": "uint256",
                       "nodeType": "ElementaryTypeName",
-                      "src": "810:7:2",
+                      "src": "810:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       }
                     },
-                    "id": 474,
+                    "id": 1273,
                     "length": null,
                     "nodeType": "ArrayTypeName",
-                    "src": "810:9:2",
+                    "src": "810:9:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
                       "typeString": "uint256[] storage pointer"
@@ -1758,20 +1758,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "758:62:2"
+              "src": "758:62:6"
             },
-            "scope": 478,
-            "src": "701:120:2",
+            "scope": 1277,
+            "src": "701:120:6",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 479,
-        "src": "91:732:2"
+        "scope": 1278,
+        "src": "91:732:6"
       }
     ],
-    "src": "0:824:2"
+    "src": "0:824:6"
   },
   "compiler": {
     "name": "solc",
@@ -1779,5 +1779,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-07-24T06:51:21.712Z"
+  "updatedAt": "2018-07-24T07:39:53.481Z"
 }

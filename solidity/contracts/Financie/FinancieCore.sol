@@ -81,6 +81,23 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
         uint256 _amountTo)
         public
     {
+        if ( _to == address(etherToken) ) {
+            log.recordLog(
+              _sender,
+              IFinancieLog.EventType.SellCards,
+              IFinancieLog.CurrencyType.Ethereum,
+              _from,
+              _amountFrom,
+              _amountTo);
+        } else {
+            log.recordLog(
+              _sender,
+              IFinancieLog.EventType.BuyCards,
+              IFinancieLog.CurrencyType.Ethereum,
+              _to,
+              _amountFrom,
+              _amountTo);
+        }
         ConvertCards(_sender, _from, _to, _amountFrom, _amountTo);
     }
 
