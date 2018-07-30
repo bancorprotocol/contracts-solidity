@@ -16,7 +16,6 @@ const FinancieCore = artifacts.require('FinancieCore.sol');
 const FinancieLog = artifacts.require('FinancieLog.sol');
 
 const DutchAuction = artifacts.require('DutchAuction.sol');
-const DutchAuctionPF = artifacts.require('DutchAuctionPF.sol');
 
 const weight10Percent = 100000;
 const gasPrice = 22000000000;
@@ -99,27 +98,29 @@ contract('FinancieLog', (accounts) => {
         let log1 = await testLog.getUserLogs(0x001);
         let log2 = await testLog.getUserLogs(0x002);
 
-        assert.equal(5, log1.length);
+        assert.equal(6, log1.length);
         assert.equal(1, log1[0].length);
         assert.equal(1, log1[1].length);
         assert.equal(1, log1[2].length);
         assert.equal(1, log1[3].length);
         assert.equal(1, log1[4].length);
+        assert.equal(1, log1[5].length);
 
-        assert.equal(5, log2.length);
+        assert.equal(6, log2.length);
         assert.equal(0, log2[0].length);
 
         let log3 = await testLog.getTargetLogs(0x011);
         let log4 = await testLog.getTargetLogs(0x012);
 
-        assert.equal(5, log3.length);
+        assert.equal(6, log3.length);
         assert.equal(1, log3[0].length);
         assert.equal(1, log3[1].length);
         assert.equal(1, log3[2].length);
         assert.equal(1, log3[3].length);
         assert.equal(1, log3[4].length);
+        assert.equal(1, log3[5].length);
 
-        assert.equal(5, log4.length);
+        assert.equal(6, log4.length);
         assert.equal(0, log4[0].length);
     });
 });

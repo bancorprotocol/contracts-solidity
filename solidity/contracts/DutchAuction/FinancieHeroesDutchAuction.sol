@@ -88,10 +88,11 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
         atStage(Stages.AuctionEnded)
         returns (bool)
     {
+        uint256 myBids = bids[receiver_address];
         uint256 balanceBefore = token.balanceOf(receiver_address);
         if ( super.proxyClaimTokens(receiver_address) ) {
             uint256 balanceAfter = token.balanceOf(receiver_address);
-            core.notifyWithdrawalCards(msg.sender, address(token), balanceAfter - balanceBefore);
+            core.notifyWithdrawalCards(receiver_address, address(token), myBids, balanceAfter - balanceBefore);
             return true;
         }
         return false;

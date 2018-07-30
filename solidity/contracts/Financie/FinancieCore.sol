@@ -29,11 +29,11 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
     event ActivateUser(address _sender, uint32 _userId);
     event ConvertCards(address _sender, address _from, address _to, uint256 _amountFrom, uint256 _amountTo);
     event BidCards(address _sender, address _to, uint256 _amount);
-    event WithdrawalCards(address _sender, address _to, uint256 _amount);
+    event WithdrawalCards(address _sender, address _to, uint256 _bids, uint256 _amount);
     event BurnCards(address _sender, address _card, uint256 _amount);
     event BurnTickets(address _sender, address _ticket, uint256 _amount);
     event DepositTickets(address _sender, address _issuer, address _ticket, address _card, uint256 _amount, uint256 _price);
-    event BuyTicket(address _sender, address _issuer, address _ticket);
+    event BuyTicket(address _sender, address _issuer, address _ticket, uint256 _amount, uint256 _price);
 
     function FinancieCore(address _pf_token, address _ether_token) public {
         platformToken = IERC20Token(_pf_token);
@@ -139,7 +139,7 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
     /**
     * log the withdrawal of cards from sales contract
     */
-    function notifyWithdrawalCards(address _sender, address _to, uint256 _amount)
+    function notifyWithdrawalCards(address _sender, address _to, uint256 _bids, uint256 _amount)
         public
         validTargetContract(msg.sender)
     {
@@ -152,7 +152,7 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
           0,
           _amount);
 
-        WithdrawalCards(_sender, _to, _amount);
+        WithdrawalCards(_sender, _to, _bids, _amount);
     }
 
     /**
@@ -247,7 +247,7 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
         require(ticket.balanceOf(address(this)) >= 1);
         ticket.transfer(msg.sender, 1);
 
-        BuyTicket(msg.sender, card.getIssuer(), _ticket);
+        BuyTicket(msg.sender, card.getIssuer(), _ticket, 1, ticketSale.price);
     }
 
     function checkUserActivation(address _sender, uint32 _userId) public returns(bool) {

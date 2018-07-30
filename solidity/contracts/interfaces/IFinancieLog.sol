@@ -29,6 +29,6 @@ contract IFinancieLog is IOwned {
         uint256 _paidAmount,
         uint256 _receivedAmount)
         public;
-    function getTargetLogs(address _target) public view returns(EventType[], CurrencyType[], address[], uint256[], uint256[]);
-    function getUserLogs(address _sender) public view returns(EventType[], CurrencyType[], address[], uint256[], uint256[]);
+    function getTargetLogs(address _target) public view returns(uint[], EventType[], CurrencyType[], address[], uint256[], uint256[]);
+    function getUserLogs(address _sender) public view returns(uint[], EventType[], CurrencyType[], address[], uint256[], uint256[]);
 }

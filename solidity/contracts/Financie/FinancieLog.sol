@@ -6,6 +6,7 @@ contract FinancieLog is Owned, IFinancieLog {
 
     struct UserLogs {
         bool isSet;
+        uint[] timestamp;
         EventType[] eventType;
         CurrencyType[] currencyType;
         address[] target;
@@ -15,6 +16,7 @@ contract FinancieLog is Owned, IFinancieLog {
 
     struct TargetLogs {
         bool isSet;
+        uint[] timestamp;
         EventType[] eventType;
         CurrencyType[] currencyType;
         address[] sender;
@@ -45,6 +47,7 @@ contract FinancieLog is Owned, IFinancieLog {
         if ( !userLogs[_sender].isSet ) {
             userLogs[_sender] = UserLogs(
                 true,
+                new uint[](0),
                 new EventType[](0),
                 new CurrencyType[](0),
                 new address[](0),
@@ -55,6 +58,7 @@ contract FinancieLog is Owned, IFinancieLog {
         if ( !targetLogs[_target].isSet ) {
             targetLogs[_target] = TargetLogs(
                 true,
+                new uint[](0),
                 new EventType[](0),
                 new CurrencyType[](0),
                 new address[](0),
@@ -64,6 +68,7 @@ contract FinancieLog is Owned, IFinancieLog {
         }
 
         // Record user log
+        userLogs[_sender].timestamp.push(now);
         userLogs[_sender].eventType.push(_eventType);
         userLogs[_sender].currencyType.push(_currencyType);
         userLogs[_sender].target.push(_target);
@@ -71,6 +76,7 @@ contract FinancieLog is Owned, IFinancieLog {
         userLogs[_sender].amountTo.push(_receivedAmount);
 
         // Record target log
+        targetLogs[_target].timestamp.push(now);
         targetLogs[_target].eventType.push(_eventType);
         targetLogs[_target].currencyType.push(_currencyType);
         targetLogs[_target].sender.push(_sender);
@@ -79,9 +85,10 @@ contract FinancieLog is Owned, IFinancieLog {
     }
 
     function getTargetLogs(address _target)
-        public view returns(EventType[], CurrencyType[], address[], uint256[], uint256[])
+        public view returns(uint[], EventType[], CurrencyType[], address[], uint256[], uint256[])
     {
         return (
+            targetLogs[_target].timestamp,
             targetLogs[_target].eventType,
             targetLogs[_target].currencyType,
             targetLogs[_target].sender,
@@ -91,9 +98,10 @@ contract FinancieLog is Owned, IFinancieLog {
     }
 
     function getUserLogs(address _sender)
-        public view returns(EventType[], CurrencyType[], address[], uint256[], uint256[])
+        public view returns(uint[], EventType[], CurrencyType[], address[], uint256[], uint256[])
     {
         return (
+            userLogs[_sender].timestamp,
             userLogs[_sender].eventType,
             userLogs[_sender].currencyType,
             userLogs[_sender].target,
