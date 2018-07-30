@@ -63,7 +63,7 @@ contract('BancorConverter', (accounts) => {
 
     it('verifies that getReturn returns a valid amount', async () => {
         converter = await initConverter(accounts, true);
-        quickConverter.registerEtherToken(etherTokenAddress, true);
+        await quickConverter.registerEtherToken(etherTokenAddress, true);
     });
 
 });
