@@ -88,40 +88,70 @@ contract('FinancieCore', (accounts) => {
     });
 });
 
-/*
 contract('FinancieLog', (accounts) => {
     it('setup financie log', async () => {
 
         let testLog = await FinancieLog.new();
-        await testLog.recordLog(0x001, 1, 1, 0x011, 300, 200);
+        await testLog.recordLog(0x001, 0x011, 1, 0x111, 0x211, 300, 200);
 
-        let log1 = await testLog.getUserLogs(0x001);
-        let log2 = await testLog.getUserLogs(0x002);
+        let log1 = await testLog.getSenderLogs(0x001);
+        let log2 = await testLog.getSenderLogs(0x002);
 
-        assert.equal(6, log1.length);
+        assert.equal(7, log1.length);
         assert.equal(1, log1[0].length);
         assert.equal(1, log1[1].length);
         assert.equal(1, log1[2].length);
         assert.equal(1, log1[3].length);
         assert.equal(1, log1[4].length);
         assert.equal(1, log1[5].length);
+        assert.equal(1, log1[6].length);
 
-        assert.equal(6, log2.length);
+        assert.equal(7, log2.length);
         assert.equal(0, log2[0].length);
 
         let log3 = await testLog.getTargetLogs(0x011);
         let log4 = await testLog.getTargetLogs(0x012);
 
-        assert.equal(6, log3.length);
+        assert.equal(7, log3.length);
         assert.equal(1, log3[0].length);
         assert.equal(1, log3[1].length);
         assert.equal(1, log3[2].length);
         assert.equal(1, log3[3].length);
         assert.equal(1, log3[4].length);
         assert.equal(1, log3[5].length);
+        assert.equal(1, log3[6].length);
 
-        assert.equal(6, log4.length);
+        assert.equal(7, log4.length);
         assert.equal(0, log4[0].length);
+
+        let log5 = await testLog.getFromLogs(0x111);
+        let log6 = await testLog.getFromLogs(0x112);
+
+        assert.equal(7, log5.length);
+        assert.equal(1, log5[0].length);
+        assert.equal(1, log5[1].length);
+        assert.equal(1, log5[2].length);
+        assert.equal(1, log5[3].length);
+        assert.equal(1, log5[4].length);
+        assert.equal(1, log5[5].length);
+        assert.equal(1, log5[6].length);
+
+        assert.equal(7, log6.length);
+        assert.equal(0, log6[0].length);
+
+        let log7 = await testLog.getToLogs(0x211);
+        let log8 = await testLog.getToLogs(0x212);
+
+        assert.equal(7, log7.length);
+        assert.equal(1, log7[0].length);
+        assert.equal(1, log7[1].length);
+        assert.equal(1, log7[2].length);
+        assert.equal(1, log7[3].length);
+        assert.equal(1, log7[4].length);
+        assert.equal(1, log7[5].length);
+        assert.equal(1, log7[6].length);
+
+        assert.equal(7, log8.length);
+        assert.equal(0, log8[0].length);
     });
 });
-*/

@@ -13,22 +13,22 @@ contract IFinancieLog is IOwned {
         WithdrawCards,
         SellCards,
         BuyCards,
-        BurnCards
+        BurnCards,
+        BuyTicket,
+        BurnTicket
     }
 
-    enum CurrencyType {
-        None,
-        PlatformCoin,
-        Ethereum
-    }
-
-    function recordLog(address _sender,
-        EventType _eventType,
-        CurrencyType _currencyType,
+    function recordLog(
+        address _sender,
         address _target,
+        EventType _eventType,
+        address _from,
+        address _to,
         uint256 _paidAmount,
         uint256 _receivedAmount)
         public;
-    function getTargetLogs(address _target) public view returns(uint[], EventType[], CurrencyType[], address[], uint256[], uint256[]);
-    function getUserLogs(address _sender) public view returns(uint[], EventType[], CurrencyType[], address[], uint256[], uint256[]);
+    function getSenderLogs(address _sender) public view returns(uint[], address[], EventType[], address[], address[], uint256[], uint256[]);
+    function getTargetLogs(address _target) public view returns(uint[], address[], EventType[], address[], address[], uint256[], uint256[]);
+    function getFromLogs(address _from) public view returns(uint[], address[], address[], EventType[], address[], uint256[], uint256[]);
+    function getToLogs(address _to) public view returns(uint[], address[], address[], EventType[], address[], uint256[], uint256[]);
 }

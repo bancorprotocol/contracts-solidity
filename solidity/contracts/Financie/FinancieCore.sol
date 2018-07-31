@@ -84,16 +84,18 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
         if ( _to == address(etherToken) ) {
             log.recordLog(
               _sender,
+              this,
               IFinancieLog.EventType.SellCards,
-              IFinancieLog.CurrencyType.Ethereum,
               _from,
+              _to,
               _amountFrom,
               _amountTo);
         } else {
             log.recordLog(
               _sender,
+              this,
               IFinancieLog.EventType.BuyCards,
-              IFinancieLog.CurrencyType.Ethereum,
+              _from,
               _to,
               _amountFrom,
               _amountTo);
@@ -127,8 +129,9 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
     {
         log.recordLog(
           _sender,
+          msg.sender,
           IFinancieLog.EventType.BidCards,
-          IFinancieLog.CurrencyType.Ethereum,
+          etherToken,
           _to,
           _amount,
           0);
@@ -144,10 +147,12 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
         validTargetContract(msg.sender)
     {
         addOwnedCardList(_sender, _to);
+
         log.recordLog(
           _sender,
+          msg.sender,
           IFinancieLog.EventType.WithdrawCards,
-          IFinancieLog.CurrencyType.None,
+          0x0,
           _to,
           0,
           _amount);
@@ -164,9 +169,10 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
     {
         log.recordLog(
           _sender,
-          IFinancieLog.EventType.BurnCards,
-          IFinancieLog.CurrencyType.None,
           msg.sender,
+          IFinancieLog.EventType.BurnCards,
+          msg.sender,
+          0x0,
           _amount,
           0);
 
@@ -181,6 +187,15 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
         validTargetContract(msg.sender)
     {
         paidTicketList[msg.sender][_sender] = safeAdd(paidTicketList[msg.sender][_sender], _amount);
+
+        log.recordLog(
+          _sender,
+          msg.sender,
+          IFinancieLog.EventType.BurnTicket,
+          msg.sender,
+          0x0,
+          _amount,
+          0);
 
         BurnTickets(_sender, msg.sender, _amount);
     }
@@ -246,6 +261,15 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
         IERC20Token ticket = IERC20Token(_ticket);
         require(ticket.balanceOf(address(this)) >= 1);
         ticket.transfer(msg.sender, 1);
+
+        log.recordLog(
+          msg.sender,
+          address(this),
+          IFinancieLog.EventType.BuyTicket,
+          card,
+          _ticket,
+          ticketSale.price,
+          1);
 
         BuyTicket(msg.sender, card.getIssuer(), _ticket, 1, ticketSale.price);
     }
