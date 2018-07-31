@@ -11,7 +11,7 @@ var address = "0x" + wallet.getAddress().toString("hex");
 
 var engineStaging = new ProviderEngine();
 engineStaging.addProvider(new WalletSubprovider(wallet, {}));
-engineStaging.addProvider(new RpcSubprovider({rpcUrl: "https://13.113.253.3:8545"}));
+engineStaging.addProvider(new RpcSubprovider({rpcUrl: "https://geth.financie.io:8545"}));
 engineStaging.start(); // Required by the provider engine.
 
 var enginePrivate = new ProviderEngine();
