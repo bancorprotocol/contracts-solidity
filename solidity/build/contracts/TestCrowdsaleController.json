@@ -503,14 +503,14 @@
     "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/helpers/TestCrowdsaleController.sol",
     "exportedSymbols": {
       "TestCrowdsaleController": [
-        8039
+        8443
       ]
     },
-    "id": 8040,
+    "id": 8444,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 8002,
+        "id": 8406,
         "literals": [
           "solidity",
           "^",
@@ -523,9 +523,9 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/CrowdsaleController.sol",
         "file": "../CrowdsaleController.sol",
-        "id": 8003,
+        "id": 8407,
         "nodeType": "ImportDirective",
-        "scope": 8040,
+        "scope": 8444,
         "sourceUnit": 3611,
         "src": "25:36:27",
         "symbolAliases": [],
@@ -537,7 +537,7 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 8004,
+              "id": 8408,
               "name": "CrowdsaleController",
               "nodeType": "UserDefinedTypeName",
               "referencedDeclaration": 3610,
@@ -547,54 +547,54 @@
                 "typeString": "contract CrowdsaleController"
               }
             },
-            "id": 8005,
+            "id": 8409,
             "nodeType": "InheritanceSpecifier",
             "src": "168:19:27"
           }
         ],
         "contractDependencies": [
           3610,
-          7360,
-          7684,
-          7730,
-          7851,
-          8510,
-          8607
+          7764,
+          8088,
+          8134,
+          8255,
+          8972,
+          9069
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 8039,
+        "id": 8443,
         "linearizedBaseContracts": [
-          8039,
+          8443,
           3610,
-          7684,
-          7730,
-          7851,
-          7360,
-          8607,
-          8510
+          8088,
+          8134,
+          8255,
+          7764,
+          9069,
+          8972
         ],
         "name": "TestCrowdsaleController",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "body": {
-              "id": 8037,
+              "id": 8441,
               "nodeType": "Block",
               "src": "515:87:27",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 8029,
+                    "id": 8433,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 8027,
+                      "id": 8431,
                       "name": "startTime",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
@@ -609,11 +609,11 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 8028,
+                      "id": 8432,
                       "name": "_startTimeOverride",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8017,
+                      "referencedDeclaration": 8421,
                       "src": "537:18:27",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -626,21 +626,21 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 8030,
+                  "id": 8434,
                   "nodeType": "ExpressionStatement",
                   "src": "525:30:27"
                 },
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 8035,
+                    "id": 8439,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 8031,
+                      "id": 8435,
                       "name": "endTime",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
@@ -659,14 +659,14 @@
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       },
-                      "id": 8034,
+                      "id": 8438,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "leftExpression": {
                         "argumentTypes": null,
-                        "id": 8032,
+                        "id": 8436,
                         "name": "startTime",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -681,7 +681,7 @@
                       "operator": "+",
                       "rightExpression": {
                         "argumentTypes": null,
-                        "id": 8033,
+                        "id": 8437,
                         "name": "DURATION",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -704,14 +704,14 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 8036,
+                  "id": 8440,
                   "nodeType": "ExpressionStatement",
                   "src": "565:30:27"
                 }
               ]
             },
             "documentation": null,
-            "id": 8038,
+            "id": 8442,
             "implemented": true,
             "isConstructor": true,
             "isDeclaredConst": false,
@@ -720,24 +720,24 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 8020,
+                    "id": 8424,
                     "name": "_token",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 8007,
+                    "referencedDeclaration": 8411,
                     "src": "451:6:27",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8538",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9000",
                       "typeString": "contract ISmartToken"
                     }
                   },
                   {
                     "argumentTypes": null,
-                    "id": 8021,
+                    "id": 8425,
                     "name": "_startTime",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 8009,
+                    "referencedDeclaration": 8413,
                     "src": "459:10:27",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
@@ -746,11 +746,11 @@
                   },
                   {
                     "argumentTypes": null,
-                    "id": 8022,
+                    "id": 8426,
                     "name": "_beneficiary",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 8011,
+                    "referencedDeclaration": 8415,
                     "src": "471:12:27",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -759,11 +759,11 @@
                   },
                   {
                     "argumentTypes": null,
-                    "id": 8023,
+                    "id": 8427,
                     "name": "_btcs",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 8013,
+                    "referencedDeclaration": 8417,
                     "src": "485:5:27",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -772,11 +772,11 @@
                   },
                   {
                     "argumentTypes": null,
-                    "id": 8024,
+                    "id": 8428,
                     "name": "_realEtherCapHash",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 8015,
+                    "referencedDeclaration": 8419,
                     "src": "492:17:27",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
@@ -784,10 +784,10 @@
                     }
                   }
                 ],
-                "id": 8025,
+                "id": 8429,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 8019,
+                  "id": 8423,
                   "name": "CrowdsaleController",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
@@ -805,31 +805,31 @@
             "name": "TestCrowdsaleController",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8018,
+              "id": 8422,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8007,
+                  "id": 8411,
                   "name": "_token",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8038,
+                  "scope": 8442,
                   "src": "236:18:27",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_ISmartToken_$8538",
+                    "typeIdentifier": "t_contract$_ISmartToken_$9000",
                     "typeString": "contract ISmartToken"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 8006,
+                    "id": 8410,
                     "name": "ISmartToken",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8538,
+                    "referencedDeclaration": 9000,
                     "src": "236:11:27",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8538",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9000",
                       "typeString": "contract ISmartToken"
                     }
                   },
@@ -838,10 +838,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8009,
+                  "id": 8413,
                   "name": "_startTime",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8038,
+                  "scope": 8442,
                   "src": "264:18:27",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -850,7 +850,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8008,
+                    "id": 8412,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "264:7:27",
@@ -864,10 +864,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8011,
+                  "id": 8415,
                   "name": "_beneficiary",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8038,
+                  "scope": 8442,
                   "src": "292:20:27",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -876,7 +876,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8010,
+                    "id": 8414,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "292:7:27",
@@ -890,10 +890,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8013,
+                  "id": 8417,
                   "name": "_btcs",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8038,
+                  "scope": 8442,
                   "src": "322:13:27",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -902,7 +902,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8012,
+                    "id": 8416,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "322:7:27",
@@ -916,10 +916,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8015,
+                  "id": 8419,
                   "name": "_realEtherCapHash",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8038,
+                  "scope": 8442,
                   "src": "345:25:27",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -928,7 +928,7 @@
                     "typeString": "bytes32"
                   },
                   "typeName": {
-                    "id": 8014,
+                    "id": 8418,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
                     "src": "345:7:27",
@@ -942,10 +942,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8017,
+                  "id": 8421,
                   "name": "_startTimeOverride",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8038,
+                  "scope": 8442,
                   "src": "380:26:27",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -954,7 +954,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8016,
+                    "id": 8420,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "380:7:27",
@@ -971,19 +971,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8026,
+              "id": 8430,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "515:0:27"
             },
-            "scope": 8039,
+            "scope": 8443,
             "src": "194:408:27",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 8040,
+        "scope": 8444,
         "src": "132:472:27"
       }
     ],
@@ -993,14 +993,14 @@
     "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/helpers/TestCrowdsaleController.sol",
     "exportedSymbols": {
       "TestCrowdsaleController": [
-        8039
+        8443
       ]
     },
-    "id": 8040,
+    "id": 8444,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 8002,
+        "id": 8406,
         "literals": [
           "solidity",
           "^",
@@ -1013,9 +1013,9 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/CrowdsaleController.sol",
         "file": "../CrowdsaleController.sol",
-        "id": 8003,
+        "id": 8407,
         "nodeType": "ImportDirective",
-        "scope": 8040,
+        "scope": 8444,
         "sourceUnit": 3611,
         "src": "25:36:27",
         "symbolAliases": [],
@@ -1027,7 +1027,7 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 8004,
+              "id": 8408,
               "name": "CrowdsaleController",
               "nodeType": "UserDefinedTypeName",
               "referencedDeclaration": 3610,
@@ -1037,54 +1037,54 @@
                 "typeString": "contract CrowdsaleController"
               }
             },
-            "id": 8005,
+            "id": 8409,
             "nodeType": "InheritanceSpecifier",
             "src": "168:19:27"
           }
         ],
         "contractDependencies": [
           3610,
-          7360,
-          7684,
-          7730,
-          7851,
-          8510,
-          8607
+          7764,
+          8088,
+          8134,
+          8255,
+          8972,
+          9069
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 8039,
+        "id": 8443,
         "linearizedBaseContracts": [
-          8039,
+          8443,
           3610,
-          7684,
-          7730,
-          7851,
-          7360,
-          8607,
-          8510
+          8088,
+          8134,
+          8255,
+          7764,
+          9069,
+          8972
         ],
         "name": "TestCrowdsaleController",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "body": {
-              "id": 8037,
+              "id": 8441,
               "nodeType": "Block",
               "src": "515:87:27",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 8029,
+                    "id": 8433,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 8027,
+                      "id": 8431,
                       "name": "startTime",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
@@ -1099,11 +1099,11 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 8028,
+                      "id": 8432,
                       "name": "_startTimeOverride",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8017,
+                      "referencedDeclaration": 8421,
                       "src": "537:18:27",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1116,21 +1116,21 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 8030,
+                  "id": 8434,
                   "nodeType": "ExpressionStatement",
                   "src": "525:30:27"
                 },
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 8035,
+                    "id": 8439,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 8031,
+                      "id": 8435,
                       "name": "endTime",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
@@ -1149,14 +1149,14 @@
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       },
-                      "id": 8034,
+                      "id": 8438,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "leftExpression": {
                         "argumentTypes": null,
-                        "id": 8032,
+                        "id": 8436,
                         "name": "startTime",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -1171,7 +1171,7 @@
                       "operator": "+",
                       "rightExpression": {
                         "argumentTypes": null,
-                        "id": 8033,
+                        "id": 8437,
                         "name": "DURATION",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -1194,14 +1194,14 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 8036,
+                  "id": 8440,
                   "nodeType": "ExpressionStatement",
                   "src": "565:30:27"
                 }
               ]
             },
             "documentation": null,
-            "id": 8038,
+            "id": 8442,
             "implemented": true,
             "isConstructor": true,
             "isDeclaredConst": false,
@@ -1210,24 +1210,24 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 8020,
+                    "id": 8424,
                     "name": "_token",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 8007,
+                    "referencedDeclaration": 8411,
                     "src": "451:6:27",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8538",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9000",
                       "typeString": "contract ISmartToken"
                     }
                   },
                   {
                     "argumentTypes": null,
-                    "id": 8021,
+                    "id": 8425,
                     "name": "_startTime",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 8009,
+                    "referencedDeclaration": 8413,
                     "src": "459:10:27",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
@@ -1236,11 +1236,11 @@
                   },
                   {
                     "argumentTypes": null,
-                    "id": 8022,
+                    "id": 8426,
                     "name": "_beneficiary",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 8011,
+                    "referencedDeclaration": 8415,
                     "src": "471:12:27",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1249,11 +1249,11 @@
                   },
                   {
                     "argumentTypes": null,
-                    "id": 8023,
+                    "id": 8427,
                     "name": "_btcs",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 8013,
+                    "referencedDeclaration": 8417,
                     "src": "485:5:27",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1262,11 +1262,11 @@
                   },
                   {
                     "argumentTypes": null,
-                    "id": 8024,
+                    "id": 8428,
                     "name": "_realEtherCapHash",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 8015,
+                    "referencedDeclaration": 8419,
                     "src": "492:17:27",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
@@ -1274,10 +1274,10 @@
                     }
                   }
                 ],
-                "id": 8025,
+                "id": 8429,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 8019,
+                  "id": 8423,
                   "name": "CrowdsaleController",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
@@ -1295,31 +1295,31 @@
             "name": "TestCrowdsaleController",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8018,
+              "id": 8422,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8007,
+                  "id": 8411,
                   "name": "_token",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8038,
+                  "scope": 8442,
                   "src": "236:18:27",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_ISmartToken_$8538",
+                    "typeIdentifier": "t_contract$_ISmartToken_$9000",
                     "typeString": "contract ISmartToken"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 8006,
+                    "id": 8410,
                     "name": "ISmartToken",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8538,
+                    "referencedDeclaration": 9000,
                     "src": "236:11:27",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8538",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9000",
                       "typeString": "contract ISmartToken"
                     }
                   },
@@ -1328,10 +1328,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8009,
+                  "id": 8413,
                   "name": "_startTime",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8038,
+                  "scope": 8442,
                   "src": "264:18:27",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1340,7 +1340,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8008,
+                    "id": 8412,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "264:7:27",
@@ -1354,10 +1354,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8011,
+                  "id": 8415,
                   "name": "_beneficiary",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8038,
+                  "scope": 8442,
                   "src": "292:20:27",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1366,7 +1366,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8010,
+                    "id": 8414,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "292:7:27",
@@ -1380,10 +1380,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8013,
+                  "id": 8417,
                   "name": "_btcs",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8038,
+                  "scope": 8442,
                   "src": "322:13:27",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1392,7 +1392,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8012,
+                    "id": 8416,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "322:7:27",
@@ -1406,10 +1406,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8015,
+                  "id": 8419,
                   "name": "_realEtherCapHash",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8038,
+                  "scope": 8442,
                   "src": "345:25:27",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1418,7 +1418,7 @@
                     "typeString": "bytes32"
                   },
                   "typeName": {
-                    "id": 8014,
+                    "id": 8418,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
                     "src": "345:7:27",
@@ -1432,10 +1432,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8017,
+                  "id": 8421,
                   "name": "_startTimeOverride",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8038,
+                  "scope": 8442,
                   "src": "380:26:27",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1444,7 +1444,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8016,
+                    "id": 8420,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "380:7:27",
@@ -1461,19 +1461,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8026,
+              "id": 8430,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "515:0:27"
             },
-            "scope": 8039,
+            "scope": 8443,
             "src": "194:408:27",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 8040,
+        "scope": 8444,
         "src": "132:472:27"
       }
     ],
@@ -1485,5 +1485,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-07-30T07:57:04.905Z"
+  "updatedAt": "2018-07-31T08:20:33.685Z"
 }

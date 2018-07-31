@@ -70,14 +70,14 @@
     "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IBancorQuickConverter.sol",
     "exportedSymbols": {
       "IBancorQuickConverter": [
-        8189
+        8593
       ]
     },
-    "id": 8190,
+    "id": 8594,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 8161,
+        "id": 8565,
         "literals": [
           "solidity",
           "^",
@@ -90,10 +90,10 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IERC20Token.sol",
         "file": "./IERC20Token.sol",
-        "id": 8162,
+        "id": 8566,
         "nodeType": "ImportDirective",
-        "scope": 8190,
-        "sourceUnit": 8270,
+        "scope": 8594,
+        "sourceUnit": 8674,
         "src": "25:27:32",
         "symbolAliases": [],
         "unitAlias": ""
@@ -104,9 +104,9 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 8189,
+        "id": 8593,
         "linearizedBaseContracts": [
-          8189
+          8593
         ],
         "name": "IBancorQuickConverter",
         "nodeType": "ContractDefinition",
@@ -114,7 +114,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 8174,
+            "id": 8578,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -122,41 +122,41 @@
             "name": "convert",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8170,
+              "id": 8574,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8165,
+                  "id": 8569,
                   "name": "_path",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8174,
+                  "scope": 8578,
                   "src": "151:19:32",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8269_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8673_$dyn_memory_ptr",
                     "typeString": "contract IERC20Token[] memory"
                   },
                   "typeName": {
                     "baseType": {
                       "contractScope": null,
-                      "id": 8163,
+                      "id": 8567,
                       "name": "IERC20Token",
                       "nodeType": "UserDefinedTypeName",
-                      "referencedDeclaration": 8269,
+                      "referencedDeclaration": 8673,
                       "src": "151:11:32",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IERC20Token_$8269",
+                        "typeIdentifier": "t_contract$_IERC20Token_$8673",
                         "typeString": "contract IERC20Token"
                       }
                     },
-                    "id": 8164,
+                    "id": 8568,
                     "length": null,
                     "nodeType": "ArrayTypeName",
                     "src": "151:13:32",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8269_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8673_$dyn_storage_ptr",
                       "typeString": "contract IERC20Token[] storage pointer"
                     }
                   },
@@ -165,10 +165,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8167,
+                  "id": 8571,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8174,
+                  "scope": 8578,
                   "src": "172:15:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -177,7 +177,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8166,
+                    "id": 8570,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "172:7:32",
@@ -191,10 +191,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8169,
+                  "id": 8573,
                   "name": "_minReturn",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8174,
+                  "scope": 8578,
                   "src": "189:18:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -203,7 +203,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8168,
+                    "id": 8572,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "189:7:32",
@@ -220,15 +220,15 @@
             },
             "payable": true,
             "returnParameters": {
-              "id": 8173,
+              "id": 8577,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8172,
+                  "id": 8576,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8174,
+                  "scope": 8578,
                   "src": "233:7:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -237,7 +237,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8171,
+                    "id": 8575,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "233:7:32",
@@ -252,7 +252,7 @@
               ],
               "src": "232:9:32"
             },
-            "scope": 8189,
+            "scope": 8593,
             "src": "134:108:32",
             "stateMutability": "payable",
             "superFunction": null,
@@ -261,7 +261,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 8188,
+            "id": 8592,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -269,41 +269,41 @@
             "name": "convertFor",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8184,
+              "id": 8588,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8177,
+                  "id": 8581,
                   "name": "_path",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8188,
+                  "scope": 8592,
                   "src": "267:19:32",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8269_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8673_$dyn_memory_ptr",
                     "typeString": "contract IERC20Token[] memory"
                   },
                   "typeName": {
                     "baseType": {
                       "contractScope": null,
-                      "id": 8175,
+                      "id": 8579,
                       "name": "IERC20Token",
                       "nodeType": "UserDefinedTypeName",
-                      "referencedDeclaration": 8269,
+                      "referencedDeclaration": 8673,
                       "src": "267:11:32",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IERC20Token_$8269",
+                        "typeIdentifier": "t_contract$_IERC20Token_$8673",
                         "typeString": "contract IERC20Token"
                       }
                     },
-                    "id": 8176,
+                    "id": 8580,
                     "length": null,
                     "nodeType": "ArrayTypeName",
                     "src": "267:13:32",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8269_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8673_$dyn_storage_ptr",
                       "typeString": "contract IERC20Token[] storage pointer"
                     }
                   },
@@ -312,10 +312,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8179,
+                  "id": 8583,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8188,
+                  "scope": 8592,
                   "src": "288:15:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -324,7 +324,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8178,
+                    "id": 8582,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "288:7:32",
@@ -338,10 +338,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8181,
+                  "id": 8585,
                   "name": "_minReturn",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8188,
+                  "scope": 8592,
                   "src": "305:18:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -350,7 +350,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8180,
+                    "id": 8584,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "305:7:32",
@@ -364,10 +364,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8183,
+                  "id": 8587,
                   "name": "_for",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8188,
+                  "scope": 8592,
                   "src": "325:12:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -376,7 +376,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8182,
+                    "id": 8586,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "325:7:32",
@@ -393,15 +393,15 @@
             },
             "payable": true,
             "returnParameters": {
-              "id": 8187,
+              "id": 8591,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8186,
+                  "id": 8590,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8188,
+                  "scope": 8592,
                   "src": "363:7:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -410,7 +410,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8185,
+                    "id": 8589,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "363:7:32",
@@ -425,14 +425,14 @@
               ],
               "src": "362:9:32"
             },
-            "scope": 8189,
+            "scope": 8593,
             "src": "247:125:32",
             "stateMutability": "payable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 8190,
+        "scope": 8594,
         "src": "97:277:32"
       }
     ],
@@ -442,14 +442,14 @@
     "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IBancorQuickConverter.sol",
     "exportedSymbols": {
       "IBancorQuickConverter": [
-        8189
+        8593
       ]
     },
-    "id": 8190,
+    "id": 8594,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 8161,
+        "id": 8565,
         "literals": [
           "solidity",
           "^",
@@ -462,10 +462,10 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IERC20Token.sol",
         "file": "./IERC20Token.sol",
-        "id": 8162,
+        "id": 8566,
         "nodeType": "ImportDirective",
-        "scope": 8190,
-        "sourceUnit": 8270,
+        "scope": 8594,
+        "sourceUnit": 8674,
         "src": "25:27:32",
         "symbolAliases": [],
         "unitAlias": ""
@@ -476,9 +476,9 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 8189,
+        "id": 8593,
         "linearizedBaseContracts": [
-          8189
+          8593
         ],
         "name": "IBancorQuickConverter",
         "nodeType": "ContractDefinition",
@@ -486,7 +486,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 8174,
+            "id": 8578,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -494,41 +494,41 @@
             "name": "convert",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8170,
+              "id": 8574,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8165,
+                  "id": 8569,
                   "name": "_path",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8174,
+                  "scope": 8578,
                   "src": "151:19:32",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8269_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8673_$dyn_memory_ptr",
                     "typeString": "contract IERC20Token[] memory"
                   },
                   "typeName": {
                     "baseType": {
                       "contractScope": null,
-                      "id": 8163,
+                      "id": 8567,
                       "name": "IERC20Token",
                       "nodeType": "UserDefinedTypeName",
-                      "referencedDeclaration": 8269,
+                      "referencedDeclaration": 8673,
                       "src": "151:11:32",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IERC20Token_$8269",
+                        "typeIdentifier": "t_contract$_IERC20Token_$8673",
                         "typeString": "contract IERC20Token"
                       }
                     },
-                    "id": 8164,
+                    "id": 8568,
                     "length": null,
                     "nodeType": "ArrayTypeName",
                     "src": "151:13:32",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8269_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8673_$dyn_storage_ptr",
                       "typeString": "contract IERC20Token[] storage pointer"
                     }
                   },
@@ -537,10 +537,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8167,
+                  "id": 8571,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8174,
+                  "scope": 8578,
                   "src": "172:15:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -549,7 +549,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8166,
+                    "id": 8570,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "172:7:32",
@@ -563,10 +563,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8169,
+                  "id": 8573,
                   "name": "_minReturn",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8174,
+                  "scope": 8578,
                   "src": "189:18:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -575,7 +575,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8168,
+                    "id": 8572,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "189:7:32",
@@ -592,15 +592,15 @@
             },
             "payable": true,
             "returnParameters": {
-              "id": 8173,
+              "id": 8577,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8172,
+                  "id": 8576,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8174,
+                  "scope": 8578,
                   "src": "233:7:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -609,7 +609,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8171,
+                    "id": 8575,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "233:7:32",
@@ -624,7 +624,7 @@
               ],
               "src": "232:9:32"
             },
-            "scope": 8189,
+            "scope": 8593,
             "src": "134:108:32",
             "stateMutability": "payable",
             "superFunction": null,
@@ -633,7 +633,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 8188,
+            "id": 8592,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -641,41 +641,41 @@
             "name": "convertFor",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8184,
+              "id": 8588,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8177,
+                  "id": 8581,
                   "name": "_path",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8188,
+                  "scope": 8592,
                   "src": "267:19:32",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8269_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8673_$dyn_memory_ptr",
                     "typeString": "contract IERC20Token[] memory"
                   },
                   "typeName": {
                     "baseType": {
                       "contractScope": null,
-                      "id": 8175,
+                      "id": 8579,
                       "name": "IERC20Token",
                       "nodeType": "UserDefinedTypeName",
-                      "referencedDeclaration": 8269,
+                      "referencedDeclaration": 8673,
                       "src": "267:11:32",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IERC20Token_$8269",
+                        "typeIdentifier": "t_contract$_IERC20Token_$8673",
                         "typeString": "contract IERC20Token"
                       }
                     },
-                    "id": 8176,
+                    "id": 8580,
                     "length": null,
                     "nodeType": "ArrayTypeName",
                     "src": "267:13:32",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8269_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_contract$_IERC20Token_$8673_$dyn_storage_ptr",
                       "typeString": "contract IERC20Token[] storage pointer"
                     }
                   },
@@ -684,10 +684,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8179,
+                  "id": 8583,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8188,
+                  "scope": 8592,
                   "src": "288:15:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -696,7 +696,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8178,
+                    "id": 8582,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "288:7:32",
@@ -710,10 +710,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8181,
+                  "id": 8585,
                   "name": "_minReturn",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8188,
+                  "scope": 8592,
                   "src": "305:18:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -722,7 +722,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8180,
+                    "id": 8584,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "305:7:32",
@@ -736,10 +736,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8183,
+                  "id": 8587,
                   "name": "_for",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8188,
+                  "scope": 8592,
                   "src": "325:12:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -748,7 +748,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8182,
+                    "id": 8586,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "325:7:32",
@@ -765,15 +765,15 @@
             },
             "payable": true,
             "returnParameters": {
-              "id": 8187,
+              "id": 8591,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8186,
+                  "id": 8590,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8188,
+                  "scope": 8592,
                   "src": "363:7:32",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -782,7 +782,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8185,
+                    "id": 8589,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "363:7:32",
@@ -797,14 +797,14 @@
               ],
               "src": "362:9:32"
             },
-            "scope": 8189,
+            "scope": 8593,
             "src": "247:125:32",
             "stateMutability": "payable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 8190,
+        "scope": 8594,
         "src": "97:277:32"
       }
     ],
@@ -816,5 +816,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-07-30T07:57:04.906Z"
+  "updatedAt": "2018-07-31T08:20:33.704Z"
 }
