@@ -224,7 +224,8 @@ def calculateSaleReturn(_supply, _connectorBalance, _connectorWeight, _sellAmoun
     return (temp1 - temp2) // result;
 
 '''
-    @dev ???
+    @dev given two connector balances/weights and a sell amount (in the first connector token),
+    calculates the return for a conversion from the first connector token to the second connector token (in the second connector token)
 
     Formula:
     Return = _toConnectorBalance * (1 - (_fromConnectorBalance / (_fromConnectorBalance + _amount)) ^ (_fromConnectorWeight / _toConnectorWeight))
