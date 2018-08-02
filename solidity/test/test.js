@@ -10,6 +10,7 @@ const BancorQuickConverter = artifacts.require('BancorQuickConverter.sol');
 const BancorConverterExtensions = artifacts.require('BancorConverterExtensions.sol');
 const FinanciePlatformToken = artifacts.require('FinanciePlatformToken.sol');
 const FinancieCardToken = artifacts.require('FinancieCardToken.sol');
+const FinancieHeroesDutchAuction = artifacts.require('FinancieHeroesDutchAuction.sol');
 const utils = require('./helpers/Utils');
 
 const FinancieCore = artifacts.require('FinancieCore.sol');
@@ -39,6 +40,8 @@ let etherToken;
 let etherTokenAddress
 
 var auction;
+let bancor;
+let cardToken;
 
 // used by purchase/sale tests
 async function initConverter(accounts, activate, maxConversionFee = 0) {
@@ -88,7 +91,38 @@ contract('FinancieCore', (accounts) => {
     });
 });
 
-contract('FinancieLog', (accounts) => {
+contract('Test Auction/Bancor', (accounts) => {
+    before(async () => {
+        cardToken = await FinancieCardToken.new('FinancieCardToken', 'FNCD', '0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C', financieCore.address);
+        await financieCore.activateTargetContract(cardToken.address, true);
+        auction = await FinancieHeroesDutchAuction.new(
+          '0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C',
+          '0x46a254FD6134eA0f564D07A305C0Db119a858d66',
+          web3.eth.coinbase,
+          1000000 / 10,
+          0x1bc16d674ec80000 / 10000,
+          0x5ddb1980,
+          3);
+        await cardToken.transfer(200000 * (10 ** 18));
+        await auction.setup(financieCore.address, '0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C');
+        await auction.start();
+        await financieCore.activateTargetContract(auction.address, true);
+    });
+
+    it('setup auction', async () => {
+        let stage = await auction.stage;
+        assert.equal(2, stage);
+
+        let before = await web3.eth.balanceOf('0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C');
+        await auction.sendTransaction({from: web3.eth.coinbase, value:40 * (10 ** 18)});
+        let after = await web3.eth.balanceOf('0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C');
+
+        new Promise(() => console.log('[auction]Before:' + before));
+        new Promise(() => console.log('[auction]After:' + after));
+    });
+});
+/*
+contract('Test FinancieLog', (accounts) => {
     it('setup financie log', async () => {
 
         let testLog = await FinancieLog.new();
@@ -155,3 +189,4 @@ contract('FinancieLog', (accounts) => {
         assert.equal(0, log8[0].length);
     });
 });
+*/
