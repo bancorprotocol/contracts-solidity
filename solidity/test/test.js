@@ -113,12 +113,7 @@ contract('Test Auction/Bancor', (accounts) => {
         let stage = await auction.stage;
         assert.equal(2, stage);
 
-        let before = await web3.eth.balanceOf('0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C');
         await auction.sendTransaction({from: web3.eth.coinbase, value:40 * (10 ** 18)});
-        let after = await web3.eth.balanceOf('0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C');
-
-        new Promise(() => console.log('[auction]Before:' + before));
-        new Promise(() => console.log('[auction]After:' + after));
     });
 });
 /*
