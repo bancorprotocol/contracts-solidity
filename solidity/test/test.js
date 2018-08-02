@@ -91,6 +91,7 @@ contract('FinancieCore', (accounts) => {
     });
 });
 
+/*
 contract('Test Auction/Bancor', (accounts) => {
     before(async () => {
         cardToken = await FinancieCardToken.new('FinancieCardToken', 'FNCD', '0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C', financieCore.address);
@@ -116,7 +117,6 @@ contract('Test Auction/Bancor', (accounts) => {
         await auction.sendTransaction({from: web3.eth.coinbase, value:40 * (10 ** 18)});
     });
 });
-/*
 contract('Test FinancieLog', (accounts) => {
     it('setup financie log', async () => {
 
