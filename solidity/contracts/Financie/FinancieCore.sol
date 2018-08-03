@@ -99,6 +99,7 @@ contract FinancieCore is IFinancieCore, Owned, Utils {
               _to,
               _amountFrom,
               _amountTo);
+            addOwnedCardList(_sender, _to);
         }
         ConvertCards(_sender, _from, _to, _amountFrom, _amountTo);
     }
