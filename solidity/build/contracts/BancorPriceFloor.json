@@ -225,7 +225,7 @@
         "id": 2789,
         "nodeType": "ImportDirective",
         "scope": 2886,
-        "sourceUnit": 8151,
+        "sourceUnit": 8156,
         "src": "25:27:4",
         "symbolAliases": [],
         "unitAlias": ""
@@ -236,7 +236,7 @@
         "id": 2790,
         "nodeType": "ImportDirective",
         "scope": 2886,
-        "sourceUnit": 7781,
+        "sourceUnit": 7786,
         "src": "53:21:4",
         "symbolAliases": [],
         "unitAlias": ""
@@ -247,7 +247,7 @@
         "id": 2791,
         "nodeType": "ImportDirective",
         "scope": 2886,
-        "sourceUnit": 8272,
+        "sourceUnit": 8277,
         "src": "75:21:4",
         "symbolAliases": [],
         "unitAlias": ""
@@ -258,7 +258,7 @@
         "id": 2792,
         "nodeType": "ImportDirective",
         "scope": 2886,
-        "sourceUnit": 9017,
+        "sourceUnit": 9022,
         "src": "97:38:4",
         "symbolAliases": [],
         "unitAlias": ""
@@ -272,10 +272,10 @@
               "id": 2793,
               "name": "Owned",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 7780,
+              "referencedDeclaration": 7785,
               "src": "369:5:4",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Owned_$7780",
+                "typeIdentifier": "t_contract$_Owned_$7785",
                 "typeString": "contract Owned"
               }
             },
@@ -290,10 +290,10 @@
               "id": 2795,
               "name": "TokenHolder",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8150,
+              "referencedDeclaration": 8155,
               "src": "376:11:4",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_TokenHolder_$8150",
+                "typeIdentifier": "t_contract$_TokenHolder_$8155",
                 "typeString": "contract TokenHolder"
               }
             },
@@ -303,11 +303,11 @@
           }
         ],
         "contractDependencies": [
-          7780,
-          8150,
-          8271,
-          8988,
-          9085
+          7785,
+          8155,
+          8276,
+          8993,
+          9090
         ],
         "contractKind": "contract",
         "documentation": null,
@@ -315,11 +315,11 @@
         "id": 2885,
         "linearizedBaseContracts": [
           2885,
-          8150,
-          8271,
-          7780,
-          9085,
-          8988
+          8155,
+          8276,
+          7785,
+          9090,
+          8993
         ],
         "name": "BancorPriceFloor",
         "nodeType": "ContractDefinition",
@@ -463,7 +463,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_ISmartToken_$9016",
+              "typeIdentifier": "t_contract$_ISmartToken_$9021",
               "typeString": "contract ISmartToken"
             },
             "typeName": {
@@ -471,10 +471,10 @@
               "id": 2806,
               "name": "ISmartToken",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 9016,
+              "referencedDeclaration": 9021,
               "src": "612:11:4",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                "typeIdentifier": "t_contract$_ISmartToken_$9021",
                 "typeString": "contract ISmartToken"
               }
             },
@@ -504,7 +504,7 @@
                       "referencedDeclaration": 2807,
                       "src": "895:5:4",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                        "typeIdentifier": "t_contract$_ISmartToken_$9021",
                         "typeString": "contract ISmartToken"
                       }
                     },
@@ -519,13 +519,13 @@
                       "referencedDeclaration": 2809,
                       "src": "903:6:4",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                        "typeIdentifier": "t_contract$_ISmartToken_$9021",
                         "typeString": "contract ISmartToken"
                       }
                     },
                     "src": "895:14:4",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9021",
                       "typeString": "contract ISmartToken"
                     }
                   },
@@ -552,7 +552,7 @@
                     "referencedDeclaration": 2809,
                     "src": "873:6:4",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9021",
                       "typeString": "contract ISmartToken"
                     }
                   }
@@ -564,7 +564,7 @@
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8182,
+                  "referencedDeclaration": 8187,
                   "src": "860:12:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -591,7 +591,7 @@
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                    "typeIdentifier": "t_contract$_ISmartToken_$9021",
                     "typeString": "contract ISmartToken"
                   },
                   "typeName": {
@@ -599,10 +599,10 @@
                     "id": 2808,
                     "name": "ISmartToken",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 9016,
+                    "referencedDeclaration": 9021,
                     "src": "817:11:4",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9021",
                       "typeString": "contract ISmartToken"
                     }
                   },
@@ -675,7 +675,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "1177:3:4",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -702,7 +702,7 @@
                         "name": "this",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9147,
+                        "referencedDeclaration": 9152,
                         "src": "1189:4:4",
                         "typeDescriptions": {
                           "typeIdentifier": "t_contract$_BancorPriceFloor_$2885",
@@ -730,7 +730,7 @@
                         "referencedDeclaration": 2807,
                         "src": "1161:5:4",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                          "typeIdentifier": "t_contract$_ISmartToken_$9021",
                           "typeString": "contract ISmartToken"
                         }
                       },
@@ -741,7 +741,7 @@
                       "lValueRequested": false,
                       "memberName": "allowance",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8659,
+                      "referencedDeclaration": 8664,
                       "src": "1161:15:4",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$_t_address_$_t_address_$returns$_t_uint256_$",
@@ -780,7 +780,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9098,
+                              "referencedDeclaration": 9103,
                               "src": "1263:3:4",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -807,7 +807,7 @@
                             "name": "this",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9147,
+                            "referencedDeclaration": 9152,
                             "src": "1275:4:4",
                             "typeDescriptions": {
                               "typeIdentifier": "t_contract$_BancorPriceFloor_$2885",
@@ -852,7 +852,7 @@
                             "referencedDeclaration": 2807,
                             "src": "1244:5:4",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                              "typeIdentifier": "t_contract$_ISmartToken_$9021",
                               "typeString": "contract ISmartToken"
                             }
                           },
@@ -863,7 +863,7 @@
                           "lValueRequested": false,
                           "memberName": "transferFrom",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 8679,
+                          "referencedDeclaration": 8684,
                           "src": "1244:18:4",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_address_$_t_uint256_$returns$_t_bool_$",
@@ -896,7 +896,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9088,
+                      "referencedDeclaration": 9093,
                       "src": "1237:6:4",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -1010,7 +1010,7 @@
                         "name": "safeMul",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8270,
+                        "referencedDeclaration": 8275,
                         "src": "1378:7:4",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -1088,7 +1088,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "1474:3:4",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -1255,7 +1255,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "1755:3:4",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -1325,7 +1325,7 @@
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7735,
+                  "referencedDeclaration": 7740,
                   "src": "1735:9:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -1452,7 +1452,7 @@
         "id": 2789,
         "nodeType": "ImportDirective",
         "scope": 2886,
-        "sourceUnit": 8151,
+        "sourceUnit": 8156,
         "src": "25:27:4",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1463,7 +1463,7 @@
         "id": 2790,
         "nodeType": "ImportDirective",
         "scope": 2886,
-        "sourceUnit": 7781,
+        "sourceUnit": 7786,
         "src": "53:21:4",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1474,7 +1474,7 @@
         "id": 2791,
         "nodeType": "ImportDirective",
         "scope": 2886,
-        "sourceUnit": 8272,
+        "sourceUnit": 8277,
         "src": "75:21:4",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1485,7 +1485,7 @@
         "id": 2792,
         "nodeType": "ImportDirective",
         "scope": 2886,
-        "sourceUnit": 9017,
+        "sourceUnit": 9022,
         "src": "97:38:4",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1499,10 +1499,10 @@
               "id": 2793,
               "name": "Owned",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 7780,
+              "referencedDeclaration": 7785,
               "src": "369:5:4",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Owned_$7780",
+                "typeIdentifier": "t_contract$_Owned_$7785",
                 "typeString": "contract Owned"
               }
             },
@@ -1517,10 +1517,10 @@
               "id": 2795,
               "name": "TokenHolder",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8150,
+              "referencedDeclaration": 8155,
               "src": "376:11:4",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_TokenHolder_$8150",
+                "typeIdentifier": "t_contract$_TokenHolder_$8155",
                 "typeString": "contract TokenHolder"
               }
             },
@@ -1530,11 +1530,11 @@
           }
         ],
         "contractDependencies": [
-          7780,
-          8150,
-          8271,
-          8988,
-          9085
+          7785,
+          8155,
+          8276,
+          8993,
+          9090
         ],
         "contractKind": "contract",
         "documentation": null,
@@ -1542,11 +1542,11 @@
         "id": 2885,
         "linearizedBaseContracts": [
           2885,
-          8150,
-          8271,
-          7780,
-          9085,
-          8988
+          8155,
+          8276,
+          7785,
+          9090,
+          8993
         ],
         "name": "BancorPriceFloor",
         "nodeType": "ContractDefinition",
@@ -1690,7 +1690,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_ISmartToken_$9016",
+              "typeIdentifier": "t_contract$_ISmartToken_$9021",
               "typeString": "contract ISmartToken"
             },
             "typeName": {
@@ -1698,10 +1698,10 @@
               "id": 2806,
               "name": "ISmartToken",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 9016,
+              "referencedDeclaration": 9021,
               "src": "612:11:4",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                "typeIdentifier": "t_contract$_ISmartToken_$9021",
                 "typeString": "contract ISmartToken"
               }
             },
@@ -1731,7 +1731,7 @@
                       "referencedDeclaration": 2807,
                       "src": "895:5:4",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                        "typeIdentifier": "t_contract$_ISmartToken_$9021",
                         "typeString": "contract ISmartToken"
                       }
                     },
@@ -1746,13 +1746,13 @@
                       "referencedDeclaration": 2809,
                       "src": "903:6:4",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                        "typeIdentifier": "t_contract$_ISmartToken_$9021",
                         "typeString": "contract ISmartToken"
                       }
                     },
                     "src": "895:14:4",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9021",
                       "typeString": "contract ISmartToken"
                     }
                   },
@@ -1779,7 +1779,7 @@
                     "referencedDeclaration": 2809,
                     "src": "873:6:4",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9021",
                       "typeString": "contract ISmartToken"
                     }
                   }
@@ -1791,7 +1791,7 @@
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8182,
+                  "referencedDeclaration": 8187,
                   "src": "860:12:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -1818,7 +1818,7 @@
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                    "typeIdentifier": "t_contract$_ISmartToken_$9021",
                     "typeString": "contract ISmartToken"
                   },
                   "typeName": {
@@ -1826,10 +1826,10 @@
                     "id": 2808,
                     "name": "ISmartToken",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 9016,
+                    "referencedDeclaration": 9021,
                     "src": "817:11:4",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9021",
                       "typeString": "contract ISmartToken"
                     }
                   },
@@ -1902,7 +1902,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "1177:3:4",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -1929,7 +1929,7 @@
                         "name": "this",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9147,
+                        "referencedDeclaration": 9152,
                         "src": "1189:4:4",
                         "typeDescriptions": {
                           "typeIdentifier": "t_contract$_BancorPriceFloor_$2885",
@@ -1957,7 +1957,7 @@
                         "referencedDeclaration": 2807,
                         "src": "1161:5:4",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                          "typeIdentifier": "t_contract$_ISmartToken_$9021",
                           "typeString": "contract ISmartToken"
                         }
                       },
@@ -1968,7 +1968,7 @@
                       "lValueRequested": false,
                       "memberName": "allowance",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8659,
+                      "referencedDeclaration": 8664,
                       "src": "1161:15:4",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$_t_address_$_t_address_$returns$_t_uint256_$",
@@ -2007,7 +2007,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9098,
+                              "referencedDeclaration": 9103,
                               "src": "1263:3:4",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -2034,7 +2034,7 @@
                             "name": "this",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9147,
+                            "referencedDeclaration": 9152,
                             "src": "1275:4:4",
                             "typeDescriptions": {
                               "typeIdentifier": "t_contract$_BancorPriceFloor_$2885",
@@ -2079,7 +2079,7 @@
                             "referencedDeclaration": 2807,
                             "src": "1244:5:4",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_ISmartToken_$9016",
+                              "typeIdentifier": "t_contract$_ISmartToken_$9021",
                               "typeString": "contract ISmartToken"
                             }
                           },
@@ -2090,7 +2090,7 @@
                           "lValueRequested": false,
                           "memberName": "transferFrom",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 8679,
+                          "referencedDeclaration": 8684,
                           "src": "1244:18:4",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_address_$_t_uint256_$returns$_t_bool_$",
@@ -2123,7 +2123,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9088,
+                      "referencedDeclaration": 9093,
                       "src": "1237:6:4",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -2237,7 +2237,7 @@
                         "name": "safeMul",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8270,
+                        "referencedDeclaration": 8275,
                         "src": "1378:7:4",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -2315,7 +2315,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "1474:3:4",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -2482,7 +2482,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "1755:3:4",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -2552,7 +2552,7 @@
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7735,
+                  "referencedDeclaration": 7740,
                   "src": "1735:9:4",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -2658,5 +2658,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-08-01T05:06:54.335Z"
+  "updatedAt": "2018-08-03T10:06:33.418Z"
 }

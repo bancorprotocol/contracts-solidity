@@ -333,7 +333,7 @@
         "id": 5550,
         "nodeType": "ImportDirective",
         "scope": 5710,
-        "sourceUnit": 8272,
+        "sourceUnit": 8277,
         "src": "25:22:13",
         "symbolAliases": [],
         "unitAlias": ""
@@ -355,7 +355,7 @@
         "id": 5552,
         "nodeType": "ImportDirective",
         "scope": 5710,
-        "sourceUnit": 8817,
+        "sourceUnit": 8822,
         "src": "76:41:13",
         "symbolAliases": [],
         "unitAlias": ""
@@ -366,7 +366,7 @@
         "id": 5553,
         "nodeType": "ImportDirective",
         "scope": 5710,
-        "sourceUnit": 8837,
+        "sourceUnit": 8842,
         "src": "118:48:13",
         "symbolAliases": [],
         "unitAlias": ""
@@ -398,10 +398,10 @@
               "id": 5556,
               "name": "IFinancieIssuerToken",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8836,
+              "referencedDeclaration": 8841,
               "src": "254:20:13",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IFinancieIssuerToken_$8836",
+                "typeIdentifier": "t_contract$_IFinancieIssuerToken_$8841",
                 "typeString": "contract IFinancieIssuerToken"
               }
             },
@@ -412,9 +412,9 @@
         ],
         "contractDependencies": [
           4981,
-          8271,
-          8689,
-          8836
+          8276,
+          8694,
+          8841
         ],
         "contractKind": "contract",
         "documentation": "Financie Card Token implementation",
@@ -422,10 +422,10 @@
         "id": 5709,
         "linearizedBaseContracts": [
           5709,
-          8836,
+          8841,
           4981,
-          8271,
-          8689
+          8276,
+          8694
         ],
         "name": "FinancieCardToken",
         "nodeType": "ContractDefinition",
@@ -520,7 +520,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+              "typeIdentifier": "t_contract$_IFinancieCore_$8821",
               "typeString": "contract IFinancieCore"
             },
             "typeName": {
@@ -528,10 +528,10 @@
               "id": 5563,
               "name": "IFinancieCore",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8816,
+              "referencedDeclaration": 8821,
               "src": "354:13:13",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+                "typeIdentifier": "t_contract$_IFinancieCore_$8821",
                 "typeString": "contract IFinancieCore"
               }
             },
@@ -652,7 +652,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "727:3:13",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -772,7 +772,7 @@
                       "referencedDeclaration": 5564,
                       "src": "799:4:13",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+                        "typeIdentifier": "t_contract$_IFinancieCore_$8821",
                         "typeString": "contract IFinancieCore"
                       }
                     },
@@ -806,10 +806,10 @@
                         "name": "IFinancieCore",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8816,
+                        "referencedDeclaration": 8821,
                         "src": "806:13:13",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_IFinancieCore_$8816_$",
+                          "typeIdentifier": "t_type$_t_contract$_IFinancieCore_$8821_$",
                           "typeString": "type(contract IFinancieCore)"
                         }
                       },
@@ -823,13 +823,13 @@
                       "nodeType": "FunctionCall",
                       "src": "806:20:13",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+                        "typeIdentifier": "t_contract$_IFinancieCore_$8821",
                         "typeString": "contract IFinancieCore"
                       }
                     },
                     "src": "799:27:13",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+                      "typeIdentifier": "t_contract$_IFinancieCore_$8821",
                       "typeString": "contract IFinancieCore"
                     }
                   },
@@ -1070,7 +1070,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9098,
+                              "referencedDeclaration": 9103,
                               "src": "933:3:13",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -1159,7 +1159,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9088,
+                      "referencedDeclaration": 9093,
                       "src": "906:6:13",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -1225,7 +1225,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9098,
+                              "referencedDeclaration": 9103,
                               "src": "982:3:13",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -1290,7 +1290,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9101,
+                      "referencedDeclaration": 9106,
                       "src": "964:7:13",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -1349,7 +1349,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "1025:3:13",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -1412,7 +1412,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9098,
+                              "referencedDeclaration": 9103,
                               "src": "1057:3:13",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -1473,7 +1473,7 @@
                         "name": "safeSub",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8240,
+                        "referencedDeclaration": 8245,
                         "src": "1039:7:13",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -1576,7 +1576,7 @@
                         "name": "safeSub",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8240,
+                        "referencedDeclaration": 8245,
                         "src": "1102:7:13",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -1658,7 +1658,7 @@
                         "referencedDeclaration": 5564,
                         "src": "1142:4:13",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+                          "typeIdentifier": "t_contract$_IFinancieCore_$8821",
                           "typeString": "contract IFinancieCore"
                         }
                       },
@@ -1669,7 +1669,7 @@
                       "lValueRequested": false,
                       "memberName": "notifyBurnCards",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8767,
+                      "referencedDeclaration": 8772,
                       "src": "1142:20:13",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$__$",
@@ -1773,7 +1773,7 @@
             "scope": 5709,
             "src": "839:346:13",
             "stateMutability": "nonpayable",
-            "superFunction": 8835,
+            "superFunction": 8840,
             "visibility": "public"
           },
           {
@@ -1823,7 +1823,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9098,
+                              "referencedDeclaration": 9103,
                               "src": "1257:3:13",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -1888,7 +1888,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9101,
+                      "referencedDeclaration": 9106,
                       "src": "1239:7:13",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -1947,7 +1947,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "1300:3:13",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -2010,7 +2010,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9098,
+                              "referencedDeclaration": 9103,
                               "src": "1332:3:13",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -2071,7 +2071,7 @@
                         "name": "safeSub",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8240,
+                        "referencedDeclaration": 8245,
                         "src": "1314:7:13",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -2174,7 +2174,7 @@
                         "name": "safeSub",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8240,
+                        "referencedDeclaration": 8245,
                         "src": "1377:7:13",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -2217,7 +2217,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "1438:3:13",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -2272,7 +2272,7 @@
                         "referencedDeclaration": 5564,
                         "src": "1417:4:13",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+                          "typeIdentifier": "t_contract$_IFinancieCore_$8821",
                           "typeString": "contract IFinancieCore"
                         }
                       },
@@ -2283,7 +2283,7 @@
                       "lValueRequested": false,
                       "memberName": "notifyBurnCards",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8767,
+                      "referencedDeclaration": 8772,
                       "src": "1417:20:13",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$__$",
@@ -2361,7 +2361,7 @@
             "scope": 5709,
             "src": "1191:274:13",
             "stateMutability": "nonpayable",
-            "superFunction": 8828,
+            "superFunction": 8833,
             "visibility": "public"
           },
           {
@@ -2442,7 +2442,7 @@
             "scope": 5709,
             "src": "1471:75:13",
             "stateMutability": "nonpayable",
-            "superFunction": 8823,
+            "superFunction": 8828,
             "visibility": "public"
           }
         ],
@@ -2479,7 +2479,7 @@
         "id": 5550,
         "nodeType": "ImportDirective",
         "scope": 5710,
-        "sourceUnit": 8272,
+        "sourceUnit": 8277,
         "src": "25:22:13",
         "symbolAliases": [],
         "unitAlias": ""
@@ -2501,7 +2501,7 @@
         "id": 5552,
         "nodeType": "ImportDirective",
         "scope": 5710,
-        "sourceUnit": 8817,
+        "sourceUnit": 8822,
         "src": "76:41:13",
         "symbolAliases": [],
         "unitAlias": ""
@@ -2512,7 +2512,7 @@
         "id": 5553,
         "nodeType": "ImportDirective",
         "scope": 5710,
-        "sourceUnit": 8837,
+        "sourceUnit": 8842,
         "src": "118:48:13",
         "symbolAliases": [],
         "unitAlias": ""
@@ -2544,10 +2544,10 @@
               "id": 5556,
               "name": "IFinancieIssuerToken",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8836,
+              "referencedDeclaration": 8841,
               "src": "254:20:13",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IFinancieIssuerToken_$8836",
+                "typeIdentifier": "t_contract$_IFinancieIssuerToken_$8841",
                 "typeString": "contract IFinancieIssuerToken"
               }
             },
@@ -2558,9 +2558,9 @@
         ],
         "contractDependencies": [
           4981,
-          8271,
-          8689,
-          8836
+          8276,
+          8694,
+          8841
         ],
         "contractKind": "contract",
         "documentation": "Financie Card Token implementation",
@@ -2568,10 +2568,10 @@
         "id": 5709,
         "linearizedBaseContracts": [
           5709,
-          8836,
+          8841,
           4981,
-          8271,
-          8689
+          8276,
+          8694
         ],
         "name": "FinancieCardToken",
         "nodeType": "ContractDefinition",
@@ -2666,7 +2666,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+              "typeIdentifier": "t_contract$_IFinancieCore_$8821",
               "typeString": "contract IFinancieCore"
             },
             "typeName": {
@@ -2674,10 +2674,10 @@
               "id": 5563,
               "name": "IFinancieCore",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8816,
+              "referencedDeclaration": 8821,
               "src": "354:13:13",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+                "typeIdentifier": "t_contract$_IFinancieCore_$8821",
                 "typeString": "contract IFinancieCore"
               }
             },
@@ -2798,7 +2798,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "727:3:13",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -2918,7 +2918,7 @@
                       "referencedDeclaration": 5564,
                       "src": "799:4:13",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+                        "typeIdentifier": "t_contract$_IFinancieCore_$8821",
                         "typeString": "contract IFinancieCore"
                       }
                     },
@@ -2952,10 +2952,10 @@
                         "name": "IFinancieCore",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8816,
+                        "referencedDeclaration": 8821,
                         "src": "806:13:13",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_IFinancieCore_$8816_$",
+                          "typeIdentifier": "t_type$_t_contract$_IFinancieCore_$8821_$",
                           "typeString": "type(contract IFinancieCore)"
                         }
                       },
@@ -2969,13 +2969,13 @@
                       "nodeType": "FunctionCall",
                       "src": "806:20:13",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+                        "typeIdentifier": "t_contract$_IFinancieCore_$8821",
                         "typeString": "contract IFinancieCore"
                       }
                     },
                     "src": "799:27:13",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+                      "typeIdentifier": "t_contract$_IFinancieCore_$8821",
                       "typeString": "contract IFinancieCore"
                     }
                   },
@@ -3216,7 +3216,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9098,
+                              "referencedDeclaration": 9103,
                               "src": "933:3:13",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -3305,7 +3305,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9088,
+                      "referencedDeclaration": 9093,
                       "src": "906:6:13",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -3371,7 +3371,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9098,
+                              "referencedDeclaration": 9103,
                               "src": "982:3:13",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -3436,7 +3436,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9101,
+                      "referencedDeclaration": 9106,
                       "src": "964:7:13",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -3495,7 +3495,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "1025:3:13",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -3558,7 +3558,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9098,
+                              "referencedDeclaration": 9103,
                               "src": "1057:3:13",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -3619,7 +3619,7 @@
                         "name": "safeSub",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8240,
+                        "referencedDeclaration": 8245,
                         "src": "1039:7:13",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -3722,7 +3722,7 @@
                         "name": "safeSub",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8240,
+                        "referencedDeclaration": 8245,
                         "src": "1102:7:13",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -3804,7 +3804,7 @@
                         "referencedDeclaration": 5564,
                         "src": "1142:4:13",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+                          "typeIdentifier": "t_contract$_IFinancieCore_$8821",
                           "typeString": "contract IFinancieCore"
                         }
                       },
@@ -3815,7 +3815,7 @@
                       "lValueRequested": false,
                       "memberName": "notifyBurnCards",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8767,
+                      "referencedDeclaration": 8772,
                       "src": "1142:20:13",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$__$",
@@ -3919,7 +3919,7 @@
             "scope": 5709,
             "src": "839:346:13",
             "stateMutability": "nonpayable",
-            "superFunction": 8835,
+            "superFunction": 8840,
             "visibility": "public"
           },
           {
@@ -3969,7 +3969,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9098,
+                              "referencedDeclaration": 9103,
                               "src": "1257:3:13",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -4034,7 +4034,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9101,
+                      "referencedDeclaration": 9106,
                       "src": "1239:7:13",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -4093,7 +4093,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "1300:3:13",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -4156,7 +4156,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9098,
+                              "referencedDeclaration": 9103,
                               "src": "1332:3:13",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -4217,7 +4217,7 @@
                         "name": "safeSub",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8240,
+                        "referencedDeclaration": 8245,
                         "src": "1314:7:13",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -4320,7 +4320,7 @@
                         "name": "safeSub",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8240,
+                        "referencedDeclaration": 8245,
                         "src": "1377:7:13",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -4363,7 +4363,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9098,
+                          "referencedDeclaration": 9103,
                           "src": "1438:3:13",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -4418,7 +4418,7 @@
                         "referencedDeclaration": 5564,
                         "src": "1417:4:13",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IFinancieCore_$8816",
+                          "typeIdentifier": "t_contract$_IFinancieCore_$8821",
                           "typeString": "contract IFinancieCore"
                         }
                       },
@@ -4429,7 +4429,7 @@
                       "lValueRequested": false,
                       "memberName": "notifyBurnCards",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8767,
+                      "referencedDeclaration": 8772,
                       "src": "1417:20:13",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$__$",
@@ -4507,7 +4507,7 @@
             "scope": 5709,
             "src": "1191:274:13",
             "stateMutability": "nonpayable",
-            "superFunction": 8828,
+            "superFunction": 8833,
             "visibility": "public"
           },
           {
@@ -4588,7 +4588,7 @@
             "scope": 5709,
             "src": "1471:75:13",
             "stateMutability": "nonpayable",
-            "superFunction": 8823,
+            "superFunction": 8828,
             "visibility": "public"
           }
         ],
@@ -4604,5 +4604,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-08-01T05:06:54.350Z"
+  "updatedAt": "2018-08-03T10:06:33.447Z"
 }

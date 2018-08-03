@@ -117,7 +117,7 @@
         "id": 1150,
         "nodeType": "ImportDirective",
         "scope": 2744,
-        "sourceUnit": 8272,
+        "sourceUnit": 8277,
         "src": "25:21:2",
         "symbolAliases": [],
         "unitAlias": ""
@@ -128,7 +128,7 @@
         "id": 1151,
         "nodeType": "ImportDirective",
         "scope": 2744,
-        "sourceUnit": 8571,
+        "sourceUnit": 8576,
         "src": "47:41:2",
         "symbolAliases": [],
         "unitAlias": ""
@@ -142,10 +142,10 @@
               "id": 1152,
               "name": "IBancorFormula",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8570,
+              "referencedDeclaration": 8575,
               "src": "116:14:2",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorFormula_$8570",
+                "typeIdentifier": "t_contract$_IBancorFormula_$8575",
                 "typeString": "contract IBancorFormula"
               }
             },
@@ -160,10 +160,10 @@
               "id": 1154,
               "name": "Utils",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8271,
+              "referencedDeclaration": 8276,
               "src": "132:5:2",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Utils_$8271",
+                "typeIdentifier": "t_contract$_Utils_$8276",
                 "typeString": "contract Utils"
               }
             },
@@ -173,8 +173,8 @@
           }
         ],
         "contractDependencies": [
-          8271,
-          8570
+          8276,
+          8575
         ],
         "contractKind": "contract",
         "documentation": null,
@@ -182,8 +182,8 @@
         "id": 2743,
         "linearizedBaseContracts": [
           2743,
-          8271,
-          8570
+          8276,
+          8575
         ],
         "name": "BancorFormula",
         "nodeType": "ContractDefinition",
@@ -8948,7 +8948,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9101,
+                      "referencedDeclaration": 9106,
                       "src": "10610:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -9160,7 +9160,7 @@
                           "name": "safeMul",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 8270,
+                          "referencedDeclaration": 8275,
                           "src": "10925:7:2",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -9356,7 +9356,7 @@
                       "name": "safeAdd",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8220,
+                      "referencedDeclaration": 8225,
                       "src": "11053:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -9632,7 +9632,7 @@
                         "name": "safeMul",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8270,
+                        "referencedDeclaration": 8275,
                         "src": "11213:7:2",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -9886,7 +9886,7 @@
             "scope": 2743,
             "src": "10418:870:2",
             "stateMutability": "view",
-            "superFunction": 8556,
+            "superFunction": 8561,
             "visibility": "public"
           },
           {
@@ -10227,7 +10227,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9101,
+                      "referencedDeclaration": 9106,
                       "src": "12104:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -10509,7 +10509,7 @@
                           "name": "safeMul",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 8270,
+                          "referencedDeclaration": 8275,
                           "src": "12568:7:2",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -10949,7 +10949,7 @@
                       "name": "safeMul",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8270,
+                      "referencedDeclaration": 8275,
                       "src": "12823:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -11312,7 +11312,7 @@
             "scope": 2743,
             "src": "11919:1042:2",
             "stateMutability": "view",
-            "superFunction": 8569,
+            "superFunction": 8574,
             "visibility": "public"
           },
           {
@@ -12009,7 +12009,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9088,
+                      "referencedDeclaration": 9093,
                       "src": "15340:6:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -14754,7 +14754,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9088,
+                      "referencedDeclaration": 9093,
                       "src": "17626:6:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -22027,7 +22027,7 @@
         "id": 1150,
         "nodeType": "ImportDirective",
         "scope": 2744,
-        "sourceUnit": 8272,
+        "sourceUnit": 8277,
         "src": "25:21:2",
         "symbolAliases": [],
         "unitAlias": ""
@@ -22038,7 +22038,7 @@
         "id": 1151,
         "nodeType": "ImportDirective",
         "scope": 2744,
-        "sourceUnit": 8571,
+        "sourceUnit": 8576,
         "src": "47:41:2",
         "symbolAliases": [],
         "unitAlias": ""
@@ -22052,10 +22052,10 @@
               "id": 1152,
               "name": "IBancorFormula",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8570,
+              "referencedDeclaration": 8575,
               "src": "116:14:2",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorFormula_$8570",
+                "typeIdentifier": "t_contract$_IBancorFormula_$8575",
                 "typeString": "contract IBancorFormula"
               }
             },
@@ -22070,10 +22070,10 @@
               "id": 1154,
               "name": "Utils",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8271,
+              "referencedDeclaration": 8276,
               "src": "132:5:2",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Utils_$8271",
+                "typeIdentifier": "t_contract$_Utils_$8276",
                 "typeString": "contract Utils"
               }
             },
@@ -22083,8 +22083,8 @@
           }
         ],
         "contractDependencies": [
-          8271,
-          8570
+          8276,
+          8575
         ],
         "contractKind": "contract",
         "documentation": null,
@@ -22092,8 +22092,8 @@
         "id": 2743,
         "linearizedBaseContracts": [
           2743,
-          8271,
-          8570
+          8276,
+          8575
         ],
         "name": "BancorFormula",
         "nodeType": "ContractDefinition",
@@ -30858,7 +30858,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9101,
+                      "referencedDeclaration": 9106,
                       "src": "10610:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -31070,7 +31070,7 @@
                           "name": "safeMul",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 8270,
+                          "referencedDeclaration": 8275,
                           "src": "10925:7:2",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -31266,7 +31266,7 @@
                       "name": "safeAdd",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8220,
+                      "referencedDeclaration": 8225,
                       "src": "11053:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -31542,7 +31542,7 @@
                         "name": "safeMul",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8270,
+                        "referencedDeclaration": 8275,
                         "src": "11213:7:2",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -31796,7 +31796,7 @@
             "scope": 2743,
             "src": "10418:870:2",
             "stateMutability": "view",
-            "superFunction": 8556,
+            "superFunction": 8561,
             "visibility": "public"
           },
           {
@@ -32137,7 +32137,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9101,
+                      "referencedDeclaration": 9106,
                       "src": "12104:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -32419,7 +32419,7 @@
                           "name": "safeMul",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 8270,
+                          "referencedDeclaration": 8275,
                           "src": "12568:7:2",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -32859,7 +32859,7 @@
                       "name": "safeMul",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8270,
+                      "referencedDeclaration": 8275,
                       "src": "12823:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -33222,7 +33222,7 @@
             "scope": 2743,
             "src": "11919:1042:2",
             "stateMutability": "view",
-            "superFunction": 8569,
+            "superFunction": 8574,
             "visibility": "public"
           },
           {
@@ -33919,7 +33919,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9088,
+                      "referencedDeclaration": 9093,
                       "src": "15340:6:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -36664,7 +36664,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9088,
+                      "referencedDeclaration": 9093,
                       "src": "17626:6:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -43916,5 +43916,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-08-01T05:06:54.328Z"
+  "updatedAt": "2018-08-03T10:06:33.410Z"
 }
