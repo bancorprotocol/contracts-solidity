@@ -91,6 +91,12 @@ contract('FinancieCore', (accounts) => {
     });
 });
 
+contract('Contract finished', (accounts) => {
+    it('all process finished', async () => {
+        process.exit(0);
+    });
+});
+
 /*
 contract('Test Auction/Bancor', (accounts) => {
     before(async () => {

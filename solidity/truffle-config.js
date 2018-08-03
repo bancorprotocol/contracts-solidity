@@ -29,11 +29,6 @@ enginePrivate.start(); // Required by the provider engine.
 
 module.exports = {
   networks: {
-    development: {
-      host: 'localhost',
-      port: 8545,
-      network_id: '*' // Match any network id
-    },
     beta: {
       network_id: 123,
       gas: 4700000,
@@ -48,7 +43,7 @@ module.exports = {
       provider: engineStaging,
       from: addressStaging
     },
-    private: {
+    development: {
       network_id: 123,
       gas: 4700000,
       gasPrice: 10000000000,
