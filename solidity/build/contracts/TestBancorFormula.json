@@ -213,14 +213,14 @@
     "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/helpers/TestBancorFormula.sol",
     "exportedSymbols": {
       "TestBancorFormula": [
-        8375
+        8322
       ]
     },
-    "id": 8376,
+    "id": 8323,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 8285,
+        "id": 8232,
         "literals": [
           "solidity",
           "^",
@@ -233,9 +233,9 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/BancorFormula.sol",
         "file": "../BancorFormula.sol",
-        "id": 8286,
+        "id": 8233,
         "nodeType": "ImportDirective",
-        "scope": 8376,
+        "scope": 8323,
         "sourceUnit": 2744,
         "src": "25:30:26",
         "symbolAliases": [],
@@ -247,7 +247,7 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 8287,
+              "id": 8234,
               "name": "BancorFormula",
               "nodeType": "UserDefinedTypeName",
               "referencedDeclaration": 2743,
@@ -257,38 +257,38 @@
                 "typeString": "contract BancorFormula"
               }
             },
-            "id": 8288,
+            "id": 8235,
             "nodeType": "InheritanceSpecifier",
             "src": "165:13:26"
           }
         ],
         "contractDependencies": [
           2743,
-          8226,
-          8525
+          8173,
+          8472
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 8375,
+        "id": 8322,
         "linearizedBaseContracts": [
-          8375,
+          8322,
           2743,
-          8226,
-          8525
+          8173,
+          8472
         ],
         "name": "TestBancorFormula",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "body": {
-              "id": 8291,
+              "id": 8238,
               "nodeType": "Block",
               "src": "221:7:26",
               "statements": []
             },
             "documentation": null,
-            "id": 8292,
+            "id": 8239,
             "implemented": true,
             "isConstructor": true,
             "isDeclaredConst": false,
@@ -296,19 +296,19 @@
             "name": "TestBancorFormula",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8289,
+              "id": 8236,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "211:2:26"
             },
             "payable": false,
             "returnParameters": {
-              "id": 8290,
+              "id": 8237,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "221:0:26"
             },
-            "scope": 8375,
+            "scope": 8322,
             "src": "185:43:26",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -316,7 +316,7 @@
           },
           {
             "body": {
-              "id": 8315,
+              "id": 8262,
               "nodeType": "Block",
               "src": "354:65:26",
               "statements": [
@@ -326,11 +326,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8309,
+                        "id": 8256,
                         "name": "_baseN",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8294,
+                        "referencedDeclaration": 8241,
                         "src": "383:6:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -339,11 +339,11 @@
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8310,
+                        "id": 8257,
                         "name": "_baseD",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8296,
+                        "referencedDeclaration": 8243,
                         "src": "391:6:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -352,11 +352,11 @@
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8311,
+                        "id": 8258,
                         "name": "_expN",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8298,
+                        "referencedDeclaration": 8245,
                         "src": "399:5:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint32",
@@ -365,11 +365,11 @@
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8312,
+                        "id": 8259,
                         "name": "_expD",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8300,
+                        "referencedDeclaration": 8247,
                         "src": "406:5:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint32",
@@ -398,18 +398,18 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8307,
+                        "id": 8254,
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9143,
+                        "referencedDeclaration": 9090,
                         "src": "371:5:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_super$_TestBancorFormula_$8375",
+                          "typeIdentifier": "t_super$_TestBancorFormula_$8322",
                           "typeString": "contract super TestBancorFormula"
                         }
                       },
-                      "id": 8308,
+                      "id": 8255,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -423,7 +423,7 @@
                         "typeString": "function (uint256,uint256,uint32,uint32) view returns (uint256,uint8)"
                       }
                     },
-                    "id": 8313,
+                    "id": 8260,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -437,15 +437,15 @@
                       "typeString": "tuple(uint256,uint8)"
                     }
                   },
-                  "functionReturnParameters": 8306,
-                  "id": 8314,
+                  "functionReturnParameters": 8253,
+                  "id": 8261,
                   "nodeType": "Return",
                   "src": "364:48:26"
                 }
               ]
             },
             "documentation": null,
-            "id": 8316,
+            "id": 8263,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -453,15 +453,15 @@
             "name": "powerTest",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8301,
+              "id": 8248,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8294,
+                  "id": 8241,
                   "name": "_baseN",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8316,
+                  "scope": 8263,
                   "src": "253:14:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -470,7 +470,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8293,
+                    "id": 8240,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "253:7:26",
@@ -484,10 +484,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8296,
+                  "id": 8243,
                   "name": "_baseD",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8316,
+                  "scope": 8263,
                   "src": "269:14:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -496,7 +496,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8295,
+                    "id": 8242,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "269:7:26",
@@ -510,10 +510,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8298,
+                  "id": 8245,
                   "name": "_expN",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8316,
+                  "scope": 8263,
                   "src": "285:12:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -522,7 +522,7 @@
                     "typeString": "uint32"
                   },
                   "typeName": {
-                    "id": 8297,
+                    "id": 8244,
                     "name": "uint32",
                     "nodeType": "ElementaryTypeName",
                     "src": "285:6:26",
@@ -536,10 +536,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8300,
+                  "id": 8247,
                   "name": "_expD",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8316,
+                  "scope": 8263,
                   "src": "299:12:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -548,7 +548,7 @@
                     "typeString": "uint32"
                   },
                   "typeName": {
-                    "id": 8299,
+                    "id": 8246,
                     "name": "uint32",
                     "nodeType": "ElementaryTypeName",
                     "src": "299:6:26",
@@ -565,15 +565,15 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8306,
+              "id": 8253,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8303,
+                  "id": 8250,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8316,
+                  "scope": 8263,
                   "src": "338:7:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -582,7 +582,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8302,
+                    "id": 8249,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "338:7:26",
@@ -596,10 +596,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8305,
+                  "id": 8252,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8316,
+                  "scope": 8263,
                   "src": "347:5:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -608,7 +608,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 8304,
+                    "id": 8251,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "347:5:26",
@@ -623,7 +623,7 @@
               ],
               "src": "337:16:26"
             },
-            "scope": 8375,
+            "scope": 8322,
             "src": "234:185:26",
             "stateMutability": "view",
             "superFunction": null,
@@ -631,7 +631,7 @@
           },
           {
             "body": {
-              "id": 8331,
+              "id": 8278,
               "nodeType": "Block",
               "src": "513:58:26",
               "statements": [
@@ -641,11 +641,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8327,
+                        "id": 8274,
                         "name": "_numerator",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8318,
+                        "referencedDeclaration": 8265,
                         "src": "539:10:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -654,11 +654,11 @@
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8328,
+                        "id": 8275,
                         "name": "_denominator",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8320,
+                        "referencedDeclaration": 8267,
                         "src": "551:12:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -679,18 +679,18 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8325,
+                        "id": 8272,
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9143,
+                        "referencedDeclaration": 9090,
                         "src": "530:5:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_super$_TestBancorFormula_$8375",
+                          "typeIdentifier": "t_super$_TestBancorFormula_$8322",
                           "typeString": "contract super TestBancorFormula"
                         }
                       },
-                      "id": 8326,
+                      "id": 8273,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -704,7 +704,7 @@
                         "typeString": "function (uint256,uint256) pure returns (uint256)"
                       }
                     },
-                    "id": 8329,
+                    "id": 8276,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -718,15 +718,15 @@
                       "typeString": "uint256"
                     }
                   },
-                  "functionReturnParameters": 8324,
-                  "id": 8330,
+                  "functionReturnParameters": 8271,
+                  "id": 8277,
                   "nodeType": "Return",
                   "src": "523:41:26"
                 }
               ]
             },
             "documentation": null,
-            "id": 8332,
+            "id": 8279,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -734,15 +734,15 @@
             "name": "lnTest",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8321,
+              "id": 8268,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8318,
+                  "id": 8265,
                   "name": "_numerator",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8332,
+                  "scope": 8279,
                   "src": "441:18:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -751,7 +751,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8317,
+                    "id": 8264,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "441:7:26",
@@ -765,10 +765,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8320,
+                  "id": 8267,
                   "name": "_denominator",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8332,
+                  "scope": 8279,
                   "src": "461:20:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -777,7 +777,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8319,
+                    "id": 8266,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "461:7:26",
@@ -794,15 +794,15 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8324,
+              "id": 8271,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8323,
+                  "id": 8270,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8332,
+                  "scope": 8279,
                   "src": "504:7:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -811,7 +811,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8322,
+                    "id": 8269,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "504:7:26",
@@ -826,7 +826,7 @@
               ],
               "src": "503:9:26"
             },
-            "scope": 8375,
+            "scope": 8322,
             "src": "425:146:26",
             "stateMutability": "pure",
             "superFunction": null,
@@ -834,7 +834,7 @@
           },
           {
             "body": {
-              "id": 8344,
+              "id": 8291,
               "nodeType": "Block",
               "src": "660:59:26",
               "statements": [
@@ -844,11 +844,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8341,
+                        "id": 8288,
                         "name": "_x",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8334,
+                        "referencedDeclaration": 8281,
                         "src": "709:2:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -865,18 +865,18 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8339,
+                        "id": 8286,
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9143,
+                        "referencedDeclaration": 9090,
                         "src": "677:5:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_super$_TestBancorFormula_$8375",
+                          "typeIdentifier": "t_super$_TestBancorFormula_$8322",
                           "typeString": "contract super TestBancorFormula"
                         }
                       },
-                      "id": 8340,
+                      "id": 8287,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -890,7 +890,7 @@
                         "typeString": "function (uint256) view returns (uint8)"
                       }
                     },
-                    "id": 8342,
+                    "id": 8289,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -904,15 +904,15 @@
                       "typeString": "uint8"
                     }
                   },
-                  "functionReturnParameters": 8338,
-                  "id": 8343,
+                  "functionReturnParameters": 8285,
+                  "id": 8290,
                   "nodeType": "Return",
                   "src": "670:42:26"
                 }
               ]
             },
             "documentation": null,
-            "id": 8345,
+            "id": 8292,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -920,15 +920,15 @@
             "name": "findPositionInMaxExpArrayTest",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8335,
+              "id": 8282,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8334,
+                  "id": 8281,
                   "name": "_x",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8345,
+                  "scope": 8292,
                   "src": "616:10:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -937,7 +937,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8333,
+                    "id": 8280,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "616:7:26",
@@ -954,15 +954,15 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8338,
+              "id": 8285,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8337,
+                  "id": 8284,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8345,
+                  "scope": 8292,
                   "src": "653:5:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -971,7 +971,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 8336,
+                    "id": 8283,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "653:5:26",
@@ -986,7 +986,7 @@
               ],
               "src": "652:7:26"
             },
-            "scope": 8375,
+            "scope": 8322,
             "src": "577:142:26",
             "stateMutability": "view",
             "superFunction": null,
@@ -994,7 +994,7 @@
           },
           {
             "body": {
-              "id": 8360,
+              "id": 8307,
               "nodeType": "Block",
               "src": "807:54:26",
               "statements": [
@@ -1004,11 +1004,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8356,
+                        "id": 8303,
                         "name": "_x",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8347,
+                        "referencedDeclaration": 8294,
                         "src": "839:2:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -1017,11 +1017,11 @@
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8357,
+                        "id": 8304,
                         "name": "_precision",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8349,
+                        "referencedDeclaration": 8296,
                         "src": "843:10:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint8",
@@ -1042,18 +1042,18 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8354,
+                        "id": 8301,
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9143,
+                        "referencedDeclaration": 9090,
                         "src": "824:5:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_super$_TestBancorFormula_$8375",
+                          "typeIdentifier": "t_super$_TestBancorFormula_$8322",
                           "typeString": "contract super TestBancorFormula"
                         }
                       },
-                      "id": 8355,
+                      "id": 8302,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -1067,7 +1067,7 @@
                         "typeString": "function (uint256,uint8) pure returns (uint256)"
                       }
                     },
-                    "id": 8358,
+                    "id": 8305,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1081,15 +1081,15 @@
                       "typeString": "uint256"
                     }
                   },
-                  "functionReturnParameters": 8353,
-                  "id": 8359,
+                  "functionReturnParameters": 8300,
+                  "id": 8306,
                   "nodeType": "Return",
                   "src": "817:37:26"
                 }
               ]
             },
             "documentation": null,
-            "id": 8361,
+            "id": 8308,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -1097,15 +1097,15 @@
             "name": "fixedExpTest",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8350,
+              "id": 8297,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8347,
+                  "id": 8294,
                   "name": "_x",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8361,
+                  "scope": 8308,
                   "src": "747:10:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1114,7 +1114,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8346,
+                    "id": 8293,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "747:7:26",
@@ -1128,10 +1128,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8349,
+                  "id": 8296,
                   "name": "_precision",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8361,
+                  "scope": 8308,
                   "src": "759:16:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1140,7 +1140,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 8348,
+                    "id": 8295,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "759:5:26",
@@ -1157,15 +1157,15 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8353,
+              "id": 8300,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8352,
+                  "id": 8299,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8361,
+                  "scope": 8308,
                   "src": "798:7:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1174,7 +1174,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8351,
+                    "id": 8298,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "798:7:26",
@@ -1189,7 +1189,7 @@
               ],
               "src": "797:9:26"
             },
-            "scope": 8375,
+            "scope": 8322,
             "src": "725:136:26",
             "stateMutability": "pure",
             "superFunction": null,
@@ -1197,7 +1197,7 @@
           },
           {
             "body": {
-              "id": 8373,
+              "id": 8320,
               "nodeType": "Block",
               "src": "930:43:26",
               "statements": [
@@ -1207,11 +1207,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8370,
+                        "id": 8317,
                         "name": "_n",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8363,
+                        "referencedDeclaration": 8310,
                         "src": "963:2:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -1228,18 +1228,18 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8368,
+                        "id": 8315,
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9143,
+                        "referencedDeclaration": 9090,
                         "src": "947:5:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_super$_TestBancorFormula_$8375",
+                          "typeIdentifier": "t_super$_TestBancorFormula_$8322",
                           "typeString": "contract super TestBancorFormula"
                         }
                       },
-                      "id": 8369,
+                      "id": 8316,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -1253,7 +1253,7 @@
                         "typeString": "function (uint256) pure returns (uint8)"
                       }
                     },
-                    "id": 8371,
+                    "id": 8318,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1267,15 +1267,15 @@
                       "typeString": "uint8"
                     }
                   },
-                  "functionReturnParameters": 8367,
-                  "id": 8372,
+                  "functionReturnParameters": 8314,
+                  "id": 8319,
                   "nodeType": "Return",
                   "src": "940:26:26"
                 }
               ]
             },
             "documentation": null,
-            "id": 8374,
+            "id": 8321,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -1283,15 +1283,15 @@
             "name": "floorLog2Test",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8364,
+              "id": 8311,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8363,
+                  "id": 8310,
                   "name": "_n",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8374,
+                  "scope": 8321,
                   "src": "890:10:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1300,7 +1300,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8362,
+                    "id": 8309,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "890:7:26",
@@ -1317,15 +1317,15 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8367,
+              "id": 8314,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8366,
+                  "id": 8313,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8374,
+                  "scope": 8321,
                   "src": "923:5:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1334,7 +1334,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 8365,
+                    "id": 8312,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "923:5:26",
@@ -1349,14 +1349,14 @@
               ],
               "src": "922:7:26"
             },
-            "scope": 8375,
+            "scope": 8322,
             "src": "867:106:26",
             "stateMutability": "pure",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 8376,
+        "scope": 8323,
         "src": "135:840:26"
       }
     ],
@@ -1366,14 +1366,14 @@
     "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/helpers/TestBancorFormula.sol",
     "exportedSymbols": {
       "TestBancorFormula": [
-        8375
+        8322
       ]
     },
-    "id": 8376,
+    "id": 8323,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 8285,
+        "id": 8232,
         "literals": [
           "solidity",
           "^",
@@ -1386,9 +1386,9 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/BancorFormula.sol",
         "file": "../BancorFormula.sol",
-        "id": 8286,
+        "id": 8233,
         "nodeType": "ImportDirective",
-        "scope": 8376,
+        "scope": 8323,
         "sourceUnit": 2744,
         "src": "25:30:26",
         "symbolAliases": [],
@@ -1400,7 +1400,7 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 8287,
+              "id": 8234,
               "name": "BancorFormula",
               "nodeType": "UserDefinedTypeName",
               "referencedDeclaration": 2743,
@@ -1410,38 +1410,38 @@
                 "typeString": "contract BancorFormula"
               }
             },
-            "id": 8288,
+            "id": 8235,
             "nodeType": "InheritanceSpecifier",
             "src": "165:13:26"
           }
         ],
         "contractDependencies": [
           2743,
-          8226,
-          8525
+          8173,
+          8472
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 8375,
+        "id": 8322,
         "linearizedBaseContracts": [
-          8375,
+          8322,
           2743,
-          8226,
-          8525
+          8173,
+          8472
         ],
         "name": "TestBancorFormula",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "body": {
-              "id": 8291,
+              "id": 8238,
               "nodeType": "Block",
               "src": "221:7:26",
               "statements": []
             },
             "documentation": null,
-            "id": 8292,
+            "id": 8239,
             "implemented": true,
             "isConstructor": true,
             "isDeclaredConst": false,
@@ -1449,19 +1449,19 @@
             "name": "TestBancorFormula",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8289,
+              "id": 8236,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "211:2:26"
             },
             "payable": false,
             "returnParameters": {
-              "id": 8290,
+              "id": 8237,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "221:0:26"
             },
-            "scope": 8375,
+            "scope": 8322,
             "src": "185:43:26",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -1469,7 +1469,7 @@
           },
           {
             "body": {
-              "id": 8315,
+              "id": 8262,
               "nodeType": "Block",
               "src": "354:65:26",
               "statements": [
@@ -1479,11 +1479,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8309,
+                        "id": 8256,
                         "name": "_baseN",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8294,
+                        "referencedDeclaration": 8241,
                         "src": "383:6:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -1492,11 +1492,11 @@
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8310,
+                        "id": 8257,
                         "name": "_baseD",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8296,
+                        "referencedDeclaration": 8243,
                         "src": "391:6:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -1505,11 +1505,11 @@
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8311,
+                        "id": 8258,
                         "name": "_expN",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8298,
+                        "referencedDeclaration": 8245,
                         "src": "399:5:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint32",
@@ -1518,11 +1518,11 @@
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8312,
+                        "id": 8259,
                         "name": "_expD",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8300,
+                        "referencedDeclaration": 8247,
                         "src": "406:5:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint32",
@@ -1551,18 +1551,18 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8307,
+                        "id": 8254,
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9143,
+                        "referencedDeclaration": 9090,
                         "src": "371:5:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_super$_TestBancorFormula_$8375",
+                          "typeIdentifier": "t_super$_TestBancorFormula_$8322",
                           "typeString": "contract super TestBancorFormula"
                         }
                       },
-                      "id": 8308,
+                      "id": 8255,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -1576,7 +1576,7 @@
                         "typeString": "function (uint256,uint256,uint32,uint32) view returns (uint256,uint8)"
                       }
                     },
-                    "id": 8313,
+                    "id": 8260,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1590,15 +1590,15 @@
                       "typeString": "tuple(uint256,uint8)"
                     }
                   },
-                  "functionReturnParameters": 8306,
-                  "id": 8314,
+                  "functionReturnParameters": 8253,
+                  "id": 8261,
                   "nodeType": "Return",
                   "src": "364:48:26"
                 }
               ]
             },
             "documentation": null,
-            "id": 8316,
+            "id": 8263,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -1606,15 +1606,15 @@
             "name": "powerTest",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8301,
+              "id": 8248,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8294,
+                  "id": 8241,
                   "name": "_baseN",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8316,
+                  "scope": 8263,
                   "src": "253:14:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1623,7 +1623,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8293,
+                    "id": 8240,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "253:7:26",
@@ -1637,10 +1637,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8296,
+                  "id": 8243,
                   "name": "_baseD",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8316,
+                  "scope": 8263,
                   "src": "269:14:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1649,7 +1649,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8295,
+                    "id": 8242,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "269:7:26",
@@ -1663,10 +1663,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8298,
+                  "id": 8245,
                   "name": "_expN",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8316,
+                  "scope": 8263,
                   "src": "285:12:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1675,7 +1675,7 @@
                     "typeString": "uint32"
                   },
                   "typeName": {
-                    "id": 8297,
+                    "id": 8244,
                     "name": "uint32",
                     "nodeType": "ElementaryTypeName",
                     "src": "285:6:26",
@@ -1689,10 +1689,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8300,
+                  "id": 8247,
                   "name": "_expD",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8316,
+                  "scope": 8263,
                   "src": "299:12:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1701,7 +1701,7 @@
                     "typeString": "uint32"
                   },
                   "typeName": {
-                    "id": 8299,
+                    "id": 8246,
                     "name": "uint32",
                     "nodeType": "ElementaryTypeName",
                     "src": "299:6:26",
@@ -1718,15 +1718,15 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8306,
+              "id": 8253,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8303,
+                  "id": 8250,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8316,
+                  "scope": 8263,
                   "src": "338:7:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1735,7 +1735,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8302,
+                    "id": 8249,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "338:7:26",
@@ -1749,10 +1749,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8305,
+                  "id": 8252,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8316,
+                  "scope": 8263,
                   "src": "347:5:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1761,7 +1761,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 8304,
+                    "id": 8251,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "347:5:26",
@@ -1776,7 +1776,7 @@
               ],
               "src": "337:16:26"
             },
-            "scope": 8375,
+            "scope": 8322,
             "src": "234:185:26",
             "stateMutability": "view",
             "superFunction": null,
@@ -1784,7 +1784,7 @@
           },
           {
             "body": {
-              "id": 8331,
+              "id": 8278,
               "nodeType": "Block",
               "src": "513:58:26",
               "statements": [
@@ -1794,11 +1794,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8327,
+                        "id": 8274,
                         "name": "_numerator",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8318,
+                        "referencedDeclaration": 8265,
                         "src": "539:10:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -1807,11 +1807,11 @@
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8328,
+                        "id": 8275,
                         "name": "_denominator",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8320,
+                        "referencedDeclaration": 8267,
                         "src": "551:12:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -1832,18 +1832,18 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8325,
+                        "id": 8272,
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9143,
+                        "referencedDeclaration": 9090,
                         "src": "530:5:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_super$_TestBancorFormula_$8375",
+                          "typeIdentifier": "t_super$_TestBancorFormula_$8322",
                           "typeString": "contract super TestBancorFormula"
                         }
                       },
-                      "id": 8326,
+                      "id": 8273,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -1857,7 +1857,7 @@
                         "typeString": "function (uint256,uint256) pure returns (uint256)"
                       }
                     },
-                    "id": 8329,
+                    "id": 8276,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1871,15 +1871,15 @@
                       "typeString": "uint256"
                     }
                   },
-                  "functionReturnParameters": 8324,
-                  "id": 8330,
+                  "functionReturnParameters": 8271,
+                  "id": 8277,
                   "nodeType": "Return",
                   "src": "523:41:26"
                 }
               ]
             },
             "documentation": null,
-            "id": 8332,
+            "id": 8279,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -1887,15 +1887,15 @@
             "name": "lnTest",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8321,
+              "id": 8268,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8318,
+                  "id": 8265,
                   "name": "_numerator",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8332,
+                  "scope": 8279,
                   "src": "441:18:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1904,7 +1904,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8317,
+                    "id": 8264,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "441:7:26",
@@ -1918,10 +1918,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8320,
+                  "id": 8267,
                   "name": "_denominator",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8332,
+                  "scope": 8279,
                   "src": "461:20:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1930,7 +1930,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8319,
+                    "id": 8266,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "461:7:26",
@@ -1947,15 +1947,15 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8324,
+              "id": 8271,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8323,
+                  "id": 8270,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8332,
+                  "scope": 8279,
                   "src": "504:7:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1964,7 +1964,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8322,
+                    "id": 8269,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "504:7:26",
@@ -1979,7 +1979,7 @@
               ],
               "src": "503:9:26"
             },
-            "scope": 8375,
+            "scope": 8322,
             "src": "425:146:26",
             "stateMutability": "pure",
             "superFunction": null,
@@ -1987,7 +1987,7 @@
           },
           {
             "body": {
-              "id": 8344,
+              "id": 8291,
               "nodeType": "Block",
               "src": "660:59:26",
               "statements": [
@@ -1997,11 +1997,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8341,
+                        "id": 8288,
                         "name": "_x",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8334,
+                        "referencedDeclaration": 8281,
                         "src": "709:2:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -2018,18 +2018,18 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8339,
+                        "id": 8286,
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9143,
+                        "referencedDeclaration": 9090,
                         "src": "677:5:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_super$_TestBancorFormula_$8375",
+                          "typeIdentifier": "t_super$_TestBancorFormula_$8322",
                           "typeString": "contract super TestBancorFormula"
                         }
                       },
-                      "id": 8340,
+                      "id": 8287,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -2043,7 +2043,7 @@
                         "typeString": "function (uint256) view returns (uint8)"
                       }
                     },
-                    "id": 8342,
+                    "id": 8289,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2057,15 +2057,15 @@
                       "typeString": "uint8"
                     }
                   },
-                  "functionReturnParameters": 8338,
-                  "id": 8343,
+                  "functionReturnParameters": 8285,
+                  "id": 8290,
                   "nodeType": "Return",
                   "src": "670:42:26"
                 }
               ]
             },
             "documentation": null,
-            "id": 8345,
+            "id": 8292,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -2073,15 +2073,15 @@
             "name": "findPositionInMaxExpArrayTest",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8335,
+              "id": 8282,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8334,
+                  "id": 8281,
                   "name": "_x",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8345,
+                  "scope": 8292,
                   "src": "616:10:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2090,7 +2090,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8333,
+                    "id": 8280,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "616:7:26",
@@ -2107,15 +2107,15 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8338,
+              "id": 8285,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8337,
+                  "id": 8284,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8345,
+                  "scope": 8292,
                   "src": "653:5:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2124,7 +2124,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 8336,
+                    "id": 8283,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "653:5:26",
@@ -2139,7 +2139,7 @@
               ],
               "src": "652:7:26"
             },
-            "scope": 8375,
+            "scope": 8322,
             "src": "577:142:26",
             "stateMutability": "view",
             "superFunction": null,
@@ -2147,7 +2147,7 @@
           },
           {
             "body": {
-              "id": 8360,
+              "id": 8307,
               "nodeType": "Block",
               "src": "807:54:26",
               "statements": [
@@ -2157,11 +2157,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8356,
+                        "id": 8303,
                         "name": "_x",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8347,
+                        "referencedDeclaration": 8294,
                         "src": "839:2:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -2170,11 +2170,11 @@
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8357,
+                        "id": 8304,
                         "name": "_precision",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8349,
+                        "referencedDeclaration": 8296,
                         "src": "843:10:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint8",
@@ -2195,18 +2195,18 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8354,
+                        "id": 8301,
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9143,
+                        "referencedDeclaration": 9090,
                         "src": "824:5:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_super$_TestBancorFormula_$8375",
+                          "typeIdentifier": "t_super$_TestBancorFormula_$8322",
                           "typeString": "contract super TestBancorFormula"
                         }
                       },
-                      "id": 8355,
+                      "id": 8302,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -2220,7 +2220,7 @@
                         "typeString": "function (uint256,uint8) pure returns (uint256)"
                       }
                     },
-                    "id": 8358,
+                    "id": 8305,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2234,15 +2234,15 @@
                       "typeString": "uint256"
                     }
                   },
-                  "functionReturnParameters": 8353,
-                  "id": 8359,
+                  "functionReturnParameters": 8300,
+                  "id": 8306,
                   "nodeType": "Return",
                   "src": "817:37:26"
                 }
               ]
             },
             "documentation": null,
-            "id": 8361,
+            "id": 8308,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -2250,15 +2250,15 @@
             "name": "fixedExpTest",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8350,
+              "id": 8297,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8347,
+                  "id": 8294,
                   "name": "_x",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8361,
+                  "scope": 8308,
                   "src": "747:10:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2267,7 +2267,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8346,
+                    "id": 8293,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "747:7:26",
@@ -2281,10 +2281,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8349,
+                  "id": 8296,
                   "name": "_precision",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8361,
+                  "scope": 8308,
                   "src": "759:16:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2293,7 +2293,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 8348,
+                    "id": 8295,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "759:5:26",
@@ -2310,15 +2310,15 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8353,
+              "id": 8300,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8352,
+                  "id": 8299,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8361,
+                  "scope": 8308,
                   "src": "798:7:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2327,7 +2327,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8351,
+                    "id": 8298,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "798:7:26",
@@ -2342,7 +2342,7 @@
               ],
               "src": "797:9:26"
             },
-            "scope": 8375,
+            "scope": 8322,
             "src": "725:136:26",
             "stateMutability": "pure",
             "superFunction": null,
@@ -2350,7 +2350,7 @@
           },
           {
             "body": {
-              "id": 8373,
+              "id": 8320,
               "nodeType": "Block",
               "src": "930:43:26",
               "statements": [
@@ -2360,11 +2360,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8370,
+                        "id": 8317,
                         "name": "_n",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8363,
+                        "referencedDeclaration": 8310,
                         "src": "963:2:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -2381,18 +2381,18 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8368,
+                        "id": 8315,
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9143,
+                        "referencedDeclaration": 9090,
                         "src": "947:5:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_super$_TestBancorFormula_$8375",
+                          "typeIdentifier": "t_super$_TestBancorFormula_$8322",
                           "typeString": "contract super TestBancorFormula"
                         }
                       },
-                      "id": 8369,
+                      "id": 8316,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -2406,7 +2406,7 @@
                         "typeString": "function (uint256) pure returns (uint8)"
                       }
                     },
-                    "id": 8371,
+                    "id": 8318,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2420,15 +2420,15 @@
                       "typeString": "uint8"
                     }
                   },
-                  "functionReturnParameters": 8367,
-                  "id": 8372,
+                  "functionReturnParameters": 8314,
+                  "id": 8319,
                   "nodeType": "Return",
                   "src": "940:26:26"
                 }
               ]
             },
             "documentation": null,
-            "id": 8374,
+            "id": 8321,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": true,
@@ -2436,15 +2436,15 @@
             "name": "floorLog2Test",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8364,
+              "id": 8311,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8363,
+                  "id": 8310,
                   "name": "_n",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8374,
+                  "scope": 8321,
                   "src": "890:10:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2453,7 +2453,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8362,
+                    "id": 8309,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "890:7:26",
@@ -2470,15 +2470,15 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8367,
+              "id": 8314,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8366,
+                  "id": 8313,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8374,
+                  "scope": 8321,
                   "src": "923:5:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2487,7 +2487,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 8365,
+                    "id": 8312,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "923:5:26",
@@ -2502,14 +2502,14 @@
               ],
               "src": "922:7:26"
             },
-            "scope": 8375,
+            "scope": 8322,
             "src": "867:106:26",
             "stateMutability": "pure",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 8376,
+        "scope": 8323,
         "src": "135:840:26"
       }
     ],
@@ -2521,5 +2521,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-08-07T05:00:47.796Z"
+  "updatedAt": "2018-08-07T05:25:05.936Z"
 }

@@ -186,14 +186,14 @@
     "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/SmartTokenController.sol",
     "exportedSymbols": {
       "SmartTokenController": [
-        8059
+        8006
       ]
     },
-    "id": 8060,
+    "id": 8007,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 7951,
+        "id": 7898,
         "literals": [
           "solidity",
           "^",
@@ -206,10 +206,10 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/TokenHolder.sol",
         "file": "./TokenHolder.sol",
-        "id": 7952,
+        "id": 7899,
         "nodeType": "ImportDirective",
-        "scope": 8060,
-        "sourceUnit": 8106,
+        "scope": 8007,
+        "sourceUnit": 8053,
         "src": "25:27:22",
         "symbolAliases": [],
         "unitAlias": ""
@@ -217,10 +217,10 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/ISmartToken.sol",
         "file": "./interfaces/ISmartToken.sol",
-        "id": 7953,
+        "id": 7900,
         "nodeType": "ImportDirective",
-        "scope": 8060,
-        "sourceUnit": 8972,
+        "scope": 8007,
+        "sourceUnit": 8919,
         "src": "53:38:22",
         "symbolAliases": [],
         "unitAlias": ""
@@ -231,65 +231,65 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 7954,
+              "id": 7901,
               "name": "TokenHolder",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8105,
+              "referencedDeclaration": 8052,
               "src": "969:11:22",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_TokenHolder_$8105",
+                "typeIdentifier": "t_contract$_TokenHolder_$8052",
                 "typeString": "contract TokenHolder"
               }
             },
-            "id": 7955,
+            "id": 7902,
             "nodeType": "InheritanceSpecifier",
             "src": "969:11:22"
           }
         ],
         "contractDependencies": [
-          7735,
-          8105,
-          8226,
-          8943,
-          9040
+          7682,
+          8052,
+          8173,
+          8890,
+          8987
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 8059,
+        "id": 8006,
         "linearizedBaseContracts": [
-          8059,
-          8105,
-          8226,
-          7735,
-          9040,
-          8943
+          8006,
+          8052,
+          8173,
+          7682,
+          8987,
+          8890
         ],
         "name": "SmartTokenController",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 7957,
+            "id": 7904,
             "name": "token",
             "nodeType": "VariableDeclaration",
-            "scope": 8059,
+            "scope": 8006,
             "src": "987:24:22",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_ISmartToken_$8971",
+              "typeIdentifier": "t_contract$_ISmartToken_$8918",
               "typeString": "contract ISmartToken"
             },
             "typeName": {
               "contractScope": null,
-              "id": 7956,
+              "id": 7903,
               "name": "ISmartToken",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8971,
+              "referencedDeclaration": 8918,
               "src": "987:11:22",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                "typeIdentifier": "t_contract$_ISmartToken_$8918",
                 "typeString": "contract ISmartToken"
               }
             },
@@ -298,28 +298,28 @@
           },
           {
             "body": {
-              "id": 7969,
+              "id": 7916,
               "nodeType": "Block",
               "src": "1173:31:22",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 7967,
+                    "id": 7914,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 7965,
+                      "id": 7912,
                       "name": "token",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 7957,
+                      "referencedDeclaration": 7904,
                       "src": "1183:5:22",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                        "typeIdentifier": "t_contract$_ISmartToken_$8918",
                         "typeString": "contract ISmartToken"
                       }
                     },
@@ -327,31 +327,31 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 7966,
+                      "id": 7913,
                       "name": "_token",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 7959,
+                      "referencedDeclaration": 7906,
                       "src": "1191:6:22",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                        "typeIdentifier": "t_contract$_ISmartToken_$8918",
                         "typeString": "contract ISmartToken"
                       }
                     },
                     "src": "1183:14:22",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                      "typeIdentifier": "t_contract$_ISmartToken_$8918",
                       "typeString": "contract ISmartToken"
                     }
                   },
-                  "id": 7968,
+                  "id": 7915,
                   "nodeType": "ExpressionStatement",
                   "src": "1183:14:22"
                 }
               ]
             },
             "documentation": "@dev constructor",
-            "id": 7970,
+            "id": 7917,
             "implemented": true,
             "isConstructor": true,
             "isDeclaredConst": false,
@@ -360,26 +360,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 7962,
+                    "id": 7909,
                     "name": "_token",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 7959,
+                    "referencedDeclaration": 7906,
                     "src": "1161:6:22",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                      "typeIdentifier": "t_contract$_ISmartToken_$8918",
                       "typeString": "contract ISmartToken"
                     }
                   }
                 ],
-                "id": 7963,
+                "id": 7910,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 7961,
+                  "id": 7908,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8137,
+                  "referencedDeclaration": 8084,
                   "src": "1148:12:22",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -393,31 +393,31 @@
             "name": "SmartTokenController",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 7960,
+              "id": 7907,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 7959,
+                  "id": 7906,
                   "name": "_token",
                   "nodeType": "VariableDeclaration",
-                  "scope": 7970,
+                  "scope": 7917,
                   "src": "1105:18:22",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                    "typeIdentifier": "t_contract$_ISmartToken_$8918",
                     "typeString": "contract ISmartToken"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 7958,
+                    "id": 7905,
                     "name": "ISmartToken",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8971,
+                    "referencedDeclaration": 8918,
                     "src": "1105:11:22",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                      "typeIdentifier": "t_contract$_ISmartToken_$8918",
                       "typeString": "contract ISmartToken"
                     }
                   },
@@ -429,12 +429,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 7964,
+              "id": 7911,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1173:0:22"
             },
-            "scope": 8059,
+            "scope": 8006,
             "src": "1075:129:22",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -442,7 +442,7 @@
           },
           {
             "body": {
-              "id": 7983,
+              "id": 7930,
               "nodeType": "Block",
               "src": "1284:66:22",
               "statements": [
@@ -456,7 +456,7 @@
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         },
-                        "id": 7979,
+                        "id": 7926,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -468,32 +468,32 @@
                             "argumentTypes": [],
                             "expression": {
                               "argumentTypes": null,
-                              "id": 7973,
+                              "id": 7920,
                               "name": "token",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 7957,
+                              "referencedDeclaration": 7904,
                               "src": "1301:5:22",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                                "typeIdentifier": "t_contract$_ISmartToken_$8918",
                                 "typeString": "contract ISmartToken"
                               }
                             },
-                            "id": 7974,
+                            "id": 7921,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
                             "lValueRequested": false,
                             "memberName": "owner",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 8934,
+                            "referencedDeclaration": 8881,
                             "src": "1301:11:22",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_view$__$returns$_t_address_$",
                               "typeString": "function () view external returns (address)"
                             }
                           },
-                          "id": 7975,
+                          "id": 7922,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -514,14 +514,14 @@
                           "arguments": [
                             {
                               "argumentTypes": null,
-                              "id": 7977,
+                              "id": 7924,
                               "name": "this",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9078,
+                              "referencedDeclaration": 9025,
                               "src": "1326:4:22",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_SmartTokenController_$8059",
+                                "typeIdentifier": "t_contract$_SmartTokenController_$8006",
                                 "typeString": "contract SmartTokenController"
                               }
                             }
@@ -529,11 +529,11 @@
                           "expression": {
                             "argumentTypes": [
                               {
-                                "typeIdentifier": "t_contract$_SmartTokenController_$8059",
+                                "typeIdentifier": "t_contract$_SmartTokenController_$8006",
                                 "typeString": "contract SmartTokenController"
                               }
                             ],
-                            "id": 7976,
+                            "id": 7923,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
@@ -546,7 +546,7 @@
                             },
                             "typeName": "address"
                           },
-                          "id": 7978,
+                          "id": 7925,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -574,18 +574,18 @@
                           "typeString": "bool"
                         }
                       ],
-                      "id": 7972,
+                      "id": 7919,
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 8990,
                       "src": "1294:6:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
                         "typeString": "function (bool) pure"
                       }
                     },
-                    "id": 7980,
+                    "id": 7927,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -599,23 +599,23 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 7981,
+                  "id": 7928,
                   "nodeType": "ExpressionStatement",
                   "src": "1294:38:22"
                 },
                 {
-                  "id": 7982,
+                  "id": 7929,
                   "nodeType": "PlaceholderStatement",
                   "src": "1342:1:22"
                 }
               ]
             },
             "documentation": null,
-            "id": 7984,
+            "id": 7931,
             "name": "active",
             "nodeType": "ModifierDefinition",
             "parameters": {
-              "id": 7971,
+              "id": 7918,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1281:2:22"
@@ -625,7 +625,7 @@
           },
           {
             "body": {
-              "id": 7997,
+              "id": 7944,
               "nodeType": "Block",
               "src": "1436:66:22",
               "statements": [
@@ -639,7 +639,7 @@
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         },
-                        "id": 7993,
+                        "id": 7940,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -651,32 +651,32 @@
                             "argumentTypes": [],
                             "expression": {
                               "argumentTypes": null,
-                              "id": 7987,
+                              "id": 7934,
                               "name": "token",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 7957,
+                              "referencedDeclaration": 7904,
                               "src": "1453:5:22",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                                "typeIdentifier": "t_contract$_ISmartToken_$8918",
                                 "typeString": "contract ISmartToken"
                               }
                             },
-                            "id": 7988,
+                            "id": 7935,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
                             "lValueRequested": false,
                             "memberName": "owner",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 8934,
+                            "referencedDeclaration": 8881,
                             "src": "1453:11:22",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_view$__$returns$_t_address_$",
                               "typeString": "function () view external returns (address)"
                             }
                           },
-                          "id": 7989,
+                          "id": 7936,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -697,14 +697,14 @@
                           "arguments": [
                             {
                               "argumentTypes": null,
-                              "id": 7991,
+                              "id": 7938,
                               "name": "this",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9078,
+                              "referencedDeclaration": 9025,
                               "src": "1478:4:22",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_SmartTokenController_$8059",
+                                "typeIdentifier": "t_contract$_SmartTokenController_$8006",
                                 "typeString": "contract SmartTokenController"
                               }
                             }
@@ -712,11 +712,11 @@
                           "expression": {
                             "argumentTypes": [
                               {
-                                "typeIdentifier": "t_contract$_SmartTokenController_$8059",
+                                "typeIdentifier": "t_contract$_SmartTokenController_$8006",
                                 "typeString": "contract SmartTokenController"
                               }
                             ],
-                            "id": 7990,
+                            "id": 7937,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
@@ -729,7 +729,7 @@
                             },
                             "typeName": "address"
                           },
-                          "id": 7992,
+                          "id": 7939,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -757,18 +757,18 @@
                           "typeString": "bool"
                         }
                       ],
-                      "id": 7986,
+                      "id": 7933,
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 8990,
                       "src": "1446:6:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
                         "typeString": "function (bool) pure"
                       }
                     },
-                    "id": 7994,
+                    "id": 7941,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -782,23 +782,23 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 7995,
+                  "id": 7942,
                   "nodeType": "ExpressionStatement",
                   "src": "1446:38:22"
                 },
                 {
-                  "id": 7996,
+                  "id": 7943,
                   "nodeType": "PlaceholderStatement",
                   "src": "1494:1:22"
                 }
               ]
             },
             "documentation": null,
-            "id": 7998,
+            "id": 7945,
             "name": "inactive",
             "nodeType": "ModifierDefinition",
             "parameters": {
-              "id": 7985,
+              "id": 7932,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1433:2:22"
@@ -808,7 +808,7 @@
           },
           {
             "body": {
-              "id": 8011,
+              "id": 7958,
               "nodeType": "Block",
               "src": "1794:51:22",
               "statements": [
@@ -818,11 +818,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8008,
+                        "id": 7955,
                         "name": "_newOwner",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8000,
+                        "referencedDeclaration": 7947,
                         "src": "1828:9:22",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -839,32 +839,32 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8005,
+                        "id": 7952,
                         "name": "token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 7957,
+                        "referencedDeclaration": 7904,
                         "src": "1804:5:22",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                          "typeIdentifier": "t_contract$_ISmartToken_$8918",
                           "typeString": "contract ISmartToken"
                         }
                       },
-                      "id": 8007,
+                      "id": 7954,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "transferOwnership",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8939,
+                      "referencedDeclaration": 8886,
                       "src": "1804:23:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$returns$__$",
                         "typeString": "function (address) external"
                       }
                     },
-                    "id": 8009,
+                    "id": 7956,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -878,28 +878,28 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 8010,
+                  "id": 7957,
                   "nodeType": "ExpressionStatement",
                   "src": "1804:34:22"
                 }
               ]
             },
             "documentation": "@dev allows transferring the token ownership\nthe new owner still need to accept the transfer\ncan only be called by the contract owner\n@param _newOwner    new token owner",
-            "id": 8012,
+            "id": 7959,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 8003,
+                "id": 7950,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 8002,
+                  "id": 7949,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7690,
+                  "referencedDeclaration": 7637,
                   "src": "1784:9:22",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -913,15 +913,15 @@
             "name": "transferTokenOwnership",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8001,
+              "id": 7948,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8000,
+                  "id": 7947,
                   "name": "_newOwner",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8012,
+                  "scope": 7959,
                   "src": "1758:17:22",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -930,7 +930,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 7999,
+                    "id": 7946,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "1758:7:22",
@@ -947,12 +947,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8004,
+              "id": 7951,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1794:0:22"
             },
-            "scope": 8059,
+            "scope": 8006,
             "src": "1726:119:22",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -960,7 +960,7 @@
           },
           {
             "body": {
-              "id": 8022,
+              "id": 7969,
               "nodeType": "Block",
               "src": "2034:40:22",
               "statements": [
@@ -972,32 +972,32 @@
                       "argumentTypes": [],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8017,
+                        "id": 7964,
                         "name": "token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 7957,
+                        "referencedDeclaration": 7904,
                         "src": "2044:5:22",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                          "typeIdentifier": "t_contract$_ISmartToken_$8918",
                           "typeString": "contract ISmartToken"
                         }
                       },
-                      "id": 8019,
+                      "id": 7966,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "acceptOwnership",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8942,
+                      "referencedDeclaration": 8889,
                       "src": "2044:21:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$__$returns$__$",
                         "typeString": "function () external"
                       }
                     },
-                    "id": 8020,
+                    "id": 7967,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1011,28 +1011,28 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 8021,
+                  "id": 7968,
                   "nodeType": "ExpressionStatement",
                   "src": "2044:23:22"
                 }
               ]
             },
             "documentation": "@dev used by a new owner to accept a token ownership transfer\ncan only be called by the contract owner",
-            "id": 8023,
+            "id": 7970,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 8015,
+                "id": 7962,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 8014,
+                  "id": 7961,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7690,
+                  "referencedDeclaration": 7637,
                   "src": "2024:9:22",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -1046,19 +1046,19 @@
             "name": "acceptTokenOwnership",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8013,
+              "id": 7960,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "2014:2:22"
             },
             "payable": false,
             "returnParameters": {
-              "id": 8016,
+              "id": 7963,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "2034:0:22"
             },
-            "scope": 8059,
+            "scope": 8006,
             "src": "1985:89:22",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -1066,7 +1066,7 @@
           },
           {
             "body": {
-              "id": 8036,
+              "id": 7983,
               "nodeType": "Block",
               "src": "2329:49:22",
               "statements": [
@@ -1076,11 +1076,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8033,
+                        "id": 7980,
                         "name": "_disable",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8025,
+                        "referencedDeclaration": 7972,
                         "src": "2362:8:22",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
@@ -1097,32 +1097,32 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8030,
+                        "id": 7977,
                         "name": "token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 7957,
+                        "referencedDeclaration": 7904,
                         "src": "2339:5:22",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                          "typeIdentifier": "t_contract$_ISmartToken_$8918",
                           "typeString": "contract ISmartToken"
                         }
                       },
-                      "id": 8032,
+                      "id": 7979,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "disableTransfers",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8956,
+                      "referencedDeclaration": 8903,
                       "src": "2339:22:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_bool_$returns$__$",
                         "typeString": "function (bool) external"
                       }
                     },
-                    "id": 8034,
+                    "id": 7981,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1136,28 +1136,28 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 8035,
+                  "id": 7982,
                   "nodeType": "ExpressionStatement",
                   "src": "2339:32:22"
                 }
               ]
             },
             "documentation": "@dev disables/enables token transfers\ncan only be called by the contract owner\n@param _disable    true to disable transfers, false to enable them",
-            "id": 8037,
+            "id": 7984,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 8028,
+                "id": 7975,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 8027,
+                  "id": 7974,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7690,
+                  "referencedDeclaration": 7637,
                   "src": "2319:9:22",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -1171,15 +1171,15 @@
             "name": "disableTokenTransfers",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8026,
+              "id": 7973,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8025,
+                  "id": 7972,
                   "name": "_disable",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8037,
+                  "scope": 7984,
                   "src": "2297:13:22",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1188,7 +1188,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 8024,
+                    "id": 7971,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "2297:4:22",
@@ -1205,12 +1205,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8029,
+              "id": 7976,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "2329:0:22"
             },
-            "scope": 8059,
+            "scope": 8006,
             "src": "2266:112:22",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -1218,7 +1218,7 @@
           },
           {
             "body": {
-              "id": 8057,
+              "id": 8004,
               "nodeType": "Block",
               "src": "2823:73:22",
               "statements": [
@@ -1228,24 +1228,24 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8052,
+                        "id": 7999,
                         "name": "_token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8039,
+                        "referencedDeclaration": 7986,
                         "src": "2868:6:22",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IERC20Token_$8644",
+                          "typeIdentifier": "t_contract$_IERC20Token_$8591",
                           "typeString": "contract IERC20Token"
                         }
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8053,
+                        "id": 8000,
                         "name": "_to",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8041,
+                        "referencedDeclaration": 7988,
                         "src": "2876:3:22",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -1254,11 +1254,11 @@
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8054,
+                        "id": 8001,
                         "name": "_amount",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8043,
+                        "referencedDeclaration": 7990,
                         "src": "2881:7:22",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -1269,7 +1269,7 @@
                     "expression": {
                       "argumentTypes": [
                         {
-                          "typeIdentifier": "t_contract$_IERC20Token_$8644",
+                          "typeIdentifier": "t_contract$_IERC20Token_$8591",
                           "typeString": "contract IERC20Token"
                         },
                         {
@@ -1286,14 +1286,14 @@
                         "arguments": [
                           {
                             "argumentTypes": null,
-                            "id": 8049,
+                            "id": 7996,
                             "name": "token",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 7957,
+                            "referencedDeclaration": 7904,
                             "src": "2846:5:22",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                              "typeIdentifier": "t_contract$_ISmartToken_$8918",
                               "typeString": "contract ISmartToken"
                             }
                           }
@@ -1301,22 +1301,22 @@
                         "expression": {
                           "argumentTypes": [
                             {
-                              "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                              "typeIdentifier": "t_contract$_ISmartToken_$8918",
                               "typeString": "contract ISmartToken"
                             }
                           ],
-                          "id": 8048,
+                          "id": 7995,
                           "name": "ITokenHolder",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9040,
+                          "referencedDeclaration": 8987,
                           "src": "2833:12:22",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_type$_t_contract$_ITokenHolder_$9040_$",
+                            "typeIdentifier": "t_type$_t_contract$_ITokenHolder_$8987_$",
                             "typeString": "type(contract ITokenHolder)"
                           }
                         },
-                        "id": 8050,
+                        "id": 7997,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -1326,25 +1326,25 @@
                         "nodeType": "FunctionCall",
                         "src": "2833:19:22",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ITokenHolder_$9040",
+                          "typeIdentifier": "t_contract$_ITokenHolder_$8987",
                           "typeString": "contract ITokenHolder"
                         }
                       },
-                      "id": 8051,
+                      "id": 7998,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "withdrawTokens",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 9039,
+                      "referencedDeclaration": 8986,
                       "src": "2833:34:22",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_external_nonpayable$_t_contract$_IERC20Token_$8644_$_t_address_$_t_uint256_$returns$__$",
+                        "typeIdentifier": "t_function_external_nonpayable$_t_contract$_IERC20Token_$8591_$_t_address_$_t_uint256_$returns$__$",
                         "typeString": "function (contract IERC20Token,address,uint256) external"
                       }
                     },
-                    "id": 8055,
+                    "id": 8002,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1358,28 +1358,28 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 8056,
+                  "id": 8003,
                   "nodeType": "ExpressionStatement",
                   "src": "2833:56:22"
                 }
               ]
             },
             "documentation": "@dev withdraws tokens held by the controller and sends them to an account\ncan only be called by the owner\n@param _token   ERC20 token contract address\n@param _to      account to receive the new amount\n@param _amount  amount to withdraw",
-            "id": 8058,
+            "id": 8005,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 8046,
+                "id": 7993,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 8045,
+                  "id": 7992,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7690,
+                  "referencedDeclaration": 7637,
                   "src": "2809:9:22",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -1393,31 +1393,31 @@
             "name": "withdrawFromToken",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8044,
+              "id": 7991,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8039,
+                  "id": 7986,
                   "name": "_token",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8058,
+                  "scope": 8005,
                   "src": "2712:18:22",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IERC20Token_$8644",
+                    "typeIdentifier": "t_contract$_IERC20Token_$8591",
                     "typeString": "contract IERC20Token"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 8038,
+                    "id": 7985,
                     "name": "IERC20Token",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8644,
+                    "referencedDeclaration": 8591,
                     "src": "2712:11:22",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IERC20Token_$8644",
+                      "typeIdentifier": "t_contract$_IERC20Token_$8591",
                       "typeString": "contract IERC20Token"
                     }
                   },
@@ -1426,10 +1426,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8041,
+                  "id": 7988,
                   "name": "_to",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8058,
+                  "scope": 8005,
                   "src": "2741:11:22",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1438,7 +1438,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8040,
+                    "id": 7987,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "2741:7:22",
@@ -1452,10 +1452,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8043,
+                  "id": 7990,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8058,
+                  "scope": 8005,
                   "src": "2763:15:22",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1464,7 +1464,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8042,
+                    "id": 7989,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "2763:7:22",
@@ -1481,19 +1481,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8047,
+              "id": 7994,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "2823:0:22"
             },
-            "scope": 8059,
+            "scope": 8006,
             "src": "2676:220:22",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 8060,
+        "scope": 8007,
         "src": "936:1962:22"
       }
     ],
@@ -1503,14 +1503,14 @@
     "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/SmartTokenController.sol",
     "exportedSymbols": {
       "SmartTokenController": [
-        8059
+        8006
       ]
     },
-    "id": 8060,
+    "id": 8007,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 7951,
+        "id": 7898,
         "literals": [
           "solidity",
           "^",
@@ -1523,10 +1523,10 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/TokenHolder.sol",
         "file": "./TokenHolder.sol",
-        "id": 7952,
+        "id": 7899,
         "nodeType": "ImportDirective",
-        "scope": 8060,
-        "sourceUnit": 8106,
+        "scope": 8007,
+        "sourceUnit": 8053,
         "src": "25:27:22",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1534,10 +1534,10 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/ISmartToken.sol",
         "file": "./interfaces/ISmartToken.sol",
-        "id": 7953,
+        "id": 7900,
         "nodeType": "ImportDirective",
-        "scope": 8060,
-        "sourceUnit": 8972,
+        "scope": 8007,
+        "sourceUnit": 8919,
         "src": "53:38:22",
         "symbolAliases": [],
         "unitAlias": ""
@@ -1548,65 +1548,65 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 7954,
+              "id": 7901,
               "name": "TokenHolder",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8105,
+              "referencedDeclaration": 8052,
               "src": "969:11:22",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_TokenHolder_$8105",
+                "typeIdentifier": "t_contract$_TokenHolder_$8052",
                 "typeString": "contract TokenHolder"
               }
             },
-            "id": 7955,
+            "id": 7902,
             "nodeType": "InheritanceSpecifier",
             "src": "969:11:22"
           }
         ],
         "contractDependencies": [
-          7735,
-          8105,
-          8226,
-          8943,
-          9040
+          7682,
+          8052,
+          8173,
+          8890,
+          8987
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 8059,
+        "id": 8006,
         "linearizedBaseContracts": [
-          8059,
-          8105,
-          8226,
-          7735,
-          9040,
-          8943
+          8006,
+          8052,
+          8173,
+          7682,
+          8987,
+          8890
         ],
         "name": "SmartTokenController",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 7957,
+            "id": 7904,
             "name": "token",
             "nodeType": "VariableDeclaration",
-            "scope": 8059,
+            "scope": 8006,
             "src": "987:24:22",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_ISmartToken_$8971",
+              "typeIdentifier": "t_contract$_ISmartToken_$8918",
               "typeString": "contract ISmartToken"
             },
             "typeName": {
               "contractScope": null,
-              "id": 7956,
+              "id": 7903,
               "name": "ISmartToken",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8971,
+              "referencedDeclaration": 8918,
               "src": "987:11:22",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                "typeIdentifier": "t_contract$_ISmartToken_$8918",
                 "typeString": "contract ISmartToken"
               }
             },
@@ -1615,28 +1615,28 @@
           },
           {
             "body": {
-              "id": 7969,
+              "id": 7916,
               "nodeType": "Block",
               "src": "1173:31:22",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 7967,
+                    "id": 7914,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 7965,
+                      "id": 7912,
                       "name": "token",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 7957,
+                      "referencedDeclaration": 7904,
                       "src": "1183:5:22",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                        "typeIdentifier": "t_contract$_ISmartToken_$8918",
                         "typeString": "contract ISmartToken"
                       }
                     },
@@ -1644,31 +1644,31 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 7966,
+                      "id": 7913,
                       "name": "_token",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 7959,
+                      "referencedDeclaration": 7906,
                       "src": "1191:6:22",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                        "typeIdentifier": "t_contract$_ISmartToken_$8918",
                         "typeString": "contract ISmartToken"
                       }
                     },
                     "src": "1183:14:22",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                      "typeIdentifier": "t_contract$_ISmartToken_$8918",
                       "typeString": "contract ISmartToken"
                     }
                   },
-                  "id": 7968,
+                  "id": 7915,
                   "nodeType": "ExpressionStatement",
                   "src": "1183:14:22"
                 }
               ]
             },
             "documentation": "@dev constructor",
-            "id": 7970,
+            "id": 7917,
             "implemented": true,
             "isConstructor": true,
             "isDeclaredConst": false,
@@ -1677,26 +1677,26 @@
                 "arguments": [
                   {
                     "argumentTypes": null,
-                    "id": 7962,
+                    "id": 7909,
                     "name": "_token",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 7959,
+                    "referencedDeclaration": 7906,
                     "src": "1161:6:22",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                      "typeIdentifier": "t_contract$_ISmartToken_$8918",
                       "typeString": "contract ISmartToken"
                     }
                   }
                 ],
-                "id": 7963,
+                "id": 7910,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 7961,
+                  "id": 7908,
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8137,
+                  "referencedDeclaration": 8084,
                   "src": "1148:12:22",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -1710,31 +1710,31 @@
             "name": "SmartTokenController",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 7960,
+              "id": 7907,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 7959,
+                  "id": 7906,
                   "name": "_token",
                   "nodeType": "VariableDeclaration",
-                  "scope": 7970,
+                  "scope": 7917,
                   "src": "1105:18:22",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                    "typeIdentifier": "t_contract$_ISmartToken_$8918",
                     "typeString": "contract ISmartToken"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 7958,
+                    "id": 7905,
                     "name": "ISmartToken",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8971,
+                    "referencedDeclaration": 8918,
                     "src": "1105:11:22",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                      "typeIdentifier": "t_contract$_ISmartToken_$8918",
                       "typeString": "contract ISmartToken"
                     }
                   },
@@ -1746,12 +1746,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 7964,
+              "id": 7911,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1173:0:22"
             },
-            "scope": 8059,
+            "scope": 8006,
             "src": "1075:129:22",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -1759,7 +1759,7 @@
           },
           {
             "body": {
-              "id": 7983,
+              "id": 7930,
               "nodeType": "Block",
               "src": "1284:66:22",
               "statements": [
@@ -1773,7 +1773,7 @@
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         },
-                        "id": 7979,
+                        "id": 7926,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -1785,32 +1785,32 @@
                             "argumentTypes": [],
                             "expression": {
                               "argumentTypes": null,
-                              "id": 7973,
+                              "id": 7920,
                               "name": "token",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 7957,
+                              "referencedDeclaration": 7904,
                               "src": "1301:5:22",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                                "typeIdentifier": "t_contract$_ISmartToken_$8918",
                                 "typeString": "contract ISmartToken"
                               }
                             },
-                            "id": 7974,
+                            "id": 7921,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
                             "lValueRequested": false,
                             "memberName": "owner",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 8934,
+                            "referencedDeclaration": 8881,
                             "src": "1301:11:22",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_view$__$returns$_t_address_$",
                               "typeString": "function () view external returns (address)"
                             }
                           },
-                          "id": 7975,
+                          "id": 7922,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -1831,14 +1831,14 @@
                           "arguments": [
                             {
                               "argumentTypes": null,
-                              "id": 7977,
+                              "id": 7924,
                               "name": "this",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9078,
+                              "referencedDeclaration": 9025,
                               "src": "1326:4:22",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_SmartTokenController_$8059",
+                                "typeIdentifier": "t_contract$_SmartTokenController_$8006",
                                 "typeString": "contract SmartTokenController"
                               }
                             }
@@ -1846,11 +1846,11 @@
                           "expression": {
                             "argumentTypes": [
                               {
-                                "typeIdentifier": "t_contract$_SmartTokenController_$8059",
+                                "typeIdentifier": "t_contract$_SmartTokenController_$8006",
                                 "typeString": "contract SmartTokenController"
                               }
                             ],
-                            "id": 7976,
+                            "id": 7923,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
@@ -1863,7 +1863,7 @@
                             },
                             "typeName": "address"
                           },
-                          "id": 7978,
+                          "id": 7925,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -1891,18 +1891,18 @@
                           "typeString": "bool"
                         }
                       ],
-                      "id": 7972,
+                      "id": 7919,
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 8990,
                       "src": "1294:6:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
                         "typeString": "function (bool) pure"
                       }
                     },
-                    "id": 7980,
+                    "id": 7927,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1916,23 +1916,23 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 7981,
+                  "id": 7928,
                   "nodeType": "ExpressionStatement",
                   "src": "1294:38:22"
                 },
                 {
-                  "id": 7982,
+                  "id": 7929,
                   "nodeType": "PlaceholderStatement",
                   "src": "1342:1:22"
                 }
               ]
             },
             "documentation": null,
-            "id": 7984,
+            "id": 7931,
             "name": "active",
             "nodeType": "ModifierDefinition",
             "parameters": {
-              "id": 7971,
+              "id": 7918,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1281:2:22"
@@ -1942,7 +1942,7 @@
           },
           {
             "body": {
-              "id": 7997,
+              "id": 7944,
               "nodeType": "Block",
               "src": "1436:66:22",
               "statements": [
@@ -1956,7 +1956,7 @@
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         },
-                        "id": 7993,
+                        "id": 7940,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -1968,32 +1968,32 @@
                             "argumentTypes": [],
                             "expression": {
                               "argumentTypes": null,
-                              "id": 7987,
+                              "id": 7934,
                               "name": "token",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 7957,
+                              "referencedDeclaration": 7904,
                               "src": "1453:5:22",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                                "typeIdentifier": "t_contract$_ISmartToken_$8918",
                                 "typeString": "contract ISmartToken"
                               }
                             },
-                            "id": 7988,
+                            "id": 7935,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
                             "lValueRequested": false,
                             "memberName": "owner",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 8934,
+                            "referencedDeclaration": 8881,
                             "src": "1453:11:22",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_view$__$returns$_t_address_$",
                               "typeString": "function () view external returns (address)"
                             }
                           },
-                          "id": 7989,
+                          "id": 7936,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -2014,14 +2014,14 @@
                           "arguments": [
                             {
                               "argumentTypes": null,
-                              "id": 7991,
+                              "id": 7938,
                               "name": "this",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9078,
+                              "referencedDeclaration": 9025,
                               "src": "1478:4:22",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_SmartTokenController_$8059",
+                                "typeIdentifier": "t_contract$_SmartTokenController_$8006",
                                 "typeString": "contract SmartTokenController"
                               }
                             }
@@ -2029,11 +2029,11 @@
                           "expression": {
                             "argumentTypes": [
                               {
-                                "typeIdentifier": "t_contract$_SmartTokenController_$8059",
+                                "typeIdentifier": "t_contract$_SmartTokenController_$8006",
                                 "typeString": "contract SmartTokenController"
                               }
                             ],
-                            "id": 7990,
+                            "id": 7937,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
@@ -2046,7 +2046,7 @@
                             },
                             "typeName": "address"
                           },
-                          "id": 7992,
+                          "id": 7939,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -2074,18 +2074,18 @@
                           "typeString": "bool"
                         }
                       ],
-                      "id": 7986,
+                      "id": 7933,
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 8990,
                       "src": "1446:6:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
                         "typeString": "function (bool) pure"
                       }
                     },
-                    "id": 7994,
+                    "id": 7941,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2099,23 +2099,23 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 7995,
+                  "id": 7942,
                   "nodeType": "ExpressionStatement",
                   "src": "1446:38:22"
                 },
                 {
-                  "id": 7996,
+                  "id": 7943,
                   "nodeType": "PlaceholderStatement",
                   "src": "1494:1:22"
                 }
               ]
             },
             "documentation": null,
-            "id": 7998,
+            "id": 7945,
             "name": "inactive",
             "nodeType": "ModifierDefinition",
             "parameters": {
-              "id": 7985,
+              "id": 7932,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1433:2:22"
@@ -2125,7 +2125,7 @@
           },
           {
             "body": {
-              "id": 8011,
+              "id": 7958,
               "nodeType": "Block",
               "src": "1794:51:22",
               "statements": [
@@ -2135,11 +2135,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8008,
+                        "id": 7955,
                         "name": "_newOwner",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8000,
+                        "referencedDeclaration": 7947,
                         "src": "1828:9:22",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -2156,32 +2156,32 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8005,
+                        "id": 7952,
                         "name": "token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 7957,
+                        "referencedDeclaration": 7904,
                         "src": "1804:5:22",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                          "typeIdentifier": "t_contract$_ISmartToken_$8918",
                           "typeString": "contract ISmartToken"
                         }
                       },
-                      "id": 8007,
+                      "id": 7954,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "transferOwnership",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8939,
+                      "referencedDeclaration": 8886,
                       "src": "1804:23:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$returns$__$",
                         "typeString": "function (address) external"
                       }
                     },
-                    "id": 8009,
+                    "id": 7956,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2195,28 +2195,28 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 8010,
+                  "id": 7957,
                   "nodeType": "ExpressionStatement",
                   "src": "1804:34:22"
                 }
               ]
             },
             "documentation": "@dev allows transferring the token ownership\nthe new owner still need to accept the transfer\ncan only be called by the contract owner\n@param _newOwner    new token owner",
-            "id": 8012,
+            "id": 7959,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 8003,
+                "id": 7950,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 8002,
+                  "id": 7949,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7690,
+                  "referencedDeclaration": 7637,
                   "src": "1784:9:22",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -2230,15 +2230,15 @@
             "name": "transferTokenOwnership",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8001,
+              "id": 7948,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8000,
+                  "id": 7947,
                   "name": "_newOwner",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8012,
+                  "scope": 7959,
                   "src": "1758:17:22",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2247,7 +2247,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 7999,
+                    "id": 7946,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "1758:7:22",
@@ -2264,12 +2264,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8004,
+              "id": 7951,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1794:0:22"
             },
-            "scope": 8059,
+            "scope": 8006,
             "src": "1726:119:22",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -2277,7 +2277,7 @@
           },
           {
             "body": {
-              "id": 8022,
+              "id": 7969,
               "nodeType": "Block",
               "src": "2034:40:22",
               "statements": [
@@ -2289,32 +2289,32 @@
                       "argumentTypes": [],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8017,
+                        "id": 7964,
                         "name": "token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 7957,
+                        "referencedDeclaration": 7904,
                         "src": "2044:5:22",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                          "typeIdentifier": "t_contract$_ISmartToken_$8918",
                           "typeString": "contract ISmartToken"
                         }
                       },
-                      "id": 8019,
+                      "id": 7966,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "acceptOwnership",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8942,
+                      "referencedDeclaration": 8889,
                       "src": "2044:21:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$__$returns$__$",
                         "typeString": "function () external"
                       }
                     },
-                    "id": 8020,
+                    "id": 7967,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2328,28 +2328,28 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 8021,
+                  "id": 7968,
                   "nodeType": "ExpressionStatement",
                   "src": "2044:23:22"
                 }
               ]
             },
             "documentation": "@dev used by a new owner to accept a token ownership transfer\ncan only be called by the contract owner",
-            "id": 8023,
+            "id": 7970,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 8015,
+                "id": 7962,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 8014,
+                  "id": 7961,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7690,
+                  "referencedDeclaration": 7637,
                   "src": "2024:9:22",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -2363,19 +2363,19 @@
             "name": "acceptTokenOwnership",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8013,
+              "id": 7960,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "2014:2:22"
             },
             "payable": false,
             "returnParameters": {
-              "id": 8016,
+              "id": 7963,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "2034:0:22"
             },
-            "scope": 8059,
+            "scope": 8006,
             "src": "1985:89:22",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -2383,7 +2383,7 @@
           },
           {
             "body": {
-              "id": 8036,
+              "id": 7983,
               "nodeType": "Block",
               "src": "2329:49:22",
               "statements": [
@@ -2393,11 +2393,11 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8033,
+                        "id": 7980,
                         "name": "_disable",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8025,
+                        "referencedDeclaration": 7972,
                         "src": "2362:8:22",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
@@ -2414,32 +2414,32 @@
                       ],
                       "expression": {
                         "argumentTypes": null,
-                        "id": 8030,
+                        "id": 7977,
                         "name": "token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 7957,
+                        "referencedDeclaration": 7904,
                         "src": "2339:5:22",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                          "typeIdentifier": "t_contract$_ISmartToken_$8918",
                           "typeString": "contract ISmartToken"
                         }
                       },
-                      "id": 8032,
+                      "id": 7979,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "disableTransfers",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8956,
+                      "referencedDeclaration": 8903,
                       "src": "2339:22:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_bool_$returns$__$",
                         "typeString": "function (bool) external"
                       }
                     },
-                    "id": 8034,
+                    "id": 7981,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2453,28 +2453,28 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 8035,
+                  "id": 7982,
                   "nodeType": "ExpressionStatement",
                   "src": "2339:32:22"
                 }
               ]
             },
             "documentation": "@dev disables/enables token transfers\ncan only be called by the contract owner\n@param _disable    true to disable transfers, false to enable them",
-            "id": 8037,
+            "id": 7984,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 8028,
+                "id": 7975,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 8027,
+                  "id": 7974,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7690,
+                  "referencedDeclaration": 7637,
                   "src": "2319:9:22",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -2488,15 +2488,15 @@
             "name": "disableTokenTransfers",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8026,
+              "id": 7973,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8025,
+                  "id": 7972,
                   "name": "_disable",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8037,
+                  "scope": 7984,
                   "src": "2297:13:22",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2505,7 +2505,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 8024,
+                    "id": 7971,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "2297:4:22",
@@ -2522,12 +2522,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8029,
+              "id": 7976,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "2329:0:22"
             },
-            "scope": 8059,
+            "scope": 8006,
             "src": "2266:112:22",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -2535,7 +2535,7 @@
           },
           {
             "body": {
-              "id": 8057,
+              "id": 8004,
               "nodeType": "Block",
               "src": "2823:73:22",
               "statements": [
@@ -2545,24 +2545,24 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 8052,
+                        "id": 7999,
                         "name": "_token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8039,
+                        "referencedDeclaration": 7986,
                         "src": "2868:6:22",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IERC20Token_$8644",
+                          "typeIdentifier": "t_contract$_IERC20Token_$8591",
                           "typeString": "contract IERC20Token"
                         }
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8053,
+                        "id": 8000,
                         "name": "_to",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8041,
+                        "referencedDeclaration": 7988,
                         "src": "2876:3:22",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -2571,11 +2571,11 @@
                       },
                       {
                         "argumentTypes": null,
-                        "id": 8054,
+                        "id": 8001,
                         "name": "_amount",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8043,
+                        "referencedDeclaration": 7990,
                         "src": "2881:7:22",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -2586,7 +2586,7 @@
                     "expression": {
                       "argumentTypes": [
                         {
-                          "typeIdentifier": "t_contract$_IERC20Token_$8644",
+                          "typeIdentifier": "t_contract$_IERC20Token_$8591",
                           "typeString": "contract IERC20Token"
                         },
                         {
@@ -2603,14 +2603,14 @@
                         "arguments": [
                           {
                             "argumentTypes": null,
-                            "id": 8049,
+                            "id": 7996,
                             "name": "token",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 7957,
+                            "referencedDeclaration": 7904,
                             "src": "2846:5:22",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                              "typeIdentifier": "t_contract$_ISmartToken_$8918",
                               "typeString": "contract ISmartToken"
                             }
                           }
@@ -2618,22 +2618,22 @@
                         "expression": {
                           "argumentTypes": [
                             {
-                              "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                              "typeIdentifier": "t_contract$_ISmartToken_$8918",
                               "typeString": "contract ISmartToken"
                             }
                           ],
-                          "id": 8048,
+                          "id": 7995,
                           "name": "ITokenHolder",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9040,
+                          "referencedDeclaration": 8987,
                           "src": "2833:12:22",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_type$_t_contract$_ITokenHolder_$9040_$",
+                            "typeIdentifier": "t_type$_t_contract$_ITokenHolder_$8987_$",
                             "typeString": "type(contract ITokenHolder)"
                           }
                         },
-                        "id": 8050,
+                        "id": 7997,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -2643,25 +2643,25 @@
                         "nodeType": "FunctionCall",
                         "src": "2833:19:22",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ITokenHolder_$9040",
+                          "typeIdentifier": "t_contract$_ITokenHolder_$8987",
                           "typeString": "contract ITokenHolder"
                         }
                       },
-                      "id": 8051,
+                      "id": 7998,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "withdrawTokens",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 9039,
+                      "referencedDeclaration": 8986,
                       "src": "2833:34:22",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_external_nonpayable$_t_contract$_IERC20Token_$8644_$_t_address_$_t_uint256_$returns$__$",
+                        "typeIdentifier": "t_function_external_nonpayable$_t_contract$_IERC20Token_$8591_$_t_address_$_t_uint256_$returns$__$",
                         "typeString": "function (contract IERC20Token,address,uint256) external"
                       }
                     },
-                    "id": 8055,
+                    "id": 8002,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2675,28 +2675,28 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 8056,
+                  "id": 8003,
                   "nodeType": "ExpressionStatement",
                   "src": "2833:56:22"
                 }
               ]
             },
             "documentation": "@dev withdraws tokens held by the controller and sends them to an account\ncan only be called by the owner\n@param _token   ERC20 token contract address\n@param _to      account to receive the new amount\n@param _amount  amount to withdraw",
-            "id": 8058,
+            "id": 8005,
             "implemented": true,
             "isConstructor": false,
             "isDeclaredConst": false,
             "modifiers": [
               {
                 "arguments": [],
-                "id": 8046,
+                "id": 7993,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 8045,
+                  "id": 7992,
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7690,
+                  "referencedDeclaration": 7637,
                   "src": "2809:9:22",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -2710,31 +2710,31 @@
             "name": "withdrawFromToken",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8044,
+              "id": 7991,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8039,
+                  "id": 7986,
                   "name": "_token",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8058,
+                  "scope": 8005,
                   "src": "2712:18:22",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_IERC20Token_$8644",
+                    "typeIdentifier": "t_contract$_IERC20Token_$8591",
                     "typeString": "contract IERC20Token"
                   },
                   "typeName": {
                     "contractScope": null,
-                    "id": 8038,
+                    "id": 7985,
                     "name": "IERC20Token",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8644,
+                    "referencedDeclaration": 8591,
                     "src": "2712:11:22",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IERC20Token_$8644",
+                      "typeIdentifier": "t_contract$_IERC20Token_$8591",
                       "typeString": "contract IERC20Token"
                     }
                   },
@@ -2743,10 +2743,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8041,
+                  "id": 7988,
                   "name": "_to",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8058,
+                  "scope": 8005,
                   "src": "2741:11:22",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2755,7 +2755,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8040,
+                    "id": 7987,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "2741:7:22",
@@ -2769,10 +2769,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8043,
+                  "id": 7990,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8058,
+                  "scope": 8005,
                   "src": "2763:15:22",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2781,7 +2781,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8042,
+                    "id": 7989,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "2763:7:22",
@@ -2798,19 +2798,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8047,
+              "id": 7994,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "2823:0:22"
             },
-            "scope": 8059,
+            "scope": 8006,
             "src": "2676:220:22",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 8060,
+        "scope": 8007,
         "src": "936:1962:22"
       }
     ],
@@ -2822,5 +2822,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-08-07T05:00:47.788Z"
+  "updatedAt": "2018-08-07T05:25:05.929Z"
 }

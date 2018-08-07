@@ -47,33 +47,21 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
     }
 
     function getVersion() public view returns (uint256) {
-        return 5;
+        return 6;
     }
 
     /**
 
     */
     function sellCards(uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        uint256 result = quickConvertInternal(quickSellPath, _amount, 1, this);
-
-        uint256 feeAmount = distributeFees(result);
-        uint256 net = safeSub(result, feeAmount);
-
-        msg.sender.transfer(net);
-
-        return net;
+        return _amount;
     }
 
     /**
 
     */
     function buyCards(uint256 _amount, uint256 _minReturn) payable public returns (uint256) {
-        uint256 feeAmount = distributeFees(_amount);
-        uint256 net = safeSub(_amount, feeAmount);
-
-        uint256 result = quickConvertInternal(quickBuyPath, net, 1, msg.sender);
-
-        return result;
+        return _amount;
     }
 
     function quickConvertInternal(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _spender)

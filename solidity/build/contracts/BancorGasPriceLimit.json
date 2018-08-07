@@ -142,7 +142,7 @@
         "id": 2746,
         "nodeType": "ImportDirective",
         "scope": 2787,
-        "sourceUnit": 7736,
+        "sourceUnit": 7683,
         "src": "25:21:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -153,7 +153,7 @@
         "id": 2747,
         "nodeType": "ImportDirective",
         "scope": 2787,
-        "sourceUnit": 8227,
+        "sourceUnit": 8174,
         "src": "47:21:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -164,7 +164,7 @@
         "id": 2748,
         "nodeType": "ImportDirective",
         "scope": 2787,
-        "sourceUnit": 8535,
+        "sourceUnit": 8482,
         "src": "69:47:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -178,10 +178,10 @@
               "id": 2749,
               "name": "IBancorGasPriceLimit",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8534,
+              "referencedDeclaration": 8481,
               "src": "550:20:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8534",
+                "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8481",
                 "typeString": "contract IBancorGasPriceLimit"
               }
             },
@@ -196,10 +196,10 @@
               "id": 2751,
               "name": "Owned",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 7735,
+              "referencedDeclaration": 7682,
               "src": "572:5:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Owned_$7735",
+                "typeIdentifier": "t_contract$_Owned_$7682",
                 "typeString": "contract Owned"
               }
             },
@@ -214,10 +214,10 @@
               "id": 2753,
               "name": "Utils",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8226,
+              "referencedDeclaration": 8173,
               "src": "579:5:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Utils_$8226",
+                "typeIdentifier": "t_contract$_Utils_$8173",
                 "typeString": "contract Utils"
               }
             },
@@ -227,10 +227,10 @@
           }
         ],
         "contractDependencies": [
-          7735,
-          8226,
-          8534,
-          8943
+          7682,
+          8173,
+          8481,
+          8890
         ],
         "contractKind": "contract",
         "documentation": null,
@@ -238,10 +238,10 @@
         "id": 2786,
         "linearizedBaseContracts": [
           2786,
-          8226,
-          7735,
-          8943,
-          8534
+          8173,
+          7682,
+          8890,
+          8481
         ],
         "name": "BancorGasPriceLimit",
         "nodeType": "ContractDefinition",
@@ -374,7 +374,7 @@
                   "name": "greaterThanZero",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8123,
+                  "referencedDeclaration": 8070,
                   "src": "833:15:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_uint256_$",
@@ -504,7 +504,7 @@
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7690,
+                  "referencedDeclaration": 7637,
                   "src": "1093:9:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -537,7 +537,7 @@
                   "name": "greaterThanZero",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8123,
+                  "referencedDeclaration": 8070,
                   "src": "1111:15:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_uint256_$",
@@ -630,7 +630,7 @@
         "id": 2746,
         "nodeType": "ImportDirective",
         "scope": 2787,
-        "sourceUnit": 7736,
+        "sourceUnit": 7683,
         "src": "25:21:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -641,7 +641,7 @@
         "id": 2747,
         "nodeType": "ImportDirective",
         "scope": 2787,
-        "sourceUnit": 8227,
+        "sourceUnit": 8174,
         "src": "47:21:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -652,7 +652,7 @@
         "id": 2748,
         "nodeType": "ImportDirective",
         "scope": 2787,
-        "sourceUnit": 8535,
+        "sourceUnit": 8482,
         "src": "69:47:3",
         "symbolAliases": [],
         "unitAlias": ""
@@ -666,10 +666,10 @@
               "id": 2749,
               "name": "IBancorGasPriceLimit",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8534,
+              "referencedDeclaration": 8481,
               "src": "550:20:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8534",
+                "typeIdentifier": "t_contract$_IBancorGasPriceLimit_$8481",
                 "typeString": "contract IBancorGasPriceLimit"
               }
             },
@@ -684,10 +684,10 @@
               "id": 2751,
               "name": "Owned",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 7735,
+              "referencedDeclaration": 7682,
               "src": "572:5:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Owned_$7735",
+                "typeIdentifier": "t_contract$_Owned_$7682",
                 "typeString": "contract Owned"
               }
             },
@@ -702,10 +702,10 @@
               "id": 2753,
               "name": "Utils",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8226,
+              "referencedDeclaration": 8173,
               "src": "579:5:3",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Utils_$8226",
+                "typeIdentifier": "t_contract$_Utils_$8173",
                 "typeString": "contract Utils"
               }
             },
@@ -715,10 +715,10 @@
           }
         ],
         "contractDependencies": [
-          7735,
-          8226,
-          8534,
-          8943
+          7682,
+          8173,
+          8481,
+          8890
         ],
         "contractKind": "contract",
         "documentation": null,
@@ -726,10 +726,10 @@
         "id": 2786,
         "linearizedBaseContracts": [
           2786,
-          8226,
-          7735,
-          8943,
-          8534
+          8173,
+          7682,
+          8890,
+          8481
         ],
         "name": "BancorGasPriceLimit",
         "nodeType": "ContractDefinition",
@@ -862,7 +862,7 @@
                   "name": "greaterThanZero",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8123,
+                  "referencedDeclaration": 8070,
                   "src": "833:15:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_uint256_$",
@@ -992,7 +992,7 @@
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7690,
+                  "referencedDeclaration": 7637,
                   "src": "1093:9:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -1025,7 +1025,7 @@
                   "name": "greaterThanZero",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8123,
+                  "referencedDeclaration": 8070,
                   "src": "1111:15:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_uint256_$",
@@ -1097,5 +1097,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-08-07T05:00:47.764Z"
+  "updatedAt": "2018-08-07T05:25:05.826Z"
 }
