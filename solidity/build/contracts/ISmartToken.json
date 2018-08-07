@@ -270,14 +270,14 @@
     "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/ISmartToken.sol",
     "exportedSymbols": {
       "ISmartToken": [
-        8971
+        9021
       ]
     },
-    "id": 8972,
+    "id": 9022,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 8945,
+        "id": 8995,
         "literals": [
           "solidity",
           "^",
@@ -290,10 +290,10 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IOwned.sol",
         "file": "./IOwned.sol",
-        "id": 8946,
+        "id": 8996,
         "nodeType": "ImportDirective",
-        "scope": 8972,
-        "sourceUnit": 8944,
+        "scope": 9022,
+        "sourceUnit": 8994,
         "src": "25:22:39",
         "symbolAliases": [],
         "unitAlias": ""
@@ -301,10 +301,10 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IERC20Token.sol",
         "file": "./IERC20Token.sol",
-        "id": 8947,
+        "id": 8997,
         "nodeType": "ImportDirective",
-        "scope": 8972,
-        "sourceUnit": 8645,
+        "scope": 9022,
+        "sourceUnit": 8695,
         "src": "48:27:39",
         "symbolAliases": [],
         "unitAlias": ""
@@ -315,17 +315,17 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 8948,
+              "id": 8998,
               "name": "IOwned",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8943,
+              "referencedDeclaration": 8993,
               "src": "133:6:39",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IOwned_$8943",
+                "typeIdentifier": "t_contract$_IOwned_$8993",
                 "typeString": "contract IOwned"
               }
             },
-            "id": 8949,
+            "id": 8999,
             "nodeType": "InheritanceSpecifier",
             "src": "133:6:39"
           },
@@ -333,33 +333,33 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 8950,
+              "id": 9000,
               "name": "IERC20Token",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8644,
+              "referencedDeclaration": 8694,
               "src": "141:11:39",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IERC20Token_$8644",
+                "typeIdentifier": "t_contract$_IERC20Token_$8694",
                 "typeString": "contract IERC20Token"
               }
             },
-            "id": 8951,
+            "id": 9001,
             "nodeType": "InheritanceSpecifier",
             "src": "141:11:39"
           }
         ],
         "contractDependencies": [
-          8644,
-          8943
+          8694,
+          8993
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 8971,
+        "id": 9021,
         "linearizedBaseContracts": [
-          8971,
-          8644,
-          8943
+          9021,
+          8694,
+          8993
         ],
         "name": "ISmartToken",
         "nodeType": "ContractDefinition",
@@ -367,7 +367,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 8956,
+            "id": 9006,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -375,15 +375,15 @@
             "name": "disableTransfers",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8954,
+              "id": 9004,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8953,
+                  "id": 9003,
                   "name": "_disable",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8956,
+                  "scope": 9006,
                   "src": "185:13:39",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -392,7 +392,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 8952,
+                    "id": 9002,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "185:4:39",
@@ -409,12 +409,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8955,
+              "id": 9005,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "206:0:39"
             },
-            "scope": 8971,
+            "scope": 9021,
             "src": "159:48:39",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -423,7 +423,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 8963,
+            "id": 9013,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -431,15 +431,15 @@
             "name": "issue",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8961,
+              "id": 9011,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8958,
+                  "id": 9008,
                   "name": "_to",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8963,
+                  "scope": 9013,
                   "src": "227:11:39",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -448,7 +448,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8957,
+                    "id": 9007,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "227:7:39",
@@ -462,10 +462,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8960,
+                  "id": 9010,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8963,
+                  "scope": 9013,
                   "src": "240:15:39",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -474,7 +474,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8959,
+                    "id": 9009,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "240:7:39",
@@ -491,12 +491,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8962,
+              "id": 9012,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "263:0:39"
             },
-            "scope": 8971,
+            "scope": 9021,
             "src": "212:52:39",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -505,7 +505,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 8970,
+            "id": 9020,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -513,15 +513,15 @@
             "name": "destroy",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8968,
+              "id": 9018,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8965,
+                  "id": 9015,
                   "name": "_from",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8970,
+                  "scope": 9020,
                   "src": "286:13:39",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -530,7 +530,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8964,
+                    "id": 9014,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "286:7:39",
@@ -544,10 +544,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8967,
+                  "id": 9017,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8970,
+                  "scope": 9020,
                   "src": "301:15:39",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -556,7 +556,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8966,
+                    "id": 9016,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "301:7:39",
@@ -573,19 +573,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8969,
+              "id": 9019,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "324:0:39"
             },
-            "scope": 8971,
+            "scope": 9021,
             "src": "269:56:39",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 8972,
+        "scope": 9022,
         "src": "109:218:39"
       }
     ],
@@ -595,14 +595,14 @@
     "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/ISmartToken.sol",
     "exportedSymbols": {
       "ISmartToken": [
-        8971
+        9021
       ]
     },
-    "id": 8972,
+    "id": 9022,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 8945,
+        "id": 8995,
         "literals": [
           "solidity",
           "^",
@@ -615,10 +615,10 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IOwned.sol",
         "file": "./IOwned.sol",
-        "id": 8946,
+        "id": 8996,
         "nodeType": "ImportDirective",
-        "scope": 8972,
-        "sourceUnit": 8944,
+        "scope": 9022,
+        "sourceUnit": 8994,
         "src": "25:22:39",
         "symbolAliases": [],
         "unitAlias": ""
@@ -626,10 +626,10 @@
       {
         "absolutePath": "/Users/rudo/Documents/ichiba/submodules/contracts/solidity/contracts/interfaces/IERC20Token.sol",
         "file": "./IERC20Token.sol",
-        "id": 8947,
+        "id": 8997,
         "nodeType": "ImportDirective",
-        "scope": 8972,
-        "sourceUnit": 8645,
+        "scope": 9022,
+        "sourceUnit": 8695,
         "src": "48:27:39",
         "symbolAliases": [],
         "unitAlias": ""
@@ -640,17 +640,17 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 8948,
+              "id": 8998,
               "name": "IOwned",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8943,
+              "referencedDeclaration": 8993,
               "src": "133:6:39",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IOwned_$8943",
+                "typeIdentifier": "t_contract$_IOwned_$8993",
                 "typeString": "contract IOwned"
               }
             },
-            "id": 8949,
+            "id": 8999,
             "nodeType": "InheritanceSpecifier",
             "src": "133:6:39"
           },
@@ -658,33 +658,33 @@
             "arguments": [],
             "baseName": {
               "contractScope": null,
-              "id": 8950,
+              "id": 9000,
               "name": "IERC20Token",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8644,
+              "referencedDeclaration": 8694,
               "src": "141:11:39",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IERC20Token_$8644",
+                "typeIdentifier": "t_contract$_IERC20Token_$8694",
                 "typeString": "contract IERC20Token"
               }
             },
-            "id": 8951,
+            "id": 9001,
             "nodeType": "InheritanceSpecifier",
             "src": "141:11:39"
           }
         ],
         "contractDependencies": [
-          8644,
-          8943
+          8694,
+          8993
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 8971,
+        "id": 9021,
         "linearizedBaseContracts": [
-          8971,
-          8644,
-          8943
+          9021,
+          8694,
+          8993
         ],
         "name": "ISmartToken",
         "nodeType": "ContractDefinition",
@@ -692,7 +692,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 8956,
+            "id": 9006,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -700,15 +700,15 @@
             "name": "disableTransfers",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8954,
+              "id": 9004,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8953,
+                  "id": 9003,
                   "name": "_disable",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8956,
+                  "scope": 9006,
                   "src": "185:13:39",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -717,7 +717,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 8952,
+                    "id": 9002,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "185:4:39",
@@ -734,12 +734,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8955,
+              "id": 9005,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "206:0:39"
             },
-            "scope": 8971,
+            "scope": 9021,
             "src": "159:48:39",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -748,7 +748,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 8963,
+            "id": 9013,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -756,15 +756,15 @@
             "name": "issue",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8961,
+              "id": 9011,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8958,
+                  "id": 9008,
                   "name": "_to",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8963,
+                  "scope": 9013,
                   "src": "227:11:39",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -773,7 +773,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8957,
+                    "id": 9007,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "227:7:39",
@@ -787,10 +787,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8960,
+                  "id": 9010,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8963,
+                  "scope": 9013,
                   "src": "240:15:39",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -799,7 +799,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8959,
+                    "id": 9009,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "240:7:39",
@@ -816,12 +816,12 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8962,
+              "id": 9012,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "263:0:39"
             },
-            "scope": 8971,
+            "scope": 9021,
             "src": "212:52:39",
             "stateMutability": "nonpayable",
             "superFunction": null,
@@ -830,7 +830,7 @@
           {
             "body": null,
             "documentation": null,
-            "id": 8970,
+            "id": 9020,
             "implemented": false,
             "isConstructor": false,
             "isDeclaredConst": false,
@@ -838,15 +838,15 @@
             "name": "destroy",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 8968,
+              "id": 9018,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8965,
+                  "id": 9015,
                   "name": "_from",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8970,
+                  "scope": 9020,
                   "src": "286:13:39",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -855,7 +855,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8964,
+                    "id": 9014,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "286:7:39",
@@ -869,10 +869,10 @@
                 },
                 {
                   "constant": false,
-                  "id": 8967,
+                  "id": 9017,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8970,
+                  "scope": 9020,
                   "src": "301:15:39",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -881,7 +881,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 8966,
+                    "id": 9016,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "301:7:39",
@@ -898,19 +898,19 @@
             },
             "payable": false,
             "returnParameters": {
-              "id": 8969,
+              "id": 9019,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "324:0:39"
             },
-            "scope": 8971,
+            "scope": 9021,
             "src": "269:56:39",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 8972,
+        "scope": 9022,
         "src": "109:218:39"
       }
     ],
@@ -922,5 +922,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-08-07T05:00:47.805Z"
+  "updatedAt": "2018-08-07T03:35:53.217Z"
 }

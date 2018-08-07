@@ -522,7 +522,7 @@
         "id": 3244,
         "nodeType": "ImportDirective",
         "scope": 3611,
-        "sourceUnit": 8060,
+        "sourceUnit": 8110,
         "src": "25:36:6",
         "symbolAliases": [],
         "unitAlias": ""
@@ -533,7 +533,7 @@
         "id": 3245,
         "nodeType": "ImportDirective",
         "scope": 3611,
-        "sourceUnit": 8227,
+        "sourceUnit": 8277,
         "src": "62:21:6",
         "symbolAliases": [],
         "unitAlias": ""
@@ -544,7 +544,7 @@
         "id": 3246,
         "nodeType": "ImportDirective",
         "scope": 3611,
-        "sourceUnit": 8972,
+        "sourceUnit": 9022,
         "src": "84:38:6",
         "symbolAliases": [],
         "unitAlias": ""
@@ -558,10 +558,10 @@
               "id": 3247,
               "name": "SmartTokenController",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8059,
+              "referencedDeclaration": 8109,
               "src": "445:20:6",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_SmartTokenController_$8059",
+                "typeIdentifier": "t_contract$_SmartTokenController_$8109",
                 "typeString": "contract SmartTokenController"
               }
             },
@@ -571,12 +571,12 @@
           }
         ],
         "contractDependencies": [
-          7735,
-          8059,
-          8105,
-          8226,
-          8943,
-          9040
+          7785,
+          8109,
+          8155,
+          8276,
+          8993,
+          9090
         ],
         "contractKind": "contract",
         "documentation": null,
@@ -584,12 +584,12 @@
         "id": 3610,
         "linearizedBaseContracts": [
           3610,
-          8059,
-          8105,
-          8226,
-          7735,
-          9040,
-          8943
+          8109,
+          8155,
+          8276,
+          7785,
+          9090,
+          8993
         ],
         "name": "CrowdsaleController",
         "nodeType": "ContractDefinition",
@@ -1595,7 +1595,7 @@
                     "referencedDeclaration": 3300,
                     "src": "2350:6:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9021",
                       "typeString": "contract ISmartToken"
                     }
                   }
@@ -1607,10 +1607,10 @@
                   "name": "SmartTokenController",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8059,
+                  "referencedDeclaration": 8109,
                   "src": "2329:20:6",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_type$_t_contract$_SmartTokenController_$8059_$",
+                    "typeIdentifier": "t_type$_t_contract$_SmartTokenController_$8109_$",
                     "typeString": "type(contract SmartTokenController)"
                   }
                 },
@@ -1640,7 +1640,7 @@
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8137,
+                  "referencedDeclaration": 8187,
                   "src": "2366:12:6",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -1673,7 +1673,7 @@
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8137,
+                  "referencedDeclaration": 8187,
                   "src": "2401:12:6",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -1777,7 +1777,7 @@
                   "name": "greaterThanZero",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8123,
+                  "referencedDeclaration": 8173,
                   "src": "2461:15:6",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_uint256_$",
@@ -1804,7 +1804,7 @@
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                    "typeIdentifier": "t_contract$_ISmartToken_$9021",
                     "typeString": "contract ISmartToken"
                   },
                   "typeName": {
@@ -1812,10 +1812,10 @@
                     "id": 3299,
                     "name": "ISmartToken",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8971,
+                    "referencedDeclaration": 9021,
                     "src": "2202:11:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9021",
                       "typeString": "contract ISmartToken"
                     }
                   },
@@ -1971,7 +1971,7 @@
                             "name": "tx",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9063,
+                            "referencedDeclaration": 9113,
                             "src": "2797:2:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_transaction",
@@ -2025,7 +2025,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 9093,
                       "src": "2790:6:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -2190,7 +2190,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9056,
+                      "referencedDeclaration": 9106,
                       "src": "2981:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -2315,7 +2315,7 @@
                           "name": "now",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9055,
+                          "referencedDeclaration": 9105,
                           "src": "3166:3:6",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint256",
@@ -2355,7 +2355,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 9093,
                       "src": "3159:6:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -2465,7 +2465,7 @@
                             "name": "now",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9055,
+                            "referencedDeclaration": 9105,
                             "src": "3370:3:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -2512,7 +2512,7 @@
                             "name": "now",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9055,
+                            "referencedDeclaration": 9105,
                             "src": "3391:3:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -2558,7 +2558,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 9093,
                       "src": "3363:6:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -2685,7 +2685,7 @@
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9053,
+                            "referencedDeclaration": 9103,
                             "src": "3516:3:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
@@ -2739,7 +2739,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 9093,
                       "src": "3509:6:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -2850,7 +2850,7 @@
                             "name": "safeAdd",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 8175,
+                            "referencedDeclaration": 8225,
                             "src": "3677:7:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -2904,7 +2904,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 9093,
                       "src": "3670:6:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -3042,7 +3042,7 @@
                             "name": "safeAdd",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 8175,
+                            "referencedDeclaration": 8225,
                             "src": "3904:7:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -3096,7 +3096,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 9093,
                       "src": "3897:6:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -3220,7 +3220,7 @@
                       "name": "keccak256",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9047,
+                      "referencedDeclaration": 9097,
                       "src": "4297:9:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_sha3_pure$__$returns$_t_bytes32_$",
@@ -3422,7 +3422,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9056,
+                      "referencedDeclaration": 9106,
                       "src": "4680:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -3510,7 +3510,7 @@
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7690,
+                  "referencedDeclaration": 7740,
                   "src": "4571:9:6",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -3529,7 +3529,7 @@
                   "name": "active",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7984,
+                  "referencedDeclaration": 8034,
                   "src": "4589:6:6",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -3769,7 +3769,7 @@
                         "name": "safeMul",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8225,
+                        "referencedDeclaration": 8275,
                         "src": "5064:7:6",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -4123,7 +4123,7 @@
                       "name": "msg",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9053,
+                      "referencedDeclaration": 9103,
                       "src": "5722:3:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_magic_message",
@@ -4294,7 +4294,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9053,
+                          "referencedDeclaration": 9103,
                           "src": "6273:3:6",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -4363,7 +4363,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9053,
+                          "referencedDeclaration": 9103,
                           "src": "6314:3:6",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -4484,7 +4484,7 @@
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9053,
+                            "referencedDeclaration": 9103,
                             "src": "6438:3:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
@@ -4521,7 +4521,7 @@
                         "name": "safeAdd",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8175,
+                        "referencedDeclaration": 8225,
                         "src": "6407:7:6",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -4564,7 +4564,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9053,
+                          "referencedDeclaration": 9103,
                           "src": "6510:3:6",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -4616,10 +4616,10 @@
                         "name": "token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 7957,
+                        "referencedDeclaration": 8007,
                         "src": "6498:5:6",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                          "typeIdentifier": "t_contract$_ISmartToken_$9021",
                           "typeString": "contract ISmartToken"
                         }
                       },
@@ -4630,7 +4630,7 @@
                       "lValueRequested": false,
                       "memberName": "issue",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8963,
+                      "referencedDeclaration": 9013,
                       "src": "6498:11:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$__$",
@@ -4703,10 +4703,10 @@
                         "name": "token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 7957,
+                        "referencedDeclaration": 8007,
                         "src": "6601:5:6",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                          "typeIdentifier": "t_contract$_ISmartToken_$9021",
                           "typeString": "contract ISmartToken"
                         }
                       },
@@ -4717,7 +4717,7 @@
                       "lValueRequested": false,
                       "memberName": "issue",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8963,
+                      "referencedDeclaration": 9013,
                       "src": "6601:11:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$__$",
@@ -4754,7 +4754,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9053,
+                          "referencedDeclaration": 9103,
                           "src": "6697:3:6",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -4783,7 +4783,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9053,
+                          "referencedDeclaration": 9103,
                           "src": "6709:3:6",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -4898,7 +4898,7 @@
                   "name": "active",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7984,
+                  "referencedDeclaration": 8034,
                   "src": "6123:6:6",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -4918,7 +4918,7 @@
                       "name": "msg",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9053,
+                      "referencedDeclaration": 9103,
                       "src": "6157:3:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_magic_message",
@@ -5129,7 +5129,7 @@
         "id": 3244,
         "nodeType": "ImportDirective",
         "scope": 3611,
-        "sourceUnit": 8060,
+        "sourceUnit": 8110,
         "src": "25:36:6",
         "symbolAliases": [],
         "unitAlias": ""
@@ -5140,7 +5140,7 @@
         "id": 3245,
         "nodeType": "ImportDirective",
         "scope": 3611,
-        "sourceUnit": 8227,
+        "sourceUnit": 8277,
         "src": "62:21:6",
         "symbolAliases": [],
         "unitAlias": ""
@@ -5151,7 +5151,7 @@
         "id": 3246,
         "nodeType": "ImportDirective",
         "scope": 3611,
-        "sourceUnit": 8972,
+        "sourceUnit": 9022,
         "src": "84:38:6",
         "symbolAliases": [],
         "unitAlias": ""
@@ -5165,10 +5165,10 @@
               "id": 3247,
               "name": "SmartTokenController",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8059,
+              "referencedDeclaration": 8109,
               "src": "445:20:6",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_SmartTokenController_$8059",
+                "typeIdentifier": "t_contract$_SmartTokenController_$8109",
                 "typeString": "contract SmartTokenController"
               }
             },
@@ -5178,12 +5178,12 @@
           }
         ],
         "contractDependencies": [
-          7735,
-          8059,
-          8105,
-          8226,
-          8943,
-          9040
+          7785,
+          8109,
+          8155,
+          8276,
+          8993,
+          9090
         ],
         "contractKind": "contract",
         "documentation": null,
@@ -5191,12 +5191,12 @@
         "id": 3610,
         "linearizedBaseContracts": [
           3610,
-          8059,
-          8105,
-          8226,
-          7735,
-          9040,
-          8943
+          8109,
+          8155,
+          8276,
+          7785,
+          9090,
+          8993
         ],
         "name": "CrowdsaleController",
         "nodeType": "ContractDefinition",
@@ -6202,7 +6202,7 @@
                     "referencedDeclaration": 3300,
                     "src": "2350:6:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9021",
                       "typeString": "contract ISmartToken"
                     }
                   }
@@ -6214,10 +6214,10 @@
                   "name": "SmartTokenController",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8059,
+                  "referencedDeclaration": 8109,
                   "src": "2329:20:6",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_type$_t_contract$_SmartTokenController_$8059_$",
+                    "typeIdentifier": "t_type$_t_contract$_SmartTokenController_$8109_$",
                     "typeString": "type(contract SmartTokenController)"
                   }
                 },
@@ -6247,7 +6247,7 @@
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8137,
+                  "referencedDeclaration": 8187,
                   "src": "2366:12:6",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -6280,7 +6280,7 @@
                   "name": "validAddress",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8137,
+                  "referencedDeclaration": 8187,
                   "src": "2401:12:6",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_address_$",
@@ -6384,7 +6384,7 @@
                   "name": "greaterThanZero",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8123,
+                  "referencedDeclaration": 8173,
                   "src": "2461:15:6",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$_t_uint256_$",
@@ -6411,7 +6411,7 @@
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                    "typeIdentifier": "t_contract$_ISmartToken_$9021",
                     "typeString": "contract ISmartToken"
                   },
                   "typeName": {
@@ -6419,10 +6419,10 @@
                     "id": 3299,
                     "name": "ISmartToken",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 8971,
+                    "referencedDeclaration": 9021,
                     "src": "2202:11:6",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                      "typeIdentifier": "t_contract$_ISmartToken_$9021",
                       "typeString": "contract ISmartToken"
                     }
                   },
@@ -6578,7 +6578,7 @@
                             "name": "tx",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9063,
+                            "referencedDeclaration": 9113,
                             "src": "2797:2:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_transaction",
@@ -6632,7 +6632,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 9093,
                       "src": "2790:6:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -6797,7 +6797,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9056,
+                      "referencedDeclaration": 9106,
                       "src": "2981:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -6922,7 +6922,7 @@
                           "name": "now",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9055,
+                          "referencedDeclaration": 9105,
                           "src": "3166:3:6",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint256",
@@ -6962,7 +6962,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 9093,
                       "src": "3159:6:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -7072,7 +7072,7 @@
                             "name": "now",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9055,
+                            "referencedDeclaration": 9105,
                             "src": "3370:3:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -7119,7 +7119,7 @@
                             "name": "now",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9055,
+                            "referencedDeclaration": 9105,
                             "src": "3391:3:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -7165,7 +7165,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 9093,
                       "src": "3363:6:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -7292,7 +7292,7 @@
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9053,
+                            "referencedDeclaration": 9103,
                             "src": "3516:3:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
@@ -7346,7 +7346,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 9093,
                       "src": "3509:6:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -7457,7 +7457,7 @@
                             "name": "safeAdd",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 8175,
+                            "referencedDeclaration": 8225,
                             "src": "3677:7:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -7511,7 +7511,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 9093,
                       "src": "3670:6:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -7649,7 +7649,7 @@
                             "name": "safeAdd",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 8175,
+                            "referencedDeclaration": 8225,
                             "src": "3904:7:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -7703,7 +7703,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9043,
+                      "referencedDeclaration": 9093,
                       "src": "3897:6:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -7827,7 +7827,7 @@
                       "name": "keccak256",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9047,
+                      "referencedDeclaration": 9097,
                       "src": "4297:9:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_sha3_pure$__$returns$_t_bytes32_$",
@@ -8029,7 +8029,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9056,
+                      "referencedDeclaration": 9106,
                       "src": "4680:7:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -8117,7 +8117,7 @@
                   "name": "ownerOnly",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7690,
+                  "referencedDeclaration": 7740,
                   "src": "4571:9:6",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -8136,7 +8136,7 @@
                   "name": "active",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7984,
+                  "referencedDeclaration": 8034,
                   "src": "4589:6:6",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -8376,7 +8376,7 @@
                         "name": "safeMul",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8225,
+                        "referencedDeclaration": 8275,
                         "src": "5064:7:6",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -8730,7 +8730,7 @@
                       "name": "msg",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9053,
+                      "referencedDeclaration": 9103,
                       "src": "5722:3:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_magic_message",
@@ -8901,7 +8901,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9053,
+                          "referencedDeclaration": 9103,
                           "src": "6273:3:6",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -8970,7 +8970,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9053,
+                          "referencedDeclaration": 9103,
                           "src": "6314:3:6",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -9091,7 +9091,7 @@
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9053,
+                            "referencedDeclaration": 9103,
                             "src": "6438:3:6",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
@@ -9128,7 +9128,7 @@
                         "name": "safeAdd",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8175,
+                        "referencedDeclaration": 8225,
                         "src": "6407:7:6",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -9171,7 +9171,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9053,
+                          "referencedDeclaration": 9103,
                           "src": "6510:3:6",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -9223,10 +9223,10 @@
                         "name": "token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 7957,
+                        "referencedDeclaration": 8007,
                         "src": "6498:5:6",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                          "typeIdentifier": "t_contract$_ISmartToken_$9021",
                           "typeString": "contract ISmartToken"
                         }
                       },
@@ -9237,7 +9237,7 @@
                       "lValueRequested": false,
                       "memberName": "issue",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8963,
+                      "referencedDeclaration": 9013,
                       "src": "6498:11:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$__$",
@@ -9310,10 +9310,10 @@
                         "name": "token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 7957,
+                        "referencedDeclaration": 8007,
                         "src": "6601:5:6",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ISmartToken_$8971",
+                          "typeIdentifier": "t_contract$_ISmartToken_$9021",
                           "typeString": "contract ISmartToken"
                         }
                       },
@@ -9324,7 +9324,7 @@
                       "lValueRequested": false,
                       "memberName": "issue",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8963,
+                      "referencedDeclaration": 9013,
                       "src": "6601:11:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$__$",
@@ -9361,7 +9361,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9053,
+                          "referencedDeclaration": 9103,
                           "src": "6697:3:6",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -9390,7 +9390,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9053,
+                          "referencedDeclaration": 9103,
                           "src": "6709:3:6",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -9505,7 +9505,7 @@
                   "name": "active",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 7984,
+                  "referencedDeclaration": 8034,
                   "src": "6123:6:6",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
@@ -9525,7 +9525,7 @@
                       "name": "msg",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9053,
+                      "referencedDeclaration": 9103,
                       "src": "6157:3:6",
                       "typeDescriptions": {
                         "typeIdentifier": "t_magic_message",
@@ -9715,5 +9715,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-08-07T05:00:47.767Z"
+  "updatedAt": "2018-08-07T03:35:53.175Z"
 }

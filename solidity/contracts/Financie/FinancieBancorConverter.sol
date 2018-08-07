@@ -61,7 +61,10 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
 
         msg.sender.transfer(net);
 
-        return net;
+        core.notifyConvertCards(msg.sender, address(quickSellPath[0]), address(quickSellPath[2]), _amount, net);
+        assert(result >= _minReturn);
+
+        return result;
     }
 
     /**
@@ -72,6 +75,9 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
         uint256 net = safeSub(_amount, feeAmount);
 
         uint256 result = quickConvertInternal(quickBuyPath, net, 1, msg.sender);
+
+        core.notifyConvertCards(msg.sender, address(quickBuyPath[0]), address(quickBuyPath[2]), _amount, result);
+        assert(result >= _minReturn);
 
         return result;
     }
