@@ -664,7 +664,7 @@
         "id": 4358,
         "nodeType": "ImportDirective",
         "scope": 4670,
-        "sourceUnit": 6683,
+        "sourceUnit": 6633,
         "src": "55:37:8",
         "symbolAliases": [],
         "unitAlias": ""
@@ -675,7 +675,7 @@
         "id": 4359,
         "nodeType": "ImportDirective",
         "scope": 4670,
-        "sourceUnit": 8822,
+        "sourceUnit": 8772,
         "src": "93:41:8",
         "symbolAliases": [],
         "unitAlias": ""
@@ -707,10 +707,10 @@
               "id": 4362,
               "name": "FinancieFee",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 6682,
+              "referencedDeclaration": 6632,
               "src": "229:11:8",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_FinancieFee_$6682",
+                "typeIdentifier": "t_contract$_FinancieFee_$6632",
                 "typeString": "contract FinancieFee"
               }
             },
@@ -721,8 +721,8 @@
         ],
         "contractDependencies": [
           4354,
-          6682,
-          8276
+          6632,
+          8226
         ],
         "contractKind": "contract",
         "documentation": "@title overrided from DutchAuction.",
@@ -730,8 +730,8 @@
         "id": 4669,
         "linearizedBaseContracts": [
           4669,
-          6682,
-          8276,
+          6632,
+          8226,
           4354
         ],
         "name": "FinancieHeroesDutchAuction",
@@ -747,7 +747,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+              "typeIdentifier": "t_contract$_IFinancieCore_$8771",
               "typeString": "contract IFinancieCore"
             },
             "typeName": {
@@ -755,10 +755,10 @@
               "id": 4364,
               "name": "IFinancieCore",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8821,
+              "referencedDeclaration": 8771,
               "src": "248:13:8",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+                "typeIdentifier": "t_contract$_IFinancieCore_$8771",
                 "typeString": "contract IFinancieCore"
               }
             },
@@ -930,10 +930,10 @@
                   "name": "FinancieFee",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 6682,
+                  "referencedDeclaration": 6632,
                   "src": "1206:11:8",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_type$_t_contract$_FinancieFee_$6682_$",
+                    "typeIdentifier": "t_type$_t_contract$_FinancieFee_$6632_$",
                     "typeString": "type(contract FinancieFee)"
                   }
                 },
@@ -1182,7 +1182,7 @@
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9167,
+                        "referencedDeclaration": 9117,
                         "src": "1495:5:8",
                         "typeDescriptions": {
                           "typeIdentifier": "t_super$_FinancieHeroesDutchAuction_$4669",
@@ -1238,7 +1238,7 @@
                       "referencedDeclaration": 4365,
                       "src": "1532:4:8",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+                        "typeIdentifier": "t_contract$_IFinancieCore_$8771",
                         "typeString": "contract IFinancieCore"
                       }
                     },
@@ -1272,10 +1272,10 @@
                         "name": "IFinancieCore",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8821,
+                        "referencedDeclaration": 8771,
                         "src": "1539:13:8",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_IFinancieCore_$8821_$",
+                          "typeIdentifier": "t_type$_t_contract$_IFinancieCore_$8771_$",
                           "typeString": "type(contract IFinancieCore)"
                         }
                       },
@@ -1289,13 +1289,13 @@
                       "nodeType": "FunctionCall",
                       "src": "1539:28:8",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+                        "typeIdentifier": "t_contract$_IFinancieCore_$8771",
                         "typeString": "contract IFinancieCore"
                       }
                     },
                     "src": "1532:35:8",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+                      "typeIdentifier": "t_contract$_IFinancieCore_$8771",
                       "typeString": "contract IFinancieCore"
                     }
                   },
@@ -1567,7 +1567,7 @@
                       "name": "msg",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9103,
+                      "referencedDeclaration": 9053,
                       "src": "1934:3:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_magic_message",
@@ -1611,7 +1611,7 @@
                         "name": "msg",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9103,
+                        "referencedDeclaration": 9053,
                         "src": "1958:3:8",
                         "typeDescriptions": {
                           "typeIdentifier": "t_magic_message",
@@ -1723,7 +1723,7 @@
                                     "name": "msg",
                                     "nodeType": "Identifier",
                                     "overloadedDeclarations": [],
-                                    "referencedDeclaration": 9103,
+                                    "referencedDeclaration": 9053,
                                     "src": "2064:3:8",
                                     "typeDescriptions": {
                                       "typeIdentifier": "t_magic_message",
@@ -1773,7 +1773,7 @@
                                 "name": "safeSub",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 8245,
+                                "referencedDeclaration": 8195,
                                 "src": "2056:7:8",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -1810,7 +1810,7 @@
                                 "name": "msg",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 9103,
+                                "referencedDeclaration": 9053,
                                 "src": "2036:3:8",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_magic_message",
@@ -1932,7 +1932,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9106,
+                      "referencedDeclaration": 9056,
                       "src": "2104:7:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -2018,7 +2018,7 @@
                                   "name": "msg",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 9103,
+                                  "referencedDeclaration": 9053,
                                   "src": "2146:3:8",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_magic_message",
@@ -2118,7 +2118,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9103,
+                              "referencedDeclaration": 9053,
                               "src": "2197:3:8",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -2168,7 +2168,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9106,
+                      "referencedDeclaration": 9056,
                       "src": "2133:7:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -2243,7 +2243,7 @@
                                 "name": "msg",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 9103,
+                                "referencedDeclaration": 9053,
                                 "src": "2231:3:8",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_magic_message",
@@ -2329,7 +2329,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9093,
+                      "referencedDeclaration": 9043,
                       "src": "2219:6:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -2386,7 +2386,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9103,
+                          "referencedDeclaration": 9053,
                           "src": "2278:3:8",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -2550,7 +2550,7 @@
                       "name": "distributeFees",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 6634,
+                      "referencedDeclaration": 6584,
                       "src": "2399:14:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_nonpayable$_t_uint256_$returns$_t_uint256_$",
@@ -2652,7 +2652,7 @@
                       "name": "safeSub",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8245,
+                      "referencedDeclaration": 8195,
                       "src": "2445:7:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -2758,7 +2758,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9103,
+                          "referencedDeclaration": 9053,
                           "src": "2534:3:8",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -2911,7 +2911,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9093,
+                      "referencedDeclaration": 9043,
                       "src": "2579:6:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -2948,7 +2948,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9103,
+                          "referencedDeclaration": 9053,
                           "src": "2640:3:8",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -3058,7 +3058,7 @@
                         "referencedDeclaration": 4365,
                         "src": "2620:4:8",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+                          "typeIdentifier": "t_contract$_IFinancieCore_$8771",
                           "typeString": "contract IFinancieCore"
                         }
                       },
@@ -3069,7 +3069,7 @@
                       "lValueRequested": false,
                       "memberName": "notifyBidCards",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8754,
+                      "referencedDeclaration": 8704,
                       "src": "2620:19:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_address_$_t_uint256_$returns$__$",
@@ -3387,7 +3387,7 @@
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9167,
+                        "referencedDeclaration": 9117,
                         "src": "2995:5:8",
                         "typeDescriptions": {
                           "typeIdentifier": "t_super$_FinancieHeroesDutchAuction_$4669",
@@ -3687,7 +3687,7 @@
                               "referencedDeclaration": 4365,
                               "src": "3122:4:8",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+                                "typeIdentifier": "t_contract$_IFinancieCore_$8771",
                                 "typeString": "contract IFinancieCore"
                               }
                             },
@@ -3698,7 +3698,7 @@
                             "lValueRequested": false,
                             "memberName": "notifyWithdrawalCards",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 8765,
+                            "referencedDeclaration": 8715,
                             "src": "3122:26:8",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_address_$_t_uint256_$_t_uint256_$returns$__$",
@@ -4535,7 +4535,7 @@
                                       "name": "now",
                                       "nodeType": "Identifier",
                                       "overloadedDeclarations": [],
-                                      "referencedDeclaration": 9105,
+                                      "referencedDeclaration": 9055,
                                       "src": "3846:3:8",
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_uint256",
@@ -4772,7 +4772,7 @@
         "id": 4358,
         "nodeType": "ImportDirective",
         "scope": 4670,
-        "sourceUnit": 6683,
+        "sourceUnit": 6633,
         "src": "55:37:8",
         "symbolAliases": [],
         "unitAlias": ""
@@ -4783,7 +4783,7 @@
         "id": 4359,
         "nodeType": "ImportDirective",
         "scope": 4670,
-        "sourceUnit": 8822,
+        "sourceUnit": 8772,
         "src": "93:41:8",
         "symbolAliases": [],
         "unitAlias": ""
@@ -4815,10 +4815,10 @@
               "id": 4362,
               "name": "FinancieFee",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 6682,
+              "referencedDeclaration": 6632,
               "src": "229:11:8",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_FinancieFee_$6682",
+                "typeIdentifier": "t_contract$_FinancieFee_$6632",
                 "typeString": "contract FinancieFee"
               }
             },
@@ -4829,8 +4829,8 @@
         ],
         "contractDependencies": [
           4354,
-          6682,
-          8276
+          6632,
+          8226
         ],
         "contractKind": "contract",
         "documentation": "@title overrided from DutchAuction.",
@@ -4838,8 +4838,8 @@
         "id": 4669,
         "linearizedBaseContracts": [
           4669,
-          6682,
-          8276,
+          6632,
+          8226,
           4354
         ],
         "name": "FinancieHeroesDutchAuction",
@@ -4855,7 +4855,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+              "typeIdentifier": "t_contract$_IFinancieCore_$8771",
               "typeString": "contract IFinancieCore"
             },
             "typeName": {
@@ -4863,10 +4863,10 @@
               "id": 4364,
               "name": "IFinancieCore",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8821,
+              "referencedDeclaration": 8771,
               "src": "248:13:8",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+                "typeIdentifier": "t_contract$_IFinancieCore_$8771",
                 "typeString": "contract IFinancieCore"
               }
             },
@@ -5038,10 +5038,10 @@
                   "name": "FinancieFee",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 6682,
+                  "referencedDeclaration": 6632,
                   "src": "1206:11:8",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_type$_t_contract$_FinancieFee_$6682_$",
+                    "typeIdentifier": "t_type$_t_contract$_FinancieFee_$6632_$",
                     "typeString": "type(contract FinancieFee)"
                   }
                 },
@@ -5290,7 +5290,7 @@
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9167,
+                        "referencedDeclaration": 9117,
                         "src": "1495:5:8",
                         "typeDescriptions": {
                           "typeIdentifier": "t_super$_FinancieHeroesDutchAuction_$4669",
@@ -5346,7 +5346,7 @@
                       "referencedDeclaration": 4365,
                       "src": "1532:4:8",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+                        "typeIdentifier": "t_contract$_IFinancieCore_$8771",
                         "typeString": "contract IFinancieCore"
                       }
                     },
@@ -5380,10 +5380,10 @@
                         "name": "IFinancieCore",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8821,
+                        "referencedDeclaration": 8771,
                         "src": "1539:13:8",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_IFinancieCore_$8821_$",
+                          "typeIdentifier": "t_type$_t_contract$_IFinancieCore_$8771_$",
                           "typeString": "type(contract IFinancieCore)"
                         }
                       },
@@ -5397,13 +5397,13 @@
                       "nodeType": "FunctionCall",
                       "src": "1539:28:8",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+                        "typeIdentifier": "t_contract$_IFinancieCore_$8771",
                         "typeString": "contract IFinancieCore"
                       }
                     },
                     "src": "1532:35:8",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+                      "typeIdentifier": "t_contract$_IFinancieCore_$8771",
                       "typeString": "contract IFinancieCore"
                     }
                   },
@@ -5675,7 +5675,7 @@
                       "name": "msg",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9103,
+                      "referencedDeclaration": 9053,
                       "src": "1934:3:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_magic_message",
@@ -5719,7 +5719,7 @@
                         "name": "msg",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9103,
+                        "referencedDeclaration": 9053,
                         "src": "1958:3:8",
                         "typeDescriptions": {
                           "typeIdentifier": "t_magic_message",
@@ -5831,7 +5831,7 @@
                                     "name": "msg",
                                     "nodeType": "Identifier",
                                     "overloadedDeclarations": [],
-                                    "referencedDeclaration": 9103,
+                                    "referencedDeclaration": 9053,
                                     "src": "2064:3:8",
                                     "typeDescriptions": {
                                       "typeIdentifier": "t_magic_message",
@@ -5881,7 +5881,7 @@
                                 "name": "safeSub",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 8245,
+                                "referencedDeclaration": 8195,
                                 "src": "2056:7:8",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -5918,7 +5918,7 @@
                                 "name": "msg",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 9103,
+                                "referencedDeclaration": 9053,
                                 "src": "2036:3:8",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_magic_message",
@@ -6040,7 +6040,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9106,
+                      "referencedDeclaration": 9056,
                       "src": "2104:7:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -6126,7 +6126,7 @@
                                   "name": "msg",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 9103,
+                                  "referencedDeclaration": 9053,
                                   "src": "2146:3:8",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_magic_message",
@@ -6226,7 +6226,7 @@
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9103,
+                              "referencedDeclaration": 9053,
                               "src": "2197:3:8",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_magic_message",
@@ -6276,7 +6276,7 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9106,
+                      "referencedDeclaration": 9056,
                       "src": "2133:7:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -6351,7 +6351,7 @@
                                 "name": "msg",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 9103,
+                                "referencedDeclaration": 9053,
                                 "src": "2231:3:8",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_magic_message",
@@ -6437,7 +6437,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9093,
+                      "referencedDeclaration": 9043,
                       "src": "2219:6:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -6494,7 +6494,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9103,
+                          "referencedDeclaration": 9053,
                           "src": "2278:3:8",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -6658,7 +6658,7 @@
                       "name": "distributeFees",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 6634,
+                      "referencedDeclaration": 6584,
                       "src": "2399:14:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_nonpayable$_t_uint256_$returns$_t_uint256_$",
@@ -6760,7 +6760,7 @@
                       "name": "safeSub",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8245,
+                      "referencedDeclaration": 8195,
                       "src": "2445:7:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
@@ -6866,7 +6866,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9103,
+                          "referencedDeclaration": 9053,
                           "src": "2534:3:8",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -7019,7 +7019,7 @@
                       "name": "assert",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9093,
+                      "referencedDeclaration": 9043,
                       "src": "2579:6:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_assert_pure$_t_bool_$returns$__$",
@@ -7056,7 +7056,7 @@
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9103,
+                          "referencedDeclaration": 9053,
                           "src": "2640:3:8",
                           "typeDescriptions": {
                             "typeIdentifier": "t_magic_message",
@@ -7166,7 +7166,7 @@
                         "referencedDeclaration": 4365,
                         "src": "2620:4:8",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+                          "typeIdentifier": "t_contract$_IFinancieCore_$8771",
                           "typeString": "contract IFinancieCore"
                         }
                       },
@@ -7177,7 +7177,7 @@
                       "lValueRequested": false,
                       "memberName": "notifyBidCards",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8754,
+                      "referencedDeclaration": 8704,
                       "src": "2620:19:8",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_address_$_t_uint256_$returns$__$",
@@ -7495,7 +7495,7 @@
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9167,
+                        "referencedDeclaration": 9117,
                         "src": "2995:5:8",
                         "typeDescriptions": {
                           "typeIdentifier": "t_super$_FinancieHeroesDutchAuction_$4669",
@@ -7795,7 +7795,7 @@
                               "referencedDeclaration": 4365,
                               "src": "3122:4:8",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_IFinancieCore_$8821",
+                                "typeIdentifier": "t_contract$_IFinancieCore_$8771",
                                 "typeString": "contract IFinancieCore"
                               }
                             },
@@ -7806,7 +7806,7 @@
                             "lValueRequested": false,
                             "memberName": "notifyWithdrawalCards",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 8765,
+                            "referencedDeclaration": 8715,
                             "src": "3122:26:8",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_address_$_t_uint256_$_t_uint256_$returns$__$",
@@ -8643,7 +8643,7 @@
                                       "name": "now",
                                       "nodeType": "Identifier",
                                       "overloadedDeclarations": [],
-                                      "referencedDeclaration": 9105,
+                                      "referencedDeclaration": 9055,
                                       "src": "3846:3:8",
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_uint256",
@@ -8848,5 +8848,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-08-07T03:35:53.184Z"
+  "updatedAt": "2018-08-07T05:00:47.771Z"
 }
