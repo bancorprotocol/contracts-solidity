@@ -16,10 +16,6 @@ const utils = require('./helpers/Utils');
 const ethUtil = require('ethereumjs-util');
 const web3Utils = require('web3-utils');
 
-// mnemonic: rose limit dog cannon adult lizard siege tumble job puzzle only trim
-// account index: 3
-const accountPrivateKey = '24668d3f9c62e5a368640a8d0d858a5c09fd836c8f0f521ed01e6745231df3a4';
-const untrustedPrivateKey = '0156f5d7ef74552352abbde8db173f69336d5623e7dd4a9dc7b524feb2d4826f';
 
 let etherToken;
 let smartToken1;
@@ -43,34 +39,11 @@ let smartToken1QuickSellPath;
 let smartToken2QuickSellPath;
 let defaultGasPriceLimit = 20000000000;
 
-function prefixMessage(msgIn) {
-    let msg = msgIn;
-    msg = new Buffer(msg.slice(2), 'hex');
-    msg = Buffer.concat([
-        new Buffer(`\x19Ethereum Signed Message:\n${msg.length.toString()}`),
-        msg]);
-    msg = web3.sha3(`0x${msg.toString('hex')}`, { encoding: 'hex' });
-    msg = new Buffer(msg.slice(2), 'hex');
-    return `0x${msg.toString('hex')}`;
-}
-
-function sign(msgToSign, privateKey) {
-    if (msgToSign.substring(0, 2) !== '0x')
-        msgToSign = `0x${msgToSign}`;
-    if (privateKey.substring(0, 2) === '0x')
-        privateKey = privateKey.substring(2, privateKey.length);
-
-    msgToSign = prefixMessage(msgToSign);
-
+function sign(msgToSign, signerAddress) {
     try {
-        const sig = ethUtil.ecsign(
-            new Buffer(msgToSign.slice(2), 'hex'),
-            new Buffer(privateKey, 'hex'));
-        const r = `0x${sig.r.toString('hex')}`;
-        const s = `0x${sig.s.toString('hex')}`;
-        const v = sig.v;
-
-        return { v: v, r: r, s: s };
+        const sig = web3.eth.sign(signerAddress, ethUtil.bufferToHex(msgToSign));
+        const { v, r, s } = ethUtil.fromRpcSig(sig);
+        return { v: v, r: ethUtil.bufferToHex(r), s: ethUtil.bufferToHex(s) };
     }
     catch (err) {
         return err;
@@ -90,7 +63,10 @@ Token network structure:
 
 */
 
-contract('BancorNetwork', accounts => {
+contract.only('BancorNetwork', accounts => {
+    const trustedAddress = accounts[3];
+    const untrustedAddress = accounts[1];
+
     before(async () => {
         contractRegistry = await ContractRegistry.new();
         contractIds = await ContractIds.new();
@@ -822,7 +798,7 @@ contract('BancorNetwork', accounts => {
         let gasPrice = defaultGasPriceLimit;
 
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-        let result = sign(soliditySha3, accountPrivateKey);
+        let result = sign(soliditySha3, trustedAddress);
 
         await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
@@ -837,7 +813,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-            let result = sign(soliditySha3, untrustedPrivateKey);
+            let result = sign(soliditySha3, untrustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -856,7 +832,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': wrongPath});
-            let result = sign(soliditySha3, accountPrivateKey);
+            let result = sign(soliditySha3, trustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -874,7 +850,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-            let result = sign(soliditySha3, accountPrivateKey);
+            let result = sign(soliditySha3, trustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 200, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -893,7 +869,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-            let result = sign(soliditySha3, accountPrivateKey);
+            let result = sign(soliditySha3, trustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -912,7 +888,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-            let result = sign(soliditySha3, accountPrivateKey);
+            let result = sign(soliditySha3, trustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -930,7 +906,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit - 1;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-            let result = sign(soliditySha3, accountPrivateKey);
+            let result = sign(soliditySha3, trustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -948,7 +924,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit + 1;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-            let result = sign(soliditySha3, accountPrivateKey);
+            let result = sign(soliditySha3, trustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
