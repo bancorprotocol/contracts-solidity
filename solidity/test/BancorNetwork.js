@@ -63,7 +63,7 @@ Token network structure:
 
 */
 
-contract.only('BancorNetwork', accounts => {
+contract('BancorNetwork', accounts => {
     const trustedAddress = accounts[3];
     const untrustedAddress = accounts[1];
 
