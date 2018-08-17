@@ -1,12 +1,12 @@
 pragma solidity ^0.4.18;
 import '../BancorConverter.sol';
 import './FinancieFee.sol';
-import '../interfaces/IFinancieCore.sol';
+import '../interfaces/IFinancieNotifier.sol';
 import '../interfaces/IEtherToken.sol';
 
 contract FinancieBancorConverter is BancorConverter, FinancieFee {
 
-    IFinancieCore core;
+    IFinancieNotifier notifier;
     IERC20Token[] public quickSellPath;
 
     /**
@@ -26,7 +26,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
         address _hero_wallet,
         address _team_wallet,
         IBancorConverterExtensions _extensions,
-        address _core_address,
+        address _notifier_address,
         uint32 _heroFee,
         uint32 _teamFee,
         uint32 _connectorWeight)
@@ -34,7 +34,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
         BancorConverter(_token, _extensions, 0, _connectorToken, _connectorWeight)
         FinancieFee(_heroFee, _teamFee, _hero_wallet, _team_wallet)
     {
-        core = IFinancieCore(_core_address);
+        notifier = IFinancieNotifier(_notifier_address);
 
         // when receiving ether, then deposit to ether token -> change to smart token -> change to connector token
         quickBuyPath.push(_etherToken);
@@ -47,7 +47,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
     }
 
     function getVersion() public view returns (uint256) {
-        return 5;
+        return 6;
     }
 
     /**
@@ -61,7 +61,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
 
         msg.sender.transfer(net);
 
-        core.notifyConvertCards(msg.sender, address(quickSellPath[0]), address(quickSellPath[2]), _amount, net);
+        notifier.notifyConvertCards(msg.sender, address(quickSellPath[0]), address(quickSellPath[2]), _amount, net);
         assert(result >= _minReturn);
 
         return result;
@@ -76,7 +76,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
 
         uint256 result = quickConvertInternal(quickBuyPath, net, 1, msg.sender);
 
-        core.notifyConvertCards(msg.sender, address(quickBuyPath[0]), address(quickBuyPath[2]), _amount, result);
+        notifier.notifyConvertCards(msg.sender, address(quickBuyPath[0]), address(quickBuyPath[2]), _amount, result);
         assert(result >= _minReturn);
 
         return result;

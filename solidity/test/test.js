@@ -13,8 +13,11 @@ const FinancieCardToken = artifacts.require('FinancieCardToken.sol');
 const FinancieHeroesDutchAuction = artifacts.require('FinancieHeroesDutchAuction.sol');
 const utils = require('./helpers/Utils');
 
-const FinancieCore = artifacts.require('FinancieCore.sol');
+const FinancieNotifier = artifacts.require('FinancieNotifier.sol');
+const FinancieTicketStore = artifacts.require('FinancieTicketStore.sol');
 const FinancieLog = artifacts.require('FinancieLog.sol');
+const FinancieUserData = artifacts.require('FinancieUserData.sol');
+const FinancieManagedContracts = artifacts.require('FinancieManagedContracts.sol');
 
 const DutchAuction = artifacts.require('DutchAuction.sol');
 
@@ -22,82 +25,95 @@ const weight10Percent = 100000;
 const gasPrice = 22000000000;
 const gasPriceBad = 22000000001;
 
-let token;
-let tokenAddress;
-let converterExtensionsAddress;
-let platformToken;
-let connectorToken;
-let connectorToken2;
-let platformTokenAddress;
-let connectorTokenAddress;
-let connectorTokenAddress2;
-let converter;
-let financieCore;
-let quickConverter;
-let log;
+var converterExtensionsAddress;
+var financieNotifier;
+var financieTicketStore;
 
-let etherToken;
-let etherTokenAddress;
+var platformTokenAddress;
+var etherTokenAddress;
 
-var auction;
-let bancor;
-let cardToken;
+var etherToken;
+var managedContracts;
 
-// used by purchase/sale tests
-async function initConverter(accounts, activate, maxConversionFee = 0) {
-    platformToken = await FinanciePlatformToken.new('PF Token', 'ERC PF', 10000000000 * (10 ** 18));
-    platformTokenAddress = platformToken.address;
-    new Promise(() => console.log('[initConverter]PF Token:' + platformTokenAddress));
+var logAddress;
+var managedContractsAddress;
+var userDataAddress;
 
-    etherToken = await EtherToken.new();
-    etherTokenAddress = etherToken.address;
-    new Promise(() => console.log('[initConverter]Ether Token:' + etherTokenAddress));
-}
+contract('Deploy Only Once Components', (accounts) => {
+    it('deploy', async () => {
+        let platformToken = await FinanciePlatformToken.new('PF Token', 'ERC PF', 10000000000 * (10 ** 18));
+        //let platformToken = FinanciePlatformToken.at('0x2ea3921591a8ce919f89b5658cc087ca0ce32212');
+        platformTokenAddress = platformToken.address;
+        new Promise(() => console.log('[Unique Components]PF Token:' + platformTokenAddress));
 
-contract('BancorConverter', (accounts) => {
+        etherToken = await EtherToken.new();
+        //etherToken = EtherToken.at('0x1ab7623dda3068dee1ff01416cf3a905b8184c66');
+        etherTokenAddress = etherToken.address;
+        new Promise(() => console.log('[Unique Components]Ether Token:' + etherTokenAddress));
+
+        let log = await FinancieLog.new();
+        //let log = FinancieLog.at('0x100a6f5690b97c12343e85735edb790b94385446');
+        logAddress = log.address;
+        new Promise(() => console.log('[Unique Components]Log:' + logAddress));
+
+        managedContracts = await FinancieManagedContracts.new();
+        managedContractsAddress = managedContracts.address;
+        new Promise(() => console.log('[Unique Components]Managed Contracts:' + managedContractsAddress));
+
+        let userData = await FinancieUserData.new();
+        //let userData = FinancieUserData.at('0x4eb99f9afd019d81b6e862ff1dea708ad00893a4');
+        userDataAddress = userData.address;
+        new Promise(() => console.log('[Unique Components]User Data:' + userDataAddress));
+
+        await managedContracts.activateTargetContract(platformTokenAddress, true);
+        await managedContracts.activateTargetContract(etherTokenAddress, true);
+    });
+});
+
+contract('Deploy Bancor Components', (accounts) => {
     before(async () => {
         let formula = await BancorFormula.new();
         let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
-        quickConverter = await BancorQuickConverter.new();
+        let quickConverter = await BancorQuickConverter.new();
         let converterExtensions = await BancorConverterExtensions.new(formula.address, gasPriceLimit.address, quickConverter.address);
         converterExtensionsAddress = converterExtensions.address;
-        new Promise(() => console.log('[BancorConverter]Converter Extension:' + converterExtensionsAddress));
-    });
-
-    it('verifies that getReturn returns a valid amount', async () => {
-        converter = await initConverter(accounts, true);
+        new Promise(() => console.log('[Bancor Components]Converter Extension:' + converterExtensionsAddress));
         await quickConverter.registerEtherToken(etherTokenAddress, true);
     });
 
+    it('setup bancor components', async () => {
+    });
 });
 
-contract('FinancieCore', (accounts) => {
+contract('Deploy FinancieNotifier', (accounts) => {
     before(async () => {
-        financieCore = await FinancieCore.new(platformTokenAddress, etherTokenAddress);
-        await financieCore.activateTargetContract(platformTokenAddress, true);
-        await financieCore.activateTargetContract(etherTokenAddress, true);
-
-        log = await FinancieLog.new();
-
-        new Promise(() => console.log('[initFinancie]FinancieCore:' + financieCore.address));
-        new Promise(() => console.log('[initFinancie]FinancieLog:' + log.address));
+        financieNotifier = await FinancieNotifier.new(logAddress, managedContractsAddress, userDataAddress, platformTokenAddress, etherTokenAddress);
+        new Promise(() => console.log('[Financie Notifier]Notifier:' + financieNotifier.address));
     });
 
-    it('setup financie core', async () => {
-        // 実験的販売
-        await platformToken.transfer(financieCore.address, 100000000 * (10 ** 18));
-        await log.transferOwnership(financieCore.address);
-        await financieCore.setFinancieLog(log.address);
+    it('setup financie notifier', async () => {
     });
 });
 
+contract('Deploy FinancieTicketStore', (accounts) => {
+    before(async () => {
+        financieTicketStore = await FinancieTicketStore.new(logAddress, managedContractsAddress, userDataAddress, platformTokenAddress, etherTokenAddress);
+        new Promise(() => console.log('[Financie Ticket Store]Store:' + financieTicketStore.address));
+    });
+
+    it('setup financie ticket store', async () => {
+    });
+});
+
+var auction;
+var cardToken;
 contract('Test Auction', (accounts) => {
     before(async () => {
         cardToken = await FinancieCardToken.new(
             'Financie Card Token',
             'FNCD',
             '0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C',
-            financieCore.address);
+            financieNotifier.address);
 
         new Promise(() => console.log('[Test Auction]card:' + cardToken.address));
 
@@ -116,19 +132,19 @@ contract('Test Auction', (accounts) => {
     it('setup auction', async () => {
         console.log('[Test Auction]begin setup');
 
-        await financieCore.activateTargetContract(cardToken.address, true);
+        await managedContracts.activateTargetContract(cardToken.address, true);
         console.log('[Test Auction]activateTargetContract card OK');
 
         await cardToken.transfer(auction.address, 200000 * (10 ** 18));
         console.log('[Test Auction]card transfer to auction OK');
 
-        await auction.setup(financieCore.address, cardToken.address);
+        await auction.setup(financieNotifier.address, cardToken.address);
         console.log('[Test Auction]setup OK');
 
         await auction.startAuction();
         console.log('[Test Auction]start OK');
 
-        await financieCore.activateTargetContract(auction.address, true);
+        await managedContracts.activateTargetContract(auction.address, true);
         console.log('[Test Auction]activateTargetContract auction OK');
 
         let stage = await auction.stage();
@@ -142,6 +158,7 @@ contract('Test Auction', (accounts) => {
     });
 });
 
+var bancor;
 contract('Test Bancor', (accounts) => {
     before(async () => {
         smartToken = await SmartToken.new('Token1', 'TKN', 0);
@@ -154,7 +171,7 @@ contract('Test Bancor', (accounts) => {
             "0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C",
             "0x46a254FD6134eA0f564D07A305C0Db119a858d66",
             converterExtensionsAddress,
-            financieCore.address,
+            financieNotifier.address,
             15000,
             15000,
             10000);

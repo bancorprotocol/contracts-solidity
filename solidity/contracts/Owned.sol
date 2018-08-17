@@ -23,6 +23,11 @@ contract Owned is IOwned {
         _;
     }
 
+    modifier ownerDelegatedOnly {
+        assert(msg.sender == owner || IOwned(msg.sender).owner() == owner);
+        _;
+    }
+    
     /**
         @dev allows transferring the contract ownership
         the new owner still needs to accept the transfer

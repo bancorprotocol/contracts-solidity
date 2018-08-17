@@ -2,12 +2,12 @@ pragma solidity ^0.4.17;
 
 import './DutchAuction.sol';
 import '../Financie/FinancieFee.sol';
-import '../interfaces/IFinancieCore.sol';
+import '../interfaces/IFinancieNotifier.sol';
 
 /// @title overrided from DutchAuction.
 contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
 
-    IFinancieCore core;
+    IFinancieNotifier notifier;
 
     /*
      * Public functions
@@ -40,10 +40,10 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
     }
 
     /// @notice overrided from DutchAuction.
-    /// @param _core_address Financie Core address.
-    function setup(address _core_address, address _token_address) public isOwner atStage(Stages.AuctionDeployed) {
+    /// @param _notifier_address Financie Notifier address.
+    function setup(address _notifier_address, address _token_address) public isOwner atStage(Stages.AuctionDeployed) {
         super.setup(_token_address);
-        core = IFinancieCore(_core_address);
+        notifier = IFinancieNotifier(_notifier_address);
     }
 
     /// --------------------------------- Auction Functions ------------------
@@ -79,7 +79,7 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
 
         assert(received_wei >= amount);
 
-        core.notifyBidCards(msg.sender, address(token), amount);
+        notifier.notifyBidCards(msg.sender, address(token), amount);
     }
 
     /// @notice overrided from DutchAuction.
@@ -92,7 +92,7 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
         uint256 balanceBefore = token.balanceOf(receiver_address);
         if ( super.proxyClaimTokens(receiver_address) ) {
             uint256 balanceAfter = token.balanceOf(receiver_address);
-            core.notifyWithdrawalCards(receiver_address, address(token), myBids, balanceAfter - balanceBefore);
+            notifier.notifyWithdrawalCards(receiver_address, address(token), myBids, balanceAfter - balanceBefore);
             return true;
         }
         return false;

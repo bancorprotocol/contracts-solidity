@@ -38,7 +38,7 @@ contract FinancieLog is Owned, IFinancieLog {
         uint256 _paidAmount,
         uint256 _receivedAmount)
         public
-        ownerOnly
+        ownerDelegatedOnly
     {
         if ( !senderLogs[_sender].isSet ) {
             senderLogs[_sender] = Log(
