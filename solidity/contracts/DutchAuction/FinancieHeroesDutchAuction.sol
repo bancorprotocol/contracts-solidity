@@ -3,9 +3,10 @@ pragma solidity ^0.4.17;
 import './DutchAuction.sol';
 import '../Financie/FinancieFee.sol';
 import '../interfaces/IFinancieNotifier.sol';
+import '../Owned.sol';
 
 /// @title overrided from DutchAuction.
-contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
+contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee, Owned {
 
     IFinancieNotifier notifier;
 
