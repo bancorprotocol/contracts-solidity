@@ -41,32 +41,50 @@ var userDataAddress;
 
 contract('Deploy Only Once Components', (accounts) => {
     it('deploy', async () => {
-        let platformToken = await FinanciePlatformToken.new('PF Token', 'ERC PF', 10000000000 * (10 ** 18));
-        //let platformToken = FinanciePlatformToken.at('0x2ea3921591a8ce919f89b5658cc087ca0ce32212');
-        platformTokenAddress = platformToken.address;
+        if ( process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS !== undefined ) {
+          let platformToken = FinanciePlatformToken.at(process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS);
+          platformTokenAddress = platformToken.address;
+        } else {
+          let platformToken = await FinanciePlatformToken.new('PF Token', 'ERC PF', 10000000000 * (10 ** 18));
+          platformTokenAddress = platformToken.address;
+        }
         new Promise(() => console.log('[Unique Components]PF Token:' + platformTokenAddress));
 
-        etherToken = await EtherToken.new();
-        //etherToken = EtherToken.at('0x1ab7623dda3068dee1ff01416cf3a905b8184c66');
+        if ( process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS !== undefined ) {
+          etherToken = EtherToken.at(process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS);
+        } else {
+          etherToken = await EtherToken.new();
+        }
         etherTokenAddress = etherToken.address;
         new Promise(() => console.log('[Unique Components]Ether Token:' + etherTokenAddress));
 
-        let log = await FinancieLog.new();
-        //let log = FinancieLog.at('0x100a6f5690b97c12343e85735edb790b94385446');
-        logAddress = log.address;
+        if ( process.env.FINANCIE_LOG_CONTRACT_ADDRESS !== undefined ) {
+          let log = FinancieLog.at(process.env.FINANCIE_LOG_CONTRACT_ADDRESS);
+          logAddress = log.address;
+        } else {
+          let log = await FinancieLog.new();
+          logAddress = log.address;
+        }
         new Promise(() => console.log('[Unique Components]Log:' + logAddress));
 
-        managedContracts = await FinancieManagedContracts.new();
+        if ( process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS !== undefined ) {
+          managedContracts = await FinancieManagedContracts.at(process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS);
+        } else {
+          managedContracts = await FinancieManagedContracts.new();
+          await managedContracts.activateTargetContract(platformTokenAddress, true);
+          await managedContracts.activateTargetContract(etherTokenAddress, true);
+        }
         managedContractsAddress = managedContracts.address;
         new Promise(() => console.log('[Unique Components]Managed Contracts:' + managedContractsAddress));
 
-        let userData = await FinancieUserData.new();
-        //let userData = FinancieUserData.at('0x4eb99f9afd019d81b6e862ff1dea708ad00893a4');
-        userDataAddress = userData.address;
+        if ( process.env.FINANCIE_USER_DATA_CONTRACT_ADDRESS !== undefined ) {
+          let userData = FinancieUserData.at(process.env.FINANCIE_USER_DATA_CONTRACT_ADDRESS);
+          userDataAddress = userData.address;
+        } else {
+          let userData = await FinancieUserData.new();
+          userDataAddress = userData.address;
+        }
         new Promise(() => console.log('[Unique Components]User Data:' + userDataAddress));
-
-        await managedContracts.activateTargetContract(platformTokenAddress, true);
-        await managedContracts.activateTargetContract(etherTokenAddress, true);
     });
 });
 
