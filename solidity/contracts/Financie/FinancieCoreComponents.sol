@@ -34,24 +34,21 @@ contract FinancieCoreComponents is Owned {
     }
 
     function addOwnedCardList(address _sender, address _address)
-        public
-        ownerDelegatedOnly
+        internal
         validTargetContract(_address)
     {
         userData.addOwnedCardList(_sender, _address);
     }
 
     function addOwnedTicketList(address _sender, address _ticket)
-        public
-        ownerDelegatedOnly
+        internal
         validTargetContract(_ticket)
     {
         userData.addOwnedTicketList(_sender, _ticket);
     }
 
     function addPaidTicketList(address _sender, address _ticket, uint256 _amount)
-        public
-        ownerDelegatedOnly
+        internal
         validTargetContract(_ticket)
     {
         userData.addPaidTicketList(_sender, _ticket, _amount);
