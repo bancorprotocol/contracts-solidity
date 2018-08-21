@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 import '../BancorConverter.sol';
 import './FinancieFee.sol';
-import '../interfaces/IFinancieNotifier.sol';
+import './IFinancieNotifier.sol';
 import '../interfaces/IEtherToken.sol';
 
 contract FinancieBancorConverter is BancorConverter, FinancieFee {

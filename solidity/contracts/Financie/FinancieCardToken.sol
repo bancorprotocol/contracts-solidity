@@ -1,8 +1,8 @@
 pragma solidity ^0.4.18;
 import '../Utils.sol';
 import '../ERC20Token.sol';
-import '../interfaces/IFinancieNotifier.sol';
-import '../interfaces/IFinancieIssuerToken.sol';
+import './IFinancieNotifier.sol';
+import './IFinancieIssuerToken.sol';
 
 /**
 * Financie Card Token implementation

@@ -1,8 +1,8 @@
 pragma solidity ^0.4.17;
 
-import './DutchAuction.sol';
-import '../Financie/FinancieFee.sol';
-import '../interfaces/IFinancieNotifier.sol';
+import '../DutchAuction/DutchAuction.sol';
+import './FinancieFee.sol';
+import './IFinancieNotifier.sol';
 
 /// @title overrided from DutchAuction.
 contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {

@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
-import '../interfaces/IFinancieManagedContracts.sol';
-import '../interfaces/IFinancieUserData.sol';
-import '../interfaces/IFinancieLog.sol';
+import './IFinancieManagedContracts.sol';
+import './IFinancieUserData.sol';
+import './IFinancieLog.sol';
 import '../interfaces/IERC20Token.sol';
 import '../Owned.sol';
 

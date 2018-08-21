@@ -1,8 +1,8 @@
 pragma solidity ^0.4.18;
 import '../Utils.sol';
 import '../ERC20Token.sol';
-import '../interfaces/IFinancieTicketStore.sol';
-import '../interfaces/IFinancieIssuerToken.sol';
+import './IFinancieTicketStore.sol';
+import './IFinancieIssuerToken.sol';
 
 /**
 * Financie Ticket Token implementation

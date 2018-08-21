@@ -1,5 +1,5 @@
 pragma solidity ^0.4.18;
-import '../interfaces/IFinancieUserData.sol';
+import './IFinancieUserData.sol';
 import './FinancieCoreComponents.sol';
 import '../Utils.sol';
 import '../Owned.sol';

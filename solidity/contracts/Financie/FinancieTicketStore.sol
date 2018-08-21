@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
-import '../interfaces/IFinancieTicketStore.sol';
-import '../interfaces/IFinancieIssuerToken.sol';
+import './IFinancieTicketStore.sol';
+import './IFinancieIssuerToken.sol';
 import '../interfaces/IERC20Token.sol';
 import './FinancieCoreComponents.sol';
 import '../Utils.sol';

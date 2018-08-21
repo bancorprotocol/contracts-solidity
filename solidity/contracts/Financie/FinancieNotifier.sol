@@ -1,5 +1,5 @@
 pragma solidity ^0.4.18;
-import '../interfaces/IFinancieNotifier.sol';
+import './IFinancieNotifier.sol';
 import './FinancieCoreComponents.sol';
 import '../Utils.sol';
 

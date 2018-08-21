@@ -1,5 +1,5 @@
 pragma solidity ^0.4.18;
-import '../interfaces/IFinancieLog.sol';
+import './IFinancieLog.sol';
 import '../Owned.sol';
 
 contract FinancieLog is Owned, IFinancieLog {

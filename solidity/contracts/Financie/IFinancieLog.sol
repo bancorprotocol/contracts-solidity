@@ -1,5 +1,5 @@
 pragma solidity ^0.4.18;
-import './IOwned.sol';
+import '../interfaces/IOwned.sol';
 
 /*
     Financie Log contract interface
