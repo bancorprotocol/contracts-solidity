@@ -26,11 +26,12 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         uint256 _amountFrom,
         uint256 _amountTo)
         public
+        validTargetContract(msg.sender)
     {
         if ( _to == address(etherToken) ) {
             log.recordLog(
               _sender,
-              this,
+              msg.sender,
               IFinancieLog.EventType.SellCards,
               _from,
               _to,
@@ -39,7 +40,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         } else {
             log.recordLog(
               _sender,
-              this,
+              msg.sender,
               IFinancieLog.EventType.BuyCards,
               _from,
               _to,

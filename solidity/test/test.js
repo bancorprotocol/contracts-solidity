@@ -110,7 +110,11 @@ contract('Deploy Bancor Components', (accounts) => {
 
 contract('Deploy FinancieNotifier', (accounts) => {
     before(async () => {
-        financieNotifier = await FinancieNotifier.new(logAddress, managedContractsAddress, userDataAddress, platformTokenAddress, etherTokenAddress);
+        if ( process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS !== undefined ) {
+          financieNotifier = await FinancieNotifier.at(process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS);
+        } else {
+          financieNotifier = await FinancieNotifier.new(logAddress, managedContractsAddress, userDataAddress, platformTokenAddress, etherTokenAddress);
+        }
         new Promise(() => console.log('[Financie Notifier]Notifier:' + financieNotifier.address));
     });
 
