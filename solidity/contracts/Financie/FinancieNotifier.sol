@@ -26,7 +26,9 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         uint256 _amountFrom,
         uint256 _amountTo)
         public
-        validTargetContract(msg.sender)
+        ownerDelegatedOnly
+        validTargetContract(_from)
+        validTargetContract(_to)
     {
         if ( _to == address(etherToken) ) {
             log.recordLog(
