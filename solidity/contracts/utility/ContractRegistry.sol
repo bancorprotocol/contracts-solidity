@@ -97,7 +97,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
         // and modify last element's registryItem.nameIndex in items,
         // to point to the right position in contractNames
         if (contractNames.length > 1)
-            string lastContractNameString = contractNames[contractNames.length - 1];
+            string memory lastContractNameString = contractNames[contractNames.length - 1];
             uint unregisterIndex = items[_contractName].nameIndex;
 
             contractNames[unregisterIndex] = lastContractNameString;
