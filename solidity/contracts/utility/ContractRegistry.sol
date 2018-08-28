@@ -98,8 +98,16 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
             items[_contractName].isSet = false;
 
             // if there are multiple items in the registry, move the last element to the deleted element's position
+            // and modify last element's registryItem.nameIndex in items,
+            // to point to the right position in contractNames
             if (contractNames.length > 1)
-                contractNames[items[_contractName].nameIndex] = contractNames[contractNames.length - 1];
+                string lastContractNameString = contractNames[contractNames.length - 1];
+                uint unresgisteredIndex = items[_contractName].nameIndex;
+
+                contractNames[unresgisteredIndex] = lastContractNameString;
+                bytes32 lastContractName = stringToBytes32(lastContractNameString);
+                RegistryItem storage registryItem = items[lastContractName];
+                registryItem.nameIndex = unresgisteredIndex;
 
             // remove the last element from the name list
             contractNames.length--;
@@ -124,6 +132,15 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
         }
 
         return string(byteArray);
+    }
+
+    // @dev utility, converts string to bytes32
+    function stringToBytes32(string memory _string) private pure returns (bytes32) {
+        bytes32 result;
+        assembly {
+            result := mload(add(_string,32))
+        }
+        return result;
     }
 
     // deprecated, backward compatibility
