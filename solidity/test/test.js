@@ -239,26 +239,25 @@ contract('All', (accounts) => {
             let connectorTokenCount = await bancor.connectorTokenCount();
             console.log('[Test Bancor]connector token count:' + connectorTokenCount);
 
-            let estimationBuy = await bancor.getReturn(etherToken.address, cardToken.address, 10 ** 10);
-            console.log('[Test Bancor]estimationBuy:' + estimationBuy);
+            let amountSellCard = 10000 * (10 ** 18)
 
-            /*
-            TODO: Following test is not stable (though there is no RNG factor...)
-            await bancor.buyCards(10 ** 10, estimationBuy, {from: accounts[0], value: 10 ** 10});
-            console.log('[Test Bancor]buy cards');
+            let estimationSell = await bancor.getReturn(cardToken.address, etherToken.address, amountSellCard);
+            console.log('[Test Bancor]estimationSell:' + (estimationSell * (0.1 ** 18)));
 
-            let estimationSell = await bancor.getReturn(cardToken.address, etherToken.address, estimationBuy);
-            console.log('[Test Bancor]estimationSell:' + estimationSell);
-
-            await cardToken.approve(bancor.address, estimationBuy);
+            await cardToken.approve(bancor.address, amountSellCard);
             console.log('[Test Bancor]approve cards');
 
             let allowanceOfCardToken = await cardToken.allowance(accounts[0], bancor.address);
             console.log('[Test Bancor]bancor allowance of card token:' + allowanceOfCardToken);
 
-            await bancor.sellCards(estimationBuy, estimationSell);
+            await bancor.sellCards(amountSellCard, estimationSell, {gasPrice: gasPrice});
             console.log('[Test Bancor]sell cards');
-            */
+
+            let estimationBuy = await bancor.getReturn(etherToken.address, cardToken.address, 10 ** 10);
+            console.log('[Test Bancor]estimationBuy:' + (estimationBuy * (0.1 ** 18)));
+
+            await bancor.buyCards(10 ** 10, estimationBuy, {gasPrice: gasPrice, from: accounts[0], value: 10 ** 10});
+            console.log('[Test Bancor]buy cards');
         });
     }
 });
