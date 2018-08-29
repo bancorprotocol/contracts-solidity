@@ -1,14 +1,13 @@
 pragma solidity ^0.4.18;
 import '../Utils.sol';
 import '../ERC20Token.sol';
-import './IFinancieTicketStore.sol';
+import './FinancieNotifierFacade.sol';
 import './IFinancieIssuerToken.sol';
 
 /**
 * Financie Ticket Token implementation
 */
-contract FinancieTicketToken is ERC20Token, IFinancieIssuerToken {
-    IFinancieTicketStore notifier;
+contract FinancieTicketToken is ERC20Token, FinancieNotifierFacade, IFinancieIssuerToken {
     address issuer;
 
     /**
@@ -18,13 +17,13 @@ contract FinancieTicketToken is ERC20Token, IFinancieIssuerToken {
     */
     function FinancieTicketToken(string _name, string _symbol, address _issuer, uint32 _supply, address _notifier)
         public
-        ERC20Token(_name, _symbol, 0) {
+        ERC20Token(_name, _symbol, 0)
+        FinancieNotifierFacade(_notifier)
+    {
         totalSupply = _supply;
         balanceOf[msg.sender] = _supply;
 
         issuer = _issuer;
-
-        notifier = IFinancieTicketStore(_notifier);
     }
 
     function burnFrom(address _from, uint256 _amount) public {
@@ -33,7 +32,7 @@ contract FinancieTicketToken is ERC20Token, IFinancieIssuerToken {
         balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _amount);
         totalSupply = safeSub(totalSupply, _amount);
 
-        notifier.notifyBurnTickets(_from, _amount);
+        notifyBurnTickets(_from, _amount);
     }
 
     function burn(uint256 _amount) public {
@@ -41,10 +40,10 @@ contract FinancieTicketToken is ERC20Token, IFinancieIssuerToken {
         balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _amount);
         totalSupply = safeSub(totalSupply, _amount);
 
-        notifier.notifyBurnTickets(msg.sender, _amount);
+        notifyBurnTickets(msg.sender, _amount);
     }
 
-    function getIssuer() public returns(address) {
+    function getIssuer() public view returns(address) {
         return issuer;
     }
 

@@ -2,23 +2,25 @@ pragma solidity ^0.4.17;
 
 import '../DutchAuction/DutchAuction.sol';
 import './FinancieFee.sol';
-import './IFinancieNotifier.sol';
+import './FinancieNotifierFacade.sol';
 
 /// @title overrided from DutchAuction.
-contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
-
-    IFinancieNotifier notifier;
+contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierFacade, FinancieFee {
 
     /*
      * Public functions
      */
 
-    /// @dev Contract constructor function sets the starting price, divisor constant and
-    /// divisor exponent for calculating the Dutch Auction price.
-    /// @param _wallet_address Wallet address to which all contributed ETH will be forwarded.
-    /// @param _price_start High price in WEI at which the auction starts.
-    /// @param _price_constant Auction price divisor constant.
-    /// @param _price_exponent Auction price divisor exponent.
+    /**
+    *   @dev Contract constructor function sets the starting price, divisor constant and
+    *        divisor exponent for calculating the Dutch Auction price.
+    *
+    *   @param   _wallet_address    Wallet address to which all contributed ETH will be forwarded.
+    *   @param   _price_start       High price in WEI at which the auction starts.
+    *   @param   _price_constant    Auction price divisor constant.
+    *   @param   _price_exponent    Auction price divisor exponent.
+    *   @param   _notifier_address  Financie Notifier address.
+    */
     function FinancieHeroesDutchAuction(
         address _wallet_address,
         address _team_wallet,
@@ -26,7 +28,8 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
         uint32 _teamFee,
         uint _price_start,
         uint _price_constant,
-        uint32 _price_exponent)
+        uint32 _price_exponent,
+        address _notifier_address)
         public
         DutchAuction(
           _wallet_address,
@@ -36,19 +39,31 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
           _price_exponent
         )
         FinancieFee(0, _teamFee, _wallet_address, _team_wallet)
+        FinancieNotifierFacade(_notifier_address)
     {
     }
 
-    /// @notice overrided from DutchAuction.
-    /// @param _notifier_address Financie Notifier address.
-    function setup(address _notifier_address, address _token_address) public isOwner atStage(Stages.AuctionDeployed) {
-        super.setup(_token_address);
-        notifier = IFinancieNotifier(_notifier_address);
+    /**
+    *   @notice  overrided from DutchAuction.
+    */
+    function startAuction() public {
+        super.startAuction();
+        notifyApproveNewCards(address(token));
+    }
+
+    /**
+    *   @notice  overrided from DutchAuction.
+    */
+    function finalizeAuction() public {
+        super.finalizeAuction();
+        notifyCardAuctionFinalized(address(token), address(this));
     }
 
     /// --------------------------------- Auction Functions ------------------
 
-    /// @notice overrided from DutchAuction.
+    /**
+    *   @notice  overrided from DutchAuction.
+    */
     function bid()
         public
         payable
@@ -75,14 +90,16 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
         uint256 net = safeSub(amount, feeAmount);
         wallet_address.transfer(net);
 
-        BidSubmission(msg.sender, amount, missing_funds);
+        emit BidSubmission(msg.sender, amount, missing_funds);
 
         assert(received_wei >= amount);
 
-        notifier.notifyBidCards(msg.sender, address(token), amount);
+        notifyBidCards(msg.sender, address(token), amount);
     }
 
-    /// @notice overrided from DutchAuction.
+    /**
+    *   @notice  overrided from DutchAuction.
+    */
     function proxyClaimTokens(address receiver_address)
         public
         atStage(Stages.AuctionEnded)
@@ -92,7 +109,7 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
         uint256 balanceBefore = token.balanceOf(receiver_address);
         if ( super.proxyClaimTokens(receiver_address) ) {
             uint256 balanceAfter = token.balanceOf(receiver_address);
-            notifier.notifyWithdrawalCards(receiver_address, address(token), myBids, balanceAfter - balanceBefore);
+            notifyWithdrawalCards(receiver_address, address(token), myBids, balanceAfter - balanceBefore);
             return true;
         }
         return false;
@@ -100,6 +117,7 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
 
     function estimateClaimTokens(address receiver_address)
         public
+        view
         returns (uint256)
     {
         if ( bids[receiver_address] > 0 ) {
@@ -111,6 +129,7 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieFee {
 
     function canClaimTokens(address receiver_address)
         public
+        view
         returns (bool)
     {
         if ( stage == Stages.AuctionEnded ) {

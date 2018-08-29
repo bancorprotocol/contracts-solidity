@@ -1,23 +1,34 @@
 pragma solidity ^0.4.18;
 import '../BancorConverter.sol';
 import './FinancieFee.sol';
-import './IFinancieNotifier.sol';
+import './FinancieNotifierFacade.sol';
 import '../interfaces/IEtherToken.sol';
 
-contract FinancieBancorConverter is BancorConverter, FinancieFee {
+/**
+* Financie Bancor Converter
+*
+*  Based on BancorConverter, extended and overriden for...
+*    - allow conversion only from ETH/Card to Card/ETH
+*    - ignore base fee model and use Financie fee model
+*
+*/
+contract FinancieBancorConverter is BancorConverter, FinancieNotifierFacade, FinancieFee {
 
-    IFinancieNotifier notifier;
     IERC20Token[] public quickSellPath;
 
     /**
-        @dev constructor
-
-        @param  _token              smart token governed by the converter
-        @param  _connectorToken     optional, initial connector, allows defining the first connector at deployment time
-        @param  _extensions         address of a bancor converter extensions contract
-        @param  _heroFee            fee for financie hero, represented in ppm
-        @param  _teamFee            fee for financie team, represented in ppm
-        @param  _connectorWeight    optional, weight for the initial connector
+    *   @dev constructor
+    *
+    *   @param  _token              smart token governed by the converter
+    *   @param  _etherToken         ether-pegged token
+    *   @param  _connectorToken     card connector for defining the first connector at deployment time
+    *   @param  _hero_wallet        issuer's wallet
+    *   @param  _team_wallet        Financie team wallet
+    *   @param  _extensions         address of a bancor converter extensions contract
+    *   @param  _notifier_address   address of Financie Notifier contract
+    *   @param  _heroFee            fee for financie hero, represented in ppm
+    *   @param  _teamFee            fee for financie team, represented in ppm
+    *   @param  _connectorWeight    optional, weight for the initial connector
     */
     function FinancieBancorConverter(
         ISmartToken _token,
@@ -33,9 +44,8 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
         public
         BancorConverter(_token, _extensions, 0, _connectorToken, _connectorWeight)
         FinancieFee(_heroFee, _teamFee, _hero_wallet, _team_wallet)
+        FinancieNotifierFacade(_notifier_address)
     {
-        notifier = IFinancieNotifier(_notifier_address);
-
         // when receiving ether, then deposit to ether token -> change to smart token -> change to connector token
         quickBuyPath.push(_etherToken);
         quickBuyPath.push(_token);
@@ -46,12 +56,20 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
         quickSellPath.push(_etherToken);
     }
 
-    function getVersion() public view returns (uint256) {
-        return 6;
+    function getVersion() public pure returns (uint256) {
+        return 10;
+    }
+
+    function acceptTokenOwnership() public {
+        super.acceptTokenOwnership();
+        notifyApproveNewBancor(address(quickSellPath[0]), address(this));
     }
 
     /**
-
+    *   @dev Sell Card Tokens - required approval for this contract before calling this function
+    *
+    *   @param  _amount           amount of sale tokens in wei
+    *   @param  _minReturn        minimum demands ether in wei, in case of lower result, the function will be failed
     */
     function sellCards(uint256 _amount, uint256 _minReturn) public returns (uint256) {
         uint256 result = quickConvertInternal(quickSellPath, _amount, 1, this);
@@ -61,14 +79,17 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
 
         msg.sender.transfer(net);
 
-        notifier.notifyConvertCards(msg.sender, address(quickSellPath[0]), address(quickSellPath[2]), _amount, net);
-        assert(result >= _minReturn);
+        notifyConvertCards(msg.sender, address(quickSellPath[0]), address(quickSellPath[2]), _amount, net);
+        assert(net >= _minReturn);
 
-        return result;
+        return net;
     }
 
     /**
-
+    *   @dev Buy Card Tokens - required specified amount of ether as msg.value
+    *
+    *   @param  _amount           amount of purchase payment ether in wei
+    *   @param  _minReturn        minimum demands cards in wei, in case of lower result, the function will be failed
     */
     function buyCards(uint256 _amount, uint256 _minReturn) payable public returns (uint256) {
         uint256 feeAmount = distributeFees(_amount);
@@ -76,12 +97,15 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
 
         uint256 result = quickConvertInternal(quickBuyPath, net, 1, msg.sender);
 
-        notifier.notifyConvertCards(msg.sender, address(quickBuyPath[0]), address(quickBuyPath[2]), _amount, result);
+        notifyConvertCards(msg.sender, address(quickBuyPath[0]), address(quickBuyPath[2]), _amount, result);
         assert(result >= _minReturn);
 
         return result;
     }
 
+    /**
+    *   @dev Convert with Quick Converter - overriden for specified amount conversion
+    */
     function quickConvertInternal(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _spender)
         internal
         validConversionPath(_path)
@@ -98,13 +122,13 @@ contract FinancieBancorConverter is BancorConverter, FinancieFee {
     }
 
     /**
-        @dev overridden
+    *   @dev Overridden to prevent super contract payable function
     */
     function() payable public {
     }
 
     /**
-        @dev overridden
+    *   @dev Overridden for original fee model
     */
     function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256) {
         require(_fromToken == quickSellPath[0] || _fromToken == quickBuyPath[0]);
