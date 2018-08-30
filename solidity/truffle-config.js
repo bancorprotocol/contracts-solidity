@@ -1,10 +1,20 @@
-if ( process.env.ETH_DEPLOYER_KEY !== undefined ) {
-  var ethwallet = require('ethereumjs-wallet');
-  var ProviderEngine = require("web3-provider-engine");
-  var WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js');
-  var RpcSubprovider = require('web3-provider-engine/subproviders/rpc.js')
-  var Web3 = require("web3");
+var ethwallet = require('ethereumjs-wallet');
+var ProviderEngine = require("web3-provider-engine");
+var WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js');
+var RpcSubprovider = require('web3-provider-engine/subproviders/rpc.js')
+var Web3 = require("web3");
 
+var enableTest = false;
+for(var i = 2;i < process.argv.length - 1; i++){
+  if ( process.argv[i] == '--network' ) {
+    if ( process.argv[i+1] == 'test' ) {
+      enableTest = true;
+      console.log('Unit test enabled');
+    }
+  }
+}
+
+if ( process.argv[i] != 'compile' && !enableTest ) {
   // Insert raw hex private key here, e.g. using MyEtherWallet
   var wallet = ethwallet.fromPrivateKey(Buffer.from(process.env.ETH_DEPLOYER_KEY, 'hex'));
   var address = "0x" + wallet.getAddress().toString("hex");
@@ -15,7 +25,21 @@ if ( process.env.ETH_DEPLOYER_KEY !== undefined ) {
 
   module.exports = {
     networks: {
-      financie: {
+      development: {
+        network_id: 123,
+        gas: 4700000,
+        gasPrice: 10000000000,
+        provider: engine,
+        from: address
+      },
+      staging: {
+        network_id: 123,
+        gas: 4700000,
+        gasPrice: 10000000000,
+        provider: engine,
+        from: address
+      },
+      beta: {
         network_id: 123,
         gas: 4700000,
         gasPrice: 10000000000,
@@ -44,11 +68,6 @@ if ( process.env.ETH_DEPLOYER_KEY !== undefined ) {
 } else {
   module.exports = {
     networks: {
-      development: {
-        network_id: 123,
-        gas: 4700000,
-        gasPrice: 10000000000
-      }
     },
     rpc: {
       host: 'localhost',

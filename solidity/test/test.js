@@ -35,12 +35,22 @@ var etherToken;
 var managedContracts;
 var managedContractsAddress;
 
+var enableTest = false;
+for(var i = 2;i < process.argv.length - 1; i++){
+  if ( process.argv[i] == '--network' ) {
+    if ( process.argv[i+1] == 'test' ) {
+      enableTest = true;
+      console.log('Unit test enabled');
+    }
+  }
+}
+
 contract('All', (accounts) => {
     before(async () => {
         // TODO: change to deploy them using "migrations" mechanism
 
         // initialize platform token (deploy once)
-        if ( process.env.ENABLE_UNIT_TEST === undefined && process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS !== undefined ) {
+        if ( !enableTest && process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS !== undefined ) {
           let platformToken = FinanciePlatformToken.at(process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS);
           platformTokenAddress = platformToken.address;
           new Promise(() => console.log('[Unique Components]PF Token(skipped):' + platformTokenAddress));
@@ -51,7 +61,7 @@ contract('All', (accounts) => {
         }
 
         // initialize ether token (deploy once)
-        if ( process.env.ENABLE_UNIT_TEST === undefined && process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS !== undefined ) {
+        if ( !enableTest && process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS !== undefined ) {
           etherToken = EtherToken.at(process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS);
           etherTokenAddress = etherToken.address;
           new Promise(() => console.log('[Unique Components]Ether Token(skipped):' + etherTokenAddress));
@@ -62,7 +72,7 @@ contract('All', (accounts) => {
         }
 
         // initialize managed contracts (deploy once)
-        if ( process.env.ENABLE_UNIT_TEST === undefined && process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS !== undefined ) {
+        if ( !enableTest && process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS !== undefined ) {
           managedContracts = FinancieManagedContracts.at(process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS);
           managedContractsAddress = managedContracts.address;
           new Promise(() => console.log('[Unique Components]Managed Contracts(skipped):' + managedContractsAddress));
@@ -77,7 +87,7 @@ contract('All', (accounts) => {
 
     it('Deploy non-unique contracts', async () => {
         // initialize bancor extension(upgradable)
-        if ( process.env.ENABLE_UNIT_TEST === undefined && process.env.BANCOR_EXTENSIONS_CONTRACT_ADDRESS !== undefined ) {
+        if ( !enableTest && process.env.BANCOR_EXTENSIONS_CONTRACT_ADDRESS !== undefined ) {
           let converterExtensions = BancorConverterExtensions.at(process.env.BANCOR_EXTENSIONS_CONTRACT_ADDRESS);
           converterExtensionsAddress = converterExtensions.address;
           new Promise(() => console.log('[Bancor Components]Converter Extension(skipped):' + converterExtensionsAddress));
@@ -98,7 +108,7 @@ contract('All', (accounts) => {
         }
 
         // initialize financie notifier(upgradable)
-        if ( process.env.ENABLE_UNIT_TEST === undefined && process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS !== undefined ) {
+        if ( !enableTest && process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS !== undefined ) {
           financieNotifier = await FinancieNotifier.at(process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS);
           new Promise(() => console.log('[Financie Notifier]Notifier(Skipped):' + financieNotifier.address));
         } else {
@@ -107,7 +117,7 @@ contract('All', (accounts) => {
         }
 
         // notifier migration
-        if ( process.env.PREV_FINANCIE_NOTIFIER_CONTRACT_ADDRESS !== undefined ) {
+        if ( !enableTest && process.env.PREV_FINANCIE_NOTIFIER_CONTRACT_ADDRESS !== undefined ) {
           prevFinancieNotifier = await IFinancieNotifier.at(process.env.PREV_FINANCIE_NOTIFIER_CONTRACT_ADDRESS);
           await prevFinancieNotifier.setLatestNotifier(financieNotifier.address);
           new Promise(() => console.log('[Financie Notifier]Old notifier address:' + prevFinancieNotifier.address));
@@ -117,7 +127,7 @@ contract('All', (accounts) => {
         }
 
         // initialize financie ticket store(non-upgradable)
-        if ( process.env.ENABLE_UNIT_TEST === undefined && process.env.FINANCIE_TICKET_STORE_CONTRACT_ADDRESS !== undefined ) {
+        if ( !enableTest && process.env.FINANCIE_TICKET_STORE_CONTRACT_ADDRESS !== undefined ) {
           financieTicketStore = FinancieTicketStore.at(process.env.FINANCIE_TICKET_STORE_CONTRACT_ADDRESS);
           new Promise(() => console.log('[Financie Ticket Store]Store(Skipped):' + financieTicketStore.address));
         } else {
@@ -126,7 +136,7 @@ contract('All', (accounts) => {
         }
     });
 
-    if ( process.env.ENABLE_UNIT_TEST !== undefined ) {
+    if ( enableTest ) {
         it('Test Notifier', async () => {
             let financieNotifier = await FinancieNotifier.new(managedContractsAddress, platformTokenAddress, etherTokenAddress);
             let newFinancieNotifier = await FinancieNotifier.new(managedContractsAddress, platformTokenAddress, etherTokenAddress);
@@ -182,6 +192,50 @@ contract('All', (accounts) => {
 
             console.log('[Test Auction]end setup');
         });
+
+        /**
+        // for debug deployed contract
+        it('Test Bancor', async () => {
+            let cardToken = await FinancieCardToken.at('0x49e67a3b162b860947a2333d57f0a7787506dc88');
+
+            new Promise(() => console.log('[Test Bancor]card:' + cardToken.address));
+
+            let bancor = await FinancieBancorConverter.at('0xdda35df3524d1db9f6356f93fe660fa690e235f6');
+            new Promise(() => console.log('[Test Bancor]bancor:' + bancor.address));
+
+            let before = await cardToken.balanceOf(accounts[0]);
+            console.log('[Test Bancor]sender balance of card token:' + before);
+
+            let quickSellPathFrom = await bancor.quickSellPath(0);
+            console.log('[Test Bancor]quick sell path from:' + quickSellPathFrom);
+
+            let quickSellPathTo = await bancor.quickSellPath(2);
+            console.log('[Test Bancor]quick sell path to:' + quickSellPathTo);
+
+            try {
+              await bancor.buyCards(10 ** 18, 1, {gasPrice: gasPrice, from: accounts[0], value: 10 ** 18});
+              console.log('[Test Bancor]buy cards');
+            } catch ( e ) {
+              console.log(e);
+            }
+
+            let after = await cardToken.balanceOf(accounts[0]);
+            console.log('[Test Bancor]sender balance of card token:' + after);
+
+            let amountSellCard = 10000 * (10 ** 18)
+            await cardToken.approve(bancor.address, amountSellCard);
+            console.log('[Test Bancor]approve cards');
+
+            let estimationSell = await bancor.getReturn(quickSellPathFrom, quickSellPathTo, amountSellCard);
+            console.log('[Test Bancor]estimationSell:' + (estimationSell * (0.1 ** 18)));
+
+            let allowanceOfCardToken = await cardToken.allowance(accounts[0], bancor.address);
+            console.log('[Test Bancor]bancor allowance of card token:' + allowanceOfCardToken);
+
+            await bancor.sellCards(amountSellCard, estimationSell, {gasPrice: gasPrice});
+            console.log('[Test Bancor]sell cards');
+        });
+        */
 
         it('Test Bancor', async () => {
             let cardToken = await FinancieCardToken.new(
@@ -253,11 +307,21 @@ contract('All', (accounts) => {
             await bancor.sellCards(amountSellCard, estimationSell, {gasPrice: gasPrice});
             console.log('[Test Bancor]sell cards');
 
-            let estimationBuy = await bancor.getReturn(etherToken.address, cardToken.address, 10 ** 10);
+            let estimationBuy = await bancor.getReturn(etherToken.address, cardToken.address, 10 ** 18);
             console.log('[Test Bancor]estimationBuy:' + (estimationBuy * (0.1 ** 18)));
 
-            await bancor.buyCards(10 ** 10, estimationBuy, {gasPrice: gasPrice, from: accounts[0], value: 10 ** 10});
-            console.log('[Test Bancor]buy cards');
+            let before = await cardToken.balanceOf(accounts[0]);
+            console.log('[Test Bancor]bancor balance of card token:' + before);
+
+            try {
+              await bancor.buyCards(10 ** 18, estimationBuy, {gasPrice: gasPrice, from: accounts[0], value: 10 ** 18});
+              console.log('[Test Bancor]buy cards');
+            } catch ( e ) {
+              console.log(e);
+            }
+
+            let after = await cardToken.balanceOf(accounts[0]);
+            console.log('[Test Bancor]bancor balance of card token:' + after);
         });
     }
 });
