@@ -402,6 +402,12 @@ def generalExp(_x, _precision):
     Return log(x / FIXED_1) * FIXED_1
     Input range: FIXED_1 <= x <= LOG_EXP_MAX_VAL - 1
     Auto-generated via 'PrintFunctionOptimalLog.py'
+    Detailed description:
+    - Rewrite the input as a product of natural exponents and a single residual r, such that 1 < r < 2
+    - The natural logarithm of each (pre-calculated) exponent is the degree of the exponent
+    - The natural logarithm of r is calculated via Taylor series for log(1 + x), where x = r - 1
+    - The natural logarithm of the input is calculated by summing up the intermediate results above
+    - For example: log(250) = log(e^4 * e^1 * e^0.5 * 1.021692859) = 4 + 1 + 0.5 + log(1 + 0.021692859)
 '''
 def optimalLog(x):
     res = 0;
@@ -432,6 +438,12 @@ def optimalLog(x):
     Return e ^ (x / FIXED_1) * FIXED_1
     Input range: 0 <= x <= OPT_EXP_MAX_VAL - 1
     Auto-generated via 'PrintFunctionOptimalExp.py'
+    Detailed description:
+    - Rewrite the input as a sum of binary exponents and a single residual r, as small as possible
+    - The exponentiation of each binary exponent is given (pre-calculated)
+    - The exponentiation of r is calculated via Taylor series for e^x, where x = r
+    - The exponentiation of the input is calculated by multiplying the intermediate results above
+    - For example: e^5.021692859 = e^(4 + 1 + 0.5 + 0.021692859) = e^4 * e^1 * e^0.5 * e^0.021692859
 '''
 def optimalExp(x):
     res = 0;
