@@ -2,8 +2,8 @@
 /* eslint-disable prefer-reflect, no-loop-func */
 
 let constants = require('./helpers/FormulaConstants.js');
+let catchRevert = require('./helpers/Utils.js').catchRevert;
 let TestBancorFormula = artifacts.require('./helpers/TestBancorFormula.sol');
-let ERROR_MESSAGE = 'invalid opcode';
 
 contract('BancorFormula', () => {
     let formula;
@@ -24,13 +24,7 @@ contract('BancorFormula', () => {
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
-            try {
-                let retVal = await formula.powerTest(baseN, baseD, expN, expD);
-                assert(percent <= 100, `${test} passed when it should have failed`);
-            }
-            catch (error) {
-                assert(percent >= 101 && error.toString().includes(ERROR_MESSAGE), error.message);
-            }
+            await formula.powerTest(baseN, baseD, expN, expD);
         });
     }
 
@@ -42,13 +36,7 @@ contract('BancorFormula', () => {
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
-            try {
-                let retVal = await formula.powerTest(baseN, baseD, expN, expD);
-                assert(percent <= 100, `${test} passed when it should have failed`);
-            }
-            catch (error) {
-                assert(percent >= 101 && error.toString().includes(ERROR_MESSAGE), error.message);
-            }
+            await formula.powerTest(baseN, baseD, expN, expD);
         });
     }
 
@@ -60,13 +48,10 @@ contract('BancorFormula', () => {
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
-            try {
-                let retVal = await formula.powerTest(baseN, baseD, expN, expD);
-                assert(percent <= 63, `${test} passed when it should have failed`);
-            }
-            catch (error) {
-                assert(percent >= 64 && error.toString().includes(ERROR_MESSAGE), error.message);
-            }
+            if (percent < 64)
+                await formula.powerTest(baseN, baseD, expN, expD);
+            else
+                await catchRevert(formula.powerTest(baseN, baseD, expN, expD));
         });
     }
 
@@ -78,13 +63,7 @@ contract('BancorFormula', () => {
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}:`, async () => {
-            try {
-                let retVal = await formula.powerTest(baseN, baseD, expN, expD);
-                assert(percent <= 0, `${test} passed when it should have failed`);
-            }
-            catch (error) {
-                assert(percent >= 1 && error.toString().includes(ERROR_MESSAGE), error.message);
-            }
+            await catchRevert(formula.powerTest(baseN, baseD, expN, expD));
         });
     }
 
@@ -124,13 +103,12 @@ contract('BancorFormula', () => {
             let test   = `Function findPositionInMaxExpArray(0x${input.toString(16)})`;
 
             it(`${test}:`, async () => {
-                try {
+                if (precision == constants.MIN_PRECISION && output.lessThan(web3.toBigNumber(precision))) {
+                    await catchRevert(formula.findPositionInMaxExpArrayTest(input));
+                }
+                else {
                     let retVal = await formula.findPositionInMaxExpArrayTest(input);
                     assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
-                    assert(precision > constants.MIN_PRECISION || !output.lessThan(web3.toBigNumber(precision)), `${test} passed when it should have failed`);
-                }
-                catch (error) {
-                    assert(precision == constants.MIN_PRECISION && output.lessThan(web3.toBigNumber(precision)) && error.toString().includes(ERROR_MESSAGE), error.message);
                 }
             });
         }
