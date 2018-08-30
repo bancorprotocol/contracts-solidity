@@ -53,7 +53,7 @@ loTermIndMaxLen = len(str(loTerms[-1].ind))
 
 
 hiTermIndMin    = EXP_MAX_HI_TERM_VAL-EXP_NUM_OF_HI_TERMS
-hiTermIndMaxLen = max(len(str(EXP_MAX_HI_TERM_VAL-1))+1,len(str(EXP_MAX_HI_TERM_VAL-EXP_NUM_OF_HI_TERMS)))
+hiTermIndMaxLen = max(len(str(EXP_MAX_HI_TERM_VAL-1)),len(str(EXP_MAX_HI_TERM_VAL-EXP_NUM_OF_HI_TERMS)))
 
 
 print('    uint256 private constant OPT_EXP_MAX_VAL = 0x{:x};'.format(hiTerms[-1].bit))
