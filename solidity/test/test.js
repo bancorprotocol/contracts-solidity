@@ -117,13 +117,18 @@ contract('All', (accounts) => {
         }
 
         // notifier migration
-        if ( !enableTest && process.env.PREV_FINANCIE_NOTIFIER_CONTRACT_ADDRESS !== undefined ) {
-          prevFinancieNotifier = await IFinancieNotifier.at(process.env.PREV_FINANCIE_NOTIFIER_CONTRACT_ADDRESS);
-          await prevFinancieNotifier.setLatestNotifier(financieNotifier.address);
-          new Promise(() => console.log('[Financie Notifier]Old notifier address:' + prevFinancieNotifier.address));
+        try {
+          if ( !enableTest && process.env.PREV_FINANCIE_NOTIFIER_CONTRACT_ADDRESS !== undefined ) {
+            prevFinancieNotifier = await IFinancieNotifier.at(process.env.PREV_FINANCIE_NOTIFIER_CONTRACT_ADDRESS);
+            await prevFinancieNotifier.setLatestNotifier(financieNotifier.address);
+            new Promise(() => console.log('[Financie Notifier]Old notifier address:' + prevFinancieNotifier.address));
 
-          let latestNotifier = await financieNotifier.latestNotifier.call();
-          new Promise(() => console.log('[Financie Notifier]New notifier address:' + latestNotifier));
+            let latestNotifier = await financieNotifier.latestNotifier.call();
+            new Promise(() => console.log('[Financie Notifier]New notifier address:' + latestNotifier));
+          }
+        } catch ( e ) {
+          // 古いバージョンからはマイグレーションできないので無視
+          console.log(e);
         }
 
         // initialize financie ticket store(non-upgradable)
