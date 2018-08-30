@@ -16,8 +16,8 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierFacade, Fi
 
     mapping (address => TicketSale) ticketSales;
 
-    event DepositTickets(address _sender, address _issuer, address _ticket, address _card, uint256 _amount, uint256 _price);
-    event BuyTicket(address _sender, address _issuer, address _ticket, uint256 _amount, uint256 _price);
+    event DepositTickets(address _sender, address indexed _issuer, address _ticket, address indexed _card, uint256 _amount, uint256 _price);
+    event BuyTicket(address indexed _sender, address indexed _issuer, address indexed _ticket, uint256 _amount, uint256 _price);
 
     function FinancieTicketStore(address _notifier_address, address _managedContracts, address _platformToken, address _ether_token)
         public
@@ -55,7 +55,7 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierFacade, Fi
         */
         ticketSales[_ticket] = TicketSale(ticket.getIssuer(), _card, _price);
 
-        emit DepositTickets(msg.sender, ticket.getIssuer(), _ticket, _card, _amount, _price);
+        DepositTickets(msg.sender, ticket.getIssuer(), _ticket, _card, _amount, _price);
     }
 
     function getTicketPrice(address _ticket) public view returns(uint256) {
@@ -92,6 +92,6 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierFacade, Fi
 
         notifyPurchaseTickets(msg.sender, card, ticket, ticketSale.price, 1);
 
-        emit BuyTicket(msg.sender, card.getIssuer(), _ticket, 1, ticketSale.price);
+        BuyTicket(msg.sender, card.getIssuer(), _ticket, 1, ticketSale.price);
     }
 }
