@@ -18,6 +18,7 @@ contract IFinancieNotifier {
     }
 
     function latestNotifier() public returns (address);
+    function setLatestNotifier(address _latest) public;
 
     function activateUser(uint32 _userId) public;
 

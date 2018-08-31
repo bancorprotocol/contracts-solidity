@@ -12,7 +12,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     event CardAuctionFinalized(address indexed _card, address indexed _auction);
     event ApproveNewBancor(address indexed _card, address indexed _bancor);
 
-    event Log(address indexed _sender, address indexed _target, EventType indexed _eventType, address _from, address _to, uint256 _paidAmount, uint256 _receivedAmount);
+    event Log(address indexed _sender, address indexed _target, EventType indexed _eventType, address _from, address _to, uint256 _paidAmount, uint256 _receivedAmount, uint _timestamp);
 
     event AddOwnedCardList(address indexed _sender, address indexed _address);
     event AddOwnedTicketList(address indexed _sender, address indexed _ticket);
@@ -128,7 +128,8 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
           _card,
           _ticket,
           _price,
-          _amount);
+          _amount,
+          now);
     }
 
     /**
@@ -147,7 +148,8 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
           msg.sender,
           0x0,
           _amount,
-          0);
+          0,
+          now);
 
         BurnTickets(_sender, msg.sender, _amount);
     }
@@ -169,7 +171,8 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
               _from,
               _to,
               _amountFrom,
-              _amountTo);
+              _amountTo,
+              now);
         } else {
             Log(
               _sender,
@@ -178,7 +181,8 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
               _from,
               _to,
               _amountFrom,
-              _amountTo);
+              _amountTo,
+              now);
             AddOwnedCardList(_sender, _to);
         }
         ConvertCards(_sender, _from, _to, _amountFrom, _amountTo);
@@ -198,7 +202,8 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
           etherToken,
           _to,
           _amount,
-          0);
+          0,
+          now);
 
         BidCards(_sender, _to, _amount);
     }
@@ -219,7 +224,8 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
           0x0,
           _to,
           0,
-          _amount);
+          _amount,
+          now);
 
         WithdrawalCards(_sender, _to, _bids, _amount);
     }
@@ -238,7 +244,8 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
           msg.sender,
           0x0,
           _amount,
-          0);
+          0,
+          now);
 
         BurnCards(msg.sender, msg.sender, _amount);
     }
