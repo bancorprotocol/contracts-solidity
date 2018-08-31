@@ -16,10 +16,6 @@ const utils = require('./helpers/Utils');
 const ethUtil = require('ethereumjs-util');
 const web3Utils = require('web3-utils');
 
-// mnemonic: rose limit dog cannon adult lizard siege tumble job puzzle only trim
-// account index: 3
-const accountPrivateKey = '24668d3f9c62e5a368640a8d0d858a5c09fd836c8f0f521ed01e6745231df3a4';
-const untrustedPrivateKey = '0156f5d7ef74552352abbde8db173f69336d5623e7dd4a9dc7b524feb2d4826f';
 
 let etherToken;
 let smartToken1;
@@ -43,34 +39,11 @@ let smartToken1QuickSellPath;
 let smartToken2QuickSellPath;
 let defaultGasPriceLimit = 20000000000;
 
-function prefixMessage(msgIn) {
-    let msg = msgIn;
-    msg = new Buffer(msg.slice(2), 'hex');
-    msg = Buffer.concat([
-        new Buffer(`\x19Ethereum Signed Message:\n${msg.length.toString()}`),
-        msg]);
-    msg = web3.sha3(`0x${msg.toString('hex')}`, { encoding: 'hex' });
-    msg = new Buffer(msg.slice(2), 'hex');
-    return `0x${msg.toString('hex')}`;
-}
-
-function sign(msgToSign, privateKey) {
-    if (msgToSign.substring(0, 2) !== '0x')
-        msgToSign = `0x${msgToSign}`;
-    if (privateKey.substring(0, 2) === '0x')
-        privateKey = privateKey.substring(2, privateKey.length);
-
-    msgToSign = prefixMessage(msgToSign);
-
+function sign(msgToSign, signerAddress) {
     try {
-        const sig = ethUtil.ecsign(
-            new Buffer(msgToSign.slice(2), 'hex'),
-            new Buffer(privateKey, 'hex'));
-        const r = `0x${sig.r.toString('hex')}`;
-        const s = `0x${sig.s.toString('hex')}`;
-        const v = sig.v;
-
-        return { v: v, r: r, s: s };
+        const sig = web3.eth.sign(signerAddress, ethUtil.bufferToHex(msgToSign));
+        const { v, r, s } = ethUtil.fromRpcSig(sig);
+        return { v: v, r: ethUtil.bufferToHex(r), s: ethUtil.bufferToHex(s) };
     }
     catch (err) {
         return err;
@@ -91,6 +64,9 @@ Token network structure:
 */
 
 contract('BancorNetwork', accounts => {
+    const trustedAddress = accounts[3];
+    const untrustedAddress = accounts[1];
+
     before(async () => {
         contractRegistry = await ContractRegistry.new();
         contractIds = await ContractIds.new();
@@ -600,7 +576,7 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies that getReturnByPath returns the correct amount for buying the smart token', async () => {
-        let returnByPath = await bancorNetwork.getReturnByPath.call(smartToken1QuickBuyPath, 10000);
+        let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1QuickBuyPath, 10000))[0];
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
         await bancorNetwork.convertFor(smartToken1QuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
         let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
@@ -608,7 +584,7 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies that getReturnByPath returns the correct amount for buying the smart token through multiple converters', async () => {
-        let returnByPath = await bancorNetwork.getReturnByPath.call(smartToken2QuickBuyPath, 10000);
+        let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken2QuickBuyPath, 10000))[0];
         let balanceBeforeTransfer = await smartToken2.balanceOf.call(accounts[1]);
         await bancorNetwork.convertFor(smartToken2QuickBuyPath, 10000, 1, accounts[1], { value: 10000 });
         let balanceAfterTransfer = await smartToken2.balanceOf.call(accounts[1]);
@@ -619,7 +595,7 @@ contract('BancorNetwork', accounts => {
         await converter2.quickConvert([etherToken.address, smartToken1.address, smartToken1.address], 1000, 1, { from: accounts[1], value: 1000 });
         await smartToken1.approve(converter2.address, 100, { from: accounts[1] });
         let path = [smartToken1.address, smartToken2.address, smartToken3.address];
-        let returnByPath = await bancorNetwork.getReturnByPath.call(path, 100);
+        let returnByPath = (await bancorNetwork.getReturnByPath.call(path, 100))[0];
         let balanceBeforeTransfer = await smartToken3.balanceOf.call(accounts[1]);
         await converter2.quickConvert(path, 100, 1, { from: accounts[1] });
         let balanceAfterTransfer = await smartToken3.balanceOf.call(accounts[1]);
@@ -628,7 +604,7 @@ contract('BancorNetwork', accounts => {
 
     it('verifies that getReturnByPath returns the correct amount for selling the smart token', async () => {
         await converter1.quickConvert(smartToken1QuickBuyPath, 100, 1, { from: accounts[1], value: 100 });
-        let returnByPath = await bancorNetwork.getReturnByPath.call(smartToken1QuickSellPath, 100);
+        let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1QuickSellPath, 100))[0];
         let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
         let res = await converter1.quickConvert(smartToken1QuickSellPath, 100, 1, { from: accounts[1] });
         let transaction = web3.eth.getTransaction(res.tx);
@@ -639,7 +615,7 @@ contract('BancorNetwork', accounts => {
 
     it('verifies that getReturnByPath returns the correct amount for selling the smart token through multiple converters', async () => {
         await converter2.quickConvert(smartToken2QuickBuyPath, 100, 1, { from: accounts[1], value: 100 });
-        let returnByPath = await bancorNetwork.getReturnByPath.call(smartToken2QuickSellPath, 100);
+        let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken2QuickSellPath, 100))[0];
         let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
         let res = await converter2.quickConvert(smartToken2QuickSellPath, 100, 1, { from: accounts[1] });
         let transaction = web3.eth.getTransaction(res.tx);
@@ -651,7 +627,7 @@ contract('BancorNetwork', accounts => {
     it('verifies that getReturnByPath returns the correct amount for selling the smart token with a long conversion path', async () => {
         await converter4.quickConvert([etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken3.address], 1000, 1, { from: accounts[1], value: 1000 });
         let path = [smartToken3.address, smartToken2.address, smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address];
-        let returnByPath = await bancorNetwork.getReturnByPath.call(path, 100);
+        let returnByPath = (await bancorNetwork.getReturnByPath.call(path, 100))[0];
         let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
         let res = await converter3.quickConvert(path, 100, 1, { from: accounts[1] });
         let transaction = web3.eth.getTransaction(res.tx);
@@ -661,14 +637,14 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting a connector to the smart token', async () => {
-        let getReturn = await converter2.getReturn.call(smartToken1.address, smartToken2.address, 100);
-        let returnByPath = await bancorNetwork.getReturnByPath.call([smartToken1.address, smartToken2.address, smartToken2.address], 100);
+        let getReturn = (await converter2.getReturn.call(smartToken1.address, smartToken2.address, 100))[0];
+        let returnByPath = (await bancorNetwork.getReturnByPath.call([smartToken1.address, smartToken2.address, smartToken2.address], 100))[0];
         assert.equal(getReturn.toNumber(), returnByPath.toNumber());
     });
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting from a token to a connector', async () => {
-        let getReturn = await converter2.getReturn.call(smartToken2.address, smartToken1.address, 100);
-        let returnByPath = await bancorNetwork.getReturnByPath.call([smartToken2.address, smartToken2.address, smartToken1.address], 100);
+        let getReturn = (await converter2.getReturn.call(smartToken2.address, smartToken1.address, 100))[0];
+        let returnByPath = (await bancorNetwork.getReturnByPath.call([smartToken2.address, smartToken2.address, smartToken1.address], 100))[0];
         assert.equal(getReturn.toNumber(), returnByPath.toNumber());
     });
 
@@ -822,7 +798,7 @@ contract('BancorNetwork', accounts => {
         let gasPrice = defaultGasPriceLimit;
 
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-        let result = sign(soliditySha3, accountPrivateKey);
+        let result = sign(soliditySha3, trustedAddress);
 
         await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
@@ -837,7 +813,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-            let result = sign(soliditySha3, untrustedPrivateKey);
+            let result = sign(soliditySha3, untrustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -856,7 +832,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': wrongPath});
-            let result = sign(soliditySha3, accountPrivateKey);
+            let result = sign(soliditySha3, trustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -874,7 +850,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-            let result = sign(soliditySha3, accountPrivateKey);
+            let result = sign(soliditySha3, trustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 200, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -893,7 +869,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-            let result = sign(soliditySha3, accountPrivateKey);
+            let result = sign(soliditySha3, trustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -912,7 +888,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-            let result = sign(soliditySha3, accountPrivateKey);
+            let result = sign(soliditySha3, trustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -930,7 +906,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit - 1;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-            let result = sign(soliditySha3, accountPrivateKey);
+            let result = sign(soliditySha3, trustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -948,7 +924,7 @@ contract('BancorNetwork', accounts => {
             let gasPrice = defaultGasPriceLimit + 1;
 
             let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1QuickBuyPath});
-            let result = sign(soliditySha3, accountPrivateKey);
+            let result = sign(soliditySha3, trustedAddress);
 
             await converter1.quickConvertPrioritized(smartToken1QuickBuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");

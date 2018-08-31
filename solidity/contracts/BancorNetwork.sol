@@ -340,25 +340,26 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _path        conversion path, see conversion path format above
         @param _amount      amount to convert from (in the initial source token)
 
-        @return expected conversion return amount
+        @return expected conversion return amount and conversion fee
     */
-    function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256) {
+    function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
         IERC20Token fromToken;
         ISmartToken smartToken; 
         IERC20Token toToken;
         IBancorConverter converter;
-        uint32 weight;
         uint256 amount;
+        uint256 fee;
         uint256 supply;
+        uint256 balance;
+        uint32 weight;
         ISmartToken prevSmartToken;
         IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
 
         amount = _amount;
         fromToken = _path[0];
-        uint256 pathLength = _path.length;
 
         // iterate over the conversion path
-        for (uint256 i = 1; i < pathLength; i += 2) {
+        for (uint256 i = 1; i < _path.length; i += 2) {
             smartToken = ISmartToken(_path[i]);
             toToken = _path[i + 1];
             converter = IBancorConverter(smartToken.owner());
@@ -370,11 +371,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 // validate input
                 require(getConnectorPurchaseEnabled(converter, fromToken));
 
+                // calculate the amount & the conversion fee
+                balance = converter.getConnectorBalance(fromToken);
                 weight = getConnectorWeight(converter, fromToken);
-
-                // calculate the amount minus the conversion fee
-                amount = formula.calculatePurchaseReturn(supply, converter.getConnectorBalance(fromToken), weight, amount);
-                amount = safeMul(amount, (MAX_CONVERSION_FEE - converter.conversionFee())) / MAX_CONVERSION_FEE;
+                amount = formula.calculatePurchaseReturn(supply, balance, weight, amount);
+                fee = safeMul(amount, converter.conversionFee()) / MAX_CONVERSION_FEE;
+                amount -= fee;
 
                 // update the smart token supply for the next iteration
                 supply = smartToken.totalSupply() + amount;
@@ -383,23 +385,25 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 // check if the current smart token supply was changed in the previous iteration
                 supply = smartToken == prevSmartToken ? supply : smartToken.totalSupply();
 
+                // calculate the amount & the conversion fee
+                balance = converter.getConnectorBalance(toToken);
                 weight = getConnectorWeight(converter, toToken);
-
-                // calculate the amount minus the conversion fee
-                amount = formula.calculateSaleReturn(supply, converter.getConnectorBalance(toToken), weight, amount);
-                amount = safeMul(amount, (MAX_CONVERSION_FEE - converter.conversionFee())) / MAX_CONVERSION_FEE;
+                amount = formula.calculateSaleReturn(supply, balance, weight, amount);
+                fee = safeMul(amount, converter.conversionFee()) / MAX_CONVERSION_FEE;
+                amount -= fee;
 
                 // update the smart token supply for the next iteration
                 supply = smartToken.totalSupply() - amount;
             }
             else { // cross connector conversion
-                amount = converter.getReturn(fromToken, toToken, amount);
+                (amount, fee) = converter.getReturn(fromToken, toToken, amount);
             }
 
             prevSmartToken = smartToken;
             fromToken = toToken;
         }
-        return amount;
+
+        return (amount, fee);
     }
 
     /**

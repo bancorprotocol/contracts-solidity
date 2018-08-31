@@ -140,7 +140,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
 
         IBancorConverterFactory converterFactory = IBancorConverterFactory(registry.addressOf(ContractIds.BANCOR_CONVERTER_FACTORY));
-        address converterAdderess  = converterFactory.createConverter(
+        address converterAddress  = converterFactory.createConverter(
             token,
             registry,
             maxConversionFee,
@@ -148,7 +148,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
             0
         );
 
-        IBancorConverterExtended converter = IBancorConverterExtended(converterAdderess);
+        IBancorConverterExtended converter = IBancorConverterExtended(converterAddress);
         converter.acceptOwnership();
         converter.acceptManagement();
 
