@@ -54,10 +54,6 @@ if ( process.argv[i] != 'compile' && !enableTest ) {
         gasPrice: 10000000000
       }
     },
-    rpc: {
-      host: 'localhost',
-      post: 8545
-    },
     solc: {
       optimizer: {
         enabled: true,
@@ -68,10 +64,6 @@ if ( process.argv[i] != 'compile' && !enableTest ) {
 } else {
   module.exports = {
     networks: {
-    },
-    rpc: {
-      host: 'localhost',
-      post: 8545
     },
     solc: {
       optimizer: {

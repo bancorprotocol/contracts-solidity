@@ -90,7 +90,7 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierFacade, Fin
         uint256 net = safeSub(amount, feeAmount);
         wallet_address.transfer(net);
 
-        emit BidSubmission(msg.sender, amount, missing_funds);
+        BidSubmission(msg.sender, amount, missing_funds);
 
         assert(received_wei >= amount);
 
