@@ -4,17 +4,7 @@ var WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js');
 var RpcSubprovider = require('web3-provider-engine/subproviders/rpc.js')
 var Web3 = require("web3");
 
-var enableTest = false;
-for(var i = 2;i < process.argv.length - 1; i++){
-  if ( process.argv[i] == '--network' ) {
-    if ( process.argv[i+1] == 'test' ) {
-      enableTest = true;
-      console.log('Unit test enabled');
-    }
-  }
-}
-
-if ( process.argv[i] != 'compile' && !enableTest ) {
+if ( process.argv[1] == 'migrate' ) {
   // Insert raw hex private key here, e.g. using MyEtherWallet
   var wallet = ethwallet.fromPrivateKey(Buffer.from(process.env.ETH_DEPLOYER_KEY, 'hex'));
   var address = "0x" + wallet.getAddress().toString("hex");
@@ -27,31 +17,33 @@ if ( process.argv[i] != 'compile' && !enableTest ) {
     networks: {
       development: {
         network_id: 123,
-        gas: 4700000,
-        gasPrice: 10000000000,
+        gas: 4712388,
         provider: engine,
         from: address
       },
       staging: {
         network_id: 123,
-        gas: 4700000,
-        gasPrice: 10000000000,
+        gas: 4712388,
         provider: engine,
         from: address
       },
       beta: {
         network_id: 123,
-        gas: 4700000,
-        gasPrice: 10000000000,
+        gas: 4712388,
         provider: engine,
         from: address
       },
       ropsten: {
         network_id: 3,
-        host: 'localhost',
-        port: 8545,
-        gas: 4700000,
-        gasPrice: 10000000000
+        gas: 4712388,
+        provider: engine,
+        from: address
+      },
+      getho: {
+        host: "vicious-spider-50320.getho.io/jsonrpc",
+        port: 80,
+        network_id: 1010,
+        gas: 4712388
       }
     },
     solc: {
@@ -64,6 +56,12 @@ if ( process.argv[i] != 'compile' && !enableTest ) {
 } else {
   module.exports = {
     networks: {
+      getho: {
+        host: "vicious-spider-50320.getho.io/jsonrpc",
+        port: 80,
+        network_id: 1010,
+        gas: 4712388
+      }
     },
     solc: {
       optimizer: {

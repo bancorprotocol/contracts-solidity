@@ -13,8 +13,8 @@ const BancorConverterExtensions = artifacts.require('BancorConverterExtensions.s
 const gasPrice = 22000000000;
 
 module.exports = async (deployer, _network, _accounts) => {
-    deployer.deploy(FinanciePlatformToken, 'PF Token', 'ERC PF', 10000000000 * (10 ** 18));
-    deployer.deploy(EtherToken);
+    await deployer.deploy(FinanciePlatformToken, 'PF Token', 'ERC PF', 10000000000 * (10 ** 18));
+    await deployer.deploy(EtherToken);
     await deployer.deploy(FinancieManagedContracts);
     FinancieManagedContracts.deployed().then((instance) => {
         instance.activateTargetContract(FinanciePlatformToken.address, true);
@@ -34,8 +34,8 @@ module.exports = async (deployer, _network, _accounts) => {
         EtherToken.address
     );
 
-    deployer.deploy(BancorFormula);
-    deployer.deploy(BancorGasPriceLimit, gasPrice);
+    await deployer.deploy(BancorFormula);
+    await deployer.deploy(BancorGasPriceLimit, gasPrice);
     await deployer.deploy(BancorQuickConverter);
     BancorQuickConverter.deployed().then((instance) => {
         instance.registerEtherToken(EtherToken.address, true);
