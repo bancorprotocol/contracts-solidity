@@ -418,7 +418,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         IWhitelist whitelist;
 
         // check if the converter supports the conversion whitelist feature
-        if (!_features.isSupported(_converter, FeatureIds.CONVERTER_CONVERSION_WHITELIST))
+        if (!_features.isSupported(_converter, CONVERTER_CONVERSION_WHITELIST))
             return;
 
         // get the whitelist contract from the converter
