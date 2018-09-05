@@ -6,7 +6,6 @@ const FinancieNotifier = artifacts.require('FinancieNotifier.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
 
 module.exports = (deployer, _network, _accounts) => {
-    let managedContracts;
     return deployer
         .then(() => {
             return deployer.deploy(FinancieTicketStore,

@@ -8,7 +8,6 @@ const BancorConverterExtensions = artifacts.require('BancorConverterExtensions.s
 const gasPrice = 22000000000;
 
 module.exports = (deployer, _network, _accounts) => {
-    let managedContracts;
     return deployer
         .then(() => {
             return deployer.deploy(BancorFormula);
