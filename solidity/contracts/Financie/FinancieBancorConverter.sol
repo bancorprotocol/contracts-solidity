@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 import '../BancorConverter.sol';
 import './FinancieFee.sol';
-import './FinancieNotifierFacade.sol';
+import './FinancieNotifierDelegate.sol';
 import '../interfaces/IEtherToken.sol';
 
 /**
@@ -12,7 +12,7 @@ import '../interfaces/IEtherToken.sol';
 *    - ignore base fee model and use Financie fee model
 *
 */
-contract FinancieBancorConverter is BancorConverter, FinancieNotifierFacade, FinancieFee {
+contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, FinancieFee {
 
     IERC20Token[] public quickSellPath;
 
@@ -44,7 +44,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierFacade, Fin
         public
         BancorConverter(_token, _extensions, 0, _connectorToken, _connectorWeight)
         FinancieFee(_heroFee, _teamFee, _hero_wallet, _team_wallet)
-        FinancieNotifierFacade(_notifier_address)
+        FinancieNotifierDelegate(_notifier_address)
     {
         // when receiving ether, then deposit to ether token -> change to smart token -> change to connector token
         quickBuyPath.push(_etherToken);

@@ -1,12 +1,12 @@
 pragma solidity ^0.4.18;
 import './IFinancieTicketStore.sol';
 import './IFinancieIssuerToken.sol';
-import './FinancieNotifierFacade.sol';
+import './FinancieNotifierDelegate.sol';
 import '../interfaces/IERC20Token.sol';
 import './FinancieCoreComponents.sol';
 import '../Utils.sol';
 
-contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierFacade, FinancieCoreComponents, Utils {
+contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, FinancieCoreComponents, Utils {
 
     struct TicketSale {
         address issuer;
@@ -22,7 +22,7 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierFacade, Fi
     function FinancieTicketStore(address _notifier_address, address _managedContracts, address _platformToken, address _ether_token)
         public
         FinancieCoreComponents(_managedContracts, _platformToken, _ether_token)
-        FinancieNotifierFacade(_notifier_address)
+        FinancieNotifierDelegate(_notifier_address)
     {
     }
 

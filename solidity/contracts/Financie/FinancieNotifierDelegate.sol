@@ -2,10 +2,10 @@ pragma solidity ^0.4.18;
 import './IFinancieNotifier.sol';
 import '../Owned.sol';
 
-contract FinancieNotifierFacade is Owned {
+contract FinancieNotifierDelegate is Owned {
     IFinancieNotifier public notifier;
 
-    function FinancieNotifierFacade(address _notifier)
+    function FinancieNotifierDelegate(address _notifier)
         public
     {
         notifier = IFinancieNotifier(_notifier);

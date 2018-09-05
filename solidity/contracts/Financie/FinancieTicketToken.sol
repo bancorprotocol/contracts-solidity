@@ -1,13 +1,13 @@
 pragma solidity ^0.4.18;
 import '../Utils.sol';
 import '../ERC20Token.sol';
-import './FinancieNotifierFacade.sol';
+import './FinancieNotifierDelegate.sol';
 import './IFinancieIssuerToken.sol';
 
 /**
 * Financie Ticket Token implementation
 */
-contract FinancieTicketToken is ERC20Token, FinancieNotifierFacade, IFinancieIssuerToken {
+contract FinancieTicketToken is ERC20Token, FinancieNotifierDelegate, IFinancieIssuerToken {
     address issuer;
 
     /**
@@ -18,7 +18,7 @@ contract FinancieTicketToken is ERC20Token, FinancieNotifierFacade, IFinancieIss
     function FinancieTicketToken(string _name, string _symbol, address _issuer, uint32 _supply, address _notifier)
         public
         ERC20Token(_name, _symbol, 0)
-        FinancieNotifierFacade(_notifier)
+        FinancieNotifierDelegate(_notifier)
     {
         totalSupply = _supply;
         balanceOf[msg.sender] = _supply;

@@ -2,10 +2,10 @@ pragma solidity ^0.4.17;
 
 import '../DutchAuction/DutchAuction.sol';
 import './FinancieFee.sol';
-import './FinancieNotifierFacade.sol';
+import './FinancieNotifierDelegate.sol';
 
 /// @title overrided from DutchAuction.
-contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierFacade, FinancieFee {
+contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierDelegate, FinancieFee {
 
     /*
      * Public functions
@@ -39,7 +39,7 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierFacade, Fin
           _price_exponent
         )
         FinancieFee(0, _teamFee, _wallet_address, _team_wallet)
-        FinancieNotifierFacade(_notifier_address)
+        FinancieNotifierDelegate(_notifier_address)
     {
     }
 

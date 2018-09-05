@@ -1,13 +1,13 @@
 pragma solidity ^0.4.18;
 import '../Utils.sol';
 import '../ERC20Token.sol';
-import './FinancieNotifierFacade.sol';
+import './FinancieNotifierDelegate.sol';
 import './IFinancieIssuerToken.sol';
 
 /**
 * Financie Card Token implementation
 */
-contract FinancieCardToken is ERC20Token, FinancieNotifierFacade, IFinancieIssuerToken {
+contract FinancieCardToken is ERC20Token, FinancieNotifierDelegate, IFinancieIssuerToken {
     uint256 private constant FIXED_INITIAL_SUPPLY = 20000000 * 1 ether;
 
     address issuer;
@@ -21,7 +21,7 @@ contract FinancieCardToken is ERC20Token, FinancieNotifierFacade, IFinancieIssue
     function FinancieCardToken(string _name, string _symbol, address _issuer, address _notifier_address)
         public
         ERC20Token(_name, _symbol, 18)
-        FinancieNotifierFacade(_notifier_address)
+        FinancieNotifierDelegate(_notifier_address)
     {
         totalSupply = FIXED_INITIAL_SUPPLY;
         balanceOf[msg.sender] = FIXED_INITIAL_SUPPLY;
