@@ -4,7 +4,7 @@ var WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js');
 var RpcSubprovider = require('web3-provider-engine/subproviders/rpc.js')
 var Web3 = require("web3");
 
-if ( process.argv[1] == 'migrate' ) {
+if ( process.argv[2] == 'migrate' ) {
   // Insert raw hex private key here, e.g. using MyEtherWallet
   var wallet = ethwallet.fromPrivateKey(Buffer.from(process.env.ETH_DEPLOYER_KEY, 'hex'));
   var address = "0x" + wallet.getAddress().toString("hex");
