@@ -1,6 +1,7 @@
 pragma solidity ^0.4.18;
 
 /*
+    **FROZEN**
     Financie Managed Contracts contract interface
 */
 contract IFinancieManagedContracts {
