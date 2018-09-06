@@ -35,6 +35,7 @@ smartToken: 0x6df4e0da83e47e3f6cd7d725224bc73f0e198c4f
 bancorConverter: 0x297569cf3910ee67dad67a8796c7ff1dd5f2c3d3
 bancorPriceLimit: 0xc23373a92c9c154a50353e990ecb03971d6c73c9
 whiteList: 0x620dcf8745fe240babb935720a5cf6137bf5f68a
+bancorExchange: 0xe243c71d1531c356c8a7072979d4acc7362761ba
 ```
 
 thanks for testing.
