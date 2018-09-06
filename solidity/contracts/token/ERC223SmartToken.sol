@@ -1,10 +1,10 @@
 pragma solidity ^0.4.23;
 
 import "./SmartToken.sol";
-import "./interfaces/IERC223ReceivingContract.sol";
+import "../../../node_modules/evolutionlandcommon/contracts/interfaces/ERC223.sol";
+import "../../../node_modules/evolutionlandcommon/contracts/interfaces/ERC223ReceivingContract.sol";
 
-contract ERC223SmartToken is SmartToken {
-    event ERC223Transfer(address indexed from, address indexed to, uint amount, bytes data);
+contract ERC223SmartToken is SmartToken, ERC223 {
 
     function transfer(
         address _to,
@@ -21,7 +21,7 @@ contract ERC223SmartToken is SmartToken {
         require(transferFrom(_from, _to, _amount));
 
         if (isContract(_to)) {
-            IERC223ReceivingContract receiver = IERC223ReceivingContract(_to);
+            ERC223ReceivingContract receiver = ERC223ReceivingContract(_to);
             receiver.tokenFallback(_from, _amount, _data);
         }
 
