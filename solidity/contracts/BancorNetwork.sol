@@ -559,6 +559,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         public payable returns (uint256)
     {
         _nonce;
-        convertForPrioritized2(_path, _amount, _minReturn, _for, _block, _v, _r, _s);
+        return convertForPrioritized2(_path, _amount, _minReturn, _for, _block, _v, _r, _s);
     }
 }
