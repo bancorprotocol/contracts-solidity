@@ -75,6 +75,7 @@ contract('FinancieHeroesDutchAuction', (accounts) => {
 
         let stage = await auction.stage();
         console.log('[FinancieHeroesDutchAuction]stage:' + stage);
+        assert.equal(2, stage);
 
         console.log('[FinancieHeroesDutchAuction]end setup');
     });

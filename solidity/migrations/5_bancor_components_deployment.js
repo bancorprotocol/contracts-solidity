@@ -20,7 +20,7 @@ module.exports = (deployer, _network, _accounts) => {
                 return deployer.deploy(BancorQuickConverter);
             })
             .then((instance) => {
-                return instance.registerEtherToken(EtherToken.address, true);
+                return instance.registerEtherToken(process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS, true);
             })
             .then((instance) => {
                 return deployer.deploy(BancorConverterExtensions,
