@@ -15,7 +15,7 @@ contract FinancieManagedContracts is IFinancieManagedContracts, Owned, Utils {
     /**
     *   @dev Constructor
     */
-    function FinancieManagedContracts() public {
+    constructor() public {
     }
 
     /**

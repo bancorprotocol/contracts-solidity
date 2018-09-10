@@ -15,7 +15,7 @@ contract FinancieTicketToken is ERC20Token, FinancieNotifierDelegate, IFinancieI
         @param _name        token name
         @param _symbol      token symbol
     */
-    function FinancieTicketToken(string _name, string _symbol, address _issuer, uint32 _supply, address _notifier)
+    constructor(string _name, string _symbol, address _issuer, uint32 _supply, address _notifier)
         public
         ERC20Token(_name, _symbol, 0)
         FinancieNotifierDelegate(_notifier)

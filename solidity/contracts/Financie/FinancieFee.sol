@@ -26,7 +26,7 @@ contract FinancieFee is Utils {
     *   @param _hero_wallet   Receiver wallet address for hero fee
     *   @param _team_wallet   Receiver wallet address for team fee
     */
-    function FinancieFee(uint32 _heroFee, uint32 _teamFee, address _hero_wallet, address _team_wallet) public {
+    constructor(uint32 _heroFee, uint32 _teamFee, address _hero_wallet, address _team_wallet) public {
         heroFee = _heroFee;
         teamFee = _teamFee;
         hero_wallet = _hero_wallet;

@@ -10,7 +10,7 @@ contract FinancieCoreComponents is Owned {
     IERC20Token platformToken;
     IERC20Token etherToken;
 
-    function FinancieCoreComponents(
+    constructor(
         address _managedContracts,
         address _platformToken,
         address _etherToken

@@ -30,7 +30,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
     *   @param  _teamFee            fee for financie team, represented in ppm
     *   @param  _connectorWeight    optional, weight for the initial connector
     */
-    function FinancieBancorConverter(
+    constructor(
         ISmartToken _token,
         IEtherToken _etherToken,
         IERC20Token _connectorToken,
@@ -57,7 +57,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
     }
 
     function getVersion() public pure returns (uint256) {
-        return 10;
+        return 11;
     }
 
     function acceptTokenOwnership() public {

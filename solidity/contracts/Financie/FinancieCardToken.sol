@@ -18,7 +18,7 @@ contract FinancieCardToken is ERC20Token, FinancieNotifierDelegate, IFinancieIss
     *   @param _name        token name
     *   @param _symbol      token symbol
     */
-    function FinancieCardToken(string _name, string _symbol, address _issuer, address _notifier_address)
+    constructor(string _name, string _symbol, address _issuer, address _notifier_address)
         public
         ERC20Token(_name, _symbol, 18)
         FinancieNotifierDelegate(_notifier_address)
