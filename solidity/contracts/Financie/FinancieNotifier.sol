@@ -6,24 +6,27 @@ import '../Utils.sol';
 contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     address latest;
 
-    event ActivateUser(address indexed _sender, uint32 indexed _userId);
+    event ActivateUser(address indexed _sender, uint32 indexed _userId, uint _timestamp);
 
-    event ApproveNewCards(address indexed _card);
-    event CardAuctionFinalized(address indexed _card, address indexed _auction);
-    event ApproveNewBancor(address indexed _card, address indexed _bancor);
+    event ApproveNewCards(address indexed _card, uint _timestamp);
+    event CardAuctionFinalized(address indexed _card, address indexed _auction, uint _timestamp);
+    event ApproveNewBancor(address indexed _card, address indexed _bancor, uint _timestamp);
 
     event Log(address indexed _sender, address indexed _target, EventType indexed _eventType, address _from, address _to, uint256 _paidAmount, uint256 _receivedAmount, uint _timestamp);
 
-    event AddOwnedCardList(address indexed _sender, address indexed _address);
-    event AddOwnedTicketList(address indexed _sender, address indexed _ticket);
-    event AddPaidTicketList(address indexed _sender, address indexed _ticket, uint256 _amount);
+    event AddOwnedCardList(address indexed _sender, address indexed _address, uint _timestamp);
+    event AddOwnedTicketList(address indexed _sender, address indexed _ticket, uint _timestamp);
+    event AddPaidTicketList(address indexed _sender, address indexed _ticket, uint256 _amount, uint _timestamp);
 
-    event ConvertCards(address indexed _sender, address indexed _from, address indexed _to, uint256 _amountFrom, uint256 _amountTo);
-    event BidCards(address indexed _sender, address indexed _to, uint256 _amount);
-    event WithdrawalCards(address indexed _sender, address indexed _to, uint256 _bids, uint256 _amount);
-    event BurnCards(address indexed _sender, address indexed _card, uint256 _amount);
+    event ConvertCards(address indexed _sender, address indexed _from, address indexed _to, uint256 _amountFrom, uint256 _amountTo, uint _timestamp);
+    event BidCards(address indexed _sender, address indexed _to, uint256 _amount, uint _timestamp);
+    event WithdrawalCards(address indexed _sender, address indexed _to, uint256 _bids, uint256 _amount, uint _timestamp);
+    event BurnCards(address indexed _sender, address indexed _card, uint256 _amount, uint _timestamp);
 
-    event BurnTickets(address indexed _sender, address indexed _ticket, uint256 _amount);
+    event BurnTickets(address indexed _sender, address indexed _ticket, uint256 _amount, uint _timestamp);
+
+    event AuctionRevenue(address _sender, address indexed _target, address indexed _card, address indexed _receiver, uint256 _amount, uint _timestamp);
+    event ExchangeRevenue(address _sender, address indexed _target, address indexed _card, address indexed _receiver, uint256 _amount, uint _timestamp);
 
     constructor(address _managedContracts, address _platformToken, address _ether_token)
         public
@@ -79,7 +82,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         public
         greaterThanZero(_userId)
     {
-        ActivateUser(msg.sender, _userId);
+        emit ActivateUser(msg.sender, _userId, now);
     }
 
     /**
@@ -89,7 +92,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         public
         ownerDelegatedOnly
     {
-        ApproveNewCards(_card);
+        emit ApproveNewCards(_card, now);
     }
 
     /**
@@ -99,7 +102,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         public
         ownerDelegatedOnly
     {
-        CardAuctionFinalized(_card, _auction);
+        emit CardAuctionFinalized(_card, _auction, now);
     }
 
     /**
@@ -109,7 +112,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         public
         ownerDelegatedOnly
     {
-        ApproveNewBancor(_card, _bancor);
+        emit ApproveNewBancor(_card, _bancor, now);
     }
 
     /**
@@ -119,9 +122,9 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         public
         ownerDelegatedOnly
     {
-        AddOwnedTicketList(_sender, _ticket);
+        emit AddOwnedTicketList(_sender, _ticket, now);
 
-        Log(
+        emit Log(
           _sender,
           msg.sender,
           EventType.BuyTicket,
@@ -139,9 +142,9 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         public
         ownerDelegatedOnly
     {
-        AddPaidTicketList(_sender, msg.sender, _amount);
+        emit AddPaidTicketList(_sender, msg.sender, _amount, now);
 
-        Log(
+        emit Log(
           _sender,
           msg.sender,
           EventType.BurnTicket,
@@ -151,7 +154,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
           0,
           now);
 
-        BurnTickets(_sender, msg.sender, _amount);
+        emit BurnTickets(_sender, msg.sender, _amount, now);
     }
 
     function notifyConvertCards(
@@ -164,7 +167,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         ownerDelegatedOnly
     {
         if ( _to == address(etherToken) ) {
-            Log(
+            emit Log(
               _sender,
               msg.sender,
               EventType.SellCards,
@@ -174,7 +177,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
               _amountTo,
               now);
         } else {
-            Log(
+            emit Log(
               _sender,
               msg.sender,
               EventType.BuyCards,
@@ -183,9 +186,9 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
               _amountFrom,
               _amountTo,
               now);
-            AddOwnedCardList(_sender, _to);
+            emit AddOwnedCardList(_sender, _to, now);
         }
-        ConvertCards(_sender, _from, _to, _amountFrom, _amountTo);
+        emit ConvertCards(_sender, _from, _to, _amountFrom, _amountTo, now);
     }
 
     /**
@@ -195,7 +198,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         public
         ownerDelegatedOnly
     {
-        Log(
+        emit Log(
           _sender,
           msg.sender,
           EventType.BidCards,
@@ -205,7 +208,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
           0,
           now);
 
-        BidCards(_sender, _to, _amount);
+        emit BidCards(_sender, _to, _amount, now);
     }
 
     /**
@@ -215,9 +218,9 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         public
         ownerDelegatedOnly
     {
-        AddOwnedCardList(_sender, _to);
+        emit AddOwnedCardList(_sender, _to, now);
 
-        Log(
+        emit Log(
           _sender,
           msg.sender,
           EventType.WithdrawCards,
@@ -227,7 +230,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
           _amount,
           now);
 
-        WithdrawalCards(_sender, _to, _bids, _amount);
+        emit WithdrawalCards(_sender, _to, _bids, _amount, now);
     }
 
     /**
@@ -237,7 +240,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         public
         ownerDelegatedOnly
     {
-        Log(
+        emit Log(
           _sender,
           msg.sender,
           EventType.BurnCards,
@@ -247,7 +250,43 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
           0,
           now);
 
-        BurnCards(msg.sender, msg.sender, _amount);
+        emit BurnCards(msg.sender, msg.sender, _amount, now);
+    }
+
+    /**
+    *   @notice log the revenue of auction
+    */
+    function notifyAuctionRevenue(
+        address _sender,
+        address _target,
+        address _card,
+        address _hero,
+        uint256 _hero_amount,
+        address _team,
+        uint256 _team_amount)
+        public
+        ownerDelegatedOnly
+    {
+        emit AuctionRevenue(_sender, _target, _card, _hero, _hero_amount, now);
+        emit AuctionRevenue(_sender, _target, _card, _team, _team_amount, now);
+    }
+
+    /**
+    *   @notice log the revenue of exchange
+    */
+    function notifyExchangeRevenue(
+        address _sender,
+        address _target,
+        address _card,
+        address _hero,
+        uint256 _hero_amount,
+        address _team,
+        uint256 _team_amount)
+        public
+        ownerDelegatedOnly
+    {
+        emit ExchangeRevenue(_sender, _target, _card, _hero, _hero_amount, now);
+        emit ExchangeRevenue(_sender, _target, _card, _team, _team_amount, now);
     }
 
 }

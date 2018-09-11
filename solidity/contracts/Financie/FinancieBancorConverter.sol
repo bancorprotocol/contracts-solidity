@@ -57,7 +57,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
     }
 
     function getVersion() public pure returns (uint256) {
-        return 11;
+        return 12;
     }
 
     function acceptTokenOwnership() public {
@@ -82,6 +82,9 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
         notifyConvertCards(msg.sender, address(quickSellPath[0]), address(quickSellPath[2]), _amount, net);
         assert(net >= _minReturn);
 
+        // Notify logs of revenue
+        notifyExchangeRevenue(msg.sender, address(this), address(quickSellPath[0]), hero_wallet, getHeroFee(result), team_wallet, getTeamFee(result));
+
         return net;
     }
 
@@ -99,6 +102,9 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
 
         notifyConvertCards(msg.sender, address(quickBuyPath[0]), address(quickBuyPath[2]), _amount, result);
         assert(result >= _minReturn);
+
+        // Notify logs of revenue
+        notifyExchangeRevenue(msg.sender, address(this), address(quickSellPath[0]), hero_wallet, getHeroFee(_amount), team_wallet, getTeamFee(_amount));
 
         return result;
     }

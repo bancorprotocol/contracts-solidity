@@ -95,6 +95,9 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierDelegate, F
         assert(received_wei >= amount);
 
         notifyBidCards(msg.sender, address(token), amount);
+
+        // Notify logs of revenue
+        notifyAuctionRevenue(msg.sender, address(this), address(token), hero_wallet, net, team_wallet, feeAmount);
     }
 
     /**

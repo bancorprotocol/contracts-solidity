@@ -11,13 +11,13 @@ contract FinancieFee is Utils {
     uint32 private constant MAX_FINANCIE_FEE = 1000000;
 
     // Fee percentage in ppm for hero
-    uint32 heroFee;
+    uint32 public heroFee;
     // Fee percentage in ppm for team
-    uint32 teamFee;
+    uint32 public teamFee;
     // Receiver wallet address for hero fee
-    address hero_wallet;
+    address public hero_wallet;
     // Receiver wallet address for team fee
-    address team_wallet;
+    address public team_wallet;
 
     /**
     *   @dev Constructor
@@ -52,7 +52,7 @@ contract FinancieFee is Utils {
     *   @param _amount        Fee target amount in wei
     *   @return               Fee amount for hero in wei
     */
-    function getHeroFee(uint256 _amount) private view returns (uint256) {
+    function getHeroFee(uint256 _amount) internal view returns (uint256) {
         return safeMul(_amount, heroFee) / MAX_FINANCIE_FEE;
     }
 
@@ -61,7 +61,7 @@ contract FinancieFee is Utils {
     *   @param _amount        Fee target amount in wei
     *   @return               Fee amount for team in wei
     */
-    function getTeamFee(uint256 _amount) private view returns (uint256) {
+    function getTeamFee(uint256 _amount) internal view returns (uint256) {
         return safeMul(_amount, teamFee) / MAX_FINANCIE_FEE;
     }
 

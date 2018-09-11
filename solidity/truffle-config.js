@@ -41,4 +41,13 @@ if ( process.argv[2] == 'migrate' ) {
       }
     }
   };
+} else {
+  module.exports = {
+    solc: {
+      optimizer: {
+        enabled: true,
+        runs: 200
+      }
+    }
+  };
 }
