@@ -1,5 +1,6 @@
 pragma solidity ^0.4.23;
 import './interfaces/IBancorConverter.sol';
+import './interfaces/IBancorConverterUpgrader.sol';
 import './interfaces/IBancorConverterFactory.sol';
 import '../utility/Owned.sol';
 import '../utility/interfaces/IContractRegistry.sol';
@@ -53,7 +54,7 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     back to the original owner.
     The address of the new converter is available in the ConverterUpgrade event.
 */
-contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
+contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds, FeatureIds {
     string public version = '0.3';
 
     IContractRegistry public registry;                      // contract registry contract address
@@ -85,31 +86,32 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
         ownership of the new converter will be transferred back to the original owner.
         fires the ConverterUpgrade event upon success.
 
-        @param _oldConverter   old converter contract address
-        @param _version        old converter version
+        @param _converter   old converter contract address
+        @param _version     old converter version
     */
-    function upgrade(IBancorConverterExtended _oldConverter, bytes32 _version) public {
+    function upgrade(IBancorConverter _converter, bytes32 _version) public {
         bool formerVersions = false;
         if (_version == "0.4")
             formerVersions = true;
-        acceptConverterOwnership(_oldConverter);
-        IBancorConverterExtended newConverter = createConverter(_oldConverter);
-        copyConnectors(_oldConverter, newConverter, formerVersions);
-        copyConversionFee(_oldConverter, newConverter);
-        copyQuickBuyPath(_oldConverter, newConverter);
-        transferConnectorsBalances(_oldConverter, newConverter, formerVersions);                
-        ISmartToken token = _oldConverter.token();
+        IBancorConverterExtended converter = IBancorConverterExtended(_converter);
+        acceptConverterOwnership(converter);
+        IBancorConverterExtended newConverter = createConverter(converter);
+        copyConnectors(converter, newConverter, formerVersions);
+        copyConversionFee(converter, newConverter);
+        copyQuickBuyPath(converter, newConverter);
+        transferConnectorsBalances(converter, newConverter, formerVersions);                
+        ISmartToken token = converter.token();
 
-        if (token.owner() == address(_oldConverter)) {
-            _oldConverter.transferTokenOwnership(newConverter);
+        if (token.owner() == address(converter)) {
+            converter.transferTokenOwnership(newConverter);
             newConverter.acceptTokenOwnership();
         }
 
-        _oldConverter.transferOwnership(msg.sender);
+        converter.transferOwnership(msg.sender);
         newConverter.transferOwnership(msg.sender);
         newConverter.transferManagement(msg.sender);
 
-        emit ConverterUpgrade(address(_oldConverter), address(newConverter));
+        emit ConverterUpgrade(address(converter), address(newConverter));
     }
 
     /**

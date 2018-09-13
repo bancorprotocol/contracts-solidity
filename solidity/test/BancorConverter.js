@@ -10,6 +10,8 @@ const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const ContractRegistry = artifacts.require('ContractRegistry.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
+const BancorConverterFactory = artifacts.require('BancorConverterFactory.sol');
+const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader.sol');
 const utils = require('./helpers/Utils');
 
 const weight10Percent = 100000;
@@ -25,6 +27,7 @@ let connectorToken;
 let connectorToken2;
 let connectorTokenAddress;
 let connectorTokenAddress2 = '0x32f0f93396f0865d7ce412695beb3c3ad9ccca75';
+let upgrader;
 
 // used by purchase/sale tests
 async function initConverter(accounts, activate, maxConversionFee = 0) {
@@ -92,6 +95,14 @@ contract('BancorConverter', accounts => {
         let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
         await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[3]);
+
+        let factory = await BancorConverterFactory.new();
+        let bancorConverterFactoryId = await contractIds.BANCOR_CONVERTER_FACTORY.call();
+        await contractRegistry.registerAddress(bancorConverterFactoryId, factory.address);
+
+        upgrader = await BancorConverterUpgrader.new(contractRegistry.address);
+        let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
+        await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
 
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         
@@ -630,28 +641,52 @@ contract('BancorConverter', accounts => {
         }
     });
 
-    it('verifies that the owner can withdraw from the connector', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-        await converter.addConnector(connectorToken.address, weight10Percent, false);
-        await connectorToken.transfer(converter.address, 1000);
-        let converterBalance = await connectorToken.balanceOf(converter.address);
-        assert.equal(converterBalance, 1000);
-        await converter.withdrawTokens(connectorToken.address, accounts[2], 50);
-        converterBalance = await connectorToken.balanceOf(converter.address);
-        assert.equal(converterBalance, 950);
-        let account2Balance = await connectorToken.balanceOf(accounts[2]);
-        assert.equal(account2Balance, 50);
+    it('verifies that the owner can withdraw a non connector token from the converter while the converter is not active', async () => {
+        let converter = await initConverter(accounts, false);
+
+        let token = await TestERC20Token.new('ERC Token 3', 'ERC3', 100000);
+        await token.transfer(converter.address, 100);
+        let balance = await token.balanceOf.call(converter.address);
+        assert.equal(balance, 100);
+
+        await converter.withdrawTokens(token.address, accounts[1], 50);
+        balance = await token.balanceOf.call(accounts[1]);
+        assert.equal(balance, 50);
     });
 
-    it('should throw when a non owner attempts to withdraw from the connector', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-        await converter.addConnector(connectorToken.address, weight10Percent, false);
-        await connectorToken.transfer(converter.address, 1000);
+    it('verifies that the owner can withdraw a connector token from the converter while the converter is not active', async () => {
+        let converter = await initConverter(accounts, false);
+
+        await converter.withdrawTokens(connectorToken.address, accounts[1], 50);
+        balance = await connectorToken.balanceOf.call(accounts[1]);
+        assert.equal(balance, 50);
+    });
+
+    it('verifies that the owner can withdraw a non connector token from the converter while the converter is active', async () => {
+        let converter = await initConverter(accounts, true);
+
+        let token = await TestERC20Token.new('ERC Token 3', 'ERC3', 100000);
+        await token.transfer(converter.address, 100);
+        let balance = await token.balanceOf.call(converter.address);
+        assert.equal(balance, 100);
+
+        await converter.withdrawTokens(token.address, accounts[1], 50);
+        balance = await token.balanceOf.call(accounts[1]);
+        assert.equal(balance, 50);
+    });
+
+    it('verifies that the upgrader can upgrade the converter while the converter is active', async () => {
+        let converter = await initConverter(accounts, true);
+
+        await converter.transferOwnership(upgrader.address);
+        await upgrader.upgrade(converter.address, web3.fromUtf8("0.9"));
+    });
+ 
+    it('should throw when the owner attempts to withdraw a connector token while the converter is active', async () => {
+        let converter = await initConverter(accounts, true);
 
         try {
-            await converter.withdrawTokens(connectorToken.address, accounts[3], 50, { from: accounts[1] });
+            await converter.withdrawTokens(connectorToken.address, accounts[1], 50);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -659,14 +694,11 @@ contract('BancorConverter', accounts => {
         }
     });
 
-    it('should throw when attempting to withdraw from a connector to an invalid address', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-        await converter.addConnector(connectorToken.address, weight10Percent, false);
-        await connectorToken.transfer(converter.address, 1000);
+    it('should throw when the upgrader attempts upgrade the converter while the converter is active and the upgrader is not the owner', async () => {
+        let converter = await initConverter(accounts, true);
 
         try {
-            await converter.withdrawTokens(connectorToken.address, '0x0', 50);
+            await upgrader.upgrade(converter.address, '0.9');
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -674,14 +706,40 @@ contract('BancorConverter', accounts => {
         }
     });
 
-    it('should throw when attempting to withdraw from a connector to the converter address', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-        await converter.addConnector(connectorToken.address, weight10Percent, false);
-        await connectorToken.transfer(converter.address, 1000);
+    it('should throw when a non owner attempts to withdraw a non connector token while the converter is not active', async () => {
+        let converter = await initConverter(accounts, false);
+
+        let token = await TestERC20Token.new('ERC Token 3', 'ERC3', 100000);
+        await token.transfer(converter.address, 100);
+        let balance = await token.balanceOf.call(converter.address);
+        assert.equal(balance, 100);
 
         try {
-            await converter.withdrawTokens(connectorToken.address, converter.address, 50);
+            await converter.withdrawTokens(token.address, accounts[1], 50, { from: accounts[2] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when a non owner attempts to withdraw a connector token while the converter is not active', async () => {
+        let converter = await initConverter(accounts, false);
+
+        try {
+            await converter.withdrawTokens(connectorToken.address, accounts[1], 50, { from: accounts[2] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when a non owner attempts to withdraw a connector token while the converter is active', async () => {
+        let converter = await initConverter(accounts, true);
+
+        try {
+            await converter.withdrawTokens(connectorToken.address, accounts[1], 50, { from: accounts[2] });
             assert(false, "didn't throw");
         }
         catch (error) {

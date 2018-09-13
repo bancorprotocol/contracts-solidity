@@ -13,5 +13,6 @@ contract ContractIds {
     bytes32 public constant BANCOR_NETWORK = "BancorNetwork";
     bytes32 public constant BANCOR_FORMULA = "BancorFormula";
     bytes32 public constant BANCOR_GAS_PRICE_LIMIT = "BancorGasPriceLimit";
+    bytes32 public constant BANCOR_CONVERTER_UPGRADER = "BancorConverterUpgrader";
     bytes32 public constant BANCOR_CONVERTER_FACTORY = "BancorConverterFactory";
 }

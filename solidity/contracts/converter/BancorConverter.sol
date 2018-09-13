@@ -1,5 +1,6 @@
 pragma solidity ^0.4.23;
 import './interfaces/IBancorConverter.sol';
+import './interfaces/IBancorConverterUpgrader.sol';
 import './interfaces/IBancorFormula.sol';
 import '../IBancorNetwork.sol';
 import '../ContractIds.sol';
@@ -251,6 +252,25 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     function getFinalAmount(uint256 _amount, uint8 _magnitude) public view returns (uint256) {
         return safeMul(_amount, (MAX_CONVERSION_FEE - conversionFee) ** _magnitude) / MAX_CONVERSION_FEE ** _magnitude;
+    }
+
+    /**
+        @dev withdraws tokens held by the converter and sends them to an account
+        can only be called by the owner
+        note that connector tokens can only be withdrawn by the owner while the converter is inactive
+        unless the owner is the converter upgrader contract
+
+        @param _token   ERC20 token contract address
+        @param _to      account to receive the new amount
+        @param _amount  amount to withdraw
+    */
+    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public {
+        address converterUpgrader = registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER);
+
+        // if the token is not a connector token, allow withdrawal
+        // otherwise verify that the converter is inactive or that the owner is the upgrader contract
+        require(!connectors[_token].isSet || token.owner() != address(this) || owner == converterUpgrader);
+        super.withdrawTokens(_token, _to, _amount);
     }
 
     /**
