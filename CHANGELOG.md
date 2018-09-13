@@ -5,6 +5,7 @@ General:
 Converters:
 * Removed the setRegistry function
 * getReturn now returns the fee as a separate return value
+* Converter owner can no longer withdraw connector tokens while the converter is active
 
 Registry:
 * Fixed item removal
