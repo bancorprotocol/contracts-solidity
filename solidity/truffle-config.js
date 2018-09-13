@@ -32,6 +32,12 @@ if ( process.argv[2] == 'migrate' ) {
         gas: 4712388,
         provider: engine,
         from: address
+      },
+      beta2: {
+        network_id: 1010,
+        gas: 4712388,
+        provider: engine,
+        from: address
       }
     },
     solc: {
