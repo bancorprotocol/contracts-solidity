@@ -174,49 +174,6 @@ contract('BancorConverter', accounts => {
         assert.equal(connectorTokenCount, 1);
     });
 
-    it('verifies the owner can update the converter contract registry contract address', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        await converter.setRegistry(accounts[3]);
-        let registry = await converter.registry.call();
-        assert.notEqual(registry, contractRegistry.address);
-    });
-
-    it('should throw when a non owner attempts update the converter contract registry contract address', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-
-        try {
-            await converter.setRegistry(accounts[3], { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when the attempts update the converter contract registry contract address with an invalid address', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-
-        try {
-            await converter.setRegistry('0x0');
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when the owner attempts update the converter contract registry contract address with the converter address', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-
-        try {
-            await converter.setRegistry(converter.address);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
     it('verifies the owner can update the conversion whitelist contract address', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         let prevWhitelist = await converter.conversionWhitelist.call();

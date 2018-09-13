@@ -172,20 +172,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /*
-        @dev allows the owner to update the contract registry contract address
-
-        @param _registry   address of a contract registry contract
-    */
-    function setRegistry(IContractRegistry _registry)
-        public
-        ownerOnly
-        validAddress(_registry)
-        notThis(_registry)
-    {
-        registry = _registry;
-    }
-
-    /*
         @dev allows the owner to update & enable the conversion whitelist contract address
         when set, only addresses that are whitelisted are actually allowed to use the converter
         note that the whitelist check is actually done by the BancorNetwork contract

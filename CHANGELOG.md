@@ -1,4 +1,16 @@
-﻿### 0.4.3 (2018-06-23)
+﻿### 0.4.4 (2018-06-23)
+General:
+* Minor cleanups / bug fixes
+
+Converters:
+* Removed the setRegistry function
+* getReturn now returns the fee as a separate return value
+
+Registry:
+* Fixed item removal
+
+
+### 0.4.3 (2018-06-23)
 General:
 * Upgraded compiler version to 0.4.23
 * Updated all contracts to make use of the new `constructor` keyword
