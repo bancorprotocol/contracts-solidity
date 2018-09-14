@@ -14,7 +14,7 @@ import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/IEtherToken.sol';
 
 /*
-    Bancor Converter v0.10
+    Bancor Converter v0.11
 
     The Bancor version of the token converter, allows conversion between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
@@ -46,7 +46,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    bytes32 public version = '0.10';
+    bytes32 public version = '0.11';
     string public converterType = 'bancor';
 
     IContractRegistry public registry;                  // contract registry contract
