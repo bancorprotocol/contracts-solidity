@@ -1,6 +1,8 @@
 /* global artifacts, contract, before, it, assert */
 /* eslint-disable prefer-reflect */
 
+const fs = require('fs');
+const path = require('path');
 const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
@@ -28,6 +30,11 @@ let connectorToken2;
 let connectorTokenAddress;
 let connectorTokenAddress2 = '0x32f0f93396f0865d7ce412695beb3c3ad9ccca75';
 let upgrader;
+
+const contractsPath = path.resolve(__dirname, '../contracts/build');
+let abi;
+abi = fs.readFileSync(path.resolve(contractsPath, 'SmartToken.abi'), 'utf-8');
+let SmartTokenAbi = JSON.parse(abi);
 
 // used by purchase/sale tests
 async function initConverter(accounts, activate, maxConversionFee = 0) {
@@ -637,6 +644,61 @@ contract('BancorConverter', accounts => {
             assert(false, "didn't throw");
         }
         catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('verifies that the owner can transfer the token ownership if the owner is the upgrader contract', async () => {
+        let converter = await initConverter(accounts, true);
+
+        let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
+        await contractRegistry.registerAddress(bancorConverterUpgraderId, accounts[0]);
+
+        await converter.transferTokenOwnership(accounts[1]);
+
+        await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
+        let tokenAddress = await converter.token.call();
+        let contract = await web3.eth.contract(SmartTokenAbi);
+        let token = await contract.at(tokenAddress);
+        let newOwner = await token.newOwner.call();
+        assert.equal(newOwner, accounts[1]);
+    });
+
+    it('should throw when the owner attempts to transfer the token ownership', async () => {
+        let converter = await initConverter(accounts, true);
+
+        try {
+            await converter.transferTokenOwnership(accounts[1]);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when a non owner attempts to transfer the token ownership', async () => {
+        let converter = await initConverter(accounts, true);
+
+        try {
+            await converter.transferTokenOwnership(accounts[1], { from: accounts[2] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when a the upgrader contract attempts to transfer the token ownership while the upgrader is not the owner', async () => {
+        let converter = await initConverter(accounts, true);
+        let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
+        await contractRegistry.registerAddress(bancorConverterUpgraderId, accounts[2]);
+
+        try {
+            await converter.transferTokenOwnership(accounts[1], { from: accounts[2] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
             return utils.ensureException(error);
         }
     });

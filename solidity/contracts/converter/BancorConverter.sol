@@ -163,6 +163,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
+    // allows execution by the converter upgrader contract only
+    modifier converterUpgraderOnly {
+        address converterUpgrader = registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER);
+        require(owner == converterUpgrader);
+        _;
+    }
+
     /**
         @dev returns the number of connector tokens defined
 
@@ -225,6 +232,22 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     function disableConversions(bool _disable) public ownerOrManagerOnly {
         conversionsEnabled = !_disable;
+    }
+
+    /**
+        @dev allows transferring the token ownership
+        the new owner needs to accept the transfer
+        can only be called by the contract owner
+        note that token ownership can only be transferred while the owner is the converter upgrader contract
+
+        @param _newOwner    new token owner
+    */
+    function transferTokenOwnership(address _newOwner)
+        public
+        ownerOnly
+        converterUpgraderOnly
+    {
+        super.transferTokenOwnership(_newOwner);
     }
 
     /**
