@@ -274,7 +274,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-        @dev upgrades the converter to a newer version
+        @dev upgrades the converter to the latest version
         can only be called by the owner
         note that the owner needs to call acceptOwnership on the new converter after the upgrade
     */
