@@ -81,7 +81,20 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
     }
 
     /**
-        @dev upgrade an old converter to the latest version
+        @dev upgrades an old converter to the latest version
+        will throw if ownership wasn't transferred to the upgrader before calling this function.
+        ownership of the new converter will be transferred back to the original owner.
+        fires the ConverterUpgrade event upon success.
+        can only be called by a converter
+
+        @param _version old converter version
+    */
+    function upgrade(bytes32 _version) public {
+        upgradeOld(IBancorConverter(msg.sender), _version);
+    }
+
+    /**
+        @dev upgrades an old converter to the latest version
         will throw if ownership wasn't transferred to the upgrader before calling this function.
         ownership of the new converter will be transferred back to the original owner.
         fires the ConverterUpgrade event upon success.
@@ -89,11 +102,12 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
         @param _converter   old converter contract address
         @param _version     old converter version
     */
-    function upgrade(IBancorConverter _converter, bytes32 _version) public {
+    function upgradeOld(IBancorConverter _converter, bytes32 _version) public {
         bool formerVersions = false;
         if (_version == "0.4")
             formerVersions = true;
         IBancorConverterExtended converter = IBancorConverterExtended(_converter);
+        address prevOwner = converter.owner();
         acceptConverterOwnership(converter);
         IBancorConverterExtended newConverter = createConverter(converter);
         copyConnectors(converter, newConverter, formerVersions);
@@ -107,9 +121,9 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
             newConverter.acceptTokenOwnership();
         }
 
-        converter.transferOwnership(msg.sender);
-        newConverter.transferOwnership(msg.sender);
-        newConverter.transferManagement(msg.sender);
+        converter.transferOwnership(prevOwner);
+        newConverter.transferOwnership(prevOwner);
+        newConverter.transferManagement(prevOwner);
 
         emit ConverterUpgrade(address(converter), address(newConverter));
     }
@@ -123,7 +137,6 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
         @param _oldConverter       converter to accept ownership of
     */
     function acceptConverterOwnership(IBancorConverterExtended _oldConverter) private {
-        require(msg.sender == _oldConverter.owner());
         _oldConverter.acceptOwnership();
         emit ConverterOwned(_oldConverter, this);
     }

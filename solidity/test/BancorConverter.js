@@ -674,31 +674,12 @@ contract('BancorConverter', accounts => {
         balance = await token.balanceOf.call(accounts[1]);
         assert.equal(balance, 50);
     });
-
-    it('verifies that the upgrader can upgrade the converter while the converter is active', async () => {
-        let converter = await initConverter(accounts, true);
-
-        await converter.transferOwnership(upgrader.address);
-        await upgrader.upgrade(converter.address, web3.fromUtf8("0.9"));
-    });
  
     it('should throw when the owner attempts to withdraw a connector token while the converter is active', async () => {
         let converter = await initConverter(accounts, true);
 
         try {
             await converter.withdrawTokens(connectorToken.address, accounts[1], 50);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when the upgrader attempts upgrade the converter while the converter is active and the upgrader is not the owner', async () => {
-        let converter = await initConverter(accounts, true);
-
-        try {
-            await upgrader.upgrade(converter.address, '0.9');
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -740,6 +721,34 @@ contract('BancorConverter', accounts => {
 
         try {
             await converter.withdrawTokens(connectorToken.address, accounts[1], 50, { from: accounts[2] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('verifies that the owner can upgrade the converter while the converter is active', async () => {
+        let converter = await initConverter(accounts, true);
+        await converter.upgrade();
+    });
+
+    it('verifies that the owner can upgrade the converter while the converter is not active', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.upgrade();
+    });
+
+    it('verifies that the owner can upgrade the converter while the converter using the legacy upgrade function', async () => {
+        let converter = await initConverter(accounts, true);
+        await converter.transferOwnership(upgrader.address);
+        await upgrader.upgradeOld(converter.address, web3.fromUtf8("0.9"));
+    });
+
+    it('should throw when a non owner attempts to upgrade the converter', async () => {
+        let converter = await initConverter(accounts, true);
+
+        try {
+            await converter.upgrade({ from: accounts[1] });
             assert(false, "didn't throw");
         }
         catch (error) {

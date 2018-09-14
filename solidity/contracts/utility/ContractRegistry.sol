@@ -95,20 +95,20 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
         // if there are multiple items in the registry, move the last element to the deleted element's position
         // and modify last element's registryItem.nameIndex in the items collection to point to the right position in contractNames
-        if (contractNames.length > 1)
+        if (contractNames.length > 1) {
             string memory lastContractNameString = contractNames[contractNames.length - 1];
-            uint unregisterIndex = items[_contractName].nameIndex;
+            uint256 unregisterIndex = items[_contractName].nameIndex;
 
             contractNames[unregisterIndex] = lastContractNameString;
             bytes32 lastContractName = stringToBytes32(lastContractNameString);
             RegistryItem storage registryItem = items[lastContractName];
             registryItem.nameIndex = unregisterIndex;
+        }
 
-            // remove the last element from the name list
-            contractNames.length--;
-            // zero the deleted element's index
-            items[_contractName].nameIndex = 0;
-
+        // remove the last element from the name list
+        contractNames.length--;
+        // zero the deleted element's index
+        items[_contractName].nameIndex = 0;
 
         // dispatch the address update event
         emit AddressUpdate(_contractName, address(0));

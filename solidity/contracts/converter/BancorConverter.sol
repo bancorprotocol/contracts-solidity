@@ -46,7 +46,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    string public version = '0.10';
+    bytes32 public version = '0.10';
     string public converterType = 'bancor';
 
     IContractRegistry public registry;                  // contract registry contract
@@ -271,6 +271,19 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
         require(!connectors[_token].isSet || token.owner() != address(this) || owner == converterUpgrader);
         super.withdrawTokens(_token, _to, _amount);
+    }
+
+    /**
+        @dev upgrades the converter to a newer version
+        can only be called by the owner
+        note that the owner needs to call acceptOwnership on the new converter after the upgrade
+    */
+    function upgrade() public ownerOnly {
+        IBancorConverterUpgrader converterUpgrader = IBancorConverterUpgrader(registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER));
+
+        transferOwnership(converterUpgrader);
+        converterUpgrader.upgrade(version);
+        acceptOwnership();
     }
 
     /**
