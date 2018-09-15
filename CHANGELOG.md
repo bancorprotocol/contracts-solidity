@@ -8,6 +8,7 @@ Converters:
 * Converter owner can no longer withdraw connector tokens while the converter is active
 * Converter owner can no longer transfer the token ownership
 * Added a dedicated `upgrade` function for easier upgrades
+* Added a `liquidate` function for decreasing liquidity atomically even when conversions are disabled
 
 Registry:
 * Fixed item removal

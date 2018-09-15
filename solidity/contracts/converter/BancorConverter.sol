@@ -150,6 +150,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
+    // allows execution only when the total weight is 100%
+    modifier maxTotalWeightOnly() {
+        require(totalConnectorWeight == MAX_WEIGHT);
+        _;
+    }
+
     // allows execution only when conversions aren't disabled
     modifier conversionsAllowed {
         assert(conversionsEnabled);
@@ -716,6 +722,45 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // execute the conversion and pass on the ETH with the call
         return bancorNetwork.convertForPrioritized2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _block, _v, _r, _s);
+    }
+
+    /**
+        @dev sells the token for all connector tokens using the same percentage
+        i.e. if the holder sells 10% of the supply, they will receive 10% of each
+        connector token balance in return
+        can only be called if the max total weight is exactly 100%
+        note that the function can also be called if conversions are disabled
+
+        @param _amount  amount to liquidate (in the smart token)
+    */
+    function liquidate(uint256 _amount) public maxTotalWeightOnly {
+        uint256 supply = token.totalSupply();
+
+        // destroy _amount from the caller's balance in the smart token
+        token.destroy(msg.sender, _amount);
+
+        // iterate through the connector tokens and send a percentage equal to the ratio between _amount
+        // and the total supply from each connector balance to the caller
+        IERC20Token connectorToken;
+        uint256 connectorBalance;
+        uint256 connectorAmount;
+        for (uint16 i = 0; i < connectorTokens.length; i++) {
+            connectorToken = connectorTokens[i];
+            connectorBalance = getConnectorBalance(connectorToken);
+            connectorAmount = safeMul(_amount, connectorBalance) / supply;
+
+            // update virtual balance if relevant
+            Connector storage connector = connectors[connectorToken];
+            if (connector.isVirtualBalanceEnabled)
+                connector.virtualBalance = safeSub(connector.virtualBalance, connectorAmount);
+
+            // transfer funds to the caller in the connector token
+            // the transfer might fail if the actual connector balance is smaller than the virtual balance
+            assert(connectorToken.transfer(msg.sender, connectorAmount));
+
+            // dispatch price data update for the smart token/connector
+            emit PriceDataUpdate(connectorToken, supply - _amount, connectorBalance - connectorAmount, connector.weight);
+        }
     }
 
     // deprecated, backward compatibility
