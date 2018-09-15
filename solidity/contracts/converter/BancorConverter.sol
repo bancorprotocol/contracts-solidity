@@ -725,6 +725,47 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
+        @dev buys the token with all connector tokens using the same percentage
+        i.e. if the caller increases the supply by 10%, it will cost an amount equal to
+        10% of each connector token balance
+        can only be called if the max total weight is exactly 100% and while conversions are enabled
+
+        @param _amount  amount to increase the supply by (in the smart token)
+    */
+    function fund(uint256 _amount)
+        public
+        maxTotalWeightOnly
+        conversionsAllowed
+    {
+        uint256 supply = token.totalSupply();
+
+        // iterate through the connector tokens and transfer a percentage equal to the ratio between _amount
+        // and the total supply in each connector from the caller to the converter
+        IERC20Token connectorToken;
+        uint256 connectorBalance;
+        uint256 connectorAmount;
+        for (uint16 i = 0; i < connectorTokens.length; i++) {
+            connectorToken = connectorTokens[i];
+            connectorBalance = getConnectorBalance(connectorToken);
+            connectorAmount = safeMul(_amount, connectorBalance) / supply;
+
+            // update virtual balance if relevant
+            Connector storage connector = connectors[connectorToken];
+            if (connector.isVirtualBalanceEnabled)
+                connector.virtualBalance = safeAdd(connector.virtualBalance, connectorAmount);
+
+            // transfer funds from the caller in the connector token
+            assert(connectorToken.transferFrom(msg.sender, this, connectorAmount));
+
+            // dispatch price data update for the smart token/connector
+            emit PriceDataUpdate(connectorToken, supply + _amount, connectorBalance + connectorAmount, connector.weight);
+        }
+
+        // issue new funds to the caller in the smart token
+        token.issue(msg.sender, _amount);
+    }
+
+    /**
         @dev sells the token for all connector tokens using the same percentage
         i.e. if the holder sells 10% of the supply, they will receive 10% of each
         connector token balance in return

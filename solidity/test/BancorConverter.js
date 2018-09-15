@@ -107,9 +107,9 @@ contract('BancorConverter', accounts => {
         let token = await SmartToken.new('Token1', 'TKN1', 2); 
         tokenAddress = token.address;
         
-        connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000000);
-        connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000000);
-        connectorToken3 = await TestERC20Token.new('ERC Token 3', 'ERC2', 150000000);
+        connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 1000000000);
+        connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 2000000000);
+        connectorToken3 = await TestERC20Token.new('ERC Token 3', 'ERC2', 1500000000);
     });
 
     it('verifies the converter data after construction', async () => {
@@ -278,7 +278,7 @@ contract('BancorConverter', accounts => {
         assert.equal(finalAmount, 490050);
     });
 
-    it('verifies that an event is fired when the owner update the fee', async () => {
+    it('verifies that an event is fired when the owner updates the fee', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
         let watcher = converter.ConversionFeeUpdate();
         await converter.setConversionFee(30000);
@@ -287,7 +287,7 @@ contract('BancorConverter', accounts => {
         assert.equal(events[0].args._newFee.valueOf(), 30000);
     });
 
-    it('verifies that an event is fired when the owner update the fee multiple times', async () => {
+    it('verifies that an event is fired when the owner updates the fee multiple times', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
         let watcher = converter.ConversionFeeUpdate();
         let events;
@@ -354,8 +354,8 @@ contract('BancorConverter', accounts => {
     it('should throw when attempting to add a connector when the converter is active', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         let converter = await BancorConverter.new(token.address, contractRegistry.address, 0, '0x0', 0);
-        token.transferOwnership(converter.address);
-        converter.acceptTokenOwnership();
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
 
         try {
             await converter.addConnector(connectorToken.address, weight10Percent, false);
@@ -1275,6 +1275,220 @@ contract('BancorConverter', accounts => {
         assert.equal(returnAmount.toNumber(), returnAmount2);
     });
 
+    it('verifies that fund executes when the total connector weight equals 100%', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addConnector(connectorToken3.address, 600000, false);
+
+        await connectorToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        let prevBalance = await token.balanceOf.call(accounts[0]);
+        await connectorToken.approve(converter.address, 100000);
+        await connectorToken2.approve(converter.address, 100000);
+        await connectorToken3.approve(converter.address, 100000);
+        await converter.fund(100);
+        let balance = await token.balanceOf.call(accounts[0]);
+
+        assert.equal(balance.toNumber(), prevBalance.toNumber() + 100);
+    });
+
+    it('verifies that fund updates the virtual balance correctly', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addConnector(connectorToken3.address, 600000, false);
+        await converter.updateConnector(connectorToken3.address, 600000, true, 7000);
+
+        await connectorToken3.transfer(converter.address, 1000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        let supply = await token.totalSupply.call();
+        let percentage = 100 / (supply / 60);
+        let prevConnector3Balance = await converter.getConnectorBalance.call(connectorToken3.address);
+        let token3Amount = prevConnector3Balance * percentage / 100;
+        await connectorToken.approve(converter.address, 100000);
+        await connectorToken2.approve(converter.address, 100000);
+        await connectorToken3.approve(converter.address, 100000);
+        await converter.fund(60);
+        
+        let connector3Balance = await converter.getConnectorBalance.call(connectorToken3.address);
+        assert.equal(connector3Balance.toNumber(), prevConnector3Balance.plus(Math.floor(token3Amount)).toNumber());
+    });
+
+    it('verifies that fund gets the correct connector balance amounts from the caller', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addConnector(connectorToken3.address, 600000, false);
+
+        await connectorToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        await connectorToken.transfer(accounts[9], 5000);
+        await connectorToken2.transfer(accounts[9], 5000);
+        await connectorToken3.transfer(accounts[9], 5000);
+
+        let supply = await token.totalSupply.call();
+        let percentage = 100 / (supply / 19);
+        let prevConnector1Balance = await converter.getConnectorBalance.call(connectorToken.address);
+        let prevConnector2Balance = await converter.getConnectorBalance.call(connectorToken2.address);
+        let prevConnector3Balance = await converter.getConnectorBalance.call(connectorToken3.address);
+        let token1Amount = prevConnector1Balance * percentage / 100;
+        let token2Amount = prevConnector2Balance * percentage / 100;
+        let token3Amount = prevConnector3Balance * percentage / 100;
+
+        await connectorToken.approve(converter.address, 100000, { from: accounts[9] });
+        await connectorToken2.approve(converter.address, 100000, { from: accounts[9] });
+        await connectorToken3.approve(converter.address, 100000, { from: accounts[9] });
+        await converter.fund(19, { from: accounts[9] });
+
+        let connector1Balance = await converter.getConnectorBalance.call(connectorToken.address);
+        let connector2Balance = await converter.getConnectorBalance.call(connectorToken2.address);
+        let connector3Balance = await converter.getConnectorBalance.call(connectorToken3.address);
+
+        assert.equal(connector1Balance.toNumber(), prevConnector1Balance.plus(Math.floor(token1Amount)));
+        assert.equal(connector2Balance.toNumber(), prevConnector2Balance.plus(Math.floor(token2Amount)));
+        assert.equal(connector3Balance.toNumber(), prevConnector3Balance.plus(Math.floor(token3Amount)));
+
+        let token1Balance = await connectorToken.balanceOf.call(accounts[9]);
+        let token2Balance = await connectorToken2.balanceOf.call(accounts[9]);
+        let token3Balance = await connectorToken3.balanceOf.call(accounts[9]);
+
+        await connectorToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
+        await connectorToken2.transfer(accounts[0], token2Balance, { from: accounts[9] });
+        await connectorToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
+    });
+
+    it('verifies that increasing the liquidity by a large amount gets the correct connector balance amounts from the caller', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addConnector(connectorToken3.address, 600000, false);
+
+        await connectorToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        await connectorToken.transfer(accounts[9], 500000);
+        await connectorToken2.transfer(accounts[9], 500000);
+        await connectorToken3.transfer(accounts[9], 500000);
+
+        let supply = await token.totalSupply.call();
+        let percentage = 100 / (supply / 140854);
+        let prevConnector1Balance = await converter.getConnectorBalance.call(connectorToken.address);
+        let prevConnector2Balance = await converter.getConnectorBalance.call(connectorToken2.address);
+        let prevConnector3Balance = await converter.getConnectorBalance.call(connectorToken3.address);
+        let token1Amount = prevConnector1Balance * percentage / 100;
+        let token2Amount = prevConnector2Balance * percentage / 100;
+        let token3Amount = prevConnector3Balance * percentage / 100;
+
+        await connectorToken.approve(converter.address, 100000, { from: accounts[9] });
+        await connectorToken2.approve(converter.address, 100000, { from: accounts[9] });
+        await connectorToken3.approve(converter.address, 100000, { from: accounts[9] });
+        await converter.fund(140854, { from: accounts[9] });
+
+        let connector1Balance = await converter.getConnectorBalance.call(connectorToken.address);
+        let connector2Balance = await converter.getConnectorBalance.call(connectorToken2.address);
+        let connector3Balance = await converter.getConnectorBalance.call(connectorToken3.address);
+
+        assert.equal(connector1Balance.toNumber(), prevConnector1Balance.plus(Math.floor(token1Amount)));
+        assert.equal(connector2Balance.toNumber(), prevConnector2Balance.plus(Math.floor(token2Amount)));
+        assert.equal(connector3Balance.toNumber(), prevConnector3Balance.plus(Math.floor(token3Amount)));
+
+        let token1Balance = await connectorToken.balanceOf.call(accounts[9]);
+        let token2Balance = await connectorToken2.balanceOf.call(accounts[9]);
+        let token3Balance = await connectorToken3.balanceOf.call(accounts[9]);
+
+        await connectorToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
+        await connectorToken2.transfer(accounts[0], token2Balance, { from: accounts[9] });
+        await connectorToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
+    });
+
+    it('should throw when attempting to fund the converter while conversions are disabled', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addConnector(connectorToken3.address, 600000, false);
+
+        await connectorToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        await connectorToken.approve(converter.address, 100000);
+        await connectorToken2.approve(converter.address, 100000);
+        await connectorToken3.approve(converter.address, 100000);
+        await converter.fund(100);
+
+        await converter.disableConversions(true);
+        let conversionsEnabled = await converter.conversionsEnabled.call();
+        assert.equal(conversionsEnabled, false);
+
+        try {
+            await converter.fund(100);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to fund the converter when the total connector weight is not equal to 100%', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addConnector(connectorToken3.address, 500000, false);
+
+        await connectorToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        await connectorToken.approve(converter.address, 100000);
+        await connectorToken2.approve(converter.address, 100000);
+        await connectorToken3.approve(converter.address, 100000);
+
+        try {
+            await converter.fund(100);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to fund the converter with insufficient funds', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addConnector(connectorToken3.address, 600000, false);
+
+        await connectorToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        await connectorToken.transfer(accounts[9], 100);
+        await connectorToken2.transfer(accounts[9], 100);
+        await connectorToken3.transfer(accounts[9], 100);
+
+        await connectorToken.approve(converter.address, 100000, { from: accounts[9] });
+        await connectorToken2.approve(converter.address, 100000, { from: accounts[9] });
+        await connectorToken3.approve(converter.address, 100000, { from: accounts[9] });
+        await converter.fund(5, { from: accounts[9] });
+
+        try {
+            await converter.fund(600, { from: accounts[9] });
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            let token1Balance = await connectorToken.balanceOf.call(accounts[9]);
+            let token2Balance = await connectorToken2.balanceOf.call(accounts[9]);
+            let token3Balance = await connectorToken3.balanceOf.call(accounts[9]);
+
+            await connectorToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
+            await connectorToken2.transfer(accounts[0], token2Balance, { from: accounts[9] });
+            await connectorToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
+            
+            return utils.ensureException(error);
+        }
+    });
+
     it('verifies that liquidate executes when the total connector weight equals 100%', async () => {
         let converter = await initConverter(accounts, false);
         await converter.addConnector(connectorToken3.address, 600000, false);
@@ -1303,12 +1517,12 @@ contract('BancorConverter', accounts => {
 
         let supply = await token.totalSupply.call();
         let percentage = 100 / (supply / 60);
-        let prevconnector3Balance = await converter.getConnectorBalance.call(connectorToken3.address);
-        let token3Amount = prevconnector3Balance * percentage / 100;
+        let prevConnector3Balance = await converter.getConnectorBalance.call(connectorToken3.address);
+        let token3Amount = prevConnector3Balance * percentage / 100;
         await converter.liquidate(60);
         
         let connector3Balance = await converter.getConnectorBalance.call(connectorToken3.address);
-        assert.equal(connector3Balance.toNumber(), prevconnector3Balance.minus(Math.floor(token3Amount)).toNumber());
+        assert.equal(connector3Balance.toNumber(), prevConnector3Balance.minus(Math.floor(token3Amount)).toNumber());
     });
 
     it('verifies that liquidate sends the correct connector balance amounts to the caller', async () => {
