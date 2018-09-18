@@ -15,7 +15,3 @@ def calculateSaleReturn(supply, balance, weight, amount):
 
 def power(baseN, baseD, expN, expD, precision):
     return (Decimal(baseN)/Decimal(baseD))**(Decimal(expN)/Decimal(expD))*2**precision
-
-
-def ln(numerator, denominator, precision):
-    return (Decimal(numerator)/Decimal(denominator)).ln()*2**precision

@@ -49,7 +49,7 @@ if ( process.argv[2] == 'migrate' ) {
     solc: {
       optimizer: {
         enabled: true,
-        runs: 200
+        runs: 5000000
       }
     }
   };
@@ -66,7 +66,7 @@ if ( process.argv[2] == 'migrate' ) {
     solc: {
       optimizer: {
         enabled: true,
-        runs: 200
+        runs: 5000000
       }
     }
   };
