@@ -4,10 +4,12 @@
 // Bancor components
 const SmartToken = artifacts.require('SmartToken.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
+const BancorNetwork = artifacts.require('BancorNetwork.sol');
+const ContractIds = artifacts.require('ContractIds.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
-const BancorQuickConverter = artifacts.require('BancorQuickConverter.sol');
-const BancorConverterExtensions = artifacts.require('BancorConverterExtensions.sol');
+const ContractRegistry = artifacts.require('ContractRegistry.sol');
+const ContractFeatures = artifacts.require('ContractFeatures.sol');
 
 // Financie components
 const FinancieBancorConverter = artifacts.require('FinancieBancorConverter.sol');
@@ -48,16 +50,26 @@ contract('FinancieBancorConverter', (accounts) => {
 
         smartToken = await SmartToken.new('Token1', 'TKN', 0);
 
-        let formula = await BancorFormula.new();
-        let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
-        let quickConverter = await BancorQuickConverter.new();
-        quickConverter.registerEtherToken(etherToken.address, true);
+        let contractRegistry = await ContractRegistry.new();
+        let contractIds = await ContractIds.new();
 
-        let extension = await BancorConverterExtensions.new(
-            formula.address,
-            gasPriceLimit.address,
-            quickConverter.address
-        );
+        contractFeatures = await ContractFeatures.new();
+        let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
+        await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
+
+        let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
+        let gasPriceLimitId = await contractIds.BANCOR_GAS_PRICE_LIMIT.call();
+        await contractRegistry.registerAddress(gasPriceLimitId, gasPriceLimit.address);
+
+        let formula = await BancorFormula.new();
+        let formulaId = await contractIds.BANCOR_FORMULA.call();
+        await contractRegistry.registerAddress(formulaId, formula.address);
+
+        let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+        let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
+        await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
+        await bancorNetwork.setSignerAddress(accounts[0]);
+        await bancorNetwork.registerEtherToken(etherToken.address, true);
 
         bancor = await FinancieBancorConverter.new(
             smartToken.address,
@@ -65,7 +77,7 @@ contract('FinancieBancorConverter', (accounts) => {
             cardToken.address,
             "0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C",
             "0x46a254FD6134eA0f564D07A305C0Db119a858d66",
-            extension.address,
+            contractRegistry.address,
             financieNotifier.address,
             15000,
             15000,
@@ -73,18 +85,18 @@ contract('FinancieBancorConverter', (accounts) => {
 
         console.log('[FinancieBancorConverter]begin setup');
 
-        etherToken.sendTransaction({from: accounts[0], value:2 * (10 ** 10)});
+        etherToken.sendTransaction({from: accounts[0], value:2 * (10 ** 5)});
 
         bancor.addConnector(etherToken.address, 10000, false);
 
-        etherToken.transfer(bancor.address, 2 * (10 ** 10));
+        etherToken.transfer(bancor.address, 2 * (10 ** 5));
 
-        await smartToken.issue(bancor.address, 1000000 * (10 ** 18));
+        await smartToken.issue(bancor.address, 1000000 * (10 ** 5));
 
         let balanceOfEtherToken = await etherToken.balanceOf(bancor.address);
-        assert.equal(20000000000, balanceOfEtherToken);
+        assert.equal(200000, balanceOfEtherToken);
 
-        cardToken.transfer(bancor.address, 20000 * (10 ** 18));
+        cardToken.transfer(bancor.address, 20000 * (10 ** 5));
 
         smartToken.transferOwnership(bancor.address);
 
@@ -97,10 +109,10 @@ contract('FinancieBancorConverter', (accounts) => {
     });
 
     it('sellCards', async () => {
-        let amountSellCard = 10000 * (10 ** 18)
+        let amountSellCard = 10000 * (10 ** 5);
 
         let estimationSell = await bancor.getReturn(cardToken.address, etherToken.address, amountSellCard);
-        console.log('[FinancieBancorConverter]estimationSell:' + (estimationSell * (0.1 ** 18)));
+        console.log('[FinancieBancorConverter]estimationSell:' + estimationSell.toFixed());
 
         await cardToken.approve(bancor.address, amountSellCard);
         console.log('[FinancieBancorConverter]approve cards');
@@ -114,13 +126,16 @@ contract('FinancieBancorConverter', (accounts) => {
 
     it('buyCards', async () => {
         let estimationBuy = await bancor.getReturn(etherToken.address, cardToken.address, 10 ** 5);
-        console.log('[FinancieBancorConverter]estimationBuy:' + (estimationBuy * (0.1 ** 18)));
+        console.log('[FinancieBancorConverter]estimationBuy:' + estimationBuy.toFixed());
 
-        let before = await cardToken.balanceOf(accounts[0]);
-        console.log('[FinancieBancorConverter]bancor balance of card token:' + before);
+        let beforeBuy = await cardToken.balanceOf(accounts[0]);
+        console.log('[FinancieBancorConverter]balance of card token before:' + beforeBuy.toFixed());
 
         await bancor.buyCards(10 ** 5, estimationBuy, {gasPrice: gasPrice, from: accounts[0], value: 10 ** 5});
         console.log('[FinancieBancorConverter]buy cards');
+
+        let afterBuy = await cardToken.balanceOf(accounts[0]);
+        console.log('[FinancieBancorConverter]balance of card token after:' + afterBuy.toFixed());
 
         try {
             await bancor.buyCards(10 ** 5, estimationBuy, {gasPrice: gasPriceBad, from: accounts[0], value: 10 ** 5});
@@ -128,8 +143,5 @@ contract('FinancieBancorConverter', (accounts) => {
         } catch ( e ) {
             // should reach here because of invalid gas price
         }
-
-        let after = await cardToken.balanceOf(accounts[0]);
-        console.log('[FinancieBancorConverter]bancor balance of card token:' + after);
     });
 });

@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 import './IFinancieManagedContracts.sol';
-import '../interfaces/IERC20Token.sol';
-import '../Owned.sol';
+import '../token/interfaces/IERC20Token.sol';
+import '../utility/Owned.sol';
 
 contract FinancieCoreComponents is Owned {
 

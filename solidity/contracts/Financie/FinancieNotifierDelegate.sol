@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
 import './IFinancieNotifier.sol';
-import '../Owned.sol';
+import '../utility/Owned.sol';
 
 contract FinancieNotifierDelegate is Owned {
     IFinancieNotifier public notifier;
@@ -20,7 +20,6 @@ contract FinancieNotifierDelegate is Owned {
 
     function notifyApproveNewCards(address _card)
         internal
-        ownerDelegatedOnly
     {
         notifier = IFinancieNotifier(notifier.latestNotifier());
         notifier.notifyApproveNewCards(_card);
@@ -28,7 +27,6 @@ contract FinancieNotifierDelegate is Owned {
 
     function notifyCardAuctionFinalized(address _card, address _auction)
         internal
-        ownerDelegatedOnly
     {
         notifier = IFinancieNotifier(notifier.latestNotifier());
         notifier.notifyCardAuctionFinalized(_card, _auction);
@@ -36,7 +34,6 @@ contract FinancieNotifierDelegate is Owned {
 
     function notifyApproveNewBancor(address _card, address _bancor)
         internal
-        ownerDelegatedOnly
     {
         notifier = IFinancieNotifier(notifier.latestNotifier());
         notifier.notifyApproveNewBancor(_card, _bancor);

@@ -295,26 +295,43 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-        @dev returns the number of convertible tokens supported by the contract
-        note that the number of convertible tokens is the number of connector token, plus 1 (that represents the smart token)
+        @dev updates one of the token connectors
+        can only be called by the owner
 
-        @return number of convertible tokens
+        @param _connectorToken         address of the connector token
+        @param _weight                 constant connector weight, represented in ppm, 1-1000000
+        @param _enableVirtualBalance   true to enable virtual balance for the connector, false to disable it
+        @param _virtualBalance         new connector's virtual balance
     */
-    function convertibleTokenCount() public view returns (uint16) {
-        return connectorTokenCount() + 1;
+    function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance)
+        public
+        ownerOnly
+        validConnector(_connectorToken)
+        validConnectorWeight(_weight)
+    {
+        Connector storage connector = connectors[_connectorToken];
+        require(totalConnectorWeight - connector.weight + _weight <= MAX_WEIGHT); // validate input
+
+        totalConnectorWeight = totalConnectorWeight - connector.weight + _weight;
+        connector.weight = _weight;
+        connector.isVirtualBalanceEnabled = _enableVirtualBalance;
+        connector.virtualBalance = _virtualBalance;
     }
 
     /**
-        @dev given a convertible token index, returns its contract address
+        @dev disables purchasing with the given connector token in case the connector token got compromised
+        can only be called by the owner
+        note that selling is still enabled regardless of this flag and it cannot be disabled by the owner
 
-        @param _tokenIndex  convertible token index
-
-        @return convertible token address
+        @param _connectorToken  connector token contract address
+        @param _disable         true to disable the token, false to re-enable it
     */
-    function convertibleToken(uint16 _tokenIndex) public view returns (address) {
-        if (_tokenIndex == 0)
-            return token;
-        return connectorTokens[_tokenIndex - 1];
+    function disableConnectorPurchases(IERC20Token _connectorToken, bool _disable)
+        public
+        ownerOnly
+        validConnector(_connectorToken)
+    {
+        connectors[_connectorToken].isPurchaseEnabled = !_disable;
     }
 
     /**
@@ -678,6 +695,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         note that the purchase will use the price at the time of the purchase
     */
     function() payable public {
-        revert();
+        quickConvert(quickBuyPath, msg.value, 1);
     }
 }

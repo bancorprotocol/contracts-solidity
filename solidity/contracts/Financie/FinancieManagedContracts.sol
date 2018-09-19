@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 import './IFinancieManagedContracts.sol';
-import '../Utils.sol';
-import '../Owned.sol';
+import '../utility/Utils.sol';
+import '../utility/Owned.sol';
 
 /**
     **FROZEN**

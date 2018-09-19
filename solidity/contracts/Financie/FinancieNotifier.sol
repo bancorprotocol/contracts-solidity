@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 import './IFinancieNotifier.sol';
 import './FinancieCoreComponents.sol';
-import '../Utils.sol';
+import '../utility/Utils.sol';
 
 contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     address latest;
@@ -32,12 +32,17 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         latest = address(this);
     }
 
+    modifier sameOwner {
+        assert(msg.sender == owner || IOwned(msg.sender).owner() == owner);
+        _;
+    }
+
     /**
     *   @notice Set latest notifier
     */
     function setLatestNotifier(address _latest)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         latest = _latest;
     }
@@ -87,7 +92,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyApproveNewCards(address _card)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         ApproveNewCards(_card);
     }
@@ -97,7 +102,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyCardAuctionFinalized(address _card, address _auction)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         CardAuctionFinalized(_card, _auction);
     }
@@ -107,7 +112,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyApproveNewBancor(address _card, address _bancor)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         ApproveNewBancor(_card, _bancor);
     }
@@ -117,7 +122,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyPurchaseTickets(address _sender, address _card, address _ticket, uint256 _price, uint256 _amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         AddOwnedTicketList(_sender, _ticket);
 
@@ -137,7 +142,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyBurnTickets(address _sender, uint256 _amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         AddPaidTicketList(_sender, msg.sender, _amount);
 
@@ -161,7 +166,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         uint256 _amountFrom,
         uint256 _amountTo)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         if ( _to == address(etherToken) ) {
             Log(
@@ -193,7 +198,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyBidCards(address _sender, address _to, uint256 _amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         Log(
           _sender,
@@ -213,7 +218,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyWithdrawalCards(address _sender, address _to, uint256 _bids, uint256 _amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         AddOwnedCardList(_sender, _to);
 
@@ -235,7 +240,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyBurnCards(address _sender, uint256 _amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         Log(
           _sender,

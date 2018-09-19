@@ -4,10 +4,8 @@
 // Bancor components
 const SmartToken = artifacts.require('SmartToken.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
-const BancorConverterExtensions = artifacts.require('BancorConverterExtensions.sol');
 
 // Financie components
-const FinancieBancorConverter = artifacts.require('FinancieBancorConverter.sol');
 const FinanciePlatformToken = artifacts.require('FinanciePlatformToken.sol');
 const FinancieCardToken = artifacts.require('FinancieCardToken.sol');
 const FinancieHeroesDutchAuction = artifacts.require('FinancieHeroesDutchAuction.sol');

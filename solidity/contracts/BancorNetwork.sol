@@ -95,8 +95,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev verifies that the signer address is trusted by recovering 
-        the address associated with the public key from elliptic 
+        @dev verifies that the signer address is trusted by recovering
+        the address associated with the public key from elliptic
         curve signature, returns zero on error.
         notice that the signature is valid only for one conversion
         and expires after the give block.
@@ -183,7 +183,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _paths           merged conversion paths, i.e. [path1, path2, ...]. see conversion path format above
         @param _pathStartIndex  each item in the array is the start index of the nth path in _paths
         @param _amounts         amount to convert from (in the initial source token) for each path
-        @param _minReturns      minimum return for each path. if the conversion results in an amount 
+        @param _minReturns      minimum return for each path. if the conversion results in an amount
                                 smaller than the minimum return - it is cancelled, must be nonzero
         @param _for             account that will receive the conversions result
 
@@ -197,7 +197,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         // if ETH is provided, ensure that the total amount was converted into other tokens
         uint256 convertedValue = 0;
         uint256 pathEndIndex;
-        
+
         // iterate over the conversion paths
         for (uint256 i = 0; i < _pathStartIndex.length; i += 1) {
             pathEndIndex = i == (_pathStartIndex.length - 1) ? _paths.length : _pathStartIndex[i + 1];
@@ -209,7 +209,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             }
 
             // if ETH is provided, ensure that the amount is lower than the path amount and
-            // verify that the source token is an ether token. otherwise ensure that 
+            // verify that the source token is an ether token. otherwise ensure that
             // the source is not an ether token
             IERC20Token fromToken = path[0];
             require(msg.value == 0 || (_amounts[i] <= msg.value && etherTokens[fromToken]) || !etherTokens[fromToken]);
@@ -246,13 +246,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @return tokens issued in return
     */
     function convertForInternal(
-        IERC20Token[] _path, 
-        uint256 _amount, 
-        uint256 _minReturn, 
-        address _for, 
-        uint256 _block, 
-        uint8 _v, 
-        bytes32 _r, 
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _for,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
         bytes32 _s
     )
         private
@@ -271,7 +271,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         IERC20Token fromToken = _path[0];
 
         IERC20Token toToken;
-        
+
         (toToken, _amount) = convertByPath(_path, _amount, _minReturn, fromToken, _for);
 
         // finished the conversion, transfer the funds to the target account
