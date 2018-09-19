@@ -1,6 +1,6 @@
 {
-  "name": "evolutionlandbancor",
-  "version": "0.1.0",
+  "name": "@evolutionland/bancor",
+  "version": "0.1.1",
   "description": "Evolution Land Bancor Contracts",
   "author": "Evolution Land",
   "repository": {
