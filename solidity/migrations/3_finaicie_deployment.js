@@ -39,11 +39,15 @@ module.exports = function(deployer, _network, _accounts) {
             }
         })
         .then((instance) => {
-            managedContracts = instance;
-            return managedContracts.activateTargetContract(process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS === undefined ? FinanciePlatformToken.address : process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS, true);
+            if ( process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS === undefined ) {
+                managedContracts = instance;
+                return managedContracts.activateTargetContract(process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS === undefined ? FinanciePlatformToken.address : process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS, true);
+            }
         })
         .then(() => {
-            managedContracts.activateTargetContract(process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS, true);
+            if ( process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS === undefined ) {
+                return managedContracts.activateTargetContract(process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS, true);
+            }
         })
         .then(() => {
             if ( process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS === undefined ) {
@@ -60,52 +64,82 @@ module.exports = function(deployer, _network, _accounts) {
             }
         })
         .then((instance) => {
-            contractRegistry = instance;
-            return deployer.deploy(ContractIds);
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                contractRegistry = instance;
+                return deployer.deploy(ContractIds);
+            }
         })
         .then((instance) => {
-            contractIds = instance;
-            return deployer.deploy(ContractFeatures);
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                contractIds = instance;
+                return deployer.deploy(ContractFeatures);
+            }
         })
         .then(() => {
-            return deployer.deploy(BancorGasPriceLimit, gasPrice);
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return deployer.deploy(BancorGasPriceLimit, gasPrice);
+            }
         })
         .then(() => {
-            return deployer.deploy(BancorFormula);
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return deployer.deploy(BancorFormula);
+            }
         })
         .then(() => {
-            return deployer.deploy(BancorNetwork, ContractRegistry.address);
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return deployer.deploy(BancorNetwork, ContractRegistry.address);
+            }
         })
         .then((instance) => {
-            bancorNetwork = instance;
-            return bancorNetwork.setSignerAddress(web3.eth.coinbase);
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                bancorNetwork = instance;
+                return bancorNetwork.setSignerAddress(_accounts[0]);
+            }
         })
         .then((instance) => {
-            return bancorNetwork.registerEtherToken(process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS, true);
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return bancorNetwork.registerEtherToken(process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS, true);
+            }
         })
         .then((instance) => {
-            return contractIds.CONTRACT_FEATURES.call();
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return contractIds.CONTRACT_FEATURES.call();
+            }
         })
         .then((contractFeaturesId) => {
-            return contractRegistry.registerAddress(contractFeaturesId, ContractFeatures.address);
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return contractRegistry.registerAddress(contractFeaturesId, ContractFeatures.address);
+            }
         })
         .then(() => {
-            return contractIds.BANCOR_GAS_PRICE_LIMIT.call();
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return contractIds.BANCOR_GAS_PRICE_LIMIT.call();
+            }
         })
         .then((gasPriceLimitId) => {
-            return contractRegistry.registerAddress(gasPriceLimitId, BancorGasPriceLimit.address);
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return contractRegistry.registerAddress(gasPriceLimitId, BancorGasPriceLimit.address);
+            }
         })
         .then(() => {
-            return contractIds.BANCOR_FORMULA.call();
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return contractIds.BANCOR_FORMULA.call();
+            }
         })
         .then((formulaId) => {
-            return contractRegistry.registerAddress(formulaId, BancorFormula.address);
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return contractRegistry.registerAddress(formulaId, BancorFormula.address);
+            }
         })
         .then(() => {
-            return contractIds.BANCOR_NETWORK.call();
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return contractIds.BANCOR_NETWORK.call();
+            }
         })
         .then((bancorNetworkId) => {
-            return contractRegistry.registerAddress(bancorNetworkId, BancorNetwork.address);
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return contractRegistry.registerAddress(bancorNetworkId, BancorNetwork.address);
+            }
         })
         .then(() => {
             if ( process.env.FINANCIE_TICKET_STORE_CONTRACT_ADDRESS === undefined ) {
