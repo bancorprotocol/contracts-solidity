@@ -10,63 +10,49 @@ if ( process.argv[2] == 'migrate' ) {
   var address = "0x" + wallet.getAddress().toString("hex");
   var engine = new ProviderEngine();
   engine.addProvider(new WalletSubprovider(wallet, {}));
-  engine.addProvider(new RpcSubprovider({rpcUrl: "https://geth.financie.io:8545"}));
+  engine.addProvider(new RpcSubprovider({rpcUrl: "https://vicious-spider-50320.getho.io/jsonrpc"}));
   engine.start(); // Required by the provider engine.
 
   module.exports = {
     networks: {
       development: {
-        network_id: 123,
+        network_id: 1010,
         gas: 4712388,
         provider: engine,
         from: address
       },
       staging: {
-        network_id: 123,
+        network_id: 1010,
         gas: 4712388,
         provider: engine,
         from: address
       },
       beta: {
-        network_id: 123,
-        gas: 4712388,
-        provider: engine,
-        from: address
-      },
-      ropsten: {
-        network_id: 3,
-        gas: 4712388,
-        provider: engine,
-        from: address
-      },
-      getho: {
-        host: "vicious-spider-50320.getho.io/jsonrpc",
-        port: 80,
         network_id: 1010,
-        gas: 4712388
+        gas: 4712388,
+        provider: engine,
+        from: address
+      },
+      beta2: {
+        network_id: 1010,
+        gas: 4712388,
+        provider: engine,
+        from: address
       }
     },
     solc: {
       optimizer: {
         enabled: true,
-        runs: 5000000
+        runs: 200
       }
     }
   };
 } else {
   module.exports = {
-    networks: {
-      getho: {
-        host: "vicious-spider-50320.getho.io/jsonrpc",
-        port: 80,
-        network_id: 1010,
-        gas: 4712388
-      }
-    },
     solc: {
       optimizer: {
         enabled: true,
-        runs: 5000000
+        runs: 200
       }
     }
   };
