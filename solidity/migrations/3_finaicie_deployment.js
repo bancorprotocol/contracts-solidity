@@ -1,3 +1,6 @@
+/* global artifacts */
+/* eslint-disable prefer-reflect */
+
 const FinancieTicketStore = artifacts.require('FinancieTicketStore.sol');
 const FinanciePlatformToken = artifacts.require('FinanciePlatformToken.sol');
 const FinancieManagedContracts = artifacts.require('FinancieManagedContracts.sol');
@@ -14,56 +17,104 @@ const BancorNetwork = artifacts.require('BancorNetwork.sol');
 
 const gasPrice = 22000000000;
 
-module.exports = async(deployer) => {
-    if ( process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS === undefined ) {
-        await deployer.deploy(FinanciePlatformToken, 'PF Token', 'ERC PF', 10000000000 * (10 ** 18));
-    }
-
-    if ( process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ) {
-        await deployer.deploy(EtherToken);
-    }
-
-    if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
-        let contractRegistry = await deployer.deploy(ContractRegistry);
-        let contractIds = await deployer.deploy(ContractIds);
-        let contractFeatures = await deployer.deploy(ContractFeatures);
-        let gasPriceLimit = await deployer.deploy(BancorGasPriceLimit, gasPrice);
-        let formula = await deployer.deploy(BancorFormula);
-        let bancorNetwork = await deployer.deploy(BancorNetwork, contractRegistry.address);
-
-        await bancorNetwork.setSignerAddress(web3.eth.coinbase);
-        await bancorNetwork.registerEtherToken(process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS, true);
-
-        let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
-        await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
-        let gasPriceLimitId = await contractIds.BANCOR_GAS_PRICE_LIMIT.call();
-        await contractRegistry.registerAddress(gasPriceLimitId, gasPriceLimit.address);
-        let formulaId = await contractIds.BANCOR_FORMULA.call();
-        await contractRegistry.registerAddress(formulaId, formula.address);
-        let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
-        await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
-    }
-
-    if ( process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS === undefined ) {
-        let managedContracts = await deployer.deploy(FinancieManagedContracts);
-        managedContracts.activateTargetContract(process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS === undefined ? FinanciePlatformToken.address : process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS, true);
-        managedContracts.activateTargetContract(process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS, true);
-    }
-
-    if ( process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS === undefined ) {
-        await deployer.deploy(FinancieNotifier,
-            process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS === undefined ? FinancieManagedContracts.address : process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS,
-            process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS === undefined ? FinanciePlatformToken.address : process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS,
-            process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS
-        );
-    }
-
-    if ( process.env.FINANCIE_TICKET_STORE_CONTRACT_ADDRESS === undefined ) {
-        await deployer.deploy(FinancieTicketStore,
-            process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS === undefined ? FinancieNotifier.address : process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS,
-            process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS === undefined ? FinancieManagedContracts.address : process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS,
-            process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS === undefined ? FinanciePlatformToken.address : process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS,
-            process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS
-        );
-    }
+module.exports = function(deployer, _network, _accounts) {
+    let managedContracts;
+    let contractRegistry;
+    let contractIds;
+    let bancorNetwork;
+    return deployer
+        .then(() => {
+            if ( process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ) {
+                return deployer.deploy(EtherToken);
+            }
+        })
+        .then(() => {
+            if ( process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS === undefined ) {
+                return deployer.deploy(FinanciePlatformToken, 'PF Token', 'ERC PF', 10000000000 * (10 ** 18));
+            }
+        })
+        .then(() => {
+            if ( process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS === undefined ) {
+                return deployer.deploy(FinancieManagedContracts);
+            }
+        })
+        .then((instance) => {
+            managedContracts = instance;
+            return managedContracts.activateTargetContract(process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS === undefined ? FinanciePlatformToken.address : process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS, true);
+        })
+        .then(() => {
+            managedContracts.activateTargetContract(process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS, true);
+        })
+        .then(() => {
+            if ( process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS === undefined ) {
+                return deployer.deploy(FinancieNotifier,
+                    process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS === undefined ? FinancieManagedContracts.address : process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS,
+                    process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS === undefined ? FinanciePlatformToken.address : process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS,
+                    process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS
+                );
+            }
+        })
+        .then(() => {
+            if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
+                return deployer.deploy(ContractRegistry);
+            }
+        })
+        .then((instance) => {
+            contractRegistry = instance;
+            return deployer.deploy(ContractIds);
+        })
+        .then((instance) => {
+            contractIds = instance;
+            return deployer.deploy(ContractFeatures);
+        })
+        .then(() => {
+            return deployer.deploy(BancorGasPriceLimit, gasPrice);
+        })
+        .then(() => {
+            return deployer.deploy(BancorFormula);
+        })
+        .then(() => {
+            return deployer.deploy(BancorNetwork, ContractRegistry.address);
+        })
+        .then((instance) => {
+            bancorNetwork = instance;
+            return bancorNetwork.setSignerAddress(web3.eth.coinbase);
+        })
+        .then((instance) => {
+            return bancorNetwork.registerEtherToken(process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS, true);
+        })
+        .then((instance) => {
+            return contractIds.CONTRACT_FEATURES.call();
+        })
+        .then((contractFeaturesId) => {
+            return contractRegistry.registerAddress(contractFeaturesId, ContractFeatures.address);
+        })
+        .then(() => {
+            return contractIds.BANCOR_GAS_PRICE_LIMIT.call();
+        })
+        .then((gasPriceLimitId) => {
+            return contractRegistry.registerAddress(gasPriceLimitId, BancorGasPriceLimit.address);
+        })
+        .then(() => {
+            return contractIds.BANCOR_FORMULA.call();
+        })
+        .then((formulaId) => {
+            return contractRegistry.registerAddress(formulaId, BancorFormula.address);
+        })
+        .then(() => {
+            return contractIds.BANCOR_NETWORK.call();
+        })
+        .then((bancorNetworkId) => {
+            return contractRegistry.registerAddress(bancorNetworkId, BancorNetwork.address);
+        })
+        .then(() => {
+            if ( process.env.FINANCIE_TICKET_STORE_CONTRACT_ADDRESS === undefined ) {
+                return deployer.deploy(FinancieTicketStore,
+                    process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS === undefined ? FinancieNotifier.address : process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS,
+                    process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS === undefined ? FinancieManagedContracts.address : process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS,
+                    process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS === undefined ? FinanciePlatformToken.address : process.env.FINANCIE_PLATFORM_TOKEN_CONTRACT_ADDRESS,
+                    process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_ETHER_TOKEN_CONTRACT_ADDRESS
+                );
+            }
+        })
 };
