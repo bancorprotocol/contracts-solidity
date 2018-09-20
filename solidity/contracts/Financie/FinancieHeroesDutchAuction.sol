@@ -21,7 +21,7 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierDelegate, F
     *   @param   _price_exponent    Auction price divisor exponent.
     *   @param   _notifier_address  Financie Notifier address.
     */
-    function FinancieHeroesDutchAuction(
+    constructor(
         address _wallet_address,
         address _team_wallet,
         address _whitelister_address,

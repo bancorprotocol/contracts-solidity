@@ -5,7 +5,7 @@ import '../utility/Owned.sol';
 contract FinancieNotifierDelegate is Owned {
     IFinancieNotifier public notifier;
 
-    function FinancieNotifierDelegate(address _notifier)
+    constructor(address _notifier)
         public
     {
         notifier = IFinancieNotifier(_notifier);

@@ -25,7 +25,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
 
     event BurnTickets(address indexed _sender, address indexed _ticket, uint256 _amount);
 
-    function FinancieNotifier(address _managedContracts, address _platformToken, address _ether_token)
+    constructor(address _managedContracts, address _platformToken, address _ether_token)
         public
         FinancieCoreComponents(_managedContracts, _platformToken, _ether_token)
     {

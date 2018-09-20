@@ -19,7 +19,7 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
     event DepositTickets(address _sender, address indexed _issuer, address _ticket, address indexed _card, uint256 _amount, uint256 _price);
     event BuyTicket(address indexed _sender, address indexed _issuer, address indexed _ticket, uint256 _amount, uint256 _price);
 
-    function FinancieTicketStore(address _notifier_address, address _managedContracts, address _platformToken, address _ether_token)
+    constructor(address _notifier_address, address _managedContracts, address _platformToken, address _ether_token)
         public
         FinancieCoreComponents(_managedContracts, _platformToken, _ether_token)
         FinancieNotifierDelegate(_notifier_address)
