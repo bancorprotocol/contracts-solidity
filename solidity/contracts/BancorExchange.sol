@@ -65,9 +65,20 @@ contract BancorExchange is Owned {
         if (address(smartToken) == msg.sender) {
             uint minReturn = bytesToUint256(_data);
             smartToken.transfer(address(bancorNetwork), _value);
+            // cant replace address(this) with _from
+            // because of whitelist mechanism in bancor protocol
             uint amount = bancorNetwork.convertForPrioritized2(quickSellPath, _value, minReturn, address(this), 0, 0, 0x0, 0x0);
             _from.transfer(amount);
         }
+    }
+
+    // @dev before invoke sellRING, make sure approve to exchange before in RING contract
+    function sellRING(uint _sellAmount, uint _minReturn) public {
+        smartToken.transferFrom(msg.sender, address(bancorNetwork), _sellAmount);
+        // cant replace address(this) with msg.sender
+        // because of whitelist mechanism in bancor protocol
+        uint amount = bancorNetwork.convertForPrioritized2(quickSellPath, _value, minReturn, address(this), 0, 0, 0x0, 0x0);
+        msg.sender.transfer(amount);
     }
 
 
