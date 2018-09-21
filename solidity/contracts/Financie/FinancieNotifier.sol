@@ -270,7 +270,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         address _team,
         uint256 _team_amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         emit AuctionRevenue(_sender, _target, _card, _hero, _hero_amount, now);
         emit AuctionRevenue(_sender, _target, _card, _team, _team_amount, now);
@@ -288,7 +288,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         address _team,
         uint256 _team_amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         emit ExchangeRevenue(_sender, _target, _card, _hero, _hero_amount, now);
         emit ExchangeRevenue(_sender, _target, _card, _team, _team_amount, now);
