@@ -32,4 +32,8 @@ contract IFinancieNotifier {
     function notifyBurnCards(address _sender, uint256 _amount) public;
     function notifyPurchaseTickets(address _sender, address _card, address _ticket, uint256 _price, uint256 _amount) public;
     function notifyBurnTickets(address _sender, uint256 _amount) public;
+
+    function notifyAuctionRevenue(address _sender, address _target, address _card, address _hero, uint256 _hero_amount, address _team, uint256 _team_amount) public;
+    function notifyExchangeRevenue(address _sender, address _target, address _card, address _hero, uint256 _hero_amount, address _team, uint256 _team_amount) public;
+
 }
