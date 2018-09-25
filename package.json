@@ -1,6 +1,6 @@
 {
   "name": "@evolutionland/bancor",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Evolution Land Bancor Contracts",
   "author": "Evolution Land",
   "repository": {
@@ -14,9 +14,9 @@
     "test": "cd solidity && truffle test"
   },
   "dependencies": {
+    "@evolutionland/common": "^1.0.12",
     "decimal.js": "^10.0.1",
     "ethereumjs-util": "^5.2.0",
-    "evolutionlandcommon": "^1.0.6",
     "js-sha256": "^0.9.0",
     "left-pad": "^1.3.0",
     "npm": "^6.1.0",
