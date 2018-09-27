@@ -1,2 +1,4 @@
 .hypothesis
 .idea
+**/truffle.js
+**/truffle-config.js
