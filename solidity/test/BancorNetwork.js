@@ -37,7 +37,7 @@ let smartToken4QuickBuyPath;
 let erc20QuickBuyPath;
 let smartToken1QuickSellPath;
 let smartToken2QuickSellPath;
-let defaultGasPriceLimit = 20000000000;
+let defaultGasPriceLimit = BancorGasPriceLimit.class_defaults.gasPrice;
 
 function sign(msgToSign, signerAddress) {
     try {
