@@ -56,13 +56,13 @@ contract BancorExchange is Owned {
         quickBuyPath = _path;
     }
 
-    function buyRING(uint _minReturn) payable returns (uint) {
+    function buyRING(uint _minReturn) payable public returns (uint) {
         uint amount = bancorConverter.quickConvert.value(msg.value)(quickBuyPath, msg.value, _minReturn);
         smartToken.transfer(msg.sender, amount);
         return amount;
     }
 
-    function exchangeRingInBid(uint _minReturn, address _buyer) returns (uint) {
+    function exchangeRingInBid(uint _minReturn, address _buyer) payable public returns (uint) {
         require(msg.sender == clockAuction);
         uint connectorBalance = bancorConverter.getConnectorBalance(quickBuyPath[0]);
         uint supply = smartToken.totalSupply();
