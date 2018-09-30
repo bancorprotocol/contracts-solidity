@@ -7,6 +7,7 @@ contract BancorExchange is Owned {
     ISmartToken public smartToken;
     IBancorNetwork public bancorNetwork;
     BancorConverter public bancorConverter;
+    address clockAuction;
 
     IERC20Token[] public quickSellPath;
     IERC20Token[] public quickBuyPath;
@@ -23,7 +24,7 @@ contract BancorExchange is Owned {
         bancorConverter = BancorConverter(_bc);
     }
 
-    function () payable {
+    function() payable {
         // this is necessary!
     }
 
@@ -55,10 +56,26 @@ contract BancorExchange is Owned {
         quickBuyPath = _path;
     }
 
-    function buyRING(uint _minReturn) payable returns (uint){
+    function buyRING(uint _minReturn) payable public returns (uint) {
         uint amount = bancorConverter.quickConvert.value(msg.value)(quickBuyPath, msg.value, _minReturn);
         smartToken.transfer(msg.sender, amount);
         return amount;
+    }
+
+    // this is used to buy specific amount of ring with minimum required eth
+    function buyRINGInMinRequiedETH(uint _minReturn, address _buyer) payable public returns (uint, uint) {
+        require(msg.sender == clockAuction);
+        uint connectorBalance = bancorConverter.getConnectorBalance(quickBuyPath[0]);
+        uint supply = smartToken.totalSupply();
+        uint cw = bancorConverter.connectors(quickBuyPath[0]).weight;
+        uint amountRequired = bancorConverter.getPurchaseRequire(connectorBalance, supply, cw, _minReturn);
+        require(msg.value >= amountRequired);
+        uint amount = bancorConverter.quickConvert.value(amountRequired)(quickBuyPath, msg.value, _minReturn);
+        uint refundEth = msg.value - amountRequired;
+        if (refundEth > 0) {
+            _buyer.transfer(refundEth);
+        }
+        return (amount, amountRequired);
     }
 
     function tokenFallback(address _from, uint256 _value, bytes _data) public {
@@ -84,7 +101,6 @@ contract BancorExchange is Owned {
     }
 
 
-
     function bytesToUint256(bytes b) public pure returns (uint256) {
         bytes32 out;
 
@@ -105,9 +121,9 @@ contract BancorExchange is Owned {
         token.transfer(owner, balance);
     }
 
-
-
-
+    function setClockAuction(address _clockAuction) public ownerOnly {
+        clockAuction = _clockAuction;
+    }
 
 
 }
