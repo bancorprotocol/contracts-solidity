@@ -401,6 +401,34 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
+            @dev returns the expected return for buying the token for a connector token
+
+            @param _connectorToken  connector token contract address
+            @param _buyAmount       amount to buy (in the main token)
+
+            @return expected purchase require amount
+        */
+    function getPurchaseRequire(IERC20Token _connectorToken, uint256 _buyAmount)
+        public
+        view
+        active
+        validConnector(_connectorToken)
+        returns (uint256)
+    {
+        Connector storage connector = connectors[_connectorToken];
+        require(connector.isPurchaseEnabled); // validate input
+
+        uint256 tokenSupply = token.totalSupply();
+        uint256 connectorBalance = getConnectorBalance(_connectorToken);
+        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
+        uint256 amount = formula.calculatePurchaseRequire(connectorBalance, tokenSupply, connector.weight, _buyAmount);
+
+        // return the amount minus the conversion fee
+        return getFinalAmount(amount, 1);
+    }
+
+
+    /**
         @dev returns the expected return for selling the token for one of its connector tokens
 
         @param _connectorToken  connector token contract address

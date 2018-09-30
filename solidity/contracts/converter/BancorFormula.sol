@@ -513,4 +513,39 @@ contract BancorFormula is IBancorFormula, Utils {
 
         return res;
     }
+
+
+    /**
+        @dev given a token supply, connector balance, weight and and a sell amount (in the main token),
+        calculates the return for a given conversion (in the connector token)
+
+        Formula:
+        Return = _connectorBalance * ((1 + _sellAmount / _supply) ^ (1/(_connectorWeight / 1000000)) - 1)
+
+        @param _supply              token total supply
+        @param _connectorBalance    total connector balance
+        @param _connectorWeight     connector weight, represented in ppm, 1-1000000
+        @param _buyAmount           buy amount, in the main token
+
+        @return purchase require amount
+    */
+    function calculatePurchaseRequire(uint256 _connectorBalance, uint256 _supply, uint32 _connectorWeight, uint256 _buyAmount) public view returns (uint256) {
+        // validate input
+        require(_supply > 0 && _connectorBalance > 0 && _connectorWeight > 0 && _connectorWeight <= MAX_WEIGHT);
+
+        // special case for 0 deposit amount
+        if (_buyAmount == 0)
+            return 0;
+
+        // special case if the weight = 100%
+        if (_connectorWeight == MAX_WEIGHT)
+            return safeMul(_connectorBalance, _buyAmount) / _supply;
+
+        uint256 result;
+        uint8 precision;
+        uint256 baseN = safeAdd(_buyAmount, _supply);
+        (result, precision) = power(baseN, _supply, MAX_WEIGHT, _connectorWeight);
+        uint256 temp = safeMul(_connectorBalance, result) >> precision;
+        return temp - _connectorBalance;
+    }
 }
