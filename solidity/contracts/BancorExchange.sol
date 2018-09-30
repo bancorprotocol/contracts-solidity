@@ -62,7 +62,8 @@ contract BancorExchange is Owned {
         return amount;
     }
 
-    function exchangeRingInBid(uint _minReturn, address _buyer) payable public returns (uint) {
+    // this is used to buy specific amount of ring with minimum required eth
+    function buyRINGInMinRequiedETH(uint _minReturn, address _buyer) payable public returns (uint, uint) {
         require(msg.sender == clockAuction);
         uint connectorBalance = bancorConverter.getConnectorBalance(quickBuyPath[0]);
         uint supply = smartToken.totalSupply();
@@ -74,7 +75,7 @@ contract BancorExchange is Owned {
         if (refundEth > 0) {
             _buyer.transfer(refundEth);
         }
-        return amount;
+        return (amount, amountRequired);
     }
 
     function tokenFallback(address _from, uint256 _value, bytes _data) public {
