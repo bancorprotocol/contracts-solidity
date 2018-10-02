@@ -2,9 +2,9 @@ pragma solidity ^0.4.18;
 import './IFinancieTicketStore.sol';
 import './IFinancieIssuerToken.sol';
 import './FinancieNotifierDelegate.sol';
-import '../interfaces/IERC20Token.sol';
+import '../token/interfaces/IERC20Token.sol';
 import './FinancieCoreComponents.sol';
-import '../Utils.sol';
+import '../utility/Utils.sol';
 
 contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, FinancieCoreComponents, Utils {
 

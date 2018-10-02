@@ -1,5 +1,5 @@
 pragma solidity ^0.4.18;
-import '../Utils.sol';
+import '../utility/Utils.sol';
 
 /**
     **FROZEN**

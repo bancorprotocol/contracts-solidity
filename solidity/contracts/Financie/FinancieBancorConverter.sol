@@ -1,8 +1,8 @@
 pragma solidity ^0.4.18;
-import '../BancorConverter.sol';
+import '../converter/BancorConverter.sol';
 import './FinancieFee.sol';
 import './FinancieNotifierDelegate.sol';
-import '../interfaces/IEtherToken.sol';
+import '../token/interfaces/IEtherToken.sol';
 
 /**
 * Financie Bancor Converter
@@ -24,7 +24,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
     *   @param  _connectorToken     card connector for defining the first connector at deployment time
     *   @param  _hero_wallet        issuer's wallet
     *   @param  _team_wallet        Financie team wallet
-    *   @param  _extensions         address of a bancor converter extensions contract
+    *   @param  _registry           address of a bancor converter extensions contract
     *   @param  _notifier_address   address of Financie Notifier contract
     *   @param  _heroFee            fee for financie hero, represented in ppm
     *   @param  _teamFee            fee for financie team, represented in ppm
@@ -36,13 +36,13 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
         IERC20Token _connectorToken,
         address _hero_wallet,
         address _team_wallet,
-        IBancorConverterExtensions _extensions,
+        IContractRegistry _registry,
         address _notifier_address,
         uint32 _heroFee,
         uint32 _teamFee,
         uint32 _connectorWeight)
         public
-        BancorConverter(_token, _extensions, 0, _connectorToken, _connectorWeight)
+        BancorConverter(_token, _registry, 0, _connectorToken, _connectorWeight)
         FinancieFee(_heroFee, _teamFee, _hero_wallet, _team_wallet)
         FinancieNotifierDelegate(_notifier_address)
     {
@@ -72,7 +72,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
     *   @param  _minReturn        minimum demands ether in wei, in case of lower result, the function will be failed
     */
     function sellCards(uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        uint256 result = quickConvertInternal(quickSellPath, _amount, 1, this);
+        uint256 result = quickConvertInternal(quickSellPath, _amount, 0, 1, this);
 
         uint256 feeAmount = distributeFees(result);
         uint256 net = safeSub(result, feeAmount);
@@ -98,7 +98,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
         uint256 feeAmount = distributeFees(_amount);
         uint256 net = safeSub(_amount, feeAmount);
 
-        uint256 result = quickConvertInternal(quickBuyPath, net, 1, msg.sender);
+        uint256 result = quickConvertInternal(quickBuyPath, net, net, 1, msg.sender);
 
         notifyConvertCards(msg.sender, address(quickBuyPath[0]), address(quickBuyPath[2]), _amount, result);
         assert(result >= _minReturn);
@@ -112,19 +112,31 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
     /**
     *   @dev Convert with Quick Converter - overriden for specified amount conversion
     */
-    function quickConvertInternal(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _spender)
+    function quickConvertInternal(IERC20Token[] _path, uint256 _amount, uint256 _value, uint256 _minReturn, address _spender)
         internal
         validConversionPath(_path)
         returns (uint256)
     {
         IERC20Token fromToken = _path[0];
-        IBancorQuickConverter quickConverter = extensions.quickConverter();
-        if ( msg.value == 0 ) {
-            assert(fromToken.transferFrom(msg.sender, quickConverter, _amount));
-            return quickConverter.convertFor.value(0)(_path, _amount, _minReturn, _spender);
-        } else {
-            return quickConverter.convertFor.value(_amount)(_path, _amount, _minReturn, _spender);
+        IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
+
+        // we need to transfer the source tokens from the caller to the BancorNetwork contract,
+        // so it can execute the conversion on behalf of the caller
+        if (msg.value == 0) {
+            // not ETH, send the source tokens to the BancorNetwork contract
+            // if the token is the smart token, no allowance is required - destroy the tokens
+            // from the caller and issue them to the BancorNetwork contract
+            if (fromToken == token) {
+                token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
+                token.issue(bancorNetwork, _amount); // issue _amount new tokens to the BancorNetwork contract
+            } else {
+                // otherwise, we assume we already have allowance, transfer the tokens directly to the BancorNetwork contract
+                assert(fromToken.transferFrom(msg.sender, bancorNetwork, _amount));
+            }
         }
+
+        // execute the conversion and pass on the ETH with the call
+        return bancorNetwork.convertForPrioritized2.value(_value)(_path, _amount, _minReturn, _spender, 0x0, 0x0, 0x0, 0x0);
     }
 
     /**

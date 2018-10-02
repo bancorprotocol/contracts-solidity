@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
-import '../Utils.sol';
-import '../ERC20Token.sol';
+import '../utility/Utils.sol';
+import '../token/ERC20Token.sol';
 import './FinancieNotifierDelegate.sol';
 import './IFinancieIssuerToken.sol';
 

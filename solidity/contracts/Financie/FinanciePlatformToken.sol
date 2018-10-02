@@ -1,5 +1,5 @@
 pragma solidity ^0.4.11;
-import '../ERC20Token.sol';
+import '../token/ERC20Token.sol';
 
 /*
     **FROZEN**

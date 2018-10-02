@@ -1,11 +1,11 @@
-pragma solidity ^0.4.11;
-import '../Utils.sol';
+pragma solidity ^0.4.23;
+import '../utility/Utils.sol';
 
 /*
     Utils test helper that exposes the safe math functions
 */
 contract TestUtils is Utils {
-    function TestUtils() public {
+    constructor() public {
     }
 
     function testSafeAdd(uint256 _x, uint256 _y) public pure returns (uint256) {

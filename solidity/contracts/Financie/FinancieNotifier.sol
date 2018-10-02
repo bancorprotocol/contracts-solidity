@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 import './IFinancieNotifier.sol';
 import './FinancieCoreComponents.sol';
-import '../Utils.sol';
+import '../utility/Utils.sol';
 
 contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     address latest;
@@ -35,12 +35,17 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         latest = address(this);
     }
 
+    modifier sameOwner {
+        assert(msg.sender == owner || IOwned(msg.sender).owner() == owner);
+        _;
+    }
+
     /**
     *   @notice Set latest notifier
     */
     function setLatestNotifier(address _latest)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         latest = _latest;
     }
@@ -90,7 +95,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyApproveNewCards(address _card)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         emit ApproveNewCards(_card, now);
     }
@@ -100,7 +105,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyCardAuctionFinalized(address _card, address _auction)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         emit CardAuctionFinalized(_card, _auction, now);
     }
@@ -110,7 +115,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyApproveNewBancor(address _card, address _bancor)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         emit ApproveNewBancor(_card, _bancor, now);
     }
@@ -120,7 +125,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyPurchaseTickets(address _sender, address _card, address _ticket, uint256 _price, uint256 _amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         emit AddOwnedTicketList(_sender, _ticket, now);
 
@@ -140,7 +145,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyBurnTickets(address _sender, uint256 _amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         emit AddPaidTicketList(_sender, msg.sender, _amount, now);
 
@@ -164,7 +169,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         uint256 _amountFrom,
         uint256 _amountTo)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         if ( _to == address(etherToken) ) {
             emit Log(
@@ -196,7 +201,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyBidCards(address _sender, address _to, uint256 _amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         emit Log(
           _sender,
@@ -216,7 +221,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyWithdrawalCards(address _sender, address _to, uint256 _bids, uint256 _amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         emit AddOwnedCardList(_sender, _to, now);
 
@@ -238,7 +243,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
     */
     function notifyBurnCards(address _sender, uint256 _amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         emit Log(
           _sender,
@@ -265,7 +270,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         address _team,
         uint256 _team_amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         emit AuctionRevenue(_sender, _target, _card, _hero, _hero_amount, now);
         emit AuctionRevenue(_sender, _target, _card, _team, _team_amount, now);
@@ -283,7 +288,7 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         address _team,
         uint256 _team_amount)
         public
-        ownerDelegatedOnly
+        sameOwner
     {
         emit ExchangeRevenue(_sender, _target, _card, _hero, _hero_amount, now);
         emit ExchangeRevenue(_sender, _target, _card, _team, _team_amount, now);
