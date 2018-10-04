@@ -118,7 +118,7 @@ async function getNewConverter() {
     return converter
 }
 
-contract.only('BancorConverterUpgrader', accounts => {
+contract('BancorConverterUpgrader', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
         let contractIds = await ContractIds.new();
