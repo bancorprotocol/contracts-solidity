@@ -147,11 +147,10 @@ Tests are included and can be run using truffle & ganache
 
 ### Prerequisites
 * Node.js v7.6.0+
-* truffle v4.1.5+
-* ganache v1.1.0+
 
-To run the test, first start ganache and then execute the following command from the project's root folder -
-* npm test
+To run the test:
+- Use `npm install` in order to install all required packages.
+- Use `npm test` in order to run truffle-test or solidity-coverage.
 
 ## Collaborators
 
