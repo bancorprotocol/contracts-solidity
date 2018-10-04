@@ -12,6 +12,8 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
         address issuer;
         address card;
         uint256 price;
+        uint256 start_at;
+        uint256 end_at;
     }
 
     mapping (address => TicketSale) ticketSales;
@@ -33,13 +35,15 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
     /**
     *   @dev issuer deposits tickets into this contract and register it as a sales item
     */
-    function depositTickets(address _ticket, address _card, uint256 _amount, uint256 _price)
+    function depositTickets(address _ticket, address _card, uint256 _amount, uint256 _price, uint32 _start_at, uint32 _end_at)
         public
         validTargetContract(_ticket)
         validTargetContract(_card)
     {
         require(_amount > 0);
         require(_price > 0);
+        require(_start_at > 0);
+        require(_end_at > 0);
 
         /**
         * check ticket issuer and deposit tickets into this contract
@@ -53,7 +57,7 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
         /**
         * register it as a sales item
         */
-        ticketSales[_ticket] = TicketSale(ticket.getIssuer(), _card, _price);
+        ticketSales[_ticket] = TicketSale(ticket.getIssuer(), _card, _price, _start_at, _end_at);
 
         DepositTickets(msg.sender, ticket.getIssuer(), _ticket, _card, _amount, _price);
     }
@@ -73,7 +77,7 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
 
     function buyTicket(address _ticket) public {
         TicketSale ticketSale = ticketSales[_ticket];
-
+        require(now >= ticketSale.start_at && now < ticketSale.end_at);
         /**
         * check currency balance and burn the number of price from the buyer
         */
