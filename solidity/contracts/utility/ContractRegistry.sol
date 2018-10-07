@@ -15,6 +15,8 @@ import './interfaces/IContractRegistry.sol';
     Note that contract names are limited to 32 bytes UTF8 encoded ASCII strings to optimize gas costs
 */
 contract ContractRegistry is IContractRegistry, Owned, Utils {
+    bytes32 public constant CONTRACT_REGISTRY = "ContractRegistry";
+
     struct RegistryItem {
         address contractAddress;    // contract address
         uint256 nameIndex;          // index of the item in the list of contract names
@@ -31,6 +33,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
         @dev constructor
     */
     constructor() public {
+        registerAddress(CONTRACT_REGISTRY, address(this));
     }
 
     /**

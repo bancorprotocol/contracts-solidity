@@ -177,6 +177,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
+        @dev sets the contract registry to wherever the current registry is pointing to
+     */
+    function updateContractRegistry() public {
+        registry = IContractRegistry(registry.addressOf(ContractIds.CONTRACT_REGISTRY));
+    }
+
+    /**
         @dev returns the number of connector tokens defined
 
         @return number of connector tokens
