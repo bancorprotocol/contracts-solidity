@@ -142,108 +142,11 @@ contract('BancorNetwork', accounts => {
         smartToken4QuickBuyPath = [etherToken.address, smartToken4.address, smartToken4.address];
         erc20QuickBuyPath = [etherToken.address, smartToken4.address, erc20Token.address];
 
-        await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
-        await converter2.setQuickBuyPath(smartToken2QuickBuyPath);
-        await converter3.setQuickBuyPath(smartToken3QuickBuyPath);
-        await converter4.setQuickBuyPath(smartToken4QuickBuyPath);
-
         smartToken1QuickSellPath = [smartToken1.address, smartToken1.address, etherToken.address];
         smartToken2QuickSellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address];
     });
 
-    it('verifies that the owner can set the quick buy path', async () => {
-        await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
-
-        let quickBuyPathLength = await converter1.getQuickBuyPathLength.call();
-        assert.equal(quickBuyPathLength, smartToken1QuickBuyPath.length);
-    });
-
-    it('verifies that the owner can clear the quick buy path', async () => {
-        await converter1.clearQuickBuyPath();
-
-        let prevQuickBuyPathLength = await converter1.getQuickBuyPathLength.call();
-        assert.equal(prevQuickBuyPathLength, 0);
-    });
-
-    it('verifies that the correct quick buy path length is returned', async () => {
-        await converter1.clearQuickBuyPath();
-
-        let prevQuickBuyPathLength = await converter1.getQuickBuyPathLength.call();
-        assert.equal(prevQuickBuyPathLength, 0);
-
-        await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
-        let newQuickBuyPathLength = await converter1.getQuickBuyPathLength.call();
-        assert.equal(newQuickBuyPathLength, smartToken1QuickBuyPath.length);
-    });
-
-    it('verifies the quick buy path values after the owner sets one', async () => {
-        await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
-
-        let newQuickBuyPathLength = await converter1.getQuickBuyPathLength.call();
-        assert.equal(newQuickBuyPathLength, smartToken1QuickBuyPath.length);
-
-        for (let i = 0; i < newQuickBuyPathLength; ++i) {
-            let quickBuyPathElement = await converter1.quickBuyPath.call(i);
-            assert.equal(quickBuyPathElement, smartToken1QuickBuyPath[i]);
-        }
-    });
-
-    it('should throw when a non owner attempts to set the quick buy path', async () => {
-        try {
-            await converter1.setQuickBuyPath(smartToken1QuickBuyPath, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when the owner attempts to set an invalid short quick buy path', async () => {
-        try {
-            await converter1.setQuickBuyPath([etherToken.address]);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when the owner attempts to set an invalid long quick buy path', async () => {
-        let longQuickBuyPath = [];
-        for (let i = 0; i < 51; ++i)
-            longQuickBuyPath.push(etherToken.address);
-
-        try {
-            await converter1.setQuickBuyPath(longQuickBuyPath);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when the owner attempts to set a quick buy path with an invalid length', async () => {
-        try {
-            await converter1.setQuickBuyPath([etherToken.address, smartToken1.address]);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when a non owner attempts to clear the quick buy path', async () => {
-        try {
-            await converter1.clearQuickBuyPath({ from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
     it('verifies that quick buy with a single converter results in increased balance for the buyer', async () => {
-        await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         await converter1.quickConvert(smartToken1QuickBuyPath, 100, 1, { from: accounts[1], value: 100 });
@@ -253,7 +156,6 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies that quick buy with multiple converters results in increased balance for the buyer', async () => {
-        await converter2.setQuickBuyPath(smartToken2QuickBuyPath);
         let prevBalance = await smartToken2.balanceOf.call(accounts[1]);
 
         await converter2.quickConvert(smartToken2QuickBuyPath, 100, 1, { from: accounts[1], value: 100 });
@@ -262,28 +164,17 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });
 
-    it('verifies that quick buy through the fallback function results in increased balance for the buyer', async () => {
-        await converter2.setQuickBuyPath(smartToken2QuickBuyPath);
-        let prevBalance = await smartToken2.balanceOf.call(accounts[0]);
-
-        await converter2.send(100);
-        let newBalance = await smartToken2.balanceOf.call(accounts[0]);
-
-        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
-    });
-
-    it('verifies that quick buy of an ERC20 token through the fallback function results in increased balance for the buyer', async () => {
-        await converter4.setQuickBuyPath(erc20QuickBuyPath);
-        let prevBalance = await erc20Token.balanceOf.call(accounts[0]);
-
-        await converter4.send(100);
-        let newBalance = await erc20Token.balanceOf.call(accounts[0]);
-
-        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    it('verifies that sending ether to the converter fails', async () => {
+        try {
+            await converter2.send(100);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
     });
 
     it('verifies that quick buy with minimum return equal to the full expected return amount results in the exact increase in balance for the buyer', async () => {
-        await converter2.setQuickBuyPath(smartToken2QuickBuyPath);
         let prevBalance = await smartToken2.balanceOf.call(accounts[0]);
         
         let token1Return = (await converter1.getPurchaseReturn(etherToken.address, 100000))[0];
@@ -296,8 +187,6 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempting to quick buy and the return amount is lower than the given minimum', async () => {
-        await converter2.setQuickBuyPath(smartToken2QuickBuyPath);
-
         try {
             await converter2.quickConvert(smartToken2QuickBuyPath, 100, 1000000, { from: accounts[1], value: 100 });
             assert(false, "didn't throw");
@@ -308,8 +197,6 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempting to quick buy and passing an amount higher than the ETH amount sent with the request', async () => {
-        await converter2.setQuickBuyPath(smartToken2QuickBuyPath);
-
         try {
             await converter2.quickConvert(smartToken2QuickBuyPath, 100001, 1, { from: accounts[1], value: 100000 });
             assert(false, "didn't throw");
@@ -320,7 +207,6 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies the caller balances after selling directly for ether with a single converter', async () => {
-        await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
         let prevETHBalance = web3.eth.getBalance(accounts[0]);
         let prevTokenBalance = await smartToken1.balanceOf.call(accounts[0]);
 
@@ -335,7 +221,6 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies the caller balances after selling directly for ether with multiple converters', async () => {
-        await converter2.setQuickBuyPath(smartToken2QuickBuyPath);
         let prevETHBalance = web3.eth.getBalance(accounts[0]);
         let prevTokenBalance = await smartToken2.balanceOf.call(accounts[0]);
 
@@ -350,8 +235,6 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempting to sell directly for ether and the return amount is lower than the given minimum', async () => {
-        await converter2.setQuickBuyPath(smartToken2QuickBuyPath);
-
         try {
             await converter2.quickConvert(smartToken2QuickSellPath, 10000, 20000);
             assert(false, "didn't throw");
@@ -362,7 +245,6 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies the caller balances after converting from one token to another with multiple converters', async () => {
-        await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
 
         let path = [smartToken1.address,
                     smartToken2.address, smartToken2.address,
@@ -790,7 +672,6 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies prioritized quick buy with trusted signature', async () => {
-        await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         let block = await web3.eth.blockNumber;
@@ -807,7 +688,6 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when attempts to call quick convert prioritized with untrusted signature', async () => {
         try {
-            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
             let gasPrice = defaultGasPriceLimit;
@@ -825,7 +705,6 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when attempts to call quick convert prioritized with wrong path', async () => {
         try {
-            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
@@ -844,7 +723,6 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when attempts to call quick convert prioritized with wrong amount', async () => {
         try {
-            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
             let gasPrice = defaultGasPriceLimit;
@@ -862,7 +740,6 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when attempts to call quick convert prioritized with higher block number than what appears in the signing data', async () => {
         try {
-            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
             let wrongBlockNumber = maximumBlock + 100;
@@ -881,7 +758,6 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when attempts to call quick convert prioritized with lower block number than what appears in the signing data', async () => {
         try {
-            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
             let wrongBlockNumber = maximumBlock - 1;
@@ -900,7 +776,6 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when attempts to call quick convert prioritized with higher gas price than what appears in the signing data', async () => {
         try {
-            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
             let gasPrice = defaultGasPriceLimit - 1;
@@ -918,7 +793,6 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when attempts to call quick convert prioritized with lower gas price than what appears in the signing data', async () => {
         try {
-            await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
             let block = await web3.eth.blockNumber;
             let maximumBlock = block + 100;
             let gasPrice = defaultGasPriceLimit + 1;
