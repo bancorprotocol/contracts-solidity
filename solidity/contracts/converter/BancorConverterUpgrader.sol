@@ -14,7 +14,6 @@ import '../FeatureIds.sol';
 */
 contract IBancorConverterExtended is IBancorConverter, IOwned {
     function token() public view returns (ISmartToken) {}
-    function quickBuyPath(uint256 _index) public view returns (IERC20Token) { _index; }
     function maxConversionFee() public view returns (uint32) {}
     function conversionFee() public view returns (uint32) {}
     function connectorTokenCount() public view returns (uint16);
@@ -22,14 +21,12 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function connectorTokens(uint256 _index) public view returns (IERC20Token) { _index; }
     function reserveTokens(uint256 _index) public view returns (IERC20Token) { _index; }
     function setConversionWhitelist(IWhitelist _whitelist) public;
-    function getQuickBuyPathLength() public view returns (uint256);
     function transferTokenOwnership(address _newOwner) public;
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public;
     function acceptTokenOwnership() public;
     function transferManagement(address _newManager) public;
     function acceptManagement() public;
     function setConversionFee(uint32 _conversionFee) public;
-    function setQuickBuyPath(IERC20Token[] _path) public;
     function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance) public;
     function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance) public;
     function getConnectorBalance(IERC20Token _connectorToken) public view returns (uint256);
@@ -112,7 +109,6 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
         IBancorConverterExtended newConverter = createConverter(converter);
         copyConnectors(converter, newConverter, formerVersions);
         copyConversionFee(converter, newConverter);
-        copyQuickBuyPath(converter, newConverter);
         transferConnectorsBalances(converter, newConverter, formerVersions);                
         ISmartToken token = converter.token();
 
@@ -222,25 +218,6 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
     function copyConversionFee(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter) private {
         uint32 conversionFee = _oldConverter.conversionFee();
         _newConverter.setConversionFee(conversionFee);
-    }
-
-    /**
-        @dev copies the quick buy path from the old converter to the new one
-
-        @param _oldConverter    old converter contract address
-        @param _newConverter    new converter contract address
-    */
-    function copyQuickBuyPath(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter) private {
-        uint256 quickBuyPathLength = _oldConverter.getQuickBuyPathLength();
-        if (quickBuyPathLength <= 0)
-            return;
-
-        IERC20Token[] memory path = new IERC20Token[](quickBuyPathLength);
-        for (uint256 i = 0; i < quickBuyPathLength; i++) {
-            path[i] = _oldConverter.quickBuyPath(i);
-        }
-
-        _newConverter.setQuickBuyPath(path);
     }
 
     /**
