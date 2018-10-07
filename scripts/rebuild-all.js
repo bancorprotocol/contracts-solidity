@@ -14,7 +14,7 @@ function extractBinaries() {
     }
 }
 
-let cp = spawn("node", [NODE_DIR + "/truffle/build/cli.bundled.js", "compile", "--all"], {cwd: WORK_DIR});
+let cp = spawn("node", [NODE_DIR + "/truffle/build/cli.bundled.js", "compile", "--all", "--fix_paths"], {cwd: WORK_DIR});
 
 cp.stdout.on("data", function(data) {process.stdout.write(data.toString());});
 cp.stderr.on("data", function(data) {process.stderr.write(data.toString());});
