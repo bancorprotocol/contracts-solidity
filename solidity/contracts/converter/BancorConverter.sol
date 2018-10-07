@@ -49,8 +49,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     bytes32 public version = '0.11';
     string public converterType = 'bancor';
 
-    IContractRegistry public prevRegistry;              // address of previous registry as security mechanism
+    IContractRegistry public initialRegistry;           // address of first registry as security mechanism
     IContractRegistry public registry;                  // contract registry contract
+    uint256 public lastUpdateBlockNumber;               // the last block number when updateRegistry was called
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public connectorTokens;               // ERC20 standard token addresses
     IERC20Token[] public quickBuyPath;                  // conversion path that's used in order to buy the token with ETH
@@ -103,6 +104,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         validMaxConversionFee(_maxConversionFee)
     {
         registry = _registry;
+        initialRegistry = _registry;
         IContractFeatures features = IContractFeatures(registry.addressOf(ContractIds.CONTRACT_FEATURES));
 
         // initialize supported features
@@ -181,27 +183,26 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @dev sets the contract registry to wherever the current registry is pointing to
      */
     function updateRegistry() public {
+        // require that 1000 blocks have passed since the last call
+        require(block.number > lastUpdateBlockNumber + 1000);
+        lastUpdateBlockNumber = block.number;
+
         // get the address of whichever registry the current registry is pointing to
         address newRegistry = registry.addressOf(ContractIds.CONTRACT_REGISTRY);
 
-        // if the new registry hasn't changed or is the zero address, return
+        // if the new registry hasn't changed or is the zero address, revert
         if (newRegistry == address(registry) || newRegistry == address(0))
-            return;
-        
-        // otherwise, we set the prevRegistry as the current registry, and current registry as the new registry
-        prevRegistry = registry;
+            revert();
+
         registry = IContractRegistry(newRegistry);
     }
 
     /**
-        @dev security mechanism allowing the converter owner to revert to the previous registry
+        @dev security mechanism allowing the converter owner to revert to the initial registry,
+        to be used in emergency scenario
     */
     function restoreRegistry() public ownerOnly {
-        require(prevRegistry != address(0));
-        IContractRegistry currentRegistry = registry;
-
-        registry = prevRegistry;
-        prevRegistry = currentRegistry;
+        registry = initialRegistry;
     }
 
     /**
