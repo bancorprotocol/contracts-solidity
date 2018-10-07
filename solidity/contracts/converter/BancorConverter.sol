@@ -49,6 +49,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     bytes32 public version = '0.11';
     string public converterType = 'bancor';
 
+    IContractRegistry public prevRegistry;              // address of previous registry as security mechanism
     IContractRegistry public registry;                  // contract registry contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public connectorTokens;               // ERC20 standard token addresses
@@ -179,8 +180,28 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
         @dev sets the contract registry to wherever the current registry is pointing to
      */
-    function updateContractRegistry() public {
-        registry = IContractRegistry(registry.addressOf(ContractIds.CONTRACT_REGISTRY));
+    function updateRegistry() public {
+        // get the address of whichever registry the current registry is pointing to
+        address newRegistry = registry.addressOf(ContractIds.CONTRACT_REGISTRY);
+
+        // if the new registry hasn't changed or is the zero address, return
+        if (newRegistry == address(registry) || newRegistry == address(0))
+            return;
+        
+        // otherwise, we set the prevRegistry as the current registry, and current registry as the new registry
+        prevRegistry = registry;
+        registry = IContractRegistry(newRegistry);
+    }
+
+    /**
+        @dev security mechanism allowing the converter owner to revert to the previous registry
+    */
+    function restoreRegistry() public ownerOnly {
+        require(prevRegistry != address(0));
+        IContractRegistry currentRegistry = registry;
+
+        registry = prevRegistry;
+        prevRegistry = currentRegistry;
     }
 
     /**
