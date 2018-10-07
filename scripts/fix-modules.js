@@ -10,7 +10,8 @@ function fix(fileName, tokens) {
 
 fix("./node_modules/truffle/build/cli.bundled.js", [
     {prev: "request = new XHR2", next: "request = new XMLHttpRequest"},
-    {prev: "error = errors.InvalidResponse", next: "error = payload.method === 'evm_revert' || payload.method === 'evm_snapshot' ? null : errors.InvalidResponse"}]
+    {prev: "error = errors.InvalidResponse", next: "error = payload.method === 'evm_revert' || payload.method === 'evm_snapshot' ? null : errors.InvalidResponse"},
+    {prev: "display_path = \".\" + path.sep + path.relative(options.working_directory, import_path);", next: "display_path = \".\" + path.sep + path.relative(options.working_directory, import_path); result[display_path] = result[import_path]; delete result[import_path];"}]
 );
 
 fix("./node_modules/solidity-coverage/lib/app.js", [

@@ -11,6 +11,7 @@
   },
   "scripts": {
     "install": "node scripts/fix-modules.js",
+    "build": "node scripts/rebuild-all.js",
     "test": "node scripts/run-tests.js"
   },
   "dependencies": {
