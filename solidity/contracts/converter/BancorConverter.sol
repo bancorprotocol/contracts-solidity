@@ -463,7 +463,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
        @return expected sale require amount
 
-       NOTE: this not extreme precise. Use carefully.
+       NOTE: this not extremely precise. Use carefully.
    */
     function getSaleRequire(IERC20Token _connectorToken, uint256 _expectedSellReturn)
     public
