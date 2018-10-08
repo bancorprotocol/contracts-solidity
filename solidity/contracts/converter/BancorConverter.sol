@@ -456,16 +456,16 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
 
     /**
-       @dev returns the expected return for selling the token for one of its connector tokens
+       @dev returns the expected return of amount of smart token based on a given amount of connector token
 
        @param _connectorToken  connector token contract address
-       @param _sellAmount      amount to sell (in the smart token)
+       @param _expectedSellReturn  amount to sell (in the connector token)
 
-       @return expected sale return amount
+       @return expected sale require amount
 
        NOTE: this not extreme precise. Use carefully.
    */
-    function getSaleRequire(IERC20Token _connectorToken, uint256 _sellAmount)
+    function getSaleRequire(IERC20Token _connectorToken, uint256 _expectedSellReturn)
     public
     view
     active
@@ -476,7 +476,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 tokenSupply = token.totalSupply();
         uint256 connectorBalance = getConnectorBalance(_connectorToken);
         IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
-        uint256 amount = formula.calculateSaleRequire(tokenSupply, connectorBalance, connector.weight, _sellAmount);
+        uint256 amount = formula.calculateSaleRequire(tokenSupply, connectorBalance, connector.weight, _expectedSellReturn);
 
         // return the amount minus the conversion fee
         return getFinalAmount(amount, 1);

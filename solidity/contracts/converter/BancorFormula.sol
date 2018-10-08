@@ -559,20 +559,20 @@ contract BancorFormula is IBancorFormula, Utils {
         @param _connectorBalance    total connector
         @param _supply              token total supply
         @param _connectorWeight     constant connector Weight, represented in ppm, 1-1000000
-        @param _sellAmount          sell amount, in the connector token
+        @param _expectedSellReturn  expected sell return, in the connector token
 
         @return sale return amount
     */
-    function calculateSaleRequire(uint256 _connectorBalance, uint256 _supply, uint32 _connectorWeight, uint256 _sellAmount) public view returns (uint256) {
+    function calculateSaleRequire(uint256 _connectorBalance, uint256 _supply, uint32 _connectorWeight, uint256 _expectedSellReturn) public view returns (uint256) {
         // validate input
-        require(_supply > 0 && _connectorBalance > 0 && _connectorWeight > 0 && _connectorWeight <= MAX_WEIGHT && _sellAmount <= _supply);
+        require(_supply > 0 && _connectorBalance > 0 && _connectorWeight > 0 && _connectorWeight <= MAX_WEIGHT && _expectedSellReturn <= _connectorBalance);
 
         // special case for 0 sell amount
-        if (_sellAmount == 0)
+        if (_expectedSellReturn == 0)
             return 0;
 
         // special case for selling the entire supply
-        if (_sellAmount == _connectorBalance)
+        if (_expectedSellReturn == _connectorBalance)
             return _supply;
 
         // special case if the weight = 100%
@@ -581,7 +581,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
         uint256 result;
         uint8 precision;
-        uint256 baseD = _connectorBalance - _sellAmount;
+        uint256 baseD = _connectorBalance - _expectedSellReturn;
         (result, precision) = power(_connectorBalance, baseD, _connectorWeight, MAX_WEIGHT);
         uint256 temp1 = safeMul(_supply, result);
         uint256 temp2 = _supply << precision;
