@@ -24,7 +24,7 @@ contract BancorExchange is Owned {
         bancorConverter = BancorConverter(_bc);
     }
 
-    function() payable {
+    function() public payable {
         // this is necessary!
     }
 
@@ -67,8 +67,9 @@ contract BancorExchange is Owned {
         require(msg.sender == clockAuction);
         uint connectorBalance = bancorConverter.getConnectorBalance(quickBuyPath[0]);
         uint supply = smartToken.totalSupply();
-        uint cw = bancorConverter.connectors(quickBuyPath[0]).weight;
-        uint amountRequired = bancorConverter.getPurchaseRequire(connectorBalance, supply, cw, _minReturn);
+        (, uint cw, , , ) = bancorConverter.connectors(quickBuyPath[0]);
+        //uint cw = bancorConverter.connectors(quickBuyPath[0]).weight;
+        (uint amountRequired) = bancorConverter.getPurchaseRequire(connectorBalance, supply, cw, _minReturn);
         require(msg.value >= amountRequired);
         uint amount = bancorConverter.quickConvert.value(amountRequired)(quickBuyPath, msg.value, _minReturn);
         uint refundEth = msg.value - amountRequired;

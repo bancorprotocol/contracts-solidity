@@ -577,7 +577,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
         // special case if the weight = 100%
         if (_connectorWeight == MAX_WEIGHT)
-            return safeMul(_supply, _sellAmount) / _supply;
+            return safeMul(_supply, _expectedSellReturn) / _supply;
 
         uint256 result;
         uint8 precision;
