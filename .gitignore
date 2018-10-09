@@ -7,3 +7,4 @@ npm-debug.log
 solidity/build
 **/truffle-config.js
 **/truffle.js
+solidity/package.json

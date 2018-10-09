@@ -14,7 +14,7 @@
     "test": "cd solidity && truffle test"
   },
   "dependencies": {
-    "@evolutionland/common": "^1.0.12",
+    "@evolutionland/common": "^1.0.14",
     "decimal.js": "^10.0.1",
     "ethereumjs-util": "^5.2.0",
     "js-sha256": "^0.9.0",
