@@ -6,7 +6,7 @@ import './converter/interfaces/IBancorConverter.sol';
 import './converter/interfaces/IBancorFormula.sol';
 import './converter/interfaces/IBancorGasPriceLimit.sol';
 import './utility/TokenHolder.sol';
-import './utility/interfaces/IContractRegistry.sol';
+import "@evolutionland/common/contracts/interfaces/ISettingsRegistry.sol";
 import './utility/interfaces/IContractFeatures.sol';
 import './utility/interfaces/IWhitelist.sol';
 import './token/interfaces/IEtherToken.sol';
@@ -34,7 +34,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     uint64 private constant MAX_CONVERSION_FEE = 1000000;
 
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
-    IContractRegistry public registry;          // contract registry contract address
+    ISettingsRegistry public registry;          // contract registry contract address
 
     mapping (address => bool) public etherTokens;       // list of all supported ether tokens
     mapping (bytes32 => bool) public conversionHashes;  // list of conversion hashes, to prevent re-use of the same hash
@@ -44,7 +44,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @param _registry    address of a contract registry contract
     */
-    constructor(IContractRegistry _registry) public validAddress(_registry) {
+    constructor(ISettingsRegistry _registry) public validAddress(_registry) {
         registry = _registry;
     }
 
@@ -59,7 +59,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @param _registry   address of a contract registry contract
     */
-    function setRegistry(IContractRegistry _registry)
+    function setRegistry(ISettingsRegistry _registry)
         public
         ownerOnly
         validAddress(_registry)
@@ -351,7 +351,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint256 amount;
         uint256 supply;
         ISmartToken prevSmartToken;
-        IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
+        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
 
         amount = _amount;
         fromToken = _path[0];

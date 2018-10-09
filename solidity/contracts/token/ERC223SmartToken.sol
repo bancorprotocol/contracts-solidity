@@ -1,8 +1,9 @@
 pragma solidity ^0.4.23;
 
 import "./SmartToken.sol";
-import "evolutionlandcommon/contracts/interfaces/ERC223.sol";
-import "evolutionlandcommon/contracts/interfaces/ERC223ReceivingContract.sol";
+
+import "@evolutionland/common/contracts/interfaces/ERC223.sol";
+import "@evolutionland/common/contracts/interfaces/ERC223ReceivingContract.sol";
 
 contract ERC223SmartToken is SmartToken, ERC223 {
 
