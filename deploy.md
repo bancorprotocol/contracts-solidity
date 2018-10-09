@@ -13,7 +13,7 @@ solidity
 │   │   ├── ERC223SmartToken.sol
 │   └── utility
 │       ├── ContractFeatures.sol
-│       ├── ContractRegistry.sol
+│       ├── ContractRegistry.sol (Replaced by SettingsRegistry.sol)
 │       ├── Whitelist.sol
 │   ├── BancorExchange.sol
 │   ├── BancorNetwork.sol
@@ -27,7 +27,7 @@ solidity
     FeatureIds.sol
     BancorGasPriceLimit.sol
     Whitelist.sol
-    ContractRegistry.sol
+    ContractRegistry.sol (Replaced by SettingsRegistry.sol)
     EtherToken.sol
     ERC223SmartToken.sol
     BancorFormula.sol 

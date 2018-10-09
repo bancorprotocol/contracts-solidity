@@ -2,7 +2,7 @@ pragma solidity ^0.4.23;
 import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorConverterFactory.sol';
 import '../utility/Owned.sol';
-import '../utility/interfaces/IContractRegistry.sol';
+import "../../../node_modules/@evolutionland/common/contracts/interfaces/ISettingsRegistry.sol";
 import '../utility/interfaces/IContractFeatures.sol';
 import '../utility/interfaces/IWhitelist.sol';
 import '../ContractIds.sol';
@@ -56,7 +56,7 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
 contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
     string public version = '0.3';
 
-    IContractRegistry public registry;                      // contract registry contract address
+    ISettingsRegistry public registry;                      // contract registry contract address
 
     // triggered when the contract accept a converter ownership
     event ConverterOwned(address indexed _converter, address indexed _owner);
@@ -66,7 +66,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
     /**
         @dev constructor
     */
-    constructor(IContractRegistry _registry) public {
+    constructor(ISettingsRegistry _registry) public {
         registry = _registry;
     }
 
@@ -75,7 +75,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
 
         @param _registry   address of a contract registry contract
     */
-    function setRegistry(IContractRegistry _registry) public ownerOnly {
+    function setRegistry(ISettingsRegistry _registry) public ownerOnly {
         registry = _registry;
     }
 

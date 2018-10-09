@@ -6,7 +6,7 @@ import '../ContractIds.sol';
 import '../FeatureIds.sol';
 import '../utility/Managed.sol';
 import '../utility/Utils.sol';
-import '../utility/interfaces/IContractRegistry.sol';
+import "../../../node_modules/@evolutionland/common/contracts/interfaces/ISettingsRegistry.sol";
 import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
@@ -48,7 +48,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     string public version = '0.10';
     string public converterType = 'bancor';
 
-    IContractRegistry public registry;                  // contract registry contract
+    ISettingsRegistry public registry;                  // contract registry contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public connectorTokens;               // ERC20 standard token addresses
     IERC20Token[] public quickBuyPath;                  // conversion path that's used in order to buy the token with ETH
@@ -90,7 +90,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     constructor(
         ISmartToken _token,
-        IContractRegistry _registry,
+        ISettingsRegistry _registry,
         uint32 _maxConversionFee,
         IERC20Token _connectorToken,
         uint32 _connectorWeight
@@ -176,7 +176,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @param _registry   address of a contract registry contract
     */
-    function setRegistry(IContractRegistry _registry)
+    function setRegistry(ISettingsRegistry _registry)
         public
         ownerOnly
         validAddress(_registry)

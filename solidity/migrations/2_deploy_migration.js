@@ -4,7 +4,7 @@ const BancorFormula = artifacts.require('BancorFormula');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
 const EtherToken = artifacts.require('EtherToken');
 const ContractFeatures = artifacts.require('ContractFeatures');
-const ContractRegistry = artifacts.require('ContractRegistry');
+const ContractRegistry = artifacts.require('SettingsRegistry');
 const WhiteList = artifacts.require('Whitelist');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const BancorExchange = artifacts.require('BancorExchange');
@@ -66,13 +66,13 @@ module.exports = function(deployer) {
         let ring = await RING.deployed();
 
         contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
-        await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
+        await contractRegistry.setAddressProperty(contractFeaturesId, contractFeatures.address);
         formulaId = await contractIds.BANCOR_FORMULA.call();
-        await contractRegistry.registerAddress(formulaId, bancorFormula.address);
+        await contractRegistry.setAddressProperty(formulaId, bancorFormula.address);
         gasPriceLimitId = await contractIds.BANCOR_GAS_PRICE_LIMIT.call();
-        await contractRegistry.registerAddress(gasPriceLimitId, bancorGasPriceLimit.address);
+        await contractRegistry.setAddressProperty(gasPriceLimitId, bancorGasPriceLimit.address);
         bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
-        await contractRegistry.registerAddress(bancorNetworkId, BancorNetwork.address);
+        await contractRegistry.setAddressProperty(bancorNetworkId, BancorNetwork.address);
 
          //do this to make SmartToken.totalSupply > 0
         await ring.issue(CONF.from, 1000000 * COIN);

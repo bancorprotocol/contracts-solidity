@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 import '../../token/interfaces/IERC20Token.sol';
 import '../../token/interfaces/ISmartToken.sol';
-import '../../utility/interfaces/IContractRegistry.sol';
+import "../../../../node_modules/@evolutionland/common/contracts/interfaces/ISettingsRegistry.sol";
 
 /*
     Bancor Converter Factory interface
@@ -9,7 +9,7 @@ import '../../utility/interfaces/IContractRegistry.sol';
 contract IBancorConverterFactory {
     function createConverter(
         ISmartToken _token,
-        IContractRegistry _registry,
+        ISettingsRegistry _registry,
         uint32 _maxConversionFee,
         IERC20Token _connectorToken,
         uint32 _connectorWeight
