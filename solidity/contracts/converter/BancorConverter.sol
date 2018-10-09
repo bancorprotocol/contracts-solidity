@@ -105,7 +105,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // initialize supported features
         if (features != address(0))
-            features.enableFeatures(FeatureIds.CONVERTER_CONVERSION_WHITELIST, true);
+            features.enableFeatures(CONVERTER_CONVERSION_WHITELIST, true);
 
         maxConversionFee = _maxConversionFee;
 

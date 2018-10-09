@@ -309,7 +309,7 @@ contract BancorFormula is IBancorFormula, Utils {
     }
 
     /**
-        Compute log(x / FIXED_1) * FIXED_1.
+        Compute log(x * FIXED_1) * FIXED_1.
         This functions assumes that "x >= FIXED_1", because the output would be negative otherwise.
     */
     function generalLog(uint256 x) internal pure returns (uint256) {
