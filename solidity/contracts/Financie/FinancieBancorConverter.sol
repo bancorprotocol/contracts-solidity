@@ -2,6 +2,7 @@ pragma solidity ^0.4.18;
 import '../converter/BancorConverter.sol';
 import './FinancieFee.sol';
 import './FinancieNotifierDelegate.sol';
+import './IFinancieBancorConverter.sol';
 import '../token/interfaces/IEtherToken.sol';
 
 /**
