@@ -6,7 +6,7 @@ import '../ContractIds.sol';
 import '../FeatureIds.sol';
 import '../utility/Managed.sol';
 import '../utility/Utils.sol';
-import '../utility/interfaces/IContractRegistry.sol';
+import "@evolutionland/common/contracts/interfaces/ISettingsRegistry.sol";
 import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
@@ -48,7 +48,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     string public version = '0.10';
     string public converterType = 'bancor';
 
-    IContractRegistry public registry;                  // contract registry contract
+    ISettingsRegistry public registry;                  // contract registry contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public connectorTokens;               // ERC20 standard token addresses
     IERC20Token[] public quickBuyPath;                  // conversion path that's used in order to buy the token with ETH
@@ -90,7 +90,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     constructor(
         ISmartToken _token,
-        IContractRegistry _registry,
+        ISettingsRegistry _registry,
         uint32 _maxConversionFee,
         IERC20Token _connectorToken,
         uint32 _connectorWeight
@@ -105,7 +105,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // initialize supported features
         if (features != address(0))
-            features.enableFeatures(FeatureIds.CONVERTER_CONVERSION_WHITELIST, true);
+            features.enableFeatures(CONVERTER_CONVERSION_WHITELIST, true);
 
         maxConversionFee = _maxConversionFee;
 
@@ -176,7 +176,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @param _registry   address of a contract registry contract
     */
-    function setRegistry(IContractRegistry _registry)
+    function setRegistry(ISettingsRegistry _registry)
         public
         ownerOnly
         validAddress(_registry)
@@ -401,6 +401,35 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
+            @dev returns the expected return for buying the token for a connector token
+
+            @param _connectorToken  connector token contract address
+            @param _buyAmount       amount to buy (in the main token)
+
+            @return expected purchase require amount
+        */
+    function getPurchaseRequire(IERC20Token _connectorToken, uint256 _buyAmount)
+        public
+        view
+        active
+        validConnector(_connectorToken)
+        returns (uint256)
+    {
+        Connector storage connector = connectors[_connectorToken];
+        require(connector.isPurchaseEnabled); // validate input
+
+        uint256 tokenSupply = token.totalSupply();
+        uint256 connectorBalance = getConnectorBalance(_connectorToken);
+        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
+        uint256 amount = formula.calculatePurchaseRequire(connectorBalance, tokenSupply, connector.weight, _buyAmount);
+
+        // return the amount minus the conversion fee
+        // TODO: add 1 for now, may consider later.
+        return getFinalAmount(amount + 1, 1);
+    }
+
+
+    /**
         @dev returns the expected return for selling the token for one of its connector tokens
 
         @param _connectorToken  connector token contract address
@@ -420,6 +449,34 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 connectorBalance = getConnectorBalance(_connectorToken);
         IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
         uint256 amount = formula.calculateSaleReturn(tokenSupply, connectorBalance, connector.weight, _sellAmount);
+
+        // return the amount minus the conversion fee
+        return getFinalAmount(amount, 1);
+    }
+
+
+    /**
+       @dev returns the expected return of amount of smart token based on a given amount of connector token
+
+       @param _connectorToken  connector token contract address
+       @param _expectedSellReturn  amount to sell (in the connector token)
+
+       @return expected sale require amount
+
+       NOTE: this not extremely precise. Use carefully.
+   */
+    function getSaleRequire(IERC20Token _connectorToken, uint256 _expectedSellReturn)
+    public
+    view
+    active
+    validConnector(_connectorToken)
+    returns (uint256)
+    {
+        Connector storage connector = connectors[_connectorToken];
+        uint256 tokenSupply = token.totalSupply();
+        uint256 connectorBalance = getConnectorBalance(_connectorToken);
+        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
+        uint256 amount = formula.calculateSaleRequire(tokenSupply, connectorBalance, connector.weight, _expectedSellReturn);
 
         // return the amount minus the conversion fee
         return getFinalAmount(amount, 1);

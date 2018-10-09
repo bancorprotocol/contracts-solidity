@@ -3,3 +3,8 @@
 node_modules
 npm-debug.log
 *.pyc
+.idea
+solidity/build
+**/truffle-config.js
+**/truffle.js
+solidity/package.json

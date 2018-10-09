@@ -7,7 +7,7 @@ const BancorConverter = artifacts.require('BancorConverter.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
-const ContractRegistry = artifacts.require('ContractRegistry.sol');
+const ContractRegistry = artifacts.require('SettingsRegistry.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
 const utils = require('./helpers/Utils');
@@ -78,19 +78,19 @@ contract('BancorConverter', accounts => {
 
         contractFeatures = await ContractFeatures.new();
         let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
-        await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
+        await contractRegistry.setAddressProperty(contractFeaturesId, contractFeatures.address);
 
         let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
         let gasPriceLimitId = await contractIds.BANCOR_GAS_PRICE_LIMIT.call();
-        await contractRegistry.registerAddress(gasPriceLimitId, gasPriceLimit.address);
+        await contractRegistry.setAddressProperty(gasPriceLimitId, gasPriceLimit.address);
 
         let formula = await BancorFormula.new();
         let formulaId = await contractIds.BANCOR_FORMULA.call();
-        await contractRegistry.registerAddress(formulaId, formula.address);
+        await contractRegistry.setAddressProperty(formulaId, formula.address);
 
         let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
-        await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
+        await contractRegistry.setAddressProperty(bancorNetworkId, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[3]);
 
         let token = await SmartToken.new('Token1', 'TKN1', 2);
