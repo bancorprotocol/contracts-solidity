@@ -80,7 +80,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     event ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee);
 
     // triggered when conversions are enabled/disabled
-    event conversionsEnabledUpdate(address indexed _caller, bool _prevConversionsEnabled, bool _newConversionsEnabled);
+    event conversionsEnabledUpdate(bool _conversionsEnabled);
 
     /**
         @dev constructor
@@ -210,9 +210,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @param _disable true to disable conversions, false to re-enable them
     */
     function disableConversions(bool _disable) public ownerOrManagerOnly {
-        bool previousConversionsEnabled = conversionsEnabled;
-        conversionsEnabled = !_disable;
-        emit conversionsEnabledUpdate(msg.sender, previousConversionsEnabled, conversionsEnabled);
+        if (conversionsEnabled == _disable) {
+            conversionsEnabled = !_disable;
+            emit conversionsEnabledUpdate(conversionsEnabled);
+        }
     }
 
     /**
