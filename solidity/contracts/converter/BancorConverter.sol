@@ -79,6 +79,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     // triggered when the conversion fee is updated
     event ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee);
 
+    // triggered when conversions are enabled/disabled
+    event conversionsEnabledUpdate(address indexed _token, bool _converstionsEnabled);
+
     /**
         @dev constructor
 
@@ -208,6 +211,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     function disableConversions(bool _disable) public ownerOrManagerOnly {
         conversionsEnabled = !_disable;
+        emit conversionsEnabledUpdate(token, conversionsEnabled);
     }
 
     /**
