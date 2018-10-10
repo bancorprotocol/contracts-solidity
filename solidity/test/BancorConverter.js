@@ -74,7 +74,7 @@ function getConversionAmount(transaction, logIndex = 0) {
     return transaction.logs[logIndex].args._return.toNumber();
 }
 
-contract.only('BancorConverter', accounts => {
+contract('BancorConverter', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
         contractIds = await ContractIds.new();
