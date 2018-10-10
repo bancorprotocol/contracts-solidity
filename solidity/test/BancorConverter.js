@@ -74,7 +74,7 @@ function getConversionAmount(transaction, logIndex = 0) {
     return transaction.logs[logIndex].args._return.toNumber();
 }
 
-contract('BancorConverter', accounts => {
+contract.only('BancorConverter', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
         contractIds = await ContractIds.new();
@@ -283,8 +283,8 @@ contract('BancorConverter', accounts => {
         let watcher = converter.conversionsEnabledUpdate();
         await converter.disableConversions(true);
         let events = await watcher.get();
-        assert.equal(events[0].args._token.valueOf(), tokenAddress);
-        assert.equal(events[0].args._converstionsEnabled.valueOf(), false);
+        assert.equal(events[0].args._caller.valueOf(), accounts[0]);
+        assert.equal(events[0].args._conversionsEnabled.valueOf(), false);
     });
 
     it('verifies that an event is fired when the owner updates the fee', async () => {
