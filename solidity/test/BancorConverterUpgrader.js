@@ -54,9 +54,6 @@ async function initConverter(accounts, activate, version = null, maxConversionFe
     await connectorToken2.transfer(converterAddress, 8000);
     await converter.setConversionFee(1000);
 
-    let smartToken1QuickBuyPath = [connectorTokenAddress, tokenAddress, tokenAddress];
-    await converter.setQuickBuyPath(smartToken1QuickBuyPath);
-
     if (activate) {
         await token.transferOwnership(converterAddress);
         await converter.acceptTokenOwnership();
@@ -185,29 +182,6 @@ contract('BancorConverterUpgrader', accounts => {
             let newManager = await newConverter.newManager.call();
             assert.equal(initialManager, newManager);    
         }
-    });
-
-    it('verifies that the quick buy path length of the converter is equal to the path length in the new converter', async () => {
-        for (let i = 0; i < versions.length; i++) {
-            let converter = await initConverter(accounts, true, versions[i]);
-            let initialLength = await converter.getQuickBuyPathLength.call();
-            let newConverter = await upgradeConverter(converter, versions[i]);
-            let newLength = await newConverter.getQuickBuyPathLength.call();
-            assert.equal(initialLength.toFixed(), newLength.toFixed());    
-        }                
-    });
-
-    it('verifies that the quick buy path of the new converter is equal to the path in the old converter', async () => {
-        for (let i = 0; i < versions.length; i++) {
-            let converter = await initConverter(accounts, true, versions[i]);
-            let initialPathLength = await converter.getQuickBuyPathLength.call();
-            let newConverter = await upgradeConverter(converter, versions[i]);
-            for (let i = 0; i < initialPathLength; i++) {
-                let initialToken = await converter.quickBuyPath.call(i);
-                let currentToken = await newConverter.quickBuyPath.call(i);
-                assert.equal(initialToken, currentToken);
-            }    
-        }                
     });
 
     it('verifies that the whitelist feature is enabled in the new converter', async () => {

@@ -54,7 +54,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     IContractRegistry public registry;                  // contract registry contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public connectorTokens;               // ERC20 standard token addresses
-    IERC20Token[] public quickBuyPath;                  // conversion path that's used in order to buy the token with ETH
     mapping (address => Connector) public connectors;   // connector token addresses -> connector data
     uint32 private totalConnectorWeight = 0;            // used to efficiently prevent increasing the total connector weight above 100%
     uint32 public maxConversionFee = 0;                 // maximum conversion fee for the lifetime of the contract,
@@ -243,35 +242,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         notThis(_whitelist)
     {
         conversionWhitelist = _whitelist;
-    }
-
-    /*
-        @dev allows the manager to update the quick buy path
-
-        @param _path    new quick buy path, see conversion path format in the bancorNetwork contract
-    */
-    function setQuickBuyPath(IERC20Token[] _path)
-        public
-        ownerOnly
-        validConversionPath(_path)
-    {
-        quickBuyPath = _path;
-    }
-
-    /*
-        @dev allows the manager to clear the quick buy path
-    */
-    function clearQuickBuyPath() public ownerOnly {
-        quickBuyPath.length = 0;
-    }
-
-    /**
-        @dev returns the length of the quick buy path array
-
-        @return quick buy path length
-    */
-    function getQuickBuyPathLength() public view returns (uint256) {
-        return quickBuyPath.length;
     }
 
     /**
@@ -869,13 +839,5 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
         assert(_feeAmount <= 2 ** 255);
         emit Conversion(_fromToken, _toToken, msg.sender, _amount, _returnAmount, int256(_feeAmount));
-    }
-
-    /**
-        @dev fallback, buys the smart token with ETH
-        note that the purchase will use the price at the time of the purchase
-    */
-    function() payable public {
-        quickConvert(quickBuyPath, msg.value, 1);
     }
 }
