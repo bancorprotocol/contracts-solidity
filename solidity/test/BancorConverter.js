@@ -1708,4 +1708,77 @@ contract('BancorConverter', accounts => {
             return utils.ensureException(error);
         }
     });
+
+    it('should have the registry point to itself after initialization', async () => {
+        let contractRegistryId = await contractIds.CONTRACT_REGISTRY.call();
+        let registryAddress = await contractRegistry.getAddress.call(contractRegistryId)
+        assert.equal(registryAddress, contractRegistry.address)
+    });
+
+    it('should throw when attempting to update the registry when no new registry is set', async () => {
+        let converter = await initConverter(accounts, false);
+
+        try {
+            await converter.updateRegistry();
+            assert(false, "didnt throw");
+        }
+        catch(error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should throw when attempting to register the registry to the zero address', async () => {
+        let contractRegistryId = await contractIds.CONTRACT_REGISTRY.call();
+
+        try {
+            await contractRegistry.registerAddress(contractRegistryId, "0x0")
+            assert(false, "didnt throw");
+        }
+        catch(error) {
+            return utils.ensureException(error);
+        }
+    });
+
+    it('should allow anyone to update the registry address', async () => {
+        let converter = await initConverter(accounts, false);
+        let contractRegistryId = await contractIds.CONTRACT_REGISTRY.call();
+        let newRegistry = await ContractRegistry.new()
+
+        await contractRegistry.registerAddress(contractRegistryId, newRegistry.address)
+        await converter.updateRegistry({ from: accounts[1] })
+
+        assert.equal(await converter.registry.call(), newRegistry.address)
+        assert.equal(await converter.prevRegistry.call(), contractRegistry.address)
+
+        // set the original registry back
+        await contractRegistry.registerAddress(contractRegistryId, contractRegistry.address)
+    });
+
+    it('should allow the owner to restore the previous registry and disable updates', async () => {
+        let converter = await initConverter(accounts, false);
+        let contractRegistryId = await contractIds.CONTRACT_REGISTRY.call();
+        let newRegistry = await ContractRegistry.new()
+
+        await contractRegistry.registerAddress(contractRegistryId, newRegistry.address)
+        await converter.updateRegistry({ from: accounts[1] })
+
+        await converter.restoreRegistry({ from: accounts[0] })
+
+        assert.equal(await converter.registry.call(), contractRegistry.address)
+        assert.equal(await converter.prevRegistry.call(), contractRegistry.address)
+
+        try {
+            await converter.updateRegistry({ from: accounts[1] })
+        }
+        catch(error) {
+            return utils.ensureException(error);
+        }
+
+        await converter.updateRegistry({ from: accounts[0] })
+        assert.equal(await converter.registry.call(), newRegistry.address)
+        assert.equal(await converter.prevRegistry.call(), contractRegistry.address)
+
+        // re register address
+        await contractRegistry.registerAddress(contractRegistryId, contractRegistry.address)
+    });
 });
