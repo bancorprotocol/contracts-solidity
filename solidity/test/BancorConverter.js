@@ -280,7 +280,7 @@ contract('BancorConverter', accounts => {
 
     it('verifies that an event is fired when an owner/manager disables conversions', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
-        let watcher = converter.ConversionsEnabledUpdate();
+        let watcher = converter.ConversionsEnable();
         await converter.disableConversions(true);
         let events = await watcher.get();
         assert.equal(events[0].args._conversionsEnabled.valueOf(), false);
@@ -288,7 +288,7 @@ contract('BancorConverter', accounts => {
 
     it('verifies that the conversionsEnabled event doesn\'t fire when passing identical value to conversionEnabled', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
-        let watcher = converter.ConversionsEnabledUpdate();
+        let watcher = converter.ConversionsEnable();
         await converter.disableConversions(false);
         let events = await watcher.get();
         assert.equal(events.length, 0);
