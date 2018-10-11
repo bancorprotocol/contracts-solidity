@@ -49,8 +49,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     bytes32 public version = '0.11';
     string public converterType = 'bancor';
 
-    bool public allowRegistryUpdate = true;            // allows the owner to prevent/allow the registry to be updated
-    IContractRegistry public prevRegistry;           // address of first registry as security mechanism
+    bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
+    IContractRegistry public prevRegistry;              // address of first registry as security mechanism
     IContractRegistry public registry;                  // contract registry contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public connectorTokens;               // ERC20 standard token addresses
@@ -203,10 +203,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         to be used in emergency scenario
     */
     function restoreRegistry() public ownerOrManagerOnly {
-        // swap prevRegistry and registry
-        IContractRegistry currentRegistry = registry;
+        // set the registry as previous registry
         registry = prevRegistry;
-        prevRegistry = currentRegistry;
 
         // after a previous registry is restored, only the owner can allow future updates
         allowRegistryUpdate = false;
