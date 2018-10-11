@@ -49,9 +49,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     bytes32 public version = '0.11';
     string public converterType = 'bancor';
 
-    IContractRegistry public initialRegistry;           // address of first registry as security mechanism
+    bool public allowRegistryUpdate = true;            // allows the owner to prevent/allow the registry to be updated
+    IContractRegistry public prevRegistry;           // address of first registry as security mechanism
     IContractRegistry public registry;                  // contract registry contract
-    uint256 public lastUpdateBlockNumber;               // the last block number when updateRegistry was called
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public connectorTokens;               // ERC20 standard token addresses
     IERC20Token[] public quickBuyPath;                  // conversion path that's used in order to buy the token with ETH
@@ -104,7 +104,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         validMaxConversionFee(_maxConversionFee)
     {
         registry = _registry;
-        initialRegistry = _registry;
+        prevRegistry = _registry;
         IContractFeatures features = IContractFeatures(registry.addressOf(ContractIds.CONTRACT_FEATURES));
 
         // initialize supported features
@@ -180,12 +180,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-        @dev sets the contract registry to wherever the current registry is pointing to
+        @dev sets the contract registry to whichever address the current registry is pointing to
      */
     function updateRegistry() public {
-        // require that 1000 blocks have passed since the last call
-        require(block.number > lastUpdateBlockNumber + 1000);
-        lastUpdateBlockNumber = block.number;
+        // require that upgrading is allowed or that the caller is the owner
+        require(allowRegistryUpdate || msg.sender == owner);
 
         // get the address of whichever registry the current registry is pointing to
         address newRegistry = registry.addressOf(ContractIds.CONTRACT_REGISTRY);
@@ -194,15 +193,34 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         if (newRegistry == address(registry) || newRegistry == address(0))
             revert();
 
+        // set the previous registry as current registry and current registry as newRegistry
+        prevRegistry = registry;
         registry = IContractRegistry(newRegistry);
     }
 
     /**
-        @dev security mechanism allowing the converter owner to revert to the initial registry,
+        @dev security mechanism allowing the converter owner to revert to the previous registry,
         to be used in emergency scenario
     */
-    function restoreRegistry() public ownerOnly {
-        registry = initialRegistry;
+    function restoreRegistry() public ownerOrManagerOnly {
+        // swap prevRegistry and registry
+        IContractRegistry currentRegistry = registry;
+        registry = prevRegistry;
+        prevRegistry = currentRegistry;
+
+        // after a previous registry is restored, only the owner can allow future updates
+        allowRegistryUpdate = false;
+    }
+
+    /**
+        @dev disables the registry update functionality
+        this is a safety mechanism in case of a emergency
+        can only be called by the manager or owner
+
+        @param _disable true to disable registry updates, false to re-enable them
+    */
+    function disableRegistryUpdate(bool _disable) public ownerOrManagerOnly {
+        allowRegistryUpdate = !_disable;
     }
 
     /**
