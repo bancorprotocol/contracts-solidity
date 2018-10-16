@@ -1,11 +1,13 @@
 pragma solidity ^0.4.17;
 
 import '../DutchAuction/DutchAuction.sol';
+import './IFinancieAuction.sol';
 import './FinancieFee.sol';
 import './FinancieNotifierDelegate.sol';
+import '../utility/Owned.sol';
 
 /// @title overrided from DutchAuction.
-contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierDelegate, FinancieFee {
+contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, FinancieNotifierDelegate, FinancieFee {
 
     /*
      * Public functions
@@ -142,5 +144,14 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierDelegate, F
         }
         return false;
     }
+
+    function targetToken()
+        public
+        view
+        returns (address)
+    {
+        return token;
+    }
+
 
 }

@@ -16,7 +16,7 @@ if ( process.argv[2] == 'migrate' ) {
   module.exports = {
     networks: {
       development: {
-        network_id: 1010,
+        network_id: "*",
         gas: 4712388,
         provider: engine,
         from: address
