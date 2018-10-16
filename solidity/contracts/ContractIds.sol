@@ -8,6 +8,7 @@ pragma solidity ^0.4.23;
 contract ContractIds {
     // generic
     bytes32 public constant CONTRACT_FEATURES = "ContractFeatures";
+    bytes32 public constant CONTRACT_REGISTRY = "ContractRegistry";
 
     // bancor logic
     bytes32 public constant BANCOR_NETWORK = "BancorNetwork";

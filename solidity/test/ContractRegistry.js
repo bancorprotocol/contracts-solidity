@@ -40,10 +40,10 @@ contract('ContractRegistry', accounts => {
         await contractRegistry.registerAddress(contractName2, accounts[2]);
 
         let itemCount = await contractRegistry.itemCount.call();
-        assert.equal(itemCount, 2);
-        let name = await contractRegistry.contractNames.call(0);
+        assert.equal(itemCount, 3);
+        let name = await contractRegistry.contractNames.call(1);
         assert.equal(name, contractName1);
-        name = await contractRegistry.contractNames.call(1);
+        name = await contractRegistry.contractNames.call(2);
         assert.equal(name, contractName2);
     });
 
@@ -80,20 +80,20 @@ contract('ContractRegistry', accounts => {
         await contractRegistry.registerAddress(contractName3, accounts[3]);
         
         let itemCount = await contractRegistry.itemCount.call();
-        assert.equal(itemCount, 3);
-        let name = await contractRegistry.contractNames.call(0);
+        assert.equal(itemCount, 4);
+        let name = await contractRegistry.contractNames.call(1);
         assert.equal(name, contractName1);
-        name = await contractRegistry.contractNames.call(1);
-        assert.equal(name, contractName2);
         name = await contractRegistry.contractNames.call(2);
+        assert.equal(name, contractName2);
+        name = await contractRegistry.contractNames.call(3);
         assert.equal(name, contractName3);
 
         await contractRegistry.unregisterAddress(contractName1);
         itemCount = await contractRegistry.itemCount.call();
-        assert.equal(itemCount, 2);
-        name = await contractRegistry.contractNames.call(0);
-        assert.equal(name, contractName3);
+        assert.equal(itemCount, 3);
         name = await contractRegistry.contractNames.call(1);
+        assert.equal(name, contractName3);
+        name = await contractRegistry.contractNames.call(2);
         assert.equal(name, contractName2);
     });
 });

@@ -2,6 +2,7 @@ pragma solidity ^0.4.23;
 import './Owned.sol';
 import './Utils.sol';
 import './interfaces/IContractRegistry.sol';
+import '../ContractIds.sol';
 
 /**
     Contract Registry
@@ -14,7 +15,7 @@ import './interfaces/IContractRegistry.sol';
 
     Note that contract names are limited to 32 bytes UTF8 encoded ASCII strings to optimize gas costs
 */
-contract ContractRegistry is IContractRegistry, Owned, Utils {
+contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     struct RegistryItem {
         address contractAddress;    // contract address
         uint256 nameIndex;          // index of the item in the list of contract names
@@ -31,6 +32,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
         @dev constructor
     */
     constructor() public {
+        registerAddress(ContractIds.CONTRACT_REGISTRY, address(this));
     }
 
     /**
