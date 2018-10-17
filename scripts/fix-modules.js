@@ -2,10 +2,14 @@ let fs = require("fs");
 
 function fix(fileName, tokens) {
     console.log("Fixing " + fileName);
-    let data = fs.readFileSync(fileName, {encoding: "utf8"});
-    for (let token of tokens)
-        data = data.split(token.prev).join(token.next);
-    fs.writeFileSync(fileName, data, {encoding: "utf8"});
+    try {
+        let data = fs.readFileSync(fileName, {encoding: "utf8"});
+        for (let token of tokens)
+            data = data.split(token.prev).join(token.next);
+        fs.writeFileSync(fileName, data, {encoding: "utf8"});    
+    } catch (err) {
+        console.log("Error fixing " + fileName);
+    }
 }
 
 fix("./node_modules/truffle/build/cli.bundled.js", [
