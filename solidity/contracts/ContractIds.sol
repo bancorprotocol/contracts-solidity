@@ -17,10 +17,10 @@ contract ContractIds {
     bytes32 public constant BANCOR_CONVERTER_UPGRADER = "BancorConverterUpgrader";
     bytes32 public constant BANCOR_CONVERTER_FACTORY = "BancorConverterFactory";
 
-    // address of BNT converter and BNT token
+    // Ids of BNT converter and BNT token
     bytes32 public constant BNT_TOKEN = "BNTToken";
     bytes32 public constant BNT_CONVERTER = "BNTConverter";
 
-    // address of BancorX contract
+    // Id of BancorX contract
     bytes32 public constant BANCOR_X = "BancorX";
 }
