@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 /**
     Id definitions for bancor contracts
@@ -16,4 +16,11 @@ contract ContractIds {
     bytes32 public constant BANCOR_GAS_PRICE_LIMIT = "BancorGasPriceLimit";
     bytes32 public constant BANCOR_CONVERTER_UPGRADER = "BancorConverterUpgrader";
     bytes32 public constant BANCOR_CONVERTER_FACTORY = "BancorConverterFactory";
+
+    // Ids of BNT converter and BNT token
+    bytes32 public constant BNT_TOKEN = "BNTToken";
+    bytes32 public constant BNT_CONVERTER = "BNTConverter";
+
+    // Id of BancorX contract
+    bytes32 public constant BANCOR_X = "BancorX";
 }
