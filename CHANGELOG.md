@@ -3,6 +3,7 @@ General:
 * Minor cleanups / bug fixes
 
 Converters:
+* Upgraded compiler version to 0.4.24
 * Removed the setRegistry function
 * getReturn now returns the fee as a separate return value
 * Converter owner can no longer withdraw connector tokens while the converter is active
