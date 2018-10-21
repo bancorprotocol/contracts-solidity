@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
-import "./BancorConverter.sol";
-import "./interfaces/IBancorXEnabledConverter.sol";
+import './BancorConverter.sol';
+import './interfaces/IBancorXEnabledConverter.sol';
 
 contract BancorXEnabledConverter is BancorConverter, IBancorXEnabledConverter {
     
