@@ -1,10 +1,11 @@
 ﻿### 0.4.4 (2018-06-23)
 General:
 * Minor cleanups / bug fixes
+* Upgraded compiler version to 0.4.24
 
 Converters:
-* Upgraded compiler version to 0.4.24
-* Removed the setRegistry function
+* Replaced the `setRegistry` function with `updateRegistry` function
+* Removed quickBuyPath from converter
 * getReturn now returns the fee as a separate return value
 * Converter owner can no longer withdraw connector tokens while the converter is active
 * Converter owner can no longer transfer the token ownership once the converter is active
