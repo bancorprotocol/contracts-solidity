@@ -232,10 +232,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
         @dev disables/enables the claim tokens functionality
 
-        @param _disable    false to enable claiming of tokens, true to disable
+        @param _enable    true to enable claiming of tokens, false to disable
      */
-    function disableClaimTokens(bool _disable) public ownerOnly {
-        claimTokensEnabled = !_disable;
+    function enableClaimTokens(bool _enable) public ownerOnly {
+        claimTokensEnabled = _enable;
     }
 
     /**
