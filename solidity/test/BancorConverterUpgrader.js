@@ -3,11 +3,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
-const BancorFormula = artifacts.require('BancorFormula.sol');
 const ContractRegistry = artifacts.require('ContractRegistry.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
@@ -23,7 +21,7 @@ let contractRegistry;
 let contractFeatures;
 let converterUpgrader;
 
-// The tests will be ran for each of these converter versions
+// the tests will be ran for each of these converter versions
 const versions = ["0.11", "0.10", "0.9"]
 
 const contractsPath = path.resolve(__dirname, './bin');
@@ -33,7 +31,7 @@ const converters = {
     "0.10": { filename: 'bancor_converter_v10' }
 };
 
-loadDataFiles(contractsPath, converters)
+loadDataFiles(contractsPath, converters);
 
 async function initConverter(accounts, activate, version = null, maxConversionFee = 30000) {
     token = await SmartToken.new('Token1', 'TKN1', 18);
@@ -63,43 +61,43 @@ async function initConverter(accounts, activate, version = null, maxConversionFe
 }
 
 async function createConverter(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight, version) {
-    let converter
+    let converter;
 
-    // If no version is passed, create newest converter
+    // if no version is passed, create newest converter
     if (version == "0.11" || !version) {
-        converter = await BancorConverter.new(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight)
+        converter = await BancorConverter.new(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight);
     }
     else {
-        let abi = converters[version]['abi']
-        let byteCode = '0x' + converters[version]['bin']
-        let converterContract = truffleContract({ abi, unlinked_binary: byteCode })
-        converterContract.setProvider(web3.currentProvider)
-        converterContract.defaults({ from: web3.eth.accounts[0], gas: 5712388 })
+        let abi = converters[version]['abi'];
+        let byteCode = '0x' + converters[version]['bin'];
+        let converterContract = truffleContract({ abi, unlinked_binary: byteCode });
+        converterContract.setProvider(web3.currentProvider);
+        converterContract.defaults({ from: web3.eth.accounts[0], gas: 5712388 });
 
-        converter = await converterContract.new(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight)
+        converter = await converterContract.new(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight);
     }
 
-    return converter
+    return converter;
 }
 
 async function upgradeConverter(converter, version = null) {
-    let newConverter
+    let newConverter;
 
-    // For the latest version, we just call upgrade on the converter
+    // for the latest version, we just call upgrade on the converter
     if (version == "0.11" || !version) {
-        await converter.upgrade()
-        newConverter = await getNewConverter()
-    } else {
-        // For previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
+        await converter.upgrade();
+        newConverter = await getNewConverter();
+    }
+    else {
+        // for previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
         // then accept ownership of the new and old converter. The end results should be the same.
-        await converter.transferOwnership(converterUpgrader.address)
-        let newOwner = await converter.newOwner.call()
-        await converterUpgrader.upgradeOld(converter.address, web3Utils.asciiToHex(version))
-        newConverter = await getNewConverter()
-        await converter.acceptOwnership()
+        await converter.transferOwnership(converterUpgrader.address);
+        await converterUpgrader.upgradeOld(converter.address, web3Utils.asciiToHex(version));
+        newConverter = await getNewConverter();
+        await converter.acceptOwnership();
     }
 
-    return newConverter
+    return newConverter;
 }
 
 async function getNewConverter() {
@@ -111,8 +109,8 @@ async function getNewConverter() {
         });
     });
 
-    let converter = await BancorConverter.at(newConverterAddress)
-    return converter
+    let converter = await BancorConverter.at(newConverterAddress);
+    return converter;
 }
 
 contract('BancorConverterUpgrader', accounts => {
@@ -123,13 +121,6 @@ contract('BancorConverterUpgrader', accounts => {
         contractFeatures = await ContractFeatures.new();
         let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
         await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
-
-        let formula = await BancorFormula.new();
-        let formulaId = await contractIds.BANCOR_FORMULA.call();
-        await contractRegistry.registerAddress(formulaId, formula.address);
-
-        let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-        await bancorNetwork.setSignerAddress(accounts[3]);
 
         let converterFactory = await BancorConverterFactory.new();
         let converterFactoryId = await contractIds.BANCOR_CONVERTER_FACTORY.call();
