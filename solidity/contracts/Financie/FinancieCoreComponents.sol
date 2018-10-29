@@ -5,10 +5,10 @@ import '../utility/Owned.sol';
 
 contract FinancieCoreComponents is Owned {
 
-    IFinancieManagedContracts managedContracts;
+    IFinancieManagedContracts public managedContracts;
 
-    IERC20Token platformToken;
-    IERC20Token etherToken;
+    IERC20Token public platformToken;
+    IERC20Token public etherToken;
 
     constructor(
         address _managedContracts,

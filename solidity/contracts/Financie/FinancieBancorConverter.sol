@@ -60,8 +60,7 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
         return 12;
     }
 
-    function acceptTokenOwnership() public {
-        super.acceptTokenOwnership();
+    function startTrading() public {
         notifyApproveNewBancor(address(quickSellPath[0]), address(this));
     }
 

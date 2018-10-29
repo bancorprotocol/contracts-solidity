@@ -18,6 +18,8 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
 
     mapping (address => TicketSale) ticketSales;
 
+    IERC20Token[] public ticketsaleTokens;
+
     event DepositTickets(address _sender, address indexed _issuer, address _ticket, address indexed _card, uint256 _amount, uint256 _price);
     event BuyTicket(address indexed _sender, address indexed _issuer, address indexed _ticket, uint256 _amount, uint256 _price);
 
@@ -35,7 +37,7 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
     /**
     *   @dev issuer deposits tickets into this contract and register it as a sales item
     */
-    function depositTickets(address _ticket, address _card, uint256 _amount, uint256 _price, uint32 _start_at, uint32 _end_at)
+    function depositTickets(address _ticket, address _card, uint256 _amount, uint256 _price, uint256 _start_at, uint256 _end_at)
         public
         validTargetContract(_ticket)
         validTargetContract(_card)
@@ -53,11 +55,10 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
 
         IERC20Token tokenTicket = IERC20Token(_ticket);
         assert(tokenTicket.transferFrom(msg.sender, this, _amount));
-
         /**
         * register it as a sales item
         */
-        ticketSales[_ticket] = TicketSale(ticket.getIssuer(), _card, _price, _start_at, _end_at);
+        setTicketSale(_ticket, _card, _price, _start_at, _end_at);
 
         DepositTickets(msg.sender, ticket.getIssuer(), _ticket, _card, _amount, _price);
     }
@@ -73,6 +74,34 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
 
     function getTicketCurrency(address _ticket) public view returns(address) {
         return ticketSales[_ticket].card;
+    }
+
+    function getTicketStartAt(address _ticket) public view returns(uint256) {
+        return ticketSales[_ticket].start_at;
+    }
+
+    function getTicketEndAt(address _ticket) public view returns(uint256) {
+        return ticketSales[_ticket].end_at;
+    }
+
+    function ticketsaleTokenCount() public view returns (uint16) {
+        return uint16(ticketsaleTokens.length);
+    }
+
+    function setTicketSale(address _ticket, address _card, uint256 _price, uint256 _start_at, uint256 _end_at) public {
+      IFinancieIssuerToken ticket = IFinancieIssuerToken(_ticket);
+      ticketSales[_ticket] = TicketSale(ticket.getIssuer(), _card, _price, _start_at, _end_at);
+      ticketsaleTokens.push(IERC20Token(_ticket));
+    }
+
+    function approveTicket(address _ticket, address _spender, uint256 _amount) public ownerOnly {
+      IERC20Token tokenTicket = IERC20Token(_ticket);
+      tokenTicket.approve(_spender, _amount);
+    }
+
+    function transferTicket(address _ticket, address _from, address _to, uint256 _amount) public ownerOnly {
+      IERC20Token tokenTicket = IERC20Token(_ticket);
+      assert(tokenTicket.transferFrom(_from, _to, _amount));
     }
 
     function buyTicket(address _ticket) public {

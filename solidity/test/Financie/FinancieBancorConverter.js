@@ -102,6 +102,8 @@ contract('FinancieBancorConverter', (accounts) => {
 
         await bancor.acceptTokenOwnership();
 
+        await bancor.startTrading();
+
         let connectorTokenCount = await bancor.connectorTokenCount();
         assert.equal(2, connectorTokenCount);
 

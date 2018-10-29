@@ -5,6 +5,7 @@ const FinancieTicketStore = artifacts.require('FinancieTicketStore.sol');
 const FinanciePlatformToken = artifacts.require('FinanciePlatformToken.sol');
 const FinancieManagedContracts = artifacts.require('FinancieManagedContracts.sol');
 const FinancieNotifier = artifacts.require('FinancieNotifier.sol');
+const FinancieBancorConverterFactory = artifacts.require('FinancieBancorConverterFactory.sol');
 
 const EtherToken = artifacts.require('EtherToken.sol');
 
@@ -14,6 +15,7 @@ const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const BancorNetwork = artifacts.require('BancorNetwork.sol');
+const BancorConverterUpgrade = artifacts.require('BancorConverterUpgrader.sol');
 
 const gasPrice = 22000000000;
 
