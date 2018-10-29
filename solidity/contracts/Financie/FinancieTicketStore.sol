@@ -88,7 +88,7 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
         return uint16(ticketsaleTokens.length);
     }
 
-    function setTicketSale(address _ticket, address _card, uint256 _price, uint256 _start_at, uint256 _end_at) public {
+    function setTicketSale(address _ticket, address _card, uint256 _price, uint256 _start_at, uint256 _end_at) public ownerOnly {
       IFinancieIssuerToken ticket = IFinancieIssuerToken(_ticket);
       ticketSales[_ticket] = TicketSale(ticket.getIssuer(), _card, _price, _start_at, _end_at);
       ticketsaleTokens.push(IERC20Token(_ticket));
