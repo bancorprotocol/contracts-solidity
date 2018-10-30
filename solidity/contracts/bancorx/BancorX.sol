@@ -9,6 +9,16 @@ import '../utility/SafeMath.sol';
 import '../utility/TokenHolder.sol';
 import '../token/interfaces/ISmartToken.sol';
 
+/*
+    The BancorX contract allows cross chain token transfers.
+
+    There are two processes that take place in the contract -
+    - Initiate a cross chain transfer to a target blockchain (locks tokens from the caller account on Ethereum)
+    - Report a cross chain transfer initiated on a source blockchain (releases tokens to an account on Ethereum)
+
+    Reporting cross chain transfers works similar to standard multisig contracts, meaning that multiple
+    callers are required to report a transfer before tokens are released to the target account.
+*/
 contract BancorX is Owned, TokenHolder, ContractIds {
     using SafeMath for uint256;
 
@@ -23,24 +33,24 @@ contract BancorX is Owned, TokenHolder, ContractIds {
 
     uint16 public version = 1;
 
-    uint256 public maxLockLimit;                   // the maximum amount of BNT that can be locked in one transaction
-    uint256 public maxReleaseLimit;                // the maximum amount of BNT that can be released in one transaction
-    uint256 public minLimit;                       // the minimum amount of BNT that can be transferred in one transaction
-    uint256 public prevLockLimit;                  // the lock limit *after* the last transaction
-    uint256 public prevReleaseLimit;               // the release limit *after* the last transaction
-    uint256 public limitIncPerBlock;               // how much the limit increases per block
-    uint256 public prevLockBlockNumber;            // the block number of the last lock transaction
-    uint256 public prevReleaseBlockNumber;         // the block number of the last release transaction
-    uint256 public minRequiredReports;             // minimum number of required reports to release tokens
+    uint256 public maxLockLimit;            // the maximum amount of BNT that can be locked in one transaction
+    uint256 public maxReleaseLimit;         // the maximum amount of BNT that can be released in one transaction
+    uint256 public minLimit;                // the minimum amount of BNT that can be transferred in one transaction
+    uint256 public prevLockLimit;           // the lock limit *after* the last transaction
+    uint256 public prevReleaseLimit;        // the release limit *after* the last transaction
+    uint256 public limitIncPerBlock;        // how much the limit increases per block
+    uint256 public prevLockBlockNumber;     // the block number of the last lock transaction
+    uint256 public prevReleaseBlockNumber;  // the block number of the last release transaction
+    uint256 public minRequiredReports;      // minimum number of required reports to release tokens
     
-    IContractRegistry public registry;             // contract registry
-    IContractRegistry public prevRegistry;         // address of previous registry as security mechanism
-    IBancorConverter public bntConverter;          // BNT converter
-    ISmartToken public bntToken;                   // BNT token
+    IContractRegistry public registry;      // contract registry
+    IContractRegistry public prevRegistry;  // address of previous registry as security mechanism
+    IBancorConverter public bntConverter;   // BNT converter
+    ISmartToken public bntToken;            // BNT token
 
-    bool public xTransfersEnabled = true;          // true if x transfers are enabled, false if not
-    bool public reportingEnabled = true;           // true if reporting is enabled, false if not
-    bool public allowRegistryUpdate = true;        // allows the owner to prevent/allow the registry to be updated
+    bool public xTransfersEnabled = true;   // true if x transfers are enabled, false if not
+    bool public reportingEnabled = true;    // true if reporting is enabled, false if not
+    bool public allowRegistryUpdate = true; // allows the owner to prevent/allow the registry to be updated
 
     // txId -> Transaction
     mapping (uint256 => Transaction) public transactions;
