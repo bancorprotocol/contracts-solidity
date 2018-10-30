@@ -241,10 +241,10 @@ contract('BancorX', async accounts => {
             { from: accounts[3] }
         )
 
-        console.log(`GasPrice for xTransfer: ${result1.receipt.gasUsed}`)
-        console.log(`GasPrice for reportTx (first reporter, no release): ${result2.receipt.gasUsed}`)
-        console.log(`GasPrice for reportTx (second reporter, no release): ${result3.receipt.gasUsed}`)
-        console.log(`GasPrice for reportTx (third reporter, yes release): ${result4.receipt.gasUsed}`)
+        // console.log(`GasPrice for xTransfer: ${result1.receipt.gasUsed}`)
+        // console.log(`GasPrice for reportTx (first reporter, no release): ${result2.receipt.gasUsed}`)
+        // console.log(`GasPrice for reportTx (second reporter, no release): ${result3.receipt.gasUsed}`)
+        // console.log(`GasPrice for reportTx (third reporter, yes release): ${result4.receipt.gasUsed}`)
     })
 })
 
@@ -266,10 +266,6 @@ async function mineBlocks(amount) {
     for (let i = 0; i < amount; i++) {
         await miningUtils.mineBlock(web3.currentProvider)
     }
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // returns random number between 0 and 10,000,000
