@@ -273,12 +273,14 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         @dev upgrades the contract to the latest version
         can only be called by the owner
         note that the owner needs to call acceptOwnership on the new contract after the upgrade
+
+        @param _reporters    new list of reporters
     */
-    function upgrade() public ownerOnly {
+    function upgrade(address[] _reporters) public ownerOnly {
         IBancorXUpgrader bancorXUpgrader = IBancorXUpgrader(registry.addressOf(ContractIds.BANCOR_X_UPGRADER));
 
         transferOwnership(bancorXUpgrader);
-        bancorXUpgrader.upgrade(version);
+        bancorXUpgrader.upgrade(version, _reporters);
         acceptOwnership();
     }
 
