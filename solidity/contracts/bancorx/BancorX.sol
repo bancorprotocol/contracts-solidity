@@ -1,12 +1,13 @@
 pragma solidity ^0.4.24;
 
-import "./token/interfaces/ISmartToken.sol";
-import "./converter/interfaces/IBancorConverter.sol";
-import "./ContractIds.sol";
-import "./utility/interfaces/IContractRegistry.sol";
-import "./utility/TokenHolder.sol";
-import "./utility/Owned.sol";
-import "./utility/SafeMath.sol";
+import './interfaces/IBancorXUpgrader.sol';
+import '../ContractIds.sol';
+import '../converter/interfaces/IBancorConverter.sol';
+import '../utility/interfaces/IContractRegistry.sol';
+import '../utility/Owned.sol';
+import '../utility/SafeMath.sol';
+import '../utility/TokenHolder.sol';
+import '../token/interfaces/ISmartToken.sol';
 
 contract BancorX is Owned, TokenHolder, ContractIds {
     using SafeMath for uint256;
@@ -19,6 +20,8 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         uint8 numOfReports;
         bool completed;
     }
+
+    uint16 public version = 1;
 
     uint256 public maxLockLimit;                   // the maximum amount of BNT that can be locked in one transaction
     uint256 public maxReleaseLimit;                // the maximum amount of BNT that can be released in one transaction
@@ -256,6 +259,18 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         allowRegistryUpdate = false;
     }
 
+    /**
+        @dev upgrades the contract to the latest version
+        can only be called by the owner
+        note that the owner needs to call acceptOwnership on the new contract after the upgrade
+    */
+    function upgrade() public ownerOnly {
+        IBancorXUpgrader bancorXUpgrader = IBancorXUpgrader(registry.addressOf(ContractIds.BANCOR_X_UPGRADER));
+
+        transferOwnership(bancorXUpgrader);
+        bancorXUpgrader.upgrade(version);
+        acceptOwnership();
+    }
 
     /**
         @dev claims BNT from msg.sender to be converted to BNT on another blockchain

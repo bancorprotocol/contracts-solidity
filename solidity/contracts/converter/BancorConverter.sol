@@ -359,7 +359,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
         @dev upgrades the converter to the latest version
         can only be called by the owner
-        note that the owner needs to call acceptOwnership on the new converter after the upgrade
+        note that the owner needs to call acceptOwnership/acceptManagement on the new converter after the upgrade
     */
     function upgrade() public ownerOnly {
         IBancorConverterUpgrader converterUpgrader = IBancorConverterUpgrader(registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER));
