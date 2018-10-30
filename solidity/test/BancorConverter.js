@@ -30,7 +30,7 @@ let connectorToken2;
 let connectorToken3;
 let upgrader;
 
-const contractsPath = path.resolve(__dirname, '../contracts/build');
+const contractsPath = path.resolve(__dirname, '../build');
 let abi;
 abi = fs.readFileSync(path.resolve(contractsPath, 'SmartToken.abi'), 'utf-8');
 let SmartTokenAbi = JSON.parse(abi);
