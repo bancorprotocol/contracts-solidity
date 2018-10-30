@@ -13,6 +13,7 @@ const Whitelist = artifacts.require('Whitelist.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
 const SmartTokenController = artifacts.require('SmartTokenController.sol');
 const BancorNetwork = artifacts.require('BancorNetwork.sol');
+const BancorX = artifacts.require('BancorX.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
