@@ -6,6 +6,7 @@ import './converter/interfaces/IBancorConverter.sol';
 import './converter/interfaces/IBancorFormula.sol';
 import './converter/interfaces/IBancorGasPriceLimit.sol';
 import './utility/TokenHolder.sol';
+import './utility/SafeMath.sol';
 import './utility/interfaces/IContractRegistry.sol';
 import './utility/interfaces/IContractFeatures.sol';
 import './utility/interfaces/IWhitelist.sol';
@@ -31,6 +32,9 @@ import './token/interfaces/ISmartToken.sol';
     [source token, smart token, to token, smart token, to token...]
 */
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
+    using SafeMath for uint256;
+
+    
     uint64 private constant MAX_CONVERSION_FEE = 1000000;
 
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
@@ -375,7 +379,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 balance = converter.getConnectorBalance(fromToken);
                 weight = getConnectorWeight(converter, fromToken);
                 amount = formula.calculatePurchaseReturn(supply, balance, weight, amount);
-                fee = safeMul(amount, converter.conversionFee()) / MAX_CONVERSION_FEE;
+                fee = amount.mul(converter.conversionFee()) / MAX_CONVERSION_FEE;
                 amount -= fee;
 
                 // update the smart token supply for the next iteration
@@ -389,7 +393,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 balance = converter.getConnectorBalance(toToken);
                 weight = getConnectorWeight(converter, toToken);
                 amount = formula.calculateSaleReturn(supply, balance, weight, amount);
-                fee = safeMul(amount, converter.conversionFee()) / MAX_CONVERSION_FEE;
+                fee = amount.mul(converter.conversionFee()) / MAX_CONVERSION_FEE;
                 amount -= fee;
 
                 // update the smart token supply for the next iteration
