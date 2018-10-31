@@ -6,7 +6,8 @@ import '../IBancorNetwork.sol';
 import '../ContractIds.sol';
 import '../FeatureIds.sol';
 import '../utility/Managed.sol';
-import '../utility/Utils.sol';
+// import '../utility/Utils.sol';
+import '../utility/SafeMath.sol';
 import '../utility/interfaces/IContractRegistry.sol';
 import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
@@ -35,6 +36,9 @@ import '../token/interfaces/IEtherToken.sol';
     - Possibly add getters for the connector fields so that the client won't need to rely on the order in the struct
 */
 contract BancorConverter is IBancorConverter, SmartTokenController, Managed, ContractIds, FeatureIds {
+    using SafeMath for uint256;
+
+    
     uint32 private constant MAX_WEIGHT = 1000000;
     uint64 private constant MAX_CONVERSION_FEE = 1000000;
 

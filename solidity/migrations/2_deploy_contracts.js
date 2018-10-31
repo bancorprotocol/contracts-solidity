@@ -22,7 +22,7 @@ const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader.sol')
 const CrowdsaleController = artifacts.require('CrowdsaleController.sol');
 
 module.exports = async function(deployer, network, accounts) {
-    if (network == "production") {
+    // if (network == "production") {
         deployer.deploy(Utils);
         deployer.deploy(Owned);
         deployer.deploy(Managed);
@@ -43,5 +43,5 @@ module.exports = async function(deployer, network, accounts) {
         await deployer.deploy(BancorConverterUpgrader, ContractRegistry.address);
 
         deployer.deploy(CrowdsaleController, SmartToken.address, 4102444800, '0x125', '0x126', 1);
-    }
+    // }
 };
