@@ -2,6 +2,7 @@ pragma solidity ^0.4.24;
 import '../utility/TokenHolder.sol';
 import '../utility/Owned.sol';
 import '../utility/Utils.sol';
+import '../utility/SafeMath.sol';
 import '../token/interfaces/ISmartToken.sol';
 
 /*
@@ -12,6 +13,9 @@ import '../token/interfaces/ISmartToken.sol';
     'Owned' is specified here for readability reasons
 */
 contract BancorPriceFloor is Owned, TokenHolder {
+    using SafeMath for uint256;
+
+
     uint256 public constant TOKEN_PRICE_N = 1;      // crowdsale price in wei (numerator)
     uint256 public constant TOKEN_PRICE_D = 100;    // crowdsale price in wei (denominator)
 
@@ -39,7 +43,7 @@ contract BancorPriceFloor is Owned, TokenHolder {
     function sell() public returns (uint256 amount) {
         uint256 allowance = token.allowance(msg.sender, this); // get the full allowance amount
         assert(token.transferFrom(msg.sender, this, allowance)); // transfer all tokens from the sender to the contract
-        uint256 etherValue = safeMul(allowance, TOKEN_PRICE_N) / TOKEN_PRICE_D; // calculate ETH value of the tokens
+        uint256 etherValue = allowance.mul(TOKEN_PRICE_N) / TOKEN_PRICE_D; // calculate ETH value of the tokens
         msg.sender.transfer(etherValue); // send the ETH amount to the seller
         return etherValue;
     }

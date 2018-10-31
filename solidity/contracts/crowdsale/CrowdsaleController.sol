@@ -1,6 +1,7 @@
 pragma solidity ^0.4.24;
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
+import '../utility/SafeMath.sol';
 
 /*
     Crowdsale v0.1
@@ -10,6 +11,9 @@ import '../token/interfaces/ISmartToken.sol';
     Note that 20% of the contributions are the BNT token's ETH connector balance
 */
 contract CrowdsaleController is SmartTokenController {
+    using SafeMath for uint256;
+
+
     uint256 public constant DURATION = 14 days;                 // crowdsale duration
     uint256 public constant TOKEN_PRICE_N = 1;                  // initial price in wei (numerator)
     uint256 public constant TOKEN_PRICE_D = 100;                // initial price in wei (denominator)
@@ -84,13 +88,13 @@ contract CrowdsaleController is SmartTokenController {
 
     // ensures that we didn't reach the ether cap
     modifier etherCapNotReached(uint256 _contribution) {
-        assert(safeAdd(totalEtherContributed, _contribution) <= totalEtherCap);
+        assert(totalEtherContributed.add(_contribution) <= totalEtherCap);
         _;
     }
 
     // ensures that we didn't reach the bitcoin suisse ether cap
     modifier btcsEtherCapNotReached(uint256 _ethContribution) {
-        assert(safeAdd(totalEtherContributed, _ethContribution) <= BTCS_ETHER_CAP);
+        assert(totalEtherContributed.add(_ethContribution) <= BTCS_ETHER_CAP);
         _;
     }
 
@@ -131,7 +135,7 @@ contract CrowdsaleController is SmartTokenController {
         @return computed number of tokens
     */
     function computeReturn(uint256 _contribution) public pure returns (uint256) {
-        return safeMul(_contribution, TOKEN_PRICE_D) / TOKEN_PRICE_N;
+        return _contribution.mul(TOKEN_PRICE_D) / TOKEN_PRICE_N;
     }
 
     /**
@@ -180,7 +184,7 @@ contract CrowdsaleController is SmartTokenController {
     {
         uint256 tokenAmount = computeReturn(msg.value);
         beneficiary.transfer(msg.value); // transfer the ether to the beneficiary account
-        totalEtherContributed = safeAdd(totalEtherContributed, msg.value); // update the total contribution amount
+        totalEtherContributed = totalEtherContributed.add(msg.value); // update the total contribution amount
         token.issue(msg.sender, tokenAmount); // issue new funds to the contributor in the smart token
         token.issue(beneficiary, tokenAmount); // issue tokens to the beneficiary
 

@@ -10,6 +10,9 @@ import '../utility/TokenHolder.sol';
     'Owned' is specified here for readability reasons
 */
 contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
+    using SafeMath for uint256;
+
+
     string public version = '0.3';
 
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
@@ -64,8 +67,8 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
         validAddress(_to)
         notThis(_to)
     {
-        totalSupply = safeAdd(totalSupply, _amount);
-        balanceOf[_to] = safeAdd(balanceOf[_to], _amount);
+        totalSupply = totalSupply.add(_amount);
+        balanceOf[_to] = balanceOf[_to].add(_amount);
 
         emit Issuance(_amount);
         emit Transfer(this, _to, _amount);
@@ -81,8 +84,8 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     function destroy(address _from, uint256 _amount) public {
         require(msg.sender == _from || msg.sender == owner); // validate input
 
-        balanceOf[_from] = safeSub(balanceOf[_from], _amount);
-        totalSupply = safeSub(totalSupply, _amount);
+        balanceOf[_from] = balanceOf[_from].sub(_amount);
+        totalSupply = totalSupply.sub(_amount);
 
         emit Transfer(_from, this, _amount);
         emit Destruction(_amount);

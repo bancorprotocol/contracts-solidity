@@ -3,6 +3,7 @@ import './ERC20Token.sol';
 import './interfaces/IEtherToken.sol';
 import '../utility/Owned.sol';
 import '../utility/TokenHolder.sol';
+import '../utility/SafeMath.sol';
 
 /**
     Ether tokenization contract
@@ -10,6 +11,9 @@ import '../utility/TokenHolder.sol';
     'Owned' is specified here for readability reasons
 */
 contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
+    using SafeMath for uint256;
+
+
     // triggered when the total supply is increased
     event Issuance(uint256 _amount);
     // triggered when the total supply is decreased
@@ -27,8 +31,8 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
         @dev deposit ether in the account
     */
     function deposit() public payable {
-        balanceOf[msg.sender] = safeAdd(balanceOf[msg.sender], msg.value); // add the value to the account balance
-        totalSupply = safeAdd(totalSupply, msg.value); // increase the total supply
+        balanceOf[msg.sender] = balanceOf[msg.sender].add(msg.value); // add the value to the account balance
+        totalSupply = totalSupply.add(msg.value); // increase the total supply
 
         emit Issuance(msg.value);
         emit Transfer(this, msg.sender, msg.value);
@@ -53,8 +57,8 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
         public
         notThis(_to)
     {
-        balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _amount); // deduct the amount from the account balance
-        totalSupply = safeSub(totalSupply, _amount); // decrease the total supply
+        balanceOf[msg.sender] = balanceOf[msg.sender].sub(_amount); // deduct the amount from the account balance
+        totalSupply = totalSupply.sub(_amount); // decrease the total supply
         _to.transfer(_amount); // send the amount to the target account
 
         emit Transfer(msg.sender, this, _amount);
