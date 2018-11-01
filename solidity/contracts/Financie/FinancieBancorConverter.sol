@@ -160,4 +160,13 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
 
     }
 
+    function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
+        public
+        payable
+        validConversionPath(_path)
+        returns (uint256)
+    {
+      revert();
+    }
+
 }
