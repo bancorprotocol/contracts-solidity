@@ -210,6 +210,57 @@ contract('BancorX', async accounts => {
         }
     })
 
+    it('should only allow reporters to report', async () => {
+        let randomTxId = getRandomTxId()
+        let amountToSend = (web3Utils.toWei('1', 'ether'))
+        try {
+            await bancorX.reportTx(
+                EOS_BLOCKCHAIN,
+                randomTxId,
+                accounts[0],
+                amountToSend,
+                { from: accounts[4] } // not reporter
+            )
+        } catch(error) {
+            utils.ensureException(error)
+        }
+    })
+
+    it('shouldnt allow reports when disabled', async () => {
+        await bancorX.enableReporting(false)
+        let amountToSend = (web3Utils.toWei('1', 'ether'))
+        let randomTxId = getRandomTxId()        
+        try {
+            await bancorX.reportTx(
+                EOS_BLOCKCHAIN,
+                randomTxId,
+                accounts[0],
+                amountToSend,
+                { from: accounts[1] }
+            )
+            assert(false, "didn't throw")
+        } catch(error) {
+            utils.ensureException(error)
+            await bancorX.enableReporting(true)
+        }
+    })
+
+    it('shouldnt allow xTransfers when disabled', async () => {
+        await bancorX.enableXTransfers(false)
+        let amountToSend = (web3Utils.toWei('1', 'ether'))
+        try {
+            await bancorX.xTransfer(
+                EOS_BLOCKCHAIN,
+                eosAddress,
+                amountToSend
+            )
+            assert(false, "didn't throw")
+        } catch(error) {
+            utils.ensureException(error)
+            await bancorX.enableXTransfers(true)
+        }
+    })
+
     it('Gas Test', async () => {
         let amountToSend = (web3Utils.toWei('10', 'ether')).toString(10)
         let randomTxId = getRandomTxId()
