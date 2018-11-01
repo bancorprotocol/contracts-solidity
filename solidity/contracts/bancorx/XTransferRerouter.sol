@@ -17,9 +17,7 @@ contract XTransferRerouter is Owned {
 
         @param _reroutingEnabled    intializes transactions routing to enabled/disabled   
      */
-    constructor(bool _reroutingEnabled)
-        public
-    {
+    constructor(bool _reroutingEnabled) public {
         reroutingEnabled = _reroutingEnabled;
     }
     /**
@@ -31,10 +29,16 @@ contract XTransferRerouter is Owned {
         reroutingEnabled = _enable;
     }
 
+    // allows execution only when rerouting enabled
+    modifier whenReroutingEnabled {
+        require(reroutingEnabled);
+        _;
+    }
+
     /**
         @dev    allows a user to reroute a transaction to a new blockchain/target address
 
-        @param _txId        the original transaction's ID
+        @param _txId        the original transaction id
         @param _blockchain  the new blockchain name
         @param _to          the new target address/account
      */
@@ -44,8 +48,8 @@ contract XTransferRerouter is Owned {
         bytes32 _to
     )
         public
+        whenReroutingEnabled 
     {
-        require(reroutingEnabled);
         emit TxReroute(_txId, _blockchain, _to);
     }
 
