@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 
 import "../utility/Owned.sol";
 
-contract TxRerouter is Owned {
+contract XTransferRerouter is Owned {
     bool public reroutingEnabled;
 
     // triggered when a rerouteTx is called
