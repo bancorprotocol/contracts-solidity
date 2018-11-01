@@ -135,7 +135,7 @@ contract CrowdsaleController is SmartTokenController {
         @return computed number of tokens
     */
     function computeReturn(uint256 _contribution) public pure returns (uint256) {
-        return _contribution.mul(TOKEN_PRICE_D) / TOKEN_PRICE_N;
+        return _contribution.mul(TOKEN_PRICE_D).div(TOKEN_PRICE_N);
     }
 
     /**

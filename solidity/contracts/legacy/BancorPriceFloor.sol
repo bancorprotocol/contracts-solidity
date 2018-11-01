@@ -43,7 +43,7 @@ contract BancorPriceFloor is Owned, TokenHolder {
     function sell() public returns (uint256 amount) {
         uint256 allowance = token.allowance(msg.sender, this); // get the full allowance amount
         assert(token.transferFrom(msg.sender, this, allowance)); // transfer all tokens from the sender to the contract
-        uint256 etherValue = allowance.mul(TOKEN_PRICE_N) / TOKEN_PRICE_D; // calculate ETH value of the tokens
+        uint256 etherValue = allowance.mul(TOKEN_PRICE_N).div(TOKEN_PRICE_D); // calculate ETH value of the tokens
         msg.sender.transfer(etherValue); // send the ETH amount to the seller
         return etherValue;
     }

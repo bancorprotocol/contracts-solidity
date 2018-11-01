@@ -379,7 +379,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 balance = converter.getConnectorBalance(fromToken);
                 weight = getConnectorWeight(converter, fromToken);
                 amount = formula.calculatePurchaseReturn(supply, balance, weight, amount);
-                fee = amount.mul(converter.conversionFee()) / MAX_CONVERSION_FEE;
+                fee = amount.mul(converter.conversionFee()).div(MAX_CONVERSION_FEE);
                 amount -= fee;
 
                 // update the smart token supply for the next iteration
@@ -393,7 +393,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 balance = converter.getConnectorBalance(toToken);
                 weight = getConnectorWeight(converter, toToken);
                 amount = formula.calculateSaleReturn(supply, balance, weight, amount);
-                fee = amount.mul(converter.conversionFee()) / MAX_CONVERSION_FEE;
+                fee = amount.mul(converter.conversionFee()).div(MAX_CONVERSION_FEE);
                 amount -= fee;
 
                 // update the smart token supply for the next iteration

@@ -48,4 +48,19 @@ library SafeMath {
         assert(z / _x == _y);
         return z;
     }
+
+      /**
+        @dev Integer division of two numbers truncating the quotient, reverts on division by zero.
+
+        @param _x   dividend
+        @param _y   divisor
+
+        @return quotient
+    */
+    function div(uint256 _x, uint256 _y) internal pure returns (uint256) {
+        require(_y > 0);
+        uint256 c = _x / _y;
+
+        return c;
+    }
 }

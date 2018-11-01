@@ -320,7 +320,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @return return amount minus conversion fee
     */
     function getFinalAmount(uint256 _amount, uint8 _magnitude) public view returns (uint256) {
-        return _amount.mul((MAX_CONVERSION_FEE - conversionFee) ** _magnitude) / MAX_CONVERSION_FEE ** _magnitude;
+        return _amount.mul((MAX_CONVERSION_FEE - conversionFee) ** _magnitude).div(MAX_CONVERSION_FEE ** _magnitude);
     }
 
     /**
@@ -805,7 +805,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < connectorTokens.length; i++) {
             connectorToken = connectorTokens[i];
             connectorBalance = getConnectorBalance(connectorToken);
-            connectorAmount = _amount.mul(connectorBalance) / supply;
+            connectorAmount = _amount.mul(connectorBalance).div(supply);
 
             // update virtual balance if relevant
             Connector storage connector = connectors[connectorToken];
@@ -846,7 +846,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < connectorTokens.length; i++) {
             connectorToken = connectorTokens[i];
             connectorBalance = getConnectorBalance(connectorToken);
-            connectorAmount = _amount.mul(connectorBalance) / supply;
+            connectorAmount = _amount.mul(connectorBalance).div(supply);
 
             // update virtual balance if relevant
             Connector storage connector = connectors[connectorToken];
