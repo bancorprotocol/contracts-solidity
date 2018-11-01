@@ -33,6 +33,7 @@ contract('FinancieBancorConverter', (accounts) => {
     let cardToken;
     let smartToken;
     let bancor;
+    let smartToken1QuickBuyPath;
 
     before(async () => {
         console.log('[FinancieBancorConverter]initialize');
@@ -144,6 +145,28 @@ contract('FinancieBancorConverter', (accounts) => {
             assert.fail('Should not reach here because of invalid gas price');
         } catch ( e ) {
             // should reach here because of invalid gas price
+        }
+    });
+
+    it('Confirm that quickConvert() is not executed', async () => {
+        smartToken1QuickBuyPath = [etherToken.address, smartToken.address, smartToken.address];
+        await bancor.setQuickBuyPath(smartToken1QuickBuyPath);
+        let prevBalance = await smartToken.balanceOf.call(accounts[1]);
+
+        try {
+          await bancor.quickConvert(smartToken1QuickBuyPath, 100, 1, { from: accounts[1], value: 100 });
+        }
+        catch (error) {
+            assert(true, "exception throw");
+        }
+    });
+
+    it('Confirm that change() is not executed', async () => {
+        try {
+          await bancor.change(etherToken.address, bancor.address, 10, 10);
+        }
+        catch (error) {
+            assert(true, "exception throw");
         }
     });
 });
