@@ -5,6 +5,9 @@ import '../crowdsale/CrowdsaleController.sol';
     Test crowdsale controller with start time < now < end time
 */
 contract TestCrowdsaleController is CrowdsaleController {
+    using SafeMath for uint256;
+
+    
     uint256 public constant BTCS_ETHER_CAP_SMALL = 2 ether; // maximum bitcoin suisse ether contribution
 
     constructor(
@@ -22,7 +25,7 @@ contract TestCrowdsaleController is CrowdsaleController {
     }
 
     modifier btcsEtherCapNotReached(uint256 _ethContribution) {
-        assert(safeAdd(totalEtherContributed, _ethContribution) <= BTCS_ETHER_CAP_SMALL);
+        assert(totalEtherContributed.add(_ethContribution) <= BTCS_ETHER_CAP_SMALL);
         _;
     }
 }

@@ -1,11 +1,15 @@
 pragma solidity ^0.4.24;
 import './interfaces/IERC20Token.sol';
 import '../utility/Utils.sol';
+import '../utility/SafeMath.sol';
 
 /**
     ERC20 Standard Token implementation
 */
 contract ERC20Token is IERC20Token, Utils {
+    using SafeMath for uint256;
+
+
     string public standard = 'Token 0.1';
     string public name = '';
     string public symbol = '';
@@ -46,8 +50,8 @@ contract ERC20Token is IERC20Token, Utils {
         validAddress(_to)
         returns (bool success)
     {
-        balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _value);
-        balanceOf[_to] = safeAdd(balanceOf[_to], _value);
+        balanceOf[msg.sender] = balanceOf[msg.sender].sub(_value);
+        balanceOf[_to] = balanceOf[_to].add(_value);
         emit Transfer(msg.sender, _to, _value);
         return true;
     }
@@ -68,9 +72,9 @@ contract ERC20Token is IERC20Token, Utils {
         validAddress(_to)
         returns (bool success)
     {
-        allowance[_from][msg.sender] = safeSub(allowance[_from][msg.sender], _value);
-        balanceOf[_from] = safeSub(balanceOf[_from], _value);
-        balanceOf[_to] = safeAdd(balanceOf[_to], _value);
+        allowance[_from][msg.sender] = allowance[_from][msg.sender].sub(_value);
+        balanceOf[_from] = balanceOf[_from].sub(_value);
+        balanceOf[_to] = balanceOf[_to].add(_value);
         emit Transfer(_from, _to, _value);
         return true;
     }

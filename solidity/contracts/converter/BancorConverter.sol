@@ -7,6 +7,7 @@ import '../ContractIds.sol';
 import '../FeatureIds.sol';
 import '../utility/Managed.sol';
 import '../utility/Utils.sol';
+import '../utility/SafeMath.sol';
 import '../utility/interfaces/IContractRegistry.sol';
 import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
@@ -35,6 +36,9 @@ import '../token/interfaces/IEtherToken.sol';
     - Possibly add getters for the connector fields so that the client won't need to rely on the order in the struct
 */
 contract BancorConverter is IBancorConverter, SmartTokenController, Managed, ContractIds, FeatureIds {
+    using SafeMath for uint256;
+
+    
     uint32 private constant MAX_WEIGHT = 1000000;
     uint64 private constant MAX_CONVERSION_FEE = 1000000;
 
@@ -316,7 +320,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @return return amount minus conversion fee
     */
     function getFinalAmount(uint256 _amount, uint8 _magnitude) public view returns (uint256) {
-        return safeMul(_amount, (MAX_CONVERSION_FEE - conversionFee) ** _magnitude) / MAX_CONVERSION_FEE ** _magnitude;
+        return _amount.mul((MAX_CONVERSION_FEE - conversionFee) ** _magnitude).div(MAX_CONVERSION_FEE ** _magnitude);
     }
 
     /**
@@ -600,12 +604,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // update the source token virtual balance if relevant
         Connector storage fromConnector = connectors[_fromToken];
         if (fromConnector.isVirtualBalanceEnabled)
-            fromConnector.virtualBalance = safeAdd(fromConnector.virtualBalance, _amount);
+            fromConnector.virtualBalance = fromConnector.virtualBalance.add(_amount);
 
         // update the target token virtual balance if relevant
         Connector storage toConnector = connectors[_toToken];
         if (toConnector.isVirtualBalanceEnabled)
-            toConnector.virtualBalance = safeSub(toConnector.virtualBalance, amount);
+            toConnector.virtualBalance = toConnector.virtualBalance.sub(amount);
 
         // ensure that the trade won't deplete the connector balance
         uint256 toConnectorBalance = getConnectorBalance(_toToken);
@@ -661,7 +665,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // update virtual balance if relevant
         Connector storage connector = connectors[_connectorToken];
         if (connector.isVirtualBalanceEnabled)
-            connector.virtualBalance = safeAdd(connector.virtualBalance, _depositAmount);
+            connector.virtualBalance = connector.virtualBalance.add(_depositAmount);
 
         // transfer funds from the caller in the connector token
         assert(_connectorToken.transferFrom(msg.sender, this, _depositAmount));
@@ -701,7 +705,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // update virtual balance if relevant
         Connector storage connector = connectors[_connectorToken];
         if (connector.isVirtualBalanceEnabled)
-            connector.virtualBalance = safeSub(connector.virtualBalance, amount);
+            connector.virtualBalance = connector.virtualBalance.sub(amount);
 
         // destroy _sellAmount from the caller's balance in the smart token
         token.destroy(msg.sender, _sellAmount);
@@ -801,12 +805,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < connectorTokens.length; i++) {
             connectorToken = connectorTokens[i];
             connectorBalance = getConnectorBalance(connectorToken);
-            connectorAmount = safeMul(_amount, connectorBalance) / supply;
+            connectorAmount = _amount.mul(connectorBalance).div(supply);
 
             // update virtual balance if relevant
             Connector storage connector = connectors[connectorToken];
             if (connector.isVirtualBalanceEnabled)
-                connector.virtualBalance = safeAdd(connector.virtualBalance, connectorAmount);
+                connector.virtualBalance = connector.virtualBalance.add(connectorAmount);
 
             // transfer funds from the caller in the connector token
             assert(connectorToken.transferFrom(msg.sender, this, connectorAmount));
@@ -842,12 +846,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < connectorTokens.length; i++) {
             connectorToken = connectorTokens[i];
             connectorBalance = getConnectorBalance(connectorToken);
-            connectorAmount = safeMul(_amount, connectorBalance) / supply;
+            connectorAmount = _amount.mul(connectorBalance).div(supply);
 
             // update virtual balance if relevant
             Connector storage connector = connectors[connectorToken];
             if (connector.isVirtualBalanceEnabled)
-                connector.virtualBalance = safeSub(connector.virtualBalance, connectorAmount);
+                connector.virtualBalance = connector.virtualBalance.sub(connectorAmount);
 
             // transfer funds to the caller in the connector token
             // the transfer might fail if the actual connector balance is smaller than the virtual balance

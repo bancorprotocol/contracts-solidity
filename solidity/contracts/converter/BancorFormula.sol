@@ -1,8 +1,12 @@
 pragma solidity ^0.4.24;
 import './interfaces/IBancorFormula.sol';
+import '../utility/SafeMath.sol';
 import '../utility/Utils.sol';
 
 contract BancorFormula is IBancorFormula, Utils {
+    using SafeMath for uint256;
+
+
     string public version = '0.3';
 
     uint256 private constant ONE = 1;
@@ -188,13 +192,13 @@ contract BancorFormula is IBancorFormula, Utils {
 
         // special case if the weight = 100%
         if (_connectorWeight == MAX_WEIGHT)
-            return safeMul(_supply, _depositAmount) / _connectorBalance;
+            return _supply.mul(_depositAmount) / _connectorBalance;
 
         uint256 result;
         uint8 precision;
-        uint256 baseN = safeAdd(_depositAmount, _connectorBalance);
+        uint256 baseN = _depositAmount.add(_connectorBalance);
         (result, precision) = power(baseN, _connectorBalance, _connectorWeight, MAX_WEIGHT);
-        uint256 temp = safeMul(_supply, result) >> precision;
+        uint256 temp = _supply.mul(result) >> precision;
         return temp - _supply;
     }
 
@@ -226,13 +230,13 @@ contract BancorFormula is IBancorFormula, Utils {
 
         // special case if the weight = 100%
         if (_connectorWeight == MAX_WEIGHT)
-            return safeMul(_connectorBalance, _sellAmount) / _supply;
+            return _connectorBalance.mul(_sellAmount) / _supply;
 
         uint256 result;
         uint8 precision;
         uint256 baseD = _supply - _sellAmount;
         (result, precision) = power(_supply, baseD, MAX_WEIGHT, _connectorWeight);
-        uint256 temp1 = safeMul(_connectorBalance, result);
+        uint256 temp1 = _connectorBalance.mul(result);
         uint256 temp2 = _connectorBalance << precision;
         return (temp1 - temp2) / result;
     }
@@ -258,13 +262,13 @@ contract BancorFormula is IBancorFormula, Utils {
 
         // special case for equal weights
         if (_fromConnectorWeight == _toConnectorWeight)
-            return safeMul(_toConnectorBalance, _amount) / safeAdd(_fromConnectorBalance, _amount);
+            return _toConnectorBalance.mul(_amount) / _fromConnectorBalance.add(_amount);
 
         uint256 result;
         uint8 precision;
-        uint256 baseN = safeAdd(_fromConnectorBalance, _amount);
+        uint256 baseN = _fromConnectorBalance.add(_amount);
         (result, precision) = power(baseN, _fromConnectorBalance, _fromConnectorWeight, _toConnectorWeight);
-        uint256 temp1 = safeMul(_toConnectorBalance, result);
+        uint256 temp1 = _toConnectorBalance.mul(result);
         uint256 temp2 = _toConnectorBalance << precision;
         return (temp1 - temp2) / result;
     }
