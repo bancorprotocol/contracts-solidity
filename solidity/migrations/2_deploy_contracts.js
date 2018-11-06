@@ -14,6 +14,7 @@ const SmartToken = artifacts.require('SmartToken.sol');
 const SmartTokenController = artifacts.require('SmartTokenController.sol');
 const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const BancorX = artifacts.require('BancorX.sol');
+const XTransferRerouter = artifacts.require('XTransferRerouter.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
@@ -22,7 +23,7 @@ const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader.sol')
 const CrowdsaleController = artifacts.require('CrowdsaleController.sol');
 
 module.exports = async function(deployer, network, accounts) {
-    // if (network == "production") {
+    if (network == "production") {
         deployer.deploy(Utils);
         deployer.deploy(Owned);
         deployer.deploy(Managed);
@@ -43,5 +44,6 @@ module.exports = async function(deployer, network, accounts) {
         await deployer.deploy(BancorConverterUpgrader, ContractRegistry.address);
 
         deployer.deploy(CrowdsaleController, SmartToken.address, 4102444800, '0x125', '0x126', 1);
-    // }
+        deployer.deploy(XTransferRerouter, true);
+    }
 };
