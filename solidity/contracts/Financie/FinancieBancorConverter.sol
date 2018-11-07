@@ -195,4 +195,8 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
       revert();
     }
 
+    function () public payable {
+        // Override to receive ether before distribution revenue/fee
+    }
+
 }
