@@ -15,6 +15,7 @@ import '../token/interfaces/IEtherToken.sol';
 contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, FinancieFee {
 
     IERC20Token[] public quickSellPath;
+    IERC20Token[] public quickBuyPath;                  // conversion path that's used in order to buy the token
 
     /**
     *   @dev constructor
@@ -62,6 +63,31 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
 
     function startTrading() public {
         notifyApproveNewBancor(address(quickSellPath[0]), address(this));
+    }
+
+    function getQuickBuyPathLength() public view returns (uint256) {
+        return quickBuyPath.length;
+    }
+
+    function setQuickBuyPath(IERC20Token[] _path)
+        public
+        ownerOnly
+        validConversionPath(_path)
+    {
+        quickBuyPath = _path;
+    }
+
+    function copyQuickBuyPath(FinancieBancorConverter _oldConverter) public ownerOnly {
+        uint256 quickBuyPathLength = _oldConverter.getQuickBuyPathLength();
+        if (quickBuyPathLength <= 0)
+            return;
+
+        IERC20Token[] memory path = new IERC20Token[](quickBuyPathLength);
+        for (uint256 i = 0; i < quickBuyPathLength; i++) {
+            path[i] = _oldConverter.quickBuyPath(i);
+        }
+
+        setQuickBuyPath(path);
     }
 
     /**
@@ -138,22 +164,22 @@ contract FinancieBancorConverter is BancorConverter, FinancieNotifierDelegate, F
         return bancorNetwork.convertForPrioritized2.value(_value)(_path, _amount, _minReturn, _spender, 0x0, 0x0, 0x0, 0x0);
     }
 
-    /**
-    *   @dev Overridden to prevent super contract payable function
-    */
-    function() payable public {
-    }
 
     /**
     *   @dev Overridden for original fee model
     */
-    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256) {
+    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256, uint256) {
         require(_fromToken == quickSellPath[0] || _fromToken == quickBuyPath[0]);
         require(_toToken == quickSellPath[2] || _toToken == quickBuyPath[2]);
 
         if ( _fromToken == quickSellPath[0] ) {
-            uint256 grossSell = super.getReturn(_fromToken, _toToken, _amount);
-            return safeSub(grossSell, getFinancieFee(grossSell));
+            uint256 grossSell;
+            uint256 fee;
+            uint256 net;
+            (grossSell, fee) = super.getReturn(_fromToken, _toToken, _amount);
+            fee = getFinancieFee(grossSell);
+            net = safeSub(grossSell, fee);
+            return (net, fee);
         } else {
             return super.getReturn(_fromToken, _toToken, safeSub(_amount, getFinancieFee(_amount)));
         }

@@ -1,8 +1,9 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 import './IBancorNetwork.sol';
 import './ContractIds.sol';
 import './FeatureIds.sol';
 import './converter/interfaces/IBancorConverter.sol';
+import './converter/interfaces/IBancorFormula.sol';
 import './converter/interfaces/IBancorGasPriceLimit.sol';
 import './utility/TokenHolder.sol';
 import './utility/interfaces/IContractRegistry.sol';
@@ -30,6 +31,8 @@ import './token/interfaces/ISmartToken.sol';
     [source token, smart token, to token, smart token, to token...]
 */
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
+    uint64 private constant MAX_CONVERSION_FEE = 1000000;
+
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
     IContractRegistry public registry;          // contract registry contract address
 
@@ -330,6 +333,80 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
+        @dev returns the expected return amount for converting a specific amount by following
+        a given conversion path.
+        notice that there is no support for circular paths.
+
+        @param _path        conversion path, see conversion path format above
+        @param _amount      amount to convert from (in the initial source token)
+
+        @return expected conversion return amount and conversion fee
+    */
+    function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
+        IERC20Token fromToken;
+        ISmartToken smartToken;
+        IERC20Token toToken;
+        IBancorConverter converter;
+        uint256 amount;
+        uint256 fee;
+        uint256 supply;
+        uint256 balance;
+        uint32 weight;
+        ISmartToken prevSmartToken;
+        IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
+
+        amount = _amount;
+        fromToken = _path[0];
+
+        // iterate over the conversion path
+        for (uint256 i = 1; i < _path.length; i += 2) {
+            smartToken = ISmartToken(_path[i]);
+            toToken = _path[i + 1];
+            converter = IBancorConverter(smartToken.owner());
+
+            if (toToken == smartToken) { // buy the smart token
+                // check if the current smart token supply was changed in the previous iteration
+                supply = smartToken == prevSmartToken ? supply : smartToken.totalSupply();
+
+                // validate input
+                require(getConnectorPurchaseEnabled(converter, fromToken));
+
+                // calculate the amount & the conversion fee
+                balance = converter.getConnectorBalance(fromToken);
+                weight = getConnectorWeight(converter, fromToken);
+                amount = formula.calculatePurchaseReturn(supply, balance, weight, amount);
+                fee = safeMul(amount, converter.conversionFee()) / MAX_CONVERSION_FEE;
+                amount -= fee;
+
+                // update the smart token supply for the next iteration
+                supply = smartToken.totalSupply() + amount;
+            }
+            else if (fromToken == smartToken) { // sell the smart token
+                // check if the current smart token supply was changed in the previous iteration
+                supply = smartToken == prevSmartToken ? supply : smartToken.totalSupply();
+
+                // calculate the amount & the conversion fee
+                balance = converter.getConnectorBalance(toToken);
+                weight = getConnectorWeight(converter, toToken);
+                amount = formula.calculateSaleReturn(supply, balance, weight, amount);
+                fee = safeMul(amount, converter.conversionFee()) / MAX_CONVERSION_FEE;
+                amount -= fee;
+
+                // update the smart token supply for the next iteration
+                supply = smartToken.totalSupply() - amount;
+            }
+            else { // cross connector conversion
+                (amount, fee) = converter.getReturn(fromToken, toToken, amount);
+            }
+
+            prevSmartToken = smartToken;
+            fromToken = toToken;
+        }
+
+        return (amount, fee);
+    }
+
+    /**
         @dev checks whether the given converter supports a whitelist and if so, ensures that
         the account that should receive the conversion result is actually whitelisted
 
@@ -424,6 +501,50 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         assert(_token.approve(_spender, _value));
     }
 
+    /**
+        @dev returns the connector weight
+
+        @param _converter       converter contract address
+        @param _connector       connector's address to read from
+
+        @return connector's weight
+    */
+    function getConnectorWeight(IBancorConverter _converter, IERC20Token _connector)
+        private
+        view
+        returns(uint32)
+    {
+        uint256 virtualBalance;
+        uint32 weight;
+        bool isVirtualBalanceEnabled;
+        bool isPurchaseEnabled;
+        bool isSet;
+        (virtualBalance, weight, isVirtualBalanceEnabled, isPurchaseEnabled, isSet) = _converter.connectors(_connector);
+        return weight;
+    }
+
+    /**
+        @dev returns true if connector purchase enabled
+
+        @param _converter       converter contract address
+        @param _connector       connector's address to read from
+
+        @return true if connector purchase enabled, otherwise - false
+    */
+    function getConnectorPurchaseEnabled(IBancorConverter _converter, IERC20Token _connector)
+        private
+        view
+        returns(bool)
+    {
+        uint256 virtualBalance;
+        uint32 weight;
+        bool isVirtualBalanceEnabled;
+        bool isPurchaseEnabled;
+        bool isSet;
+        (virtualBalance, weight, isVirtualBalanceEnabled, isPurchaseEnabled, isSet) = _converter.connectors(_connector);
+        return isPurchaseEnabled;
+    }
+
     // deprecated, backward compatibility
     function convertForPrioritized(
         IERC20Token[] _path,
@@ -438,6 +559,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         public payable returns (uint256)
     {
         _nonce;
-        convertForPrioritized2(_path, _amount, _minReturn, _for, _block, _v, _r, _s);
+        return convertForPrioritized2(_path, _amount, _minReturn, _for, _block, _v, _r, _s);
     }
 }

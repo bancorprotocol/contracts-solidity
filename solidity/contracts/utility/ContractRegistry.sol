@@ -1,7 +1,8 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 import './Owned.sol';
 import './Utils.sol';
 import './interfaces/IContractRegistry.sol';
+import '../ContractIds.sol';
 
 /**
     Contract Registry
@@ -14,7 +15,7 @@ import './interfaces/IContractRegistry.sol';
 
     Note that contract names are limited to 32 bytes UTF8 encoded ASCII strings to optimize gas costs
 */
-contract ContractRegistry is IContractRegistry, Owned, Utils {
+contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     struct RegistryItem {
         address contractAddress;    // contract address
         uint256 nameIndex;          // index of the item in the list of contract names
@@ -31,6 +32,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
         @dev constructor
     */
     constructor() public {
+        registerAddress(ContractIds.CONTRACT_REGISTRY, address(this));
     }
 
     /**
@@ -68,7 +70,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
         // update the address in the registry
         items[_contractName].contractAddress = _contractAddress;
-        
+
         if (!items[_contractName].isSet) {
             // mark the item as set
             items[_contractName].isSet = true;
@@ -93,19 +95,22 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
         // remove the address from the registry
         items[_contractName].contractAddress = address(0);
 
-        if (items[_contractName].isSet) {
-            // mark the item as empty
-            items[_contractName].isSet = false;
+        // if there are multiple items in the registry, move the last element to the deleted element's position
+        // and modify last element's registryItem.nameIndex in the items collection to point to the right position in contractNames
+        if (contractNames.length > 1) {
+            string memory lastContractNameString = contractNames[contractNames.length - 1];
+            uint256 unregisterIndex = items[_contractName].nameIndex;
 
-            // if there are multiple items in the registry, move the last element to the deleted element's position
-            if (contractNames.length > 1)
-                contractNames[items[_contractName].nameIndex] = contractNames[contractNames.length - 1];
-
-            // remove the last element from the name list
-            contractNames.length--;
-            // zero the deleted element's index
-            items[_contractName].nameIndex = 0;
+            contractNames[unregisterIndex] = lastContractNameString;
+            bytes32 lastContractName = stringToBytes32(lastContractNameString);
+            RegistryItem storage registryItem = items[lastContractName];
+            registryItem.nameIndex = unregisterIndex;
         }
+
+        // remove the last element from the name list
+        contractNames.length--;
+        // zero the deleted element's index
+        items[_contractName].nameIndex = 0;
 
         // dispatch the address update event
         emit AddressUpdate(_contractName, address(0));
@@ -124,6 +129,15 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
         }
 
         return string(byteArray);
+    }
+
+    // @dev utility, converts string to bytes32
+    function stringToBytes32(string memory _string) private pure returns (bytes32) {
+        bytes32 result;
+        assembly {
+            result := mload(add(_string,32))
+        }
+        return result;
     }
 
     // deprecated, backward compatibility

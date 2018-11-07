@@ -34,6 +34,7 @@ contract('FinancieBancorConverter', (accounts) => {
     let smartToken;
     let bancor;
     let smartToken1QuickBuyPath;
+    let bancorNetwork;
 
     before(async () => {
         console.log('[FinancieBancorConverter]initialize');
@@ -66,7 +67,7 @@ contract('FinancieBancorConverter', (accounts) => {
         let formulaId = await contractIds.BANCOR_FORMULA.call();
         await contractRegistry.registerAddress(formulaId, formula.address);
 
-        let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+        bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
         await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[0]);
@@ -111,10 +112,28 @@ contract('FinancieBancorConverter', (accounts) => {
         console.log('[FinancieBancorConverter]end setup');
     });
 
-    it('sellCards', async () => {
-        let amountSellCard = 10000 * (10 ** 5);
+    it('getCrossConnectorReturn', async () => {
+      let amount;
+      let fee;
+      let amountSellCard = 100 * (10 ** 5);
 
-        let estimationSell = await bancor.getReturn(cardToken.address, etherToken.address, amountSellCard);
+      [amount, fee] = await bancor.getCrossConnectorReturn(cardToken.address, etherToken.address, amountSellCard);
+      console.log('[FinancieBancorConverter]getCrossConnectorReturn amount:' + amount.toFixed());
+      console.log('[FinancieBancorConverter]getCrossConnectorReturn fee:' + fee.toFixed());
+      console.log(await etherToken.totalSupply());
+    });
+
+    it('sellCards', async () => {
+        let amountSellCard = 100 * (10 ** 5);
+        let estimationSell;
+        let sellFee;
+
+        let smartToken1BuyPath = [etherToken.address, smartToken.address, cardToken.address];
+
+        // await etherToken.approve(bancorNetwork.address, 70000);
+        // await bancorNetwork.claimAndConvert(smartToken1BuyPath, 70000, 1);
+
+        [estimationSell,sellFee] = await bancor.getReturn(cardToken.address, etherToken.address, amountSellCard);
         console.log('[FinancieBancorConverter]estimationSell:' + estimationSell.toFixed());
 
         await cardToken.approve(bancor.address, amountSellCard);
@@ -128,7 +147,9 @@ contract('FinancieBancorConverter', (accounts) => {
     });
 
     it('buyCards', async () => {
-        let estimationBuy = await bancor.getReturn(etherToken.address, cardToken.address, 10 ** 5);
+        let estimationBuy;
+        let buyFee;
+        [estimationBuy, buyFee] = await bancor.getReturn(etherToken.address, cardToken.address, 10 ** 5);
         console.log('[FinancieBancorConverter]estimationBuy:' + estimationBuy.toFixed());
 
         let beforeBuy = await cardToken.balanceOf(accounts[0]);
@@ -150,7 +171,7 @@ contract('FinancieBancorConverter', (accounts) => {
 
     it('Confirm that quickConvert() is not executed', async () => {
         smartToken1QuickBuyPath = [etherToken.address, smartToken.address, smartToken.address];
-        await bancor.setQuickBuyPath(smartToken1QuickBuyPath);
+        // await bancor.setQuickBuyPath(smartToken1QuickBuyPath);
         let prevBalance = await smartToken.balanceOf.call(accounts[1]);
 
         try {

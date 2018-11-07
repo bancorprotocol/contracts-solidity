@@ -1,6 +1,6 @@
 {
   "name": "bancor-contracts",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "author": "Yudi Levi",
   "repository": {
     "type": "git",
@@ -10,6 +10,8 @@
     "npm": "^3.0.0"
   },
   "scripts": {
+    "install": "node scripts/fix-modules.js",
+    "build": "node scripts/rebuild-all.js",
     "test": "cd solidity && truffle test"
   },
   "dependencies": {
@@ -21,6 +23,11 @@
     "npm": "^6.4.1",
     "web3": "^1.0.0-beta.35",
     "web3-provider-engine": "^14.0.6",
+    "truffle-contract": "^3.0.6",
+    "truffle": "4.1.14",
+    "ganache-cli": "6.1.8",
+    "solidity-coverage": "0.5.8",
+    "ethereumjs-testrpc-sc": "6.1.6",
     "web3-utils": "^1.0.0-beta.34"
   }
 }

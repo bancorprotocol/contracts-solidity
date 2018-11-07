@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 import './interfaces/ISmartToken.sol';
 import '../utility/TokenHolder.sol';
 
@@ -33,19 +33,19 @@ contract SmartTokenController is TokenHolder {
 
     // ensures that the controller is the token's owner
     modifier active() {
-        assert(token.owner() == address(this));
+        require(token.owner() == address(this));
         _;
     }
 
     // ensures that the controller is not the token's owner
     modifier inactive() {
-        assert(token.owner() != address(this));
+        require(token.owner() != address(this));
         _;
     }
 
     /**
         @dev allows transferring the token ownership
-        the new owner still need to accept the transfer
+        the new owner needs to accept the transfer
         can only be called by the contract owner
 
         @param _newOwner    new token owner
@@ -80,14 +80,7 @@ contract SmartTokenController is TokenHolder {
         @param _to      account to receive the new amount
         @param _amount  amount to withdraw
     */
-    function withdrawFromToken(
-        IERC20Token _token, 
-        address _to, 
-        uint256 _amount
-    ) 
-        public
-        ownerOnly
-    {
+    function withdrawFromToken(IERC20Token _token, address _to, uint256 _amount) public ownerOnly {
         ITokenHolder(token).withdrawTokens(_token, _to, _amount);
     }
 }
