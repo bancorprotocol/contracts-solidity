@@ -38,6 +38,28 @@ let converterUpgrader;
 // abi = fs.readFileSync(path.resolve(contractsPath2, 'SmartToken.abi'), 'utf-8');
 // let SmartTokenAbi = JSON.parse(abi);
 
+async function upgradeConverter(converter) {
+    let newConverter
+
+    await converter.upgrade();
+    newConverter = await getNewConverter();
+
+    return newConverter;
+}
+
+async function getNewConverter() {
+    let converterUpgrade = converterUpgrader.ConverterUpgrade({fromBlock: 'latest', toBlock: 'latest'});
+    newConverterAddress = await new Promise((resolve, reject) => {
+        converterUpgrade.get((error, logs) => {
+            assert(logs.length == 1);
+            resolve(logs[0].args._newConverter);
+        });
+    });
+
+    let converter = await FinancieBancorConverter.at(newConverterAddress);
+    return converter;
+}
+
 contract('FinancieBancorConverterUpgrade', (accounts) => {
   let managedContracts;
   let platformToken;
@@ -140,6 +162,8 @@ contract('FinancieBancorConverterUpgrade', (accounts) => {
       await contractRegistry.registerAddress(converterFactoryId, converterFactory.address);
 
       converterUpgrader = await BancorConverterUpgrader.new(contractRegistry.address);
+      let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
+      await contractRegistry.registerAddress(bancorConverterUpgraderId, converterUpgrader.address);
 
       console.log('[FinancieBancorConverter]end setup');
   });
@@ -152,7 +176,8 @@ contract('FinancieBancorConverterUpgrade', (accounts) => {
       console.log('converterUpgrader['+converterUpgrader.address+']');
       console.log('converterNewOwner['+await bancor.newOwner.call()+']');
 
-      let upgradeRes = await converterUpgrader.upgrade(bancor.address, web3.fromUtf8("0.7"));
+      let upgradeRes = await converterUpgrader.upgradeOld(bancor.address, web3.fromUtf8("0.7"));
+      // console.log(upgradeRes.logs);
       await bancor.acceptOwnership();
       let currentOwner = await bancor.owner.call();
 
@@ -171,18 +196,31 @@ contract('FinancieBancorConverterUpgrade', (accounts) => {
   });
 
   it('verifies that the quick buy path of the new converter is equal to the path in the given converter', async () => {
-      let initialPathLength = await bancor.getQuickBuyPathLength.call();
+      let initialPathLength = await bancor.getQuickBuyPathLength();
       if (newConverterAddress == null) {
         await bancor.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(bancor.address, web3.fromUtf8("0.7"));
+        let upgradeRes = await converterUpgrader.upgradeOld(bancor.address, web3.fromUtf8("0.7"));
         let newConverterAddress = upgradeRes.logs[4].args._newConverter;
       }
       let newConverter = FinancieBancorConverter.at(newConverterAddress);
+      newConverter.copyQuickBuyPath(bancor.address);
       for (let i = 0; i < initialPathLength; i++) {
           let initialToken = await bancor.quickBuyPath.call(i);
           let currentToken = await newConverter.quickBuyPath.call(i);
           assert.equal(initialToken, currentToken);
       }
+  });
+
+  it('verifies that the new upgrade', async () => {
+    let newconverter;
+    let initialOwner = await bancor.owner.call();
+    newconverter = await upgradeConverter(bancor);
+    await newconverter.acceptOwnership();
+    await newconverter.startTrading();
+    let connectorTokenCount = await newconverter.connectorTokenCount();
+    let newOwner = await newconverter.owner.call();
+    assert.equal(2, connectorTokenCount);
+    assert.equal(initialOwner, newOwner);
   });
 
 

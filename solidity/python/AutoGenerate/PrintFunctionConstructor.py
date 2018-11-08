@@ -15,7 +15,7 @@ len2 = len(hex(maxExpArrayShl[0]))
 
 
 print('    uint256[{}] private maxExpArray;'.format(len(maxExpArray)))
-print('    function BancorFormula() public {')
+print('    constructor() public {')
 for precision in range(len(maxExpArray)):
     prefix = '  ' if MIN_PRECISION <= precision <= MAX_PRECISION else '//'
     print('    {0:s}  maxExpArray[{1:{2}d}] = {3:#0{4}x};'.format(prefix,precision,len1,maxExpArrayShl[precision],len2))

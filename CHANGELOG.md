@@ -1,4 +1,23 @@
-﻿### 0.4.3 (2018-06-23)
+﻿### 0.4.4 (2018-06-23)
+General:
+* Minor cleanups / bug fixes
+* Upgraded compiler version to 0.4.24
+
+Converters:
+* Replaced the `setRegistry` function with `updateRegistry` function
+* Removed quickBuyPath from converter
+* getReturn now returns the fee as a separate return value
+* Converter owner can no longer withdraw connector tokens while the converter is active
+* Converter owner can no longer transfer the token ownership once the converter is active
+* Added a dedicated `upgrade` function for easier upgrades
+* Added a `fund` function for increasing liquidity atomically
+* Added a `liquidate` function for decreasing liquidity atomically even when conversions are disabled
+
+Registry:
+* Fixed item removal
+
+
+### 0.4.3 (2018-06-23)
 General:
 * Upgraded compiler version to 0.4.23
 * Updated all contracts to make use of the new `constructor` keyword

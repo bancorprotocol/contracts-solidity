@@ -1,5 +1,6 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 import './interfaces/IBancorConverter.sol';
+import './interfaces/IBancorConverterUpgrader.sol';
 import './interfaces/IBancorConverterFactory.sol';
 import '../utility/Owned.sol';
 import '../utility/interfaces/IContractRegistry.sol';
@@ -13,7 +14,6 @@ import '../FeatureIds.sol';
 */
 contract IBancorConverterExtended is IBancorConverter, IOwned {
     function token() public view returns (ISmartToken) {}
-    function quickBuyPath(uint256 _index) public view returns (IERC20Token) { _index; }
     function maxConversionFee() public view returns (uint32) {}
     function conversionFee() public view returns (uint32) {}
     function connectorTokenCount() public view returns (uint16);
@@ -21,25 +21,16 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function connectorTokens(uint256 _index) public view returns (IERC20Token) { _index; }
     function reserveTokens(uint256 _index) public view returns (IERC20Token) { _index; }
     function setConversionWhitelist(IWhitelist _whitelist) public;
-    function getQuickBuyPathLength() public view returns (uint256);
     function transferTokenOwnership(address _newOwner) public;
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public;
     function acceptTokenOwnership() public;
     function transferManagement(address _newManager) public;
     function acceptManagement() public;
     function setConversionFee(uint32 _conversionFee) public;
-    function setQuickBuyPath(IERC20Token[] _path) public;
     function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance) public;
     function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance) public;
     function getConnectorBalance(IERC20Token _connectorToken) public view returns (uint256);
     function getReserveBalance(IERC20Token _reserveToken) public view returns (uint256);
-    function connectors(address _address) public view returns (
-        uint256 virtualBalance, 
-        uint32 weight, 
-        bool isVirtualBalanceEnabled, 
-        bool isPurchaseEnabled, 
-        bool isSet
-    );
     function reserves(address _address) public view returns (
         uint256 virtualBalance, 
         uint32 weight, 
@@ -60,7 +51,7 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     back to the original owner.
     The address of the new converter is available in the ConverterUpgrade event.
 */
-contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
+contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds, FeatureIds {
     string public version = '0.3';
 
     IContractRegistry public registry;                      // contract registry contract address
@@ -87,36 +78,50 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
     }
 
     /**
-        @dev upgrade an old converter to the latest version
+        @dev upgrades an old converter to the latest version
+        will throw if ownership wasn't transferred to the upgrader before calling this function.
+        ownership of the new converter will be transferred back to the original owner.
+        fires the ConverterUpgrade event upon success.
+        can only be called by a converter
+
+        @param _version old converter version
+    */
+    function upgrade(bytes32 _version) public {
+        upgradeOld(IBancorConverter(msg.sender), _version);
+    }
+
+    /**
+        @dev upgrades an old converter to the latest version
         will throw if ownership wasn't transferred to the upgrader before calling this function.
         ownership of the new converter will be transferred back to the original owner.
         fires the ConverterUpgrade event upon success.
 
-        @param _oldConverter   old converter contract address
-        @param _version        old converter version
+        @param _converter   old converter contract address
+        @param _version     old converter version
     */
-    function upgrade(IBancorConverterExtended _oldConverter, bytes32 _version) public {
+    function upgradeOld(IBancorConverter _converter, bytes32 _version) public {
         bool formerVersions = false;
         if (_version == "0.4")
             formerVersions = true;
-        acceptConverterOwnership(_oldConverter);
-        IBancorConverterExtended newConverter = createConverter(_oldConverter);
-        copyConnectors(_oldConverter, newConverter, formerVersions);
-        copyConversionFee(_oldConverter, newConverter);
-        copyQuickBuyPath(_oldConverter, newConverter);
-        transferConnectorsBalances(_oldConverter, newConverter, formerVersions);                
-        ISmartToken token = _oldConverter.token();
+        IBancorConverterExtended converter = IBancorConverterExtended(_converter);
+        address prevOwner = converter.owner();
+        acceptConverterOwnership(converter);
+        IBancorConverterExtended newConverter = createConverter(converter);
+        copyConnectors(converter, newConverter, formerVersions);
+        copyConversionFee(converter, newConverter);
+        transferConnectorsBalances(converter, newConverter, formerVersions);                
+        ISmartToken token = converter.token();
 
-        if (token.owner() == address(_oldConverter)) {
-            _oldConverter.transferTokenOwnership(newConverter);
+        if (token.owner() == address(converter)) {
+            converter.transferTokenOwnership(newConverter);
             newConverter.acceptTokenOwnership();
         }
 
-        _oldConverter.transferOwnership(msg.sender);
-        newConverter.transferOwnership(msg.sender);
-        newConverter.transferManagement(msg.sender);
+        converter.transferOwnership(prevOwner);
+        newConverter.transferOwnership(prevOwner);
+        newConverter.transferManagement(prevOwner);
 
-        emit ConverterUpgrade(address(_oldConverter), address(newConverter));
+        emit ConverterUpgrade(address(converter), address(newConverter));
     }
 
     /**
@@ -128,7 +133,6 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
         @param _oldConverter       converter to accept ownership of
     */
     function acceptConverterOwnership(IBancorConverterExtended _oldConverter) private {
-        require(msg.sender == _oldConverter.owner());
         _oldConverter.acceptOwnership();
         emit ConverterOwned(_oldConverter, this);
     }
@@ -147,7 +151,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
 
         IBancorConverterFactory converterFactory = IBancorConverterFactory(registry.addressOf(ContractIds.BANCOR_CONVERTER_FACTORY));
-        address converterAdderess  = converterFactory.createConverter(
+        address converterAddress  = converterFactory.createConverter(
             token,
             registry,
             maxConversionFee,
@@ -155,7 +159,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
             0
         );
 
-        IBancorConverterExtended converter = IBancorConverterExtended(converterAdderess);
+        IBancorConverterExtended converter = IBancorConverterExtended(converterAddress);
         converter.acceptOwnership();
         converter.acceptManagement();
 
@@ -214,25 +218,6 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
     function copyConversionFee(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter) private {
         uint32 conversionFee = _oldConverter.conversionFee();
         _newConverter.setConversionFee(conversionFee);
-    }
-
-    /**
-        @dev copies the quick buy path from the old converter to the new one
-
-        @param _oldConverter    old converter contract address
-        @param _newConverter    new converter contract address
-    */
-    function copyQuickBuyPath(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter) private {
-        uint256 quickBuyPathLength = _oldConverter.getQuickBuyPathLength();
-        if (quickBuyPathLength <= 0)
-            return;
-
-        IERC20Token[] memory path = new IERC20Token[](quickBuyPathLength);
-        for (uint256 i = 0; i < quickBuyPathLength; i++) {
-            path[i] = _oldConverter.quickBuyPath(i);
-        }
-
-        _newConverter.setQuickBuyPath(path);
     }
 
     /**

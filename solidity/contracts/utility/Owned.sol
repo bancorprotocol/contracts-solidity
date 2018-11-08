@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 import './interfaces/IOwned.sol';
 
 /*
@@ -19,7 +19,7 @@ contract Owned is IOwned {
 
     // allows execution by the owner only
     modifier ownerOnly {
-        assert(msg.sender == owner);
+        require(msg.sender == owner);
         _;
     }
 

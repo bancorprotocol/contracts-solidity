@@ -15,20 +15,27 @@ const Whitelist = artifacts.require('Whitelist.sol');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory.sol');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader.sol');
 const utils = require('./helpers/Utils');
+const truffleContract = require('truffle-contract');
+const web3Utils = require('web3-utils')
 
 let token;
 let contractRegistry;
 let contractFeatures;
 let converterUpgrader;
 
-const contractsPath = path.resolve(__dirname, '../contracts/build');
-let abi;
-abi = fs.readFileSync(path.resolve(contractsPath, 'BancorConverter.abi'), 'utf-8');
-let converterAbi = JSON.parse(abi);
-abi = fs.readFileSync(path.resolve(contractsPath, 'SmartToken.abi'), 'utf-8');
-let SmartTokenAbi = JSON.parse(abi);
+// The tests will be ran for each of these converter versions
+const versions = ["0.11", "0.10", "0.9"]
 
-async function initConverter(accounts, activate, maxConversionFee = 30000) {
+const contractsPath = path.resolve(__dirname, './bin');
+
+const converters = {
+    "0.9": { filename: 'bancor_converter_v9' },
+    "0.10": { filename: 'bancor_converter_v10' }
+};
+
+loadDataFiles(contractsPath, converters)
+
+async function initConverter(accounts, activate, version = null, maxConversionFee = 30000) {
     token = await SmartToken.new('Token1', 'TKN1', 18);
     let tokenAddress = token.address;
 
@@ -38,7 +45,7 @@ async function initConverter(accounts, activate, maxConversionFee = 30000) {
     let connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
     let connectorTokenAddress2 = connectorToken2.address;
 
-    let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, maxConversionFee, connectorTokenAddress, 500000);
+    let converter = await createConverter(tokenAddress, contractRegistry.address, maxConversionFee, connectorTokenAddress, 500000, version);
     let converterAddress = converter.address;
     await converter.addConnector(connectorTokenAddress2, 150000, false);
 
@@ -47,15 +54,65 @@ async function initConverter(accounts, activate, maxConversionFee = 30000) {
     await connectorToken2.transfer(converterAddress, 8000);
     await converter.setConversionFee(1000);
 
-    let smartToken1QuickBuyPath = [connectorTokenAddress, tokenAddress, tokenAddress];
-    await converter.setQuickBuyPath(smartToken1QuickBuyPath);
-
     if (activate) {
         await token.transferOwnership(converterAddress);
         await converter.acceptTokenOwnership();
     }
 
     return converter;
+}
+
+async function createConverter(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight, version) {
+    let converter
+
+    // If no version is passed, create newest converter
+    if (version == "0.11" || !version) {
+        converter = await BancorConverter.new(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight)
+    }
+    else {
+        let abi = converters[version]['abi']
+        let byteCode = '0x' + converters[version]['bin']
+        let converterContract = truffleContract({ abi, unlinked_binary: byteCode })
+        converterContract.setProvider(web3.currentProvider)
+        converterContract.defaults({ from: web3.eth.accounts[0], gas: 5712388 })
+
+        converter = await converterContract.new(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight)
+    }
+
+    return converter
+}
+
+async function upgradeConverter(converter, version = null) {
+    let newConverter
+
+    // For the latest version, we just call upgrade on the converter
+    if (version == "0.11" || !version) {
+        await converter.upgrade()
+        newConverter = await getNewConverter()
+    } else {
+        // For previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
+        // then accept ownership of the new and old converter. The end results should be the same.
+        await converter.transferOwnership(converterUpgrader.address)
+        let newOwner = await converter.newOwner.call()
+        await converterUpgrader.upgradeOld(converter.address, web3Utils.asciiToHex(version))
+        newConverter = await getNewConverter()
+        await converter.acceptOwnership()
+    }
+
+    return newConverter
+}
+
+async function getNewConverter() {
+    let converterUpgrade = converterUpgrader.ConverterUpgrade({fromBlock: 'latest', toBlock: 'latest'});
+    newConverterAddress = await new Promise((resolve, reject) => {
+        converterUpgrade.get((error, logs) => {
+            assert(logs.length == 1);
+            resolve(logs[0].args._newConverter);
+        });
+    });
+
+    let converter = await BancorConverter.at(newConverterAddress)
+    return converter
 }
 
 contract('BancorConverterUpgrader', accounts => {
@@ -79,127 +136,78 @@ contract('BancorConverterUpgrader', accounts => {
         await contractRegistry.registerAddress(converterFactoryId, converterFactory.address);
 
         converterUpgrader = await BancorConverterUpgrader.new(contractRegistry.address);
+        let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
+        await contractRegistry.registerAddress(bancorConverterUpgraderId, converterUpgrader.address);
     });
 
-    it('verifies that the ownership of the given converter returned to the given address', async () => {
-        let converter = await initConverter(accounts, true);
-        let initialOwner = await converter.owner.call();
-        await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
-        await converter.acceptOwnership();
-        let currentOwner = await converter.owner.call();
-        assert.equal(initialOwner, currentOwner);
+    it('verifies that the ownership of the converter is returned to the original owner after upgrade', async () => {
+        for (let i = 0; i < versions.length; i++) {
+            let converter = await initConverter(accounts, true, versions[i]);
+            let initialOwner = await converter.owner.call();
+            await upgradeConverter(converter, versions[i])
+            let currentOwner = await converter.owner.call();
+            assert.equal(initialOwner, currentOwner);    
+        }
     });
 
-    it('verifies that the ownership of the new converter transfered to sender', async () => {
-        let converter = await initConverter(accounts, true);
-        await converter.transferOwnership(converterUpgrader.address);
-        let initialOwner = await converter.owner.call();
-        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
-        let contract = await web3.eth.contract(converterAbi);
-        let newConverter = await contract.at(newConverterAddress);
-        let newOwner = await newConverter.newOwner.call();
-        assert.equal(initialOwner, newOwner);
+    it('verifies that the ownership of the new converter is transfered to the old converter owner', async () => {
+        for (let i = 0; i < versions.length; i++) {
+            let converter = await initConverter(accounts, true, versions[i]);
+            let initialOwner = await converter.owner.call();
+            let newConverter = await upgradeConverter(converter, versions[i])
+
+            let newOwner = await newConverter.newOwner.call();
+            assert.equal(initialOwner, newOwner);    
+        }
     });
 
-    it('verifies that the token ownership held by current converter transfered to the new converter', async () => {
-        let converter = await initConverter(accounts, true);
-        let tokenAddress = await converter.token.call();
-        let tokenContract = web3.eth.contract(SmartTokenAbi);
-        let token1 = tokenContract.at(tokenAddress);
-        let initialTokenOwner = await token1.owner.call();
-        assert.equal(initialTokenOwner, converter.address);
-        await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
-        let currentTokenOwner = await token1.owner.call();
-        assert.equal(currentTokenOwner, newConverterAddress);
+    it('verifies that the token ownership held by the converter is transfered to the new converter', async () => {
+        for (let i = 0; i < versions.length; i++) {
+            let converter = await initConverter(accounts, true, versions[i]);
+            let tokenAddress = await converter.token.call();
+            let token1 = await SmartToken.at(tokenAddress)
+            let initialTokenOwner = await token1.owner.call();
+            assert.equal(initialTokenOwner, converter.address);
+            let newConverter = await upgradeConverter(converter, versions[i]);
+            let currentTokenOwner = await token1.owner.call();
+            assert.equal(currentTokenOwner, newConverter.address);    
+        }        
     });
 
-    it('verifies that the management of the new converter transfered to sender', async () => {
-        let converter = await initConverter(accounts, true);
-        await converter.transferOwnership(converterUpgrader.address);
-        let initialManager = await converter.manager.call();
-        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
-        let contract = await web3.eth.contract(converterAbi);
-        let newConverter = await contract.at(newConverterAddress);
-        let newManager = await newConverter.newManager.call();
-        assert.equal(initialManager, newManager);
-    });
-
-    it('verifies that the quick buy path length of the given converter equal to the path in the new converter', async () => {
-        let converter = await initConverter(accounts, true);
-        let initialLength = await converter.getQuickBuyPathLength.call();
-        await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
-        let contract = await web3.eth.contract(converterAbi);
-        let newConverter = await contract.at(newConverterAddress);
-        let newLength = await newConverter.getQuickBuyPathLength.call();
-        assert.equal(initialLength.toFixed(), newLength.toFixed());
+    it('verifies that the management of the new converter is transfered to the old converter owner', async () => {        
+        for (let i = 0; i < versions.length; i++) {
+            let converter = await initConverter(accounts, true, versions[i]);
+            let initialManager = await converter.manager.call();
+            let newConverter = await upgradeConverter(converter, versions[i]);
+            let newManager = await newConverter.newManager.call();
+            assert.equal(initialManager, newManager);    
+        }
     });
 
     it('verifies that the whitelist feature is enabled in the new converter', async () => {
         let converter = await initConverter(accounts, true);
-        let initialLength = await converter.getQuickBuyPathLength.call();
-        await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
-        let contract = await web3.eth.contract(converterAbi);
-        let newConverter = await contract.at(newConverterAddress);
-
+        await converter.upgrade();
+        let newConverter = await getNewConverter();
+        
         let featureWhitelist = await newConverter.CONVERTER_CONVERSION_WHITELIST.call();
         let isSupported = await contractFeatures.isSupported.call(newConverter.address, featureWhitelist);
         assert(isSupported);
     });
 
-    it('verifies that the whitelist from the given converter is copied to the new converter', async () => {
+    it('verifies that the whitelist from the converter is copied to the new converter', async () => {
         let converter = await initConverter(accounts, true);
-        let initialLength = await converter.getQuickBuyPathLength.call();
         let whitelist = await Whitelist.new();
         await converter.setConversionWhitelist(whitelist.address);
-        await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
-        let contract = await web3.eth.contract(converterAbi);
-        let newConverter = await contract.at(newConverterAddress);
+        await converter.upgrade();
+        let newConverter = await getNewConverter();
         let conversionWhitelist = await newConverter.conversionWhitelist.call();
         assert.equal(whitelist.address, conversionWhitelist);
     });
 
-    it('verifies that the quick buy path of the new converter is equal to the path in the given converter', async () => {
-        let converter = await initConverter(accounts, true);
-        let initialConversionFee = await converter.conversionFee.call();
-        let initialPathLength = await converter.getQuickBuyPathLength.call();
-        await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
-        let contract = web3.eth.contract(converterAbi);
-        let newConverter = contract.at(newConverterAddress);
-        for (let i = 0; i < initialPathLength; i++) {
-            let initialToken = await converter.quickBuyPath.call(i);
-            let currentToken = await newConverter.quickBuyPath.call(i);
-            assert.equal(initialToken, currentToken);
-        }
-    });
-
-    it('should throw after the ownership transfered to the contract and upgrade execution triggered from another account', async () => {
+    it('should throw if the upgrader did not receive the converter ownership before calling the upgrade function', async () => {
         try {
             let converter = await initConverter(accounts, true);
-            await converter.transferOwnership(converterUpgrader.address);
-            await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"), { from: accounts[1] });
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when start upgrade execution process without transfer the ownership first', async () => {
-        try {
-            let converter = await initConverter(accounts, true);
-            await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
+            await converterUpgrader.upgradeOld(converter.address, web3.fromUtf8("0.7"));
         }
         catch (error) {
             return utils.ensureException(error);
@@ -207,34 +215,31 @@ contract('BancorConverterUpgrader', accounts => {
     });
 
     it('verifies that the max conversion fee after upgrade is the same', async () => {
-        let converter = await initConverter(accounts, true, 20000);
-        await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
-        let contract = web3.eth.contract(converterAbi);
-        let newConverter = contract.at(newConverterAddress);
-        let newVal = await newConverter.maxConversionFee.call();
-        assert.equal(newVal.toFixed(), "20000");
+        for (let i = 0; i < versions.length; i++) {
+            let converter = await initConverter(accounts, true, versions[i], 20000);
+            let newConverter = await upgradeConverter(converter, versions[i]);
+            let newVal = await newConverter.maxConversionFee.call();
+            assert.equal(newVal.toFixed(), "20000");            
+        }
+
     });
 
     it('verifies that the conversion fee after upgrade is the same', async () => {
-        let converter = await initConverter(accounts, true);
-        let initialConversionFee = await converter.conversionFee.call();
-        await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
-        let contract = web3.eth.contract(converterAbi);
-        let newConverter = contract.at(newConverterAddress);
-        let currentConversionFee = await newConverter.conversionFee.call();
-        assert.equal(initialConversionFee.toFixed(), currentConversionFee.toFixed());
+        for (let i = 0; i < versions.length; i++) {
+            let converter = await initConverter(accounts, true, versions[i]);
+            let initialConversionFee = await converter.conversionFee.call();
+            let newConverter = await upgradeConverter(converter, versions[i]);
+            let currentConversionFee = await newConverter.conversionFee.call();
+            assert.equal(initialConversionFee.toFixed(), currentConversionFee.toFixed());            
+        }
     });
 
-    it('verifies that the ownership did not changed if the process stopped due to gas limitation', async () => {
+    it('verifies that the ownership did not change if the process stopped due to gas limitation', async () => {
         let converter = await initConverter(accounts, true);
         let initialOwner = await converter.owner.call();
-        await converter.transferOwnership(converterUpgrader.address);
+        
         try {
-            await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"), { gas: 2000000 });
+            await converter.upgrade({ gas: 2000000 });
             assert.fail('Expected throw not received');
         }
         catch (error) {
@@ -244,67 +249,57 @@ contract('BancorConverterUpgrader', accounts => {
         }
     });
 
-    it('verifies that the upgrade process of converter without connectors success', async () => {
+    it('verifies upgrade of converter without connectors', async () => {
         let token1 = await SmartToken.new('Token1', 'TKN1', 18);
-        let formula = await BancorFormula.new();
         let converter1 = await BancorConverter.new(token1.address, contractRegistry.address, 30000, '0x0', 0);
         await token1.issue(accounts[0], 20000);
         await token1.transferOwnership(converter1.address);
         await converter1.acceptTokenOwnership();
-        let currentOwner = await converter1.owner.call();
         let currentMaxConversionFee = await converter1.maxConversionFee.call();
-        await converter1.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(converter1.address, 7);
-        await converter1.acceptOwnership();
-        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
-        let contract = web3.eth.contract(converterAbi);
-        let newConverter = contract.at(newConverterAddress);
+        await converter1.upgrade();
+        let newConverter = await getNewConverter();
         let newConverterConnectorTokenCount = await newConverter.connectorTokenCount.call();
         assert.equal(newConverterConnectorTokenCount.toFixed(), 0);
         let newTokenOwner = await token1.owner.call();
-        assert.equal(newTokenOwner, newConverterAddress);
+        assert.equal(newTokenOwner, newConverter.address);
         let newMaxConversionFee = await newConverter.maxConversionFee.call();
         assert.equal(currentMaxConversionFee.toFixed(), newMaxConversionFee.toFixed());
     });
 
-    it('verifies that the connectors count after upgrade is the same', async () => {
-        let converter = await initConverter(accounts, true);
-        let currentConverterConnectorTokenCount = await converter.connectorTokenCount.call();
-        await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
-        let contract = web3.eth.contract(converterAbi);
-        let newConverter = contract.at(newConverterAddress);
-        let newConverterConnectorTokenCount = await newConverter.connectorTokenCount.call();
-        assert.equal(currentConverterConnectorTokenCount.toFixed(), newConverterConnectorTokenCount.toFixed());
+    it('verifies that the connectors count after an upgrade is the same', async () => {
+        for (let i = 0; i < versions.length; i++) {
+            let converter = await initConverter(accounts, true, versions[i]);
+            let currentConverterConnectorTokenCount = await converter.connectorTokenCount.call();
+            let newConverter = await upgradeConverter(converter, versions[i]);
+            let newConverterConnectorTokenCount = await newConverter.connectorTokenCount.call();
+            assert.equal(currentConverterConnectorTokenCount.toFixed(), newConverterConnectorTokenCount.toFixed());            
+        }
     });
 
-    it('verifies that the connectors balances after upgrade is equal', async () => {
+    it('verifies that the connector balances after upgrade is equal', async () => {
+        for (let i = 0; i < versions.length; i++) {
+            let converter = await initConverter(accounts, true, versions[i]);
+            let connector1 = await converter.connectorTokens.call(0);
+            let connector2 = await converter.connectorTokens.call(1);
+            let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
+            let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
+            let newConverter = await upgradeConverter(converter, versions[i]);
+            let currentConnectorBalance1 = await newConverter.getConnectorBalance.call(connector1);
+            let currentConnectorBalance2 = await newConverter.getConnectorBalance.call(connector2);
+            assert.equal(initialConnectorBalance1.toFixed(), currentConnectorBalance1.toFixed());
+            assert.equal(initialConnectorBalance2.toFixed(), currentConnectorBalance2.toFixed());            
+        }
+    });
+
+    it('verifies that balances did not change if the process stopped due to gas limitation', async () => {
         let converter = await initConverter(accounts, true);
         let connector1 = await converter.connectorTokens.call(0);
         let connector2 = await converter.connectorTokens.call(1);
         let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
         let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
-        await converter.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"));
-        let newConverterAddress = upgradeRes.logs[4].args._newConverter;
-        let contract = web3.eth.contract(converterAbi);
-        let newConverter = contract.at(newConverterAddress);
-        let currentConnectorBalance1 = await newConverter.getConnectorBalance.call(connector1);
-        let currentConnectorBalance2 = await newConverter.getConnectorBalance.call(connector2);
-        assert.equal(initialConnectorBalance1.toFixed(), currentConnectorBalance1.toFixed());
-        assert.equal(initialConnectorBalance2.toFixed(), currentConnectorBalance2.toFixed());
-    });
-
-    it('verifies that balances did not changed if the process stopped due to gas limitation', async () => {
-        let converter = await initConverter(accounts, true);
-        let connector1 = await converter.connectorTokens.call(0);
-        let connector2 = await converter.connectorTokens.call(1);
-        let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
-        let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
-        await converter.transferOwnership(converterUpgrader.address);
+        
         try {
-            await converterUpgrader.upgrade(converter.address, web3.fromUtf8("0.7"), { gas: 2000000 });
+            await converter.upgrade({ gas: 2000000 });
             assert.fail('Expected throw not received');
         }
         catch (error) {
@@ -316,9 +311,8 @@ contract('BancorConverterUpgrader', accounts => {
         }
     });
 
-    it('verifies that the upgrade process of non active converter success', async () => {
+    it('verifies upgrade of a non active converter', async () => {
         let token1 = await SmartToken.new('Token1', 'TKN1', 18);
-        let formula = await BancorFormula.new();
         let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
         let connectorTokenAddress = connectorToken.address;
         let connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
@@ -328,14 +322,9 @@ contract('BancorConverterUpgrader', accounts => {
         await connectorToken.transfer(converter1.address, 5000);
         await connectorToken2.transfer(converter1.address, 8000);
         await token1.issue(accounts[0], 20000);
-        let currentOwner = await converter1.owner.call();
         let currentMaxConversionFee = await converter1.maxConversionFee.call();
-        await converter1.transferOwnership(converterUpgrader.address);
-        let upgradeRes = await converterUpgrader.upgrade(converter1.address, 7);
-        await converter1.acceptOwnership();
-        let newConverterAddress = upgradeRes.logs[3].args._newConverter;
-        let contract = web3.eth.contract(converterAbi);
-        let newConverter = contract.at(newConverterAddress);
+        await converter1.upgrade();
+        let newConverter = await getNewConverter();
         let newConverterConnectorTokenCount = await newConverter.connectorTokenCount.call();
         assert.equal(newConverterConnectorTokenCount.toFixed(), 2);
         let newMaxConversionFee = await newConverter.maxConversionFee.call();
@@ -346,3 +335,18 @@ contract('BancorConverterUpgrader', accounts => {
         assert.equal(currentConnectorBalance2.toFixed(), 8000);
     });
 });
+
+
+function loadDataFiles(rootPath, container) {
+    Object.keys(container).forEach(item => {
+        loadContractDataFile(rootPath, container, item, 'abi')
+        loadContractDataFile(rootPath, container, item, 'bin')
+    });
+}
+
+function loadContractDataFile(rootPath, container, key, type) {
+    const filepath = path.resolve(rootPath, `${container[key].filename}.${type}`);
+    const content = fs.readFileSync(filepath, 'utf8')
+
+    container[key][type] = (type == 'abi') ? JSON.parse(content) : content;
+}
