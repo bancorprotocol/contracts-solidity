@@ -349,7 +349,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @param _from      address to claim the BNT from
         @param _amount    the amount to claim
      */
-    function claimTokens(address _from, uint256 _amount) public whenClaimTokensEnabled {
+    function lockTokens(address _from, uint256 _amount) public whenClaimTokensEnabled {
         address bancorX = registry.addressOf(ContractIds.BANCOR_X);
 
         // only the bancorX contract may call this method
@@ -357,7 +357,15 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // destroy the tokens belonging to _from, and issue the same amount to bancorX contract
         token.destroy(_from, _amount);
-        token.issue(bancorX, _amount);
+    }
+
+    function claimTokens(address _to, uint256 _amount) public {
+        address bancorX = registry.addressOf(ContractIds.BANCOR_X);
+
+        // only the bancorX contract may call this method
+        require(msg.sender == bancorX);
+        
+        token.issue(_to, _amount);
     }
 
     /**

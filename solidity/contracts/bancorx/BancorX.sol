@@ -31,6 +31,21 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         bool completed;
     }
 
+    struct Deposit {
+        address sender;
+        bytes32 _toBlockchain;
+        bytes32 _to;
+        uint256 _amount;
+        uint256 expiration;
+        DepositStatus status;
+    }
+
+    enum DepositStatus {
+        DEFAULT,
+        DEPOSITED,
+        RELEASED
+    }
+
     uint16 public version = 1;
 
     uint256 public maxLockLimit;            // the maximum amount of BNT that can be locked in one transaction
@@ -54,6 +69,9 @@ contract BancorX is Owned, TokenHolder, ContractIds {
 
     // txId -> Transaction
     mapping (uint256 => Transaction) public transactions;
+
+    // hashLock -> Deposit
+    mapping (bytes32 => Deposit) public deposits;
 
     // txId -> reporter -> true if reporter already reported txId
     mapping (uint256 => mapping (address => bool)) public reportedTxs;
@@ -291,20 +309,46 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         @param _to              address to send the BNT to
         @param _amount          the amount to transfer
      */
-    function xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount) public whenXTransfersEnabled {
+    function xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount, bytes32 hashLock) public whenXTransfersEnabled {
         // get the current lock limit
-        uint256 currentLockLimit = getCurrentLockLimit();
+        // uint256 currentLockLimit = getCurrentLockLimit();
 
         // require that; minLimit <= _amount <= currentLockLimit
-        require(_amount >= minLimit && _amount <= currentLockLimit);
+        // require(_amount >= minLimit && _amount <= currentLockLimit);
+        require(_amount >= minLimit);
         
-        lockTokens(_amount);
+        Deposit storage dpst = deposits[hashLock];
+        dpst.status = DepositStatus.DEPOSITED;
+        dpst.sender = msg.sender;
+        dpst._toBlockchain = _toBlockchain;
+        dpst._to = _to;
+        dpst._amount = _amount;
+        dpst.expiration = now + 75 minutes;
 
-        // set the previous lock limit and block number
-        prevLockLimit = currentLockLimit.sub(_amount);
-        prevLockBlockNumber = block.number;
-
+        lockTokens(deposits[hashLock]._amount);
+        
         emit XTransfer(msg.sender, _toBlockchain, _to, _amount);
+    }
+
+
+    function claimXTransfer(bytes32 hashLockSourceMsg) public {
+        bytes32 hashLock = sha256(abi.encodePacked(hashLockSourceMsg));
+
+        require(deposits[hashLock].status == DepositStatus.DEPOSITED);
+
+        deposits[hashLock].status = DepositStatus.RELEASED;
+
+        if (now <= deposits[hashLock].expiration) {
+            
+            // set the previous lock limit and block number
+            // prevLockLimit = currentLockLimit.sub(deposits[hashLock]._amount);
+            // prevLockBlockNumber = block.number;
+
+            bntConverter.claimTokens(this, deposits[hashLock]._amount);
+        }
+        else {
+            bntConverter.claimTokens(deposits[hashLock].sender, deposits[hashLock]._amount);
+        }
     }
 
     /**
@@ -392,7 +436,7 @@ contract BancorX is Owned, TokenHolder, ContractIds {
      */
     function lockTokens(uint256 _amount) private {
         // lock the BNT from msg.sender in this contract
-        bntConverter.claimTokens(msg.sender, _amount);
+        bntConverter.lockTokens(msg.sender, _amount);
 
         emit TokensLock(msg.sender, _amount);
     }
