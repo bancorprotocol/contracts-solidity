@@ -331,7 +331,7 @@ contract BancorX is Owned, TokenHolder, ContractIds {
     }
 
 
-    function claimXTransfer(bytes32 hashLockSourceMsg) public {
+    function claimXTransfer(string hashLockSourceMsg) public {
         bytes32 hashLock = sha256(abi.encodePacked(hashLockSourceMsg));
 
         require(deposits[hashLock].status == DepositStatus.DEPOSITED);

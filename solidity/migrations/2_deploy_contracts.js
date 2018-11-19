@@ -31,6 +31,7 @@ module.exports = async function(deployer, network, accounts) {
         deployer.deploy(ERC20Token, 'DummyToken', 'DUM', 0);
         deployer.deploy(EtherToken);
         await deployer.deploy(ContractRegistry);
+        await deployer.deploy(BancorX, 200000000000000, 2000000000000000, 1, 10000000, 2, ContractRegistry.address);
         deployer.deploy(ContractFeatures);
         deployer.deploy(Whitelist);
         await deployer.deploy(SmartToken, 'Token1', 'TKN1', 2);
