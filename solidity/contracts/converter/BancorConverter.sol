@@ -61,7 +61,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
                                                         // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public conversionFee = 0;                    // current conversion fee, represented in ppm, 0...maxConversionFee
     bool public conversionsEnabled = true;              // true if token conversions is enabled, false if not
-    IERC20Token[] private convertPath;
 
     // triggered when a conversion between two tokens occurs
     event Conversion(
@@ -638,8 +637,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @return conversion return amount
     */
     function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        convertPath = [_fromToken, token, _toToken];
-        return quickConvert(convertPath, _amount, _minReturn);
+        IERC20Token[] memory path = new IERC20Token[](3);
+        (path[0], path[1], path[2]) = (_fromToken, token, _toToken);
+        return quickConvert(path, _amount, _minReturn);
     }
 
     /**
