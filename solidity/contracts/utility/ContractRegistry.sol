@@ -19,7 +19,6 @@ contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     struct RegistryItem {
         address contractAddress;    // contract address
         uint256 nameIndex;          // index of the item in the list of contract names
-        bool isSet;                 // used to tell if the mapping element is defined
     }
 
     mapping (bytes32 => RegistryItem) private items;    // name -> RegistryItem mapping
@@ -68,17 +67,15 @@ contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     {
         require(_contractName.length > 0); // validate input
 
-        // update the address in the registry
-        items[_contractName].contractAddress = _contractAddress;
-
-        if (!items[_contractName].isSet) {
-            // mark the item as set
-            items[_contractName].isSet = true;
+        if (items[_contractName].contractAddress == address(0)) {
             // add the contract name to the name list
             uint256 i = contractNames.push(bytes32ToString(_contractName));
             // update the item's index in the list
             items[_contractName].nameIndex = i - 1;
         }
+
+        // update the address in the registry
+        items[_contractName].contractAddress = _contractAddress;
 
         // dispatch the address update event
         emit AddressUpdate(_contractName, _contractAddress);
@@ -91,6 +88,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     */
     function unregisterAddress(bytes32 _contractName) public ownerOnly {
         require(_contractName.length > 0); // validate input
+        require(items[_contractName].contractAddress != address(0));
 
         // remove the address from the registry
         items[_contractName].contractAddress = address(0);
