@@ -96,4 +96,34 @@ contract('ContractRegistry', accounts => {
         name = await contractRegistry.contractNames.call(2);
         assert.equal(name, contractName2);
     });
+
+    it('verifies that a registry item can be unregistered and reregistered properly', async () => {
+        let contractRegistry = await ContractRegistry.new();
+        
+        await contractRegistry.registerAddress(contractName1, accounts[1]);
+        await contractRegistry.registerAddress(contractName2, accounts[2]);
+
+        await contractRegistry.unregisterAddress(contractName1);
+        await contractRegistry.registerAddress(contractName1, accounts[1]);
+
+        // contractName2 is in first index after unregister and reregister
+        let cn2 = await contractRegistry.contractNames.call(1);
+        let cn1 = await contractRegistry.contractNames.call(2);
+
+        assert.equal(cn1, contractName1);
+        assert.equal(cn2, contractName2);
+    });
+
+    it('should throw when unregistering non registered address', async () => {
+        let contractRegistry = await ContractRegistry.new();
+
+        await contractRegistry.registerAddress(contractName1, accounts[1]);
+        try {
+            await contractRegistry.unregisterAddress(contractName2);
+            assert(false, "didn't throw");
+        }
+        catch (error) {
+            return utils.ensureException(error);
+        }
+    });
 });
