@@ -12,6 +12,7 @@ import './utility/interfaces/IContractFeatures.sol';
 import './utility/interfaces/IWhitelist.sol';
 import './token/interfaces/IEtherToken.sol';
 import './token/interfaces/ISmartToken.sol';
+import './bancorx/interfaces/IBancorX.sol';
 
 /*
     The BancorNetwork contract is the main entry point for bancor token conversions.
@@ -131,6 +132,37 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
+        @dev
+
+    */
+    function validateXConversion(IERC20Token[] _path, uint256 _amount, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) private {
+        require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
+
+        // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
+        IERC20Token fromToken = _path[0];
+        require(msg.value == 0 || (_amount == msg.value && etherTokens[fromToken]));
+
+        // require that the dest token is BNT
+        require(_path[_path.length - 1] == registry.addressOf(ContractIds.BNT_TOKEN));
+
+        // if ETH was sent with the call, the source is an ether token - deposit the ETH in it
+        // otherwise, we claim the tokens from the sender
+        if (msg.value > 0) {
+            IEtherToken(fromToken).deposit.value(msg.value)();
+        } else {
+            assert(fromToken.transferFrom(msg.sender, this, _amount));
+        }
+
+        // verify gas price limit
+        if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
+            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
+            gasPriceLimit.validateGasPrice(tx.gasprice);
+        } else {
+            require(verifyTrustedSender(_path, _amount, _block, this, _v, _r, _s));
+        }
+    }
+
+    /**
         @dev converts the token to any other token in the bancor network by following
         a predefined conversion path and transfers the result tokens to a target account
         note that the converter should already own the source tokens
@@ -177,6 +209,33 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             IEtherToken(fromToken).deposit.value(msg.value)();
 
         return convertForInternal(_path, _amount, _minReturn, _for, _block, _v, _r, _s);
+    }
+
+    /**
+        @dev
+    */
+    function xConvert(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        bytes32 _toBlockchain,
+        bytes32 _to,
+        uint256 _conversionId,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        public
+        payable
+    {
+        // do a lot of validation and transfers in separate function to work around 16 variable limit
+        validateXConversion(_path, _amount, _block, _v, _r, _s);
+
+        //
+        (, uint256 retAmount) = convertByPath(_path, _amount, _minReturn, _path[0], this);
+
+        IBancorX(registry.addressOf(ContractIds.BANCOR_X)).xTransfer(_toBlockchain, _to, retAmount, _conversionId);
     }
 
     /**
