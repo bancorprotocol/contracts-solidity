@@ -111,8 +111,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return true if the signer is verified
     */
-    function verifyTrustedSender(IERC20Token[] _path, uint256 _amount, uint256 _block, address _addr, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
-        bytes32 hash = keccak256(_block, tx.gasprice, _addr, msg.sender, _amount, _path);
+    function verifyTrustedSender(IERC20Token[] _path, uint256 _customVal, uint256 _block, address _addr, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
+        bytes32 hash = keccak256(_block, tx.gasprice, _addr, msg.sender, _customVal, _path);
 
         // checking that it is the first conversion with the given signature
         // and that the current block number doesn't exceeded the maximum block
@@ -213,6 +213,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
     /**
         @dev
+
+        @param _path
+        @param _amount
+        @param _minReturn
+        @param _toBlockchain
+        @param _to
+        @param _conversionId
+        @param _block
+        @param _v
+        @param _r
+        @param _s
     */
     function xConvert(
         IERC20Token[] _path,
@@ -236,6 +247,59 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         (, uint256 retAmount) = convertByPath(_path, _amount, _minReturn, _path[0], this);
 
         IBancorX(registry.addressOf(ContractIds.BANCOR_X)).xTransfer(_toBlockchain, _to, retAmount, _conversionId);
+    }
+
+    /**
+        @dev
+
+    */
+    function completeConversion(
+        IERC20Token[] _path,
+        uint256 _minReturn,
+        uint256 _conversionId,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        public
+        validConversionPath(_path)
+        returns (uint256)
+    {
+        IBancorX bancorX = IBancorX(registry.addressOf(ContractIds.BANCOR_X));
+        IBancorConverter bntConverter = IBancorConverter(registry.addressOf(ContractIds.BNT_CONVERTER));
+
+        // get conversion details from bancor x contract
+        (uint256 amount, address to, bool completed) = bancorX.getConversion(_conversionId);
+
+        // verify gas price limit
+        if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
+            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
+            gasPriceLimit.validateGasPrice(tx.gasprice);
+        }
+        else {
+            require(verifyTrustedSender(_path, _conversionId, _block, to, _v, _r, _s));
+        }
+        
+        // verify that conversion hasn't been completed and the caller is the receiver
+        require(!completed && msg.sender == to);
+
+        // verify that the first token in the path is BNT (so many checks.........)
+        require(_path[0] == registry.addressOf(ContractIds.BNT_TOKEN));
+
+        // claim the bnt from the caller
+        bntConverter.claimTokens(msg.sender, amount);
+
+        // do the conversion (we should probably verify the minReturn here...)
+        (IERC20Token toToken, uint256 retAmount) = convertByPath(_path, amount, _minReturn, _path[0], this);
+
+        // send final tokens to the caller
+        toToken.transfer(to, retAmount);
+
+        // mark conversion as completed in bancor x contract
+        bancorX.markCompletedConversion(_conversionId);
+
+        return retAmount;
     }
 
     /**

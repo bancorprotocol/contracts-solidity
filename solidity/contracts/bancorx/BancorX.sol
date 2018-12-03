@@ -31,7 +31,14 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         bool completed;
     }
 
-    uint16 public version = 1;
+    // represents uncompleted conversion that started on another blockchain
+    struct UncompletedConversion {
+        uint256 amount;
+        address to;
+        bool completed;
+    }
+
+    uint16 public version = 2;
 
     uint256 public maxLockLimit;            // the maximum amount of BNT that can be locked in one transaction
     uint256 public maxReleaseLimit;         // the maximum amount of BNT that can be released in one transaction
@@ -54,6 +61,9 @@ contract BancorX is Owned, TokenHolder, ContractIds {
 
     // txId -> Transaction
     mapping (uint256 => Transaction) public transactions;
+
+    // conversionId -> UncompletedTx
+    mapping (uint256 => UncompletedConversion) public uncompletedConversions;
 
     // txId -> reporter -> true if reporter already reported txId
     mapping (uint256 => mapping (address => bool)) public reportedTxs;
@@ -78,7 +88,8 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         address indexed _from,
         bytes32 _toBlockchain,
         bytes32 indexed _to,
-        uint256 _amount
+        uint256 _amount,
+        uint256 _conversionId
     );
 
     // triggered when report is successfully submitted
@@ -304,7 +315,33 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         prevLockLimit = currentLockLimit.sub(_amount);
         prevLockBlockNumber = block.number;
 
-        emit XTransfer(msg.sender, _toBlockchain, _to, _amount);
+        // emit XTransfer event with conversionId of 0
+        emit XTransfer(msg.sender, _toBlockchain, _to, _amount, 0);
+    }
+
+    /**
+        @dev claims BNT from msg.sender to be converted to BNT on another blockchain
+
+        @param _toBlockchain    blockchain BNT will be issued on
+        @param _to              address to send the BNT to
+        @param _amount          the amount to transfer
+        @param _conversionId
+     */
+    function xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount, uint256 _conversionId) public whenXTransfersEnabled {
+        // get the current lock limit
+        uint256 currentLockLimit = getCurrentLockLimit();
+
+        // require that; minLimit <= _amount <= currentLockLimit
+        require(_amount >= minLimit && _amount <= currentLockLimit);
+        
+        lockTokens(_amount);
+
+        // set the previous lock limit and block number
+        prevLockLimit = currentLockLimit.sub(_amount);
+        prevLockBlockNumber = block.number;
+
+        // emit XTransfer event
+        emit XTransfer(msg.sender, _toBlockchain, _to, _amount, _conversionId);
     }
 
     /**
@@ -357,6 +394,82 @@ contract BancorX is Owned, TokenHolder, ContractIds {
 
             releaseTokens(_to, _amount);
         }
+    }
+
+    /**
+        @dev allows reporter to report transaction which occured on another blockchain
+
+        @param _fromBlockchain  blockchain BNT was destroyed in
+        @param _txId            transactionId of transaction thats being reported
+        @param _to              address to receive BNT
+        @param _amount          amount of BNT destroyed on another blockchain
+        @param _conversionId
+     */
+    function reportTx(
+        bytes32 _fromBlockchain,
+        uint256 _txId,
+        address _to,
+        uint256 _amount,
+        uint256 _conversionId   
+    )
+        public
+        isReporter
+        whenReportingEnabled
+    {
+        // require that the transaction has not been reported yet by the reporter
+        require(!reportedTxs[_txId][msg.sender]);
+
+        // set reported as true
+        reportedTxs[_txId][msg.sender] = true;
+
+        Transaction storage txn = transactions[_txId];
+
+        // If the caller is the first reporter, set the transaction details
+        if (txn.numOfReports == 0) {
+            txn.to = _to;
+            txn.amount = _amount;
+            txn.fromBlockchain = _fromBlockchain;
+        } else {
+            // otherwise, verify transaction details
+            require(txn.to == _to && txn.amount == _amount && txn.fromBlockchain == _fromBlockchain);
+        }
+        
+        // increment the number of reports
+        txn.numOfReports++;
+
+        emit TxReport(msg.sender, _fromBlockchain, _txId, _to, _amount);
+
+        // if theres enough reports, try to release tokens
+        if (txn.numOfReports >= minRequiredReports) {
+            require(!transactions[_txId].completed);
+
+            // set the transaction as completed
+            transactions[_txId].completed = true;
+
+            releaseTokens(_to, _amount);
+
+            if (_conversionId != 0) {
+                uncompletedConversions[_conversionId] = UncompletedConversion(_amount, _to, false);
+            }
+        }
+    }
+
+    /**
+        @dev
+    */
+    function markCompletedConversion(uint256 _conversionId) public {
+        // only bancor network can mark uncompleted tx as completed
+        require(msg.sender == registry.addressOf(ContractIds.BANCOR_NETWORK));
+
+        uncompletedConversions[_conversionId].completed = true;
+    }
+
+    /**
+        @dev
+    */
+    function getConversion(uint256 _conversionId) public view returns (uint256, address, bool) {
+        UncompletedConversion memory conversion = uncompletedConversions[_conversionId];
+        return (conversion.amount, conversion.to, conversion.completed);
     }
 
     /**

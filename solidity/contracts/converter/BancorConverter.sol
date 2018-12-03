@@ -343,21 +343,22 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-        @dev allows the BancorX contract to claim BNT from any address (so that users
-        dont have to first give allowance when calling BancorX)
+        @dev allows the BancorX/network contract to claim BNT from any address (so that users
+        dont have to first give allowance when calling BancorX/network)
 
         @param _from      address to claim the BNT from
         @param _amount    the amount to claim
      */
     function claimTokens(address _from, uint256 _amount) public whenClaimTokensEnabled {
         address bancorX = registry.addressOf(ContractIds.BANCOR_X);
+        address bancorNetwork = registry.addressOf(ContractIds.BANCOR_NETWORK);
 
-        // only the bancorX contract may call this method
-        require(msg.sender == bancorX);
+        // only the bancorX/network contract may call this method
+        require(msg.sender == bancorX || msg.sender == bancorNetwork);
 
-        // destroy the tokens belonging to _from, and issue the same amount to bancorX contract
+        // destroy the tokens belonging to _from, and issue the same amount to bancorX/network contract
         token.destroy(_from, _amount);
-        token.issue(bancorX, _amount);
+        token.issue(msg.sender, _amount);
     }
 
     /**
