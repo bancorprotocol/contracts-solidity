@@ -253,9 +253,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @dev
 
     */
-    function completeConversion(
+    function completeXConversion(
         IERC20Token[] _path,
+        uint256 _amount,
         uint256 _minReturn,
+        address _for,
         uint256 _conversionId,
         uint256 _block,
         uint8 _v,
@@ -266,38 +268,25 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         validConversionPath(_path)
         returns (uint256)
     {
-        IBancorX bancorX = IBancorX(registry.addressOf(ContractIds.BANCOR_X));
-        IBancorConverter bntConverter = IBancorConverter(registry.addressOf(ContractIds.BNT_CONVERTER));
-
-        // get conversion details from bancor x contract
-        (uint256 amount, address to, bool completed) = bancorX.getConversion(_conversionId);
-
         // verify gas price limit
         if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
             IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
             gasPriceLimit.validateGasPrice(tx.gasprice);
         }
         else {
-            require(verifyTrustedSender(_path, _conversionId, _block, to, _v, _r, _s));
+            require(verifyTrustedSender(_path, _conversionId, _block, _for, _v, _r, _s));
         }
         
-        // verify that conversion hasn't been completed and the caller is the receiver
-        require(!completed && msg.sender == to);
-
-        // verify that the first token in the path is BNT (so many checks.........)
-        require(_path[0] == registry.addressOf(ContractIds.BNT_TOKEN));
-
-        // claim the bnt from the caller
-        bntConverter.claimTokens(msg.sender, amount);
-
         // do the conversion (we should probably verify the minReturn here...)
-        (IERC20Token toToken, uint256 retAmount) = convertByPath(_path, amount, _minReturn, _path[0], this);
+        (IERC20Token toToken, uint256 retAmount) = convertByPath(_path, _amount, _minReturn, _path[0], _for);
 
-        // send final tokens to the caller
-        toToken.transfer(to, retAmount);
-
-        // mark conversion as completed in bancor x contract
-        bancorX.markCompletedConversion(_conversionId);
+        // finished the conversion, transfer the funds to the target account
+        // if the target token is an ether token, withdraw the tokens and send them as ETH
+        // otherwise, transfer the tokens as is
+        if (etherTokens[toToken])
+            IEtherToken(toToken).withdrawTo(_for, retAmount);
+        else
+            assert(toToken.transfer(_for, retAmount));
 
         return retAmount;
     }

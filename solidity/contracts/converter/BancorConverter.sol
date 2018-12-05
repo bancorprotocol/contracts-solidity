@@ -13,6 +13,7 @@ import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/IEtherToken.sol';
+import '../bancorx/interfaces/IBancorX.sol';
 
 /*
     Bancor Converter v0.11
@@ -343,20 +344,19 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-        @dev allows the BancorX/network contract to claim BNT from any address (so that users
-        dont have to first give allowance when calling BancorX/network)
+        @dev allows the BancorX contract to claim BNT from any address (so that users
+        dont have to first give allowance when calling BancorX)
 
         @param _from      address to claim the BNT from
         @param _amount    the amount to claim
      */
     function claimTokens(address _from, uint256 _amount) public whenClaimTokensEnabled {
         address bancorX = registry.addressOf(ContractIds.BANCOR_X);
-        address bancorNetwork = registry.addressOf(ContractIds.BANCOR_NETWORK);
 
-        // only the bancorX/network contract may call this method
-        require(msg.sender == bancorX || msg.sender == bancorNetwork);
+        // only the bancorX contract may call this method
+        require(msg.sender == bancorX);
 
-        // destroy the tokens belonging to _from, and issue the same amount to bancorX/network contract
+        // destroy the tokens belonging to _from, and issue the same amount to bancorX contract
         token.destroy(_from, _amount);
         token.issue(msg.sender, _amount);
     }
@@ -781,6 +781,46 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // execute the conversion and pass on the ETH with the call
         return bancorNetwork.convertForPrioritized2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _block, _v, _r, _s);
+    }
+
+    /**
+        @dev 
+        The parameters v, r, and s signed a message that includes:
+        _path, _conversionId, msg.sender (to), address(this), _block and tx.gasPrice
+        
+    */
+    function completeXConversion(
+        IERC20Token[] _path,
+        uint256 _minReturn,
+        uint256 _conversionId,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        public
+        returns (uint256)
+    {
+        IBancorX bancorX = IBancorX(registry.addressOf(ContractIds.BANCOR_X));
+        IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
+
+        // verify that the first token in the path is BNT (not sure if necessary, since bancor network would revert anyways)
+        require(_path[0] == address(token));
+
+        // get conversion details from bancor x contract
+        (uint256 amount, address to) = bancorX.getUncompletedConversion(_conversionId);
+
+        // verify that the caller is the receiver (the getUncompletedConversion method already checks the conversion isn't completed)
+        require(msg.sender == to);
+
+        // send BNT from msg.sender to the BancorNetwork contract
+        token.destroy(msg.sender, amount);
+        token.issue(bancorNetwork, amount);
+
+        // mark the conversion as completed and then do the conversion
+        bancorX.markConversionCompleted(_conversionId);
+
+        return bancorNetwork.completeXConversion(_path, amount, _minReturn, to, _conversionId, _block, _v, _r, _s);
     }
 
     /**

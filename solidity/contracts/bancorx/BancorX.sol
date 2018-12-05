@@ -1,6 +1,7 @@
 pragma solidity ^0.4.24;
 
 import './interfaces/IBancorXUpgrader.sol';
+import './interfaces/IBancorX.sol';
 import '../ContractIds.sol';
 import '../converter/interfaces/IBancorConverter.sol';
 import '../utility/interfaces/IContractRegistry.sol';
@@ -19,7 +20,7 @@ import '../token/interfaces/ISmartToken.sol';
     Reporting cross chain transfers works similar to standard multisig contracts, meaning that multiple
     callers are required to report a transfer before tokens are released to the target account.
 */
-contract BancorX is Owned, TokenHolder, ContractIds {
+contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     using SafeMath for uint256;
 
     // represents a transaction on another blockchain where BNT was destroyed/locked
@@ -32,7 +33,7 @@ contract BancorX is Owned, TokenHolder, ContractIds {
     }
 
     // represents uncompleted conversion that started on another blockchain
-    struct UncompletedConversion {
+    struct CrossConversion {
         uint256 amount;
         address to;
         bool completed;
@@ -63,7 +64,7 @@ contract BancorX is Owned, TokenHolder, ContractIds {
     mapping (uint256 => Transaction) public transactions;
 
     // conversionId -> UncompletedTx
-    mapping (uint256 => UncompletedConversion) public uncompletedConversions;
+    mapping (uint256 => CrossConversion) public crossConversions;
 
     // txId -> reporter -> true if reporter already reported txId
     mapping (uint256 => mapping (address => bool)) public reportedTxs;
@@ -98,7 +99,8 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         bytes32 _fromBlockchain,
         uint256 _txId,
         address _to,
-        uint256 _amount
+        uint256 _amount,
+        uint256 _conversionId
     );
 
     /**
@@ -155,6 +157,12 @@ contract BancorX is Owned, TokenHolder, ContractIds {
     // allows execution only when reporting is enabled
     modifier whenReportingEnabled {
         require(reportingEnabled);
+        _;
+    }
+
+    //
+    modifier bntConverterOnly {
+        require(msg.sender == address(bntConverter));
         _;
     }
 
@@ -351,58 +359,6 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         @param _txId            transactionId of transaction thats being reported
         @param _to              address to receive BNT
         @param _amount          amount of BNT destroyed on another blockchain
-     */
-    function reportTx(
-        bytes32 _fromBlockchain,
-        uint256 _txId,
-        address _to,
-        uint256 _amount    
-    )
-        public
-        isReporter
-        whenReportingEnabled
-    {
-        // require that the transaction has not been reported yet by the reporter
-        require(!reportedTxs[_txId][msg.sender]);
-
-        // set reported as true
-        reportedTxs[_txId][msg.sender] = true;
-
-        Transaction storage txn = transactions[_txId];
-
-        // If the caller is the first reporter, set the transaction details
-        if (txn.numOfReports == 0) {
-            txn.to = _to;
-            txn.amount = _amount;
-            txn.fromBlockchain = _fromBlockchain;
-        } else {
-            // otherwise, verify transaction details
-            require(txn.to == _to && txn.amount == _amount && txn.fromBlockchain == _fromBlockchain);
-        }
-        
-        // increment the number of reports
-        txn.numOfReports++;
-
-        emit TxReport(msg.sender, _fromBlockchain, _txId, _to, _amount);
-
-        // if theres enough reports, try to release tokens
-        if (txn.numOfReports >= minRequiredReports) {
-            require(!transactions[_txId].completed);
-
-            // set the transaction as completed
-            transactions[_txId].completed = true;
-
-            releaseTokens(_to, _amount);
-        }
-    }
-
-    /**
-        @dev allows reporter to report transaction which occured on another blockchain
-
-        @param _fromBlockchain  blockchain BNT was destroyed in
-        @param _txId            transactionId of transaction thats being reported
-        @param _to              address to receive BNT
-        @param _amount          amount of BNT destroyed on another blockchain
         @param _conversionId
      */
     function reportTx(
@@ -437,7 +393,7 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         // increment the number of reports
         txn.numOfReports++;
 
-        emit TxReport(msg.sender, _fromBlockchain, _txId, _to, _amount);
+        emit TxReport(msg.sender, _fromBlockchain, _txId, _to, _amount, _conversionId);
 
         // if theres enough reports, try to release tokens
         if (txn.numOfReports >= minRequiredReports) {
@@ -449,7 +405,9 @@ contract BancorX is Owned, TokenHolder, ContractIds {
             releaseTokens(_to, _amount);
 
             if (_conversionId != 0) {
-                uncompletedConversions[_conversionId] = UncompletedConversion(_amount, _to, false);
+                // verify uniqueness of conversion id to prevent overwriting (necessary??)
+                require(crossConversions[_conversionId].to == address(0));
+                crossConversions[_conversionId] = CrossConversion(_amount, _to, false);
             }
         }
     }
@@ -457,19 +415,19 @@ contract BancorX is Owned, TokenHolder, ContractIds {
     /**
         @dev
     */
-    function markCompletedConversion(uint256 _conversionId) public {
-        // only bancor network can mark uncompleted tx as completed
-        require(msg.sender == registry.addressOf(ContractIds.BANCOR_NETWORK));
-
-        uncompletedConversions[_conversionId].completed = true;
+    function markConversionCompleted(uint256 _conversionId) public bntConverterOnly {
+        crossConversions[_conversionId].completed = true;
     }
 
     /**
         @dev
     */
-    function getConversion(uint256 _conversionId) public view returns (uint256, address, bool) {
-        UncompletedConversion memory conversion = uncompletedConversions[_conversionId];
-        return (conversion.amount, conversion.to, conversion.completed);
+    function getUncompletedConversion(uint256 _conversionId) public view returns (uint256, address) {
+        CrossConversion memory conversion = crossConversions[_conversionId];
+        // rather than returning conversion.completed, we just require than conversion.completed is false
+        require(!conversion.completed);
+        
+        return (conversion.amount, conversion.to);
     }
 
     /**

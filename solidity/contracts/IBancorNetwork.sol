@@ -30,4 +30,17 @@ contract IBancorNetwork {
         bytes32 _r,
         bytes32 _s)
         public payable returns (uint256);
+
+    function completeXConversion(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _for,
+        uint256 _conversionId,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        public returns (uint256);
 }
