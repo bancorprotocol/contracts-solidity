@@ -735,7 +735,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function quickConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
         public
         payable
-        validConversionPath(_path)
         returns (uint256)
     {
         return quickConvertPrioritized(_path, _amount, _minReturn, 0x0, 0x0, 0x0, 0x0);
@@ -758,7 +757,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
         public
         payable
-        validConversionPath(_path)
         returns (uint256)
     {
         IERC20Token fromToken = _path[0];
@@ -780,7 +778,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         }
 
         // execute the conversion and pass on the ETH with the call
-        return bancorNetwork.convertForPrioritized2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _block, _v, _r, _s);
+        return bancorNetwork.convertForPrioritized3.value(msg.value)(_path, _amount, _minReturn, msg.sender, _amount, _block, _v, _r, _s);
     }
 
     /**
@@ -820,7 +818,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // mark the conversion as completed and then do the conversion
         bancorX.markConversionCompleted(_conversionId);
 
-        return bancorNetwork.completeXConversion(_path, amount, _minReturn, to, _conversionId, _block, _v, _r, _s);
+        return bancorNetwork.convertForPrioritized3(_path, amount, _minReturn, to, _conversionId, _block, _v, _r, _s);
     }
 
     /**
