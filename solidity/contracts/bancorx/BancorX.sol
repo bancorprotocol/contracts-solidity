@@ -333,7 +333,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @param _toBlockchain    blockchain BNT will be issued on
         @param _to              address to send the BNT to
         @param _amount          the amount to transfer
-        @param _conversionId
+        @param _conversionId    conversionId
      */
     function xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount, uint256 _conversionId) public whenXTransfersEnabled {
         // get the current lock limit
@@ -359,7 +359,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @param _txId            transactionId of transaction thats being reported
         @param _to              address to receive BNT
         @param _amount          amount of BNT destroyed on another blockchain
-        @param _conversionId
+        @param _conversionId    conversionId
      */
     function reportTx(
         bytes32 _fromBlockchain,
@@ -413,14 +413,20 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     }
 
     /**
-        @dev
+        @dev marks conversion as completed
+
+        @param _conversionId conversionId
     */
     function markConversionCompleted(uint256 _conversionId) public bntConverterOnly {
         crossConversions[_conversionId].completed = true;
     }
 
     /**
-        @dev
+        @dev gets uncompleted conversion details
+
+        @param _conversionId conversionId
+
+        @return amount and to
     */
     function getUncompletedConversion(uint256 _conversionId) public view returns (uint256, address) {
         CrossConversion memory conversion = crossConversions[_conversionId];

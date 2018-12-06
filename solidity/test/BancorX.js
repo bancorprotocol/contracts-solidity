@@ -148,6 +148,7 @@ contract('BancorX', async accounts => {
             randomTxId,
             accounts[0],
             amountToSend,
+            0,
             { from: accounts[1] }
         )
         try {
@@ -156,6 +157,7 @@ contract('BancorX', async accounts => {
                 randomTxId,
                 accounts[0],
                 amountToSend,
+                0,
                 { from: accounts[1] }
             )
             assert(false, "didn't throw")
@@ -173,6 +175,7 @@ contract('BancorX', async accounts => {
             randomTxId,
             accounts[0],
             amountToSend,
+            0,
             { from: accounts[1] }
         )
 
@@ -182,6 +185,7 @@ contract('BancorX', async accounts => {
                 randomTxId,
                 accounts[1],
                 amountToSend,
+                0,
                 { from: accounts[1] }
             )
             assert(false, "didn't throw")
@@ -219,6 +223,7 @@ contract('BancorX', async accounts => {
                 randomTxId,
                 accounts[0],
                 amountToSend,
+                0,
                 { from: accounts[4] } // not reporter
             )
         } catch(error) {
@@ -236,6 +241,7 @@ contract('BancorX', async accounts => {
                 randomTxId,
                 accounts[0],
                 amountToSend,
+                0,
                 { from: accounts[1] }
             )
             assert(false, "didn't throw")
@@ -273,6 +279,7 @@ contract('BancorX', async accounts => {
             randomTxId,
             accounts[0],
             amountToSend,
+            0,
             { from: accounts[1] }
         )
         // gas cost for being second reporter
@@ -281,6 +288,7 @@ contract('BancorX', async accounts => {
             randomTxId,
             accounts[0],
             amountToSend,
+            0,
             { from: accounts[2] }
         )
         // gas cost for being third reporter
@@ -289,6 +297,7 @@ contract('BancorX', async accounts => {
             randomTxId,
             accounts[0],
             amountToSend,
+            0,
             { from: accounts[3] }
         )
 
@@ -307,6 +316,7 @@ async function reportAndRelease(to, from, amount, txId, blockchainType) {
             txId,
             to,
             amount,
+            0,
             { from: defAccounts[i] }
         )
     }

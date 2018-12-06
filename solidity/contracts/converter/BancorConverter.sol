@@ -782,10 +782,18 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-        @dev 
-        The parameters v, r, and s signed a message that includes:
+        @dev The parameters v, r, and s signed a message that includes:
         _path, _conversionId, msg.sender (to), address(this), _block and tx.gasPrice
-        
+
+        @param _path path
+        @param _minReturn minReturn
+        @param _conversionId conversionId
+        @param _block block
+        @param _v v
+        @param _r r
+        @param _s s
+
+        @return return
     */
     function completeXConversion(
         IERC20Token[] _path,

@@ -132,8 +132,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev
+        @dev validates x conversion
 
+        @param _path path
+        @param _amount amount
+        @param _block block
+        @param _v v
+        @param _r r
+        @param _s s
     */
     function validateXConversion(IERC20Token[] _path, uint256 _amount, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) private {
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
@@ -190,6 +196,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _for         account that will receive the conversion result
+        @param _customVal customVal
+        @param _block block
+        @param _v v
+        @param _r r
+        @param _s s
 
         @return tokens issued in return
     */
@@ -221,18 +232,18 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev
+        @dev converts to BNT and calls xTransfer
 
-        @param _path
-        @param _amount
-        @param _minReturn
-        @param _toBlockchain
-        @param _to
-        @param _conversionId
-        @param _block
-        @param _v
-        @param _r
-        @param _s
+        @param _path path
+        @param _amount amount
+        @param _minReturn minReturn
+        @param _toBlockchain toBlockchain
+        @param _to to
+        @param _conversionId conversionId
+        @param _block block
+        @param _v v
+        @param _r r
+        @param _s s
     */
     function xConvert(
         IERC20Token[] _path,
