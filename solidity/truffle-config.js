@@ -10,32 +10,32 @@ if ( process.argv[2] == 'migrate' ) {
   var address = "0x" + wallet.getAddress().toString("hex");
   var engine = new ProviderEngine();
   engine.addProvider(new WalletSubprovider(wallet, {}));
-  engine.addProvider(new RpcSubprovider({rpcUrl: "https://vicious-spider-50320.getho.io/jsonrpc"}));
+  engine.addProvider(new RpcSubprovider({rpcUrl: process.env.ETH_NODE_URL}));
   engine.start(); // Required by the provider engine.
 
   module.exports = {
     networks: {
       development: {
         network_id: 1010,
-        gas: 4712388,
+        gas: 7000000,
         provider: engine,
         from: address
       },
       staging: {
         network_id: 1010,
-        gas: 4712388,
+        gas: 7000000,
         provider: engine,
         from: address
       },
       beta: {
         network_id: 1010,
-        gas: 4712388,
+        gas: 7000000,
         provider: engine,
         from: address
       },
       beta2: {
         network_id: 1010,
-        gas: 4712388,
+        gas: 7000000,
         provider: engine,
         from: address
       }
