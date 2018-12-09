@@ -783,11 +783,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     /**
         @dev The parameters v, r, and s signed a message that includes:
-        _path, _conversionId, msg.sender (to), address(this), _block and tx.gasPrice
+        _path, _xTransferId, msg.sender (to), address(this), _block and tx.gasPrice
 
         @param _path path
         @param _minReturn minReturn
-        @param _conversionId conversionId
+        @param _xTransferId xTransferId
         @param _block block
         @param _v v
         @param _r r
@@ -798,7 +798,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function completeXConversion(
         IERC20Token[] _path,
         uint256 _minReturn,
-        uint256 _conversionId,
+        uint256 _xTransferId,
         uint256 _block,
         uint8 _v,
         bytes32 _r,
@@ -814,13 +814,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         require(_path[0] == address(token));
 
         // get conversion amount from bancor x contract
-        uint256 amount = bancorX.getXTransferAmount(_conversionId);
+        uint256 amount = bancorX.getXTransferAmount(_xTransferId);
 
         // send BNT from msg.sender to the BancorNetwork contract
         token.destroy(msg.sender, amount);
         token.issue(bancorNetwork, amount);
 
-        return bancorNetwork.convertForPrioritized3(_path, amount, _minReturn, msg.sender, _conversionId, _block, _v, _r, _s);
+        return bancorNetwork.convertForPrioritized3(_path, amount, _minReturn, msg.sender, _xTransferId, _block, _v, _r, _s);
     }
 
     /**

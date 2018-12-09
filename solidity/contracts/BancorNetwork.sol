@@ -239,7 +239,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _minReturn minReturn
         @param _toBlockchain toBlockchain
         @param _to to
-        @param _conversionId conversionId
+        @param _xTransferId xTransferId
         @param _block block
         @param _v v
         @param _r r
@@ -251,7 +251,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint256 _minReturn,
         bytes32 _toBlockchain,
         bytes32 _to,
-        uint256 _conversionId,
+        uint256 _xTransferId,
         uint256 _block,
         uint8 _v,
         bytes32 _r,
@@ -259,6 +259,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     )
         public
         payable
+        returns (uint256)
     {
         // do a lot of validation and transfers in separate function to work around 16 variable limit
         validateXConversion(_path, _amount, _block, _v, _r, _s);
@@ -266,7 +267,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         //
         (, uint256 retAmount) = convertByPath(_path, _amount, _minReturn, _path[0], this);
 
-        IBancorX(registry.addressOf(ContractIds.BANCOR_X)).xTransfer(_toBlockchain, _to, retAmount, _conversionId);
+        IBancorX(registry.addressOf(ContractIds.BANCOR_X)).xTransfer(_toBlockchain, _to, retAmount, _xTransferId);
+
+        return retAmount;
     }
 
     /**
