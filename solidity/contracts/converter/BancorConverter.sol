@@ -813,20 +813,14 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // verify that the first token in the path is BNT (not sure if necessary, since bancor network would revert anyways)
         require(_path[0] == address(token));
 
-        // get conversion details from bancor x contract
-        (uint256 amount, address to) = bancorX.getUncompletedConversion(_conversionId);
-
-        // verify that the caller is the receiver (the getUncompletedConversion method already checks the conversion isn't completed)
-        require(msg.sender == to);
+        // get conversion amount from bancor x contract
+        uint256 amount = bancorX.getXTransferAmount(_conversionId);
 
         // send BNT from msg.sender to the BancorNetwork contract
         token.destroy(msg.sender, amount);
         token.issue(bancorNetwork, amount);
 
-        // mark the conversion as completed and then do the conversion
-        bancorX.markConversionCompleted(_conversionId);
-
-        return bancorNetwork.convertForPrioritized3(_path, amount, _minReturn, to, _conversionId, _block, _v, _r, _s);
+        return bancorNetwork.convertForPrioritized3(_path, amount, _minReturn, msg.sender, _conversionId, _block, _v, _r, _s);
     }
 
     /**

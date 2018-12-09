@@ -32,13 +32,6 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         bool completed;
     }
 
-    // represents uncompleted conversion that started on another blockchain
-    struct CrossConversion {
-        uint256 amount;
-        address to;
-        bool completed;
-    }
-
     uint16 public version = 2;
 
     uint256 public maxLockLimit;            // the maximum amount of BNT that can be locked in one transaction
@@ -63,8 +56,8 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     // txId -> Transaction
     mapping (uint256 => Transaction) public transactions;
 
-    // conversionId -> UncompletedTx
-    mapping (uint256 => CrossConversion) public crossConversions;
+    // xTransferId -> txId
+    mapping (uint256 => uint256) public transactionIds;
 
     // txId -> reporter -> true if reporter already reported txId
     mapping (uint256 => mapping (address => bool)) public reportedTxs;
@@ -90,7 +83,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         bytes32 _toBlockchain,
         bytes32 indexed _to,
         uint256 _amount,
-        uint256 _conversionId
+        uint256 _id
     );
 
     // triggered when report is successfully submitted
@@ -100,7 +93,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         uint256 _txId,
         address _to,
         uint256 _amount,
-        uint256 _conversionId
+        uint256 _xTransferId
     );
 
     /**
@@ -157,12 +150,6 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     // allows execution only when reporting is enabled
     modifier whenReportingEnabled {
         require(reportingEnabled);
-        _;
-    }
-
-    //
-    modifier bntConverterOnly {
-        require(msg.sender == address(bntConverter));
         _;
     }
 
@@ -323,7 +310,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         prevLockLimit = currentLockLimit.sub(_amount);
         prevLockBlockNumber = block.number;
 
-        // emit XTransfer event with conversionId of 0
+        // emit XTransfer event with id of 0
         emit XTransfer(msg.sender, _toBlockchain, _to, _amount, 0);
     }
 
@@ -333,9 +320,9 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @param _toBlockchain    blockchain BNT will be issued on
         @param _to              address to send the BNT to
         @param _amount          the amount to transfer
-        @param _conversionId    conversionId
+        @param _id              id
      */
-    function xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount, uint256 _conversionId) public whenXTransfersEnabled {
+    function xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount, uint256 _id) public whenXTransfersEnabled {
         // get the current lock limit
         uint256 currentLockLimit = getCurrentLockLimit();
 
@@ -349,7 +336,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         prevLockBlockNumber = block.number;
 
         // emit XTransfer event
-        emit XTransfer(msg.sender, _toBlockchain, _to, _amount, _conversionId);
+        emit XTransfer(msg.sender, _toBlockchain, _to, _amount, _id);
     }
 
     /**
@@ -359,14 +346,14 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @param _txId            transactionId of transaction thats being reported
         @param _to              address to receive BNT
         @param _amount          amount of BNT destroyed on another blockchain
-        @param _conversionId    conversionId
+        @param _xTransferId    conversionId
      */
     function reportTx(
         bytes32 _fromBlockchain,
         uint256 _txId,
         address _to,
         uint256 _amount,
-        uint256 _conversionId   
+        uint256 _xTransferId 
     )
         public
         isReporter
@@ -393,7 +380,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         // increment the number of reports
         txn.numOfReports++;
 
-        emit TxReport(msg.sender, _fromBlockchain, _txId, _to, _amount, _conversionId);
+        emit TxReport(msg.sender, _fromBlockchain, _txId, _to, _amount, _xTransferId);
 
         // if theres enough reports, try to release tokens
         if (txn.numOfReports >= minRequiredReports) {
@@ -404,36 +391,26 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
 
             releaseTokens(_to, _amount);
 
-            if (_conversionId != 0) {
+            if (_xTransferId != 0) {
                 // verify uniqueness of conversion id to prevent overwriting (necessary??)
-                require(crossConversions[_conversionId].to == address(0));
-                crossConversions[_conversionId] = CrossConversion(_amount, _to, false);
+                require(transactionIds[_xTransferId] == 0);
+                transactionIds[_xTransferId] = _txId;
             }
         }
     }
 
     /**
-        @dev marks conversion as completed
+        @dev gets x transfer amount by xTransferId (not txId)
 
-        @param _conversionId conversionId
+        @param _xTransferId conversionId
+
+        @return amount
     */
-    function markConversionCompleted(uint256 _conversionId) public bntConverterOnly {
-        crossConversions[_conversionId].completed = true;
-    }
-
-    /**
-        @dev gets uncompleted conversion details
-
-        @param _conversionId conversionId
-
-        @return amount and to
-    */
-    function getUncompletedConversion(uint256 _conversionId) public view returns (uint256, address) {
-        CrossConversion memory conversion = crossConversions[_conversionId];
-        // rather than returning conversion.completed, we just require than conversion.completed is false
-        require(!conversion.completed);
+    function getXTransferAmount(uint256 _xTransferId) public view returns (uint256) {
+        // xTransferId -> txId -> Transaction
+        Transaction memory transaction = transactions[transactionIds[_xTransferId]];
         
-        return (conversion.amount, conversion.to);
+        return transaction.amount;
     }
 
     /**
