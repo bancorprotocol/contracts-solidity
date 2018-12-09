@@ -346,7 +346,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @param _txId            transactionId of transaction thats being reported
         @param _to              address to receive BNT
         @param _amount          amount of BNT destroyed on another blockchain
-        @param _xTransferId    conversionId
+        @param _xTransferId    xTransferId
      */
     function reportTx(
         bytes32 _fromBlockchain,
@@ -372,9 +372,19 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
             txn.to = _to;
             txn.amount = _amount;
             txn.fromBlockchain = _fromBlockchain;
+
+            if (_xTransferId != 0) {
+                // verify uniqueness of xTransfer id to prevent overwriting (necessary??)
+                require(transactionIds[_xTransferId] == 0);
+                transactionIds[_xTransferId] = _txId;
+            }
         } else {
             // otherwise, verify transaction details
             require(txn.to == _to && txn.amount == _amount && txn.fromBlockchain == _fromBlockchain);
+            
+            if (_xTransferId != 0) {
+                require(transactionIds[_xTransferId] == _txId);
+            }
         }
         
         // increment the number of reports
@@ -390,19 +400,13 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
             transactions[_txId].completed = true;
 
             releaseTokens(_to, _amount);
-
-            if (_xTransferId != 0) {
-                // verify uniqueness of conversion id to prevent overwriting (necessary??)
-                require(transactionIds[_xTransferId] == 0);
-                transactionIds[_xTransferId] = _txId;
-            }
         }
     }
 
     /**
         @dev gets x transfer amount by xTransferId (not txId)
 
-        @param _xTransferId conversionId
+        @param _xTransferId xTransferId
 
         @return amount
     */
