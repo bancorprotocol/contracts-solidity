@@ -782,18 +782,19 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-        @dev The parameters v, r, and s signed a message that includes:
-        _path, _xTransferId, msg.sender (to), address(this), _block and tx.gasPrice
+        @dev allows a user to convert BNT that was sent from another blockchain into any other
+        token on the BancorNetwork without specifying the amount of BNT to be converted, but
+        rather by providing the xTransferId which allows us to get the amount from BancorX.
 
-        @param _path path
-        @param _minReturn minReturn
-        @param _xTransferId xTransferId
-        @param _block block
-        @param _v v
-        @param _r r
-        @param _s s
+        @param _path            conversion path, see conversion path format in the BancorNetwork contract
+        @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _xTransferId     pre-determined unique (if non zero) id which refers to this transaction 
+        @param _block           if the current block exceeded the given parameter - it is cancelled
+        @param _v               (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+        @param _r               (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+        @param _s               (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
 
-        @return return
+        @return tokens issued in return
     */
     function completeXConversion(
         IERC20Token[] _path,
@@ -810,10 +811,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         IBancorX bancorX = IBancorX(registry.addressOf(ContractIds.BANCOR_X));
         IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
 
-        // verify that the first token in the path is BNT (not sure if necessary, since bancor network would revert anyways)
+        // verify that the first token in the path is BNT
         require(_path[0] == address(token));
 
-        // get conversion amount from bancor x contract
+        // get conversion amount from BancorX contract
         uint256 amount = bancorX.getXTransferAmount(_xTransferId);
 
         // send BNT from msg.sender to the BancorNetwork contract

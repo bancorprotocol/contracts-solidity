@@ -132,18 +132,27 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev validates x conversion
+        @dev validates xConvert call by verifying the path format, claiming the callers tokens (if not ETH),
+        and verifying the gas price limit
 
-        @param _path path
-        @param _amount amount
-        @param _block block
-        @param _v v
-        @param _r r
-        @param _s s
+        @param _path        conversion path, see conversion path format above
+        @param _amount      amount to convert from (in the initial source token)
+        @param _block       if the current block exceeded the given parameter - it is cancelled
+        @param _v           (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+        @param _r           (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+        @param _s           (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
     */
-    function validateXConversion(IERC20Token[] _path, uint256 _amount, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) private {
-        require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
-
+    function validateXConversion(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) 
+        private 
+        validConversionPath(_path)    
+    {
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
         IERC20Token fromToken = _path[0];
         require(msg.value == 0 || (_amount == msg.value && etherTokens[fromToken]));
@@ -196,11 +205,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _for         account that will receive the conversion result
-        @param _customVal customVal
-        @param _block block
-        @param _v v
-        @param _r r
-        @param _s s
+        @param _customVal   custom value that was signed for prioritized conversion
+        @param _block       if the current block exceeded the given parameter - it is cancelled
+        @param _v           (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+        @param _r           (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+        @param _s           (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
 
         @return tokens issued in return
     */
@@ -232,20 +241,57 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev converts to BNT and calls xTransfer
+        @dev converts any other token to BNT in the bancor network
+        by following a predefined conversion path and transfers the resulting
+        tokens to BancorX.
+        note that the network should already have been given allowance of the source token (if not ETH)
 
-        @param _path path
-        @param _amount amount
-        @param _minReturn minReturn
-        @param _toBlockchain toBlockchain
-        @param _to to
-        @param _xTransferId xTransferId
-        @param _block block
-        @param _v v
-        @param _r r
-        @param _s s
+        @param _path            conversion path, see conversion path format above
+        @param _amount          amount to convert from (in the initial source token)
+        @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _toBlockchain    blockchain BNT will be issued on
+        @param _to              address/account on _toBlockchain to send the BNT to
+        @param _xTransferId     pre-determined unique (if non zero) id which refers to this transaction 
+
+        @return the amount of BNT received from this conversion
     */
     function xConvert(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        bytes32 _toBlockchain,
+        bytes32 _to,
+        uint256 _xTransferId
+    )
+        public
+        payable
+        returns (uint256)
+    {
+        return xConvertPrioritized(_path, _amount, _minReturn, _toBlockchain, _to, _xTransferId, 0x0, 0x0, 0x0, 0x0);
+    }
+
+    /**
+        @dev converts any other token to BNT in the bancor network
+        by following a predefined conversion path and transfers the resulting
+        tokens to BancorX.
+        this version of the function also allows the verified signer
+        to bypass the universal gas price limit.
+        note that the network should already have been given allowance of the source token (if not ETH)
+
+        @param _path            conversion path, see conversion path format above
+        @param _amount          amount to convert from (in the initial source token)
+        @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _toBlockchain    blockchain BNT will be issued on
+        @param _to              address/account on _toBlockchain to send the BNT to
+        @param _xTransferId     pre-determined unique (if non zero) id which refers to this transaction 
+        @param _block           if the current block exceeded the given parameter - it is cancelled
+        @param _v               (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+        @param _r               (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+        @param _s               (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+
+        @return the amount of BNT received from this conversion
+    */
+    function xConvertPrioritized(
         IERC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
@@ -264,9 +310,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         // do a lot of validation and transfers in separate function to work around 16 variable limit
         validateXConversion(_path, _amount, _block, _v, _r, _s);
 
-        //
+        // convert to BNT and get the resulting amount
         (, uint256 retAmount) = convertByPath(_path, _amount, _minReturn, _path[0], this);
 
+        // transfer the resulting amount to BancorX, and return the amount
         IBancorX(registry.addressOf(ContractIds.BANCOR_X)).xTransfer(_toBlockchain, _to, retAmount, _xTransferId);
 
         return retAmount;

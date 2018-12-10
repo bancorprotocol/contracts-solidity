@@ -320,7 +320,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @param _toBlockchain    blockchain BNT will be issued on
         @param _to              address to send the BNT to
         @param _amount          the amount to transfer
-        @param _id              id
+        @param _id              pre-determined unique (if non zero) id which refers to this transaction 
      */
     function xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount, uint256 _id) public whenXTransfersEnabled {
         // get the current lock limit
@@ -346,7 +346,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @param _txId            transactionId of transaction thats being reported
         @param _to              address to receive BNT
         @param _amount          amount of BNT destroyed on another blockchain
-        @param _xTransferId    xTransferId
+        @param _xTransferId     unique (if non zero) pre-determined id (unlike _txId which is determined after the transactions been broadcasted)
      */
     function reportTx(
         bytes32 _fromBlockchain,
@@ -374,7 +374,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
             txn.fromBlockchain = _fromBlockchain;
 
             if (_xTransferId != 0) {
-                // verify uniqueness of xTransfer id to prevent overwriting (necessary??)
+                // verify uniqueness of xTransfer id to prevent overwriting
                 require(transactionIds[_xTransferId] == 0);
                 transactionIds[_xTransferId] = _txId;
             }
@@ -406,9 +406,9 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     /**
         @dev gets x transfer amount by xTransferId (not txId)
 
-        @param _xTransferId xTransferId
+        @param _xTransferId    unique (if non zero) pre-determined id (unlike _txId which is determined after the transactions been broadcasted)
 
-        @return amount
+        @return amount that was sent in corresponding _xTransferId
     */
     function getXTransferAmount(uint256 _xTransferId) public view returns (uint256) {
         // xTransferId -> txId -> Transaction
