@@ -408,13 +408,11 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
 
         @param _xTransferId    unique (if non zero) pre-determined id (unlike _txId which is determined after the transactions been broadcasted)
 
-        @return amount that was sent in corresponding _xTransferId
+        @return amount that was sent in xTransfer corresponding to _xTransferId
     */
     function getXTransferAmount(uint256 _xTransferId) public view returns (uint256) {
-        // xTransferId -> txId -> Transaction
-        Transaction memory transaction = transactions[transactionIds[_xTransferId]];
-        
-        return transaction.amount;
+        // xTransferId -> txId -> Transaction -> amount
+        return transactions[transactionIds[_xTransferId]].amount;
     }
 
     /**
