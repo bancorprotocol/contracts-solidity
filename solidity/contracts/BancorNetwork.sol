@@ -173,7 +173,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
             gasPriceLimit.validateGasPrice(tx.gasprice);
         } else {
-            require(verifyTrustedSender(_path, _amount, _block, this, _v, _r, _s));
+            require(verifyTrustedSender(_path, _amount, _block, msg.sender, _v, _r, _s));
         }
     }
 

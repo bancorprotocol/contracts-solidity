@@ -10,6 +10,7 @@ const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const ContractFeatures = artifacts.require("ContractFeatures.sol");
+const TestERC20Token = artifacts.require('TestERC20Token.sol');
 
 const web3Utils = require('web3-utils')
 const ethUtil = require('ethereumjs-util');
@@ -29,14 +30,236 @@ const BNT_RESERVE_AMOUNT = '45688650129186275318509'
 const eosAddress = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c000000000000000000000000'
 const EOS_BLOCKCHAIN = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c000000000000000000000000'
 
-let bancorX, bntConverter, bntToken, etherToken, bancorNetwork
-let reporter1, reporter2, reporter3, signerAddress
+// bancor network contracts
+let bancorX, bancorNetwork, bntConverter, bntToken, etherToken, erc20Token, erc20TokenConverter
+// paths
+let ethBntPath, bntEthPath, erc20TokenBntPath, bntErc20Path
+
+let reporter1, reporter2, reporter3, signerAddress, nonSignerAddress, defaultGasPrice
+
+contract.only('XConversions', async accounts => {
+    // initialize BancorX contracts
+    before(async () => {
+        await initBancorNetwork(accounts)
+    })
+
+    it('should be able to xConvert from eth', async () => {
+        const gasPrice = defaultGasPrice
+        const maximumBlock = (await web3.eth.blockNumber) + 100;
+        const path = ethBntPath
+        const amount = web3Utils.toWei('1')
+        const { v, r, s } = signConversionDetails(
+            maximumBlock,
+            gasPrice,
+            accounts[5],
+            accounts[5],
+            amount,
+            path,
+            signerAddress
+        )
+
+        const retAmount = await bancorNetwork.xConvertPrioritized.call(
+            path,                         
+            amount,               
+            '1',                                
+            EOS_BLOCKCHAIN,                     
+            eosAddress,                         
+            '0',                                
+            maximumBlock,                                                    
+            v,                                                      
+            r,                                                      
+            s,                                                      
+            { from: accounts[5], value: amount }
+        )
+
+        const prevBalance = await bntToken.balanceOf(bancorX.address)
+
+        const res = await bancorNetwork.xConvertPrioritized(
+            path,                                               
+            amount,                                     
+            '1',                                                      
+            EOS_BLOCKCHAIN,                                           
+            eosAddress,                                               
+            '0',                                                      
+            maximumBlock,                                                    
+            v,                                                      
+            r,                                                      
+            s,                                                      
+            { from: accounts[5], value: amount }
+        )
+
+        // console.log(res.receipt.gasUsed)
+        assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
+    })
+
+    it('should be able to xConvert from an ERC20', async () => {
+        const gasPrice = defaultGasPrice
+        const maximumBlock = (await web3.eth.blockNumber) + 100;
+        const path = erc20TokenBntPath
+        const amount = web3Utils.toWei('1')
+        const { v, r, s } = signConversionDetails(
+            maximumBlock,
+            gasPrice,
+            accounts[5],
+            accounts[5],
+            amount,
+            path,
+            signerAddress
+        )
+
+        await erc20Token.approve(bancorNetwork.address, amount, { from: accounts[5] })
+
+        const retAmount = await bancorNetwork.xConvertPrioritized.call(
+            path,                         
+            amount,               
+            '1',                                
+            EOS_BLOCKCHAIN,                     
+            eosAddress,                         
+            '0',                                
+            maximumBlock,                                                    
+            v,                                                      
+            r,                                                      
+            s,                                                      
+            { from: accounts[5] }
+        )
+
+        const prevBalance = await bntToken.balanceOf(bancorX.address)
+
+        const res = await bancorNetwork.xConvertPrioritized(
+            path,                                               
+            amount,                                     
+            '1',                                                      
+            EOS_BLOCKCHAIN,                                           
+            eosAddress,                                               
+            '0',                                                      
+            maximumBlock,                                                    
+            v,                                                      
+            r,                                                      
+            s,                                                      
+            { from: accounts[5] }
+        )
+
+        // console.log(res.receipt.gasUsed)
+        assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
+    })
+
+    it('should be able to completeXConversion to eth', async () => {
+        const txId = getRandomTxId()
+        const xTransferId = getRandomTxId() + 1 // in case it's 0... lol
+        const amount = web3Utils.toWei('10') // releasing 10 BNT
+        const path = bntEthPath
+
+        await reportAndRelease(accounts[5], amount, txId, EOS_BLOCKCHAIN, xTransferId)
+
+        const prevBalance = await web3.eth.getBalance(accounts[5])
+
+        const res = await bntConverter.completeXConversion(
+            path,                                                     // _path
+            '1',                                                      // _minReturn
+            xTransferId,                                              // _xTransferId
+            '0',                                                      // _block
+            '0',                                                      // _v
+            '0',                                                      // _r
+            '0',                                                      // _s
+            { from: accounts[5] }
+        )
+
+        const currBalance = await web3.eth.getBalance(accounts[5])
+
+        // console.log(res.receipt.gasUsed)
+
+        assert(currBalance.greaterThan(prevBalance))
+    })
+
+    it('should be able to completeXConversion to an ERC20', async () => {
+        const txId = getRandomTxId()
+        const xTransferId = getRandomTxId() + 1 // in case it's 0... lol
+        const maximumBlock = (await web3.eth.blockNumber) + 100;
+        const gasPrice = defaultGasPrice
+        const amount = web3Utils.toWei('10') // releasing 10 BNT
+        const path = bntErc20Path
+
+        const { v, r, s } = signConversionDetails(
+            maximumBlock,
+            gasPrice,
+            accounts[5],
+            bntConverter.address,
+            xTransferId,
+            path,
+            signerAddress
+        )
+
+        await reportAndRelease(accounts[5], amount, txId, EOS_BLOCKCHAIN, xTransferId)
+
+        const prevBalance = await erc20Token.balanceOf(accounts[5])
+
+        const retAmount = await bntConverter.completeXConversion.call(
+            path,                                              
+            '1',                                               
+            xTransferId,                                       
+            maximumBlock,                                      
+            v,                                                 
+            r,                                                 
+            s,                                                 
+            { from: accounts[5] }
+        )
+
+        const res = await bntConverter.completeXConversion(
+            path,                                              
+            '1',                                               
+            xTransferId,                                       
+            maximumBlock,                                      
+            v,                                                 
+            r,                                                 
+            s,                                                 
+            { from: accounts[5] }
+        )
+
+        const currBalance = await erc20Token.balanceOf(accounts[5])
+
+        // console.log(res.receipt.gasUsed)
+
+        assert.equal(currBalance.minus(prevBalance).toString(10), retAmount.toString(10))
+    })
+
+})
+
+async function reportAndRelease(to, amount, txId, blockchainType, xTransferId = 0) {
+    for (let i = 1; i <= 3; i++) {
+        await bancorX.reportTx(
+            blockchainType,
+            txId,
+            to,
+            amount,
+            xTransferId,
+            { from: eval(`reporter${i}`) }
+        )
+    }
+}
+
+function signConversionDetails(block, gasPrice, originSender, finalSender, customVal, path, signerAddress) {
+    let soliditySha3 = web3Utils.soliditySha3(block, gasPrice, originSender, finalSender, customVal, {'type': 'address', 'value': path});
+    return sign(soliditySha3, signerAddress)
+}
+
+function sign(msgToSign, signerAddress) {
+    try {
+        const sig = web3.eth.sign(signerAddress, ethUtil.bufferToHex(msgToSign));
+        const { v, r, s } = ethUtil.fromRpcSig(sig);
+        return { v: v, r: ethUtil.bufferToHex(r), s: ethUtil.bufferToHex(s) };
+    }
+    catch (err) {
+        return err;
+    }
+}
 
 const initBancorNetwork = async accounts => {
     signerAddress = accounts[4]
+    nonSignerAddress = accounts[5]
     reporter1 = accounts[1]
     reporter2 = accounts[2]
     reporter3 = accounts[3]
+    defaultGasPrice = BancorGasPriceLimit.class_defaults.gasPrice
 
     const gasPriceLimit = await BancorGasPriceLimit.new("30000000000"); // 30 gwei
     const formula = await BancorFormula.new();
@@ -48,7 +271,7 @@ const initBancorNetwork = async accounts => {
     bntConverter = await BancorConverter.new(
         bntToken.address,
         contractRegistry.address,
-        '100000',
+        '30000',
         etherToken.address,
         '100000'
     )
@@ -89,96 +312,35 @@ const initBancorNetwork = async accounts => {
     await bntConverter.updateConnector(etherToken.address, '100000', true, BNT_RESERVE_AMOUNT)
     await bntConverter.acceptTokenOwnership()
     await bntConverter.enableClaimTokens(true);
+
+    // creating second converter
+    const relayToken = await SmartToken.new('Relay Token', 'RLY', 18)
+
+    erc20Token = await TestERC20Token.new('Test Token', 'TST', web3Utils.toWei('100'))
+    erc20TokenConverter = await BancorConverter.new(
+        relayToken.address,
+        contractRegistry.address,
+        '30000',
+        bntToken.address,
+        '500000' // 100% connector weight
+    )
+
+    await relayToken.issue(accounts[0], web3Utils.toWei('200'))
+    await erc20Token.transfer(erc20TokenConverter.address, web3Utils.toWei('50'))
+    await erc20Token.transfer(accounts[5], web3Utils.toWei('50'))
+    await bntToken.transfer(erc20TokenConverter.address, web3Utils.toWei('100'))
+
+    await erc20TokenConverter.addConnector(erc20Token.address, '500000', false)
+    await relayToken.transferOwnership(erc20TokenConverter.address)
+    await erc20TokenConverter.acceptTokenOwnership()
+
+    // settings paths for easy use
+    ethBntPath = [etherToken.address, bntToken.address, bntToken.address]
+    bntEthPath = [bntToken.address, bntToken.address, etherToken.address]
+    erc20TokenBntPath = [erc20Token.address, relayToken.address, bntToken.address]
+    bntErc20Path = [bntToken.address, relayToken.address, erc20Token.address]
 }
 
-contract('XConversions', async accounts => {
-    // initialize BancorX contracts
-    before(async () => {
-        await initBancorNetwork(accounts)
-    })
-
-    it('should be able to xConvert from eth', async () => {
-        const retAmount = await bancorNetwork.xConvert.call(
-            [etherToken.address, bntToken.address, bntToken.address], // _path
-            web3Utils.toWei('1'),                                     // _amount
-            '1',                                                      // _minReturn
-            EOS_BLOCKCHAIN,                                           // _toBlockchain
-            eosAddress,                                               // _to
-            '0',                                                      // _conversionId
-            '0',                                                      // _block
-            '0',                                                      // _v
-            '0',                                                      // _r
-            '0',                                                      // _s
-            { from: accounts[5], value: web3Utils.toWei('1') }
-        )
-
-        await bancorNetwork.xConvert(
-            [etherToken.address, bntToken.address, bntToken.address], // _path
-            web3Utils.toWei('1'),                                     // _amount
-            '1',                                                      // _minReturn
-            EOS_BLOCKCHAIN,                                           // _toBlockchain
-            eosAddress,                                               // _to
-            '0',                                                      // _conversionId
-            '0',                                                      // _block
-            '0',                                                      // _v
-            '0',                                                      // _r
-            '0',                                                      // _s
-            { from: accounts[5], value: web3Utils.toWei('1') }
-        )
-
-        assert.equal((await bntToken.balanceOf(bancorX.address)).toString(10), retAmount.toString(10))
-    })
-
-    it('should be able to completeXConversion to eth', async () => {
-        const txId = getRandomTxId()
-        const xTransferId = getRandomTxId() + 1 // in case it's 0... lol
-        const amount = web3Utils.toWei('100') // releasing 100 BNT
-
-        await reportAndRelease(accounts[5], amount, txId, EOS_BLOCKCHAIN, xTransferId)
-
-        const prevBalance = await web3.eth.getBalance(accounts[5])
-
-        await bntConverter.completeXConversion(
-            [bntToken.address, bntToken.address, etherToken.address], // _path
-            '1',                                                      // _minReturn
-            xTransferId,                                              // _xTransferId
-            '0',                                                      // _block
-            '0',                                                      // _v
-            '0',                                                      // _r
-            '0',                                                      // _s
-            { from: accounts[5] }
-        )
-
-        const currBalance = await web3.eth.getBalance(accounts[5])
-
-        assert(currBalance.greaterThan(prevBalance))
-    })
-
-})
-
-async function reportAndRelease(to, amount, txId, blockchainType, xTransferId = 0) {
-    for (let i = 1; i <= 3; i++) {
-        await bancorX.reportTx(
-            blockchainType,
-            txId,
-            to,
-            amount,
-            xTransferId,
-            { from: eval(`reporter${i}`) }
-        )
-    }
-}
-
-function sign(msgToSign, signerAddress) {
-    try {
-        const sig = web3.eth.sign(signerAddress, ethUtil.bufferToHex(msgToSign));
-        const { v, r, s } = ethUtil.fromRpcSig(sig);
-        return { v: v, r: ethUtil.bufferToHex(r), s: ethUtil.bufferToHex(s) };
-    }
-    catch (err) {
-        return err;
-    }
-}
 
 // returns random number between 0 and 10,000,000
 function getRandomTxId() {
