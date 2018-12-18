@@ -51,7 +51,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    bytes32 public version = '0.11';
+    uint16 public version = 12;
     string public converterType = 'bancor';
 
     bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
@@ -370,7 +370,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         IBancorConverterUpgrader converterUpgrader = IBancorConverterUpgrader(registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER));
 
         transferOwnership(converterUpgrader);
-        converterUpgrader.upgrade(version);
+        converterUpgrader.upgrade(bytes32(version));
         acceptOwnership();
     }
 
