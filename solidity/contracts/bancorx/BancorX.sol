@@ -96,6 +96,12 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         uint256 _xTransferId
     );
 
+    // triggered when final report is successfully submitted
+    event XTransferComplete(
+        address _to,
+        uint256 _xTransferId
+    );
+
     /**
         @dev constructor
 
@@ -398,6 +404,8 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
 
             // set the transaction as completed
             transactions[_txId].completed = true;
+
+            emit XTransferComplete(_to, _xTransferId);
 
             releaseTokens(_to, _amount);
         }
