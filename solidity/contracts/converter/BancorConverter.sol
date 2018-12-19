@@ -786,20 +786,20 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         token on the BancorNetwork without specifying the amount of BNT to be converted, but
         rather by providing the xTransferId which allows us to get the amount from BancorX.
 
-        @param _path            conversion path, see conversion path format in the BancorNetwork contract
-        @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _xTransferId     pre-determined unique (if non zero) id which refers to this transaction 
-        @param _block           if the current block exceeded the given parameter - it is cancelled
-        @param _v               (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-        @param _r               (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-        @param _s               (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+        @param _path             conversion path, see conversion path format in the BancorNetwork contract
+        @param _minReturn        if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _conversionId     pre-determined unique (if non zero) id which refers to this transaction 
+        @param _block            if the current block exceeded the given parameter - it is cancelled
+        @param _v                (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+        @param _r                (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+        @param _s                (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
 
         @return tokens issued in return
     */
     function completeXConversion(
         IERC20Token[] _path,
         uint256 _minReturn,
-        uint256 _xTransferId,
+        uint256 _conversionId,
         uint256 _block,
         uint8 _v,
         bytes32 _r,
@@ -815,13 +815,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         require(_path[0] == address(token));
 
         // get conversion amount from BancorX contract
-        uint256 amount = bancorX.getXTransferAmount(_xTransferId);
+        uint256 amount = bancorX.getXTransferAmount(_conversionId, msg.sender);
 
         // send BNT from msg.sender to the BancorNetwork contract
         token.destroy(msg.sender, amount);
         token.issue(bancorNetwork, amount);
 
-        return bancorNetwork.convertForPrioritized3(_path, amount, _minReturn, msg.sender, _xTransferId, _block, _v, _r, _s);
+        return bancorNetwork.convertForPrioritized3(_path, amount, _minReturn, msg.sender, _conversionId, _block, _v, _r, _s);
     }
 
     /**

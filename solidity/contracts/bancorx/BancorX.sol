@@ -56,8 +56,8 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     // txId -> Transaction
     mapping (uint256 => Transaction) public transactions;
 
-    // xTransferId -> amount
-    mapping (uint256 => uint256) public amounts;
+    // xTransferId -> txId
+    mapping (uint256 => uint256) public transactionIds;
 
     // txId -> reporter -> true if reporter already reported txId
     mapping (uint256 => mapping (address => bool)) public reportedTxs;
@@ -352,7 +352,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @param _txId            transactionId of transaction thats being reported
         @param _to              address to receive BNT
         @param _amount          amount of BNT destroyed on another blockchain
-        @param _xTransferId     unique (if non zero) pre-determined id (unlike _txId which is determined after the transactions been broadcasted)
+        @param _xTransferId     unique (if non zero) pre-determined id (unlike _txId which is determined after the transactions been mined)
      */
     function reportTx(
         bytes32 _fromBlockchain,
@@ -381,15 +381,15 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
 
             if (_xTransferId != 0) {
                 // verify uniqueness of xTransfer id to prevent overwriting
-                require(amounts[_xTransferId] == 0);
-                amounts[_xTransferId] = _amount;
+                require(transactionIds[_xTransferId] == 0);
+                transactionIds[_xTransferId] = _txId;
             }
         } else {
             // otherwise, verify transaction details
             require(txn.to == _to && txn.amount == _amount && txn.fromBlockchain == _fromBlockchain);
             
             if (_xTransferId != 0) {
-                require(amounts[_xTransferId] == _amount);
+                require(transactionIds[_xTransferId] == _txId);
             }
         }
         
@@ -415,12 +415,18 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @dev gets x transfer amount by xTransferId (not txId)
 
         @param _xTransferId    unique (if non zero) pre-determined id (unlike _txId which is determined after the transactions been broadcasted)
+        @param _for            address corresponding to xTransferId
 
         @return amount that was sent in xTransfer corresponding to _xTransferId
     */
-    function getXTransferAmount(uint256 _xTransferId) public view returns (uint256) {
-        // xTransferId -> amount
-        return amounts[_xTransferId];
+    function getXTransferAmount(uint256 _xTransferId, address _for) public view returns (uint256) {
+        // xTransferId -> txId -> Transaction
+        Transaction memory transaction = transactions[transactionIds[_xTransferId]];
+
+        // verify that the xTransferId is for _for
+        require(transaction.to == _for);
+
+        return transaction.amount;
     }
 
     /**
