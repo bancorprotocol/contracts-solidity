@@ -56,8 +56,8 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     // txId -> Transaction
     mapping (uint256 => Transaction) public transactions;
 
-    // xTransferId -> txId
-    mapping (uint256 => uint256) public transactionIds;
+    // xTransferId -> amount
+    mapping (uint256 => uint256) public amounts;
 
     // txId -> reporter -> true if reporter already reported txId
     mapping (uint256 => mapping (address => bool)) public reportedTxs;
@@ -381,15 +381,15 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
 
             if (_xTransferId != 0) {
                 // verify uniqueness of xTransfer id to prevent overwriting
-                require(transactionIds[_xTransferId] == 0);
-                transactionIds[_xTransferId] = _txId;
+                require(amounts[_xTransferId] == 0);
+                amounts[_xTransferId] = _amount;
             }
         } else {
             // otherwise, verify transaction details
             require(txn.to == _to && txn.amount == _amount && txn.fromBlockchain == _fromBlockchain);
             
             if (_xTransferId != 0) {
-                require(transactionIds[_xTransferId] == _txId);
+                require(amounts[_xTransferId] == _amount);
             }
         }
         
@@ -419,8 +419,8 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @return amount that was sent in xTransfer corresponding to _xTransferId
     */
     function getXTransferAmount(uint256 _xTransferId) public view returns (uint256) {
-        // xTransferId -> txId -> Transaction -> amount
-        return transactions[transactionIds[_xTransferId]].amount;
+        // xTransferId -> amount
+        return amounts[_xTransferId];
     }
 
     /**
