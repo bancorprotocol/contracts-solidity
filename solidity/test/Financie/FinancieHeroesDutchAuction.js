@@ -3,26 +3,19 @@
 
 // Bancor components
 const SmartToken = artifacts.require('SmartToken.sol');
-const EtherToken = artifacts.require('EtherToken.sol');
 
 // Financie components
 const FinanciePlatformToken = artifacts.require('FinanciePlatformToken.sol');
 const FinancieCardToken = artifacts.require('FinancieCardToken.sol');
 const FinancieHeroesDutchAuction = artifacts.require('FinancieHeroesDutchAuction.sol');
 const FinancieNotifier = artifacts.require('FinancieNotifier.sol');
-const IFinancieNotifier = artifacts.require('IFinancieNotifier.sol');
-const FinancieTicketStore = artifacts.require('FinancieTicketStore.sol');
 const FinancieManagedContracts = artifacts.require('FinancieManagedContracts.sol');
-
-const weight10Percent = 100000;
-const gasPrice = 22000000000;
-const gasPriceBad = 22000000001;
 
 contract('FinancieHeroesDutchAuction', (accounts) => {
     let managedContracts;
     let auction;
     let platformToken;
-    let etherToken;
+    let currencyToken;
     let financieNotifier;
     let cardToken;
     let smartToken;
@@ -32,8 +25,8 @@ contract('FinancieHeroesDutchAuction', (accounts) => {
 
         managedContracts = await FinancieManagedContracts.new();
         platformToken = await FinanciePlatformToken.new('PF Token', 'ERC PF', 10000000000 * (10 ** 18));
-        etherToken = await EtherToken.new();
-        financieNotifier = await FinancieNotifier.new(managedContracts.address, platformToken.address, etherToken.address);
+        currencyToken = await SmartToken.new('Test', 'TST', 18);
+        financieNotifier = await FinancieNotifier.new(managedContracts.address, platformToken.address, currencyToken.address);
 
         cardToken = await FinancieCardToken.new(
             'Financie Card Token',
@@ -51,7 +44,8 @@ contract('FinancieHeroesDutchAuction', (accounts) => {
             0x1bc16d674ec80000 / 10000,
             0x5ddb1980,
             3,
-            financieNotifier.address);
+            financieNotifier.address,
+            currencyToken.address);
         new Promise(() => console.log('[FinancieHeroesDutchAuction]auction:' + auction.address));
 
         console.log('[FinancieHeroesDutchAuction]begin setup');
@@ -79,7 +73,9 @@ contract('FinancieHeroesDutchAuction', (accounts) => {
     });
 
     it('bid', async () => {
-        await auction.sendTransaction({from: accounts[0], value:1 * (10 ** 5)});
+        currencyToken.issue(accounts[0], 10 ** 5);
+        currencyToken.approve(auction.address, 10 ** 5);
+        await auction.bidToken(1 * (10 ** 5));
         console.log('[FinancieHeroesDutchAuction]bid OK');
     });
 });

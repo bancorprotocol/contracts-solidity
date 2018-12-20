@@ -1,11 +1,16 @@
 pragma solidity ^0.4.17;
 
 import '../DutchAuction/DutchAuction.sol';
+import './IFinancieAuction.sol';
 import './FinancieFee.sol';
 import './FinancieNotifierDelegate.sol';
+import '../utility/Owned.sol';
+import '../token/interfaces/IERC20Token.sol';
 
 /// @title overrided from DutchAuction.
-contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierDelegate, FinancieFee {
+contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, FinancieNotifierDelegate, FinancieFee {
+
+    IERC20Token paymentCurrentyToken;
 
     /*
      * Public functions
@@ -29,7 +34,8 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierDelegate, F
         uint _price_start,
         uint _price_constant,
         uint32 _price_exponent,
-        address _notifier_address)
+        address _notifier_address,
+        address _payment_currency_token_address)
         public
         DutchAuction(
           _wallet_address,
@@ -38,9 +44,10 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierDelegate, F
           _price_constant,
           _price_exponent
         )
-        FinancieFee(0, _teamFee, _wallet_address, _team_wallet)
         FinancieNotifierDelegate(_notifier_address)
     {
+        paymentCurrentyToken = IERC20Token(_payment_currency_token_address);
+        setFee(0, _teamFee, _wallet_address, _team_wallet, _payment_currency_token_address);
     }
 
     /**
@@ -62,25 +69,31 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierDelegate, F
     /// --------------------------------- Auction Functions ------------------
 
     /**
-    *   @notice  overrided from DutchAuction.
+    *   @notice  overrided from DutchAuction to prevent default bidding.
     */
     function bid()
         public
         payable
+    {
+        revert();
+    }
+
+    function bidToken(uint256 _amount)
+        public
         atStage(Stages.AuctionStarted)
     {
         // Missing funds without the current bid value
         uint missing_funds = missingFundsToEndAuction();
 
-        uint256 amount = msg.value;
-        if ( msg.value > missing_funds ) {
+        uint256 amount = _amount;
+        if ( amount > missing_funds ) {
             amount = missing_funds;
-            msg.sender.transfer(safeSub(msg.value, amount));
         }
 
         require(amount > 0);
-        require(bids[msg.sender] + amount <= bid_threshold || whitelist[msg.sender]);
         assert(bids[msg.sender] + amount >= amount);
+
+        paymentCurrentyToken.transferFrom(msg.sender, this, amount);
 
         bids[msg.sender] += amount;
         received_wei += amount;
@@ -88,7 +101,7 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierDelegate, F
         // Send bid amount to wallet
         uint256 feeAmount = distributeFees(amount);
         uint256 net = safeSub(amount, feeAmount);
-        wallet_address.transfer(net);
+        paymentCurrentyToken.transfer(wallet_address, net);
 
         BidSubmission(msg.sender, amount, missing_funds);
 
@@ -142,5 +155,14 @@ contract FinancieHeroesDutchAuction is DutchAuction, FinancieNotifierDelegate, F
         }
         return false;
     }
+
+    function targetToken()
+        public
+        view
+        returns (address)
+    {
+        return token;
+    }
+
 
 }

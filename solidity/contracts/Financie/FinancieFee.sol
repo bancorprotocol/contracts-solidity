@@ -1,5 +1,6 @@
 pragma solidity ^0.4.18;
 import '../utility/Utils.sol';
+import '../token/interfaces/IERC20Token.sol';
 
 /**
     **FROZEN**
@@ -19,18 +20,23 @@ contract FinancieFee is Utils {
     // Receiver wallet address for team fee
     address public team_wallet;
 
+    // Currency token for payment
+    IERC20Token payment_currenty_token;
+
     /**
-    *   @dev Constructor
+    *   @dev setFee
     *   @param _heroFee       Fee percentage in ppm for hero
     *   @param _teamFee       Fee percentage in ppm for team
     *   @param _hero_wallet   Receiver wallet address for hero fee
     *   @param _team_wallet   Receiver wallet address for team fee
+    *   @param _payment_currency_token Currency token for payment
     */
-    constructor(uint32 _heroFee, uint32 _teamFee, address _hero_wallet, address _team_wallet) public {
+    function setFee(uint32 _heroFee, uint32 _teamFee, address _hero_wallet, address _team_wallet, address _payment_currency_token) internal {
         heroFee = _heroFee;
         teamFee = _teamFee;
         hero_wallet = _hero_wallet;
         team_wallet = _team_wallet;
+        payment_currenty_token = IERC20Token(_payment_currency_token);
     }
 
     /**
@@ -41,8 +47,8 @@ contract FinancieFee is Utils {
     function distributeFees(uint256 _amount) internal returns (uint256) {
         uint256 _heroFee = getHeroFee(_amount);
         uint256 _teamFee = getTeamFee(_amount);
-        hero_wallet.transfer(_heroFee);
-        team_wallet.transfer(_teamFee);
+        assert(payment_currenty_token.transfer(hero_wallet, _heroFee));
+        assert(payment_currenty_token.transfer(team_wallet, _teamFee));
 
         return safeAdd(_heroFee, _teamFee);
     }

@@ -3,7 +3,6 @@
 
 // Bancor components
 const SmartToken = artifacts.require('SmartToken.sol');
-const EtherToken = artifacts.require('EtherToken.sol');
 const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
@@ -15,10 +14,7 @@ const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const FinancieBancorConverter = artifacts.require('FinancieBancorConverter.sol');
 const FinanciePlatformToken = artifacts.require('FinanciePlatformToken.sol');
 const FinancieCardToken = artifacts.require('FinancieCardToken.sol');
-const FinancieHeroesDutchAuction = artifacts.require('FinancieHeroesDutchAuction.sol');
 const FinancieNotifier = artifacts.require('FinancieNotifier.sol');
-const IFinancieNotifier = artifacts.require('IFinancieNotifier.sol');
-const FinancieTicketStore = artifacts.require('FinancieTicketStore.sol');
 const FinancieManagedContracts = artifacts.require('FinancieManagedContracts.sol');
 
 const weight10Percent = 100000;
@@ -28,7 +24,7 @@ const gasPriceBad = 22000000001;
 contract('FinancieBancorConverter', (accounts) => {
     let managedContracts;
     let platformToken;
-    let etherToken;
+    let currencyToken;
     let financieNotifier;
     let cardToken;
     let smartToken;
@@ -41,8 +37,8 @@ contract('FinancieBancorConverter', (accounts) => {
 
         contracts = await FinancieManagedContracts.new();
         platformToken = await FinanciePlatformToken.new('PF Token', 'ERC PF', 10000000000 * (10 ** 18));
-        etherToken = await EtherToken.new();
-        financieNotifier = await FinancieNotifier.new(contracts.address, platformToken.address, etherToken.address);
+        currencyToken = await SmartToken.new('Test', 'TST', 18);
+        financieNotifier = await FinancieNotifier.new(contracts.address, platformToken.address, currencyToken.address);
 
         cardToken = await FinancieCardToken.new(
             'Financie Card Token',
@@ -71,11 +67,10 @@ contract('FinancieBancorConverter', (accounts) => {
         let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
         await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[0]);
-        await bancorNetwork.registerEtherToken(etherToken.address, true);
 
         bancor = await FinancieBancorConverter.new(
             smartToken.address,
-            etherToken.address,
+            currencyToken.address,
             cardToken.address,
             "0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C",
             "0x46a254FD6134eA0f564D07A305C0Db119a858d66",
@@ -87,16 +82,16 @@ contract('FinancieBancorConverter', (accounts) => {
 
         console.log('[FinancieBancorConverter]begin setup');
 
-        etherToken.sendTransaction({from: accounts[0], value:2 * (10 ** 5)});
+        currencyToken.issue(accounts[0], 2 * (10 ** 5));
 
-        bancor.addConnector(etherToken.address, 10000, false);
+        bancor.addConnector(currencyToken.address, 10000, false);
 
-        etherToken.transfer(bancor.address, 2 * (10 ** 5));
+        currencyToken.transfer(bancor.address, 2 * (10 ** 5));
 
         await smartToken.issue(bancor.address, 1000000 * (10 ** 5));
 
-        let balanceOfEtherToken = await etherToken.balanceOf(bancor.address);
-        assert.equal(200000, balanceOfEtherToken);
+        let balanceOfCurrencyToken = await currencyToken.balanceOf(bancor.address);
+        assert.equal(200000, balanceOfCurrencyToken);
 
         cardToken.transfer(bancor.address, 20000 * (10 ** 5));
 
@@ -117,10 +112,10 @@ contract('FinancieBancorConverter', (accounts) => {
       let fee;
       let amountSellCard = 100 * (10 ** 5);
 
-      [amount, fee] = await bancor.getCrossConnectorReturn(cardToken.address, etherToken.address, amountSellCard);
+      [amount, fee] = await bancor.getCrossConnectorReturn(cardToken.address, currencyToken.address, amountSellCard);
       console.log('[FinancieBancorConverter]getCrossConnectorReturn amount:' + amount.toFixed());
       console.log('[FinancieBancorConverter]getCrossConnectorReturn fee:' + fee.toFixed());
-      console.log(await etherToken.totalSupply());
+      console.log(await currencyToken.totalSupply());
     });
 
     it('sellCards', async () => {
@@ -128,12 +123,12 @@ contract('FinancieBancorConverter', (accounts) => {
         let estimationSell;
         let sellFee;
 
-        let smartToken1BuyPath = [etherToken.address, smartToken.address, cardToken.address];
+        let smartToken1BuyPath = [currencyToken.address, smartToken.address, cardToken.address];
 
-        // await etherToken.approve(bancorNetwork.address, 70000);
+        // await currencyToken.approve(bancorNetwork.address, 70000);
         // await bancorNetwork.claimAndConvert(smartToken1BuyPath, 70000, 1);
 
-        [estimationSell,sellFee] = await bancor.getReturn(cardToken.address, etherToken.address, amountSellCard);
+        [estimationSell,sellFee] = await bancor.getReturn(cardToken.address, currencyToken.address, amountSellCard);
         console.log('[FinancieBancorConverter]estimationSell:' + estimationSell.toFixed());
 
         await cardToken.approve(bancor.address, amountSellCard);
@@ -148,21 +143,29 @@ contract('FinancieBancorConverter', (accounts) => {
 
     it('buyCards', async () => {
         let estimationBuy;
-        let buyFee;
-        [estimationBuy, buyFee] = await bancor.getReturn(etherToken.address, cardToken.address, 10 ** 5);
-        console.log('[FinancieBancorConverter]estimationBuy:' + estimationBuy.toFixed());
+        let Fee;
 
+        await currencyToken.issue(accounts[0], 10 ** 5);
+
+        [estimationBuy, Fee] = await bancor.getReturn(currencyToken.address, cardToken.address, 10 ** 5);
+        console.log('[FinancieBancorConverter]estimationBuy:' + estimationBuy.toFixed());
+  
         let beforeBuy = await cardToken.balanceOf(accounts[0]);
         console.log('[FinancieBancorConverter]balance of card token before:' + beforeBuy.toFixed());
 
-        await bancor.buyCards(10 ** 5, estimationBuy, {gasPrice: gasPrice, from: accounts[0], value: 10 ** 5});
+        let currencyTokenBefore = await currencyToken.balanceOf(accounts[0]);
+        console.log('[FinancieBancorConverter]balance of currency token before:' + currencyTokenBefore.toFixed());
+
+        currencyToken.approve(bancor.address, 0);
+        currencyToken.approve(bancor.address, 10 ** 5);
+        await bancor.buyCards(10 ** 5, estimationBuy, {gasPrice: gasPrice});
         console.log('[FinancieBancorConverter]buy cards');
 
         let afterBuy = await cardToken.balanceOf(accounts[0]);
         console.log('[FinancieBancorConverter]balance of card token after:' + afterBuy.toFixed());
 
         try {
-            await bancor.buyCards(10 ** 5, estimationBuy, {gasPrice: gasPriceBad, from: accounts[0], value: 10 ** 5});
+            await bancor.buyCards(10 ** 5, estimationBuy, {gasPrice: gasPriceBad});
             assert.fail('Should not reach here because of invalid gas price');
         } catch ( e ) {
             // should reach here because of invalid gas price
@@ -170,12 +173,13 @@ contract('FinancieBancorConverter', (accounts) => {
     });
 
     it('Confirm that quickConvert() is not executed', async () => {
-        smartToken1QuickBuyPath = [etherToken.address, smartToken.address, smartToken.address];
+        smartToken1QuickBuyPath = [currencyToken.address, smartToken.address, smartToken.address];
         // await bancor.setQuickBuyPath(smartToken1QuickBuyPath);
         let prevBalance = await smartToken.balanceOf.call(accounts[1]);
 
         try {
-          await bancor.quickConvert(smartToken1QuickBuyPath, 100, 1, { from: accounts[1], value: 100 });
+            await bancor.quickConvert(smartToken1QuickBuyPath, 100, 1, { from: accounts[1], value: 100 });
+            assert(false, "exception not thrown");
         }
         catch (error) {
             assert(true, "exception throw");
@@ -184,7 +188,8 @@ contract('FinancieBancorConverter', (accounts) => {
 
     it('Confirm that change() is not executed', async () => {
         try {
-          await bancor.change(etherToken.address, bancor.address, 10, 10);
+            await bancor.change(currencyToken.address, bancor.address, 10, 10);
+            assert(false, "exception not thrown");
         }
         catch (error) {
             assert(true, "exception throw");
