@@ -9,11 +9,22 @@ import '../utility/Utils.sol';
 contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
 
     address teamWallet;
+    mapping (address => mapping (uint32 => bool)) public holderOfTokens;
     mapping (address => mapping (uint32 => uint256)) public balanceOfTokens;
     mapping (address => mapping (uint32 => uint256)) public bidsOfAuctions;
     mapping (address => uint256) public totalBidsOfAuctions;
     mapping (address => uint256) public receivedCardsOfAuctions;
     IERC20Token paymentCurrencyToken;
+
+    event AddOwnedCardList(uint32 indexed _user_id, address indexed _address, uint _timestamp);
+
+    event DepositTokens(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, uint _timestamp);
+    event WithdrawTokens(uint32 indexed _userId, uint256 _amount, address indexed _token_address, uint _timestamp);
+
+    event BuyCards(uint32 indexed _user_id, uint256 _amount, uint256 _minReturn, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
+    event SellCards(uint32 indexed _user_id, uint256 _amount, uint256 _minReturn, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
+    event BidCards(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, address indexed _auction_address, uint _timestamp);
+    event ReceiveCards(uint32 indexed _user_id, address indexed _token_address, address indexed _auction_address, uint _timestamp);
 
     constructor(address _teamWallet, address _paymentCurrencyToken) public {
         teamWallet = _teamWallet;
@@ -25,12 +36,23 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         _;
     }
 
+    function updateHolders(uint32 _userId, address _tokenAddress) internal {
+        if ( !holderOfTokens[_tokenAddress][_userId] ) {
+            holderOfTokens[_tokenAddress][_userId] = true;
+            AddOwnedCardList(_userId, _tokenAddress, now);
+        }
+    }
+
     function depositTokens(uint32 _userId, uint256 _amount, address _tokenAddress)
         public
         sameOwner {
         IERC20Token token = IERC20Token(_tokenAddress);
         token.transferFrom(msg.sender, this, _amount);
         balanceOfTokens[_tokenAddress][_userId] = safeAdd(balanceOfTokens[_tokenAddress][_userId], _amount);
+
+        updateHolders(_userId, _tokenAddress);
+
+        DepositTokens(_userId, _amount, _tokenAddress, now);
     }
 
     function withdrawTokens(uint32 _userId, uint256 _amount, address _tokenAddress)
@@ -40,6 +62,8 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         IERC20Token token = IERC20Token(_tokenAddress);
         token.transfer(teamWallet, _amount);
         balanceOfTokens[_tokenAddress][_userId] = safeSub(balanceOfTokens[_tokenAddress][_userId], _amount);
+
+        WithdrawTokens(_userId, _amount, _tokenAddress, now);
     }
 
     function delegateBuyCards(uint32 _userId, uint256 _amount, uint256 _minReturn, address _tokenAddress, address _bancorAddress)
@@ -73,6 +97,10 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         assert(_amount == safeSub(currencyBefore, currencyAfter));
 
         balanceOfTokens[_tokenAddress][_userId] = safeAdd(balanceOfTokens[_tokenAddress][_userId], result);
+
+        BuyCards(_userId, _amount, _minReturn, _tokenAddress, _bancorAddress, now);
+
+        updateHolders(_userId, _tokenAddress);
     }
 
     function delegateSellCards(uint32 _userId, uint256 _amount, uint256 _minReturn, address _tokenAddress, address _bancorAddress)
@@ -106,6 +134,8 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         assert(_amount == safeSub(tokenBefore, tokenAfter));
 
         balanceOfTokens[address(paymentCurrencyToken)][_userId] = safeAdd(balanceOfTokens[address(paymentCurrencyToken)][_userId], result);
+
+        SellCards(_userId, _amount, _minReturn, _tokenAddress, _bancorAddress, now);
     }
 
     function delegateBidCards(uint32 _userId, uint256 _amount, address _auctionAddress)
@@ -134,6 +164,9 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         totalBidsOfAuctions[_auctionAddress] = safeAdd(totalBidsOfAuctions[_auctionAddress], result);
         bidsOfAuctions[_auctionAddress][_userId] = safeAdd(bidsOfAuctions[_auctionAddress][_userId], result);
         balanceOfTokens[address(paymentCurrencyToken)][_userId] = safeSub(balanceOfTokens[address(paymentCurrencyToken)][_userId], result);
+
+        address tokenAddress = auction.targetToken();
+        BidCards(_userId, _amount, tokenAddress, _auctionAddress, now);
     }
 
     function delegateReceiveCards(uint32 _userId, address _auctionAddress)
@@ -166,6 +199,10 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
             balanceOfTokens[tokenAddress][_userId] = safeAdd(balanceOfTokens[tokenAddress][_userId], result);
             bidsOfAuctions[_auctionAddress][_userId] = 0;
         }
+
+        ReceiveCards(_userId, tokenAddress, _auctionAddress, now);
+
+        updateHolders(_userId, tokenAddress);
     }
 
     function delegateCanClaimTokens(uint32 _userId, address _auctionAddress)
