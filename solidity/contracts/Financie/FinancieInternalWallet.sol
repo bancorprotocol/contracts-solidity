@@ -186,6 +186,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
 
         // receive tokens on this wallet if available
         IFinancieAuction auction = IFinancieAuction(_auctionAddress);
+        require(auction.auctionFinished());
 
         address tokenAddress = auction.targetToken();
         IERC20Token token = IERC20Token(tokenAddress);

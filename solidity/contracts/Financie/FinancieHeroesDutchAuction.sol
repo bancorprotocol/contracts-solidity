@@ -168,6 +168,13 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
         return false;
     }
 
+    function auctionFinished() public
+        view
+        returns (bool)
+    {
+        return stage == Stages.AuctionEnded;
+    }
+
     function targetToken()
         public
         view
