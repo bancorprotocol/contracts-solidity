@@ -9,7 +9,7 @@ import '../utility/Utils.sol';
 contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, FinancieCoreComponents, Utils {
 
     struct TicketSale {
-        address issuer;
+        uint32  issuer;
         address card;
         uint256 price;
         uint256 start_at;
@@ -20,8 +20,8 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
 
     IERC20Token[] public ticketsaleTokens;
 
-    event DepositTickets(address _sender, address indexed _issuer, address _ticket, address indexed _card, uint256 _amount, uint256 _price);
-    event BuyTicket(address indexed _sender, address indexed _issuer, address indexed _ticket, uint256 _amount, uint256 _price);
+    event DepositTickets(address _sender, uint32 indexed _issuer, address _ticket, address indexed _card, uint256 _amount, uint256 _price);
+    event BuyTicket(address indexed _sender, uint32 indexed _issuer, address indexed _ticket, uint256 _amount, uint256 _price);
 
     constructor(address _notifier_address, address _managedContracts, address _platformToken, address _ether_token)
         public
@@ -41,6 +41,7 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
         public
         validTargetContract(_ticket)
         validTargetContract(_card)
+        ownerOnly
     {
         require(_amount > 0);
         require(_price > 0);
@@ -51,7 +52,6 @@ contract FinancieTicketStore is IFinancieTicketStore, FinancieNotifierDelegate, 
         * check ticket issuer and deposit tickets into this contract
         */
         IFinancieIssuerToken ticket = IFinancieIssuerToken(_ticket);
-        require(msg.sender == ticket.getIssuer() || msg.sender == owner );
 
         IERC20Token tokenTicket = IERC20Token(_ticket);
         assert(tokenTicket.transferFrom(msg.sender, this, _amount));

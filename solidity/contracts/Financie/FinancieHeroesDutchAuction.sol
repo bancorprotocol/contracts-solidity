@@ -4,6 +4,7 @@ import '../DutchAuction/DutchAuction.sol';
 import './IFinancieAuction.sol';
 import './FinancieFee.sol';
 import './FinancieNotifierDelegate.sol';
+import './IFinancieInternalWallet.sol';
 import '../utility/Owned.sol';
 import '../token/interfaces/IERC20Token.sol';
 
@@ -11,6 +12,8 @@ import '../token/interfaces/IERC20Token.sol';
 contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, FinancieNotifierDelegate, FinancieFee {
 
     IERC20Token paymentCurrentyToken;
+    IFinancieInternalWallet internalWallet;
+    uint32 hero_id;
 
     /*
      * Public functions
@@ -20,14 +23,14 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
     *   @dev Contract constructor function sets the starting price, divisor constant and
     *        divisor exponent for calculating the Dutch Auction price.
     *
-    *   @param   _wallet_address    Wallet address to which all contributed ETH will be forwarded.
+    *   @param   _hero_id           Issuer id.
     *   @param   _price_start       High price in WEI at which the auction starts.
     *   @param   _price_constant    Auction price divisor constant.
     *   @param   _price_exponent    Auction price divisor exponent.
     *   @param   _notifier_address  Financie Notifier address.
     */
     constructor(
-        address _wallet_address,
+        uint32  _hero_id,
         address _team_wallet,
         address _whitelister_address,
         uint32 _teamFee,
@@ -35,10 +38,11 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
         uint _price_constant,
         uint32 _price_exponent,
         address _notifier_address,
-        address _payment_currency_token_address)
+        address _payment_currency_token_address,
+        address _internal_wallet_address)
         public
         DutchAuction(
-          _wallet_address,
+          _internal_wallet_address,
           _whitelister_address,
           _price_start,
           _price_constant,
@@ -47,7 +51,9 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
         FinancieNotifierDelegate(_notifier_address)
     {
         paymentCurrentyToken = IERC20Token(_payment_currency_token_address);
-        setFee(0, _teamFee, _wallet_address, _team_wallet, _payment_currency_token_address);
+        internalWallet = IFinancieInternalWallet(_internal_wallet_address);
+        hero_id = _hero_id;
+        setFee(0, _teamFee, _hero_id, _team_wallet, _payment_currency_token_address, _internal_wallet_address);
     }
 
     /**
@@ -101,7 +107,11 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
         // Send bid amount to wallet
         uint256 feeAmount = distributeFees(amount);
         uint256 net = safeSub(amount, feeAmount);
-        paymentCurrentyToken.transfer(wallet_address, net);
+        if ( paymentCurrentyToken.allowance(this, address(internalWallet)) < net ) {
+            paymentCurrentyToken.approve(address(internalWallet), 0);
+        }
+        paymentCurrentyToken.approve(address(internalWallet), net);
+        internalWallet.depositTokens(hero_id, net, address(paymentCurrentyToken));
 
         BidSubmission(msg.sender, amount, missing_funds);
 
@@ -110,7 +120,7 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
         notifyBidCards(msg.sender, address(token), amount);
 
         // Notify logs of revenue
-        notifyAuctionRevenue(msg.sender, address(this), address(token), hero_wallet, net, team_wallet, feeAmount);
+        notifyAuctionRevenue(msg.sender, address(this), address(token), hero_id, net, feeAmount);
     }
 
     /**

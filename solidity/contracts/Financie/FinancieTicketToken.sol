@@ -8,14 +8,14 @@ import './IFinancieIssuerToken.sol';
 * Financie Ticket Token implementation
 */
 contract FinancieTicketToken is ERC20Token, FinancieNotifierDelegate, IFinancieIssuerToken {
-    address issuer;
+    uint32 issuer;
 
     /**
         @dev constructor
         @param _name        token name
         @param _symbol      token symbol
     */
-    constructor(string _name, string _symbol, address _issuer, uint32 _supply, address _notifier)
+    constructor(string _name, string _symbol, uint32 _issuer, uint32 _supply, address _notifier)
         public
         ERC20Token(_name, _symbol, 0)
         FinancieNotifierDelegate(_notifier)
@@ -43,7 +43,7 @@ contract FinancieTicketToken is ERC20Token, FinancieNotifierDelegate, IFinancieI
         notifyBurnTickets(msg.sender, _amount);
     }
 
-    function getIssuer() public view returns(address) {
+    function getIssuer() public view returns(uint32) {
         return issuer;
     }
 

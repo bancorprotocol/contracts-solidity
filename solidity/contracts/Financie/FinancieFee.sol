@@ -1,6 +1,7 @@
 pragma solidity ^0.4.18;
 import '../utility/Utils.sol';
 import '../token/interfaces/IERC20Token.sol';
+import './IFinancieInternalWallet.sol';
 
 /**
     **FROZEN**
@@ -15,28 +16,38 @@ contract FinancieFee is Utils {
     uint32 public heroFee;
     // Fee percentage in ppm for team
     uint32 public teamFee;
-    // Receiver wallet address for hero fee
-    address public hero_wallet;
+    // Receiver wallet id for hero fee
+    uint32 public hero_id;
     // Receiver wallet address for team fee
     address public team_wallet;
 
     // Currency token for payment
     IERC20Token payment_currenty_token;
 
+    IFinancieInternalWallet internalWallet;
+
     /**
     *   @dev setFee
     *   @param _heroFee       Fee percentage in ppm for hero
     *   @param _teamFee       Fee percentage in ppm for team
-    *   @param _hero_wallet   Receiver wallet address for hero fee
+    *   @param _hero_id       Receiver id for hero fee
     *   @param _team_wallet   Receiver wallet address for team fee
     *   @param _payment_currency_token Currency token for payment
     */
-    function setFee(uint32 _heroFee, uint32 _teamFee, address _hero_wallet, address _team_wallet, address _payment_currency_token) internal {
+    function setFee(
+        uint32 _heroFee,
+        uint32 _teamFee,
+        uint32 _hero_id,
+        address _team_wallet,
+        address _payment_currency_token,
+        address _internalWallet
+    ) internal {
         heroFee = _heroFee;
         teamFee = _teamFee;
-        hero_wallet = _hero_wallet;
+        hero_id = _hero_id;
         team_wallet = _team_wallet;
         payment_currenty_token = IERC20Token(_payment_currency_token);
+        internalWallet = IFinancieInternalWallet(_internalWallet);
     }
 
     /**
@@ -47,7 +58,14 @@ contract FinancieFee is Utils {
     function distributeFees(uint256 _amount) internal returns (uint256) {
         uint256 _heroFee = getHeroFee(_amount);
         uint256 _teamFee = getTeamFee(_amount);
-        assert(payment_currenty_token.transfer(hero_wallet, _heroFee));
+        if ( _heroFee > 0 ) {
+            require(hero_id != 0);
+            if ( payment_currenty_token.allowance(this, address(internalWallet)) < _heroFee ) {
+                payment_currenty_token.approve(address(internalWallet), 0);
+            }
+            payment_currenty_token.approve(address(internalWallet), _heroFee);
+            internalWallet.depositTokens(hero_id, _heroFee, address(payment_currenty_token));
+        }
         assert(payment_currenty_token.transfer(team_wallet, _teamFee));
 
         return safeAdd(_heroFee, _teamFee);

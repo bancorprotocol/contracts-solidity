@@ -25,8 +25,10 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
 
     event BurnTickets(address indexed _sender, address indexed _ticket, uint256 _amount, uint _timestamp);
 
-    event AuctionRevenue(address _sender, address indexed _target, address indexed _card, address indexed _receiver, uint256 _amount, uint _timestamp);
-    event ExchangeRevenue(address _sender, address indexed _target, address indexed _card, address indexed _receiver, uint256 _amount, uint _timestamp);
+    event AuctionHeroRevenue(address _sender, address indexed _target, address indexed _card, uint32 indexed _receiver, uint256 _amount, uint _timestamp);
+    event AuctionTeamRevenue(address _sender, address indexed _target, address indexed _card, uint256 _amount, uint _timestamp);
+    event ExchangeHeroRevenue(address _sender, address indexed _target, address indexed _card, uint32 indexed _receiver, uint256 _amount, uint _timestamp);
+    event ExchangeTeamRevenue(address _sender, address indexed _target, address indexed _card, uint256 _amount, uint _timestamp);
 
     constructor(address _managedContracts, address _platformToken, address _ether_token)
         public
@@ -265,15 +267,14 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         address _sender,
         address _target,
         address _card,
-        address _hero,
+        uint32  _hero,
         uint256 _hero_amount,
-        address _team,
         uint256 _team_amount)
         public
         sameOwner
     {
-        emit AuctionRevenue(_sender, _target, _card, _hero, _hero_amount, now);
-        emit AuctionRevenue(_sender, _target, _card, _team, _team_amount, now);
+        emit AuctionHeroRevenue(_sender, _target, _card, _hero, _hero_amount, now);
+        emit AuctionTeamRevenue(_sender, _target, _card, _team_amount, now);
     }
 
     /**
@@ -283,15 +284,14 @@ contract FinancieNotifier is IFinancieNotifier, FinancieCoreComponents, Utils {
         address _sender,
         address _target,
         address _card,
-        address _hero,
+        uint32  _hero,
         uint256 _hero_amount,
-        address _team,
         uint256 _team_amount)
         public
         sameOwner
     {
-        emit ExchangeRevenue(_sender, _target, _card, _hero, _hero_amount, now);
-        emit ExchangeRevenue(_sender, _target, _card, _team, _team_amount, now);
+        emit ExchangeHeroRevenue(_sender, _target, _card, _hero, _hero_amount, now);
+        emit ExchangeTeamRevenue(_sender, _target, _card, _team_amount, now);
     }
 
 }

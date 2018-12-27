@@ -11,6 +11,8 @@ const FinancieHeroesDutchAuction = artifacts.require('FinancieHeroesDutchAuction
 const FinancieNotifier = artifacts.require('FinancieNotifier.sol');
 const FinancieManagedContracts = artifacts.require('FinancieManagedContracts.sol');
 
+const FinancieInternalWallet = artifacts.require('FinancieInternalWallet.sol');
+
 contract('FinancieHeroesDutchAuction', (accounts) => {
     let managedContracts;
     let auction;
@@ -36,6 +38,8 @@ contract('FinancieHeroesDutchAuction', (accounts) => {
 
         new Promise(() => console.log('[FinancieHeroesDutchAuction]card:' + cardToken.address));
 
+        let internalWallet = await FinancieInternalWallet.new("0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C", currencyToken.address);
+
         auction = await FinancieHeroesDutchAuction.new(
             '0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C',
             '0x46a254FD6134eA0f564D07A305C0Db119a858d66',
@@ -45,18 +49,20 @@ contract('FinancieHeroesDutchAuction', (accounts) => {
             0x5ddb1980,
             3,
             financieNotifier.address,
-            currencyToken.address);
+            currencyToken.address,
+            internalWallet.address
+        );
         new Promise(() => console.log('[FinancieHeroesDutchAuction]auction:' + auction.address));
 
         console.log('[FinancieHeroesDutchAuction]begin setup');
 
-        managedContracts.activateTargetContract(cardToken.address, true);
+        await managedContracts.activateTargetContract(cardToken.address, true);
         console.log('[FinancieHeroesDutchAuction]activateTargetContract card OK');
 
-        cardToken.transfer(auction.address, 200000 * (10 ** 18));
+        await cardToken.transfer(auction.address, 200000 * (10 ** 18));
         console.log('[FinancieHeroesDutchAuction]card transfer to auction OK');
 
-        auction.setup(cardToken.address);
+        await auction.setup(cardToken.address);
         console.log('[FinancieHeroesDutchAuction]setup OK');
 
         await auction.startAuction();
@@ -73,8 +79,8 @@ contract('FinancieHeroesDutchAuction', (accounts) => {
     });
 
     it('bid', async () => {
-        currencyToken.issue(accounts[0], 10 ** 5);
-        currencyToken.approve(auction.address, 10 ** 5);
+        await currencyToken.issue(accounts[0], 10 ** 5);
+        await currencyToken.approve(auction.address, 10 ** 5);
         await auction.bidToken(1 * (10 ** 5));
         console.log('[FinancieHeroesDutchAuction]bid OK');
     });

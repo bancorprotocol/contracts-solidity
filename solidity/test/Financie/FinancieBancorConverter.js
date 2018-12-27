@@ -17,11 +17,14 @@ const FinancieCardToken = artifacts.require('FinancieCardToken.sol');
 const FinancieNotifier = artifacts.require('FinancieNotifier.sol');
 const FinancieManagedContracts = artifacts.require('FinancieManagedContracts.sol');
 
+const FinancieInternalWallet = artifacts.require('FinancieInternalWallet.sol');
+
 const weight10Percent = 100000;
 const gasPrice = 22000000000;
 const gasPriceBad = 22000000001;
 
 contract('FinancieBancorConverter', (accounts) => {
+    const hero_id = 100;
     let managedContracts;
     let platformToken;
     let currencyToken;
@@ -43,7 +46,7 @@ contract('FinancieBancorConverter', (accounts) => {
         cardToken = await FinancieCardToken.new(
             'Financie Card Token',
             'FNCD',
-            '0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C',
+            hero_id,
             financieNotifier.address);
 
         smartToken = await SmartToken.new('Token1', 'TKN', 0);
@@ -68,6 +71,8 @@ contract('FinancieBancorConverter', (accounts) => {
         await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[0]);
 
+        let internalWallet = await FinancieInternalWallet.new("0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C", currencyToken.address);
+
         bancor = await FinancieBancorConverter.new(
             smartToken.address,
             currencyToken.address,
@@ -78,24 +83,26 @@ contract('FinancieBancorConverter', (accounts) => {
             financieNotifier.address,
             15000,
             15000,
-            10000);
+            10000,
+            internalWallet.address
+        );
 
         console.log('[FinancieBancorConverter]begin setup');
 
-        currencyToken.issue(accounts[0], 2 * (10 ** 5));
+        await currencyToken.issue(accounts[0], 2 * (10 ** 5));
 
-        bancor.addConnector(currencyToken.address, 10000, false);
+        await bancor.addConnector(currencyToken.address, 10000, false);
 
-        currencyToken.transfer(bancor.address, 2 * (10 ** 5));
+        await currencyToken.transfer(bancor.address, 2 * (10 ** 5));
 
         await smartToken.issue(bancor.address, 1000000 * (10 ** 5));
 
         let balanceOfCurrencyToken = await currencyToken.balanceOf(bancor.address);
         assert.equal(200000, balanceOfCurrencyToken);
 
-        cardToken.transfer(bancor.address, 20000 * (10 ** 5));
+        await cardToken.transfer(bancor.address, 20000 * (10 ** 5));
 
-        smartToken.transferOwnership(bancor.address);
+        await smartToken.transferOwnership(bancor.address);
 
         await bancor.acceptTokenOwnership();
 
@@ -125,9 +132,6 @@ contract('FinancieBancorConverter', (accounts) => {
 
         let smartToken1BuyPath = [currencyToken.address, smartToken.address, cardToken.address];
 
-        // await currencyToken.approve(bancorNetwork.address, 70000);
-        // await bancorNetwork.claimAndConvert(smartToken1BuyPath, 70000, 1);
-
         [estimationSell,sellFee] = await bancor.getReturn(cardToken.address, currencyToken.address, amountSellCard);
         console.log('[FinancieBancorConverter]estimationSell:' + estimationSell.toFixed());
 
@@ -149,15 +153,15 @@ contract('FinancieBancorConverter', (accounts) => {
 
         [estimationBuy, Fee] = await bancor.getReturn(currencyToken.address, cardToken.address, 10 ** 5);
         console.log('[FinancieBancorConverter]estimationBuy:' + estimationBuy.toFixed());
-  
+
         let beforeBuy = await cardToken.balanceOf(accounts[0]);
         console.log('[FinancieBancorConverter]balance of card token before:' + beforeBuy.toFixed());
 
         let currencyTokenBefore = await currencyToken.balanceOf(accounts[0]);
         console.log('[FinancieBancorConverter]balance of currency token before:' + currencyTokenBefore.toFixed());
 
-        currencyToken.approve(bancor.address, 0);
-        currencyToken.approve(bancor.address, 10 ** 5);
+        await currencyToken.approve(bancor.address, 0);
+        await currencyToken.approve(bancor.address, 10 ** 5);
         await bancor.buyCards(10 ** 5, estimationBuy, {gasPrice: gasPrice});
         console.log('[FinancieBancorConverter]buy cards');
 
