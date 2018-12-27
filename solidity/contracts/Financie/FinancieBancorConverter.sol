@@ -15,8 +15,8 @@ import './IFinancieBancorConverter.sol';
 */
 contract FinancieBancorConverter is IFinancieBancorConverter, BancorConverter, FinancieNotifierDelegate, FinancieFee {
 
-    IERC20Token[] public quickSellPath;
-    IERC20Token[] public quickBuyPath;                  // conversion path that's used in order to buy the token
+    IERC20Token public currencyToken;
+    IERC20Token[] private convertPath;
 
     /**
     *   @dev constructor
@@ -24,39 +24,35 @@ contract FinancieBancorConverter is IFinancieBancorConverter, BancorConverter, F
     *   @param  _token                smart token governed by the converter
     *   @param  _currencyToken        currency token for payment
     *   @param  _connectorToken       card connector for defining the first connector at deployment time
-    *   @param  _hero_wallet          issuer's wallet
+    *   @param  _hero_id              issuer's id
     *   @param  _team_wallet          Financie team wallet
     *   @param  _registry             address of a bancor converter extensions contract
     *   @param  _notifier_address     address of Financie Notifier contract
     *   @param  _heroFee              fee for financie hero, represented in ppm
     *   @param  _teamFee              fee for financie team, represented in ppm
-    *   @param  _connectorWeight      optional, weight for the initial connector
+    *   @param  _connectorWeight      weight for the initial connector
+    *   @param  _internalWallet       internal wallet contract
     */
     constructor(
         ISmartToken _token,
         IERC20Token _currencyToken,
         IERC20Token _connectorToken,
-        address _hero_wallet,
-        address _team_wallet,
+        uint32      _hero_id,
+        address     _team_wallet,
         IContractRegistry _registry,
-        address _notifier_address,
-        uint32 _heroFee,
-        uint32 _teamFee,
-        uint32 _connectorWeight)
+        address     _notifier_address,
+        uint32      _heroFee,
+        uint32      _teamFee,
+        uint32      _connectorWeight,
+        address     _internalWallet
+        )
         public
         BancorConverter(_token, _registry, 0, _connectorToken, _connectorWeight)
         FinancieNotifierDelegate(_notifier_address)
     {
-        // when receiving , then deposit to currency token -> change to smart token -> change to connector token
-        quickBuyPath.push(_currencyToken);
-        quickBuyPath.push(_token);
-        quickBuyPath.push(_connectorToken);
+        currencyToken = _currencyToken;
 
-        quickSellPath.push(_connectorToken);
-        quickSellPath.push(_token);
-        quickSellPath.push(_currencyToken);
-
-        setFee(_heroFee, _teamFee, _hero_wallet, _team_wallet, _currencyToken);
+        setFee(_heroFee, _teamFee, _hero_id, _team_wallet, _currencyToken, _internalWallet);
     }
 
     function getVersion() public pure returns (uint256) {
@@ -64,32 +60,7 @@ contract FinancieBancorConverter is IFinancieBancorConverter, BancorConverter, F
     }
 
     function startTrading() public {
-        notifyApproveNewBancor(address(quickSellPath[0]), address(this));
-    }
-
-    function getQuickBuyPathLength() public view returns (uint256) {
-        return quickBuyPath.length;
-    }
-
-    function setQuickBuyPath(IERC20Token[] _path)
-        public
-        ownerOnly
-        validConversionPath(_path)
-    {
-        quickBuyPath = _path;
-    }
-
-    function copyQuickBuyPath(FinancieBancorConverter _oldConverter) public ownerOnly {
-        uint256 quickBuyPathLength = _oldConverter.getQuickBuyPathLength();
-        if (quickBuyPathLength <= 0)
-            return;
-
-        IERC20Token[] memory path = new IERC20Token[](quickBuyPathLength);
-        for (uint256 i = 0; i < quickBuyPathLength; i++) {
-            path[i] = _oldConverter.quickBuyPath(i);
-        }
-
-        setQuickBuyPath(path);
+        notifyApproveNewBancor(address(connectorTokens[0]), address(this));
     }
 
     /**
@@ -98,23 +69,22 @@ contract FinancieBancorConverter is IFinancieBancorConverter, BancorConverter, F
     *   @param  _amount           amount of sale tokens in wei
     *   @param  _minReturn        minimum demands currency in wei, in case of lower result, the function will be failed
     */
-    function sellCards(uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        IERC20Token cardToken = quickSellPath[0];
-        IERC20Token currencyToken = quickSellPath[2];
-        uint256 result = quickConvertInternal(quickSellPath, _amount, 1, this);
+    function sellCards(uint256 _amount, uint256 _minReturn) public returns (uint256, uint256, uint256) {
+        convertPath = [connectorTokens[0], token, currencyToken];
+        uint256 result = quickConvertInternal(convertPath, _amount, 1, this);
 
         uint256 feeAmount = distributeFees(result);
         uint256 net = safeSub(result, feeAmount);
 
         currencyToken.transfer(msg.sender, net);
 
-        notifyConvertCards(msg.sender, address(cardToken), address(currencyToken), _amount, net);
+        notifyConvertCards(msg.sender, address(connectorTokens[0]), address(currencyToken), _amount, net);
         assert(net >= _minReturn);
 
         // Notify logs of revenue
-        notifyExchangeRevenue(msg.sender, address(this), address(cardToken), hero_wallet, getHeroFee(result), team_wallet, getTeamFee(result));
+        notifyExchangeRevenue(msg.sender, address(this), address(connectorTokens[0]), hero_id, getHeroFee(result), getTeamFee(result));
 
-        return net;
+        return (net, getHeroFee(result), getTeamFee(result));
     }
 
     /**
@@ -123,22 +93,21 @@ contract FinancieBancorConverter is IFinancieBancorConverter, BancorConverter, F
     *   @param  _amount           amount of purchase payment currency in wei
     *   @param  _minReturn        minimum demands cards in wei, in case of lower result, the function will be failed
     */
-    function buyCards(uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        IERC20Token currencyToken = quickBuyPath[0];
-        IERC20Token cardToken = quickBuyPath[2];
+    function buyCards(uint256 _amount, uint256 _minReturn) public returns (uint256, uint256, uint256) {
         assert(currencyToken.transferFrom(msg.sender, this, getFinancieFee(_amount)));
         uint256 feeAmount = distributeFees(_amount);
         uint256 net = safeSub(_amount, feeAmount);
 
-        uint256 result = quickConvertInternal(quickBuyPath, net, 1, msg.sender);
+        convertPath = [currencyToken, token, connectorTokens[0]];
+        uint256 result = quickConvertInternal(convertPath, net, 1, msg.sender);
 
-        notifyConvertCards(msg.sender, address(currencyToken), address(cardToken), _amount, result);
+        notifyConvertCards(msg.sender, address(currencyToken), address(connectorTokens[0]), _amount, result);
         assert(result >= _minReturn);
 
         // Notify logs of revenue
-        notifyExchangeRevenue(msg.sender, address(this), address(currencyToken), hero_wallet, getHeroFee(_amount), team_wallet, getTeamFee(_amount));
+        notifyExchangeRevenue(msg.sender, address(this), address(currencyToken), hero_id, getHeroFee(_amount), getTeamFee(_amount));
 
-        return result;
+        return (result, getHeroFee(_amount), getTeamFee(_amount));
     }
 
     /**
@@ -164,14 +133,14 @@ contract FinancieBancorConverter is IFinancieBancorConverter, BancorConverter, F
     *   @dev Overridden for original fee model
     */
     function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256, uint256) {
-        require(_fromToken == quickSellPath[0] || _fromToken == quickBuyPath[0]);
-        require(_toToken == quickSellPath[2] || _toToken == quickBuyPath[2]);
+        require(_fromToken == connectorTokens[0] || _fromToken == currencyToken);
+        require(_toToken == currencyToken || _toToken == connectorTokens[0]);
 
         uint256 financieFee;
         uint256 bancorFee;
         uint256 totalFee;
         uint256 net;
-        if ( _fromToken == quickSellPath[0] ) {
+        if ( _fromToken == connectorTokens[0] ) {
             uint256 gross;
             (gross, bancorFee) = super.getReturn(_fromToken, _toToken, _amount);
             assert(bancorFee == 0);
@@ -197,10 +166,6 @@ contract FinancieBancorConverter is IFinancieBancorConverter, BancorConverter, F
         returns (uint256)
     {
         revert();
-    }
-
-    function () public payable {
-        // Override to receive currency before distribution revenue/fee
     }
 
 }

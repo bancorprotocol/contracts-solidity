@@ -10,7 +10,7 @@ import './IFinancieIssuerToken.sol';
 contract FinancieCardToken is ERC20Token, FinancieNotifierDelegate, IFinancieIssuerToken {
     uint256 private constant FIXED_INITIAL_SUPPLY = 20000000 * 1 ether;
 
-    address issuer;
+    uint32 issuer;
 
     /**
     *   @dev constructor
@@ -18,7 +18,7 @@ contract FinancieCardToken is ERC20Token, FinancieNotifierDelegate, IFinancieIss
     *   @param _name        token name
     *   @param _symbol      token symbol
     */
-    constructor(string _name, string _symbol, address _issuer, address _notifier_address)
+    constructor(string _name, string _symbol, uint32 _issuer, address _notifier_address)
         public
         ERC20Token(_name, _symbol, 18)
         FinancieNotifierDelegate(_notifier_address)
@@ -46,7 +46,7 @@ contract FinancieCardToken is ERC20Token, FinancieNotifierDelegate, IFinancieIss
         notifyBurnCards(msg.sender, _amount);
     }
 
-    function getIssuer() public view returns(address) {
+    function getIssuer() public view returns(uint32) {
         return issuer;
     }
 

@@ -15,32 +15,38 @@ contract FinancieBancorConverterFactory is BancorConverterFactory {
     uint32 public heroFee;
     // Fee percentage in ppm for team
     uint32 public teamFee;
-    // Receiver wallet address for hero fee
-    address public hero_wallet;
+    // Receiver wallet id for hero fee
+    uint32 public hero_id;
     // Receiver wallet address for team fee
     address public team_wallet;
     // Notifier contract address
     address public notifier_address;
-    // Ether Tokens
-    IEtherToken public etherToken;
+    // Currency Tokens
+    IERC20Token public currencyToken;
+    // Internal wallet address
+    address public internalWallet;
+
     /**
         @dev constructor
     */
     constructor(
-      address _hero_wallet,
-      address _team_wallet,
-      uint32 _heroFee,
-      uint32 _teamFee,
-      address _notifier_address,
-      IEtherToken _etherToken)
-      public
+        uint32  _hero_id,
+        address _team_wallet,
+        uint32  _heroFee,
+        uint32  _teamFee,
+        address _notifier_address,
+        IERC20Token _currencyToken,
+        address _internalWallet
+    )
+        public
     {
-      heroFee = _heroFee;
-      teamFee = _teamFee;
-      hero_wallet = _hero_wallet;
-      team_wallet = _team_wallet;
-      notifier_address = _notifier_address;
-      etherToken = _etherToken;
+        heroFee = _heroFee;
+        teamFee = _teamFee;
+        hero_id = _hero_id;
+        team_wallet = _team_wallet;
+        notifier_address = _notifier_address;
+        currencyToken = _currencyToken;
+        internalWallet = _internalWallet;
     }
 
     /**
@@ -64,15 +70,16 @@ contract FinancieBancorConverterFactory is BancorConverterFactory {
     ) public returns(address converterAddress) {
         FinancieBancorConverter converter = new FinancieBancorConverter(
             _token,
-            etherToken,
+            currencyToken,
             _connectorToken,
-            hero_wallet,
+            hero_id,
             team_wallet,
             _registry,
             notifier_address,
             heroFee,
             teamFee,
-            _connectorWeight
+            _connectorWeight,
+            internalWallet
         );
 
         converter.transferOwnership(msg.sender);

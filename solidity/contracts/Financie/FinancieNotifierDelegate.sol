@@ -90,28 +90,26 @@ contract FinancieNotifierDelegate is Owned {
         address _sender,
         address _target,
         address _card,
-        address _hero,
+        uint32  _hero,
         uint256 _hero_amount,
-        address _team,
         uint256 _team_amount)
         internal
     {
         notifier = IFinancieNotifier(notifier.latestNotifier());
-        notifier.notifyAuctionRevenue(_sender, _target, _card, _hero, _hero_amount, _team, _team_amount);
+        notifier.notifyAuctionRevenue(_sender, _target, _card, _hero, _hero_amount, _team_amount);
     }
 
     function notifyExchangeRevenue(
         address _sender,
         address _target,
         address _card,
-        address _hero,
+        uint32  _hero,
         uint256 _hero_amount,
-        address _team,
         uint256 _team_amount)
         internal
     {
         notifier = IFinancieNotifier(notifier.latestNotifier());
-        notifier.notifyExchangeRevenue(_sender, _target, _card, _hero, _hero_amount, _team, _team_amount);
+        notifier.notifyExchangeRevenue(_sender, _target, _card, _hero, _hero_amount, _team_amount);
     }
 
 }

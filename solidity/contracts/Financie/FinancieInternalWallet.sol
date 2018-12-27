@@ -76,25 +76,28 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         balanceOfTokens[address(paymentCurrencyToken)][_userId] = safeSub(balanceOfTokens[address(paymentCurrencyToken)][_userId], _amount);
 
         IERC20Token token = IERC20Token(_tokenAddress);
-        uint256 tokenBefore = token.balanceOf(this);
-        uint256 currencyBefore = paymentCurrencyToken.balanceOf(this);
+        uint256 tokenDiff = token.balanceOf(this);
+        uint256 currencyDiff = paymentCurrencyToken.balanceOf(this);
 
-        uint256 allowance = paymentCurrencyToken.allowance(this, _bancorAddress);
-        if ( allowance > 0 && allowance < _amount ) {
+        if ( paymentCurrencyToken.allowance(this, _bancorAddress) < _amount ) {
             assert(paymentCurrencyToken.approve(_bancorAddress, 0));
         }
         assert(paymentCurrencyToken.approve(_bancorAddress, _amount));
 
         IFinancieBancorConverter converter = IFinancieBancorConverter(_bancorAddress);
-        uint256 result = converter.buyCards(_amount, _minReturn);
+        uint256 result;
+        uint256 heroFee;
+        uint256 teamFee;
+        (result, heroFee, teamFee) = converter.buyCards(_amount, _minReturn);
         assert(result >= _minReturn);
 
-        uint256 tokenAfter = token.balanceOf(this);
-        uint256 currencyAfter = paymentCurrencyToken.balanceOf(this);
+        tokenDiff = safeSub(token.balanceOf(this), tokenDiff);
         // check received card tokens amount equals to converted amount
-        assert(result == safeSub(tokenAfter, tokenBefore));
+        assert(result == tokenDiff);
+
+        currencyDiff = safeSub(safeAdd(currencyDiff, heroFee), paymentCurrencyToken.balanceOf(this));
         // check consumed currency tokens amount equals to specified amount
-        assert(_amount == safeSub(currencyBefore, currencyAfter));
+        assert(_amount == currencyDiff);
 
         balanceOfTokens[_tokenAddress][_userId] = safeAdd(balanceOfTokens[_tokenAddress][_userId], result);
 
@@ -111,8 +114,8 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         require(_amount > 0);
 
         IERC20Token token = IERC20Token(_tokenAddress);
-        uint256 tokenBefore = token.balanceOf(this);
-        uint256 currencyBefore = paymentCurrencyToken.balanceOf(this);
+        uint256 tokenDiff = token.balanceOf(this);
+        uint256 currencyDiff = paymentCurrencyToken.balanceOf(this);
 
         uint256 allowance = token.allowance(this, _bancorAddress);
         if ( allowance > 0 && allowance < _amount ) {
@@ -123,15 +126,19 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         balanceOfTokens[_tokenAddress][_userId] = safeSub(balanceOfTokens[_tokenAddress][_userId], _amount);
 
         IFinancieBancorConverter converter = IFinancieBancorConverter(_bancorAddress);
-        uint256 result = converter.sellCards(_amount, _minReturn);
+        uint256 result;
+        uint256 heroFee;
+        uint256 teamFee;
+        (result, heroFee, teamFee) = converter.sellCards(_amount, _minReturn);
         assert(result >= _minReturn);
 
-        uint256 tokenAfter = token.balanceOf(this);
-        uint256 currencyAfter = paymentCurrencyToken.balanceOf(this);
+        currencyDiff = safeSub(safeSub(paymentCurrencyToken.balanceOf(this), heroFee), currencyDiff);
         // check received currency tokens amount equals to converted amount
-        assert(result == safeSub(currencyAfter, currencyBefore));
+        assert(result == currencyDiff);
+
+        tokenDiff = safeSub(tokenDiff, token.balanceOf(this));
         // check consumed card tokens amount equals to specified amount
-        assert(_amount == safeSub(tokenBefore, tokenAfter));
+        assert(_amount == tokenDiff);
 
         balanceOfTokens[address(paymentCurrencyToken)][_userId] = safeAdd(balanceOfTokens[address(paymentCurrencyToken)][_userId], result);
 

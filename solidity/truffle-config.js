@@ -49,6 +49,15 @@ if ( process.argv[2] == 'migrate' ) {
   };
 } else {
   module.exports = {
+    networks: {
+      test: {
+        gas: 7000000,
+        gasPrice: 1000000000,
+        network_id: 1010,
+        host: "localhost",
+        port: 8545
+      }
+    },
     solc: {
       optimizer: {
         enabled: true,
