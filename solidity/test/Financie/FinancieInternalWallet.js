@@ -195,11 +195,31 @@ contract('FinancieInternalWallet', (accounts) => {
         let currencyAfterBidding2 = await currencyToken.balanceOf(internalWallet.address);
         console.log('[FinancieInternalWallet]total currencyAfterBidding2 ' + currencyAfterBidding2.toFixed());
 
+        try {
+            await internalWallet.delegateReceiveCards(user_id, auction.address);
+            assert(false, "exception not thrown / not finalized");
+        }
+        catch ( error ) {
+            assert(true, "exception throw");
+        }
+
         await auction.finalizeAuction();
         console.log('[FinancieInternalWallet]finalize OK');
 
-        await internalWallet.delegateReceiveCards(user_id, auction.address);
-        console.log('[FinancieInternalWallet]delegateReceive OK');
+        try {
+            await internalWallet.delegateReceiveCards(user_id, auction.address);
+            assert(false, "exception not thrown / not enough time after finalized");
+        }
+        catch ( error ) {
+            assert(true, "exception throw");
+        }
+
+        // TODO: Receive 1 min later
+        //await internalWallet.delegateReceiveCards(user_id, auction.address);
+        //console.log('[FinancieInternalWallet]delegateReceive OK');
+
+        //let receivedAmount = await internalWallet.balanceOfTokens(cardToken.address, user_id);
+        //assert(receivedAmount > 0);
     });
 
     it('delegateWithdrawal', async () => {
