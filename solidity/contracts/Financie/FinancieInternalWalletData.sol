@@ -6,6 +6,7 @@ import './IFinancieInternalWalletData.sol';
 contract FinancieInternalWalletData is IFinancieInternalWalletData, FinancieCoreComponents, Utils {
 
   mapping (address => mapping (uint32 => uint256)) balanceOfTokens;
+  mapping (address => mapping (uint32 => bool)) holderOfTokens;
   mapping (address => mapping (uint32 => uint256)) bidsOfAuctions;
   mapping (address => uint256) totalBidsOfAuctions;
   mapping (address => uint256) receivedCardsOfAuctions;
