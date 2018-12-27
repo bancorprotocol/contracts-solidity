@@ -50,10 +50,11 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
         )
         FinancieNotifierDelegate(_notifier_address)
     {
+        require(_teamFee <= 1000000);
         paymentCurrentyToken = IERC20Token(_payment_currency_token_address);
         internalWallet = IFinancieInternalWallet(_internal_wallet_address);
         hero_id = _hero_id;
-        setFee(0, _teamFee, _hero_id, _team_wallet, _payment_currency_token_address, _internal_wallet_address);
+        setFee(1000000 - _teamFee, _teamFee, _hero_id, _team_wallet, _payment_currency_token_address, _internal_wallet_address);
     }
 
     /**
@@ -87,6 +88,7 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
     function bidToken(uint256 _amount)
         public
         atStage(Stages.AuctionStarted)
+        returns (uint256, uint256, uint256)
     {
         // Missing funds without the current bid value
         uint missing_funds = missingFundsToEndAuction();
@@ -106,12 +108,10 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
 
         // Send bid amount to wallet
         uint256 feeAmount = distributeFees(amount);
+        uint256 heroFee = getHeroFee(amount);
+        uint256 teamFee = getTeamFee(amount);
         uint256 net = safeSub(amount, feeAmount);
-        if ( paymentCurrentyToken.allowance(this, address(internalWallet)) < net ) {
-            paymentCurrentyToken.approve(address(internalWallet), 0);
-        }
-        paymentCurrentyToken.approve(address(internalWallet), net);
-        internalWallet.depositTokens(hero_id, net, address(paymentCurrentyToken));
+        assert(net == 0);
 
         BidSubmission(msg.sender, amount, missing_funds);
 
@@ -120,7 +120,9 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
         notifyBidCards(msg.sender, address(token), amount);
 
         // Notify logs of revenue
-        notifyAuctionRevenue(msg.sender, address(this), address(token), hero_id, net, feeAmount);
+        notifyAuctionRevenue(msg.sender, address(this), address(token), hero_id, heroFee, teamFee);
+
+        return (amount, heroFee, teamFee);
     }
 
     /**

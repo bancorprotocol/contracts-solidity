@@ -161,19 +161,22 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
             paymentCurrencyToken.approve(_auctionAddress, 0);
         }
         paymentCurrencyToken.approve(_auctionAddress, _amount);
-        auction.bidToken(_amount);
+        uint256 amount;
+        uint256 heroFee;
+        uint256 teamFee;
+        (amount, heroFee, teamFee) = auction.bidToken(_amount);
 
         uint256 currencyAfter = paymentCurrencyToken.balanceOf(this);
 
         uint256 result = safeSub(currencyBefore, currencyAfter);
-        assert(result <= _amount);
+        assert(result == teamFee);
 
-        totalBidsOfAuctions[_auctionAddress] = safeAdd(totalBidsOfAuctions[_auctionAddress], result);
-        bidsOfAuctions[_auctionAddress][_userId] = safeAdd(bidsOfAuctions[_auctionAddress][_userId], result);
-        balanceOfTokens[address(paymentCurrencyToken)][_userId] = safeSub(balanceOfTokens[address(paymentCurrencyToken)][_userId], result);
+        totalBidsOfAuctions[_auctionAddress] = safeAdd(totalBidsOfAuctions[_auctionAddress], amount);
+        bidsOfAuctions[_auctionAddress][_userId] = safeAdd(bidsOfAuctions[_auctionAddress][_userId], amount);
+        balanceOfTokens[address(paymentCurrencyToken)][_userId] = safeSub(balanceOfTokens[address(paymentCurrencyToken)][_userId], amount);
 
         address tokenAddress = auction.targetToken();
-        BidCards(_userId, _amount, tokenAddress, _auctionAddress, now);
+        BidCards(_userId, amount, tokenAddress, _auctionAddress, now);
     }
 
     function delegateReceiveCards(uint32 _userId, address _auctionAddress)
