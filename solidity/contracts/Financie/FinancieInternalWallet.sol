@@ -21,10 +21,10 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
     event DepositTokens(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, uint _timestamp);
     event WithdrawTokens(uint32 indexed _userId, uint256 _amount, address indexed _token_address, uint _timestamp);
 
-    event BuyCards(uint32 indexed _user_id, uint256 _amount, uint256 _minReturn, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
-    event SellCards(uint32 indexed _user_id, uint256 _amount, uint256 _minReturn, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
+    event BuyCards(uint32 indexed _user_id, uint256 _currency_amount, uint256 _card_amount, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
+    event SellCards(uint32 indexed _user_id, uint256 _currency_amount, uint256 _card_amount, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
     event BidCards(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, address indexed _auction_address, uint _timestamp);
-    event ReceiveCards(uint32 indexed _user_id, address indexed _token_address, address indexed _auction_address, uint _timestamp);
+    event ReceiveCards(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, address indexed _auction_address, uint _timestamp);
 
     constructor(address _teamWallet, address _paymentCurrencyToken) public {
         teamWallet = _teamWallet;
@@ -70,7 +70,6 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         public
         sameOwner {
         require(balanceOfTokens[address(paymentCurrencyToken)][_userId] >= _amount);
-        require(IOwned(_bancorAddress).owner() == owner);
         require(_amount > 0);
 
         balanceOfTokens[address(paymentCurrencyToken)][_userId] = safeSub(balanceOfTokens[address(paymentCurrencyToken)][_userId], _amount);
@@ -101,7 +100,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
 
         balanceOfTokens[_tokenAddress][_userId] = safeAdd(balanceOfTokens[_tokenAddress][_userId], result);
 
-        BuyCards(_userId, _amount, _minReturn, _tokenAddress, _bancorAddress, now);
+        BuyCards(_userId, _amount, result, _tokenAddress, _bancorAddress, now);
 
         updateHolders(_userId, _tokenAddress);
     }
@@ -110,15 +109,13 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         public
         sameOwner {
         require(balanceOfTokens[_tokenAddress][_userId] >= _amount);
-        require(IOwned(_bancorAddress).owner() == owner);
         require(_amount > 0);
 
         IERC20Token token = IERC20Token(_tokenAddress);
         uint256 tokenDiff = token.balanceOf(this);
         uint256 currencyDiff = paymentCurrencyToken.balanceOf(this);
 
-        uint256 allowance = token.allowance(this, _bancorAddress);
-        if ( allowance > 0 && allowance < _amount ) {
+        if ( token.allowance(this, _bancorAddress) < _amount ) {
             assert(token.approve(_bancorAddress, 0));
         }
         assert(token.approve(_bancorAddress, _amount));
@@ -142,7 +139,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
 
         balanceOfTokens[address(paymentCurrencyToken)][_userId] = safeAdd(balanceOfTokens[address(paymentCurrencyToken)][_userId], result);
 
-        SellCards(_userId, _amount, _minReturn, _tokenAddress, _bancorAddress, now);
+        SellCards(_userId, result, _amount, _tokenAddress, _bancorAddress, now);
     }
 
     function delegateBidCards(uint32 _userId, uint256 _amount, address _auctionAddress)
@@ -209,11 +206,11 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
             uint256 result = safeMul(receivedCardsOfAuctions[_auctionAddress] / (10 ** 10), bidsOfAuctions[_auctionAddress][_userId]) / (totalBidsOfAuctions[_auctionAddress] / (10 ** 10));
             balanceOfTokens[tokenAddress][_userId] = safeAdd(balanceOfTokens[tokenAddress][_userId], result);
             bidsOfAuctions[_auctionAddress][_userId] = 0;
+
+            ReceiveCards(_userId, result, tokenAddress, _auctionAddress, now);
+
+            updateHolders(_userId, tokenAddress);
         }
-
-        ReceiveCards(_userId, tokenAddress, _auctionAddress, now);
-
-        updateHolders(_userId, tokenAddress);
     }
 
     function delegateCanClaimTokens(uint32 _userId, address _auctionAddress)
