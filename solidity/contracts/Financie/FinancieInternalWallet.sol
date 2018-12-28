@@ -192,6 +192,11 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         uint256 teamFee;
         (amount, heroFee, teamFee) = auction.bidToken(bank, _amount);
 
+        uint256 extra = safeSub(_amount, amount);
+        if ( extra > 0 ) {
+            paymentCurrencyToken.transfer(bank, extra);
+        }
+
         uint256 currencyAfter = paymentCurrencyToken.balanceOf(bank);
 
         uint256 result = safeSub(currencyBefore, currencyAfter);

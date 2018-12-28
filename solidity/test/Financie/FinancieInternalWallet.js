@@ -191,14 +191,14 @@ contract('FinancieInternalWallet', (accounts) => {
         console.log('[FinancieInternalWallet]total currencyAfterBidding ' + currencyAfterBidding.toFixed());
 
         let missingFund = await auction.missingFundsToEndAuction();
-        await currencyToken.issue(accounts[0], missingFund);
-        await currencyToken.approve(internalWallet.address, missingFund);
-        await internalWallet.depositTokens(user_id_noone, missingFund, currencyToken.address);
+        await currencyToken.issue(accounts[0], missingFund + 1);
+        await currencyToken.approve(internalWallet.address, missingFund + 1);
+        await internalWallet.depositTokens(user_id_noone, missingFund + 1, currencyToken.address);
 
         let currencyBeforeBidding2 = await currencyToken.balanceOf(internalWallet.address);
         console.log('[FinancieInternalWallet]total currencyBeforeBidding2 ' + currencyBeforeBidding2.toFixed());
 
-        await internalWallet.delegateBidCards(user_id_noone, missingFund, auction.address);
+        await internalWallet.delegateBidCards(user_id_noone, missingFund + 1, auction.address);
 
         let currencyAfterBidding2 = await currencyToken.balanceOf(internalWallet.address);
         console.log('[FinancieInternalWallet]total currencyAfterBidding2 ' + currencyAfterBidding2.toFixed());
