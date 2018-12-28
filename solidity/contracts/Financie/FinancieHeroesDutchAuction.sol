@@ -85,7 +85,7 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
         revert();
     }
 
-    function bidToken(uint256 _amount)
+    function bidToken(address _bidder, uint256 _amount)
         public
         atStage(Stages.AuctionStarted)
         returns (uint256, uint256, uint256)
@@ -99,11 +99,11 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
         }
 
         require(amount > 0);
-        assert(bids[msg.sender] + amount >= amount);
+        assert(bids[_bidder] + amount >= amount);
 
         paymentCurrentyToken.transferFrom(msg.sender, this, amount);
 
-        bids[msg.sender] += amount;
+        bids[_bidder] += amount;
         received_wei += amount;
 
         // Send bid amount to wallet
@@ -113,14 +113,14 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
         uint256 net = safeSub(amount, feeAmount);
         assert(net == 0);
 
-        BidSubmission(msg.sender, amount, missing_funds);
+        BidSubmission(_bidder, amount, missing_funds);
 
         assert(received_wei >= amount);
 
-        notifyBidCards(msg.sender, address(token), amount);
+        notifyBidCards(_bidder, address(token), amount);
 
         // Notify logs of revenue
-        notifyAuctionRevenue(msg.sender, address(this), address(token), hero_id, heroFee, teamFee);
+        notifyAuctionRevenue(_bidder, address(this), address(token), hero_id, heroFee, teamFee);
 
         return (amount, heroFee, teamFee);
     }

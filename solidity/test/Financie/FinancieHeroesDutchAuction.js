@@ -11,6 +11,7 @@ const FinancieHeroesDutchAuction = artifacts.require('FinancieHeroesDutchAuction
 const FinancieNotifier = artifacts.require('FinancieNotifier.sol');
 const FinancieManagedContracts = artifacts.require('FinancieManagedContracts.sol');
 
+const FinancieInternalBank = artifacts.require('FinancieInternalBank.sol');
 const FinancieInternalWallet = artifacts.require('FinancieInternalWallet.sol');
 
 contract('FinancieHeroesDutchAuction', (accounts) => {
@@ -38,7 +39,13 @@ contract('FinancieHeroesDutchAuction', (accounts) => {
 
         new Promise(() => console.log('[FinancieHeroesDutchAuction]card:' + cardToken.address));
 
-        let internalWallet = await FinancieInternalWallet.new("0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C", currencyToken.address);
+        let internalBank = await FinancieInternalBank.new();
+        let internalWallet = await FinancieInternalWallet.new(
+            "0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C",
+            currencyToken.address
+        );
+        await internalBank.transferOwnership(internalWallet.address);
+        await internalWallet.setInternalBank(internalBank.address);
 
         auction = await FinancieHeroesDutchAuction.new(
             '0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C',
@@ -81,7 +88,7 @@ contract('FinancieHeroesDutchAuction', (accounts) => {
     it('bid', async () => {
         await currencyToken.issue(accounts[0], 10 ** 5);
         await currencyToken.approve(auction.address, 10 ** 5);
-        await auction.bidToken(1 * (10 ** 5));
+        await auction.bidToken(accounts[0], 1 * (10 ** 5));
         console.log('[FinancieHeroesDutchAuction]bid OK');
     });
 });
