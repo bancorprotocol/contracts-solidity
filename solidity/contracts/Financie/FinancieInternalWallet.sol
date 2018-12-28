@@ -23,10 +23,10 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
     event DepositTokens(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, uint _timestamp);
     event WithdrawTokens(uint32 indexed _userId, uint256 _amount, address indexed _token_address, uint _timestamp);
 
-    event BuyCards(uint32 indexed _user_id, uint256 _amount, uint256 _minReturn, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
-    event SellCards(uint32 indexed _user_id, uint256 _amount, uint256 _minReturn, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
+    event BuyCards(uint32 indexed _user_id, uint256 _currency_amount, uint256 _card_amount, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
+    event SellCards(uint32 indexed _user_id, uint256 _currency_amount, uint256 _card_amount, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
     event BidCards(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, address indexed _auction_address, uint _timestamp);
-    event ReceiveCards(uint32 indexed _user_id, address indexed _token_address, address indexed _auction_address, uint _timestamp);
+    event ReceiveCards(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, address indexed _auction_address, uint _timestamp);
 
     constructor(address _teamWallet, address _paymentCurrencyToken, address _walletdata) public {
         teamWallet = _teamWallet;
@@ -40,10 +40,15 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
     }
 
     function updateHolders(uint32 _userId, address _tokenAddress) internal {
-        if ( !holderOfTokens[_tokenAddress][_userId] ) {
-            holderOfTokens[_tokenAddress][_userId] = true;
+        if ( !walletdata.getHolderOfToken(_tokenAddress, _userId) ) {
+            walletdata.setHolderOfToken(_tokenAddress, _userId, true);
             AddOwnedCardList(_userId, _tokenAddress, now);
         }
+    }
+
+    function getBalanceOfToken(address _tokenAddress, uint32 _userId) public view returns(uint256)
+    {
+      return walletdata.getBalanceOfToken(_tokenAddress, _userId);
     }
 
     function depositTokens(uint32 _userId, uint256 _amount, address _tokenAddress)
@@ -53,10 +58,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         token.transferFrom(msg.sender, this, _amount);
 
         /* balanceOfTokens[_tokenAddress][_userId] = safeAdd(balanceOfTokens[_tokenAddress][_userId], _amount); */
-        /* addBalanceOfTokens(_userId, _amount, _tokenAddress); */
-        uint256 amount = walletdata.getBalanceOfToken(_tokenAddress, _userId);
-        amount = safeAdd(amount, _amount);
-        walletdata.setBalanceOfToken(_tokenAddress, _userId, amount);
+        addBalanceOfTokens(_userId, _amount, _tokenAddress);
 
         updateHolders(_userId, _tokenAddress);
 
@@ -69,12 +71,11 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         /* require(balanceOfTokens[_tokenAddress][_userId] >= _amount); */
         require(walletdata.getBalanceOfToken(_tokenAddress, _userId) >= _amount);
         IERC20Token token = IERC20Token(_tokenAddress);
+
         token.transfer(teamWallet, _amount);
+
         /* balanceOfTokens[_tokenAddress][_userId] = safeSub(balanceOfTokens[_tokenAddress][_userId], _amount); */
-        /* subBalanceOfTokens(_userId, _amount, _tokenAddress); */
-        uint256 amount = walletdata.getBalanceOfToken(_tokenAddress, _userId);
-        amount = safeSub(amount, _amount);
-        walletdata.setBalanceOfToken(_tokenAddress, _userId, amount);
+        subBalanceOfTokens(_userId, _amount, _tokenAddress);
 
         WithdrawTokens(_userId, _amount, _tokenAddress, now);
     }
@@ -84,14 +85,10 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         sameOwner {
         /* require(balanceOfTokens[address(paymentCurrencyToken)][_userId] >= _amount); */
         require(walletdata.getBalanceOfToken(address(paymentCurrencyToken), _userId) >= _amount);
-        require(IOwned(_bancorAddress).owner() == owner);
         require(_amount > 0);
 
         /* balanceOfTokens[address(paymentCurrencyToken)][_userId] = safeSub(balanceOfTokens[address(paymentCurrencyToken)][_userId], _amount); */
-        /* addBalanceOfTokens(_userId, _amount, address(paymentCurrencyToken)); */
-        uint256 currency_token_amount = walletdata.getBalanceOfToken(address(paymentCurrencyToken), _userId);
-        currency_token_amount = safeAdd(currency_token_amount, _amount);
-        walletdata.setBalanceOfToken(address(paymentCurrencyToken), _userId, currency_token_amount);
+        subBalanceOfTokens(_userId, _amount, address(paymentCurrencyToken));
 
         IERC20Token token = IERC20Token(_tokenAddress);
         uint256 tokenDiff = token.balanceOf(this);
@@ -101,6 +98,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
             assert(paymentCurrencyToken.approve(_bancorAddress, 0));
         }
         assert(paymentCurrencyToken.approve(_bancorAddress, _amount));
+        /* approveBancor(_amount, address(paymentCurrencyToken), _bancorAddress); */
 
         IFinancieBancorConverter converter = IFinancieBancorConverter(_bancorAddress);
         uint256 result;
@@ -118,14 +116,12 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         assert(_amount == currencyDiff);
 
         /* balanceOfTokens[_tokenAddress][_userId] = safeAdd(balanceOfTokens[_tokenAddress][_userId], result); */
-        /* addBalanceOfTokens(_userId, result, _tokenAddress); */
-        uint256 amount = walletdata.getBalanceOfToken(_tokenAddress, _userId);
-        amount = safeAdd(amount, result);
-        walletdata.setBalanceOfToken(_tokenAddress, _userId, amount);
+        addBalanceOfTokens(_userId, result, _tokenAddress);
 
-        BuyCards(_userId, _amount, _minReturn, _tokenAddress, _bancorAddress, now);
+        BuyCards(_userId, _amount, result, _tokenAddress, _bancorAddress, now);
 
         updateHolders(_userId, _tokenAddress);
+
     }
 
     function delegateSellCards(uint32 _userId, uint256 _amount, uint256 _minReturn, address _tokenAddress, address _bancorAddress)
@@ -133,24 +129,19 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         sameOwner {
         /* require(balanceOfTokens[_tokenAddress][_userId] >= _amount); */
         require(walletdata.getBalanceOfToken(_tokenAddress, _userId) >= _amount);
-        require(IOwned(_bancorAddress).owner() == owner);
         require(_amount > 0);
 
         IERC20Token token = IERC20Token(_tokenAddress);
         uint256 tokenDiff = token.balanceOf(this);
         uint256 currencyDiff = paymentCurrencyToken.balanceOf(this);
 
-        uint256 allowance = token.allowance(this, _bancorAddress);
-        if ( allowance > 0 && allowance < _amount ) {
+        if ( token.allowance(this, _bancorAddress) < _amount ) {
             assert(token.approve(_bancorAddress, 0));
         }
         assert(token.approve(_bancorAddress, _amount));
 
         /* balanceOfTokens[_tokenAddress][_userId] = safeSub(balanceOfTokens[_tokenAddress][_userId], _amount); */
-        /* subBalanceOfTokens(_userId, _amount, _tokenAddress); */
-        uint256 amount = walletdata.getBalanceOfToken(_tokenAddress, _userId);
-        amount = safeSub(amount, _amount);
-        walletdata.setBalanceOfToken(_tokenAddress, _userId, amount);
+        subBalanceOfTokens(_userId, _amount, _tokenAddress);
 
         IFinancieBancorConverter converter = IFinancieBancorConverter(_bancorAddress);
         uint256 result;
@@ -168,12 +159,9 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         assert(_amount == tokenDiff);
 
         /* balanceOfTokens[address(paymentCurrencyToken)][_userId] = safeAdd(balanceOfTokens[address(paymentCurrencyToken)][_userId], result); */
-        /* addBalanceOfTokens(_userId, result, address(paymentCurrencyToken)); */
-        uint256 currency_token_amount = walletdata.getBalanceOfToken(address(paymentCurrencyToken), _userId);
-        currency_token_amount = safeAdd(currency_token_amount, result);
-        walletdata.setBalanceOfToken(address(paymentCurrencyToken), _userId, currency_token_amount);
+        addBalanceOfTokens(_userId, result, address(paymentCurrencyToken));
 
-        SellCards(_userId, _amount, _minReturn, _tokenAddress, _bancorAddress, now);
+        SellCards(_userId, result, _amount, _tokenAddress, _bancorAddress, now);
     }
 
     function delegateBidCards(uint32 _userId, uint256 _amount, address _auctionAddress)
@@ -193,31 +181,25 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
             paymentCurrencyToken.approve(_auctionAddress, 0);
         }
         paymentCurrencyToken.approve(_auctionAddress, _amount);
-        auction.bidToken(_amount);
+        uint256 amount;
+        uint256 heroFee;
+        uint256 teamFee;
+        (amount, heroFee, teamFee) = auction.bidToken(_amount);
 
         uint256 currencyAfter = paymentCurrencyToken.balanceOf(this);
 
         uint256 result = safeSub(currencyBefore, currencyAfter);
-        assert(result <= _amount);
+        assert(result == teamFee);
 
-        /* totalBidsOfAuctions[_auctionAddress] = safeAdd(totalBidsOfAuctions[_auctionAddress], result); */
-        /* addTotalBidsOfAuctions(result, _auctionAddress); */
-        uint256 totalbis_amount = walletdata.getTotalBidsOfAuctions(_auctionAddress);
-        totalbis_amount = safeAdd(amount, result);
-        walletdata.setTotalBidsOfAuctions(_auctionAddress, totalbis_amount);
-        /* bidsOfAuctions[_auctionAddress][_userId] = safeAdd(bidsOfAuctions[_auctionAddress][_userId], result); */
-        /* addBidsOfAuctions(_userId, result, _auctionAddress); */
-        uint256 bids_amount = walletdata.getBidsOfAuctions(_auctionAddress, _userId);
-        bids_amount = safeAdd(amount, result);
-        walletdata.setBidsOfAuctions(_auctionAddress, _userId, bids_amount);
-        /* balanceOfTokens[address(paymentCurrencyToken)][_userId] = safeSub(balanceOfTokens[address(paymentCurrencyToken)][_userId], result); */
-        /* addBalanceOfTokens(_userId, result, address(paymentCurrencyToken)); */
-        uint256 amount = walletdata.getBalanceOfToken(address(paymentCurrencyToken), _userId);
-        amount = safeAdd(amount, result);
-        walletdata.setBalanceOfToken(address(paymentCurrencyToken), _userId, amount);
+        /* totalBidsOfAuctions[_auctionAddress] = safeAdd(totalBidsOfAuctions[_auctionAddress], amount); */
+        addTotalBidsOfAuctions(amount, _auctionAddress);
+        /* bidsOfAuctions[_auctionAddress][_userId] = safeAdd(bidsOfAuctions[_auctionAddress][_userId], amount); */
+        addBidsOfAuctions(_userId, amount, _auctionAddress);
+        /* balanceOfTokens[address(paymentCurrencyToken)][_userId] = safeSub(balanceOfTokens[address(paymentCurrencyToken)][_userId], amount); */
+        subBalanceOfTokens(_userId, amount, address(paymentCurrencyToken));
 
         address tokenAddress = auction.targetToken();
-        BidCards(_userId, _amount, tokenAddress, _auctionAddress, now);
+        BidCards(_userId, amount, tokenAddress, _auctionAddress, now);
     }
 
     function delegateReceiveCards(uint32 _userId, address _auctionAddress)
@@ -227,6 +209,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
 
         // receive tokens on this wallet if available
         IFinancieAuction auction = IFinancieAuction(_auctionAddress);
+        require(auction.auctionFinished());
 
         address tokenAddress = auction.targetToken();
         IERC20Token token = IERC20Token(tokenAddress);
@@ -242,10 +225,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
             assert(safeSub(tokenAfter, tokenBefore) == amount);
 
             /* receivedCardsOfAuctions[_auctionAddress] = safeAdd(receivedCardsOfAuctions[_auctionAddress], amount); */
-            /* addReceivedCardsOfAuctions(amount, _auctionAddress); */
-            uint256 recvcardauction_amount = walletdata.getRecvCardsOfAuctions(_auctionAddress);
-            recvcardauction_amount = safeAdd(recvcardauction_amount, amount);
-            walletdata.setRecvCardsOfAuctions(_auctionAddress, recvcardauction_amount);
+            addReceivedCardsOfAuctions(amount, _auctionAddress);
         }
 
         // assign tokens amount as received * bids / total
@@ -253,21 +233,16 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         /* if ( bidsOfAuctions[_auctionAddress][_userId] > 0 ) { */
         if ( bidsauction_amount > 0 ) {
             /* uint256 result = safeMul(receivedCardsOfAuctions[_auctionAddress] / (10 ** 10), bidsOfAuctions[_auctionAddress][_userId]) / (totalBidsOfAuctions[_auctionAddress] / (10 ** 10)); */
-            uint256 totalbisdauction_amount = walletdata.getTotalBidsOfAuctions(_auctionAddress);
-            uint256 recvcardsauction_amount = walletdata.getRecvCardsOfAuctions(_auctionAddress);
-            uint256 result = safeMul(recvcardsauction_amount / (10 ** 10), bidsauction_amount) / (totalbisdauction_amount / (10 ** 10));
+            uint256 result = safeMul(walletdata.getRecvCardsOfAuctions(_auctionAddress) / (10 ** 10), bidsauction_amount) / (walletdata.getTotalBidsOfAuctions(_auctionAddress) / (10 ** 10));
             /* balanceOfTokens[tokenAddress][_userId] = safeAdd(balanceOfTokens[tokenAddress][_userId], result); */
-            /* addBalanceOfTokens(_userId, result, tokenAddress); */
-            uint256 token_amount = walletdata.getBalanceOfToken(tokenAddress, _userId);
-            token_amount = safeAdd(token_amount, result);
-            walletdata.setBalanceOfToken(tokenAddress, _userId, token_amount);
+            addBalanceOfTokens(_userId, result, tokenAddress);
             /* bidsOfAuctions[_auctionAddress][_userId] = 0; */
             walletdata.setBidsOfAuctions(_auctionAddress, _userId, 0);
+
+            ReceiveCards(_userId, result, tokenAddress, _auctionAddress, now);
+
+            updateHolders(_userId, tokenAddress);
         }
-
-        ReceiveCards(_userId, tokenAddress, _auctionAddress, now);
-
-        updateHolders(_userId, tokenAddress);
     }
 
     function delegateCanClaimTokens(uint32 _userId, address _auctionAddress)
@@ -284,11 +259,8 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
                 return true;
             }
 
-            uint256 recvcardsauction_amount = walletdata.getRecvCardsOfAuctions(_auctionAddress);
-            uint256 totalbisdauction_amount = walletdata.getTotalBidsOfAuctions(_auctionAddress);
-
             /* uint256 estimate = safeMul(receivedCardsOfAuctions[_auctionAddress] / (10 ** 10), bidsOfAuctions[_auctionAddress][_userId]) / (totalBidsOfAuctions[_auctionAddress] / (10 ** 10)); */
-            uint256 estimate = safeMul(recvcardsauction_amount / (10 ** 10), bidsauction_amount) / (totalbisdauction_amount / (10 ** 10));
+            uint256 estimate = safeMul(walletdata.getRecvCardsOfAuctions(_auctionAddress) / (10 ** 10), bidsauction_amount) / (walletdata.getTotalBidsOfAuctions(_auctionAddress) / (10 ** 10));
             return estimate > 0;
         }
 
@@ -305,48 +277,58 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         /* if ( bidsOfAuctions[_auctionAddress][_userId] > 0 ) { */
         if ( bidsauction_amount > 0 ) {
             IFinancieAuction auction = IFinancieAuction(_auctionAddress);
-            uint256 totalbisdauction_amount = walletdata.getTotalBidsOfAuctions(_auctionAddress);
             if ( auction.canClaimTokens(this) ) {
                 uint256 totalEstimation = auction.estimateClaimTokens(this);
                 /* return safeMul(totalEstimation / (10 ** 10), bidsOfAuctions[_auctionAddress][_userId]) / (totalBidsOfAuctions[_auctionAddress] / (10 ** 10)); */
-                return safeMul(totalEstimation / (10 ** 10), bidsauction_amount) / (totalbisdauction_amount / (10 ** 10));
+                return safeMul(totalEstimation / (10 ** 10), bidsauction_amount) / (walletdata.getTotalBidsOfAuctions(_auctionAddress) / (10 ** 10));
             } else {
                 /* return safeMul(receivedCardsOfAuctions[_auctionAddress] / (10 ** 10), bidsOfAuctions[_auctionAddress][_userId]) / (totalBidsOfAuctions[_auctionAddress] / (10 ** 10)); */
-                uint256 recvcardsauction_amount = walletdata.getRecvCardsOfAuctions(_auctionAddress);
-                return safeMul(recvcardsauction_amount / (10 ** 10), bidsauction_amount) / (totalbisdauction_amount / (10 ** 10));
+                return safeMul(walletdata.getRecvCardsOfAuctions(_auctionAddress) / (10 ** 10), bidsauction_amount) / (walletdata.getTotalBidsOfAuctions(_auctionAddress) / (10 ** 10));
             }
         }
 
         return 0;
     }
 
-    /* function addBalanceOfTokens(uint32 _userId, uint256 _amount, address _tokenAddress) private {
+    function addBalanceOfTokens(uint32 _userId, uint256 _amount, address _tokenAddress) private {
       uint256 amount = walletdata.getBalanceOfToken(_tokenAddress, _userId);
       amount = safeAdd(amount, _amount);
       walletdata.setBalanceOfToken(_tokenAddress, _userId, amount);
-    } */
+    }
 
-    /* function subBalanceOfTokens(uint32 _userId, uint256 _amount, address _tokenAddress) private {
+    function subBalanceOfTokens(uint32 _userId, uint256 _amount, address _tokenAddress) private {
       uint256 amount = walletdata.getBalanceOfToken(_tokenAddress, _userId);
       amount = safeSub(amount, _amount);
       walletdata.setBalanceOfToken(_tokenAddress, _userId, amount);
-    } */
+    }
 
-    /* function addTotalBidsOfAuctions(uint256 _amount, address _auctionAddress) private {
+    function addTotalBidsOfAuctions(uint256 _amount, address _auctionAddress) private {
       uint256 amount = walletdata.getTotalBidsOfAuctions(_auctionAddress);
       amount = safeAdd(amount, _amount);
       walletdata.setTotalBidsOfAuctions(_auctionAddress, amount);
-    } */
+    }
 
-    /* function addBidsOfAuctions(uint32 _userId, uint256 _amount, address _auctionAddress) private {
+    function addBidsOfAuctions(uint32 _userId, uint256 _amount, address _auctionAddress) private {
       uint256 amount = walletdata.getBidsOfAuctions(_auctionAddress, _userId);
       amount = safeAdd(amount, _amount);
       walletdata.setBidsOfAuctions(_auctionAddress, _userId, amount);
-    } */
+    }
 
-    /* function addReceivedCardsOfAuctions(uint256 _amount, address _auctionAddress) private {
+    function addReceivedCardsOfAuctions(uint256 _amount, address _auctionAddress) private {
       uint256 amount = walletdata.getRecvCardsOfAuctions(_auctionAddress);
       amount = safeAdd(amount, _amount);
       walletdata.setRecvCardsOfAuctions(_auctionAddress, amount);
-    } */
+    }
+
+    function approveBancor(uint256 _amount, address _tokenAddress, address _bancorAddress) private {
+      IERC20Token token = IERC20Token(_tokenAddress);
+
+      uint256 allowance = token.allowance(this, _bancorAddress);
+      if ( allowance > 0 && allowance < _amount ) {
+          assert(token.approve(_bancorAddress, 0));
+      }
+      assert(token.approve(_bancorAddress, _amount));
+    }
+
+
 }

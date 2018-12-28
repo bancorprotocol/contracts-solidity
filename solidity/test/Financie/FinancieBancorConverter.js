@@ -18,6 +18,7 @@ const FinancieNotifier = artifacts.require('FinancieNotifier.sol');
 const FinancieManagedContracts = artifacts.require('FinancieManagedContracts.sol');
 
 const FinancieInternalWallet = artifacts.require('FinancieInternalWallet.sol');
+const FinancieInternalWalletData = artifacts.require('FinancieInternalWalletData.sol');
 
 const weight10Percent = 100000;
 const gasPrice = 22000000000;
@@ -42,6 +43,7 @@ contract('FinancieBancorConverter', (accounts) => {
         platformToken = await FinanciePlatformToken.new('PF Token', 'ERC PF', 10000000000 * (10 ** 18));
         currencyToken = await SmartToken.new('Test', 'TST', 18);
         financieNotifier = await FinancieNotifier.new(contracts.address, platformToken.address, currencyToken.address);
+        managedContracts = await FinancieManagedContracts.new();
 
         cardToken = await FinancieCardToken.new(
             'Financie Card Token',
@@ -71,7 +73,12 @@ contract('FinancieBancorConverter', (accounts) => {
         await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[0]);
 
-        let internalWallet = await FinancieInternalWallet.new("0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C", currencyToken.address);
+        console.log('[FinancieInternalWalletData]initialize');
+        let internalWalletData = await FinancieInternalWalletData.new(managedContracts.address, platformToken.address, currencyToken.address);
+
+        let internalWallet = await FinancieInternalWallet.new("0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C", currencyToken.address, internalWalletData.address);
+        await managedContracts.activateTargetContract(internalWallet.address, true);
+        await managedContracts.activateTargetContract(currencyToken.address, true);
 
         bancor = await FinancieBancorConverter.new(
             smartToken.address,

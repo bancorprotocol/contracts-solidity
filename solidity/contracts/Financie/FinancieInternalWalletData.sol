@@ -19,24 +19,34 @@ contract FinancieInternalWalletData is IFinancieInternalWalletData, FinancieCore
   function setBalanceOfToken(address _tokenAddress, uint32 _userId, uint256 _amount)
     public
     validTargetContract(msg.sender)
-    validTargetContract(_tokenAddress) {
-
+    {
     balanceOfTokens[_tokenAddress][_userId] = _amount;
   }
 
   function getBalanceOfToken(address _tokenAddress, uint32 _userId)
     public
     validTargetContract(msg.sender)
-    validTargetContract(_tokenAddress)
     view returns(uint256) {
-
     return balanceOfTokens[_tokenAddress][_userId];
+  }
+
+  function setHolderOfToken(address _tokenAddress, uint32 _userId, bool _flg)
+    public
+    validTargetContract(msg.sender)
+    {
+    holderOfTokens[_tokenAddress][_userId] = _flg;
+  }
+
+  function getHolderOfToken(address _tokenAddress, uint32 _userId)
+    public
+    validTargetContract(msg.sender)
+    view returns(bool) {
+    return holderOfTokens[_tokenAddress][_userId];
   }
 
   function setBidsOfAuctions(address _auctionAddress, uint32 _userId, uint256 _amount)
     public
-    validTargetContract(msg.sender)
-    validTargetContract(_auctionAddress) {
+    validTargetContract(msg.sender) {
 
     bidsOfAuctions[_auctionAddress][_userId] = _amount;
   }
@@ -44,7 +54,6 @@ contract FinancieInternalWalletData is IFinancieInternalWalletData, FinancieCore
   function getBidsOfAuctions(address _auctionAddress, uint32 _userId)
     public
     validTargetContract(msg.sender)
-    validTargetContract(_auctionAddress)
     view returns(uint256) {
 
     return bidsOfAuctions[_auctionAddress][_userId];
@@ -52,8 +61,7 @@ contract FinancieInternalWalletData is IFinancieInternalWalletData, FinancieCore
 
   function setTotalBidsOfAuctions(address _auctionAddress, uint256 _amount)
     public
-    validTargetContract(msg.sender)
-    validTargetContract(_auctionAddress) {
+    validTargetContract(msg.sender) {
 
     totalBidsOfAuctions[_auctionAddress] = _amount;
   }
@@ -61,7 +69,6 @@ contract FinancieInternalWalletData is IFinancieInternalWalletData, FinancieCore
   function getTotalBidsOfAuctions(address _auctionAddress)
     public
     validTargetContract(msg.sender)
-    validTargetContract(_auctionAddress)
     view returns(uint256) {
 
     return totalBidsOfAuctions[_auctionAddress];
@@ -69,8 +76,7 @@ contract FinancieInternalWalletData is IFinancieInternalWalletData, FinancieCore
 
   function setRecvCardsOfAuctions(address _auctionAddress, uint256 _amount)
     public
-    validTargetContract(msg.sender)
-    validTargetContract(_auctionAddress) {
+    validTargetContract(msg.sender) {
 
     receivedCardsOfAuctions[_auctionAddress] = _amount;
   }
@@ -78,7 +84,6 @@ contract FinancieInternalWalletData is IFinancieInternalWalletData, FinancieCore
   function getRecvCardsOfAuctions(address _auctionAddress)
     public
     validTargetContract(msg.sender)
-    validTargetContract(_auctionAddress)
     view returns(uint256) {
 
     return receivedCardsOfAuctions[_auctionAddress];
