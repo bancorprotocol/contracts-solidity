@@ -10,12 +10,12 @@ module.exports = function(deployer, _network, _accounts) {
   let wallet;
   return deployer.deploy(SmartToken, "Fiat Token(JPY)", "JPYT", 18)
     .then(() => {
-        if ( process.env.FINANCIE_INTENNAL_BANK_CONTRACT_ADDRESS === undefined ) {
+        if ( process.env.FINANCIE_INTERNAL_BANK_CONTRACT_ADDRESS === undefined ) {
             return deployer.deploy(FinancieInternalBank);
         }
     })
     .then((instance) => {
-        if ( process.env.FINANCIE_INTENNAL_WALLET_CONTRACT_ADDRESS === undefined ) {
+        if ( process.env.FINANCIE_INTERNAL_WALLET_CONTRACT_ADDRESS === undefined ) {
             bank = instance;
             return deployer.deploy(
                 FinancieInternalWallet,
@@ -24,13 +24,13 @@ module.exports = function(deployer, _network, _accounts) {
         }
     })
     .then((instance) => {
-        if ( process.env.FINANCIE_INTENNAL_WALLET_CONTRACT_ADDRESS === undefined ) {
+        if ( process.env.FINANCIE_INTERNAL_WALLET_CONTRACT_ADDRESS === undefined ) {
             wallet = instance;
             return bank.transferOwnership(FinancieInternalWallet.address);
         }
     }).then(() => {
-        if ( process.env.FINANCIE_INTENNAL_WALLET_CONTRACT_ADDRESS === undefined &&
-            process.env.FINANCIE_INTENNAL_BANK_CONTRACT_ADDRESS === undefined ) {
+        if ( process.env.FINANCIE_INTERNAL_WALLET_CONTRACT_ADDRESS === undefined &&
+            process.env.FINANCIE_INTERNAL_BANK_CONTRACT_ADDRESS === undefined ) {
             return wallet.setInternalBank(FinancieInternalBank.address);
         }
     })
