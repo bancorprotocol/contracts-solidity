@@ -48,7 +48,7 @@ module.exports = function(deployer, _network, _accounts) {
         })
         .then(() => {
             if ( process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS === undefined ) {
-                return managedContracts.activateTargetContract(process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS, true);
+                return managedContracts.activateTargetContract(process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS === undefined ? SmartToken.address : process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS, true);
             }
         })
         .then(() => {
@@ -100,7 +100,7 @@ module.exports = function(deployer, _network, _accounts) {
         })
         .then((instance) => {
             if ( process.env.CONTRACT_REGISTRY_CONTRACT_ADDRESS === undefined ) {
-                return bancorNetwork.registerEtherToken(process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS === undefined ? EtherToken.address : process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS, true);
+                return bancorNetwork.registerEtherToken(process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS === undefined ? SmartToken.address : process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS, true);
             }
         })
         .then((instance) => {

@@ -70,6 +70,7 @@ contract('FinancieInternalWallet', (accounts) => {
         );
 
         new Promise(() => console.log('[FinancieHeroesDutchAuction]card:' + cardToken.address));
+        await managedContracts.activateTargetContract(cardToken.address, true);
 
         auction = await FinancieHeroesDutchAuction.new(
             hero_id,
@@ -145,6 +146,7 @@ contract('FinancieInternalWallet', (accounts) => {
             10000,
             internalWallet.address
         );
+        await managedContracts.activateTargetContract(bancor.address, true);
 
         console.log('[FinancieBancorConverter]begin setup');
 

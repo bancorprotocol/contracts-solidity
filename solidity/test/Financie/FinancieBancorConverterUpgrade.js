@@ -81,6 +81,7 @@ contract('FinancieBancorConverterUpgrade', (accounts) => {
         platformToken = await FinanciePlatformToken.new('PF Token', 'ERC PF', 10000000000 * (10 ** 18));
         currencyToken = await SmartToken.new('Test', 'TST', 18);
         financieNotifier = await FinancieNotifier.new(contracts.address, platformToken.address, currencyToken.address);
+        managedContracts = await FinancieManagedContracts.new();
 
         cardToken = await FinancieCardToken.new(
             'Financie Card Token',
@@ -88,6 +89,7 @@ contract('FinancieBancorConverterUpgrade', (accounts) => {
             hero_id,
             financieNotifier.address
         );
+        await managedContracts.activateTargetContract(cardToken.address, true);
 
         smartToken = await SmartToken.new('Token1', 'TKN', 0);
 
@@ -118,6 +120,7 @@ contract('FinancieBancorConverterUpgrade', (accounts) => {
         );
         await internalBank.transferOwnership(internalWallet.address);
         await internalWallet.setInternalBank(internalBank.address);
+
 
         console.log('[FinancieBancorConverter]new');
 

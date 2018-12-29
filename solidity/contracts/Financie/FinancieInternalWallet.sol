@@ -40,6 +40,9 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         bank = IFinancieInternalBank(_bank);
         bank.acceptOwnership();
     }
+    function transferBnakOwnership(address _newOwner) public ownerOnly {
+      bank.transferOwnership(_newOwner);
+    }
 
     function updateHolders(uint32 _userId, address _tokenAddress) internal {
         if ( !bank.getHolderOfToken(_tokenAddress, _userId) ) {
@@ -100,6 +103,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
             assert(paymentCurrencyToken.approve(_bancorAddress, 0));
         }
         assert(paymentCurrencyToken.approve(_bancorAddress, _amount));
+        /* approveBancor(_amount, address(paymentCurrencyToken), _bancorAddress); */
 
         IFinancieBancorConverter converter = IFinancieBancorConverter(_bancorAddress);
         uint256 result;

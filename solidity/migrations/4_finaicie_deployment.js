@@ -3,11 +3,17 @@
 
 const FinancieInternalWallet = artifacts.require('FinancieInternalWallet.sol');
 const FinancieInternalBank = artifacts.require('FinancieInternalBank.sol');
+const SmartToken = artifacts.require('SmartToken.sol');
 
 module.exports = function(deployer, _network, _accounts) {
   let bank;
   let wallet;
   return deployer
+    .then(() => {
+        if ( process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS === undefined ) {
+            return deployer.deploy(SmartToken, "Fiat Token(JPY)", "JPYT", 18)
+        }
+    })
     .then(() => {
         if ( process.env.FINANCIE_INTERNAL_BANK_CONTRACT_ADDRESS === undefined ) {
             return deployer.deploy(FinancieInternalBank);
