@@ -15,9 +15,9 @@ let input = JSON.parse(fs.readFileSync(INPUT_FILE, {encoding: "utf8"}));
 //      "compilerVersion": "v0.4.24+commit.e67f0147",
 //      "optimization"   : {"used": 1, "runs": 1000000},
 //      "contracts"      : {
-//          "Contract1Name": {"address": "0x0000000000000000000000000000000000000001"},
-//          "Contract2Name": {"address": "0x0000000000000000000000000000000000000002"},
-//          "Contract3Name": {"address": "0x0000000000000000000000000000000000000003"}
+//          "Contract1": "0x0000000000000000000000000000000000000001",
+//          "Contract2": "0x0000000000000000000000000000000000000002",
+//          "Contract3": "0x0000000000000000000000000000000000000003"
 //      }
 //  }
 
@@ -53,7 +53,7 @@ function post(contractName, sourceCode) {
                 apikey          : input.apiKey,
                 module          : "contract",
                 action          : "verifysourcecode",
-                contractaddress : input.contracts[contractName].address,
+                contractaddress : input.contracts[contractName],
                 sourceCode      : sourceCode,
                 contractname    : contractName,
                 compilerversion : input.compilerVersion,
