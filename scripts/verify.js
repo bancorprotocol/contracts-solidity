@@ -10,7 +10,7 @@ let spawnSync = require("child_process").spawnSync;
 let input = JSON.parse(fs.readFileSync(INPUT_FILE, {encoding: "utf8"}));
 //  input example:
 //  {
-//      "api"            : "api", // for mainnet, use "api"; for testnet, use testnet name
+//      "api"            : "api", // for mainnet, use "api"; for testnet, use "api-<testnet>"
 //      "apiKey"         : "",    // generate this value at https://etherscan.io/myapikey
 //      "compilerVersion": "v0.4.24+commit.e67f0147",
 //      "optimization"   : {"used": 1, "runs": 1000000},
