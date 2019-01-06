@@ -156,10 +156,9 @@ To run the test:
 
 * **[Yudi Levi](https://github.com/yudilevi)**
 * **[Ilana Pinhas](https://github.com/ilanapi)**
-* **[Or Dadosh](https://github.com/ordd)**
+* **[David Benchimol](https://github.com/davidbancor)**
 * **[Barak Manos](https://github.com/barakman)**
 * **[Martin Holst Swende](https://github.com/holiman)**
-* **[David Benchimol](https://github.com/davidbancor)**
 
 
 ## License
