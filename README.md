@@ -143,20 +143,20 @@ event Conversion(address indexed _fromToken, address indexed _toToken, address i
 Triggered when a conversion between one of the convertible tokens takes place.
 
 ## Testing
-Tests are included and can be run using truffle & ganache
+Tests are included and are run using truffle & ganache
 
 ### Prerequisites
 * Node.js v7.6.0+
 
 To run the test:
 - Use `npm install` in order to install all required packages.
-- Use `npm test` in order to run truffle-test or solidity-coverage.
+- Use `npm test 1` in order to run truffle-test or `npm test 2` in order to run solidity-coverage.
 
 ## Collaborators
 
 * **[Yudi Levi](https://github.com/yudilevi)**
 * **[Ilana Pinhas](https://github.com/ilanapi)**
-* **[Or Dadosh](https://github.com/ordd)**
+* **[David Benchimol](https://github.com/davidbancor)**
 * **[Barak Manos](https://github.com/barakman)**
 * **[Martin Holst Swende](https://github.com/holiman)**
 

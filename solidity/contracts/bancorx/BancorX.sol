@@ -1,6 +1,7 @@
 pragma solidity ^0.4.24;
 
 import './interfaces/IBancorXUpgrader.sol';
+import './interfaces/IBancorX.sol';
 import '../ContractIds.sol';
 import '../converter/interfaces/IBancorConverter.sol';
 import '../utility/interfaces/IContractRegistry.sol';
@@ -19,7 +20,7 @@ import '../token/interfaces/ISmartToken.sol';
     Reporting cross chain transfers works similar to standard multisig contracts, meaning that multiple
     callers are required to report a transfer before tokens are released to the target account.
 */
-contract BancorX is Owned, TokenHolder, ContractIds {
+contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     using SafeMath for uint256;
 
     // represents a transaction on another blockchain where BNT was destroyed/locked
@@ -31,7 +32,7 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         bool completed;
     }
 
-    uint16 public version = 1;
+    uint16 public version = 2;
 
     uint256 public maxLockLimit;            // the maximum amount of BNT that can be locked in one transaction
     uint256 public maxReleaseLimit;         // the maximum amount of BNT that can be released in one transaction
@@ -54,6 +55,9 @@ contract BancorX is Owned, TokenHolder, ContractIds {
 
     // txId -> Transaction
     mapping (uint256 => Transaction) public transactions;
+
+    // xTransferId -> txId
+    mapping (uint256 => uint256) public transactionIds;
 
     // txId -> reporter -> true if reporter already reported txId
     mapping (uint256 => mapping (address => bool)) public reportedTxs;
@@ -78,7 +82,8 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         address indexed _from,
         bytes32 _toBlockchain,
         bytes32 indexed _to,
-        uint256 _amount
+        uint256 _amount,
+        uint256 _id
     );
 
     // triggered when report is successfully submitted
@@ -87,7 +92,14 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         bytes32 _fromBlockchain,
         uint256 _txId,
         address _to,
-        uint256 _amount
+        uint256 _amount,
+        uint256 _xTransferId
+    );
+
+    // triggered when final report is successfully submitted
+    event XTransferComplete(
+        address _to,
+        uint256 _id
     );
 
     /**
@@ -304,7 +316,33 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         prevLockLimit = currentLockLimit.sub(_amount);
         prevLockBlockNumber = block.number;
 
-        emit XTransfer(msg.sender, _toBlockchain, _to, _amount);
+        // emit XTransfer event with id of 0
+        emit XTransfer(msg.sender, _toBlockchain, _to, _amount, 0);
+    }
+
+    /**
+        @dev claims BNT from msg.sender to be converted to BNT on another blockchain
+
+        @param _toBlockchain    blockchain BNT will be issued on
+        @param _to              address to send the BNT to
+        @param _amount          the amount to transfer
+        @param _id              pre-determined unique (if non zero) id which refers to this transaction 
+     */
+    function xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount, uint256 _id) public whenXTransfersEnabled {
+        // get the current lock limit
+        uint256 currentLockLimit = getCurrentLockLimit();
+
+        // require that; minLimit <= _amount <= currentLockLimit
+        require(_amount >= minLimit && _amount <= currentLockLimit);
+        
+        lockTokens(_amount);
+
+        // set the previous lock limit and block number
+        prevLockLimit = currentLockLimit.sub(_amount);
+        prevLockBlockNumber = block.number;
+
+        // emit XTransfer event
+        emit XTransfer(msg.sender, _toBlockchain, _to, _amount, _id);
     }
 
     /**
@@ -314,12 +352,14 @@ contract BancorX is Owned, TokenHolder, ContractIds {
         @param _txId            transactionId of transaction thats being reported
         @param _to              address to receive BNT
         @param _amount          amount of BNT destroyed on another blockchain
+        @param _xTransferId     unique (if non zero) pre-determined id (unlike _txId which is determined after the transactions been mined)
      */
     function reportTx(
         bytes32 _fromBlockchain,
         uint256 _txId,
         address _to,
-        uint256 _amount    
+        uint256 _amount,
+        uint256 _xTransferId 
     )
         public
         isReporter
@@ -338,15 +378,25 @@ contract BancorX is Owned, TokenHolder, ContractIds {
             txn.to = _to;
             txn.amount = _amount;
             txn.fromBlockchain = _fromBlockchain;
+
+            if (_xTransferId != 0) {
+                // verify uniqueness of xTransfer id to prevent overwriting
+                require(transactionIds[_xTransferId] == 0);
+                transactionIds[_xTransferId] = _txId;
+            }
         } else {
             // otherwise, verify transaction details
             require(txn.to == _to && txn.amount == _amount && txn.fromBlockchain == _fromBlockchain);
+            
+            if (_xTransferId != 0) {
+                require(transactionIds[_xTransferId] == _txId);
+            }
         }
         
         // increment the number of reports
         txn.numOfReports++;
 
-        emit TxReport(msg.sender, _fromBlockchain, _txId, _to, _amount);
+        emit TxReport(msg.sender, _fromBlockchain, _txId, _to, _amount, _xTransferId);
 
         // if theres enough reports, try to release tokens
         if (txn.numOfReports >= minRequiredReports) {
@@ -355,8 +405,28 @@ contract BancorX is Owned, TokenHolder, ContractIds {
             // set the transaction as completed
             transactions[_txId].completed = true;
 
+            emit XTransferComplete(_to, _xTransferId);
+
             releaseTokens(_to, _amount);
         }
+    }
+
+    /**
+        @dev gets x transfer amount by xTransferId (not txId)
+
+        @param _xTransferId    unique (if non zero) pre-determined id (unlike _txId which is determined after the transactions been broadcasted)
+        @param _for            address corresponding to xTransferId
+
+        @return amount that was sent in xTransfer corresponding to _xTransferId
+    */
+    function getXTransferAmount(uint256 _xTransferId, address _for) public view returns (uint256) {
+        // xTransferId -> txId -> Transaction
+        Transaction storage transaction = transactions[transactionIds[_xTransferId]];
+
+        // verify that the xTransferId is for _for
+        require(transaction.to == _for);
+
+        return transaction.amount;
     }
 
     /**

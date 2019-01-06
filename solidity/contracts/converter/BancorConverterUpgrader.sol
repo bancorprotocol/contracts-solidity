@@ -95,6 +95,19 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
         will throw if ownership wasn't transferred to the upgrader before calling this function.
         ownership of the new converter will be transferred back to the original owner.
         fires the ConverterUpgrade event upon success.
+        can only be called by a converter
+
+        @param _version old converter version
+    */
+    function upgrade(uint16 _version) public {
+        upgradeOld(IBancorConverter(msg.sender), bytes32(_version));
+    }
+
+    /**
+        @dev upgrades an old converter to the latest version
+        will throw if ownership wasn't transferred to the upgrader before calling this function.
+        ownership of the new converter will be transferred back to the original owner.
+        fires the ConverterUpgrade event upon success.
 
         @param _converter   old converter contract address
         @param _version     old converter version

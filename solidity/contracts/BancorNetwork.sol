@@ -12,6 +12,7 @@ import './utility/interfaces/IContractFeatures.sol';
 import './utility/interfaces/IWhitelist.sol';
 import './token/interfaces/IEtherToken.sol';
 import './token/interfaces/ISmartToken.sol';
+import './bancorx/interfaces/IBancorX.sol';
 
 /*
     The BancorNetwork contract is the main entry point for bancor token conversions.
@@ -110,8 +111,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return true if the signer is verified
     */
-    function verifyTrustedSender(IERC20Token[] _path, uint256 _amount, uint256 _block, address _addr, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
-        bytes32 hash = keccak256(_block, tx.gasprice, _addr, msg.sender, _amount, _path);
+    function verifyTrustedSender(IERC20Token[] _path, uint256 _customVal, uint256 _block, address _addr, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
+        bytes32 hash = keccak256(_block, tx.gasprice, _addr, msg.sender, _customVal, _path);
 
         // checking that it is the first conversion with the given signature
         // and that the current block number doesn't exceeded the maximum block
@@ -131,6 +132,52 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
+        @dev validates xConvert call by verifying the path format, claiming the callers tokens (if not ETH),
+        and verifying the gas price limit
+
+        @param _path        conversion path, see conversion path format above
+        @param _amount      amount to convert from (in the initial source token)
+        @param _block       if the current block exceeded the given parameter - it is cancelled
+        @param _v           (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+        @param _r           (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+        @param _s           (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+    */
+    function validateXConversion(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) 
+        private 
+        validConversionPath(_path)    
+    {
+        // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
+        IERC20Token fromToken = _path[0];
+        require(msg.value == 0 || (_amount == msg.value && etherTokens[fromToken]));
+
+        // require that the dest token is BNT
+        require(_path[_path.length - 1] == registry.addressOf(ContractIds.BNT_TOKEN));
+
+        // if ETH was sent with the call, the source is an ether token - deposit the ETH in it
+        // otherwise, we claim the tokens from the sender
+        if (msg.value > 0) {
+            IEtherToken(fromToken).deposit.value(msg.value)();
+        } else {
+            assert(fromToken.transferFrom(msg.sender, this, _amount));
+        }
+
+        // verify gas price limit
+        if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
+            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
+            gasPriceLimit.validateGasPrice(tx.gasprice);
+        } else {
+            require(verifyTrustedSender(_path, _amount, _block, msg.sender, _v, _r, _s));
+        }
+    }
+
+    /**
         @dev converts the token to any other token in the bancor network by following
         a predefined conversion path and transfers the result tokens to a target account
         note that the converter should already own the source tokens
@@ -143,7 +190,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @return tokens issued in return
     */
     function convertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public payable returns (uint256) {
-        return convertForPrioritized2(_path, _amount, _minReturn, _for, 0x0, 0x0, 0x0, 0x0);
+        return convertForPrioritized3(_path, _amount, _minReturn, _for, _amount, 0x0, 0x0, 0x0, 0x0);
     }
 
     /**
@@ -158,13 +205,27 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _for         account that will receive the conversion result
+        @param _customVal   custom value that was signed for prioritized conversion
+        @param _block       if the current block exceeded the given parameter - it is cancelled
+        @param _v           (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+        @param _r           (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+        @param _s           (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
 
         @return tokens issued in return
     */
-    function convertForPrioritized2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
+    function convertForPrioritized3(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _for,
+        uint256 _customVal,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
         public
         payable
-        validConversionPath(_path)
         returns (uint256)
     {
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
@@ -176,7 +237,86 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         if (msg.value > 0)
             IEtherToken(fromToken).deposit.value(msg.value)();
 
-        return convertForInternal(_path, _amount, _minReturn, _for, _block, _v, _r, _s);
+        return convertForInternal(_path, _amount, _minReturn, _for, _customVal, _block, _v, _r, _s);
+    }
+
+    /**
+        @dev converts any other token to BNT in the bancor network
+        by following a predefined conversion path and transfers the resulting
+        tokens to BancorX.
+        note that the network should already have been given allowance of the source token (if not ETH)
+
+        @param _path             conversion path, see conversion path format above
+        @param _amount           amount to convert from (in the initial source token)
+        @param _minReturn        if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _toBlockchain     blockchain BNT will be issued on
+        @param _to               address/account on _toBlockchain to send the BNT to
+        @param _conversionId     pre-determined unique (if non zero) id which refers to this transaction 
+
+        @return the amount of BNT received from this conversion
+    */
+    function xConvert(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        bytes32 _toBlockchain,
+        bytes32 _to,
+        uint256 _conversionId
+    )
+        public
+        payable
+        returns (uint256)
+    {
+        return xConvertPrioritized(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, 0x0, 0x0, 0x0, 0x0);
+    }
+
+    /**
+        @dev converts any other token to BNT in the bancor network
+        by following a predefined conversion path and transfers the resulting
+        tokens to BancorX.
+        this version of the function also allows the verified signer
+        to bypass the universal gas price limit.
+        note that the network should already have been given allowance of the source token (if not ETH)
+
+        @param _path            conversion path, see conversion path format above
+        @param _amount          amount to convert from (in the initial source token)
+        @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _toBlockchain    blockchain BNT will be issued on
+        @param _to              address/account on _toBlockchain to send the BNT to
+        @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction 
+        @param _block           if the current block exceeded the given parameter - it is cancelled
+        @param _v               (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+        @param _r               (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+        @param _s               (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+
+        @return the amount of BNT received from this conversion
+    */
+    function xConvertPrioritized(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        bytes32 _toBlockchain,
+        bytes32 _to,
+        uint256 _conversionId,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        public
+        payable
+        returns (uint256)
+    {
+        // do a lot of validation and transfers in separate function to work around 16 variable limit
+        validateXConversion(_path, _amount, _block, _v, _r, _s);
+
+        // convert to BNT and get the resulting amount
+        (, uint256 retAmount) = convertByPath(_path, _amount, _minReturn, _path[0], this);
+
+        // transfer the resulting amount to BancorX, and return the amount
+        IBancorX(registry.addressOf(ContractIds.BANCOR_X)).xTransfer(_toBlockchain, _to, retAmount, _conversionId);
+
+        return retAmount;
     }
 
     /**
@@ -227,7 +367,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 IEtherToken(fromToken).deposit.value(_amounts[i])();
                 convertedValue += _amounts[i];
             }
-            _amounts[i] = convertForInternal(path, _amounts[i], _minReturns[i], _for, 0x0, 0x0, 0x0, 0x0);
+            _amounts[i] = convertForInternal(path, _amounts[i], _minReturns[i], _for, 0x0, 0x0, 0x0, 0x0, 0x0);
         }
 
         // if ETH was provided, ensure that the full amount was converted
@@ -257,7 +397,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint256 _amount, 
         uint256 _minReturn, 
         address _for, 
-        uint256 _block, 
+        uint256 _customVal,
+        uint256 _block,
         uint8 _v, 
         bytes32 _r, 
         bytes32 _s
@@ -271,7 +412,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             gasPriceLimit.validateGasPrice(tx.gasprice);
         }
         else {
-            require(verifyTrustedSender(_path, _amount, _block, _for, _v, _r, _s));
+            require(verifyTrustedSender(_path, _customVal, _block, _for, _v, _r, _s));
         }
 
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
@@ -550,6 +691,24 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     // deprecated, backward compatibility
+    function convertForPrioritized2(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _for,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        public
+        payable
+        returns (uint256)
+    {
+        return convertForPrioritized3(_path, _amount, _minReturn, _for, _amount, _block, _v, _r, _s);
+    }
+
+    // deprecated, backward compatibility
     function convertForPrioritized(
         IERC20Token[] _path,
         uint256 _amount,
@@ -563,6 +722,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         public payable returns (uint256)
     {
         _nonce;
-        return convertForPrioritized2(_path, _amount, _minReturn, _for, _block, _v, _r, _s);
+        return convertForPrioritized3(_path, _amount, _minReturn, _for, _amount, _block, _v, _r, _s);
     }
 }

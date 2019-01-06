@@ -13,6 +13,7 @@ import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/IEtherToken.sol';
+import '../bancorx/interfaces/IBancorX.sol';
 
 /*
     Bancor Converter v0.11
@@ -50,7 +51,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    bytes32 public version = '0.11';
+    uint16 public version = 12;
     string public converterType = 'bancor';
 
     bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
@@ -357,7 +358,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // destroy the tokens belonging to _from, and issue the same amount to bancorX contract
         token.destroy(_from, _amount);
-        token.issue(bancorX, _amount);
+        token.issue(msg.sender, _amount);
     }
 
     /**
@@ -734,7 +735,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function quickConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
         public
         payable
-        validConversionPath(_path)
         returns (uint256)
     {
         return quickConvertPrioritized(_path, _amount, _minReturn, 0x0, 0x0, 0x0, 0x0);
@@ -757,7 +757,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
         public
         payable
-        validConversionPath(_path)
         returns (uint256)
     {
         IERC20Token fromToken = _path[0];
@@ -779,7 +778,50 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         }
 
         // execute the conversion and pass on the ETH with the call
-        return bancorNetwork.convertForPrioritized2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _block, _v, _r, _s);
+        return bancorNetwork.convertForPrioritized3.value(msg.value)(_path, _amount, _minReturn, msg.sender, _amount, _block, _v, _r, _s);
+    }
+
+    /**
+        @dev allows a user to convert BNT that was sent from another blockchain into any other
+        token on the BancorNetwork without specifying the amount of BNT to be converted, but
+        rather by providing the xTransferId which allows us to get the amount from BancorX.
+
+        @param _path             conversion path, see conversion path format in the BancorNetwork contract
+        @param _minReturn        if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _conversionId     pre-determined unique (if non zero) id which refers to this transaction 
+        @param _block            if the current block exceeded the given parameter - it is cancelled
+        @param _v                (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+        @param _r                (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+        @param _s                (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+
+        @return tokens issued in return
+    */
+    function completeXConversion(
+        IERC20Token[] _path,
+        uint256 _minReturn,
+        uint256 _conversionId,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        public
+        returns (uint256)
+    {
+        IBancorX bancorX = IBancorX(registry.addressOf(ContractIds.BANCOR_X));
+        IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
+
+        // verify that the first token in the path is BNT
+        require(_path[0] == registry.addressOf(ContractIds.BNT_TOKEN));
+
+        // get conversion amount from BancorX contract
+        uint256 amount = bancorX.getXTransferAmount(_conversionId, msg.sender);
+
+        // send BNT from msg.sender to the BancorNetwork contract
+        token.destroy(msg.sender, amount);
+        token.issue(bancorNetwork, amount);
+
+        return bancorNetwork.convertForPrioritized3(_path, amount, _minReturn, msg.sender, _conversionId, _block, _v, _r, _s);
     }
 
     /**
