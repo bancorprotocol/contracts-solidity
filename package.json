@@ -12,7 +12,8 @@
   "scripts": {
     "install": "node scripts/fix-modules.js",
     "build": "node scripts/rebuild-all.js",
-    "test": "node scripts/run-tests.js"
+    "test": "node scripts/run-tests.js",
+    "verify": "node scripts/verify.js"
   },
   "dependencies": {
     "decimal.js": "^10.0.1",
@@ -20,6 +21,7 @@
     "js-sha256": "^0.9.0",
     "left-pad": "^1.3.0",
     "npm": "^6.1.0",
+    "truffle-flattener": "^1.2.10",
     "truffle-contract": "^3.0.6",
     "truffle": "4.1.14",
     "ganache-cli": "6.1.8",
