@@ -99,7 +99,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     // triggered when final report is successfully submitted
     event XTransferComplete(
         address _to,
-        uint256 _xTransferId
+        uint256 _id
     );
 
     /**
