@@ -22,13 +22,14 @@ let contractFeatures;
 let converterUpgrader;
 
 // the tests will be ran for each of these converter versions
-const versions = ["0.11", "0.10", "0.9"]
+const versions = ["0.12","0.11", "0.10", "0.9"]
 
 const contractsPath = path.resolve(__dirname, './bin');
 
 const converters = {
     "0.9": { filename: 'bancor_converter_v9' },
-    "0.10": { filename: 'bancor_converter_v10' }
+    "0.10": { filename: 'bancor_converter_v10' },
+    "0.11": { filename: 'bancor_converter_v11' }
 };
 
 loadDataFiles(contractsPath, converters);
@@ -64,7 +65,7 @@ async function createConverter(tokenAddress, registryAddress, maxConversionFee, 
     let converter;
 
     // if no version is passed, create newest converter
-    if (version == "0.11" || !version) {
+    if (!version || version == "0.12") {
         converter = await BancorConverter.new(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight);
     }
     else {
