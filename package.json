@@ -12,7 +12,7 @@
   "scripts": {
     "install": "node scripts/fix-modules.js",
     "build": "node scripts/rebuild-all.js",
-    "test": "cd solidity && truffle test"
+    "test": "node scripts/run-tests.js"
   },
   "dependencies": {
     "decimal.js": "^10.0.1",

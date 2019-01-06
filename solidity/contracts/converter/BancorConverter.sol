@@ -370,7 +370,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         IBancorConverterUpgrader converterUpgrader = IBancorConverterUpgrader(registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER));
 
         transferOwnership(converterUpgrader);
-        converterUpgrader.upgrade(bytes32(version));
+        converterUpgrader.upgrade(version);
         acceptOwnership();
     }
 
@@ -812,7 +812,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
 
         // verify that the first token in the path is BNT
-        require(_path[0] == address(token));
+        require(_path[0] == registry.addressOf(ContractIds.BNT_TOKEN));
 
         // get conversion amount from BancorX contract
         uint256 amount = bancorX.getXTransferAmount(_conversionId, msg.sender);

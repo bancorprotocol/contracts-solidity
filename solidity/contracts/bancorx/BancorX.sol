@@ -421,7 +421,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     */
     function getXTransferAmount(uint256 _xTransferId, address _for) public view returns (uint256) {
         // xTransferId -> txId -> Transaction
-        Transaction memory transaction = transactions[transactionIds[_xTransferId]];
+        Transaction storage transaction = transactions[transactionIds[_xTransferId]];
 
         // verify that the xTransferId is for _for
         require(transaction.to == _for);
