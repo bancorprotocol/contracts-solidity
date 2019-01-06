@@ -85,7 +85,7 @@ async function upgradeConverter(converter, version = null) {
     let newConverter;
 
     // for the latest version, we just call upgrade on the converter
-    if (version == "0.11" || !version) {
+    if (version == "0.11" || version == "0.12" || !version) {
         await converter.upgrade();
         newConverter = await getNewConverter();
     }
