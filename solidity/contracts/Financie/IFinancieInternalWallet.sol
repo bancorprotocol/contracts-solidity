@@ -1,10 +1,12 @@
 pragma solidity ^0.4.18;
+import '../utility/interfaces/IOwned.sol';
 
 /**
 * Financie Internal Wallet interface
 */
-contract IFinancieInternalWallet {
+contract IFinancieInternalWallet is IOwned{
     function setInternalBank(address _bank) public;
+    function transferBnakOwnership(address _newOwner);
     function depositTokens(uint32 _userId, uint256 _amount, address _tokenAddress);
     function withdrawTokens(uint32 _userId, uint256 _amount, address _tokenAddress);
     function delegateBuyCards(uint32 _userId, uint256 _amount, uint256 _minReturn, address _tokenAddress, address _bancorAddress);
