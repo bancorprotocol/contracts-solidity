@@ -47,11 +47,6 @@ module.exports = function(deployer, _network, _accounts) {
             }
         })
         .then(() => {
-            if ( process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS === undefined ) {
-                return managedContracts.activateTargetContract(process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS === undefined ? SmartToken.address : process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS, true);
-            }
-        })
-        .then(() => {
             if ( process.env.FINANCIE_NOTIFIER_CONTRACT_ADDRESS === undefined ) {
                 return deployer.deploy(FinancieNotifier,
                     process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS === undefined ? FinancieManagedContracts.address : process.env.FINANCIE_MANAGED_CONTRACTS_CONTRACT_ADDRESS,

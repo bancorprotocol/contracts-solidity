@@ -62,7 +62,7 @@ contract('FinancieInternalBank', (accounts) => {
         cardToken = await FinancieCardToken.new(
             'Financie Card Token',
             'FNCD',
-            '0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C',
+            hero_id,
             financieNotifier.address);
 
         new Promise(() => console.log('[FinancieHeroesDutchAuction]card:' + cardToken.address));
@@ -133,7 +133,7 @@ contract('FinancieInternalBank', (accounts) => {
             smartToken.address,
             currencyToken.address,
             cardToken.address,
-            "0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C",
+            hero_id,
             "0x46a254FD6134eA0f564D07A305C0Db119a858d66",
             contractRegistry.address,
             financieNotifier.address,
