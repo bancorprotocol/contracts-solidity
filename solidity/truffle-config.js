@@ -10,6 +10,7 @@ if ( process.argv[2] == 'migrate' ) {
       development: {
         network_id: process.env.ETH_NETWORK_ID,
         gas: 7000000,
+        gasPrice: process.env.ETH_GAS_PRICE,
         provider: function() {
           return new WalletProvider([process.env.ETH_DEPLOYER_KEY], process.env.ETH_NODE_URL);
         },
@@ -18,6 +19,7 @@ if ( process.argv[2] == 'migrate' ) {
       staging: {
         network_id: process.env.ETH_NETWORK_ID,
         gas: 7000000,
+        gasPrice: process.env.ETH_GAS_PRICE,
         provider: function() {
           return new WalletProvider([process.env.ETH_DEPLOYER_KEY], process.env.ETH_NODE_URL);
         },
@@ -26,6 +28,7 @@ if ( process.argv[2] == 'migrate' ) {
       beta: {
         network_id: process.env.ETH_NETWORK_ID,
         gas: 7000000,
+        gasPrice: process.env.ETH_GAS_PRICE,
         provider: function() {
           return new WalletProvider([process.env.ETH_DEPLOYER_KEY], process.env.ETH_NODE_URL);
         },
@@ -34,6 +37,7 @@ if ( process.argv[2] == 'migrate' ) {
       beta2: {
         network_id: process.env.ETH_NETWORK_ID,
         gas: 7000000,
+        gasPrice: process.env.ETH_GAS_PRICE,
         provider: function() {
           return new WalletProvider([process.env.ETH_DEPLOYER_KEY], process.env.ETH_NODE_URL);
         },
