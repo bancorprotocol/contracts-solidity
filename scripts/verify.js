@@ -10,14 +10,14 @@ let spawnSync = require("child_process").spawnSync;
 let input = JSON.parse(fs.readFileSync(INPUT_FILE, {encoding: "utf8"}));
 //  input example:
 //  {
-//      "api"            : "api", // for mainnet, use "api"; for testnet, use "api-<testnet>"
+//      "network"        : "api", // use "api" for mainnet or "api-<testnet>" for testnet
 //      "apiKey"         : "",    // generate this value at https://etherscan.io/myapikey
 //      "compilerVersion": "v0.4.24+commit.e67f0147",
 //      "optimization"   : {"used": 1, "runs": 1000000},
 //      "contracts"      : {
-//          "Contract1": "0x0000000000000000000000000000000000000001",
-//          "Contract2": "0x0000000000000000000000000000000000000002",
-//          "Contract3": "0x0000000000000000000000000000000000000003"
+//          "Contract1": {"addr": "0x0000000000000000000000000000000000000001", "args": "<abi-encoded constructor arguments>"},
+//          "Contract2": {"addr": "0x0000000000000000000000000000000000000002", "args": "<abi-encoded constructor arguments>"},
+//          "Contract3": {"addr": "0x0000000000000000000000000000000000000003", "args": "<abi-encoded constructor arguments>"}
 //      }
 //  }
 
@@ -48,17 +48,18 @@ function getSourceCode(pathName) {
 function post(contractName, sourceCode) {
     console.log(contractName + ": sending verification request...");
     request.post({
-            url: "https://" + input.api + ".etherscan.io/api",
+            url: "https://" + input.network + ".etherscan.io/api",
             form: {
-                apikey          : input.apiKey,
-                module          : "contract",
-                action          : "verifysourcecode",
-                contractaddress : input.contracts[contractName],
-                sourceCode      : sourceCode,
-                contractname    : contractName,
-                compilerversion : input.compilerVersion,
-                optimizationUsed: input.optimization.used,
-                runs            : input.optimization.runs,
+                module               : "contract",
+                action               : "verifysourcecode",
+                sourceCode           : sourceCode,
+                contractname         : contractName,
+                apikey               : input.apiKey,
+                compilerversion      : input.compilerVersion,
+                optimizationUsed     : input.optimization.used,
+                runs                 : input.optimization.runs,
+                contractaddress      : input.contracts[contractName].addr,
+                constructorArguements: input.contracts[contractName].args,
             }
         },
         function(error, response, body) {
@@ -79,7 +80,7 @@ function post(contractName, sourceCode) {
 function get(contractName, guid) {
     console.log(contractName + ": checking verification status...");
     request.get(
-        "https://" + input.api + ".etherscan.io/api?module=contract&action=checkverifystatus&guid=" + guid,
+        "https://" + input.network + ".etherscan.io/api?module=contract&action=checkverifystatus&guid=" + guid,
         function(error, response, body) {
             if (error) {
                 console.log(contractName + ": " + error);
