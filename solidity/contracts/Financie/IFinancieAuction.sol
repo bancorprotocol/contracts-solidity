@@ -6,5 +6,7 @@ contract IFinancieAuction {
     function proxyClaimTokens(address receiver_address) public returns (bool);
     function canClaimTokens(address receiver_address) public view returns (bool);
     function auctionFinished() public view returns (bool);
+    function price() public constant returns (uint);
+    function tokenMultiplier() public constant returns (uint);
     function targetToken() public view returns (address);
 }

@@ -257,15 +257,17 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
     {
         require(IOwned(_auctionAddress).owner() == owner);
 
-        uint256 bidsauction_amount = bank.getBidsOfAuctions(_auctionAddress, _userId);
-        if ( bidsauction_amount > 0 ) {
-            IFinancieAuction auction = IFinancieAuction(_auctionAddress);
-            if ( auction.canClaimTokens(bank) ) {
-                return true;
-            }
+        IFinancieAuction auction = IFinancieAuction(_auctionAddress);
+        if ( auction.auctionFinished() ) {
+            uint256 bidsauction_amount = bank.getBidsOfAuctions(_auctionAddress, _userId);
+            if ( bidsauction_amount > 0 ) {
+                if ( auction.canClaimTokens(bank) ) {
+                    return true;
+                }
 
-            uint256 estimate = safeMul(bank.getRecvCardsOfAuctions(_auctionAddress) / (10 ** 10), bidsauction_amount) / (bank.getTotalBidsOfAuctions(_auctionAddress) / (10 ** 10));
-            return estimate > 0;
+                uint256 estimate = safeMul(bank.getRecvCardsOfAuctions(_auctionAddress) / (10 ** 10), bidsauction_amount) / (bank.getTotalBidsOfAuctions(_auctionAddress) / (10 ** 10));
+                return estimate > 0;
+            }
         }
 
         return false;
@@ -279,11 +281,15 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         uint256 bidsauction_amount = bank.getBidsOfAuctions(_auctionAddress, _userId);
         if ( bidsauction_amount > 0 ) {
             IFinancieAuction auction = IFinancieAuction(_auctionAddress);
-            if ( auction.canClaimTokens(bank) ) {
-                uint256 totalEstimation = auction.estimateClaimTokens(bank);
-                return safeMul(totalEstimation / (10 ** 10), bidsauction_amount) / (bank.getTotalBidsOfAuctions(_auctionAddress) / (10 ** 10));
+            if ( auction.auctionFinished() ) {
+                if ( auction.canClaimTokens(bank) ) {
+                    uint256 totalEstimation = auction.estimateClaimTokens(bank);
+                    return safeMul(totalEstimation / (10 ** 10), bidsauction_amount) / (bank.getTotalBidsOfAuctions(_auctionAddress) / (10 ** 10));
+                } else {
+                    return safeMul(bank.getRecvCardsOfAuctions(_auctionAddress) / (10 ** 10), bidsauction_amount) / (bank.getTotalBidsOfAuctions(_auctionAddress) / (10 ** 10));
+                }
             } else {
-                return safeMul(bank.getRecvCardsOfAuctions(_auctionAddress) / (10 ** 10), bidsauction_amount) / (bank.getTotalBidsOfAuctions(_auctionAddress) / (10 ** 10));
+                return safeMul(auction.tokenMultiplier(), bidsauction_amount) / auction.price();
             }
         }
 
