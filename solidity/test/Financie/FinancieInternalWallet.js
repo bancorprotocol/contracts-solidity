@@ -48,7 +48,9 @@ contract('FinancieInternalWallet', (accounts) => {
     before(async () => {
         console.log('[FinancieInternalWallet]initialize');
         currencyToken = await SmartToken.new('Test', 'TST', 18);
-        internalBank = await FinancieInternalBank.new();
+        internalBank = await FinancieInternalBank.new(
+            currencyToken.address
+        );
         internalWallet = await FinancieInternalWallet.new(
             "0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C",
             currencyToken.address
@@ -137,7 +139,7 @@ contract('FinancieInternalWallet', (accounts) => {
             smartToken.address,
             currencyToken.address,
             cardToken.address,
-            "0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C",
+            hero_id,
             "0x46a254FD6134eA0f564D07A305C0Db119a858d66",
             contractRegistry.address,
             financieNotifier.address,
@@ -178,31 +180,36 @@ contract('FinancieInternalWallet', (accounts) => {
     it('delegateBid/Receive', async () => {
         await currencyToken.issue(accounts[0], 1 * (10 ** 5));
         await currencyToken.approve(internalWallet.address, 1 * (10 ** 5));
-        await internalWallet.depositTokens(user_id, 1 * (10 ** 5), currencyToken.address);
+        await internalWallet.depositConsumableCurrencyTokens(user_id, 1 * (10 ** 5));
 
-        let currencyBeforeBidding = await currencyToken.balanceOf(internalWallet.address);
+        let currencyBeforeBidding = await currencyToken.balanceOf(internalBank.address);
         console.log('[FinancieInternalWallet]total currencyBeforeBidding ' + currencyBeforeBidding.toFixed());
 
-        await internalWallet.delegateBidCards(user_id, 1 * (10 ** 5), auction.address);
+        await internalWallet.delegateBidCards(user_id, 1 * (10 ** 5) - 100, auction.address);
         console.log('[FinancieInternalWallet]delegateBid OK');
 
-        let currencyAfterBidding = await internalWallet.getBalanceOfToken(currencyToken.address, user_id);
+        let missingFund = await auction.missingFundsToEndAuction();
+
+        await internalWallet.delegateBidCards(user_id, 100, auction.address);
+        console.log('[FinancieInternalWallet]delegateBid OK');
+
+        let currencyAfterBidding = await internalWallet.getBalanceOfConsumableCurrencyToken(user_id);
         console.log('[FinancieInternalWallet]currencyAfterBidding(user_id) ' + currencyAfterBidding.toFixed());
 
-        currencyAfterBidding = await currencyToken.balanceOf(internalWallet.address);
+        currencyAfterBidding = await currencyToken.balanceOf(internalBank.address);
         console.log('[FinancieInternalWallet]total currencyAfterBidding ' + currencyAfterBidding.toFixed());
 
-        let missingFund = await auction.missingFundsToEndAuction();
-        await currencyToken.issue(accounts[0], missingFund + 1);
-        await currencyToken.approve(internalWallet.address, missingFund + 1);
-        await internalWallet.depositTokens(user_id_noone, missingFund + 1, currencyToken.address);
+        console.log('[FinancieInternalWallet]missingFund ' + missingFund.toFixed());
+        await currencyToken.issue(accounts[0], missingFund);
+        await currencyToken.approve(internalWallet.address, missingFund);
+        await internalWallet.depositConsumableCurrencyTokens(user_id_noone, missingFund);
 
-        let currencyBeforeBidding2 = await currencyToken.balanceOf(internalWallet.address);
+        let currencyBeforeBidding2 = await currencyToken.balanceOf(internalBank.address);
         console.log('[FinancieInternalWallet]total currencyBeforeBidding2 ' + currencyBeforeBidding2.toFixed());
 
-        await internalWallet.delegateBidCards(user_id_noone, missingFund + 1, auction.address);
+        await internalWallet.delegateBidCards(user_id_noone, missingFund, auction.address);
 
-        let currencyAfterBidding2 = await currencyToken.balanceOf(internalWallet.address);
+        let currencyAfterBidding2 = await currencyToken.balanceOf(internalBank.address);
         console.log('[FinancieInternalWallet]total currencyAfterBidding2 ' + currencyAfterBidding2.toFixed());
 
         try {
@@ -233,26 +240,37 @@ contract('FinancieInternalWallet', (accounts) => {
     });
 
     it('delegateWithdrawal', async () => {
-        let currencyBeforeWithdrawal = await currencyToken.balanceOf(internalWallet.address);
-        console.log('[FinancieInternalWallet]currencyBeforeWithdrawal(internalWallet) ' + currencyBeforeWithdrawal.toFixed());
+        let currencyBeforeWithdrawal = await currencyToken.balanceOf(internalBank.address);
+        console.log('[FinancieInternalWallet]currencyBeforeWithdrawal(internalBank) ' + currencyBeforeWithdrawal.toFixed());
 
-        currencyBeforeWithdrawal = await internalWallet.getBalanceOfToken(currencyToken.address, user_id_noone);
+        currencyBeforeWithdrawal = await internalWallet.getBalanceOfWithdrawableCurrencyToken(user_id_noone);
         console.log('[FinancieInternalWallet]currencyBeforeWithdrawal(user_id_noone) ' + currencyBeforeWithdrawal.toFixed());
-        await internalWallet.withdrawTokens(user_id_noone, currencyBeforeWithdrawal, currencyToken.address);
+        await internalWallet.withdrawCurrencyTokens(user_id_noone, currencyBeforeWithdrawal);
 
-        currencyBeforeWithdrawal = await internalWallet.getBalanceOfToken(currencyToken.address, user_id);
+        currencyBeforeWithdrawal = await internalWallet.getBalanceOfWithdrawableCurrencyToken(user_id);
         console.log('[FinancieInternalWallet]currencyBeforeWithdrawal(user_id) ' + currencyBeforeWithdrawal.toFixed());
-        await internalWallet.withdrawTokens(user_id, currencyBeforeWithdrawal, currencyToken.address);
+        await internalWallet.withdrawCurrencyTokens(user_id, currencyBeforeWithdrawal);
 
-        currencyBeforeWithdrawal = await internalWallet.getBalanceOfToken(currencyToken.address, hero_id);
+        currencyBeforeWithdrawal = await internalWallet.getBalanceOfWithdrawableCurrencyToken(hero_id);
         console.log('[FinancieInternalWallet]currencyBeforeWithdrawal(hero_id) ' + currencyBeforeWithdrawal.toFixed());
-        await internalWallet.withdrawTokens(hero_id, currencyBeforeWithdrawal, currencyToken.address);
+        await internalWallet.withdrawCurrencyTokens(hero_id, currencyBeforeWithdrawal);
+
+        let currencyAfterWithdrawal = await currencyToken.balanceOf(internalBank.address);
+        console.log('[FinancieInternalWallet]currencyAfterWithdrawal(internalBank) ' + currencyAfterWithdrawal.toFixed());
+
+        currencyAfterWithdrawal = await internalWallet.getBalanceOfWithdrawableCurrencyToken(hero_id);
+        console.log('[FinancieInternalWallet]currencyAfterWithdrawal(hero_id) ' + currencyAfterWithdrawal.toFixed());
+        assert.equal(0, currencyAfterWithdrawal.toFixed());
     });
 
     it('delegateBuy/Sell', async () => {
+        let currencyBeforeTesting = await currencyToken.balanceOf(internalBank.address);
+        console.log('[FinancieInternalWallet]total currencyBeforeTesting ' + currencyBeforeTesting.toFixed());
+        assert.equal(100, currencyBeforeTesting.toFixed());
+
         await currencyToken.issue(accounts[0], 1 * (10 ** 5));
         await currencyToken.approve(internalWallet.address, 1 * (10 ** 5));
-        await internalWallet.depositTokens(user_id, 1 * (10 ** 5), currencyToken.address);
+        await internalWallet.depositConsumableCurrencyTokens(user_id, 1 * (10 ** 5));
 
         [estimationBuy, fee] = await bancor.getReturn(currencyToken.address, cardToken.address, 10 ** 5);
         console.log('[FinancieInternalWallet]estimationBuy ' + estimationBuy + ' / ' + fee);
@@ -263,7 +281,7 @@ contract('FinancieInternalWallet', (accounts) => {
 
         let currencyBeforeBuy = await currencyToken.balanceOf(internalBank.address);
         console.log('[FinancieInternalWallet]total currencyBeforeBuy ' + currencyBeforeBuy.toFixed());
-        assert.equal(10 ** 5, currencyBeforeBuy.toFixed());
+        assert.equal(10 ** 5 + 100, currencyBeforeBuy.toFixed());
 
         await internalWallet.delegateBuyCards(user_id, 1 * (10 ** 5), estimationBuy, cardToken.address, bancor.address, {gasPrice: gasPrice});
         console.log('[FinancieInternalWallet]delegateBuy OK/100000');
@@ -276,9 +294,9 @@ contract('FinancieInternalWallet', (accounts) => {
 
         let currencyAfterBuy = await currencyToken.balanceOf(internalBank.address);
         console.log('[FinancieInternalWallet]total currencyAfterBuy ' + currencyAfterBuy.toFixed());
-        assert.equal(1500, currencyAfterBuy.toFixed());
+        assert.equal(1500 + 100, currencyAfterBuy.toFixed());
 
-        currencyBeforeSell = await internalWallet.getBalanceOfToken(currencyToken.address, user_id);
+        currencyBeforeSell = await internalWallet.getBalanceOfWithdrawableCurrencyToken(user_id);
         console.log('[FinancieInternalWallet]user currencyBeforeSell ' + currencyBeforeSell.toFixed());
         assert.equal(0, currencyBeforeSell.toFixed());
 
@@ -291,7 +309,7 @@ contract('FinancieInternalWallet', (accounts) => {
         let afterSell = await cardToken.balanceOf(internalBank.address);
         console.log('[FinancieInternalWallet]balance of card token after selling:' + afterSell.toFixed());
 
-        let currencyAfterSell = await internalWallet.getBalanceOfToken(currencyToken.address, user_id);
+        let currencyAfterSell = await internalWallet.getBalanceOfWithdrawableCurrencyToken(user_id);
         console.log('[FinancieInternalWallet]user currencyAfterSell ' + currencyAfterSell.toFixed());
         assert.equal(estimationSell.toFixed(), currencyAfterSell.toFixed());
     });

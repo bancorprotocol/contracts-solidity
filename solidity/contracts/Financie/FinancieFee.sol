@@ -64,7 +64,7 @@ contract FinancieFee is Utils {
                 payment_currenty_token.approve(address(internalWallet), 0);
             }
             payment_currenty_token.approve(address(internalWallet), _heroFee);
-            internalWallet.depositTokens(hero_id, _heroFee, address(payment_currenty_token));
+            internalWallet.depositWithdrawableCurrencyTokens(hero_id, _heroFee);
         }
         assert(payment_currenty_token.transfer(team_wallet, _teamFee));
 

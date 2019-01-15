@@ -51,7 +51,9 @@ contract('FinancieInternalBank', (accounts) => {
         financieNotifier = await FinancieNotifier.new(managedContracts.address, platformToken.address, currencyToken.address);
 
         console.log('[FinancieInternalBank]initialize');
-        internalBank = await FinancieInternalBank.new();
+        internalBank = await FinancieInternalBank.new(
+            currencyToken.address
+        );
         console.log(internalBank.address);
 
         console.log('[FinancieInternalWallet]initialize');

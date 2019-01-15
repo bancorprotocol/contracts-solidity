@@ -18,6 +18,11 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
     event DepositTokens(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, uint _timestamp);
     event WithdrawTokens(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, uint _timestamp);
 
+    event DepositConsumableCurrencyTokens(uint32 indexed _user_id, uint256 _amount, uint _timestamp);
+    event DepositWithdrawableCurrencyTokens(uint32 indexed _user_id, uint256 _amount, uint _timestamp);
+    event ConvertWithdrawableToCunsumableCurrencyTokens(uint32 indexed _user_id, uint256 _amount, uint _timestamp);
+    event WithdrawCurrencyTokens(uint32 indexed _user_id, uint256 _amount, uint _timestamp);
+
     event BuyCards(uint32 indexed _user_id, uint256 _currency_amount, uint256 _card_amount, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
     event SellCards(uint32 indexed _user_id, uint256 _currency_amount, uint256 _card_amount, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
     event BidCards(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, address indexed _auction_address, uint _timestamp);
@@ -40,6 +45,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         bank = IFinancieInternalBank(_bank);
         bank.acceptOwnership();
     }
+
     function transferBnakOwnership(address _newOwner) public ownerOnly {
       bank.transferOwnership(_newOwner);
     }
@@ -51,14 +57,35 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         }
     }
 
-    function getBalanceOfToken(address _tokenAddress, uint32 _userId) public view returns(uint256) {
+    function getBalanceOfToken(address _tokenAddress, uint32 _userId)
+        public
+        view
+        returns(uint256)
+    {
         return bank.getBalanceOfToken(_tokenAddress, _userId);
+    }
+
+    function getBalanceOfConsumableCurrencyToken(uint32 _userId)
+        public
+        view
+        returns(uint256)
+    {
+        return bank.getBalanceOfConsumableCurrencyToken(_userId);
+    }
+
+    function getBalanceOfWithdrawableCurrencyToken(uint32 _userId)
+        public
+        view
+        returns(uint256)
+    {
+        return bank.getBalanceOfWithdrawableCurrencyToken(_userId);
     }
 
     function depositTokens(uint32 _userId, uint256 _amount, address _tokenAddress)
         public
         sameOwner
     {
+        assert(_tokenAddress != address(paymentCurrencyToken));
         IERC20Token token = IERC20Token(_tokenAddress);
         token.transferFrom(msg.sender, address(bank), _amount);
 
@@ -69,6 +96,28 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         DepositTokens(_userId, _amount, _tokenAddress, now);
     }
 
+    function depositConsumableCurrencyTokens(uint32 _userId, uint256 _amount)
+        public
+        sameOwner
+    {
+        paymentCurrencyToken.transferFrom(msg.sender, address(bank), _amount);
+
+        addBalanceOfConsumableCurrencyTokens(_userId, _amount);
+
+        DepositConsumableCurrencyTokens(_userId, _amount, now);
+    }
+
+    function depositWithdrawableCurrencyTokens(uint32 _userId, uint256 _amount)
+        public
+        sameOwner
+    {
+        paymentCurrencyToken.transferFrom(msg.sender, address(bank), _amount);
+
+        addBalanceOfWithdrawableCurrencyTokens(_userId, _amount);
+
+        DepositWithdrawableCurrencyTokens(_userId, _amount, now);
+    }
+
     function withdrawTokens(uint32 _userId, uint256 _amount, address _tokenAddress)
         public
         sameOwner
@@ -76,28 +125,56 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         require(bank.getBalanceOfToken(_tokenAddress, _userId) >= _amount);
         IERC20Token token = IERC20Token(_tokenAddress);
 
-        bank.withdrawTokens(_tokenAddress, teamWallet, _amount);
+        bank.transferTokens(_tokenAddress, teamWallet, _amount);
 
         subBalanceOfTokens(_userId, _amount, _tokenAddress);
 
         WithdrawTokens(_userId, _amount, _tokenAddress, now);
     }
 
+    function convertWithdrawableToConsumableCurrencyTokens(uint32 _userId, uint256 _amount)
+        public
+        sameOwner
+    {
+        require(bank.getBalanceOfWithdrawableCurrencyToken(_userId) >= _amount);
+
+        // withdraw "withdrawable" currency
+        subBalanceOfWithdrawableCurrencyTokens(_userId, _amount);
+
+        // deposit as "consumable" currency
+        addBalanceOfConsumableCurrencyTokens(_userId, _amount);
+
+        ConvertWithdrawableToCunsumableCurrencyTokens(_userId, _amount, now);
+    }
+
+    function withdrawCurrencyTokens(uint32 _userId, uint256 _amount)
+        public
+        sameOwner
+    {
+        require(bank.getBalanceOfWithdrawableCurrencyToken(_userId) >= _amount);
+
+        subBalanceOfWithdrawableCurrencyTokens(_userId, _amount);
+
+        bank.transferCurrencyTokens(teamWallet, _amount);
+
+        WithdrawCurrencyTokens(_userId, _amount, now);
+    }
+
     function delegateBuyCards(uint32 _userId, uint256 _amount, uint256 _minReturn, address _tokenAddress, address _bancorAddress)
         public
         sameOwner
     {
-        require(bank.getBalanceOfToken(address(paymentCurrencyToken), _userId) >= _amount);
+        require(bank.getBalanceOfConsumableCurrencyToken(_userId) >= _amount);
         require(_amount > 0);
 
-        subBalanceOfTokens(_userId, _amount, address(paymentCurrencyToken));
+        subBalanceOfConsumableCurrencyTokens(_userId, _amount);
 
         IERC20Token token = IERC20Token(_tokenAddress);
         uint256 tokenDiff = token.balanceOf(bank);
         uint256 currencyDiff = paymentCurrencyToken.balanceOf(bank);
 
         // withdraw currency token to this internal wallet
-        bank.withdrawTokens(paymentCurrencyToken, this, _amount);
+        bank.transferCurrencyTokens(this, _amount);
 
         if ( paymentCurrencyToken.allowance(this, _bancorAddress) < _amount ) {
             assert(paymentCurrencyToken.approve(_bancorAddress, 0));
@@ -142,7 +219,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         uint256 currencyDiff = paymentCurrencyToken.balanceOf(bank);
 
         // withdraw card token to this internal wallet
-        bank.withdrawTokens(_tokenAddress, this, _amount);
+        bank.transferTokens(_tokenAddress, this, _amount);
 
         if ( token.allowance(this, _bancorAddress) < _amount ) {
             assert(token.approve(_bancorAddress, 0));
@@ -168,7 +245,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         // check consumed card tokens amount equals to specified amount
         assert(_amount == tokenDiff);
 
-        addBalanceOfTokens(_userId, result, address(paymentCurrencyToken));
+        addBalanceOfWithdrawableCurrencyTokens(_userId, result);
 
         SellCards(_userId, result, _amount, _tokenAddress, _bancorAddress, now);
     }
@@ -177,13 +254,13 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         public
         sameOwner
     {
-        require(bank.getBalanceOfToken(address(paymentCurrencyToken), _userId) >= _amount);
+        require(bank.getBalanceOfConsumableCurrencyToken(_userId) >= _amount);
         require(_amount > 0);
 
         uint256 currencyBefore = paymentCurrencyToken.balanceOf(bank);
 
         // withdraw currency token to this internal wallet
-        bank.withdrawTokens(paymentCurrencyToken, this, _amount);
+        bank.transferCurrencyTokens(this, _amount);
 
         // receive tokens on this wallet if available
         IFinancieAuction auction = IFinancieAuction(_auctionAddress);
@@ -191,6 +268,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
             paymentCurrencyToken.approve(_auctionAddress, 0);
         }
         paymentCurrencyToken.approve(_auctionAddress, _amount);
+
         uint256 amount;
         uint256 heroFee;
         uint256 teamFee;
@@ -208,7 +286,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
 
         addTotalBidsOfAuctions(amount, _auctionAddress);
         addBidsOfAuctions(_userId, amount, _auctionAddress);
-        subBalanceOfTokens(_userId, amount, address(paymentCurrencyToken));
+        subBalanceOfConsumableCurrencyTokens(_userId, amount);
 
         address tokenAddress = auction.targetToken();
         BidCards(_userId, amount, tokenAddress, _auctionAddress, now);
@@ -295,6 +373,31 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
 
         return 0;
     }
+
+    function addBalanceOfConsumableCurrencyTokens(uint32 _userId, uint256 _amount) private {
+        uint256 amount = bank.getBalanceOfConsumableCurrencyToken(_userId);
+        amount = safeAdd(amount, _amount);
+        bank.setBalanceOfConsumableCurrencyToken(_userId, amount);
+    }
+
+    function subBalanceOfConsumableCurrencyTokens(uint32 _userId, uint256 _amount) private {
+        uint256 amount = bank.getBalanceOfConsumableCurrencyToken(_userId);
+        amount = safeSub(amount, _amount);
+        bank.setBalanceOfConsumableCurrencyToken(_userId, amount);
+    }
+
+    function addBalanceOfWithdrawableCurrencyTokens(uint32 _userId, uint256 _amount) private {
+        uint256 amount = bank.getBalanceOfWithdrawableCurrencyToken(_userId);
+        amount = safeAdd(amount, _amount);
+        bank.setBalanceOfWithdrawableCurrencyToken(_userId, amount);
+    }
+
+    function subBalanceOfWithdrawableCurrencyTokens(uint32 _userId, uint256 _amount) private {
+        uint256 amount = bank.getBalanceOfWithdrawableCurrencyToken(_userId);
+        amount = safeSub(amount, _amount);
+        bank.setBalanceOfWithdrawableCurrencyToken(_userId, amount);
+    }
+
 
     function addBalanceOfTokens(uint32 _userId, uint256 _amount, address _tokenAddress) private {
         uint256 amount = bank.getBalanceOfToken(_tokenAddress, _userId);

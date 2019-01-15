@@ -113,7 +113,9 @@ contract('FinancieBancorConverterUpgrade', (accounts) => {
         await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[0]);
 
-        let internalBank = await FinancieInternalBank.new();
+        let internalBank = await FinancieInternalBank.new(
+            currencyToken.address
+        );
         let internalWallet = await FinancieInternalWallet.new(
             "0xA0d6B46ab1e40BEfc073E510e92AdB88C0A70c5C",
             currencyToken.address
