@@ -276,7 +276,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
 
         uint256 net = safeSub(result, transactionFee);
         paymentCurrencyToken.transfer(bank, net);
-        emit SellCards(_userId, net, result, _tokenAddress, _bancorAddress, now);
+        emit SellCards(_userId, _amount, net, _tokenAddress, _bancorAddress, now);
 
         // send transaction fee
         paymentCurrencyToken.transfer(teamWallet, transactionFee);
