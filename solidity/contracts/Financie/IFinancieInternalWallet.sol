@@ -7,6 +7,7 @@ import '../utility/interfaces/IOwned.sol';
 contract IFinancieInternalWallet is IOwned{
     function setInternalBank(address _bank) public;
     function transferBnakOwnership(address _newOwner);
+    function setTransactionFee(uint256 _amount) public;
     function getBalanceOfToken(address _tokenAddress, uint32 _userId) public view returns(uint256);
     function getBalanceOfConsumableCurrencyToken(uint32 _userId) public view returns(uint256);
     function getBalanceOfWithdrawableCurrencyToken(uint32 _userId) public view returns(uint256);
