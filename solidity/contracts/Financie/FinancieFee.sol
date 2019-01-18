@@ -21,6 +21,8 @@ contract FinancieFee is Utils {
     // Receiver wallet address for team fee
     address public team_wallet;
 
+    bool public pendingRevenue;
+
     // Currency token for payment
     IERC20Token payment_currenty_token;
 
@@ -40,7 +42,8 @@ contract FinancieFee is Utils {
         uint32 _hero_id,
         address _team_wallet,
         address _payment_currency_token,
-        address _internalWallet
+        address _internalWallet,
+        bool    _pendingRevenue
     ) internal {
         heroFee = _heroFee;
         teamFee = _teamFee;
@@ -48,6 +51,7 @@ contract FinancieFee is Utils {
         team_wallet = _team_wallet;
         payment_currenty_token = IERC20Token(_payment_currency_token);
         internalWallet = IFinancieInternalWallet(_internalWallet);
+        pendingRevenue = _pendingRevenue;
     }
 
     /**
@@ -64,7 +68,11 @@ contract FinancieFee is Utils {
                 payment_currenty_token.approve(address(internalWallet), 0);
             }
             payment_currenty_token.approve(address(internalWallet), _heroFee);
-            internalWallet.depositWithdrawableCurrencyTokens(hero_id, _heroFee);
+            if ( pendingRevenue ) {
+                internalWallet.depositPendingRevenueCurrencyTokens(hero_id, _heroFee);
+            } else {
+                internalWallet.depositWithdrawableCurrencyTokens(hero_id, _heroFee);
+            }
         }
         assert(payment_currenty_token.transfer(team_wallet, _teamFee));
 

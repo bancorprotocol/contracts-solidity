@@ -21,6 +21,7 @@ const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const BancorConverterUpgrade = artifacts.require('BancorConverterUpgrader.sol');
 
 const gasPrice = 22000000000;
+const transactionFee = 50 * (10 ** 18);
 
 module.exports = function(deployer, _network, _accounts) {
     let managedContracts;
@@ -63,6 +64,11 @@ module.exports = function(deployer, _network, _accounts) {
             if ( process.env.FINANCIE_INTERNAL_WALLET_CONTRACT_ADDRESS === undefined &&
                 process.env.FINANCIE_INTERNAL_BANK_CONTRACT_ADDRESS === undefined ) {
                 return wallet.setInternalBank(FinancieInternalBank.address);
+            }
+        })
+        .then(() => {
+            if ( process.env.FINANCIE_INTERNAL_WALLET_CONTRACT_ADDRESS === undefined ) {
+                return wallet.setTransactionFee(transactionFee);
             }
         })
         .then(() => {

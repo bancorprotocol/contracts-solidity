@@ -184,7 +184,7 @@ contract('FinancieInternalWallet', (accounts) => {
 
     it('delegateBid/Receive', async () => {
         let bidAmount = new web3.BigNumber(web3.toWei("10000", "ether"));
-        totalAmount = bidAmount.add(transactionFee);
+        totalAmount = bidAmount.add(transactionFee * 2);
         issueAmount = totalAmount.add(transactionFee);
         console.log('bidAmount:' + bidAmount.toFixed());
 
@@ -213,7 +213,7 @@ contract('FinancieInternalWallet', (accounts) => {
         console.log('[FinancieInternalWallet]total currencyAfterBidding ' + currencyAfterBidding.toFixed());
 
         bidAmount = await auction.missingFundsToEndAuction();
-        totalAmount = bidAmount.add(transactionFee);
+        totalAmount = bidAmount.add(transactionFee * 2);
         issueAmount = totalAmount.add(transactionFee);
         console.log('[FinancieInternalWallet]missingFund ' + bidAmount.toFixed());
 
@@ -264,16 +264,16 @@ contract('FinancieInternalWallet', (accounts) => {
         let currencyBeforeWithdrawal = await currencyToken.balanceOf(internalBank.address);
         console.log('[FinancieInternalWallet]currencyBeforeWithdrawal(internalBank) ' + currencyBeforeWithdrawal.toFixed());
 
-        currencyBeforeWithdrawal = await internalWallet.getBalanceOfWithdrawableCurrencyToken(hero_id);
+        currencyBeforeWithdrawal = await internalWallet.getBalanceOfPendingRevenueCurrencyToken(hero_id);
         console.log('[FinancieInternalWallet]currencyBeforeWithdrawal(hero_id) ' + currencyBeforeWithdrawal.toFixed());
 
         let balance = currencyBeforeWithdrawal.sub(transactionFee);
-        await internalWallet.withdrawCurrencyTokens(hero_id, balance);
+        await internalWallet.withdrawPendingRevenueCurrencyTokens(hero_id, balance);
 
         let currencyAfterWithdrawal = await currencyToken.balanceOf(internalBank.address);
         console.log('[FinancieInternalWallet]currencyAfterWithdrawal(internalBank) ' + currencyAfterWithdrawal.toFixed());
 
-        currencyAfterWithdrawal = await internalWallet.getBalanceOfWithdrawableCurrencyToken(hero_id);
+        currencyAfterWithdrawal = await internalWallet.getBalanceOfPendingRevenueCurrencyToken(hero_id);
         console.log('[FinancieInternalWallet]currencyAfterWithdrawal(hero_id) ' + currencyAfterWithdrawal.toFixed());
         assert.equal(0, currencyAfterWithdrawal.toFixed());
     });

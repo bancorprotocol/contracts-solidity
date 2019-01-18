@@ -54,7 +54,7 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
         paymentCurrentyToken = IERC20Token(_payment_currency_token_address);
         internalWallet = IFinancieInternalWallet(_internal_wallet_address);
         hero_id = _hero_id;
-        setFee(1000000 - _teamFee, _teamFee, _hero_id, _team_wallet, _payment_currency_token_address, _internal_wallet_address);
+        setFee(1000000 - _teamFee, _teamFee, _hero_id, _team_wallet, _payment_currency_token_address, _internal_wallet_address, true);
     }
 
     /**

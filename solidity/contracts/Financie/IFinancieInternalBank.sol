@@ -13,6 +13,8 @@ contract IFinancieInternalBank is IOwned {
     function getBalanceOfConsumableCurrencyToken(uint32 _userId) public view returns(uint256);
     function setBalanceOfWithdrawableCurrencyToken(uint32 _userId, uint256 _amount) public;
     function getBalanceOfWithdrawableCurrencyToken(uint32 _userId) public view returns(uint256);
+    function setBalanceOfPendingRevenueCurrencyToken(uint32 _userId, uint256 _amount) public;
+    function getBalanceOfPendingRevenueCurrencyToken(uint32 _userId) public view returns(uint256);
     function setHolderOfToken(address _tokenAddress, uint32 _userId, bool _flg) public;
     function getHolderOfToken(address _tokenAddress, uint32 _userId) public view returns(bool);
     function setBidsOfAuctions(address _auctionAddress, uint32 _userId, uint256 _amount) public;
