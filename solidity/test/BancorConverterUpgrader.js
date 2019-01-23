@@ -72,8 +72,9 @@ async function createConverter(tokenAddress, registryAddress, maxConversionFee, 
         let abi = converters[version]['abi'];
         let byteCode = '0x' + converters[version]['bin'];
         let converterContract = truffleContract({ abi, unlinked_binary: byteCode });
+        let block = await web3.eth.getBlock("latest");
         converterContract.setProvider(web3.currentProvider);
-        converterContract.defaults({ from: web3.eth.accounts[0], gas: 5712388 });
+        converterContract.defaults({ from: web3.eth.accounts[0], gas: block.gasLimit });
 
         converter = await converterContract.new(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight);
     }
