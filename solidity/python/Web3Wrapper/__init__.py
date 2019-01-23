@@ -9,7 +9,7 @@ eth = Web3(HTTPProvider("http://127.0.0.1:8545")).eth
 
 class Contract():
     def __init__(self,moduleName,ownerAddress='',args=[]):
-        path = dirname(dirname(dirname(__file__)))+'/contracts/build/'
+        path = dirname(dirname(dirname(__file__)))+'/build/'
         abi = open(path+moduleName+'.abi').read()
         bin = open(path+moduleName+'.bin').read()
         self.contract = eth.contract(abi=loads(abi),bytecode=bin)
