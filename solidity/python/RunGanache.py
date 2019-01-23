@@ -9,7 +9,7 @@ balance  = 2**256-1
 
 run([
     'node',
-    '{}/../../node_modules/ganache-cli/build/cli.node.js'.format(path[0]),
+    '{}/../../node_modules/ganache-cli/cli.js'.format(path[0]),
     '--port={}'.format(port),
     '--gasPrice={}'.format(gasPrice),
     '--gasLimit={}'.format(gasLimit),

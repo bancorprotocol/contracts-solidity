@@ -24,8 +24,8 @@
     "truffle-flattener": "^1.2.10",
     "truffle-contract": "^3.0.6",
     "truffle": "4.1.14",
-    "ganache-cli": "6.1.8",
-    "solidity-coverage": "0.5.8",
+    "ganache-cli": "6.2.5",
+    "solidity-coverage": "0.5.11",
     "ethereumjs-testrpc-sc": "6.1.6",
     "web3-utils": "^1.0.0-beta.34"
   }
