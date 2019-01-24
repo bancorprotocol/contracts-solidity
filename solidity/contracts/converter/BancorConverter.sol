@@ -16,7 +16,7 @@ import '../token/interfaces/IEtherToken.sol';
 import '../bancorx/interfaces/IBancorX.sol';
 
 /*
-    Bancor Converter v0.11
+    Bancor Converter v12
 
     The Bancor version of the token converter, allows conversion between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
@@ -47,7 +47,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 virtualBalance;         // connector virtual balance
         uint32 weight;                  // connector weight, represented in ppm, 1-1000000
         bool isVirtualBalanceEnabled;   // true if virtual balance is enabled, false if not
-        bool isPurchaseEnabled;         // is purchase of the smart token enabled with the connector, can be set by the owner
+        bool isSaleEnabled;             // is sale of the connector token enabled, can be set by the owner
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
@@ -395,7 +395,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         connectors[_token].virtualBalance = 0;
         connectors[_token].weight = _weight;
         connectors[_token].isVirtualBalanceEnabled = _enableVirtualBalance;
-        connectors[_token].isPurchaseEnabled = true;
+        connectors[_token].isSaleEnabled = true;
         connectors[_token].isSet = true;
         connectorTokens.push(_token);
         totalConnectorWeight += _weight;
@@ -438,7 +438,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         ownerOnly
         validConnector(_connectorToken)
     {
-        connectors[_connectorToken].isPurchaseEnabled = !_disable;
+        connectors[_connectorToken].isSaleEnabled = !_disable;
     }
 
     /**
@@ -496,7 +496,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         returns (uint256, uint256)
     {
         Connector storage connector = connectors[_connectorToken];
-        require(connector.isPurchaseEnabled); // validate input
+        require(connector.isSaleEnabled); // validate input
 
         uint256 tokenSupply = token.totalSupply();
         uint256 connectorBalance = getConnectorBalance(_connectorToken);
@@ -553,7 +553,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     {
         Connector storage fromConnector = connectors[_fromConnectorToken];
         Connector storage toConnector = connectors[_toConnectorToken];
-        require(toConnector.isPurchaseEnabled); // validate input
+        require(fromConnector.isSaleEnabled); // validate input
 
         IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
         uint256 amount = formula.calculateCrossConnectorReturn(
