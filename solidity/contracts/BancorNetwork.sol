@@ -514,7 +514,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 supply = smartToken == prevSmartToken ? supply : smartToken.totalSupply();
 
                 // validate input
-                require(getConnectorPurchaseEnabled(converter, fromToken));
+                require(getConnectorSaleEnabled(converter, fromToken));
 
                 // calculate the amount & the conversion fee
                 balance = converter.getConnectorBalance(fromToken);
@@ -662,21 +662,21 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint256 virtualBalance;
         uint32 weight;
         bool isVirtualBalanceEnabled;
-        bool isPurchaseEnabled;
+        bool isSaleEnabled;
         bool isSet;
-        (virtualBalance, weight, isVirtualBalanceEnabled, isPurchaseEnabled, isSet) = _converter.connectors(_connector);
+        (virtualBalance, weight, isVirtualBalanceEnabled, isSaleEnabled, isSet) = _converter.connectors(_connector);
         return weight;
     }
 
     /**
-        @dev returns true if connector purchase enabled
+        @dev returns true if connector sale is enabled
 
         @param _converter       converter contract address
         @param _connector       connector's address to read from
 
-        @return true if connector purchase enabled, otherwise - false
+        @return true if connector sale is enabled, otherwise - false
     */
-    function getConnectorPurchaseEnabled(IBancorConverter _converter, IERC20Token _connector) 
+    function getConnectorSaleEnabled(IBancorConverter _converter, IERC20Token _connector) 
         private
         view
         returns(bool)
@@ -684,10 +684,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint256 virtualBalance;
         uint32 weight;
         bool isVirtualBalanceEnabled;
-        bool isPurchaseEnabled;
+        bool isSaleEnabled;
         bool isSet;
-        (virtualBalance, weight, isVirtualBalanceEnabled, isPurchaseEnabled, isSet) = _converter.connectors(_connector);
-        return isPurchaseEnabled;
+        (virtualBalance, weight, isVirtualBalanceEnabled, isSaleEnabled, isSet) = _converter.connectors(_connector);
+        return isSaleEnabled;
     }
 
     // deprecated, backward compatibility

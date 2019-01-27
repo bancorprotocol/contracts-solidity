@@ -621,25 +621,25 @@ contract('BancorConverter', accounts => {
         }
     });
 
-    it('verifies that the owner can disable / re-enable connector purchases', async () => {
+    it('verifies that the owner can disable / re-enable connector sale', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
         let connector = await converter.connectors.call(connectorToken.address);
         verifyConnector(connector, true, true, weight10Percent, false, 0);
-        await converter.disableConnectorPurchases(connectorToken.address, true);
+        await converter.disableConnectorSale(connectorToken.address, true);
         connector = await converter.connectors.call(connectorToken.address);
         verifyConnector(connector, true, false, weight10Percent, false, 0);
-        await converter.disableConnectorPurchases(connectorToken.address, false);
+        await converter.disableConnectorSale(connectorToken.address, false);
         connector = await converter.connectors.call(connectorToken.address);
         verifyConnector(connector, true, true, weight10Percent, false, 0);
     });
 
-    it('should throw when a non owner attempts to disable connector purchases', async () => {
+    it('should throw when a non owner attempts to disable connector sale', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
 
         try {
-            await converter.disableConnectorPurchases(connectorToken.address, true, { from: accounts[1] });
+            await converter.disableConnectorSale(connectorToken.address, true, { from: accounts[1] });
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -647,12 +647,12 @@ contract('BancorConverter', accounts => {
         }
     });
 
-    it('should throw when attempting to disable connector purchases for a connector that does not exist', async () => {
+    it('should throw when attempting to disable connector sale for a connector that does not exist', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
 
         try {
-            await converter.disableConnectorPurchases(connectorToken2.address, true);
+            await converter.disableConnectorSale(connectorToken2.address, true);
             assert(false, "didn't throw");
         }
         catch (error) {
@@ -977,9 +977,9 @@ contract('BancorConverter', accounts => {
         }
     });
 
-    it('should throw when attempting to get the purchase return while purchasing with the connector is disabled', async () => {
+    it('should throw when attempting to get the purchase return while selling the connector is disabled', async () => {
         let converter = await initConverter(accounts, true);
-        await converter.disableConnectorPurchases(connectorToken.address, true);
+        await converter.disableConnectorSale(connectorToken.address, true);
 
         try {
             await converter.getPurchaseReturn.call(connectorToken.address, 500);
@@ -1205,10 +1205,10 @@ contract('BancorConverter', accounts => {
         }
     });
 
-    it('should throw when attempting to buy while the connector purchases are disabled', async () => {
+    it('should throw when attempting to buy while the connector sale are disabled', async () => {
         let converter = await initConverter(accounts, true);
         await connectorToken.approve(converter.address, 500);
-        await converter.disableConnectorPurchases(connectorToken.address, true);
+        await converter.disableConnectorSale(connectorToken.address, true);
 
         try {
             await converter.convert(connectorToken.address, tokenAddress, 500, 1);
