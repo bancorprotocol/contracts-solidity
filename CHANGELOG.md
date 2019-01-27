@@ -7,7 +7,7 @@ Converters:
 * Added `completeXConversion` function to convert from BNT to another token by providing an id rather than amount
 * Changed the version from bytes32 to uint16
 * `quickConvert` and `quickConvertPrioritized` now call `convertForPrioritized3` in the BancorNetwork contract
-* Renamed `isPurchaseEnabled` to `isSaleEnabled` in connector token struct, and validated that sales are enabled for the `fromConnector` rather than the `toConnector` in the `getCrossConnectorReturn` function
+* Renamed `isPurchaseEnabled` to `isSaleEnabled` in connector token struct, and validated that sales are enabled for the `fromConnector` rather than the `toConnector` in the conversion functions
 
 Network:
 * `verifyTrustedSender` function argument `amount` renamed to `customVal`
