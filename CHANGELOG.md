@@ -1,4 +1,22 @@
-﻿### 0.4.4 (2018-06-23)
+﻿### 0.4.5 (2019-01-23)
+General:
+* Minor cleanups / bug fixes
+* Moved to SafeMath
+
+Converters:
+* Added `completeXConversion` function to convert from BNT to another token by providing an id rather than amount
+* Changed the version from bytes32 to uint16
+* `quickConvert` and `quickConvertPrioritized` now call `convertForPrioritized3` in the BancorNetwork contract
+* Renamed `isPurchaseEnabled` to `isSaleEnabled` in connector token struct, and validated that sales are enabled for the `fromConnector` rather than the `toConnector` in the conversion functions
+
+Network:
+* `verifyTrustedSender` function argument `amount` renamed to `customVal`
+* Added `xConvert` and `xConvertPrioritized` functions which converts any token to BNT and transfers the result to BancorX
+* Added `validateXConversion` function to get around the 16 variable function limit in the `xConvert` function
+* Added `convertForPrioritized3` with backwards compatibility to now receive a custom value along with the amount for verifying trusted senders
+
+
+### 0.4.4 (2018-06-23)
 General:
 * Minor cleanups / bug fixes
 * Upgraded compiler version to 0.4.24

@@ -1,7 +1,7 @@
 let WORK_DIR   = "./solidity";
 let NODE_DIR   = "../node_modules";
 let INPUT_DIR  = "./solidity/build/contracts/";
-let OUTPUT_DIR = "./solidity/contracts/build/";
+let OUTPUT_DIR = "./solidity/build/";
 
 let fs    = require("fs");
 let spawn = require("child_process").spawn;

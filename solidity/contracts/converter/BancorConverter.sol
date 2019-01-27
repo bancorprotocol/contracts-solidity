@@ -7,14 +7,16 @@ import '../ContractIds.sol';
 import '../FeatureIds.sol';
 import '../utility/Managed.sol';
 import '../utility/Utils.sol';
+import '../utility/SafeMath.sol';
 import '../utility/interfaces/IContractRegistry.sol';
 import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/IEtherToken.sol';
+import '../bancorx/interfaces/IBancorX.sol';
 
 /*
-    Bancor Converter v0.11
+    Bancor Converter v12
 
     The Bancor version of the token converter, allows conversion between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
@@ -35,6 +37,9 @@ import '../token/interfaces/IEtherToken.sol';
     - Possibly add getters for the connector fields so that the client won't need to rely on the order in the struct
 */
 contract BancorConverter is IBancorConverter, SmartTokenController, Managed, ContractIds, FeatureIds {
+    using SafeMath for uint256;
+
+    
     uint32 private constant MAX_WEIGHT = 1000000;
     uint64 private constant MAX_CONVERSION_FEE = 1000000;
 
@@ -42,11 +47,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 virtualBalance;         // connector virtual balance
         uint32 weight;                  // connector weight, represented in ppm, 1-1000000
         bool isVirtualBalanceEnabled;   // true if virtual balance is enabled, false if not
-        bool isPurchaseEnabled;         // is purchase of the smart token enabled with the connector, can be set by the owner
+        bool isSaleEnabled;             // is sale of the connector token enabled, can be set by the owner
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    bytes32 public version = '0.11';
+    uint16 public version = 12;
     string public converterType = 'bancor';
 
     bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
@@ -316,7 +321,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @return return amount minus conversion fee
     */
     function getFinalAmount(uint256 _amount, uint8 _magnitude) public view returns (uint256) {
-        return safeMul(_amount, (MAX_CONVERSION_FEE - conversionFee) ** _magnitude) / MAX_CONVERSION_FEE ** _magnitude;
+        return _amount.mul((MAX_CONVERSION_FEE - conversionFee) ** _magnitude).div(MAX_CONVERSION_FEE ** _magnitude);
     }
 
     /**
@@ -353,13 +358,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // destroy the tokens belonging to _from, and issue the same amount to bancorX contract
         token.destroy(_from, _amount);
-        token.issue(bancorX, _amount);
+        token.issue(msg.sender, _amount);
     }
 
     /**
         @dev upgrades the converter to the latest version
         can only be called by the owner
-        note that the owner needs to call acceptOwnership on the new converter after the upgrade
+        note that the owner needs to call acceptOwnership/acceptManagement on the new converter after the upgrade
     */
     function upgrade() public ownerOnly {
         IBancorConverterUpgrader converterUpgrader = IBancorConverterUpgrader(registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER));
@@ -390,7 +395,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         connectors[_token].virtualBalance = 0;
         connectors[_token].weight = _weight;
         connectors[_token].isVirtualBalanceEnabled = _enableVirtualBalance;
-        connectors[_token].isPurchaseEnabled = true;
+        connectors[_token].isSaleEnabled = true;
         connectors[_token].isSet = true;
         connectorTokens.push(_token);
         totalConnectorWeight += _weight;
@@ -421,19 +426,19 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-        @dev disables purchasing with the given connector token in case the connector token got compromised
+        @dev disables converting from the given connector token in case the connector token got compromised
         can only be called by the owner
-        note that selling is still enabled regardless of this flag and it cannot be disabled by the owner
+        note that converting to the token is still enabled regardless of this flag and it cannot be disabled by the owner
 
         @param _connectorToken  connector token contract address
         @param _disable         true to disable the token, false to re-enable it
     */
-    function disableConnectorPurchases(IERC20Token _connectorToken, bool _disable)
+    function disableConnectorSale(IERC20Token _connectorToken, bool _disable)
         public
         ownerOnly
         validConnector(_connectorToken)
     {
-        connectors[_connectorToken].isPurchaseEnabled = !_disable;
+        connectors[_connectorToken].isSaleEnabled = !_disable;
     }
 
     /**
@@ -491,7 +496,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         returns (uint256, uint256)
     {
         Connector storage connector = connectors[_connectorToken];
-        require(connector.isPurchaseEnabled); // validate input
+        require(connector.isSaleEnabled); // validate input
 
         uint256 tokenSupply = token.totalSupply();
         uint256 connectorBalance = getConnectorBalance(_connectorToken);
@@ -548,7 +553,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     {
         Connector storage fromConnector = connectors[_fromConnectorToken];
         Connector storage toConnector = connectors[_toConnectorToken];
-        require(toConnector.isPurchaseEnabled); // validate input
+        require(fromConnector.isSaleEnabled); // validate input
 
         IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
         uint256 amount = formula.calculateCrossConnectorReturn(
@@ -600,12 +605,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // update the source token virtual balance if relevant
         Connector storage fromConnector = connectors[_fromToken];
         if (fromConnector.isVirtualBalanceEnabled)
-            fromConnector.virtualBalance = safeAdd(fromConnector.virtualBalance, _amount);
+            fromConnector.virtualBalance = fromConnector.virtualBalance.add(_amount);
 
         // update the target token virtual balance if relevant
         Connector storage toConnector = connectors[_toToken];
         if (toConnector.isVirtualBalanceEnabled)
-            toConnector.virtualBalance = safeSub(toConnector.virtualBalance, amount);
+            toConnector.virtualBalance = toConnector.virtualBalance.sub(amount);
 
         // ensure that the trade won't deplete the connector balance
         uint256 toConnectorBalance = getConnectorBalance(_toToken);
@@ -661,7 +666,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // update virtual balance if relevant
         Connector storage connector = connectors[_connectorToken];
         if (connector.isVirtualBalanceEnabled)
-            connector.virtualBalance = safeAdd(connector.virtualBalance, _depositAmount);
+            connector.virtualBalance = connector.virtualBalance.add(_depositAmount);
 
         // transfer funds from the caller in the connector token
         assert(_connectorToken.transferFrom(msg.sender, this, _depositAmount));
@@ -701,7 +706,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // update virtual balance if relevant
         Connector storage connector = connectors[_connectorToken];
         if (connector.isVirtualBalanceEnabled)
-            connector.virtualBalance = safeSub(connector.virtualBalance, amount);
+            connector.virtualBalance = connector.virtualBalance.sub(amount);
 
         // destroy _sellAmount from the caller's balance in the smart token
         token.destroy(msg.sender, _sellAmount);
@@ -730,7 +735,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function quickConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
         public
         payable
-        validConversionPath(_path)
         returns (uint256)
     {
         return quickConvertPrioritized(_path, _amount, _minReturn, 0x0, 0x0, 0x0, 0x0);
@@ -753,7 +757,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
         public
         payable
-        validConversionPath(_path)
         returns (uint256)
     {
         IERC20Token fromToken = _path[0];
@@ -775,7 +778,50 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         }
 
         // execute the conversion and pass on the ETH with the call
-        return bancorNetwork.convertForPrioritized2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _block, _v, _r, _s);
+        return bancorNetwork.convertForPrioritized3.value(msg.value)(_path, _amount, _minReturn, msg.sender, _amount, _block, _v, _r, _s);
+    }
+
+    /**
+        @dev allows a user to convert BNT that was sent from another blockchain into any other
+        token on the BancorNetwork without specifying the amount of BNT to be converted, but
+        rather by providing the xTransferId which allows us to get the amount from BancorX.
+
+        @param _path             conversion path, see conversion path format in the BancorNetwork contract
+        @param _minReturn        if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _conversionId     pre-determined unique (if non zero) id which refers to this transaction 
+        @param _block            if the current block exceeded the given parameter - it is cancelled
+        @param _v                (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+        @param _r                (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+        @param _s                (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+
+        @return tokens issued in return
+    */
+    function completeXConversion(
+        IERC20Token[] _path,
+        uint256 _minReturn,
+        uint256 _conversionId,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        public
+        returns (uint256)
+    {
+        IBancorX bancorX = IBancorX(registry.addressOf(ContractIds.BANCOR_X));
+        IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
+
+        // verify that the first token in the path is BNT
+        require(_path[0] == registry.addressOf(ContractIds.BNT_TOKEN));
+
+        // get conversion amount from BancorX contract
+        uint256 amount = bancorX.getXTransferAmount(_conversionId, msg.sender);
+
+        // send BNT from msg.sender to the BancorNetwork contract
+        token.destroy(msg.sender, amount);
+        token.issue(bancorNetwork, amount);
+
+        return bancorNetwork.convertForPrioritized3(_path, amount, _minReturn, msg.sender, _conversionId, _block, _v, _r, _s);
     }
 
     /**
@@ -801,12 +847,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < connectorTokens.length; i++) {
             connectorToken = connectorTokens[i];
             connectorBalance = getConnectorBalance(connectorToken);
-            connectorAmount = safeMul(_amount, connectorBalance) / supply;
+            connectorAmount = _amount.mul(connectorBalance).div(supply);
 
             // update virtual balance if relevant
             Connector storage connector = connectors[connectorToken];
             if (connector.isVirtualBalanceEnabled)
-                connector.virtualBalance = safeAdd(connector.virtualBalance, connectorAmount);
+                connector.virtualBalance = connector.virtualBalance.add(connectorAmount);
 
             // transfer funds from the caller in the connector token
             assert(connectorToken.transferFrom(msg.sender, this, connectorAmount));
@@ -842,12 +888,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < connectorTokens.length; i++) {
             connectorToken = connectorTokens[i];
             connectorBalance = getConnectorBalance(connectorToken);
-            connectorAmount = safeMul(_amount, connectorBalance) / supply;
+            connectorAmount = _amount.mul(connectorBalance).div(supply);
 
             // update virtual balance if relevant
             Connector storage connector = connectors[connectorToken];
             if (connector.isVirtualBalanceEnabled)
-                connector.virtualBalance = safeSub(connector.virtualBalance, connectorAmount);
+                connector.virtualBalance = connector.virtualBalance.sub(connectorAmount);
 
             // transfer funds to the caller in the connector token
             // the transfer might fail if the actual connector balance is smaller than the virtual balance

@@ -1,0 +1,1 @@
+[{"constant":false,"inputs":[{"name":"_version","type":"uint16"},{"name":"_reporters","type":"address[]"}],"name":"upgrade","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]

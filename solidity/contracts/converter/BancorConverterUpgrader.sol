@@ -35,7 +35,7 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
         uint256 virtualBalance, 
         uint32 weight, 
         bool isVirtualBalanceEnabled, 
-        bool isPurchaseEnabled, 
+        bool isSaleEnabled, 
         bool isSet
     );
 }
@@ -88,6 +88,19 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
     */
     function upgrade(bytes32 _version) public {
         upgradeOld(IBancorConverter(msg.sender), _version);
+    }
+
+    /**
+        @dev upgrades an old converter to the latest version
+        will throw if ownership wasn't transferred to the upgrader before calling this function.
+        ownership of the new converter will be transferred back to the original owner.
+        fires the ConverterUpgrade event upon success.
+        can only be called by a converter
+
+        @param _version old converter version
+    */
+    function upgrade(uint16 _version) public {
+        upgradeOld(IBancorConverter(msg.sender), bytes32(_version));
     }
 
     /**
@@ -189,13 +202,13 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
         uint256 virtualBalance;
         uint32 weight;
         bool isVirtualBalanceEnabled;
-        bool isPurchaseEnabled;
+        bool isSaleEnabled;
         bool isSet;
         uint16 connectorTokenCount = _isLegacyVersion ? _oldConverter.reserveTokenCount() : _oldConverter.connectorTokenCount();
 
         for (uint16 i = 0; i < connectorTokenCount; i++) {
             address connectorAddress = _isLegacyVersion ? _oldConverter.reserveTokens(i) : _oldConverter.connectorTokens(i);
-            (virtualBalance, weight, isVirtualBalanceEnabled, isPurchaseEnabled, isSet) = readConnector(
+            (virtualBalance, weight, isVirtualBalanceEnabled, isSaleEnabled, isSet) = readConnector(
                 _oldConverter,
                 connectorAddress,
                 _isLegacyVersion
@@ -255,7 +268,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
     function readConnector(IBancorConverterExtended _converter, address _address, bool _isLegacyVersion) 
         private
         view
-        returns(uint256 virtualBalance, uint32 weight, bool isVirtualBalanceEnabled, bool isPurchaseEnabled, bool isSet)
+        returns(uint256 virtualBalance, uint32 weight, bool isVirtualBalanceEnabled, bool isSaleEnabled, bool isSet)
     {
         return _isLegacyVersion ? _converter.reserves(_address) : _converter.connectors(_address);
     }

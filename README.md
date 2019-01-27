@@ -1,4 +1,4 @@
-﻿# Bancor Protocol Contracts v0.4 (alpha)
+﻿# Bancor Protocol Contracts v0.4 (beta)
 
 Bancor is a decentralized liquidity network that provides users with a simple, low-cost way to buy and sell tokens. Bancor’s open-source protocol empowers tokens with built-in convertibility directly through their smart contracts, allowing integrated tokens to be instantly converted for one another, without needing to match buyers and sellers in an exchange. The Bancor Wallet enables automated token conversions directly from within the wallet, at prices that are more predictable than exchanges and resistant to manipulation. To convert tokens instantly, including ETH, EOS, DAI and more, visit the [Bancor Web App](https://www.bancor.network/communities/5a780b3a287443a5cdea2477?utm_source=social&utm_medium=github&utm_content=readme), join the [Bancor Telegram group](https://t.me/bancor) or read the Bancor Protocol™ [Whitepaper](https://www.bancor.network/whitepaper) for more information.
 
@@ -143,21 +143,22 @@ event Conversion(address indexed _fromToken, address indexed _toToken, address i
 Triggered when a conversion between one of the convertible tokens takes place.
 
 ## Testing
-Tests are included and can be run using truffle & ganache
+Tests are included and are run using truffle & ganache
 
 ### Prerequisites
 * Node.js v7.6.0+
 
 To run the test:
 - Use `npm install` in order to install all required packages.
-- Use `npm test` in order to run truffle-test or solidity-coverage.
+- Use `npm test 1` in order to run truffle-test or `npm test 2` in order to run solidity-coverage.
 
 ## Collaborators
 
 * **[Yudi Levi](https://github.com/yudilevi)**
 * **[Ilana Pinhas](https://github.com/ilanapi)**
-* **[Or Dadosh](https://github.com/ordd)**
+* **[David Benchimol](https://github.com/davidbancor)**
 * **[Barak Manos](https://github.com/barakman)**
+* **[Or Dadosh](https://github.com/ordd)**
 * **[Martin Holst Swende](https://github.com/holiman)**
 
 
