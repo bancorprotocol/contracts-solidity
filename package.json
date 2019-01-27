@@ -16,16 +16,16 @@
     "verify": "node scripts/verify.js"
   },
   "dependencies": {
-    "decimal.js": "^10.0.1",
+    "decimal.js": "^10.0.2",
     "ethereumjs-util": "^5.2.0",
+    "ganache-cli": "6.2.5",
     "js-sha256": "^0.9.0",
     "left-pad": "^1.3.0",
-    "npm": "^6.1.0",
-    "truffle-flattener": "^1.2.10",
-    "truffle-contract": "^3.0.6",
-    "truffle": "4.1.14",
-    "ganache-cli": "6.2.5",
+    "npm": "^6.7.0",
     "solidity-coverage": "0.5.11",
-    "web3-utils": "^1.0.0-beta.34"
+    "truffle": "4.1.14",
+    "truffle-contract": "^3.0.7",
+    "truffle-flattener": "^1.2.10",
+    "web3-utils": "^1.0.0-beta.39"
   }
 }
