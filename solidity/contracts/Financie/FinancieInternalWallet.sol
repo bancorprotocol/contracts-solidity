@@ -458,14 +458,17 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         uint256 bidsauction_amount = bank.getBidsOfAuctions(_auctionAddress, _userId);
         if ( bidsauction_amount > 0 ) {
             IFinancieAuction auction = IFinancieAuction(_auctionAddress);
-            if ( auction.auctionFinished() ) {
-                if ( auction.canClaimTokens(bank) ) {
+            if ( auction.missingFundsToEndAuction() == 0 ) {
+                if ( auction.bidsAmount(bank) > 0 ) {
+                    // Bank had not received yet
                     uint256 totalEstimation = auction.estimateClaimTokens(bank);
                     return safeMul(totalEstimation / (10 ** 10), bidsauction_amount) / (bank.getTotalBidsOfAuctions(_auctionAddress) / (10 ** 10));
                 } else {
+                    // Bank had already received
                     return safeMul(bank.getRecvCardsOfAuctions(_auctionAddress) / (10 ** 10), bidsauction_amount) / (bank.getTotalBidsOfAuctions(_auctionAddress) / (10 ** 10));
                 }
             } else {
+                // Auction ongoing
                 return safeMul(auction.tokenMultiplier(), bidsauction_amount) / auction.price();
             }
         }
