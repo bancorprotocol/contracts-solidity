@@ -13,6 +13,7 @@
     "install": "node scripts/fix-modules.js",
     "build": "node scripts/rebuild-all.js",
     "test": "node scripts/run-tests.js",
+    "truffle-test": "cd solidity && truffle test",
     "verify": "node scripts/verify.js"
   },
   "dependencies": {

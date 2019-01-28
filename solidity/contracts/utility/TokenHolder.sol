@@ -33,6 +33,6 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
         validAddress(_to)
         notThis(_to)
     {
-        assert(_token.transfer(_to, _amount));
+        _token.transfer(_to, _amount);
     }
 }

@@ -10,6 +10,7 @@ import './utility/SafeMath.sol';
 import './utility/interfaces/IContractRegistry.sol';
 import './utility/interfaces/IContractFeatures.sol';
 import './utility/interfaces/IWhitelist.sol';
+import './utility/interfaces/ITokenWhitelist.sol';
 import './token/interfaces/IEtherToken.sol';
 import './token/interfaces/ISmartToken.sol';
 import './bancorx/interfaces/IBancorX.sol';
@@ -165,7 +166,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         if (msg.value > 0) {
             IEtherToken(fromToken).deposit.value(msg.value)();
         } else {
-            assert(fromToken.transferFrom(msg.sender, this, _amount));
+            ensureTransferFrom(fromToken, msg.sender, this, _amount);
         }
 
         // verify gas price limit
@@ -428,7 +429,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         if (etherTokens[toToken])
             IEtherToken(toToken).withdrawTo(_for, _amount);
         else
-            assert(toToken.transfer(_for, _amount));
+            ensureTransfer(toToken, _for, _amount);
 
         return _amount;
     }
@@ -592,7 +593,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         // the conversion path, to allow it to execute the conversion on behalf of the caller
         // note: we assume we already have allowance
         IERC20Token fromToken = _path[0];
-        assert(fromToken.transferFrom(msg.sender, this, _amount));
+        ensureTransferFrom(fromToken, msg.sender, this, _amount);
         return convertFor(_path, _amount, _minReturn, _for);
     }
 
@@ -627,6 +628,68 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
+        @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
+        true on success but revert instead
+    */
+    function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
+        ITokenWhitelist tokenWhitelist = ITokenWhitelist(registry.addressOf(ContractIds.TOKEN_WHITELIST));
+
+        if (!tokenWhitelist.whitelistedTokens(_token)) {
+            // if the token isn't whitelisted, we assert on transfer
+            assert(_token.transfer(_to, _amount));
+        } else {
+            uint256 prevBalance = _token.balanceOf(_to);
+            _token.transfer(_to, _amount);
+            uint256 postBalance = _token.balanceOf(_to);
+            assert(postBalance.sub(prevBalance) == _amount);
+        }
+    }
+
+    // /**
+    //     @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
+    //     true on success but revert instead
+    // */
+    // function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
+    //     bool success = _token.transfer(_to, _amount);
+    //     if (!success) {
+    //         // if we don't receive true on transfer, ensure that the token is whitelisted
+    //         ITokenWhitelist tokenWhitelist = ITokenWhitelist(registry.addressOf(ContractIds.TOKEN_WHITELIST));
+    //         assert(tokenWhitelist.whitelistedTokens(_token));
+    //     }
+    // }
+
+    /**
+        @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
+        true on success but revert instead
+    */
+    function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
+        ITokenWhitelist tokenWhitelist = ITokenWhitelist(registry.addressOf(ContractIds.TOKEN_WHITELIST));
+
+        if (!tokenWhitelist.whitelistedTokens(_token)) {
+            // if the token isn't whitelisted, we assert on transfer
+            assert(_token.transferFrom(_from, _to, _amount));
+        } else {
+            uint256 prevBalance = _token.balanceOf(_to);
+            _token.transferFrom(_from, _to, _amount);
+            uint256 postBalance = _token.balanceOf(_to);
+            assert(postBalance.sub(prevBalance) == _amount);
+        }
+    }
+
+    // /**
+    //     @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
+    //     true on success but revert instead
+    // */
+    // function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
+    //     bool success = _token.transferFrom(_from, _to, _amount);
+    //     if (!success) {
+    //         // if we don't receive true on transfer, ensure that the token is whitelisted
+    //         ITokenWhitelist tokenWhitelist = ITokenWhitelist(registry.addressOf(ContractIds.TOKEN_WHITELIST));
+    //         assert(tokenWhitelist.whitelistedTokens(_token));
+    //     }
+    // }
+
+    /**
         @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't
 
         @param _token   token to check the allowance in
@@ -640,10 +703,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         // if the allowance is nonzero, must reset it to 0 first
         if (_token.allowance(this, _spender) != 0)
-            assert(_token.approve(_spender, 0));
+            _token.approve(_spender, 0);
 
         // approve the new allowance
-        assert(_token.approve(_spender, _value));
+        _token.approve(_spender, _value);
     }
 
     /**
