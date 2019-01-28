@@ -7,6 +7,7 @@ const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
+const BadSmartToken = artifacts.require('BadSmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const ContractRegistry = artifacts.require('ContractRegistry.sol');
@@ -17,7 +18,7 @@ const utils = require('./helpers/Utils');
 const ethUtil = require('ethereumjs-util');
 const web3Utils = require('web3-utils');
 
-
+let tokenWhitelist;
 let etherToken;
 let smartToken1;
 let smartToken2;
@@ -61,7 +62,7 @@ Token network structure:
 
 */
 
-contract.only('BancorNetwork', accounts => {
+contract('BancorNetwork', accounts => {
     const trustedAddress = accounts[3];
     const untrustedAddress = accounts[1];
 
@@ -81,7 +82,7 @@ contract.only('BancorNetwork', accounts => {
         let formulaId = await contractIds.BANCOR_FORMULA.call();
         await contractRegistry.registerAddress(formulaId, formula.address);
 
-        let tokenWhitelist = await TokenWhitelist.new();
+        tokenWhitelist = await TokenWhitelist.new();
         let tokenWhitelistId = await contractIds.TOKEN_WHITELIST.call();
         await contractRegistry.registerAddress(tokenWhitelistId, tokenWhitelist.address);
 
@@ -98,7 +99,7 @@ contract.only('BancorNetwork', accounts => {
         smartToken1 = await SmartToken.new('Token1', 'TKN1', 2);
         await smartToken1.issue(accounts[0], 1000000);
 
-        smartToken2 = await SmartToken.new('Token2', 'TKN2', 2);
+        smartToken2 = await BadSmartToken.new('Token2', 'TKN2', 2);
         await smartToken2.issue(accounts[0], 2000000);
 
         smartToken3 = await SmartToken.new('Token3', 'TKN3', 2);
@@ -165,7 +166,6 @@ contract.only('BancorNetwork', accounts => {
 
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
         console.log(`gas used for converting eth -> 1 -> 2: ${res.receipt.cumulativeGasUsed}`);
-
     });
 
     it('verifies that sending ether to the converter fails', async () => {

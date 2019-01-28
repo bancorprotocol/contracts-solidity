@@ -13,6 +13,7 @@ import '../utility/interfaces/IContractFeatures.sol';
 import '../utility/interfaces/ITokenWhitelist.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
+import '../token/interfaces/INonStandardERC20.sol';
 import '../token/interfaces/IEtherToken.sol';
 import '../bancorx/interfaces/IBancorX.sol';
 
@@ -837,24 +838,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
             assert(_token.transfer(_to, _amount));
         } else {
             uint256 prevBalance = _token.balanceOf(_to);
-            _token.transfer(_to, _amount);
+            // we have to cast the token contract in an interface which has no return value
+            INonStandardERC20(_token).transfer(_to, _amount);
             uint256 postBalance = _token.balanceOf(_to);
             assert(postBalance.sub(prevBalance) == _amount);
         }
     }
-
-    // /**
-    //     @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
-    //     true on success but revert instead
-    // */
-    // function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
-    //     bool success = _token.transfer(_to, _amount);
-    //     if (!success) {
-    //         // if we don't receive true on transfer, ensure that the token is whitelisted
-    //         ITokenWhitelist tokenWhitelist = ITokenWhitelist(registry.addressOf(ContractIds.TOKEN_WHITELIST));
-    //         assert(tokenWhitelist.whitelistedTokens(_token));
-    //     }
-    // }
 
     /**
         @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
@@ -865,27 +854,16 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         if (!tokenWhitelist.whitelistedTokens(_token)) {
             // if the token isn't whitelisted, we assert on transfer
-            assert(_token.transferFrom(_from, _to, _amount));
+            // assert(_token.transferFrom(_from, _to, _amount));
+            _token.transferFrom(_from, _to, _amount);
         } else {
             uint256 prevBalance = _token.balanceOf(_to);
-            _token.transferFrom(_from, _to, _amount);
+            // we have to cast the token contract in an interface which has no return value
+            INonStandardERC20(_token).transferFrom(_from, _to, _amount);
             uint256 postBalance = _token.balanceOf(_to);
             assert(postBalance.sub(prevBalance) == _amount);
         }
     }
-
-    // /**
-    //     @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
-    //     true on success but revert instead
-    // */
-    // function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
-    //     bool success = _token.transferFrom(_from, _to, _amount);
-    //     if (!success) {
-    //         // if we don't receive true on transfer, ensure that the token is whitelisted
-    //         ITokenWhitelist tokenWhitelist = ITokenWhitelist(registry.addressOf(ContractIds.TOKEN_WHITELIST));
-    //         assert(tokenWhitelist.whitelistedTokens(_token));
-    //     }
-    // }
 
     /**
         @dev buys the token with all connector tokens using the same percentage
