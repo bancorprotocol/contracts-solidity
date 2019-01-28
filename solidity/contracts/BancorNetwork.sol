@@ -667,7 +667,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't
+        @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't.
+        Note that we use the non standard erc-20 interface in which `approve` has no return value so that
+        this function will work for both standard and non standard tokens
 
         @param _token   token to check the allowance in
         @param _spender approved address
@@ -680,10 +682,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         // if the allowance is nonzero, must reset it to 0 first
         if (_token.allowance(this, _spender) != 0)
-            _token.approve(_spender, 0);
+            INonStandardERC20(_token).approve(_spender, 0);
 
         // approve the new allowance
-        _token.approve(_spender, _value);
+        INonStandardERC20(_token).approve(_spender, _value);
     }
 
     /**

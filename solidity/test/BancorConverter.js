@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const TokenWhitelist = artifacts.require('TokenWhitelist.sol');
 const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
@@ -90,6 +91,10 @@ contract('BancorConverter', accounts => {
         let formula = await BancorFormula.new();
         let formulaId = await contractIds.BANCOR_FORMULA.call();
         await contractRegistry.registerAddress(formulaId, formula.address);
+
+        let tokenWhitelist = await TokenWhitelist.new();
+        let tokenWhitelistId = await contractIds.TOKEN_WHITELIST.call();
+        await contractRegistry.registerAddress(tokenWhitelistId, tokenWhitelist.address);
 
         let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
