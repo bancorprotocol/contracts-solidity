@@ -7,7 +7,7 @@ import './interfaces/ITokenWhitelist.sol';
 
     manages tokens who don't return true/false on transfer/transferFrom but revert on failure instead 
 */
-contract TokenHolder is ITokenWhitelist, Owned {
+contract TokenWhitelist is ITokenWhitelist, Owned {
 
     mapping (address => bool) public whitelistedTokens;
 

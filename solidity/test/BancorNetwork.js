@@ -2,6 +2,7 @@
 /* eslint-disable prefer-reflect */
 
 const Whitelist = artifacts.require('Whitelist.sol');
+const TokenWhitelist = artifacts.require('TokenWhitelist.sol');
 const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
@@ -60,7 +61,7 @@ Token network structure:
 
 */
 
-contract('BancorNetwork', accounts => {
+contract.only('BancorNetwork', accounts => {
     const trustedAddress = accounts[3];
     const untrustedAddress = accounts[1];
 
@@ -79,6 +80,10 @@ contract('BancorNetwork', accounts => {
         let formula = await BancorFormula.new();
         let formulaId = await contractIds.BANCOR_FORMULA.call();
         await contractRegistry.registerAddress(formulaId, formula.address);
+
+        let tokenWhitelist = await TokenWhitelist.new();
+        let tokenWhitelistId = await contractIds.TOKEN_WHITELIST.call();
+        await contractRegistry.registerAddress(tokenWhitelistId, tokenWhitelist.address);
 
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
@@ -103,6 +108,8 @@ contract('BancorNetwork', accounts => {
         await smartToken4.issue(accounts[0], 2500000);
 
         erc20Token = await TestERC20Token.new('ERC20Token', 'ERC5', 1000000);
+
+        await tokenWhitelist.setToken(smartToken2.address, true);
 
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000);
 
@@ -143,19 +150,22 @@ contract('BancorNetwork', accounts => {
     it('verifies that quick buy with a single converter results in increased balance for the buyer', async () => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
-        await converter1.quickConvert(smartToken1BuyPath, 100, 1, { from: accounts[1], value: 100 });
+        let res = await converter1.quickConvert(smartToken1BuyPath, 100, 1, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+        console.log(`gas used for converting eth -> 1: ${res.receipt.cumulativeGasUsed}`);
     });
 
     it('verifies that quick buy with multiple converters results in increased balance for the buyer', async () => {
         let prevBalance = await smartToken2.balanceOf.call(accounts[1]);
 
-        await converter2.quickConvert(smartToken2BuyPath, 100, 1, { from: accounts[1], value: 100 });
+        let res = await converter2.quickConvert(smartToken2BuyPath, 100, 1, { from: accounts[1], value: 100 });
         let newBalance = await smartToken2.balanceOf.call(accounts[1]);
 
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+        console.log(`gas used for converting eth -> 1 -> 2: ${res.receipt.cumulativeGasUsed}`);
+
     });
 
     it('verifies that sending ether to the converter fails', async () => {
@@ -498,6 +508,7 @@ contract('BancorNetwork', accounts => {
         let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
         let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
         assert.equal(returnByPath.toNumber(), balanceAfterTransfer.minus(balanceBeforeTransfer).plus(transactionCost).toNumber());
+        console.log(`gas used for converting 2 -> 1 -> eth: ${res.receipt.cumulativeGasUsed}`);
     });
 
     it('verifies that getReturnByPath returns the correct amount for selling the smart token with a long conversion path', async () => {
@@ -510,6 +521,7 @@ contract('BancorNetwork', accounts => {
         let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
         let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
         assert.equal(returnByPath.toNumber(), balanceAfterTransfer.minus(balanceBeforeTransfer).plus(transactionCost).toNumber());
+        console.log(`gas used for converting 3 -> 2 -> 1 -> eth: ${res.receipt.cumulativeGasUsed}`);
     });
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting a connector to the smart token', async () => {
