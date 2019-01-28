@@ -829,6 +829,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
         @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
         true on success but revert instead
+
+        @param _token     the token to transfer
+        @param _to        the address to transfer the tokens to
+        @param _amount    the amount to transfer
     */
     function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
         ITokenWhitelist tokenWhitelist = ITokenWhitelist(registry.addressOf(ContractIds.TOKEN_WHITELIST));
@@ -848,6 +852,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
         @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
         true on success but revert instead
+
+        @param _token     the token to transfer
+        @param _from      the address to transfer the tokens from
+        @param _to        the address to transfer the tokens to
+        @param _amount    the amount to transfer
     */
     function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
         ITokenWhitelist tokenWhitelist = ITokenWhitelist(registry.addressOf(ContractIds.TOKEN_WHITELIST));
