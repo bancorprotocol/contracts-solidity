@@ -1,4 +1,13 @@
-﻿### 0.4.5 (2019-01-23)
+﻿### 0.4.6 (2019-01-29)
+General:
+* Added support for non standard ERC-20 tokens
+* Added NonStandardTokenRegistry contract to support non standard ERC-20 tokens
+
+Network:
+* Removed `convertForMultiple`
+
+
+### 0.4.5 (2019-01-23)
 General:
 * Minor cleanups / bug fixes
 * Moved to SafeMath
