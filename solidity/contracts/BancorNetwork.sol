@@ -630,7 +630,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
     /**
         @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
-        true on success but revert instead
+        true on success but revert on failure instead
 
         @param _token     the token to transfer
         @param _to        the address to transfer the tokens to
@@ -653,7 +653,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
     /**
         @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
-        true on success but revert instead
+        true on success but revert on failure instead
 
         @param _token     the token to transfer
         @param _from      the address to transfer the tokens from
