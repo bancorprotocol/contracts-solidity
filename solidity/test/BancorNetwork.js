@@ -2,7 +2,7 @@
 /* eslint-disable prefer-reflect */
 
 const Whitelist = artifacts.require('Whitelist.sol');
-const TokenWhitelist = artifacts.require('TokenWhitelist.sol');
+const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry.sol');
 const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
@@ -18,7 +18,6 @@ const utils = require('./helpers/Utils');
 const ethUtil = require('ethereumjs-util');
 const web3Utils = require('web3-utils');
 
-let tokenWhitelist;
 let etherToken;
 let smartToken1;
 let smartToken2;
@@ -82,9 +81,9 @@ contract('BancorNetwork', accounts => {
         let formulaId = await contractIds.BANCOR_FORMULA.call();
         await contractRegistry.registerAddress(formulaId, formula.address);
 
-        tokenWhitelist = await TokenWhitelist.new();
-        let tokenWhitelistId = await contractIds.TOKEN_WHITELIST.call();
-        await contractRegistry.registerAddress(tokenWhitelistId, tokenWhitelist.address);
+        let nonStandardTokenRegistry = await NonStandardTokenRegistry.new();
+        let nonStandardTokenRegistryId = await contractIds.NON_STANDARD_TOKEN_REGISTRY.call();
+        await contractRegistry.registerAddress(nonStandardTokenRegistryId, nonStandardTokenRegistry.address);
 
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
@@ -110,8 +109,8 @@ contract('BancorNetwork', accounts => {
 
         erc20Token = await TestNonStandardERC20Token.new('ERC20Token', 'ERC5', 1000000);
 
-        await tokenWhitelist.setToken(smartToken2.address, true);
-        await tokenWhitelist.setToken(erc20Token.address, true);
+        await nonStandardTokenRegistry.setAddress(smartToken2.address, true);
+        await nonStandardTokenRegistry.setAddress(erc20Token.address, true);
 
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000);
 

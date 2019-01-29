@@ -10,7 +10,7 @@ import './utility/SafeMath.sol';
 import './utility/interfaces/IContractRegistry.sol';
 import './utility/interfaces/IContractFeatures.sol';
 import './utility/interfaces/IWhitelist.sol';
-import './utility/interfaces/ITokenWhitelist.sol';
+import './utility/interfaces/IAddressList.sol';
 import './token/interfaces/IEtherToken.sol';
 import './token/interfaces/ISmartToken.sol';
 import './token/interfaces/INonStandardERC20.sol';
@@ -637,9 +637,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _amount    the amount to transfer
     */
     function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
-        ITokenWhitelist tokenWhitelist = ITokenWhitelist(registry.addressOf(ContractIds.TOKEN_WHITELIST));
+        IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
 
-        if (!tokenWhitelist.whitelistedTokens(_token)) {
+        if (!addressList.listedAddresses(_token)) {
             // if the token isn't whitelisted, we assert on transfer
             assert(_token.transfer(_to, _amount));
         } else {
@@ -661,9 +661,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _amount    the amount to transfer
     */
     function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
-        ITokenWhitelist tokenWhitelist = ITokenWhitelist(registry.addressOf(ContractIds.TOKEN_WHITELIST));
+        IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
 
-        if (!tokenWhitelist.whitelistedTokens(_token)) {
+        if (!addressList.listedAddresses(_token)) {
             // if the token isn't whitelisted, we assert on transfer
             assert(_token.transferFrom(_from, _to, _amount));
         } else {

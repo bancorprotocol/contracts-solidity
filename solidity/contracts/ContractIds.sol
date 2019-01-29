@@ -9,7 +9,7 @@ contract ContractIds {
     // generic
     bytes32 public constant CONTRACT_FEATURES = "ContractFeatures";
     bytes32 public constant CONTRACT_REGISTRY = "ContractRegistry";
-    bytes32 public constant TOKEN_WHITELIST = "TokenWhitelist";
+    bytes32 public constant NON_STANDARD_TOKEN_REGISTRY = "NonStandardTokenRegistry";
 
     // bancor logic
     bytes32 public constant BANCOR_NETWORK = "BancorNetwork";

@@ -11,7 +11,7 @@ const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const ContractFeatures = artifacts.require("ContractFeatures.sol");
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
-const TokenWhitelist = artifacts.require('TokenWhitelist.sol');
+const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry.sol');
 
 const web3Utils = require('web3-utils')
 const ethUtil = require('ethereumjs-util');
@@ -380,7 +380,7 @@ const initBancorNetwork = async accounts => {
     const formula = await BancorFormula.new();
     const contractRegistry = await ContractRegistry.new()
     const contractFeatures = await ContractFeatures.new()
-    const tokenWhitelist = await TokenWhitelist.new()
+    const tokenWhitelist = await NonStandardTokenRegistry.new()
         
     etherToken = await EtherToken.new()
     bntToken = await SmartToken.new('Bancor', 'BNT', 18)
@@ -402,7 +402,7 @@ const initBancorNetwork = async accounts => {
     await contractRegistry.registerAddress(web3Utils.asciiToHex('BancorFormula'), formula.address)
     await contractRegistry.registerAddress(web3Utils.asciiToHex('BancorNetwork'), bancorNetwork.address)
     await contractRegistry.registerAddress(web3Utils.asciiToHex('ContractFeatures'), contractFeatures.address)
-    await contractRegistry.registerAddress(web3Utils.asciiToHex('TokenWhitelist'), tokenWhitelist.address)
+    await contractRegistry.registerAddress(web3Utils.asciiToHex('NonStandardTokenRegistry'), tokenWhitelist.address)
 
 
     bancorX = await BancorX.new(

@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const TokenWhitelist = artifacts.require('TokenWhitelist.sol');
+const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry.sol');
 const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
@@ -93,9 +93,9 @@ contract('BancorConverter', accounts => {
         let formulaId = await contractIds.BANCOR_FORMULA.call();
         await contractRegistry.registerAddress(formulaId, formula.address);
 
-        let tokenWhitelist = await TokenWhitelist.new();
-        let tokenWhitelistId = await contractIds.TOKEN_WHITELIST.call();
-        await contractRegistry.registerAddress(tokenWhitelistId, tokenWhitelist.address);
+        let nonStandardTokenRegistry = await NonStandardTokenRegistry.new();
+        let nonStandardTokenRegistryId = await contractIds.NON_STANDARD_TOKEN_REGISTRY.call();
+        await contractRegistry.registerAddress(nonStandardTokenRegistryId, nonStandardTokenRegistry.address);
 
         let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
@@ -120,7 +120,7 @@ contract('BancorConverter', accounts => {
         connectorToken2 = await TestNonStandardERC20Token.new('ERC Token 2', 'ERC2', 2000000000);
         connectorToken3 = await TestERC20Token.new('ERC Token 3', 'ERC2', 1500000000);
 
-        await tokenWhitelist.setToken(connectorToken2.address, true);
+        await nonStandardTokenRegistry.setAddress(connectorToken2.address, true);
     });
 
     it('verifies the converter data after construction', async () => {
