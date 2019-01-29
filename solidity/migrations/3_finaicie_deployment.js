@@ -50,7 +50,7 @@ module.exports = function(deployer, _network, _accounts) {
                 bank = instance;
                 return deployer.deploy(
                     FinancieInternalWallet,
-                    "0x619dd467d76fb4a15e52deffd8c17a9c762d46b1",
+                    process.env.FINANCIE_TEAM_WALLET_ADDRESS,
                     process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS === undefined ? SmartToken.address : process.env.FINANCIE_CURRENCY_TOKEN_CONTRACT_ADDRESS
                 );
             }
