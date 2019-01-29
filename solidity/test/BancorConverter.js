@@ -13,6 +13,7 @@ const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const ContractRegistry = artifacts.require('ContractRegistry.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
+const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token.sol');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory.sol');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader.sol');
 const utils = require('./helpers/Utils');
@@ -116,8 +117,10 @@ contract('BancorConverter', accounts => {
         tokenAddress = token.address;
         
         connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 1000000000);
-        connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 2000000000);
+        connectorToken2 = await TestNonStandardERC20Token.new('ERC Token 2', 'ERC2', 2000000000);
         connectorToken3 = await TestERC20Token.new('ERC Token 3', 'ERC2', 1500000000);
+
+        await tokenWhitelist.setToken(connectorToken2.address, true);
     });
 
     it('verifies the converter data after construction', async () => {

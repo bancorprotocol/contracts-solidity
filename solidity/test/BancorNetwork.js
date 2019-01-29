@@ -7,13 +7,13 @@ const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
-const BadSmartToken = artifacts.require('BadSmartToken.sol');
+const NonStandardSmartToken = artifacts.require('NonStandardSmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const ContractRegistry = artifacts.require('ContractRegistry.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
-const TestBadERC20Token = artifacts.require('TestBadERC20Token.sol');
+const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token.sol');
 const utils = require('./helpers/Utils');
 const ethUtil = require('ethereumjs-util');
 const web3Utils = require('web3-utils');
@@ -99,7 +99,7 @@ contract('BancorNetwork', accounts => {
         smartToken1 = await SmartToken.new('Token1', 'TKN1', 2);
         await smartToken1.issue(accounts[0], 1000000);
 
-        smartToken2 = await BadSmartToken.new('Token2', 'TKN2', 2);
+        smartToken2 = await NonStandardSmartToken.new('Token2', 'TKN2', 2);
         await smartToken2.issue(accounts[0], 2000000);
 
         smartToken3 = await SmartToken.new('Token3', 'TKN3', 2);
@@ -108,7 +108,7 @@ contract('BancorNetwork', accounts => {
         smartToken4 = await SmartToken.new('Token4', 'TKN4', 2);
         await smartToken4.issue(accounts[0], 2500000);
 
-        erc20Token = await TestBadERC20Token.new('ERC20Token', 'ERC5', 1000000);
+        erc20Token = await TestNonStandardERC20Token.new('ERC20Token', 'ERC5', 1000000);
 
         await tokenWhitelist.setToken(smartToken2.address, true);
         await tokenWhitelist.setToken(erc20Token.address, true);

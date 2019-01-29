@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
-import './BadERC20Token.sol';
-import './interfaces/IBadSmartToken.sol';
+import './NonStandardERC20Token.sol';
+import './interfaces/INonStandardSmartToken.sol';
 import '../utility/Owned.sol';
 
 /*
@@ -8,7 +8,7 @@ import '../utility/Owned.sol';
 
     'Owned' is specified here for readability reasons
 */
-contract BadSmartToken is IBadSmartToken, Owned, BadERC20Token {
+contract NonStandardSmartToken is INonStandardSmartToken, Owned, NonStandardERC20Token {
     using SafeMath for uint256;
 
 
@@ -32,7 +32,7 @@ contract BadSmartToken is IBadSmartToken, Owned, BadERC20Token {
     */
     constructor(string _name, string _symbol, uint8 _decimals)
         public
-        BadERC20Token(_name, _symbol, _decimals)
+        NonStandardERC20Token(_name, _symbol, _decimals)
     {
         emit NewSmartToken(address(this));
     }

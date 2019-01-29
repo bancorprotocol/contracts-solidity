@@ -2,6 +2,7 @@ pragma solidity ^0.4.24;
 import './Owned.sol';
 import './Utils.sol';
 import './interfaces/ITokenHolder.sol';
+import '../token/interfaces/INonStandardERC20.sol';
 import '../token/interfaces/IERC20Token.sol';
 
 /*
@@ -10,6 +11,10 @@ import '../token/interfaces/IERC20Token.sol';
 
     The TokenHolder's contract sole purpose is to provide a safety mechanism that allows
     the owner to send tokens that were sent to the contract by mistake back to their sender.
+
+    Note that we use the non standard ERC-20 interface which has no return value for transfer
+    in order to support both non standard as well as standard token contracts.
+    see https://github.com/ethereum/solidity/issues/4116
 */
 contract TokenHolder is ITokenHolder, Owned, Utils {
     /**
@@ -33,6 +38,6 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
         validAddress(_to)
         notThis(_to)
     {
-        _token.transfer(_to, _amount);
+        INonStandardERC20(_token).transfer(_to, _amount);
     }
 }

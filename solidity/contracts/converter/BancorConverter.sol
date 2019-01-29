@@ -863,8 +863,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         if (!tokenWhitelist.whitelistedTokens(_token)) {
             // if the token isn't whitelisted, we assert on transfer
-            // assert(_token.transferFrom(_from, _to, _amount));
-            _token.transferFrom(_from, _to, _amount);
+            assert(_token.transferFrom(_from, _to, _amount));
         } else {
             uint256 prevBalance = _token.balanceOf(_to);
             // we have to cast the token contract in an interface which has no return value
