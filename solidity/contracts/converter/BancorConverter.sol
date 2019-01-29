@@ -837,15 +837,15 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
         IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
 
-        if (!addressList.listedAddresses(_token)) {
-            // if the token isn't whitelisted, we assert on transfer
-            assert(_token.transfer(_to, _amount));
-        } else {
+        if (addressList.listedAddresses(_token)) {
             uint256 prevBalance = _token.balanceOf(_to);
             // we have to cast the token contract in an interface which has no return value
             INonStandardERC20(_token).transfer(_to, _amount);
             uint256 postBalance = _token.balanceOf(_to);
-            assert(postBalance.sub(prevBalance) == _amount);
+            assert(postBalance > prevBalance);
+        } else {
+            // if the token isn't whitelisted, we assert on transfer
+            assert(_token.transfer(_to, _amount));
         }
     }
 
@@ -861,15 +861,15 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
         IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
 
-        if (!addressList.listedAddresses(_token)) {
-            // if the token isn't whitelisted, we assert on transfer
-            assert(_token.transferFrom(_from, _to, _amount));
-        } else {
+        if (addressList.listedAddresses(_token)) {
             uint256 prevBalance = _token.balanceOf(_to);
             // we have to cast the token contract in an interface which has no return value
             INonStandardERC20(_token).transferFrom(_from, _to, _amount);
             uint256 postBalance = _token.balanceOf(_to);
-            assert(postBalance.sub(prevBalance) == _amount);
+            assert(postBalance > prevBalance);
+        } else {
+            // if the token is standard, we assert on transfer
+            assert(_token.transferFrom(_from, _to, _amount));
         }
     }
 
