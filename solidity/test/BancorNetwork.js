@@ -2,20 +2,21 @@
 /* eslint-disable prefer-reflect */
 
 const Whitelist = artifacts.require('Whitelist.sol');
+const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry.sol');
 const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
 const SmartToken = artifacts.require('SmartToken.sol');
+const NonStandardSmartToken = artifacts.require('NonStandardSmartToken.sol');
 const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const ContractRegistry = artifacts.require('ContractRegistry.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
-const TestERC20Token = artifacts.require('TestERC20Token.sol');
+const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token.sol');
 const utils = require('./helpers/Utils');
 const ethUtil = require('ethereumjs-util');
 const web3Utils = require('web3-utils');
-
 
 let etherToken;
 let smartToken1;
@@ -80,6 +81,10 @@ contract('BancorNetwork', accounts => {
         let formulaId = await contractIds.BANCOR_FORMULA.call();
         await contractRegistry.registerAddress(formulaId, formula.address);
 
+        let nonStandardTokenRegistry = await NonStandardTokenRegistry.new();
+        let nonStandardTokenRegistryId = await contractIds.NON_STANDARD_TOKEN_REGISTRY.call();
+        await contractRegistry.registerAddress(nonStandardTokenRegistryId, nonStandardTokenRegistry.address);
+
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
         await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
@@ -93,7 +98,7 @@ contract('BancorNetwork', accounts => {
         smartToken1 = await SmartToken.new('Token1', 'TKN1', 2);
         await smartToken1.issue(accounts[0], 1000000);
 
-        smartToken2 = await SmartToken.new('Token2', 'TKN2', 2);
+        smartToken2 = await NonStandardSmartToken.new('Token2', 'TKN2', 2);
         await smartToken2.issue(accounts[0], 2000000);
 
         smartToken3 = await SmartToken.new('Token3', 'TKN3', 2);
@@ -102,7 +107,10 @@ contract('BancorNetwork', accounts => {
         smartToken4 = await SmartToken.new('Token4', 'TKN4', 2);
         await smartToken4.issue(accounts[0], 2500000);
 
-        erc20Token = await TestERC20Token.new('ERC20Token', 'ERC5', 1000000);
+        erc20Token = await TestNonStandardERC20Token.new('ERC20Token', 'ERC5', 1000000);
+
+        await nonStandardTokenRegistry.setAddress(smartToken2.address, true);
+        await nonStandardTokenRegistry.setAddress(erc20Token.address, true);
 
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000);
 
@@ -140,22 +148,43 @@ contract('BancorNetwork', accounts => {
         smartToken2SellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address];
     });
 
+    it('should be able to convert from a non compliant erc-20 to another token', async () => {
+        await erc20Token.approve(converter4.address, 1000);
+        let path = [erc20Token.address, smartToken4.address, smartToken4.address];
+        let prevBalance = await smartToken4.balanceOf.call(accounts[0]);
+        await converter4.quickConvert(path, 1000, 1);
+        let postBalance = await smartToken4.balanceOf.call(accounts[0]);
+
+        assert.isAbove(postBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
+    it('should be able to convert from a smart token to a non compliant erc-20', async () => {
+        let path = [smartToken4.address, smartToken4.address, erc20Token.address];
+        let prevBalance = await erc20Token.balanceOf.call(accounts[0]);
+        await converter4.quickConvert(path, 1000, 1);
+        let postBalance = await erc20Token.balanceOf.call(accounts[0]);
+
+        assert.isAbove(postBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
     it('verifies that quick buy with a single converter results in increased balance for the buyer', async () => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
-        await converter1.quickConvert(smartToken1BuyPath, 100, 1, { from: accounts[1], value: 100 });
+        let res = await converter1.quickConvert(smartToken1BuyPath, 100, 1, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+        // console.log(`gas used for converting eth -> 1: ${res.receipt.cumulativeGasUsed}`);
     });
 
     it('verifies that quick buy with multiple converters results in increased balance for the buyer', async () => {
         let prevBalance = await smartToken2.balanceOf.call(accounts[1]);
 
-        await converter2.quickConvert(smartToken2BuyPath, 100, 1, { from: accounts[1], value: 100 });
+        let res = await converter2.quickConvert(smartToken2BuyPath, 100, 1, { from: accounts[1], value: 100 });
         let newBalance = await smartToken2.balanceOf.call(accounts[1]);
 
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+        // console.log(`gas used for converting eth -> 1 -> 2: ${res.receipt.cumulativeGasUsed}`);
     });
 
     it('verifies that sending ether to the converter fails', async () => {
@@ -498,6 +527,7 @@ contract('BancorNetwork', accounts => {
         let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
         let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
         assert.equal(returnByPath.toNumber(), balanceAfterTransfer.minus(balanceBeforeTransfer).plus(transactionCost).toNumber());
+        // console.log(`gas used for converting 2 -> 1 -> eth: ${res.receipt.cumulativeGasUsed}`);
     });
 
     it('verifies that getReturnByPath returns the correct amount for selling the smart token with a long conversion path', async () => {
@@ -510,6 +540,7 @@ contract('BancorNetwork', accounts => {
         let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
         let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
         assert.equal(returnByPath.toNumber(), balanceAfterTransfer.minus(balanceBeforeTransfer).plus(transactionCost).toNumber());
+        // console.log(`gas used for converting 3 -> 2 -> 1 -> eth: ${res.receipt.cumulativeGasUsed}`);
     });
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting a connector to the smart token', async () => {
@@ -542,122 +573,6 @@ contract('BancorNetwork', accounts => {
 
         try {
             await bancorNetwork.getReturnByPath.call(longBuyPath, 1000);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('verifies multiple convertFor with multiple paths', async () => {
-        let prevBalance1 = await smartToken1.balanceOf.call(accounts[0]);
-        let prevBalance2 = await smartToken2.balanceOf.call(accounts[0]);
-        await smartToken2.transfer(bancorNetwork.address, 20000);
-        let smartTokenBuyPathMultiple = [etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken2.address, 
-            smartToken2.address, smartToken2.address, smartToken1.address,
-            smartToken2.address, smartToken2.address, smartToken1.address];
-
-        await bancorNetwork.convertForMultiple(smartTokenBuyPathMultiple, [0, 5, 8], [10000, 10000, 10000], [1, 1, 1], accounts[0], { from: accounts[0], value: 10000 });
-        
-        let newBalance1 = await smartToken1.balanceOf.call(accounts[0]);
-        let newBalance2 = await smartToken2.balanceOf.call(accounts[0]);
-
-        assert.isAbove(newBalance1.toNumber(), prevBalance1.toNumber(), "smart token 1 new balance isn't higher than previous balance");
-        assert.isAbove(newBalance2.toNumber(), prevBalance2.toNumber(), "smart token 2 new balance isn't higher than previous balance");
-    });
-
-    it('verifies multiple convertFor with a single path', async () => {
-        let prevBalance = await smartToken1.balanceOf.call(accounts[0]);
-        await smartToken2.transfer(bancorNetwork.address, 10000);
-        let smartTokenBuyPathMultiple = [smartToken2.address, smartToken2.address, smartToken1.address];
-
-        await bancorNetwork.convertForMultiple(smartTokenBuyPathMultiple, [0], [10000], [1], accounts[0]);
-        
-        let newBalance = await smartToken1.balanceOf.call(accounts[0]);;
-
-        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
-    });
-
-    it('verifies multiple convertFor with multiple paths that each of them starts with ether', async () => {
-        let prevBalance = await smartToken2.balanceOf.call(accounts[1]);
-        let smartTokenBuyPathMultiple = [etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken2.address, 
-            etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken2.address];
-
-        await bancorNetwork.convertForMultiple(smartTokenBuyPathMultiple, [0, 5], [10000, 10000], [1, 1], accounts[1], { from: accounts[1], value: 20000 });
-        
-        let newBalance = await smartToken2.balanceOf.call(accounts[1]);
-
-        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
-    });
-
-    it('verifies the caller balances after multiple conversions to ether in single transaction', async () => {
-        let prevTokenBalance = await smartToken2.balanceOf.call(accounts[0]);
-        await smartToken2.transfer(bancorNetwork.address, 100000);
-
-        let smartTokenSellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address];
-        let prevETHBalance = web3.eth.getBalance(accounts[0]);
-        let res = await bancorNetwork.convertForMultiple(smartTokenSellPath, [0], [100000], [1], accounts[0]);
-
-        let newETHBalance = web3.eth.getBalance(accounts[0]);
-        let newTokenBalance = await smartToken2.balanceOf.call(accounts[0]);
-
-        let transaction = web3.eth.getTransaction(res.tx);
-        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
-
-        assert(newETHBalance.greaterThan(prevETHBalance.minus(transactionCost)), "new ETH balance isn't higher than previous balance");
-        assert(newTokenBalance.lessThan(prevTokenBalance), "new token balance isn't lower than previous balance");
-    });
-
-    it('verifies the caller balances after multiple different conversions to ether in a single transaction', async () => {
-        let prevToken2Balance = await smartToken2.balanceOf.call(accounts[0]);
-        await smartToken2.transfer(bancorNetwork.address, 30000);
-        let prevETHBalance = web3.eth.getBalance(accounts[0]);
-        let prevToken1Balance = await smartToken1.balanceOf.call(accounts[0]);
-        let smartTokenSellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address,
-            smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address,
-            smartToken2.address, smartToken2.address, smartToken1.address];
-        let res = await bancorNetwork.convertForMultiple(smartTokenSellPath, [0, 5, 10], [10000, 10000, 10000], [1, 1, 1], accounts[0]);
-        let newETHBalance = web3.eth.getBalance(accounts[0]);
-        let newToken1Balance = await smartToken1.balanceOf.call(accounts[0]);
-        let newToken2Balance = await smartToken2.balanceOf.call(accounts[0]);
-        let transaction = web3.eth.getTransaction(res.tx);
-        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
-        assert(newETHBalance.greaterThan(prevETHBalance.minus(transactionCost)), "new ETH balance isn't higher than previous balance");
-        assert(newToken1Balance.greaterThan(prevToken1Balance), "new token 1 balance isn't greater than previous balance");
-        assert(newToken2Balance.lessThan(prevToken2Balance), "new token 2 balance isn't lower than previous balance");
-    });
-
-    it('should throw when attempts to call multiple convertFor with too high ether value', async () => {
-        try {
-            let prevBalance = await smartToken2.balanceOf.call(accounts[1]);
-            let smartTokenBuyPathMultiple = [etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken2.address, 
-                etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken2.address];
-
-            await bancorNetwork.convertForMultiple(smartTokenBuyPathMultiple, [0, 5], [10000, 10000], [1, 1], accounts[1], { from: accounts[1], value: 20001 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when attempts to call multiple convertFor with wrong path index', async () => {
-        try {
-            await smartToken2.transfer(bancorNetwork.address, 10000);
-
-            let smartTokenSellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address]
-            let res = await bancorNetwork.convertForMultiple(smartTokenSellPath, [0, 4], [10000], [1], accounts[0]);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
-    });
-
-    it('should throw when attempts to call multiple convertFor with zero amount in the amounts array', async () => {
-        try {
-            let smartTokenSellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address]
-            let res = await bancorNetwork.convertForMultiple(smartTokenSellPath, [0, 4], [0], [1], accounts[0]);
             assert(false, "didn't throw");
         }
         catch (error) {

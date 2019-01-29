@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry.sol');
 const BancorNetwork = artifacts.require('BancorNetwork.sol');
 const ContractIds = artifacts.require('ContractIds.sol');
 const BancorConverter = artifacts.require('BancorConverter.sol');
@@ -12,6 +13,7 @@ const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const ContractRegistry = artifacts.require('ContractRegistry.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const TestERC20Token = artifacts.require('TestERC20Token.sol');
+const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token.sol');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory.sol');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader.sol');
 const utils = require('./helpers/Utils');
@@ -91,6 +93,10 @@ contract('BancorConverter', accounts => {
         let formulaId = await contractIds.BANCOR_FORMULA.call();
         await contractRegistry.registerAddress(formulaId, formula.address);
 
+        let nonStandardTokenRegistry = await NonStandardTokenRegistry.new();
+        let nonStandardTokenRegistryId = await contractIds.NON_STANDARD_TOKEN_REGISTRY.call();
+        await contractRegistry.registerAddress(nonStandardTokenRegistryId, nonStandardTokenRegistry.address);
+
         let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
         await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
@@ -111,8 +117,10 @@ contract('BancorConverter', accounts => {
         tokenAddress = token.address;
         
         connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 1000000000);
-        connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 2000000000);
+        connectorToken2 = await TestNonStandardERC20Token.new('ERC Token 2', 'ERC2', 2000000000);
         connectorToken3 = await TestERC20Token.new('ERC Token 3', 'ERC2', 1500000000);
+
+        await nonStandardTokenRegistry.setAddress(connectorToken2.address, true);
     });
 
     it('verifies the converter data after construction', async () => {

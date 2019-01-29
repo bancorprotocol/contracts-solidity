@@ -10,13 +10,15 @@ import '../utility/Utils.sol';
 import '../utility/SafeMath.sol';
 import '../utility/interfaces/IContractRegistry.sol';
 import '../utility/interfaces/IContractFeatures.sol';
+import '../utility/interfaces/IAddressList.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
+import '../token/interfaces/INonStandardERC20.sol';
 import '../token/interfaces/IEtherToken.sol';
 import '../bancorx/interfaces/IBancorX.sol';
 
 /*
-    Bancor Converter v12
+    Bancor Converter v13
 
     The Bancor version of the token converter, allows conversion between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
@@ -51,7 +53,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
-    uint16 public version = 12;
+    uint16 public version = 13;
     string public converterType = 'bancor';
 
     bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
@@ -617,10 +619,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         assert(amount < toConnectorBalance);
 
         // transfer funds from the caller in the from connector token
-        assert(_fromToken.transferFrom(msg.sender, this, _amount));
+        ensureTransferFrom(_fromToken, msg.sender, this, _amount);
         // transfer funds to the caller in the to connector token
         // the transfer might fail if the actual connector balance is smaller than the virtual balance
-        assert(_toToken.transfer(msg.sender, amount));
+        ensureTransfer(_toToken, msg.sender, amount);
 
         // dispatch the conversion event
         // the fee is higher (magnitude = 2) since cross connector conversion equals 2 conversions (from / to the smart token)
@@ -669,7 +671,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
             connector.virtualBalance = connector.virtualBalance.add(_depositAmount);
 
         // transfer funds from the caller in the connector token
-        assert(_connectorToken.transferFrom(msg.sender, this, _depositAmount));
+        ensureTransferFrom(_connectorToken, msg.sender, this, _depositAmount);
         // issue new funds to the caller in the smart token
         token.issue(msg.sender, amount);
 
@@ -712,7 +714,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         token.destroy(msg.sender, _sellAmount);
         // transfer funds to the caller in the connector token
         // the transfer might fail if the actual connector balance is smaller than the virtual balance
-        assert(_connectorToken.transfer(msg.sender, amount));
+        ensureTransfer(_connectorToken, msg.sender, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(token, _connectorToken, _sellAmount, amount, feeAmount);
@@ -773,7 +775,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
                 token.issue(bancorNetwork, _amount); // issue _amount new tokens to the BancorNetwork contract
             } else {
                 // otherwise, we assume we already have allowance, transfer the tokens directly to the BancorNetwork contract
-                assert(fromToken.transferFrom(msg.sender, bancorNetwork, _amount));
+                ensureTransferFrom(fromToken, msg.sender, bancorNetwork, _amount);
             }
         }
 
@@ -825,6 +827,53 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
+        @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
+        true on success but revert on failure instead
+
+        @param _token     the token to transfer
+        @param _to        the address to transfer the tokens to
+        @param _amount    the amount to transfer
+    */
+    function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
+        IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
+
+        if (addressList.listedAddresses(_token)) {
+            uint256 prevBalance = _token.balanceOf(_to);
+            // we have to cast the token contract in an interface which has no return value
+            INonStandardERC20(_token).transfer(_to, _amount);
+            uint256 postBalance = _token.balanceOf(_to);
+            assert(postBalance > prevBalance);
+        } else {
+            // if the token isn't whitelisted, we assert on transfer
+            assert(_token.transfer(_to, _amount));
+        }
+    }
+
+    /**
+        @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
+        true on success but revert on failure instead
+
+        @param _token     the token to transfer
+        @param _from      the address to transfer the tokens from
+        @param _to        the address to transfer the tokens to
+        @param _amount    the amount to transfer
+    */
+    function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
+        IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
+
+        if (addressList.listedAddresses(_token)) {
+            uint256 prevBalance = _token.balanceOf(_to);
+            // we have to cast the token contract in an interface which has no return value
+            INonStandardERC20(_token).transferFrom(_from, _to, _amount);
+            uint256 postBalance = _token.balanceOf(_to);
+            assert(postBalance > prevBalance);
+        } else {
+            // if the token is standard, we assert on transfer
+            assert(_token.transferFrom(_from, _to, _amount));
+        }
+    }
+
+    /**
         @dev buys the token with all connector tokens using the same percentage
         i.e. if the caller increases the supply by 10%, it will cost an amount equal to
         10% of each connector token balance
@@ -855,7 +904,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
                 connector.virtualBalance = connector.virtualBalance.add(connectorAmount);
 
             // transfer funds from the caller in the connector token
-            assert(connectorToken.transferFrom(msg.sender, this, connectorAmount));
+            ensureTransferFrom(connectorToken, msg.sender, this, connectorAmount);
 
             // dispatch price data update for the smart token/connector
             emit PriceDataUpdate(connectorToken, supply + _amount, connectorBalance + connectorAmount, connector.weight);
@@ -897,7 +946,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
             // transfer funds to the caller in the connector token
             // the transfer might fail if the actual connector balance is smaller than the virtual balance
-            assert(connectorToken.transfer(msg.sender, connectorAmount));
+            ensureTransfer(connectorToken, msg.sender, connectorAmount);
 
             // dispatch price data update for the smart token/connector
             emit PriceDataUpdate(connectorToken, supply - _amount, connectorBalance - connectorAmount, connector.weight);

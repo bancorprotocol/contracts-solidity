@@ -10,8 +10,10 @@ import './utility/SafeMath.sol';
 import './utility/interfaces/IContractRegistry.sol';
 import './utility/interfaces/IContractFeatures.sol';
 import './utility/interfaces/IWhitelist.sol';
+import './utility/interfaces/IAddressList.sol';
 import './token/interfaces/IEtherToken.sol';
 import './token/interfaces/ISmartToken.sol';
+import './token/interfaces/INonStandardERC20.sol';
 import './bancorx/interfaces/IBancorX.sol';
 
 /*
@@ -165,7 +167,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         if (msg.value > 0) {
             IEtherToken(fromToken).deposit.value(msg.value)();
         } else {
-            assert(fromToken.transferFrom(msg.sender, this, _amount));
+            ensureTransferFrom(fromToken, msg.sender, this, _amount);
         }
 
         // verify gas price limit
@@ -321,63 +323,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
     /**
         @dev converts token to any other token in the bancor network
-        by following the predefined conversion paths and transfers the result
-        tokens to a targeted account.
-        this version of the function also allows multiple conversions
-        in a single atomic transaction.
-        note that the converter should already own the source tokens
-
-        @param _paths           merged conversion paths, i.e. [path1, path2, ...]. see conversion path format above
-        @param _pathStartIndex  each item in the array is the start index of the nth path in _paths
-        @param _amounts         amount to convert from (in the initial source token) for each path
-        @param _minReturns      minimum return for each path. if the conversion results in an amount 
-                                smaller than the minimum return - it is cancelled, must be nonzero
-        @param _for             account that will receive the conversions result
-
-        @return amount of conversion result for each path
-    */
-    function convertForMultiple(IERC20Token[] _paths, uint256[] _pathStartIndex, uint256[] _amounts, uint256[] _minReturns, address _for)
-        public
-        payable
-        returns (uint256[])
-    {
-        // if ETH is provided, ensure that the total amount was converted into other tokens
-        uint256 convertedValue = 0;
-        uint256 pathEndIndex;
-        
-        // iterate over the conversion paths
-        for (uint256 i = 0; i < _pathStartIndex.length; i += 1) {
-            pathEndIndex = i == (_pathStartIndex.length - 1) ? _paths.length : _pathStartIndex[i + 1];
-
-            // copy a single path from _paths into an array
-            IERC20Token[] memory path = new IERC20Token[](pathEndIndex - _pathStartIndex[i]);
-            for (uint256 j = _pathStartIndex[i]; j < pathEndIndex; j += 1) {
-                path[j - _pathStartIndex[i]] = _paths[j];
-            }
-
-            // if ETH is provided, ensure that the amount is lower than the path amount and
-            // verify that the source token is an ether token. otherwise ensure that 
-            // the source is not an ether token
-            IERC20Token fromToken = path[0];
-            require(msg.value == 0 || (_amounts[i] <= msg.value && etherTokens[fromToken]) || !etherTokens[fromToken]);
-
-            // if ETH was sent with the call, the source is an ether token - deposit the ETH path amount in it.
-            // otherwise, we assume we already have the tokens
-            if (msg.value > 0 && etherTokens[fromToken]) {
-                IEtherToken(fromToken).deposit.value(_amounts[i])();
-                convertedValue += _amounts[i];
-            }
-            _amounts[i] = convertForInternal(path, _amounts[i], _minReturns[i], _for, 0x0, 0x0, 0x0, 0x0, 0x0);
-        }
-
-        // if ETH was provided, ensure that the full amount was converted
-        require(convertedValue == msg.value);
-
-        return _amounts;
-    }
-
-    /**
-        @dev converts token to any other token in the bancor network
         by following a predefined conversion paths and transfers the result
         tokens to a target account.
 
@@ -428,7 +373,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         if (etherTokens[toToken])
             IEtherToken(toToken).withdrawTo(_for, _amount);
         else
-            assert(toToken.transfer(_for, _amount));
+            ensureTransfer(toToken, _for, _amount);
 
         return _amount;
     }
@@ -592,7 +537,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         // the conversion path, to allow it to execute the conversion on behalf of the caller
         // note: we assume we already have allowance
         IERC20Token fromToken = _path[0];
-        assert(fromToken.transferFrom(msg.sender, this, _amount));
+        ensureTransferFrom(fromToken, msg.sender, this, _amount);
         return convertFor(_path, _amount, _minReturn, _for);
     }
 
@@ -627,7 +572,56 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't
+        @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
+        true on success but revert on failure instead
+
+        @param _token     the token to transfer
+        @param _to        the address to transfer the tokens to
+        @param _amount    the amount to transfer
+    */
+    function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
+        IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
+
+        if (addressList.listedAddresses(_token)) {
+            uint256 prevBalance = _token.balanceOf(_to);
+            // we have to cast the token contract in an interface which has no return value
+            INonStandardERC20(_token).transfer(_to, _amount);
+            uint256 postBalance = _token.balanceOf(_to);
+            assert(postBalance > prevBalance);
+        } else {
+            // if the token isn't whitelisted, we assert on transfer
+            assert(_token.transfer(_to, _amount));
+        }
+    }
+
+    /**
+        @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
+        true on success but revert on failure instead
+
+        @param _token     the token to transfer
+        @param _from      the address to transfer the tokens from
+        @param _to        the address to transfer the tokens to
+        @param _amount    the amount to transfer
+    */
+    function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
+        IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
+
+        if (addressList.listedAddresses(_token)) {
+            uint256 prevBalance = _token.balanceOf(_to);
+            // we have to cast the token contract in an interface which has no return value
+            INonStandardERC20(_token).transferFrom(_from, _to, _amount);
+            uint256 postBalance = _token.balanceOf(_to);
+            assert(postBalance > prevBalance);
+        } else {
+            // if the token isn't whitelisted, we assert on transfer
+            assert(_token.transferFrom(_from, _to, _amount));
+        }
+    }
+
+    /**
+        @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't.
+        Note that we use the non standard erc-20 interface in which `approve` has no return value so that
+        this function will work for both standard and non standard tokens
 
         @param _token   token to check the allowance in
         @param _spender approved address
@@ -640,10 +634,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         // if the allowance is nonzero, must reset it to 0 first
         if (_token.allowance(this, _spender) != 0)
-            assert(_token.approve(_spender, 0));
+            INonStandardERC20(_token).approve(_spender, 0);
 
         // approve the new allowance
-        assert(_token.approve(_spender, _value));
+        INonStandardERC20(_token).approve(_spender, _value);
     }
 
     /**
