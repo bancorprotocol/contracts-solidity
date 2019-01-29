@@ -158,6 +158,15 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(postBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });
 
+    it('should be able to convert from a smart token to a non compliant erc-20', async () => {
+        let path = [smartToken4.address, smartToken4.address, erc20Token.address];
+        let prevBalance = await erc20Token.balanceOf.call(accounts[0]);
+        await converter4.quickConvert(path, 1000, 1);
+        let postBalance = await erc20Token.balanceOf.call(accounts[0]);
+
+        assert.isAbove(postBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
     it('verifies that quick buy with a single converter results in increased balance for the buyer', async () => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
