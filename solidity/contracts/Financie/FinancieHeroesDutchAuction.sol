@@ -195,4 +195,9 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
     {
         return token_multiplier;
     }
+
+    function finalPrice() public constant returns (uint)
+    {
+        return token_multiplier * received_wei / num_tokens_auctioned;
+    }
 }
