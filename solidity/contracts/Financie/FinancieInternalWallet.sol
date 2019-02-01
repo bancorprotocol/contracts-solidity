@@ -469,7 +469,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
                 }
             } else {
                 // Auction ongoing
-                return safeMul(auction.tokenMultiplier(), bidsauction_amount) / auction.finalPrice();
+                return safeMul(auction.tokenMultiplier(), bidsauction_amount) / auction.price();
             }
         }
 

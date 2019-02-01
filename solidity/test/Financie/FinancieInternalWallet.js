@@ -205,6 +205,11 @@ contract('FinancieInternalWallet', (accounts) => {
         await internalWallet.delegateBidCards(user_id, bidAmount, auction.address);
         console.log('[FinancieInternalWallet]delegateBid OK');
 
+        let estimationTokens = await internalWallet.delegateEstimateClaimTokens(user_id, auction.address);
+        console.log('[FinancieInternalWallet]delegateEstimateClaimTokens:' + estimationTokens.toFixed());
+        // bid 10000, initial price is 20, then it should be 500(=10000/20)
+        assert.equal(web3.toWei("500", "ether"), estimationTokens.toFixed());
+
         let currencyAfterBidding = await internalWallet.getBalanceOfConsumableCurrencyToken(user_id);
         console.log('[FinancieInternalWallet]currencyAfterBidding(user_id) ' + currencyAfterBidding.toFixed());
         assert.equal(0 , currencyAfterBidding.toFixed());
@@ -226,6 +231,11 @@ contract('FinancieInternalWallet', (accounts) => {
 
         await internalWallet.delegateBidCards(user_id_noone, bidAmount, auction.address);
 
+        // User:user_id didn't raise funds, so it should be still 5000
+        estimationTokens = await internalWallet.delegateEstimateClaimTokens(user_id, auction.address);
+        console.log('[FinancieInternalWallet]delegateEstimateClaimTokens:' + estimationTokens.toFixed());
+        assert.equal(web3.toWei("500", "ether"), estimationTokens.toFixed());
+
         currencyAfterBidding = await internalWallet.getBalanceOfConsumableCurrencyToken(user_id_noone);
         console.log('[FinancieInternalWallet]currencyAfterBidding(user_id_noone) ' + currencyAfterBidding.toFixed());
         assert.equal(0 , currencyAfterBidding);
@@ -244,20 +254,75 @@ contract('FinancieInternalWallet', (accounts) => {
         await auction.finalizeAuction();
         console.log('[FinancieInternalWallet]finalize OK');
 
+        // User:user_id didn't raise funds still
+        estimationTokens = await internalWallet.delegateEstimateClaimTokens(user_id, auction.address);
+        console.log('[FinancieInternalWallet]delegateEstimateClaimTokens(user_id):' + estimationTokens.toFixed());
+        assert.equal(web3.toWei("500", "ether"), estimationTokens.toFixed());
+
+        // User:user_id_noone raised funds
+        estimationTokens = await internalWallet.delegateEstimateClaimTokens(user_id_noone, auction.address);
+        console.log('[FinancieInternalWallet]delegateEstimateClaimTokens(user_id_noone):' + estimationTokens.toFixed());
+        assert.equal(web3.toWei("199500", "ether"), estimationTokens.toFixed());
+
+        let beforeClaim = await cardToken.balanceOf(internalBank.address);
+        console.log('[FinancieInternalWallet]balance of card token before claiming:' + beforeClaim.toFixed());
+
+        function timeout(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        await timeout(1000);
+
+        let canClaim = await auction.canClaimTokens(internalBank.address);
+        console.log('[FinancieInternalWallet]can claim:' + canClaim.toString());
+
         try {
             await internalWallet.delegateReceiveCards(user_id, auction.address);
-            assert(false, "exception not thrown / not enough time after finalized");
+            console.log('[FinancieInternalWallet]delegateReceive OK(user_id)');
         }
         catch ( error ) {
-            assert(true, "exception throw");
+            assert(false, "enough time after finalized(user_id)");
         }
 
-        // TODO: Receive 1 min later
-        //await internalWallet.delegateReceiveCards(user_id, auction.address);
-        //console.log('[FinancieInternalWallet]delegateReceive OK');
+        canClaim = await auction.canClaimTokens(internalBank.address);
+        console.log('[FinancieInternalWallet]can claim after first one received:' + canClaim.toString());
 
-        //let receivedAmount = await internalWallet.getBalanceOfToken(cardToken.address, user_id);
-        //assert(receivedAmount > 0);
+        // User:user_id_noone didn't receive cards
+        estimationTokens = await internalWallet.delegateEstimateClaimTokens(user_id_noone, auction.address);
+        console.log('[FinancieInternalWallet]delegateEstimateClaimTokens after first one received (user_id_noone):' + estimationTokens.toFixed());
+        assert.equal(web3.toWei("199500", "ether"), estimationTokens.toFixed());
+
+        try {
+            await internalWallet.delegateReceiveCards(user_id_noone, auction.address);
+            console.log('[FinancieInternalWallet]delegateReceive OK(user_id_noone)');
+        }
+        catch ( error ) {
+            assert(false, "enough time after finalized(user_id_noone)");
+        }
+
+        let afterClaim = await cardToken.balanceOf(internalBank.address);
+        console.log('[FinancieInternalWallet]balance of card token after claiming:' + afterClaim.toFixed());
+
+        let receivedAmount = await internalWallet.getBalanceOfToken(cardToken.address, user_id);
+        assert.equal(web3.toWei("500", "ether"), receivedAmount.toFixed());
+
+        receivedAmount = await internalWallet.getBalanceOfToken(cardToken.address, user_id_noone);
+        assert.equal(web3.toWei("199500", "ether"), receivedAmount.toFixed());
+
+        // User:user_id/user_id_noone had already received tokens
+        estimationTokens = await internalWallet.delegateEstimateClaimTokens(user_id, auction.address);
+        console.log('[FinancieInternalWallet]delegateEstimateClaimTokens(user_id):' + estimationTokens.toFixed());
+        assert.equal(0, estimationTokens.toFixed());
+
+        estimationTokens = await internalWallet.delegateEstimateClaimTokens(user_id_noone, auction.address);
+        console.log('[FinancieInternalWallet]delegateEstimateClaimTokens(user_id_noone):' + estimationTokens.toFixed());
+        assert.equal(0, estimationTokens.toFixed());
+
+        await internalWallet.withdrawTokens(user_id, web3.toWei("500", "ether"), cardToken.address);
+        // 200000 - 500 = 199500 for "no one" user
+        await internalWallet.withdrawTokens(user_id_noone, web3.toWei("199500", "ether"), cardToken.address);
+
+        let afterWithdrawal = await cardToken.balanceOf(internalBank.address);
+        console.log('[FinancieInternalWallet]balance of card token after withdrawal:' + afterWithdrawal.toFixed());
     });
 
     it('delegateWithdrawalAfterAuction', async () => {

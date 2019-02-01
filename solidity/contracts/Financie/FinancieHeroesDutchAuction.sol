@@ -177,6 +177,9 @@ contract FinancieHeroesDutchAuction is IFinancieAuction, DutchAuction, Owned, Fi
         view
         returns (bool)
     {
+        if ( stage == Stages.TokensDistributed ) {
+            return true;
+        }
         if ( stage == Stages.AuctionEnded ) {
             return (now > end_time + token_claim_waiting_period);
         }

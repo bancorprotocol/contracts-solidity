@@ -7,6 +7,7 @@ contract IFinancieAuction {
     function canClaimTokens(address receiver_address) public view returns (bool);
     function auctionFinished() public view returns (bool);
     function missingFundsToEndAuction() constant public returns (uint);
+    function price() public constant returns (uint);
     function finalPrice() public constant returns (uint);
     function tokenMultiplier() public constant returns (uint);
     function bidsAmount(address _bidder) public constant returns (uint);
