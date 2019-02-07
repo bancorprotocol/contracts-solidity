@@ -28,9 +28,9 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
     event WithdrawCurrencyTokens(uint32 indexed _user_id, uint256 _amount, uint _timestamp);
     event WithdrawPendingRevenueCurrencyTokens(uint32 indexed _user_id, uint256 _amount, uint _timestamp);
 
-    event BuyCards(uint32 indexed _user_id, uint256 _currency_amount, uint256 _card_amount, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
-    event SellCards(uint32 indexed _user_id, uint256 _currency_amount, uint256 _card_amount, address indexed _token_address, address indexed _bancor_address, uint _timestamp);
-    event BidCards(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, address indexed _auction_address, uint _timestamp);
+    event BuyCards(uint32 indexed _user_id, uint256 _currency_amount, uint256 _card_amount, address indexed _token_address, address indexed _bancor_address, uint256 _trading_fee, uint256 _transaction_fee, uint _timestamp);
+    event SellCards(uint32 indexed _user_id, uint256 _currency_amount, uint256 _card_amount, address indexed _token_address, address indexed _bancor_address, uint256 _trading_fee, uint256 _transaction_fee, uint _timestamp);
+    event BidCards(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, address indexed _auction_address, uint256 _trading_fee, uint256 _transaction_fee, uint _timestamp);
     event ReceiveCards(uint32 indexed _user_id, uint256 _amount, address indexed _token_address, address indexed _auction_address, uint _timestamp);
 
     constructor(address _teamWallet, address _paymentCurrencyToken) public {
@@ -220,6 +220,20 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         emit WithdrawPendingRevenueCurrencyTokens(_userId, _amount, now);
     }
 
+    function _buyCards(uint256 _amount, uint256 _minReturn, address _tokenAddress, address _bancorAddress)
+        private
+        returns(uint256, uint256, uint256)
+    {
+        IFinancieBancorConverter converter = IFinancieBancorConverter(_bancorAddress);
+        uint256 result;
+        uint256 heroFee;
+        uint256 teamFee;
+        (result, heroFee, teamFee) = converter.buyCards(_amount, _minReturn);
+        assert(result >= _minReturn);
+
+        return (result, heroFee, teamFee);
+    }
+
     function delegateBuyCards(uint32 _userId, uint256 _amount, uint256 _minReturn, address _tokenAddress, address _bancorAddress)
         public
         sameOwner
@@ -247,12 +261,10 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         assert(paymentCurrencyToken.approve(_bancorAddress, _amount));
         /* approveBancor(_amount, address(paymentCurrencyToken), _bancorAddress); */
 
-        IFinancieBancorConverter converter = IFinancieBancorConverter(_bancorAddress);
         uint256 result;
         uint256 heroFee;
         uint256 teamFee;
-        (result, heroFee, teamFee) = converter.buyCards(_amount, _minReturn);
-        assert(result >= _minReturn);
+        (result, heroFee, teamFee) = _buyCards(_amount, _minReturn, _tokenAddress, _bancorAddress);
 
         token.transfer(bank, result);
 
@@ -266,7 +278,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
 
         addBalanceOfTokens(_userId, result, _tokenAddress);
 
-        emit BuyCards(_userId, _amount, result, _tokenAddress, _bancorAddress, now);
+        emit BuyCards(_userId, safeSub(_amount, safeAdd(heroFee, teamFee)), result, _tokenAddress, _bancorAddress, safeAdd(heroFee, teamFee), transactionFee, now);
 
         updateHolders(_userId, _tokenAddress);
 
@@ -274,7 +286,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
 
     function _sellCards(uint32 _userId, uint256 _amount, uint256 _minReturn, address _tokenAddress, address _bancorAddress)
         private
-        returns(uint256, uint256)
+        returns(uint256, uint256, uint256)
     {
         IFinancieBancorConverter converter = IFinancieBancorConverter(_bancorAddress);
         uint256 result;
@@ -282,7 +294,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         uint256 teamFee;
         (result, heroFee, teamFee) = converter.sellCards(_amount, _minReturn);
         assert(result >= _minReturn);
-        return (result, heroFee);
+        return (result, heroFee, teamFee);
     }
 
     function delegateSellCards(uint32 _userId, uint256 _amount, uint256 _minReturn, address _tokenAddress, address _bancorAddress)
@@ -308,11 +320,12 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
 
         uint256 result;
         uint256 heroFee;
-        (result, heroFee) = _sellCards(_userId, _amount, _minReturn, _tokenAddress, _bancorAddress);
+        uint256 teamFee;
+        (result, heroFee, teamFee) = _sellCards(_userId, _amount, _minReturn, _tokenAddress, _bancorAddress);
 
         uint256 net = safeSub(result, transactionFee);
         paymentCurrencyToken.transfer(bank, net);
-        emit SellCards(_userId, net, _amount, _tokenAddress, _bancorAddress, now);
+        emit SellCards(_userId, net, _amount, _tokenAddress, _bancorAddress, safeAdd(heroFee, teamFee), transactionFee, now);
 
         // send transaction fee
         paymentCurrencyToken.transfer(teamWallet, transactionFee);
@@ -388,7 +401,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         subBalanceOfConsumableCurrencyTokens(_userId, amount);
 
         address tokenAddress = auction.targetToken();
-        emit BidCards(_userId, amount, tokenAddress, _auctionAddress, now);
+        emit BidCards(_userId, safeSub(amount, safeAdd(heroFee, teamFee)), tokenAddress, _auctionAddress, safeAdd(heroFee, teamFee), transactionFee * 2, now);
     }
 
     function delegateReceiveCards(uint32 _userId, address _auctionAddress)
