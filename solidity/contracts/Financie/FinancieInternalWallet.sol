@@ -401,7 +401,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         subBalanceOfConsumableCurrencyTokens(_userId, amount);
 
         address tokenAddress = auction.targetToken();
-        emit BidCards(_userId, safeSub(amount, safeAdd(heroFee, teamFee)), tokenAddress, _auctionAddress, safeAdd(heroFee, teamFee), transactionFee * 2, now);
+        emit BidCards(_userId, heroFee, tokenAddress, _auctionAddress, teamFee, transactionFee * 2, now);
     }
 
     function delegateReceiveCards(uint32 _userId, address _auctionAddress)
