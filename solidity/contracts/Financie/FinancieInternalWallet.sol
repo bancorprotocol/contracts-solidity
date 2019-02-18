@@ -347,9 +347,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         sameOwner
     {
         require(_amount > 0);
-        uint256 totalAmount;
         uint256 totalFee;
-
         if ( bank.getBidsOfAuctions(_auctionAddress, _userId) == 0 ) {
             // fee = bid + receive
             totalFee = transactionFee * 2;
@@ -357,9 +355,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
             // fee = bid
             totalFee = transactionFee;
         }
-
-        totalAmount = safeAdd(_amount, totalFee);
-        require(bank.getBalanceOfConsumableCurrencyToken(_userId) >= totalAmount);
+        require(bank.getBalanceOfConsumableCurrencyToken(_userId) >= safeAdd(_amount, totalFee));
 
         // send transaction fee
         bank.transferCurrencyTokens(teamWallet, totalFee);
