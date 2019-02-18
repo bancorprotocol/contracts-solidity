@@ -348,26 +348,23 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
     {
         require(_amount > 0);
         uint256 totalAmount;
+        uint256 totalFee;
 
         if ( bank.getBidsOfAuctions(_auctionAddress, _userId) == 0 ) {
             // fee = bid + receive
-            totalAmount = safeAdd(_amount, transactionFee * 2);
-            require(bank.getBalanceOfConsumableCurrencyToken(_userId) >= totalAmount);
-
-            // send transaction fee
-            bank.transferCurrencyTokens(teamWallet, transactionFee * 2);
-            emit TransactionFee(_userId, transactionFee * 2, now);
-            subBalanceOfConsumableCurrencyTokens(_userId, transactionFee * 2);
+            totalFee = transactionFee * 2;
         } else {
             // fee = bid
-            totalAmount = safeAdd(_amount, transactionFee);
-            require(bank.getBalanceOfConsumableCurrencyToken(_userId) >= totalAmount);
-
-            // send transaction fee
-            bank.transferCurrencyTokens(teamWallet, transactionFee);
-            emit TransactionFee(_userId, transactionFee, now);
-            subBalanceOfConsumableCurrencyTokens(_userId, transactionFee);
+            totalFee = transactionFee;
         }
+
+        totalAmount = safeAdd(_amount, totalFee);
+        require(bank.getBalanceOfConsumableCurrencyToken(_userId) >= totalAmount);
+
+        // send transaction fee
+        bank.transferCurrencyTokens(teamWallet, totalFee);
+        emit TransactionFee(_userId, totalFee, now);
+        subBalanceOfConsumableCurrencyTokens(_userId, totalFee);
 
         uint256 currencyBefore = paymentCurrencyToken.balanceOf(bank);
 
@@ -401,7 +398,7 @@ contract FinancieInternalWallet is IFinancieInternalWallet, Owned, Utils {
         subBalanceOfConsumableCurrencyTokens(_userId, amount);
 
         address tokenAddress = auction.targetToken();
-        emit BidCards(_userId, heroFee, tokenAddress, _auctionAddress, teamFee, transactionFee * 2, now);
+        emit BidCards(_userId, heroFee, tokenAddress, _auctionAddress, teamFee, totalFee, now);
     }
 
     function delegateReceiveCards(uint32 _userId, address _auctionAddress)
