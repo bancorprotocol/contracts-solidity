@@ -1,5 +1,13 @@
 let fs = require("fs");
 
+try {
+    fs.closeSync(fs.openSync("./node_modules/run-once", "wx"));
+}
+catch (error) {
+    console.error("This script should not run more than once");
+    process.exit();
+}
+
 function fix(fileName, tokens) {
     console.log("Fixing " + fileName);
     try {
