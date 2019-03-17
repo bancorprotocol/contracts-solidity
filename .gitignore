@@ -3,3 +3,8 @@
 node_modules
 npm-debug.log
 *.pyc
+solidity/coverageEnv
+solidity/coverage
+solidity/coverage.json
+solidity/allFiredEvents
+solidity/scTopics

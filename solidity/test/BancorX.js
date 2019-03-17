@@ -124,25 +124,6 @@ contract('BancorX', async accounts => {
         assert.equal(from.toLowerCase(), accounts[0].toLowerCase())
     })
 
-    // it('should properly calculate the current lock limit after a single transaction', async () => {
-    //     let amountToSend = (web3Utils.toWei('100', 'ether')).toString(10)
-    //     await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amountToSend)
-
-    //     const lockLimit = (await bancorX.getCurrentLockLimit.call()).dividedBy(Math.pow(10,18)).toString(10);
-
-    //     let timestamp1 = (await web3.eth.getBlock('latest')).timestamp;
-    //     await mineBlocks(10);
-    //     let timestamp2 = (await web3.eth.getBlock('latest')).timestamp;
-    //     let limit1 = String(((timestamp2 - timestamp1) * LIM_INC_PER_SECOND / Math.pow(10, 18)) + Number(lockLimit));
-
-    //     assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei(limit1, 'ether')).toString(10))
-
-    //     await mineBlocks(10)
-    //     let timestamp3 = (await web3.eth.getBlock('latest')).timestamp;
-    //     let limit2 = String(((timestamp3 - timestamp1) * LIM_INC_PER_SECOND / Math.pow(10, 18)) + Number(lockLimit));
-    //     assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei(limit2, 'ether')).toString(10))
-    // })
-
     it('should not allow a reporter to report the same transaction twice', async () => {
         let amountToSend = (web3Utils.toWei('1', 'ether'))
         let randomTxId = getRandomTxId()
