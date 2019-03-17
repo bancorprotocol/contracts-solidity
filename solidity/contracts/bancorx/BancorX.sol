@@ -32,26 +32,26 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         bool completed;
     }
 
-    uint16 public version = 2;
+    uint16 public version = 3;
 
-    uint256 public maxLockLimit;            // the maximum amount of BNT that can be locked in one transaction
-    uint256 public maxReleaseLimit;         // the maximum amount of BNT that can be released in one transaction
-    uint256 public minLimit;                // the minimum amount of BNT that can be transferred in one transaction
-    uint256 public prevLockLimit;           // the lock limit *after* the last transaction
-    uint256 public prevReleaseLimit;        // the release limit *after* the last transaction
-    uint256 public limitIncPerBlock;        // how much the limit increases per block
-    uint256 public prevLockBlockNumber;     // the block number of the last lock transaction
-    uint256 public prevReleaseBlockNumber;  // the block number of the last release transaction
-    uint256 public minRequiredReports;      // minimum number of required reports to release tokens
+    uint256 public maxLockLimit;             // the maximum amount of BNT that can be locked in one transaction
+    uint256 public maxReleaseLimit;          // the maximum amount of BNT that can be released in one transaction
+    uint256 public minLimit;                 // the minimum amount of BNT that can be transferred in one transaction
+    uint256 public prevLockLimit;            // the lock limit *after* the last transaction
+    uint256 public prevReleaseLimit;         // the release limit *after* the last transaction
+    uint256 public limitIncPerSecond;        // how much the limit increases per second
+    uint256 public prevLockTimestamp;        // the block number of the last lock transaction
+    uint256 public prevReleaseTimestamp;     // the block number of the last release transaction
+    uint256 public minRequiredReports;       // minimum number of required reports to release tokens
     
-    IContractRegistry public registry;      // contract registry
-    IContractRegistry public prevRegistry;  // address of previous registry as security mechanism
-    IBancorConverter public bntConverter;   // BNT converter
-    ISmartToken public bntToken;            // BNT token
+    IContractRegistry public registry;       // contract registry
+    IContractRegistry public prevRegistry;   // address of previous registry as security mechanism
+    IBancorConverter public bntConverter;    // BNT converter
+    ISmartToken public bntToken;             // BNT token
 
-    bool public xTransfersEnabled = true;   // true if x transfers are enabled, false if not
-    bool public reportingEnabled = true;    // true if reporting is enabled, false if not
-    bool public allowRegistryUpdate = true; // allows the owner to prevent/allow the registry to be updated
+    bool public xTransfersEnabled = true;    // true if x transfers are enabled, false if not
+    bool public reportingEnabled = true;     // true if reporting is enabled, false if not
+    bool public allowRegistryUpdate = true;  // allows the owner to prevent/allow the registry to be updated
 
     // txId -> Transaction
     mapping (uint256 => Transaction) public transactions;
@@ -108,7 +108,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @param _maxLockLimit          maximum amount of BNT that can be locked in one transaction
         @param _maxReleaseLimit       maximum amount of BNT that can be released in one transaction
         @param _minLimit              minimum amount of BNT that can be transferred in one transaction
-        @param _limitIncPerBlock      how much the limit increases per block
+        @param _limitIncPerSecond      how much the limit increases per block
         @param _minRequiredReports    minimum number of reporters to report transaction before tokens can be released
         @param _registry              address of contract registry
      */
@@ -116,7 +116,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         uint256 _maxLockLimit,
         uint256 _maxReleaseLimit,
         uint256 _minLimit,
-        uint256 _limitIncPerBlock,
+        uint256 _limitIncPerSecond,
         uint256 _minRequiredReports,
         address _registry
     )
@@ -126,14 +126,14 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         maxLockLimit = _maxLockLimit;
         maxReleaseLimit = _maxReleaseLimit;
         minLimit = _minLimit;
-        limitIncPerBlock = _limitIncPerBlock;
+        limitIncPerSecond = _limitIncPerSecond;
         minRequiredReports = _minRequiredReports;
 
         // previous limit is _maxLimit, and previous block number is current block number
         prevLockLimit = _maxLockLimit;
         prevReleaseLimit = _maxReleaseLimit;
-        prevLockBlockNumber = block.number;
-        prevReleaseBlockNumber = block.number;
+        prevLockTimestamp = block.timestamp;
+        prevReleaseTimestamp = block.timestamp;
 
         registry = IContractRegistry(_registry);
         prevRegistry = IContractRegistry(_registry);
@@ -189,10 +189,10 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     /**
         @dev setter
 
-        @param _limitIncPerBlock    new limitIncPerBlock
+        @param _limitIncPerSecond    new limitIncPerSecond
      */
-    function setLimitIncPerBlock(uint256 _limitIncPerBlock) public ownerOnly {
-        limitIncPerBlock = _limitIncPerBlock;
+    function setLimitIncPerBlock(uint256 _limitIncPerSecond) public ownerOnly {
+        limitIncPerSecond = _limitIncPerSecond;
     }
 
     /**
@@ -312,9 +312,9 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         
         lockTokens(_amount);
 
-        // set the previous lock limit and block number
+        // set the previous lock limit and block timestamp
         prevLockLimit = currentLockLimit.sub(_amount);
-        prevLockBlockNumber = block.number;
+        prevLockTimestamp = block.timestamp;
 
         // emit XTransfer event with id of 0
         emit XTransfer(msg.sender, _toBlockchain, _to, _amount, 0);
@@ -339,7 +339,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
 
         // set the previous lock limit and block number
         prevLockLimit = currentLockLimit.sub(_amount);
-        prevLockBlockNumber = block.number;
+        prevLockTimestamp = block.timestamp;
 
         // emit XTransfer event
         emit XTransfer(msg.sender, _toBlockchain, _to, _amount, _id);
@@ -435,8 +435,8 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @return the current maximum limit of BNT that can be locked
      */
     function getCurrentLockLimit() public view returns (uint256) {
-        // prevLockLimit + ((currBlockNumber - prevLockBlockNumber) * limitIncPerBlock)
-        uint256 currentLockLimit = prevLockLimit.add(((block.number).sub(prevLockBlockNumber)).mul(limitIncPerBlock));
+        // prevLockLimit + ((currBlockTimestamp - prevLockTimestamp) * limitIncPerSecond)
+        uint256 currentLockLimit = prevLockLimit.add(((block.timestamp).sub(prevLockTimestamp)).mul(limitIncPerSecond));
         if (currentLockLimit > maxLockLimit)
             return maxLockLimit;
         return currentLockLimit;
@@ -448,8 +448,8 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @return the current maximum limit of BNT that can be released
      */
     function getCurrentReleaseLimit() public view returns (uint256) {
-        // prevReleaseLimit + ((currBlockNumber - prevReleaseBlockNumber) * limitIncPerBlock)
-        uint256 currentReleaseLimit = prevReleaseLimit.add(((block.number).sub(prevReleaseBlockNumber)).mul(limitIncPerBlock));
+        // prevReleaseLimit + ((currBlockTimestamp - prevReleaseTimestamp) * limitIncPerSecond)
+        uint256 currentReleaseLimit = prevReleaseLimit.add(((block.timestamp).sub(prevReleaseTimestamp)).mul(limitIncPerSecond));
         if (currentReleaseLimit > maxReleaseLimit)
             return maxReleaseLimit;
         return currentReleaseLimit;
@@ -479,9 +479,9 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
 
         require(_amount >= minLimit && _amount <= currentReleaseLimit);
         
-        // update the previous release limit and block number
+        // update the previous release limit and block timestamp
         prevReleaseLimit = currentReleaseLimit.sub(_amount);
-        prevReleaseBlockNumber = block.number;
+        prevReleaseTimestamp = block.timestamp;
 
         // no need to require, reverts on failure
         bntToken.transfer(_to, _amount);

@@ -10,12 +10,11 @@ const ContractRegistry = artifacts.require('ContractRegistry.sol');
 const web3Utils = require('web3-utils')
 
 const utils = require('./helpers/Utils');
-const miningUtils = require('./helpers/MiningUtils');
 
 const MAX_LOCK_LIMIT = '1000000000000000000000' // 1000 bnt
 const MAX_RELEASE_LIMIT = '1000000000000000000000' // 1000 bnt
 const MIN_LIMIT = '1000000000000000000' // 1 bnt
-const LIM_INC_PER_BLOCK = '1000000000000000000' // 1 bnt
+const LIM_INC_PER_SECOND = '1000000000000000000' // 1 bnt
 const MIN_REQUIRED_REPORTS = '3'
 const BNT_AMOUNT = '77492920201018469141404133'
 const BNT_RESERVE_AMOUNT = '45688650129186275318509'
@@ -45,7 +44,7 @@ const initBancorX = async accounts => {
         MAX_LOCK_LIMIT,
         MAX_RELEASE_LIMIT,
         MIN_LIMIT,
-        LIM_INC_PER_BLOCK,
+        LIM_INC_PER_SECOND,
         MIN_REQUIRED_REPORTS,
         contractRegistry.address
     )
@@ -74,13 +73,13 @@ contract('BancorX', async accounts => {
         let maxLockLimit = (await bancorX.maxLockLimit.call()).toString(10)
         let maxReleaseLimit = (await bancorX.maxReleaseLimit.call()).toString(10)
         let minLimit = (await bancorX.minLimit.call()).toString(10)
-        let limitIncPerBlock = (await bancorX.limitIncPerBlock.call()).toString(10)
+        let limitIncPerSecond = (await bancorX.limitIncPerSecond.call()).toString(10)
         let minRequiredReports = (await bancorX.minRequiredReports.call()).toString(10)
 
         assert.equal(maxLockLimit, MAX_LOCK_LIMIT)
         assert.equal(maxReleaseLimit, MAX_RELEASE_LIMIT)
         assert.equal(minLimit, MIN_LIMIT)
-        assert.equal(limitIncPerBlock, LIM_INC_PER_BLOCK)
+        assert.equal(limitIncPerSecond, LIM_INC_PER_SECOND)
         assert.equal(minRequiredReports, MIN_REQUIRED_REPORTS)
     })
 
@@ -125,20 +124,24 @@ contract('BancorX', async accounts => {
         assert.equal(from.toLowerCase(), accounts[0].toLowerCase())
     })
 
-    it('should properly calculate the current lock limit after a single transaction', async () => {
-        let amountToSend = (web3Utils.toWei('10', 'ether')).toString(10)
-        await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amountToSend)
-        // after the transaction, a block was mined, so the limit is 991 (not 990)
-        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei('991', 'ether')).toString(10))
+    // it('should properly calculate the current lock limit after a single transaction', async () => {
+    //     let amountToSend = (web3Utils.toWei('100', 'ether')).toString(10)
+    //     await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amountToSend)
 
-        // after 5 blocks, the limit should increase by 5 bnt
-        await mineBlocks(5)
-        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei('996', 'ether')).toString(10))
+    //     const lockLimit = (await bancorX.getCurrentLockLimit.call()).dividedBy(Math.pow(10,18)).toString(10);
 
-        // after another 5 blocks, the limit should be back to 1000
-        await mineBlocks(5)
-        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei('1000', 'ether')).toString(10))
-    })
+    //     let timestamp1 = (await web3.eth.getBlock('latest')).timestamp;
+    //     await mineBlocks(10);
+    //     let timestamp2 = (await web3.eth.getBlock('latest')).timestamp;
+    //     let limit1 = String(((timestamp2 - timestamp1) * LIM_INC_PER_SECOND / Math.pow(10, 18)) + Number(lockLimit));
+
+    //     assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei(limit1, 'ether')).toString(10))
+
+    //     await mineBlocks(10)
+    //     let timestamp3 = (await web3.eth.getBlock('latest')).timestamp;
+    //     let limit2 = String(((timestamp3 - timestamp1) * LIM_INC_PER_SECOND / Math.pow(10, 18)) + Number(lockLimit));
+    //     assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei(limit2, 'ether')).toString(10))
+    // })
 
     it('should not allow a reporter to report the same transaction twice', async () => {
         let amountToSend = (web3Utils.toWei('1', 'ether'))
@@ -324,8 +327,9 @@ async function reportAndRelease(to, from, amount, txId, blockchainType) {
 
 // helper function for mining blocks
 async function mineBlocks(amount) {
+    let accounts = await web3.eth.accounts;
     for (let i = 0; i < amount; i++) {
-        await miningUtils.mineBlock(web3.currentProvider)
+        await web3.eth.sendTransaction({from: accounts[0], to: accounts[0], value: "1"});
     }
 }
 
