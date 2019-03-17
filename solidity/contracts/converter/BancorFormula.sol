@@ -489,7 +489,7 @@ contract BancorFormula is IBancorFormula, Utils {
         - The exponentiation of each binary exponent is given (pre-calculated)
         - The exponentiation of r is calculated via Taylor series for e^x, where x = r
         - The exponentiation of the input is calculated by multiplying the intermediate results above
-        - For example: e^5.021692859 = e^(4 + 1 + 0.5 + 0.021692859) = e^4 * e^1 * e^0.5 * e^0.021692859
+        - For example: e^5.521692859 = e^(4 + 1 + 0.5 + 0.021692859) = e^4 * e^1 * e^0.5 * e^0.021692859
     */
     function optimalExp(uint256 x) internal pure returns (uint256) {
         uint256 res = 0;
