@@ -59,8 +59,9 @@ if (process.argv.length > 2) {
 }
 else {
     process.stdout.write(`Enter '${TRUFFLE_TEST}' for truffle-test or '${SOL_COVERAGE}' for solidity-coverage: `);
-    process.stdin.on("data", function(data) {
-        process.stdin.end();
+    process.stdin.resume();
+    process.stdin.once("data", function(data) {
+        process.stdin.pause();
         execute(data.toString().trim());
     });
 }
