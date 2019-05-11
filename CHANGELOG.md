@@ -1,4 +1,8 @@
-﻿### 0.4.6 (2019-01-29)
+﻿### 0.4.6 (2019-05-11)
+* added the ConverterRegistry contract
+
+
+### 0.4.6 (2019-01-29)
 General:
 * Added support for non standard ERC-20 tokens
 * Added NonStandardTokenRegistry contract to support non standard ERC-20 tokens
