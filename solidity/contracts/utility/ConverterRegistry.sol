@@ -5,20 +5,20 @@ import './Utils.sol';
 /**
     Converter Registry
 
-    The converter registry keeps converter addresses by smart token addresses and vice versa.
-    The owner can update converter addresses so that a the smart token address always points to
-    the updated list of converters for each smart token.
+    The converter registry keeps converter addresses by token addresses and vice versa.
+    The owner can update converter addresses so that a the token address always points to
+    the updated list of converters for each token.
 
-    The contract also allows to iterate through all the smart tokens in the network.
+    The contract also allows to iterate through all the tokens in the network.
 
-    Note that converter addresses for each smart token are returned in ascending order (from oldest
+    Note that converter addresses for each token are returned in ascending order (from oldest
     to latest).
 */
 contract ConverterRegistry is Owned, Utils {
     mapping (address => bool) private tokensRegistered;         // token address -> registered or not
     mapping (address => address[]) private tokensToConverters;  // token address -> converter addresses
     mapping (address => address) private convertersToTokens;    // converter address -> token address
-    address[] public tokens;                                    // list of all smart token addresses
+    address[] public tokens;                                    // list of all token addresses
 
     // triggered when a converter is added to the registry
     event ConverterAddition(address indexed _token, address _address);
