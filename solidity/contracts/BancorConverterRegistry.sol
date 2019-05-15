@@ -1,11 +1,11 @@
 pragma solidity ^0.4.24;
-import './Owned.sol';
-import './Utils.sol';
+import './utility/Owned.sol';
+import './utility/Utils.sol';
 
 /**
-    Converter Registry
+    Bancor Converter Registry
 
-    The converter registry keeps converter addresses by token addresses and vice versa.
+    The bancor converter registry keeps converter addresses by token addresses and vice versa.
     The owner can update converter addresses so that a the token address always points to
     the updated list of converters for each token.
 
@@ -14,7 +14,7 @@ import './Utils.sol';
     Note that converter addresses for each token are returned in ascending order (from oldest
     to latest).
 */
-contract ConverterRegistry is Owned, Utils {
+contract BancorConverterRegistry is Owned, Utils {
     mapping (address => bool) private tokensRegistered;         // token address -> registered or not
     mapping (address => address[]) private tokensToConverters;  // token address -> converter addresses
     mapping (address => address) private convertersToTokens;    // converter address -> token address
