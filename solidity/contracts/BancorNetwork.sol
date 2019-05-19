@@ -509,7 +509,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         bool success;
         assembly {
             success := call(
-                sub(gas, 34710),
+                div(mul(gas, 63), 64),
                 destination,
                 0,
                 add(data, 32),
