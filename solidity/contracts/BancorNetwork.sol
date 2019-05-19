@@ -486,7 +486,15 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 supply = smartToken.totalSupply() - amount;
             }
             else { // cross connector conversion
-                (amount, fee) = converter.getReturn(fromToken, toToken, amount);
+                (amount, fee) = converterGetReturn(
+                    converter,
+                    abi.encodeWithSelector(
+                        converter.getReturn.selector,
+                        fromToken,
+                        toToken,
+                        amount
+                    )
+                );
             }
 
             prevSmartToken = smartToken;
@@ -494,6 +502,29 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         }
 
         return (amount, fee);
+    }
+
+    function converterGetReturn(address destination, bytes data) private returns(uint256 amount, uint256 fee) {
+        bytes memory ret = new bytes(64);
+        bool success;
+        assembly {
+            success := call(
+                sub(gas, 34710),
+                destination,
+                0,
+                add(data, 32),
+                mload(data),
+                add(ret, 32),
+                64
+            )
+        }
+
+        if (success) {
+            assembly {
+                amount := mload(add(ret, 32))
+                fee := mload(add(ret, 64))
+            }
+        }
     }
 
     /**
