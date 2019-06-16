@@ -1,4 +1,4 @@
-﻿### 0.4.6 (2019-05-11)
+﻿### 0.4.7 (2019-05-11)
 * added the ConverterRegistry contract
 
 
