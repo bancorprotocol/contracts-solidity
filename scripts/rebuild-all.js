@@ -1,6 +1,6 @@
 let WORK_DIR   = "./solidity";
 let NODE_DIR   = "../node_modules";
-let INPUT_DIR  = "./solidity/build/contracts/";
+let INPUT_DIR  = "./solidity/contracts/";
 let OUTPUT_DIR = "./solidity/build/";
 
 let fs    = require("fs");
