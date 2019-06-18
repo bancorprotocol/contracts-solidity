@@ -42,6 +42,10 @@ fix("./node_modules/solidity-docgen/dist/gather/solidity/compile.js", [
     {prev: "_solc.default.compile", next: "_solc.default.compileStandard"}]
 );
 
+fix("./node_modules/solidity-docgen/dist/gather/index.js", [
+    {prev: "return 'index';", next: "return 'main';"}]
+);
+
 function copyDir(src, dest) {
     try {
         fs.mkdirSync(dest);

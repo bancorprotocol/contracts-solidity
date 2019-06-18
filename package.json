@@ -15,7 +15,8 @@
     "test": "node scripts/run-tests.js",
     "truffle-test": "cd solidity && truffle test",
     "verify": "node scripts/verify.js",
-    "docify": "node_modules/.bin/solidity-docgen -c solidity/contracts"
+    "docify": "node_modules/.bin/solidity-docgen -c solidity/contracts",
+    "bookify": "node_modules/.bin/gitbook build"
   },
   "dependencies": {
     "decimal.js": "^10.0.2",
@@ -29,6 +30,8 @@
     "truffle-contract": "^3.0.7",
     "truffle-flattener": "^1.2.10",
     "web3-utils": "^1.0.0-beta.39",
-    "solidity-docgen": "0.2.0-alpha.1"
+    "solidity-docgen": "0.2.0-alpha.1",
+    "gitbook-cli": "2.3.2",
+    "gitbook": "2.6.9"
   }
 }
