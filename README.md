@@ -146,7 +146,8 @@ Triggered when a conversion between one of the convertible tokens takes place.
 Tests are included and are run using truffle & ganache
 
 ### Prerequisites
-* Node.js v7.6.0+
+* node v10.16.0
+* npm v6.9.0
 
 To run the test:
 - Use `npm install` in order to install all required packages.
