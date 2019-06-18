@@ -42,15 +42,15 @@ fix("./node_modules/solidity-docgen/dist/gather/solidity/compile.js", [
 );
 
 function copyDir(src, dest) {
-	fs.mkdirSync(dest);
-	for (const file of fs.readdirSync(src)) {
-		if (fs.lstatSync(src + "/" + file).isDirectory()) {
-			copyDir(src + "/" + file, dest + "/" + file);
-		}
+    fs.mkdirSync(dest);
+    for (const file of fs.readdirSync(src)) {
+        if (fs.lstatSync(src + "/" + file).isDirectory()) {
+            copyDir(src + "/" + file, dest + "/" + file);
+        }
         else {
-			fs.copyFileSync(src + "/" + file, dest + "/" + file);
-		}
-	}
+            fs.copyFileSync(src + "/" + file, dest + "/" + file);
+        }
+    }
 };
 
 copyDir("./node_modules/truffle/node_modules/solc", "./node_modules/solidity-docgen/node_modules/solc");
