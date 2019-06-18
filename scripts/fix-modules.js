@@ -1,4 +1,4 @@
-let fs = require("fs");
+const fs = require("fs");
 
 try {
     fs.closeSync(fs.openSync("./node_modules/run-once", "wx"));
@@ -12,11 +12,12 @@ function fix(fileName, tokens) {
     console.log("Fixing " + fileName);
     try {
         let data = fs.readFileSync(fileName, {encoding: "utf8"});
-        for (let token of tokens)
+        for (const token of tokens)
             data = data.split(token.prev).join(token.next);
         fs.writeFileSync(fileName, data, {encoding: "utf8"});    
-    } catch (err) {
-        console.log("Error fixing " + fileName);
+    }
+    catch (error) {
+        console.log(error.message);
     }
 }
 
@@ -42,14 +43,19 @@ fix("./node_modules/solidity-docgen/dist/gather/solidity/compile.js", [
 );
 
 function copyDir(src, dest) {
-    fs.mkdirSync(dest);
-    for (const file of fs.readdirSync(src)) {
-        if (fs.lstatSync(src + "/" + file).isDirectory()) {
-            copyDir(src + "/" + file, dest + "/" + file);
+    try {
+        fs.mkdirSync(dest);
+        for (const file of fs.readdirSync(src)) {
+            if (fs.lstatSync(src + "/" + file).isDirectory()) {
+                copyDir(src + "/" + file, dest + "/" + file);
+            }
+            else {
+                fs.copyFileSync(src + "/" + file, dest + "/" + file);
+            }
         }
-        else {
-            fs.copyFileSync(src + "/" + file, dest + "/" + file);
-        }
+    }
+    catch (error) {
+        console.log(error.message);
     }
 };
 

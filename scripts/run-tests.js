@@ -1,10 +1,10 @@
-let TRUFFLE_TEST = "1";
-let SOL_COVERAGE = "2";
+const TRUFFLE_TEST = "1";
+const SOL_COVERAGE = "2";
 
-let WORK_DIR = "./solidity";
-let NODE_DIR = "../node_modules";
+const WORK_DIR = "./solidity";
+const NODE_DIR = "../node_modules";
 
-let spawn = require("child_process").spawn;
+const spawn = require("child_process").spawn;
 
 function getArgs(id, args) {
     switch (id) {
@@ -15,11 +15,11 @@ function getArgs(id, args) {
 }
 
 function server(id) {
-    let args = getArgs(id, {
+    const args = getArgs(id, {
         TRUFFLE_TEST: [NODE_DIR + "/ganache-cli/cli.js"                     , "--port=7545", "--gasPrice=20000000000", "--gasLimit=6721975"         ],
         SOL_COVERAGE: [NODE_DIR + "/ethereumjs-testrpc-sc/build/cli.node.js", "--port=7555", "--gasPrice=0x1"        , "--gasLimit=0x1fffffffffffff"],
     });
-    let cp = spawn("node", [...args,
+    const cp = spawn("node", [...args,
         "--account=0x0000000000000000000000000000000000000000000000000000000000000001,1000000000000000000000000000000000000000",
         "--account=0x0000000000000000000000000000000000000000000000000000000000000002,1000000000000000000000000000000000000000",
         "--account=0x0000000000000000000000000000000000000000000000000000000000000003,1000000000000000000000000000000000000000",
@@ -37,11 +37,11 @@ function server(id) {
 }
 
 function client(id) {
-    let args = getArgs(id, {
+    const args = getArgs(id, {
         TRUFFLE_TEST: [NODE_DIR + "/truffle/build/cli.bundled.js", "test"],
         SOL_COVERAGE: [NODE_DIR + "/solidity-coverage/bin/exec.js"       ],
     });
-    let cp = spawn("node", args, {cwd: WORK_DIR});
+    const cp = spawn("node", args, {cwd: WORK_DIR});
     cp.stdout.on("data", function(data) {process.stdout.write(data.toString());});
     cp.stderr.on("data", function(data) {process.stderr.write(data.toString());});
     cp.on("error", function(error) {process.stderr.write(error.toString());});
@@ -49,8 +49,8 @@ function client(id) {
 }
 
 function execute(id) {
-    let server_cp = server(id);
-    let client_cp = client(id);
+    const server_cp = server(id);
+    const client_cp = client(id);
     client_cp.on("exit", function(code, signal) {server_cp.kill();});
 }
 

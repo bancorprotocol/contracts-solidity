@@ -1,13 +1,13 @@
-let WORK_DIR = "./solidity";
-let NODE_DIR = "../node_modules";
-let INPUT_FILE = process.argv[2];
+const WORK_DIR = "./solidity";
+const NODE_DIR = "../node_modules";
+const INPUT_FILE = process.argv[2];
 
-let fs        = require("fs");
-let path      = require("path");
-let request   = require("request");
-let spawnSync = require("child_process").spawnSync;
+const fs        = require("fs");
+const path      = require("path");
+const request   = require("request");
+const spawnSync = require("child_process").spawnSync;
 
-let input = JSON.parse(fs.readFileSync(INPUT_FILE, {encoding: "utf8"}));
+const input = JSON.parse(fs.readFileSync(INPUT_FILE, {encoding: "utf8"}));
 //  input example:
 //  {
 //      "network"        : "api", // use "api" for mainnet or "api-<testnet>" for testnet
@@ -22,8 +22,8 @@ let input = JSON.parse(fs.readFileSync(INPUT_FILE, {encoding: "utf8"}));
 //  }
 
 function run() {
-    for (let pathName of getPathNames("contracts")) {
-        let contractName = path.basename(pathName, ".sol");
+    for (const pathName of getPathNames("contracts")) {
+        const contractName = path.basename(pathName, ".sol");
         if (input.contracts.hasOwnProperty(contractName))
             post(contractName, getSourceCode(pathName));
     }
@@ -31,7 +31,7 @@ function run() {
 
 function getPathNames(dirName) {
     let pathNames = [];
-    for (let fileName of fs.readdirSync(WORK_DIR + "/" + dirName)) {
+    for (const fileName of fs.readdirSync(WORK_DIR + "/" + dirName)) {
         if (fs.statSync(WORK_DIR + "/" + dirName + "/" + fileName).isDirectory())
             pathNames = pathNames.concat(getPathNames(dirName + "/" + fileName));
         else if (fileName.endsWith(".sol"))
@@ -41,7 +41,7 @@ function getPathNames(dirName) {
 }
 
 function getSourceCode(pathName) {
-    let result = spawnSync("node", [NODE_DIR + "/truffle-flattener/index.js", pathName], {cwd: WORK_DIR});
+    const result = spawnSync("node", [NODE_DIR + "/truffle-flattener/index.js", pathName], {cwd: WORK_DIR});
     return result.output.toString().slice(1, -1);
 }
 
