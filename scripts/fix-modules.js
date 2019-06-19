@@ -50,6 +50,10 @@ fix("./node_modules/solidity-docgen/dist/gather/index.js", [
     {prev: "return 'index';", next: "return 'main';"}]
 );
 
+fix("./node_modules/solidity-docgen/dist/render/index.js", [
+    {prev: "'<div class=\"contracts\">', sections.map(renderSection), '</div>'", next: "sections.map(renderSection)"}]
+);
+
 function copyDir(src, dest) {
     try {
         fs.mkdirSync(dest);
