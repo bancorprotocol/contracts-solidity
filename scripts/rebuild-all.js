@@ -1,6 +1,6 @@
 const WORK_DIR   = "./solidity";
 const NODE_DIR   = "../node_modules";
-const INPUT_DIR  = "./solidity/contracts/";
+const INPUT_DIR  = "./solidity/build/contracts/";
 const OUTPUT_DIR = "./solidity/build/";
 
 const fs    = require("fs");
