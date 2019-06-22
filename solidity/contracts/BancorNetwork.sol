@@ -504,14 +504,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         return (amount, fee);
     }
 
-    function converterGetReturn(address destination, bytes data) private returns(uint256 amount, uint256 fee) {
+    function converterGetReturn(address destination, bytes data) private view returns(uint256 amount, uint256 fee) {
         bytes memory ret = new bytes(64);
         bool success;
         assembly {
-            success := call(
+            success := staticcall(
                 div(mul(gas, 63), 64),
                 destination,
-                0,
                 add(data, 32),
                 mload(data),
                 add(ret, 32),
