@@ -16,6 +16,12 @@ import './token/interfaces/ISmartToken.sol';
 import './token/interfaces/INonStandardERC20.sol';
 import './bancorx/interfaces/IBancorX.sol';
 
+interface IBancorConverterOld {
+    function version() public view returns (bytes);
+    //function version() public view returns (uint16);
+    function getReserveBalance(IERC20Token _connectorToken) public view returns (uint256);
+}
+
 /*
     The BancorNetwork contract is the main entry point for bancor token conversions.
     It also allows converting between any token in the bancor network to any other token
@@ -462,7 +468,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 require(getConnectorSaleEnabled(converter, fromToken));
 
                 // calculate the amount & the conversion fee
-                balance = converter.getConnectorBalance(fromToken);
+                balance = fixGetConverterBalance(converter, fromToken);
                 weight = getConnectorWeight(converter, fromToken);
                 amount = formula.calculatePurchaseReturn(supply, balance, weight, amount);
                 fee = amount.mul(converter.conversionFee()).div(MAX_CONVERSION_FEE);
@@ -476,7 +482,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 supply = smartToken == prevSmartToken ? supply : smartToken.totalSupply();
 
                 // calculate the amount & the conversion fee
-                balance = converter.getConnectorBalance(toToken);
+                balance = fixGetConverterBalance(converter, toToken);
                 weight = getConnectorWeight(converter, toToken);
                 amount = formula.calculateSaleReturn(supply, balance, weight, amount);
                 fee = amount.mul(converter.conversionFee()).div(MAX_CONVERSION_FEE);
@@ -509,7 +515,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         bool success;
         assembly {
             success := staticcall(
-                div(mul(gas, 63), 64),
+                gas,
                 destination,
                 add(data, 32),
                 mload(data),
@@ -522,6 +528,37 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             assembly {
                 amount := mload(add(ret, 32))
                 fee := mload(add(ret, 64))
+            }
+        }
+    }
+
+    function fixGetConverterBalance(IBancorConverter _converter, IERC20Token _connector) internal view returns(uint256) {
+        bytes memory ret = new bytes(64);
+        bytes memory versionCalldata = abi.encodeWithSelector(IBancorConverterOld(_converter).version.selector);
+        bool success;
+        assembly {
+            success := staticcall(
+                gas,
+                _converter,
+                add(versionCalldata, 32),
+                mload(versionCalldata),
+                add(ret, 32),
+                64
+            )
+        }
+
+        if (success) {
+            uint256 version;
+            assembly {
+                version := mload(add(ret, 64))
+            }
+
+            if (version > 0) {
+                // version: bytes
+                return IBancorConverterOld(_converter).getReserveBalance(_connector);
+            } else {
+                // version: uint16
+                return _converter.getConnectorBalance(_connector);
             }
         }
     }
