@@ -422,6 +422,33 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         return (toToken, _amount);
     }
 
+    bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(uint256(keccak256("getReturn(address,address,uint256)") >> (256 - 4 * 8)));
+
+    function getReturn(address _dest, address _fromToken, address _toToken, uint256 _amount) internal view returns (uint256, uint256) {
+        uint256[2] memory ret;
+
+        assert(_dest.call(GET_RETURN_FUNC_SELECTOR, _fromToken, _toToken, _amount));
+        assembly {
+            switch returndatasize
+            case 32 {returndatacopy(ret, 0, 32)}
+            case 64 {returndatacopy(ret, 0, 64)}
+            default {revert(0, 0)}            
+        }
+
+        /* We can use `staticcall` instead, but it may run out of gas when executed via `solidity-coverage`:
+        bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _fromToken, _toToken, _amount);
+        assembly {
+            let success := staticcall(gas, _dest, add(data, 32), mload(data), add(ret, 32), 64)
+            switch mul(success, returndatasize)
+            case 32 {returndatacopy(ret, 0, 32)}
+            case 64 {returndatacopy(ret, 0, 64)}
+            default {revert(0, 0)}            
+        }
+        */
+
+        return (ret[0], ret[1]);
+    }
+
     /**
         @dev returns the expected return amount for converting a specific amount by following
         a given conversion path.
@@ -486,7 +513,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 supply = smartToken.totalSupply() - amount;
             }
             else { // cross connector conversion
-                (amount, fee) = converter.getReturn(fromToken, toToken, amount);
+                (amount, fee) = getReturn(converter, fromToken, toToken, amount);
             }
 
             prevSmartToken = smartToken;
