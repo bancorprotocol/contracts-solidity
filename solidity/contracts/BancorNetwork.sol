@@ -426,25 +426,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
     function getReturn(address _dest, address _fromToken, address _toToken, uint256 _amount) internal view returns (uint256, uint256) {
         uint256[2] memory ret;
-
-        assert(_dest.call(GET_RETURN_FUNC_SELECTOR, _fromToken, _toToken, _amount));
-        assembly {
-            switch returndatasize
-            case 32 {returndatacopy(ret, 0, 32)}
-            case 64 {returndatacopy(ret, 0, 64)}
-            default {revert(0, 0)}            
-        }
-
-        /* We can use `staticcall` instead, but it may run out of gas when executed via `solidity-coverage`:
         bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _fromToken, _toToken, _amount);
+
         assembly {
-            let success := staticcall(gas, _dest, add(data, 32), mload(data), add(ret, 32), 64)
-            switch mul(success, returndatasize)
-            case 32 {returndatacopy(ret, 0, 32)}
-            case 64 {returndatacopy(ret, 0, 64)}
-            default {revert(0, 0)}            
+            switch call(gas, _dest, 0, add(data, 32), mload(data), ret, 64) case 0 {revert(0, 0)}
+            // Using `call` instead of `staticcall` because the latter causes the transaction to run out of gas when executed via `solidity-coverage`
+            // Using `switch` instead of `if` because the latter yields a parsing error in `solidity-coverage` (https://github.com/sc-forks/solidity-coverage/issues/328)
         }
-        */
 
         return (ret[0], ret[1]);
     }
