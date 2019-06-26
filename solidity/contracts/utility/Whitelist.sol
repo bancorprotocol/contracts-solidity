@@ -20,12 +20,6 @@ contract Whitelist is IWhitelist, Owned, Utils {
     constructor() public {
     }
 
-    // allows execution by a whitelisted address only
-    modifier whitelistedOnly() {
-        require(whitelist[msg.sender]);
-        _;
-    }
-
     /**
         @dev returns true if a given address is whitelisted, false if not
 

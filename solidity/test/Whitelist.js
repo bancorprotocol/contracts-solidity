@@ -128,4 +128,22 @@ contract('Whitelist', accounts => {
             return utils.ensureException(error);
         }
     });
+
+    it('verifies that an address can be added unless it is already added and removed unless it is already removed', async () => {
+        let whitelist = await Whitelist.new();
+        let status0 = await whitelist.isWhitelisted.call(accounts[1]);
+        let response1 = await whitelist.addAddress(accounts[1]);
+        let status1 = await whitelist.isWhitelisted.call(accounts[1]);
+        let response2 = await whitelist.addAddress(accounts[1]);
+        let status2 = await whitelist.isWhitelisted.call(accounts[1]);
+        let response3 = await whitelist.removeAddress(accounts[1]);
+        let status3 = await whitelist.isWhitelisted.call(accounts[1]);
+        let response4 = await whitelist.removeAddress(accounts[1]);
+        let status4 = await whitelist.isWhitelisted.call(accounts[1]);
+        assert(!status0 && status1 && status2 && !status3 && !status4);
+        assert(response1.logs.length == 1 && response1.logs[0].event == "AddressAddition" && response1.logs[0].args._address == accounts[1]);
+        assert(response2.logs.length == 0);
+        assert(response3.logs.length == 1 && response3.logs[0].event == "AddressRemoval" && response3.logs[0].args._address == accounts[1]);
+        assert(response4.logs.length == 0);
+    });
 });
