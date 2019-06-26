@@ -94,6 +94,52 @@ contract('BancorX', async accounts => {
         assert.equal(await bancorX.reporters.call(accounts[3]), true)
     })
 
+    it('should allow the owner to set limits', async () => {
+        await bancorX.setMaxLockLimit(MAX_LOCK_LIMIT + 1)
+        await bancorX.setMaxReleaseLimit(MAX_RELEASE_LIMIT + 1)
+        await bancorX.setMinLimit(MIN_LIMIT + 1)
+        await bancorX.setLimitIncPerBlock(LIM_INC_PER_BLOCK + 1)
+        await bancorX.setMinRequiredReports(MIN_REQUIRED_REPORTS + 1)
+
+        let maxLockLimit = (await bancorX.maxLockLimit.call()).toString(10)
+        let maxReleaseLimit = (await bancorX.maxReleaseLimit.call()).toString(10)
+        let minLimit = (await bancorX.minLimit.call()).toString(10)
+        let limitIncPerBlock = (await bancorX.limitIncPerBlock.call()).toString(10)
+        let minRequiredReports = (await bancorX.minRequiredReports.call()).toString(10)
+
+        assert.equal(maxLockLimit, MAX_LOCK_LIMIT + 1)
+        assert.equal(maxReleaseLimit, MAX_RELEASE_LIMIT + 1)
+        assert.equal(minLimit, MIN_LIMIT + 1)
+        assert.equal(limitIncPerBlock, LIM_INC_PER_BLOCK + 1)
+        assert.equal(minRequiredReports, MIN_REQUIRED_REPORTS + 1)
+
+        await bancorX.setMaxLockLimit(MAX_LOCK_LIMIT)
+        await bancorX.setMaxReleaseLimit(MAX_RELEASE_LIMIT)
+        await bancorX.setMinLimit(MIN_LIMIT)
+        await bancorX.setLimitIncPerBlock(LIM_INC_PER_BLOCK)
+        await bancorX.setMinRequiredReports(MIN_REQUIRED_REPORTS)
+    })
+
+    it('should not allow a non-owner to set limits', async () => {
+        await utils.catchRevert(bancorX.setMaxLockLimit(MAX_LOCK_LIMIT + 1, {from: accounts[1]}))
+        await utils.catchRevert(bancorX.setMaxReleaseLimit(MAX_RELEASE_LIMIT + 1, {from: accounts[1]}))
+        await utils.catchRevert(bancorX.setMinLimit(MIN_LIMIT + 1, {from: accounts[1]}))
+        await utils.catchRevert(bancorX.setLimitIncPerBlock(LIM_INC_PER_BLOCK + 1, {from: accounts[1]}))
+        await utils.catchRevert(bancorX.setMinRequiredReports(MIN_REQUIRED_REPORTS + 1, {from: accounts[1]}))
+
+        let maxLockLimit = (await bancorX.maxLockLimit.call()).toString(10)
+        let maxReleaseLimit = (await bancorX.maxReleaseLimit.call()).toString(10)
+        let minLimit = (await bancorX.minLimit.call()).toString(10)
+        let limitIncPerBlock = (await bancorX.limitIncPerBlock.call()).toString(10)
+        let minRequiredReports = (await bancorX.minRequiredReports.call()).toString(10)
+
+        assert.equal(maxLockLimit, MAX_LOCK_LIMIT)
+        assert.equal(maxReleaseLimit, MAX_RELEASE_LIMIT)
+        assert.equal(minLimit, MIN_LIMIT)
+        assert.equal(limitIncPerBlock, LIM_INC_PER_BLOCK)
+        assert.equal(minRequiredReports, MIN_REQUIRED_REPORTS)
+    })
+
     it('should not be able to lock above or below the max/min limit', async () => {
         let amountAboveLimit = web3Utils.toWei('1001', 'ether')
         let amountBelowLimit = web3Utils.toWei('0.5', 'ether')
