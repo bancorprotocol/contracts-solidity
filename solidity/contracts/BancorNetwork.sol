@@ -431,8 +431,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         assembly {
             /* SC0 */ if iszero(staticcall(gas, _dest, add(data, 32), mload(data), ret, 64)) {revert(0, 0)}
             // SC1 // switch call(gas, _dest, 0, add(data, 32), mload(data), ret, 64) case 0 {revert(0, 0)}
-            // Prior to being instrumented by solidity-coverage, `if` is replaced with `switch` (see https://github.com/sc-forks/solidity-coverage/issues/328)
-            // Prior to being instrumented by solidity-coverage, `staticcall` is replaced with `call` (see https://github.com/sc-forks/solidity-coverage/issues/329)
+            // Prior to being instrumented by solidity-coverage, the SC0 line should be disabled and the SC1 line should be enabled:
+            // - The `if` should be replaced with a `switch` because it would otherwise yield a compilation error (https://github.com/sc-forks/solidity-coverage/issues/328)
+            // - The `staticcall` should be replaced with a `call` because it would otherwise yield a runtime error (https://github.com/sc-forks/solidity-coverage/issues/329)
         }
 
         return (ret[0], ret[1]);
