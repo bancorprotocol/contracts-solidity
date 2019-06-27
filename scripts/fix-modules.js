@@ -28,7 +28,8 @@ fix("./node_modules/truffle/build/cli.bundled.js", [
 );
 
 fix("./node_modules/solidity-coverage/lib/app.js", [
-    {prev: "events.push", next: "coverage.processEvent"}]
+    {prev: "events.push", next: "coverage.processEvent"},
+    {prev: "readFileSync(contractPath).toString()", next: "readFileSync(contractPath).toString().replace('/* SC0 */', '// SC0 //').replace('// SC1 //', '/* SC1 */')"}]
 );
 
 fix("./node_modules/solidity-coverage/lib/coverageMap.js", [
