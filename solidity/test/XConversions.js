@@ -258,7 +258,7 @@ contract('XConversions', async accounts => {
             r,                                                 
             s,                                                 
             { from: accounts[5] }
-        )    )
+        ))
     })
 
     it("shouldn't be able to xConvert with an invalid signature", async () => {
@@ -288,7 +288,7 @@ contract('XConversions', async accounts => {
             r,                                                      
             s,                                                      
             { from: accounts[5], value: amount }
-        )    )
+        ))
     })
 
     it("shouldn't be able to completeXConversion with a different xTransferId", async () => {
@@ -323,7 +323,7 @@ contract('XConversions', async accounts => {
             r,                                                 
             s,                                                 
             { from: accounts[5] }
-        )    )
+        ))
     })
 })
 
