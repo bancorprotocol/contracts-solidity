@@ -23,25 +23,13 @@ contract('Whitelist', accounts => {
     it('should throw when a non owner tries to add an address to the whitelist', async () => {
         let whitelist = await Whitelist.new();
 
-        try {
-            await whitelist.addAddress(accounts[1], { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(whitelist.addAddress(accounts[1], { from: accounts[2] }));
     });
 
     it('should throw when the owner tries to add an invalid address to the whitelist', async () => {
         let whitelist = await Whitelist.new();
 
-        try {
-            await whitelist.addAddress(invalidAccount);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(whitelist.addAddress(invalidAccount));
     });
 
     it('verifies that the owner can add multiple addresses to the whitelist', async () => {
@@ -56,13 +44,7 @@ contract('Whitelist', accounts => {
     it('should throw when a non owner tries to add multiple addresses to the whitelist', async () => {
         let whitelist = await Whitelist.new();
 
-        try {
-            await whitelist.addAddresses([accounts[1], accounts[2]], { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(whitelist.addAddresses([accounts[1], accounts[2]], { from: accounts[2] }));
     });
 
     it('verifies that the owner can remove an address from the whitelist', async () => {
@@ -82,13 +64,7 @@ contract('Whitelist', accounts => {
         let isWhitelisted = await whitelist.isWhitelisted.call(accounts[1]);
         assert(isWhitelisted);
 
-        try {
-            await whitelist.removeAddress(accounts[1], { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(whitelist.removeAddress(accounts[1], { from: accounts[2] }));
     });
 
     it('verifies that the owner can remove multiple addresses from the whitelist', async () => {
@@ -120,13 +96,7 @@ contract('Whitelist', accounts => {
         isWhitelisted = await whitelist.isWhitelisted.call(accounts[3]);
         assert(isWhitelisted);
 
-        try {
-            await whitelist.removeAddresses([accounts[1], accounts[3]], { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(whitelist.removeAddresses([accounts[1], accounts[3]], { from: accounts[2] }));
     });
 
     it('verifies that an address can be added unless it is already added and removed unless it is already removed', async () => {

@@ -249,20 +249,16 @@ contract('XConversions', async accounts => {
 
         await reportAndRelease(accounts[5], amount, txId, EOS_BLOCKCHAIN, xTransferId)
 
-        try {
-            await bntConverter.completeXConversion(
-                path,                                              
-                '1',                                               
-                xTransferId,                                       
-                maximumBlock,                                      
-                v,                                                 
-                r,                                                 
-                s,                                                 
-                { from: accounts[5] }
-            )    
-        } catch (error) {
-            return utils.ensureException(error)
-        }
+        await utils.catchRevert(bntConverter.completeXConversion(
+            path,                                              
+            '1',                                               
+            xTransferId,                                       
+            maximumBlock,                                      
+            v,                                                 
+            r,                                                 
+            s,                                                 
+            { from: accounts[5] }
+        )    )
     })
 
     it("shouldn't be able to xConvert with an invalid signature", async () => {
@@ -280,23 +276,19 @@ contract('XConversions', async accounts => {
             nonSignerAddress
         )
 
-        try {
-            await bancorNetwork.xConvertPrioritized(
-                path,                                               
-                amount,                                     
-                '1',                                                      
-                EOS_BLOCKCHAIN,                                           
-                eosAddress,                                               
-                '0',                                                      
-                maximumBlock,                                                    
-                v,                                                      
-                r,                                                      
-                s,                                                      
-                { from: accounts[5], value: amount }
-            )    
-        } catch(error) {
-            return utils.ensureException(error)
-        }
+        await utils.catchRevert(bancorNetwork.xConvertPrioritized(
+            path,                                               
+            amount,                                     
+            '1',                                                      
+            EOS_BLOCKCHAIN,                                           
+            eosAddress,                                               
+            '0',                                                      
+            maximumBlock,                                                    
+            v,                                                      
+            r,                                                      
+            s,                                                      
+            { from: accounts[5], value: amount }
+        )    )
     })
 
     it("shouldn't be able to completeXConversion with a different xTransferId", async () => {
@@ -322,20 +314,16 @@ contract('XConversions', async accounts => {
         await reportAndRelease(accounts[5], amount, txId1, EOS_BLOCKCHAIN, xTransferId1)
         await reportAndRelease(accounts[4], amount, txId2, EOS_BLOCKCHAIN, xTransferId2)
 
-        try {
-            await bntConverter.completeXConversion(
-                path,                                              
-                '1',                                               
-                xTransferId2,                                       
-                maximumBlock,                                      
-                v,                                                 
-                r,                                                 
-                s,                                                 
-                { from: accounts[5] }
-            )    
-        } catch (error) {
-            return utils.ensureException(error)
-        }
+        await utils.catchRevert(bntConverter.completeXConversion(
+            path,                                              
+            '1',                                               
+            xTransferId2,                                       
+            maximumBlock,                                      
+            v,                                                 
+            r,                                                 
+            s,                                                 
+            { from: accounts[5] }
+        )    )
     })
 })
 

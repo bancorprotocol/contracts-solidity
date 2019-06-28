@@ -16,23 +16,11 @@ contract('SmartToken', accounts => {
     });
 
     it('should throw when attempting to construct a token with no name', async () => {
-        try {
-            await SmartToken.new('', 'TKN1', 2);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(SmartToken.new('', 'TKN1', 2));
     });
 
     it('should throw when attempting to construct a token with no symbol', async () => {
-        try {
-            await SmartToken.new('Token1', '', 2);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(SmartToken.new('Token1', '', 2));
     });
 
     it('verifies that the owner can disable & re-enable transfers', async () => {
@@ -48,13 +36,7 @@ contract('SmartToken', accounts => {
     it('should throw when a non owner attempts to disable transfers', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
 
-        try {
-            await token.disableTransfers(true, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.disableTransfers(true, { from: accounts[1] }));
     });
 
     it('verifies that issue tokens updates the target balance and the total supply', async () => {
@@ -83,37 +65,19 @@ contract('SmartToken', accounts => {
     it('should throw when the owner attempts to issue tokens to an invalid address', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
 
-        try {
-            await token.issue('0x0', 100);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.issue('0x0', 100));
     });
 
     it('should throw when the owner attempts to issue tokens to the token address', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
 
-        try {
-            await token.issue(token.address, 100);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.issue(token.address, 100));
     });
 
     it('should throw when a non owner attempts to issue tokens', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
 
-        try {
-            await token.issue(accounts[1], 100, { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.issue(accounts[1], 100, { from: accounts[2] }));
     });
 
     it('verifies that destroy tokens updates the target balance and the total supply', async () => {
@@ -154,13 +118,7 @@ contract('SmartToken', accounts => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         await token.issue(accounts[1], 100);
 
-        try {
-            await token.destroy(accounts[1], 20, { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.destroy(accounts[1], 20, { from: accounts[2] }));
     });
 
     it('verifies the balances after a transfer', async () => {
@@ -184,13 +142,7 @@ contract('SmartToken', accounts => {
         let transfersEnabled = await token.transfersEnabled.call();
         assert.equal(transfersEnabled, false);
 
-        try {
-            await token.transfer(accounts[1], 100);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(token.transfer(accounts[1], 100));
     });
 
     it('verifies the allowance after an approval', async () => {
@@ -214,12 +166,6 @@ contract('SmartToken', accounts => {
         let transfersEnabled = await token.transfersEnabled.call();
         assert.equal(transfersEnabled, false);
 
-        try {
-            await token.transferFrom(accounts[0], accounts[2], 50, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(token.transferFrom(accounts[0], accounts[2], 50, { from: accounts[1] }));
     });
 });

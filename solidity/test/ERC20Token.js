@@ -38,25 +38,13 @@ contract('ERC20Token', accounts => {
     it('should throw when attempting to transfer more than the balance', async () => {
         let token = await TestERC20Token.new('Token1', 'TKN1', 100);
 
-        try {
-            await token.transfer(accounts[1], 500);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.transfer(accounts[1], 500));
     });
 
     it('should throw when attempting to transfer to an invalid address', async () => {
         let token = await TestERC20Token.new('Token1', 'TKN1', 100);
 
-        try {
-            await token.transfer(invalidAccount, 10);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.transfer(invalidAccount, 10));
     });
 
     it('verifies the allowance after an approval', async () => {
@@ -75,13 +63,7 @@ contract('ERC20Token', accounts => {
     it('should throw when attempting to define allowance for an invalid address', async () => {
         let token = await TestERC20Token.new('Token1', 'TKN1', 100);
 
-        try {
-            await token.approve(invalidAccount, 10);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.approve(invalidAccount, 10));
     });
 
     it('verifies the balances after transferring from another account', async () => {
@@ -116,38 +98,20 @@ contract('ERC20Token', accounts => {
         let token = await TestERC20Token.new('Token1', 'TKN1', 1000);
         await token.approve(accounts[1], 100);
 
-        try {
-            await token.transferFrom(accounts[0], accounts[2], 200, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.transferFrom(accounts[0], accounts[2], 200, { from: accounts[1] }));
     });
 
     it('should throw when attempting to transfer from an invalid account', async () => {
         let token = await TestERC20Token.new('Token1', 'TKN1', 1000);
         await token.approve(accounts[1], 100);
 
-        try {
-            await token.transferFrom(invalidAccount, accounts[2], 50, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.transferFrom(invalidAccount, accounts[2], 50, { from: accounts[1] }));
     });
 
     it('should throw when attempting to transfer from to an invalid account', async () => {
         let token = await TestERC20Token.new('Token1', 'TKN1', 1000);
         await token.approve(accounts[1], 100);
 
-        try {
-            await token.transferFrom(accounts[0], invalidAccount, 50, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.transferFrom(accounts[0], invalidAccount, 50, { from: accounts[1] }));
     });
 });

@@ -44,13 +44,7 @@ contract('Owned', accounts => {
     it('verifies that only the owner can initiate ownership transfer', async () => {
         let contract = await Owned.new();
 
-        try {
-            await contract.transferOwnership(accounts[1], { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(contract.transferOwnership(accounts[1], { from: accounts[2] }));
     });
 
     it('verifies that the owner can cancel ownership transfer before the new owner accepted it', async () => {

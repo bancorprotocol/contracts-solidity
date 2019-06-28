@@ -188,13 +188,7 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies that sending ether to the converter fails', async () => {
-        try {
-            await converter2.send(100);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter2.send(100));
     });
 
     it('verifies that quick buy with minimum return equal to the full expected return amount results in the exact increase in balance for the buyer', async () => {
@@ -210,23 +204,11 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempting to quick buy and the return amount is lower than the given minimum', async () => {
-        try {
-            await converter2.quickConvert(smartToken2BuyPath, 100, 1000000, { from: accounts[1], value: 100 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter2.quickConvert(smartToken2BuyPath, 100, 1000000, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempting to quick buy and passing an amount higher than the ETH amount sent with the request', async () => {
-        try {
-            await converter2.quickConvert(smartToken2BuyPath, 100001, 1, { from: accounts[1], value: 100000 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter2.quickConvert(smartToken2BuyPath, 100001, 1, { from: accounts[1], value: 100000 }));
     });
 
     it('verifies the caller balances after selling directly for ether with a single converter', async () => {
@@ -258,13 +240,7 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempting to sell directly for ether and the return amount is lower than the given minimum', async () => {
-        try {
-            await converter2.quickConvert(smartToken2SellPath, 10000, 20000);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter2.quickConvert(smartToken2SellPath, 10000, 20000));
     });
 
     it('verifies the caller balances after converting from one token to another with multiple converters', async () => {
@@ -295,27 +271,15 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempting register ether token with invalid address', async () => {
-        try {
-            let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
-            await bancorNetwork1.registerEtherToken('0x0', true);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
+        await utils.catchRevert(bancorNetwork1.registerEtherToken('0x0', true));
     });
 
     it('should throw when non owner attempting register ether token', async () => {
-        try {
-            let etherToken1 = await EtherToken.new();
-            await etherToken1.deposit({ value: 10000000 });
-            let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
-            await bancorNetwork1.registerEtherToken(etherToken1.address, true, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        let etherToken1 = await EtherToken.new();
+        await etherToken1.deposit({ value: 10000000 });
+        let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
+        await utils.catchRevert(bancorNetwork1.registerEtherToken(etherToken1.address, true, { from: accounts[1] }));
     });
 
     it('verifies valid ether token unregistration', async () => {
@@ -331,19 +295,13 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when non owner attempting to unregister ether token', async () => {
-        try {
-            let etherToken1 = await EtherToken.new();
-            await etherToken1.deposit({ value: 10000000 });
-            let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
-            await bancorNetwork1.registerEtherToken(etherToken1.address, true);
-            let validEtherToken = await bancorNetwork1.etherTokens.call(etherToken1.address);
-            assert.isTrue(validEtherToken, 'registered etherToken address verification');
-            await bancorNetwork1.registerEtherToken(etherToken1.address, false, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        let etherToken1 = await EtherToken.new();
+        await etherToken1.deposit({ value: 10000000 });
+        let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
+        await bancorNetwork1.registerEtherToken(etherToken1.address, true);
+        let validEtherToken = await bancorNetwork1.etherTokens.call(etherToken1.address);
+        assert.isTrue(validEtherToken, 'registered etherToken address verification');
+        await utils.catchRevert(bancorNetwork1.registerEtherToken(etherToken1.address, false, { from: accounts[1] }));
     });
 
     it('verifies that convertFor transfers the converted amount correctly', async () => {
@@ -373,34 +331,16 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when trying convert ether token without sending ether', async () => {
-        try {
-            await bancorNetwork.convertFor(smartToken1BuyPath, 10000, 1, accounts[1], { });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(bancorNetwork.convertFor(smartToken1BuyPath, 10000, 1, accounts[1], { }));
     });
 
     it('should throw when ether is different than the amount sent ', async () => {
-        try {
-            await bancorNetwork.convertFor.call(smartToken1BuyPath, 20000, 1, accounts[1], { value: 10000 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(bancorNetwork.convertFor.call(smartToken1BuyPath, 20000, 1, accounts[1], { value: 10000 }));
     });
 
     it('should throw when trying convert with invalid path', async () => {
-        try {
-            let invalidPath = [etherToken.address, smartToken1.address];
-            await bancorNetwork.convertFor(invalidPath, 10000, 1, accounts[1], { value: 10000 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        let invalidPath = [etherToken.address, smartToken1.address];
+        await utils.catchRevert(bancorNetwork.convertFor(invalidPath, 10000, 1, accounts[1], { value: 10000 }));
     });
 
     it('should throw when trying convert with invalid long path', async () => {
@@ -408,13 +348,7 @@ contract('BancorNetwork', accounts => {
         for (let i = 0; i < 100; ++i)
             longBuyPath.push(etherToken.address);
 
-        try {
-            await bancorNetwork.convertFor(longBuyPath, 10000, 1, accounts[1], { value: 10000 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(bancorNetwork.convertFor(longBuyPath, 10000, 1, accounts[1], { value: 10000 }));
     });
 
     it('verifies that convertFor transfers the converted amount correctly', async () => {
@@ -426,13 +360,7 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when trying claim and convert without approval', async () => {
-        try {
-            await bancorNetwork.claimAndConvertFor(smartToken1BuyPath, 10000, 1, accounts[1]);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(bancorNetwork.claimAndConvertFor(smartToken1BuyPath, 10000, 1, accounts[1]));
     });
 
     it('verifies that convertFor transfers the converted amount correctly with claimAndConvert', async () => {
@@ -444,13 +372,7 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when trying claim and convert without approval with claimAndConvert', async () => {
-        try {
-            await bancorNetwork.claimAndConvert(smartToken1BuyPath, 10000, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(bancorNetwork.claimAndConvert(smartToken1BuyPath, 10000, 1));
     });
 
     it('verifies that convertFor is allowed for a whitelisted account', async () => {
@@ -470,14 +392,8 @@ contract('BancorNetwork', accounts => {
         let whitelist = await Whitelist.new();
         await converter1.setConversionWhitelist(whitelist.address);
 
-        try {
-            await bancorNetwork.convertFor(smartToken1BuyPath, 10000, 1, accounts[1], { value: 10000 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            await converter1.setConversionWhitelist(utils.zeroAddress);
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(bancorNetwork.convertFor(smartToken1BuyPath, 10000, 1, accounts[1], { value: 10000 }));
+        await converter1.setConversionWhitelist(utils.zeroAddress);
     });
 
     it('verifies that getReturnByPath returns the correct amount for buying the smart token', async () => {
@@ -556,14 +472,8 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempting to get the return by path with invalid path', async () => {
-        try {
-            let invalidPath = [etherToken.address, smartToken1.address];
-            await bancorNetwork.getReturnByPath.call(invalidPath, 1000);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        let invalidPath = [etherToken.address, smartToken1.address];
+        await utils.catchInvalidOpcode(bancorNetwork.getReturnByPath.call(invalidPath, 1000));
     });
 
     it('should throw when attempting to get the return by path with invalid long path', async () => {
@@ -571,13 +481,7 @@ contract('BancorNetwork', accounts => {
         for (let i = 0; i < 103; ++i)
             longBuyPath.push(etherToken.address);
 
-        try {
-            await bancorNetwork.getReturnByPath.call(longBuyPath, 1000);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(bancorNetwork.getReturnByPath.call(longBuyPath, 1000));
     });
 
     it('verifies prioritized quick buy with trusted signature', async () => {
@@ -596,124 +500,82 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempts to call quick convert prioritized with untrusted signature', async () => {
-        try {
-            let block = await web3.eth.blockNumber;
-            let maximumBlock = block + 100;
-            let gasPrice = defaultGasPriceLimit;
+        let block = await web3.eth.blockNumber;
+        let maximumBlock = block + 100;
+        let gasPrice = defaultGasPriceLimit;
 
-            let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-            let result = sign(soliditySha3, untrustedAddress);
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, untrustedAddress);
 
-            await converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempts to call quick convert prioritized with wrong path', async () => {
-        try {
-            let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
-            let block = await web3.eth.blockNumber;
-            let maximumBlock = block + 100;
-            let gasPrice = defaultGasPriceLimit;
+        let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
+        let block = await web3.eth.blockNumber;
+        let maximumBlock = block + 100;
+        let gasPrice = defaultGasPriceLimit;
 
-            let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': wrongPath});
-            let result = sign(soliditySha3, trustedAddress);
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': wrongPath});
+        let result = sign(soliditySha3, trustedAddress);
 
-            await converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempts to call quick convert prioritized with wrong amount', async () => {
-        try {
-            let block = await web3.eth.blockNumber;
-            let maximumBlock = block + 100;
-            let gasPrice = defaultGasPriceLimit;
+        let block = await web3.eth.blockNumber;
+        let maximumBlock = block + 100;
+        let gasPrice = defaultGasPriceLimit;
 
-            let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-            let result = sign(soliditySha3, trustedAddress);
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
 
-            await converter1.quickConvertPrioritized(smartToken1BuyPath, 200, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 200, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempts to call quick convert prioritized with higher block number than what appears in the signing data', async () => {
-        try {
-            let block = await web3.eth.blockNumber;
-            let maximumBlock = block + 100;
-            let wrongBlockNumber = maximumBlock + 100;
-            let gasPrice = defaultGasPriceLimit;
+        let block = await web3.eth.blockNumber;
+        let maximumBlock = block + 100;
+        let wrongBlockNumber = maximumBlock + 100;
+        let gasPrice = defaultGasPriceLimit;
 
-            let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-            let result = sign(soliditySha3, trustedAddress);
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
 
-            await converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempts to call quick convert prioritized with lower block number than what appears in the signing data', async () => {
-        try {
-            let block = await web3.eth.blockNumber;
-            let maximumBlock = block + 100;
-            let wrongBlockNumber = maximumBlock - 1;
-            let gasPrice = defaultGasPriceLimit;
+        let block = await web3.eth.blockNumber;
+        let maximumBlock = block + 100;
+        let wrongBlockNumber = maximumBlock - 1;
+        let gasPrice = defaultGasPriceLimit;
 
-            let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-            let result = sign(soliditySha3, trustedAddress);
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
 
-            await converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempts to call quick convert prioritized with higher gas price than what appears in the signing data', async () => {
-        try {
-            let block = await web3.eth.blockNumber;
-            let maximumBlock = block + 100;
-            let gasPrice = defaultGasPriceLimit - 1;
+        let block = await web3.eth.blockNumber;
+        let maximumBlock = block + 100;
+        let gasPrice = defaultGasPriceLimit - 1;
 
-            let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-            let result = sign(soliditySha3, trustedAddress);
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
 
-            await converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempts to call quick convert prioritized with lower gas price than what appears in the signing data', async () => {
-        try {
-            let block = await web3.eth.blockNumber;
-            let maximumBlock = block + 100;
-            let gasPrice = defaultGasPriceLimit + 1;
+        let block = await web3.eth.blockNumber;
+        let maximumBlock = block + 100;
+        let gasPrice = defaultGasPriceLimit + 1;
 
-            let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-            let result = sign(soliditySha3, trustedAddress);
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
 
-            await converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 });

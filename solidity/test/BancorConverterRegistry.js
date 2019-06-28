@@ -21,50 +21,26 @@ contract('BancorConverterRegistry', accounts => {
     it('should throw when a non owner attempts to register a converter', async () => {
         let converterRegistry = await BancorConverterRegistry.new();
 
-        try {
-            await converterRegistry.registerConverter(accounts[1], accounts[2], { from: accounts[3] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converterRegistry.registerConverter(accounts[1], accounts[2], { from: accounts[3] }));
     });
 
     it('should throw when attempting to register an invalid token address', async () => {
         let converterRegistry = await BancorConverterRegistry.new();
 
-        try {
-            await converterRegistry.registerConverter(utils.zeroAddress, accounts[2]);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converterRegistry.registerConverter(utils.zeroAddress, accounts[2]));
     });
 
     it('should throw when attempting to register an invalid converter address', async () => {
         let converterRegistry = await BancorConverterRegistry.new();
 
-        try {
-            await converterRegistry.registerConverter(accounts[1], utils.zeroAddress);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converterRegistry.registerConverter(accounts[1], utils.zeroAddress));
     });
 
     it('should throw when attempting to register a converter that already exists', async () => {
         let converterRegistry = await BancorConverterRegistry.new();
         await converterRegistry.registerConverter(accounts[1], accounts[2]);
 
-        try {
-            await converterRegistry.registerConverter(accounts[1], accounts[2]);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converterRegistry.registerConverter(accounts[1], accounts[2]));
     });
 
     it('verifies that the token count is increased when registering the first converter', async () => {
@@ -142,39 +118,21 @@ contract('BancorConverterRegistry', accounts => {
         let converterRegistry = await BancorConverterRegistry.new();
         await converterRegistry.registerConverter(accounts[1], accounts[2]);
 
-        try {
-            await converterRegistry.unregisterConverter(accounts[1], 0, { from: accounts[3] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converterRegistry.unregisterConverter(accounts[1], 0, { from: accounts[3] }));
     });
 
     it('should throw when attempting to unregister with an invalid token address', async () => {
         let converterRegistry = await BancorConverterRegistry.new();
         await converterRegistry.registerConverter(accounts[1], accounts[2]);
 
-        try {
-            await converterRegistry.unregisterConverter(utils.zeroAddress, 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converterRegistry.unregisterConverter(utils.zeroAddress, 0));
     });
 
     it('should throw when attempting to unregister with an invalid converter index', async () => {
         let converterRegistry = await BancorConverterRegistry.new();
         await converterRegistry.registerConverter(accounts[1], accounts[2]);
 
-        try {
-            await converterRegistry.unregisterConverter(accounts[1], 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converterRegistry.unregisterConverter(accounts[1], 1));
     });
 
     it('verifies that a converter is not registered after unregistering a converter', async () => {

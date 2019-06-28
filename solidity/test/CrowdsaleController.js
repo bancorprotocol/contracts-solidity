@@ -76,53 +76,23 @@ contract('CrowdsaleController', accounts => {
     });
 
     it('should throw when attempting to construct a controller with no token', async () => {
-        try {
-            await CrowdsaleController.new('0x0', startTime, beneficiaryAddress, btcsAddress, realEtherCapHash);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(CrowdsaleController.new('0x0', startTime, beneficiaryAddress, btcsAddress, realEtherCapHash));
     });
 
     it('should throw when attempting to construct a controller with start time that has already passed', async () => {
-        try {
-            await CrowdsaleController.new(tokenAddress, 10000000, beneficiaryAddress, btcsAddress, realEtherCapHash);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(CrowdsaleController.new(tokenAddress, 10000000, beneficiaryAddress, btcsAddress, realEtherCapHash));
     });
 
     it('should throw when attempting to construct a controller without beneficiary address', async () => {
-        try {
-            await CrowdsaleController.new(tokenAddress, startTime, '0x0', btcsAddress, realEtherCapHash);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(CrowdsaleController.new(tokenAddress, startTime, '0x0', btcsAddress, realEtherCapHash));
     });
 
     it('should throw when attempting to construct a controller without bitcoin suisse address', async () => {
-        try {
-            await CrowdsaleController.new(tokenAddress, startTime, beneficiaryAddress, '0x0', realEtherCapHash);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(CrowdsaleController.new(tokenAddress, startTime, beneficiaryAddress, '0x0', realEtherCapHash));
     });
 
     it('should throw when attempting to construct a controller without ether cap hash', async () => {
-        try {
-            await CrowdsaleController.new(tokenAddress, startTime, beneficiaryAddress, btcsAddress, 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(CrowdsaleController.new(tokenAddress, startTime, beneficiaryAddress, btcsAddress, 0));
     });
 
     it('verifies the real ether cap balance after enabled by the owner', async () => {
@@ -135,85 +105,43 @@ contract('CrowdsaleController', accounts => {
     it('should throw when a non owner attempts to enable the real ether cap', async () => {
         let controller = await initController(accounts, true);
 
-        try {
-            await controller.enableRealCap(realCap, realCapKey, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.enableRealCap(realCap, realCapKey, { from: accounts[1] }));
     });
 
     it('should throw when the owner attempts to enable the real ether cap while the controller is not active', async () => {
         let controller = await initController(accounts, false);
 
-        try {
-            await controller.enableRealCap(realCap, realCapKey);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.enableRealCap(realCap, realCapKey));
     });
 
     it('should throw when the owner attempts to enable the real ether cap before the start time', async () => {
         let controller = await initController(accounts, true, startTime);
 
-        try {
-            await controller.enableRealCap(realCap, realCapKey);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(controller.enableRealCap(realCap, realCapKey));
     });
 
     it('should throw when the owner attempts to enable the real ether cap with an invalid cap', async () => {
         let controller = await initController(accounts, true);
 
-        try {
-            await controller.enableRealCap(0, realCapKey);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.enableRealCap(0, realCapKey));
     });
 
     it('should throw when the owner attempts to enable the real ether cap with the wrong real cap', async () => {
         let controller = await initController(accounts, true);
 
-        try {
-            await controller.enableRealCap(1001, realCapKey);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.enableRealCap(1001, realCapKey));
     });
 
     it('should throw when the owner attempts to enable the real ether cap with the wrong cap key', async () => {
         let controller = await initController(accounts, true);
 
-        try {
-            await controller.enableRealCap(realCap, 235);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.enableRealCap(realCap, 235));
     });
 
     it('should throw when the owner attempts to enable the real ether cap with a value larger than the initial cap', async () => {
         let controller = await CrowdsaleController.new(tokenAddress, startTime, beneficiaryAddress, btcsAddress, realEtherCapHashLarge);
 
-        try {
-            await controller.enableRealCap(realCapLarge, realCapKey);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.enableRealCap(realCapLarge, realCapKey));
     });
 
     it('verifies that computeReturn returns a valid amount', async () => {
@@ -269,62 +197,32 @@ contract('CrowdsaleController', accounts => {
     it('should throw when attempting to contribute ether while the controller is not active', async () => {
         let controller = await initController(accounts, false);
 
-        try {
-            await controller.contributeETH({ value: 2000 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.contributeETH({ value: 2000 }));
     });
 
     it('should throw when attempting to contribute ether before the crowdsale has started', async () => {
         let controller = await initController(accounts, true, startTime);
 
-        try {
-            await controller.contributeETH({ value: 2000 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(controller.contributeETH({ value: 2000 }));
     });
 
     it('should throw when attempting to contribute ether after the crowdsale has finished', async () => {
         let controller = await initController(accounts, true, startTimeFinished);
 
-        try {
-            await controller.contributeETH({ value: 2000 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(controller.contributeETH({ value: 2000 }));
     });
 
     it('should throw when attempting to contribute ether while hitting the real ether cap', async () => {
         let controller = await initController(accounts, true, startTimeInProgress, realEtherCapHashSmall);
         await controller.enableRealCap(realCapSmall, realCapKey);
 
-        try {
-            await controller.contributeETH({ value: realCap + 1 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(controller.contributeETH({ value: realCap + 1 }));
     });
 
     it('should throw when attempting to contribute ether with a large gas price', async () => {
         let controller = await initController(accounts, true);
 
-        try {
-            await controller.contributeETH({ value: 2000, gasPrice: badContributionGasPrice });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(controller.contributeETH({ value: 2000, gasPrice: badContributionGasPrice }));
     });
 
     it('verifies balances and total eth contributed after contributing through btcs', async () => {
@@ -354,49 +252,25 @@ contract('CrowdsaleController', accounts => {
     it('should throw when attempting to contribute through btcs from a non btcs address', async () => {
         let controller = await initController(accounts, true, startTime);
 
-        try {
-            await controller.contributeBTCs({ value: 2000 });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(controller.contributeBTCs({ value: 2000 }));
     });
 
     it('should throw when attempting to contribute through btcs while the controller is not active', async () => {
         let controller = await initController(accounts, false, startTime);
 
-        try {
-            await controller.contributeBTCs({ value: 2000, from: btcsAddress });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.contributeBTCs({ value: 2000, from: btcsAddress }));
     });
 
     it('should throw when attempting to contribute through btcs after the crowdsale has started', async () => {
         let controller = await initController(accounts, true);
 
-        try {
-            await controller.contributeBTCs({ value: 2000, from: btcsAddress });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(controller.contributeBTCs({ value: 2000, from: btcsAddress }));
     });
 
     it('should throw when attempting to contribute through btcs after the crowdsale has finished', async () => {
         let controller = await initController(accounts, true, startTimeFinished);
 
-        try {
-            await controller.contributeBTCs({ value: 2000, from: btcsAddress });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(controller.contributeBTCs({ value: 2000, from: btcsAddress }));
     });
 
     it('should throw when attempting to contribute through btcs while hitting the btcs ether cap', async () => {
@@ -404,25 +278,12 @@ contract('CrowdsaleController', accounts => {
         let btcsEtherCap = await controller.BTCS_ETHER_CAP_SMALL.call();
         let largerThanCap = btcsEtherCap.plus(1);
 
-        try {
-            await controller.contributeBTCs({ value: largerThanCap.toString(), from: btcsAddress });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(controller.contributeBTCs({ value: largerThanCap.toString(), from: btcsAddress }));
     });
 
     it('should throw when attempting to contribute through btcs with large gas price', async () => {
         let controller = await initController(accounts, true, startTime);
 
-        try {
-            await controller.contributeBTCs({ value: 200, from: btcsAddress, gasPrice: badContributionGasPrice });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(controller.contributeBTCs({ value: 200, from: btcsAddress, gasPrice: badContributionGasPrice }));
     });
 });
-

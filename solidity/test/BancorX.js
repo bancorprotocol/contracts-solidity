@@ -144,19 +144,9 @@ contract('BancorX', async accounts => {
         let amountAboveLimit = web3Utils.toWei('1001', 'ether')
         let amountBelowLimit = web3Utils.toWei('0.5', 'ether')
 
-        try {
-            await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amountAboveLimit)
-            assert(false, "didn't throw")
-        } catch(error) {
-            utils.ensureException(error)
-        }
+        await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amountAboveLimit))
 
-        try {
-            await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amountBelowLimit)
-            assert(false, "didn't throw")
-        } catch(error) {
-            utils.ensureException(error)
-        }
+        await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amountBelowLimit))
     })
 
     it('should emit an event when successfuly locking bnt', async () => {
@@ -197,19 +187,14 @@ contract('BancorX', async accounts => {
             0,
             { from: accounts[1] }
         )
-        try {
-            await bancorX.reportTx(
-                EOS_BLOCKCHAIN,
-                randomTxId,
-                accounts[0],
-                amountToSend,
-                0,
-                { from: accounts[1] }
-            )
-            assert(false, "didn't throw")
-        } catch(error) {
-            utils.ensureException(error)
-        }
+        await utils.catchRevert(bancorX.reportTx(
+            EOS_BLOCKCHAIN,
+            randomTxId,
+            accounts[0],
+            amountToSend,
+            0,
+            { from: accounts[1] }
+        ))
     })
 
     it('should not allow two reporters to give conflicting transaction details', async () => {
@@ -225,19 +210,14 @@ contract('BancorX', async accounts => {
             { from: accounts[1] }
         )
 
-        try {
-            await bancorX.reportTx(
-                EOS_BLOCKCHAIN,
-                randomTxId,
-                accounts[1],
-                amountToSend,
-                0,
-                { from: accounts[1] }
-            )
-            assert(false, "didn't throw")
-        } catch(error) {
-            utils.ensureException(error)
-        }
+        await utils.catchRevert(bancorX.reportTx(
+            EOS_BLOCKCHAIN,
+            randomTxId,
+            accounts[1],
+            amountToSend,
+            0,
+            { from: accounts[1] }
+        ))
     })
 
     it('should not be able to release above or below the max/min limit', async () => {
@@ -245,72 +225,48 @@ contract('BancorX', async accounts => {
         let amountBelowLimit = web3Utils.toWei('0.5', 'ether')
         let randomTxId = getRandomTxId()
 
-        try {
-            await reportAndRelease(accounts[0], eosAddress, amountAboveLimit, randomTxId, EOS_BLOCKCHAIN)
-            assert(false, "didn't throw")
-        } catch(error) {
-            utils.ensureException(error)
-        }
+        await utils.catchRevert(reportAndRelease(accounts[0], eosAddress, amountAboveLimit, randomTxId, EOS_BLOCKCHAIN))
 
-        try {
-            await reportAndRelease(accounts[0], eosAddress, amountBelowLimit, randomTxId, EOS_BLOCKCHAIN)
-            assert(false, "didn't throw")
-        } catch(error) {
-            utils.ensureException(error)
-        }
+        await utils.catchRevert(reportAndRelease(accounts[0], eosAddress, amountBelowLimit, randomTxId, EOS_BLOCKCHAIN))
     })
 
     it('should only allow reporters to report', async () => {
         let randomTxId = getRandomTxId()
         let amountToSend = (web3Utils.toWei('1', 'ether'))
-        try {
-            await bancorX.reportTx(
-                EOS_BLOCKCHAIN,
-                randomTxId,
-                accounts[0],
-                amountToSend,
-                0,
-                { from: accounts[4] } // not reporter
-            )
-        } catch(error) {
-            utils.ensureException(error)
-        }
+        await utils.catchRevert(bancorX.reportTx(
+            EOS_BLOCKCHAIN,
+            randomTxId,
+            accounts[0],
+            amountToSend,
+            0,
+            { from: accounts[4] } // not reporter
+        ))
     })
 
     it('shouldnt allow reports when disabled', async () => {
         await bancorX.enableReporting(false)
         let amountToSend = (web3Utils.toWei('1', 'ether'))
         let randomTxId = getRandomTxId()        
-        try {
-            await bancorX.reportTx(
-                EOS_BLOCKCHAIN,
-                randomTxId,
-                accounts[0],
-                amountToSend,
-                0,
-                { from: accounts[1] }
-            )
-            assert(false, "didn't throw")
-        } catch(error) {
-            utils.ensureException(error)
-            await bancorX.enableReporting(true)
-        }
+        await utils.catchRevert(bancorX.reportTx(
+            EOS_BLOCKCHAIN,
+            randomTxId,
+            accounts[0],
+            amountToSend,
+            0,
+            { from: accounts[1] }
+        ))
+        await bancorX.enableReporting(true)
     })
 
     it('shouldnt allow xTransfers when disabled', async () => {
         await bancorX.enableXTransfers(false)
         let amountToSend = (web3Utils.toWei('1', 'ether'))
-        try {
-            await bancorX.xTransfer(
-                EOS_BLOCKCHAIN,
-                eosAddress,
-                amountToSend
-            )
-            assert(false, "didn't throw")
-        } catch(error) {
-            utils.ensureException(error)
-            await bancorX.enableXTransfers(true)
-        }
+        await utils.catchRevert(bancorX.xTransfer(
+            EOS_BLOCKCHAIN,
+            eosAddress,
+            amountToSend
+        ))
+        await bancorX.enableXTransfers(true)
     })
 
     it('Gas Test', async () => {

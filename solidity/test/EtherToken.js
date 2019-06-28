@@ -84,13 +84,7 @@ contract('EtherToken', accounts => {
         let token = await EtherToken.new();
         await token.deposit({ value: 100 });
 
-        try {
-            await token.transfer(token.address, 10);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.transfer(token.address, 10));
     });
 
     it('should throw when attempting to transferFrom to the token address', async () => {
@@ -98,12 +92,6 @@ contract('EtherToken', accounts => {
         await token.deposit({ value: 100 });
         await token.approve(accounts[1], 50);
 
-        try {
-            await token.transferFrom(accounts[0], token.address, 10, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(token.transferFrom(accounts[0], token.address, 10, { from: accounts[1] }));
     });
 });

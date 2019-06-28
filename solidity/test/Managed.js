@@ -44,13 +44,7 @@ contract('Managed', accounts => {
     it('verifies that only the manager can initiate management transfer', async () => {
         let contract = await Managed.new();
 
-        try {
-            await contract.transferManagement(accounts[1], { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(contract.transferManagement(accounts[1], { from: accounts[2] }));
     });
 
     it('verifies that the manager can cancel management transfer before the new manager accepted it', async () => {

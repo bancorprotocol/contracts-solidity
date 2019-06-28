@@ -20,17 +20,12 @@ contract('XTransferRerouter', async () => {
         txRouter = await XTransferRerouter.new(false, {
             from: accounts[0]
         })
-        try {
-            await txRouter.rerouteTx(
-                123,
-                eosAddress,
-                web3.fromAscii('EOS'),
-                { from: accounts[1] }
-            )
-            assert(false, "didn't throw")
-        } catch(error) {
-            utils.ensureException(error)
-        }
+        await utils.catchRevert(txRouter.rerouteTx(
+            123,
+            eosAddress,
+            web3.fromAscii('EOS'),
+            { from: accounts[1] }
+        ))
         
     })
     it('verify that calling rerouteTx emits an event properly', async () => {
@@ -55,15 +50,10 @@ contract('XTransferRerouter', async () => {
         txRouter = await XTransferRerouter.new(false, {
             from: accounts[0]
         })
-        try {
-            await txRouter.enableRerouting(
-                true,
-                { from: accounts[1] }
-            )
-            assert(false, "didn't throw")
-        } catch(error) {
-            utils.ensureException(error)
-        }
+        await utils.catchRevert(txRouter.enableRerouting(
+            true,
+            { from: accounts[1] }
+        ))
     })
 
     it('verify that the owner can call enableRerouting', async () => {
@@ -80,5 +70,4 @@ contract('XTransferRerouter', async () => {
         assert(reroutingEnabled === true, 'reroutingEnabled didn\'t get updated properly!')
     })
 })
-
 

@@ -25,13 +25,7 @@ contract('ContractRegistry', accounts => {
     it('should throw when a non owner attempts to register a contract address', async () => {
         let contractRegistry = await ContractRegistry.new();
 
-        try {
-            await contractRegistry.registerAddress(contractName1, accounts[1], { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(contractRegistry.registerAddress(contractName1, accounts[1], { from: accounts[2] }));
     });
 
     it('verifies that the contract name list gets updated correctly when registering addresses', async () => {
@@ -64,13 +58,7 @@ contract('ContractRegistry', accounts => {
         let address = await contractRegistry.addressOf.call(contractName1);
         assert.equal(address, accounts[1]);
 
-        try {
-            await contractRegistry.unregisterAddress(contractName1, { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(contractRegistry.unregisterAddress(contractName1, { from: accounts[2] }));
     });
 
     it('verifies that the contract name list gets updated correctly when unregistering addresses', async () => {
@@ -118,12 +106,6 @@ contract('ContractRegistry', accounts => {
         let contractRegistry = await ContractRegistry.new();
 
         await contractRegistry.registerAddress(contractName1, accounts[1]);
-        try {
-            await contractRegistry.unregisterAddress(contractName2);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(contractRegistry.unregisterAddress(contractName2));
     });
 });

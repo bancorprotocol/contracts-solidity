@@ -35,13 +35,7 @@ contract('SmartTokenController', accounts => {
     });
 
     it('should throw when attempting to construct a controller with no token', async () => {
-        try {
-            await SmartTokenController.new('0x0');
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(SmartTokenController.new('0x0'));
     });
 
     it('verifies that the owner can accept token ownership', async () => {
@@ -58,13 +52,7 @@ contract('SmartTokenController', accounts => {
         let controller = await SmartTokenController.new(token.address);
         await token.transferOwnership(controller.address);
 
-        try {
-            await controller.acceptTokenOwnership({ from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.acceptTokenOwnership({ from: accounts[1] }));
     });
 
     it('verifies that the owner can transfer token ownership', async () => {
@@ -88,13 +76,7 @@ contract('SmartTokenController', accounts => {
 
         let controller2 = await SmartTokenController.new(token.address);
 
-        try {
-            await controller.transferTokenOwnership(controller2.address);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.transferTokenOwnership(controller2.address));
     });
 
     it('should throw when a non owner attempts to transfer token ownership', async () => {
@@ -105,13 +87,7 @@ contract('SmartTokenController', accounts => {
 
         let controller2 = await SmartTokenController.new(token.address);
 
-        try {
-            await controller.transferTokenOwnership(controller2.address, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.transferTokenOwnership(controller2.address, { from: accounts[1] }));
     });
 
     it('verifies that the owner can disable / re-enable token transfers', async () => {
@@ -129,25 +105,13 @@ contract('SmartTokenController', accounts => {
     it('should throw when the owner attempts to disable token transfers while the controller is not active', async () => {
         let controller = await initController(accounts, false);
 
-        try {
-            await controller.disableTokenTransfers(true);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.disableTokenTransfers(true));
     });
 
     it('should throw when a non owner attempts to disable token transfers', async () => {
         let controller = await initController(accounts, true);
 
-        try {
-            await controller.disableTokenTransfers(true, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.disableTokenTransfers(true, { from: accounts[1] }));
     });
 
     it('verifies that the owner can withdraw other tokens from the token', async () => {
@@ -165,13 +129,7 @@ contract('SmartTokenController', accounts => {
         let ercToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
         await ercToken.transfer(token.address, 100);
 
-        try {
-            await controller.withdrawFromToken(ercToken.address, accounts[0], 100);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.withdrawFromToken(ercToken.address, accounts[0], 100));
     });
 
     it('should throw when a non owner attempts to withdraw other tokens from the token', async () => {
@@ -179,12 +137,6 @@ contract('SmartTokenController', accounts => {
         let ercToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
         await ercToken.transfer(token.address, 100);
 
-        try {
-            await controller.withdrawFromToken(ercToken.address, accounts[0], 100, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(controller.withdrawFromToken(ercToken.address, accounts[0], 100, { from: accounts[1] }));
     });
 });

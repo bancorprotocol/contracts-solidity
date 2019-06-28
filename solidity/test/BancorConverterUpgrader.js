@@ -198,13 +198,8 @@ contract('BancorConverterUpgrader', accounts => {
     });
 
     it('should throw if the upgrader did not receive the converter ownership before calling the upgrade function', async () => {
-        try {
-            let converter = await initConverter(accounts, true);
-            await converterUpgrader.upgradeOld(converter.address, web3.fromUtf8("0.7"));
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        let converter = await initConverter(accounts, true);
+        await utils.catchRevert(converterUpgrader.upgradeOld(converter.address, web3.fromUtf8("0.7")));
     });
 
     it('verifies that the max conversion fee after upgrade is the same', async () => {
@@ -231,15 +226,9 @@ contract('BancorConverterUpgrader', accounts => {
         let converter = await initConverter(accounts, true);
         let initialOwner = await converter.owner.call();
         
-        try {
-            await converter.upgrade({ gas: 2000000 });
-            assert.fail('Expected throw not received');
-        }
-        catch (error) {
-            let currentOwner = await converter.owner.call();
-            assert.equal(initialOwner, currentOwner);
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.upgrade({ gas: 2000000 }));
+        let currentOwner = await converter.owner.call();
+        assert.equal(initialOwner, currentOwner);
     });
 
     it('verifies upgrade of converter without connectors', async () => {
@@ -291,17 +280,11 @@ contract('BancorConverterUpgrader', accounts => {
         let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
         let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
         
-        try {
-            await converter.upgrade({ gas: 2000000 });
-            assert.fail('Expected throw not received');
-        }
-        catch (error) {
-            let currentConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
-            let currentConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
-            assert.equal(initialConnectorBalance1.toFixed(), currentConnectorBalance1.toFixed());
-            assert.equal(initialConnectorBalance2.toFixed(), currentConnectorBalance2.toFixed());
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.upgrade({ gas: 2000000 }));
+        let currentConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
+        let currentConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
+        assert.equal(initialConnectorBalance1.toFixed(), currentConnectorBalance1.toFixed());
+        assert.equal(initialConnectorBalance2.toFixed(), currentConnectorBalance2.toFixed());
     });
 
     it('verifies upgrade of a non active converter', async () => {

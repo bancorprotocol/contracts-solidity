@@ -18,13 +18,7 @@ contract('SafeMath', () => {
         let x = web3.toBigNumber('115792089237316195423570985008687907853269984665640564039457584007913129639935');
         let y = 1;
 
-        try {
-            await math.testSafeAdd.call(x, y);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(math.testSafeAdd.call(x, y));
     });
 
     it('verifies successful subtraction', async () => {
@@ -40,13 +34,7 @@ contract('SafeMath', () => {
         let x = 10;
         let y = 11;
 
-        try {
-            await math.testSafeSub.call(x, y);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(math.testSafeSub.call(x, y));
     });
 
     it('verifies successful multiplication', async () => {
@@ -62,12 +50,6 @@ contract('SafeMath', () => {
         let x = web3.toBigNumber('15792089237316195423570985008687907853269984665640564039457584007913129639935');
         let y = 2000;
 
-        try {
-            await math.testSafeMul.call(x, y);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(math.testSafeMul.call(x, y));
     });
 });

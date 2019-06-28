@@ -142,23 +142,13 @@ contract('BancorConverter', accounts => {
 
     it('should throw when attempting to claim tokens when not enabled', async () => {
         let converter = await initConverter(accounts, true);
-        try {
-            await converter.claimTokens(accounts[0], 1);
-            assert(false, "didn't throw");
-        } catch(error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.claimTokens(accounts[0], 1));
     });
 
     it('should only allow the owner to enable claiming tokens', async () => {
         let converter = await initConverter(accounts, true);
         await converter.enableClaimTokens(true);
-        try {
-            await converter.enableClaimTokens(true, { from: accounts[1] });
-            assert(false, "didn't throw");
-        } catch(error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.enableClaimTokens(true, { from: accounts[1] }));
     });
 
     it('should only allow BancorX (as per the registry) to claim tokens', async () => {
@@ -171,33 +161,15 @@ contract('BancorConverter', accounts => {
     });
 
     it('should throw when attempting to construct a converter with no token', async () => {
-        try {
-            await BancorConverter.new('0x0', contractRegistry.address, 0, '0x0', 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(BancorConverter.new('0x0', contractRegistry.address, 0, '0x0', 0));
     });
 
     it('should throw when attempting to construct a converter with no contract registry', async () => {
-        try {
-            await BancorConverter.new(tokenAddress, '0x0', 0, '0x0', 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(BancorConverter.new(tokenAddress, '0x0', 0, '0x0', 0));
     });
 
     it('should throw when attempting to construct a converter with invalid max fee', async () => {
-        try {
-            await BancorConverter.new(tokenAddress, contractRegistry.address, 1000000000, '0x0', 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(BancorConverter.new(tokenAddress, contractRegistry.address, 1000000000, '0x0', 0));
     });
 
     it('verifies the first connector when provided at construction time', async () => {
@@ -209,13 +181,7 @@ contract('BancorConverter', accounts => {
     });
 
     it('should throw when attempting to construct a converter with a connector with invalid weight', async () => {
-        try {
-            await BancorConverter.new(tokenAddress, contractRegistry.address, 0, connectorToken.address, 1000001);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(BancorConverter.new(tokenAddress, contractRegistry.address, 0, connectorToken.address, 1000001));
     });
 
     it('verifies the connector token count before / after adding a connector', async () => {
@@ -238,13 +204,7 @@ contract('BancorConverter', accounts => {
     it('should throw when a non owner attempts update the conversion whitelist contract address', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
 
-        try {
-            await converter.setConversionWhitelist(accounts[3], { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.setConversionWhitelist(accounts[3], { from: accounts[1] }));
     });
 
     it('verifies the owner can remove the conversion whitelist contract address', async () => {
@@ -260,13 +220,7 @@ contract('BancorConverter', accounts => {
     it('should throw when the owner attempts update the conversion whitelist contract address with the converter address', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
 
-        try {
-            await converter.setConversionWhitelist(converter.address);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.setConversionWhitelist(converter.address));
     });
 
     it('verifies the owner can update the fee', async () => {
@@ -289,25 +243,13 @@ contract('BancorConverter', accounts => {
     it('should throw when attempting to update the fee to an invalid value', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
 
-        try {
-            await converter.setConversionFee(200001);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.setConversionFee(200001));
     });
 
     it('should throw when a non owner and non manager attempts to update the fee', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
 
-        try {
-            await converter.setConversionFee(30000, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.setConversionFee(30000, { from: accounts[1] }));
     });
 
     it('verifies that getFinalAmount returns the correct amount', async () => {
@@ -360,30 +302,18 @@ contract('BancorConverter', accounts => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
         let watcher = converter.ConversionFeeUpdate();
 
-        try {
-            await converter.setConversionFee(200001);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            let events = await watcher.get();
-            assert.equal(events.length, 0);
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.setConversionFee(200001));
+        let events = await watcher.get();
+        assert.equal(events.length, 0);
     });
 
     it('should not fire an event when a non owner attempts to update the fee', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
         let watcher = converter.ConversionFeeUpdate();
 
-        try {
-            await converter.setConversionFee(30000, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            let events = await watcher.get();
-            assert.equal(events.length, 0);
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.setConversionFee(30000, { from: accounts[1] }));
+        let events = await watcher.get();
+        assert.equal(events.length, 0);
     });
 
     it('verifies that 2 connectors are added correctly', async () => {
@@ -399,13 +329,7 @@ contract('BancorConverter', accounts => {
     it('should throw when a non owner attempts to add a connector', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
 
-        try {
-            await converter.addConnector(connectorToken.address, weight10Percent, false, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.addConnector(connectorToken.address, weight10Percent, false, { from: accounts[1] }));
     });
 
     it('should throw when attempting to add a connector when the converter is active', async () => {
@@ -414,99 +338,51 @@ contract('BancorConverter', accounts => {
         await token.transferOwnership(converter.address);
         await converter.acceptTokenOwnership();
 
-        try {
-            await converter.addConnector(connectorToken.address, weight10Percent, false);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.addConnector(connectorToken.address, weight10Percent, false));
     });
 
     it('should throw when attempting to add a connector with invalid address', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
 
-        try {
-            await converter.addConnector('0x0', weight10Percent, false);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.addConnector('0x0', weight10Percent, false));
     });
 
     it('should throw when attempting to add a connector with weight = 0', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
 
-        try {
-            await converter.addConnector(connectorToken.address, 0, false);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.addConnector(connectorToken.address, 0, false));
     });
 
     it('should throw when attempting to add a connector with weight greater than 100%', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
 
-        try {
-            await converter.addConnector(connectorToken.address, 1000001, false);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.addConnector(connectorToken.address, 1000001, false));
     });
 
     it('should throw when attempting to add the token as a connector', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
 
-        try {
-            await converter.addConnector(tokenAddress, weight10Percent, false);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.addConnector(tokenAddress, weight10Percent, false));
     });
 
     it('should throw when attempting to add the converter as a connector', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
 
-        try {
-            await converter.addConnector(converter.address, weight10Percent, false);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.addConnector(converter.address, weight10Percent, false));
     });
 
     it('should throw when attempting to add a connector that already exists', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
 
-        try {
-            await converter.addConnector(connectorToken.address, 200000, false);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.addConnector(connectorToken.address, 200000, false));
     });
 
     it('should throw when attempting to add multiple connectors with total weight greater than 100%', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addConnector(connectorToken.address, 500000, false);
 
-        try {
-            await converter.addConnector(connectorToken2.address, 500001, false);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.addConnector(connectorToken2.address, 500001, false));
     });
 
     it('verifies that the owner can update a connector', async () => {
@@ -523,52 +399,28 @@ contract('BancorConverter', accounts => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
 
-        try {
-            await converter.updateConnector(connectorToken.address, 200000, false, 0, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.updateConnector(connectorToken.address, 200000, false, 0, { from: accounts[1] }));
     });
 
     it('should throw when attempting to update a connector that does not exist', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
 
-        try {
-            await converter.updateConnector(connectorToken2.address, 200000, false, 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.updateConnector(connectorToken2.address, 200000, false, 0));
     });
 
     it('should throw when attempting to update a connector with weight = 0', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
 
-        try {
-            await converter.updateConnector(connectorToken.address, 0, false, 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.updateConnector(connectorToken.address, 0, false, 0));
     });
 
     it('should throw when attempting to update a connector with weight greater than 100%', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
 
-        try {
-            await converter.updateConnector(connectorToken.address, 1000001, false, 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.updateConnector(connectorToken.address, 1000001, false, 0));
     });
 
     it('should throw when attempting to update a connector that will result in total weight greater than 100%', async () => {
@@ -576,13 +428,7 @@ contract('BancorConverter', accounts => {
         await converter.addConnector(connectorToken.address, 500000, false);
         await converter.addConnector(connectorToken2.address, 400000, false);
 
-        try {
-            await converter.updateConnector(connectorToken2.address, 500001, false, 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.updateConnector(connectorToken2.address, 500001, false, 0));
     });
 
     it('verifies that the owner can disable / re-enable conversions', async () => {
@@ -620,13 +466,7 @@ contract('BancorConverter', accounts => {
     it('should throw when a non owner attempts to disable conversions', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
 
-        try {
-            await converter.disableConversions(true, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.disableConversions(true, { from: accounts[1] }));
     });
 
     it('verifies that the owner can disable / re-enable connector sale', async () => {
@@ -646,26 +486,14 @@ contract('BancorConverter', accounts => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
 
-        try {
-            await converter.disableConnectorSale(connectorToken.address, true, { from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.disableConnectorSale(connectorToken.address, true, { from: accounts[1] }));
     });
 
     it('should throw when attempting to disable connector sale for a connector that does not exist', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
 
-        try {
-            await converter.disableConnectorSale(connectorToken2.address, true);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.disableConnectorSale(connectorToken2.address, true));
     });
 
     it('verifies that the correct connector balance is returned regardless of whether virtual balance is set or not', async () => {
@@ -690,13 +518,7 @@ contract('BancorConverter', accounts => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
 
-        try {
-            await converter.getConnectorBalance.call(connectorToken2.address);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.getConnectorBalance.call(connectorToken2.address));
     });
 
     it('verifies that the owner can transfer the token ownership if the owner is the upgrader contract', async () => {
@@ -718,25 +540,13 @@ contract('BancorConverter', accounts => {
     it('should throw when the owner attempts to transfer the token ownership', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.transferTokenOwnership(accounts[1]);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.transferTokenOwnership(accounts[1]));
     });
 
     it('should throw when a non owner attempts to transfer the token ownership', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.transferTokenOwnership(accounts[1], { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.transferTokenOwnership(accounts[1], { from: accounts[2] }));
     });
 
     it('should throw when a the upgrader contract attempts to transfer the token ownership while the upgrader is not the owner', async () => {
@@ -744,14 +554,8 @@ contract('BancorConverter', accounts => {
         let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
         await contractRegistry.registerAddress(bancorConverterUpgraderId, accounts[2]);
 
-        try {
-            await converter.transferTokenOwnership(accounts[1], { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.transferTokenOwnership(accounts[1], { from: accounts[2] }));
+        await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
     });
 
     it('verifies that the owner can withdraw a non connector token from the converter while the converter is not active', async () => {
@@ -791,13 +595,7 @@ contract('BancorConverter', accounts => {
     it('should throw when the owner attempts to withdraw a connector token while the converter is active', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.withdrawTokens(connectorToken.address, accounts[1], 50);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.withdrawTokens(connectorToken.address, accounts[1], 50));
     });
 
     it('should throw when a non owner attempts to withdraw a non connector token while the converter is not active', async () => {
@@ -808,37 +606,19 @@ contract('BancorConverter', accounts => {
         let balance = await token.balanceOf.call(converter.address);
         assert.equal(balance, 100);
 
-        try {
-            await converter.withdrawTokens(token.address, accounts[1], 50, { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.withdrawTokens(token.address, accounts[1], 50, { from: accounts[2] }));
     });
 
     it('should throw when a non owner attempts to withdraw a connector token while the converter is not active', async () => {
         let converter = await initConverter(accounts, false);
 
-        try {
-            await converter.withdrawTokens(connectorToken.address, accounts[1], 50, { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.withdrawTokens(connectorToken.address, accounts[1], 50, { from: accounts[2] }));
     });
 
     it('should throw when a non owner attempts to withdraw a connector token while the converter is active', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.withdrawTokens(connectorToken.address, accounts[1], 50, { from: accounts[2] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.withdrawTokens(connectorToken.address, accounts[1], 50, { from: accounts[2] }));
     });
 
     it('verifies that the owner can upgrade the converter while the converter is active', async () => {
@@ -860,13 +640,7 @@ contract('BancorConverter', accounts => {
     it('should throw when a non owner attempts to upgrade the converter', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.upgrade({ from: accounts[1] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.upgrade({ from: accounts[1] }));
     });
 
     it('verifies that getReturn returns a valid amount', async () => {
@@ -928,98 +702,50 @@ contract('BancorConverter', accounts => {
     it('should throw when attempting to get the return with an invalid from token adress', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.getReturn.call('0x0', connectorToken2.address, 500);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.getReturn.call('0x0', connectorToken2.address, 500));
     });
 
     it('should throw when attempting to get the return with an invalid to token address', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.getReturn.call(connectorToken.address, '0x0', 500);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.getReturn.call(connectorToken.address, '0x0', 500));
     });
 
     it('should throw when attempting to get the return with identical from/to addresses', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.getReturn.call(connectorToken.address, connectorToken.address, 500);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.getReturn.call(connectorToken.address, connectorToken.address, 500));
     });
 
     it('should throw when attempting to get the purchase return while the converter is not active', async () => {
         let converter = await initConverter(accounts, false);
 
-        try {
-            await converter.getPurchaseReturn.call(connectorToken.address, 500);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.getPurchaseReturn.call(connectorToken.address, 500));
     });
 
     it('should throw when attempting to get the purchase return with a non connector address', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.getPurchaseReturn.call(tokenAddress, 500);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.getPurchaseReturn.call(tokenAddress, 500));
     });
 
     it('should throw when attempting to get the purchase return while selling the connector is disabled', async () => {
         let converter = await initConverter(accounts, true);
         await converter.disableConnectorSale(connectorToken.address, true);
 
-        try {
-            await converter.getPurchaseReturn.call(connectorToken.address, 500);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.getPurchaseReturn.call(connectorToken.address, 500));
     });
 
     it('should throw when attempting to get the sale return while the converter is not active', async () => {
         let converter = await initConverter(accounts, false);
 
-        try {
-            await converter.getSaleReturn.call(connectorToken.address, 500);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.getSaleReturn.call(connectorToken.address, 500));
     });
 
     it('should throw when attempting to get the sale return with a non connector address', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.getSaleReturn.call(tokenAddress, 500);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.getSaleReturn.call(tokenAddress, 500));
     });
 
     it('verifies that convert returns a valid amount', async () => {
@@ -1056,65 +782,35 @@ contract('BancorConverter', accounts => {
         let converter = await initConverter(accounts, true);
         await connectorToken.approve(converter.address, 500);
 
-        try {
-            await converter.convert('0x0', connectorToken2.address, 500, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert('0x0', connectorToken2.address, 500, 1));
     });
 
     it('should throw when attempting to convert with an invalid to token address', async () => {
         let converter = await initConverter(accounts, true);
         await connectorToken.approve(converter.address, 500);
 
-        try {
-            await converter.convert(connectorToken.address, '0x0', 500, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(connectorToken.address, '0x0', 500, 1));
     });
 
     it('should throw when attempting to convert with identical from/to addresses', async () => {
         let converter = await initConverter(accounts, true);
         await connectorToken.approve(converter.address, 500);
 
-        try {
-            await converter.convert(connectorToken.address, connectorToken.address, 500, 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(connectorToken.address, connectorToken.address, 500, 0));
     });
 
     it('should throw when attempting to convert with 0 minimum requested amount', async () => {
         let converter = await initConverter(accounts, true);
         await connectorToken.approve(converter.address, 500);
 
-        try {
-            await converter.convert(connectorToken.address, connectorToken2.address, 500, 2000);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(connectorToken.address, connectorToken2.address, 500, 2000));
     });
 
     it('should throw when attempting to convert when the return is smaller than the minimum requested amount', async () => {
         let converter = await initConverter(accounts, true);
         await connectorToken.approve(converter.address, 500);
 
-        try {
-            await converter.convert(connectorToken.address, connectorToken2.address, 500, 2000);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(connectorToken.address, connectorToken2.address, 500, 2000));
     });
 
     it('verifies balances after buy', async () => {
@@ -1138,39 +834,21 @@ contract('BancorConverter', accounts => {
         let converter = await initConverter(accounts, false);
         await connectorToken.approve(converter.address, 500);
 
-        try {
-            await converter.convert(connectorToken.address, tokenAddress, 500, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(connectorToken.address, tokenAddress, 500, 1));
     });
 
     it('should throw when attempting to buy with a non connector address', async () => {
         let converter = await initConverter(accounts, true);
         await connectorToken.approve(converter.address, 500);
 
-        try {
-            await converter.convert(tokenAddress, tokenAddress, 500, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(tokenAddress, tokenAddress, 500, 1));
     });
 
     it('should throw when attempting to buy while the purchase yields 0 return', async () => {
         let converter = await initConverter(accounts, true);
         await connectorToken.approve(converter.address, 500);
 
-        try {
-            await converter.convert(connectorToken.address, tokenAddress, 0, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(connectorToken.address, tokenAddress, 0, 1));
     });
 
     it('should throw when attempting to convert while conversions are disabled', async () => {
@@ -1178,39 +856,21 @@ contract('BancorConverter', accounts => {
         await converter.disableConversions(true);
         await connectorToken.approve(converter.address, 500);
 
-        try {
-            await converter.convert(connectorToken.address, tokenAddress, 500, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(connectorToken.address, tokenAddress, 500, 1));
     });
 
     it('should throw when attempting to buy with gas price higher than the universal limit', async () => {
         let converter = await initConverter(accounts, true);
         await connectorToken.approve(converter.address, 500);
 
-        try {
-            await converter.convert(connectorToken.address, tokenAddress, 500, 1, { gasPrice: gasPriceBadHigh });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(connectorToken.address, tokenAddress, 500, 1, { gasPrice: gasPriceBadHigh }));
     });
 
     it('should throw when attempting to buy with 0 minimum requested amount', async () => {
         let converter = await initConverter(accounts, true);
         await connectorToken.approve(converter.address, 500);
 
-        try {
-            await converter.convert(connectorToken.address, tokenAddress, 500, 0);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(connectorToken.address, tokenAddress, 500, 0));
     });
 
     it('should throw when attempting to buy while the connector sale are disabled', async () => {
@@ -1218,25 +878,13 @@ contract('BancorConverter', accounts => {
         await connectorToken.approve(converter.address, 500);
         await converter.disableConnectorSale(connectorToken.address, true);
 
-        try {
-            await converter.convert(connectorToken.address, tokenAddress, 500, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(connectorToken.address, tokenAddress, 500, 1));
     });
 
     it('should throw when attempting to buy without first approving the converter to transfer from the buyer account in the connector contract', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.convert(connectorToken.address, tokenAddress, 500, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(connectorToken.address, tokenAddress, 500, 1));
     });
 
     it('verifies balances after sell', async () => {
@@ -1258,49 +906,25 @@ contract('BancorConverter', accounts => {
     it('should throw when attempting to sell while the converter is not active', async () => {
         let converter = await initConverter(accounts, false);
 
-        try {
-            await converter.convert(tokenAddress, connectorToken.address, 500, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(tokenAddress, connectorToken.address, 500, 1));
     });
 
     it('should throw when attempting to sell with a non connector address', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.convert(tokenAddress, tokenAddress, 500, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(tokenAddress, tokenAddress, 500, 1));
     });
 
     it('should throw when attempting to sell while the sale yields 0 return', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.convert(tokenAddress, connectorToken.address, 0, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(tokenAddress, connectorToken.address, 0, 1));
     });
 
     it('should throw when attempting to sell with amount greater then the seller balance', async () => {
         let converter = await initConverter(accounts, true);
 
-        try {
-            await converter.convert(tokenAddress, connectorToken.address, 30000, 1);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.convert(tokenAddress, connectorToken.address, 30000, 1));
     });
 
     it('verifies that getReturn returns the same amount as getCrossConnectorReturn when converting between 2 connectors', async () => {
@@ -1480,13 +1104,7 @@ contract('BancorConverter', accounts => {
         let conversionsEnabled = await converter.conversionsEnabled.call();
         assert.equal(conversionsEnabled, false);
 
-        try {
-            await converter.fund(100);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchInvalidOpcode(converter.fund(100));
     });
 
     it('should throw when attempting to fund the converter when the total connector weight is not equal to 100%', async () => {
@@ -1502,13 +1120,7 @@ contract('BancorConverter', accounts => {
         await connectorToken2.approve(converter.address, 100000);
         await connectorToken3.approve(converter.address, 100000);
 
-        try {
-            await converter.fund(100);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.fund(100));
     });
 
     it('should throw when attempting to fund the converter with insufficient funds', async () => {
@@ -1529,21 +1141,15 @@ contract('BancorConverter', accounts => {
         await connectorToken3.approve(converter.address, 100000, { from: accounts[9] });
         await converter.fund(5, { from: accounts[9] });
 
-        try {
-            await converter.fund(600, { from: accounts[9] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            let token1Balance = await connectorToken.balanceOf.call(accounts[9]);
-            let token2Balance = await connectorToken2.balanceOf.call(accounts[9]);
-            let token3Balance = await connectorToken3.balanceOf.call(accounts[9]);
+        await utils.catchRevert(converter.fund(600, { from: accounts[9] }));
+        let token1Balance = await connectorToken.balanceOf.call(accounts[9]);
+        let token2Balance = await connectorToken2.balanceOf.call(accounts[9]);
+        let token3Balance = await connectorToken3.balanceOf.call(accounts[9]);
 
-            await connectorToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-            await connectorToken2.transfer(accounts[0], token2Balance, { from: accounts[9] });
-            await connectorToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
-            
-            return utils.ensureException(error);
-        }
+        await connectorToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
+        await connectorToken2.transfer(accounts[0], token2Balance, { from: accounts[9] });
+        await connectorToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
+        
     });
 
     it('verifies that liquidate executes when the total connector weight equals 100%', async () => {
@@ -1714,13 +1320,7 @@ contract('BancorConverter', accounts => {
         await token.transferOwnership(converter.address);
         await converter.acceptTokenOwnership();
 
-        try {
-            await converter.liquidate(100);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.liquidate(100));
     });
 
     it('should throw when attempting to liquidate when the virtual balance is insufficient', async () => {
@@ -1735,13 +1335,7 @@ contract('BancorConverter', accounts => {
 
         await converter.liquidate(5);
 
-        try {
-            await converter.liquidate(600);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.liquidate(600));
     });
 
     it('should throw when attempting to liquidate with insufficient funds', async () => {
@@ -1757,13 +1351,7 @@ contract('BancorConverter', accounts => {
 
         await converter.liquidate(5, { from: accounts[9] });
 
-        try {
-            await converter.liquidate(600, { from: accounts[9] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.liquidate(600, { from: accounts[9] }));
     });
 
     it('should have the registry point to itself after initialization', async () => {
@@ -1775,25 +1363,13 @@ contract('BancorConverter', accounts => {
     it('should throw when attempting to update the registry when no new registry is set', async () => {
         let converter = await initConverter(accounts, false);
 
-        try {
-            await converter.updateRegistry();
-            assert(false, "didnt throw");
-        }
-        catch(error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.updateRegistry());
     });
 
     it('should throw when attempting to register the registry to the zero address', async () => {
         let contractRegistryId = await contractIds.CONTRACT_REGISTRY.call();
 
-        try {
-            await contractRegistry.registerAddress(contractRegistryId, "0x0")
-            assert(false, "didnt throw");
-        }
-        catch(error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(contractRegistry.registerAddress(contractRegistryId, "0x0"))
     });
 
     it('should allow anyone to update the registry address', async () => {
@@ -1824,12 +1400,7 @@ contract('BancorConverter', accounts => {
         assert.equal(await converter.registry.call(), contractRegistry.address)
         assert.equal(await converter.prevRegistry.call(), contractRegistry.address)
 
-        try {
-            await converter.updateRegistry({ from: accounts[1] })
-        }
-        catch(error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(converter.updateRegistry({ from: accounts[1] }))
 
         await converter.updateRegistry({ from: accounts[0] })
         assert.equal(await converter.registry.call(), newRegistry.address)

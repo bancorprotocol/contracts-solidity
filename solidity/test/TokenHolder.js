@@ -31,60 +31,30 @@ contract('TokenHolder', accounts => {
     it('should throw when a non owner attempts to withdraw tokens', async () => {
         let holder = await initHolder();
 
-        try {
-            await holder.withdrawTokens(erc20TokenAddress, accounts[2], 100, { from: accounts[3] });
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(holder.withdrawTokens(erc20TokenAddress, accounts[2], 100, { from: accounts[3] }));
     });
 
     it('should throw when attempting to withdraw tokens from an invalid ERC20 token address', async () => {
         let holder = await initHolder();
 
-        try {
-            await holder.withdrawTokens('0x0', accounts[2], 100);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(holder.withdrawTokens('0x0', accounts[2], 100));
     });
 
     it('should throw when attempting to withdraw tokens to an invalid account address', async () => {
         let holder = await initHolder();
 
-        try {
-            await holder.withdrawTokens(erc20TokenAddress, '0x0', 100);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(holder.withdrawTokens(erc20TokenAddress, '0x0', 100));
     });
 
     it('should throw when attempting to withdraw tokens to the holder address', async () => {
         let holder = await initHolder();
 
-        try {
-            await holder.withdrawTokens(erc20TokenAddress, holderAddress, 100);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(holder.withdrawTokens(erc20TokenAddress, holderAddress, 100));
     });
 
     it('should throw when attempting to withdraw an amount greater than the holder balance', async () => {
         let holder = await initHolder();
 
-        try {
-            await holder.withdrawTokens(erc20TokenAddress, accounts[2], 5000);
-            assert(false, "didn't throw");
-        }
-        catch (error) {
-            return utils.ensureException(error);
-        }
+        await utils.catchRevert(holder.withdrawTokens(erc20TokenAddress, accounts[2], 5000));
     });
 });
