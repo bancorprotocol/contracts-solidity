@@ -107,7 +107,7 @@ contract CrowdsaleController is SmartTokenController {
         @return computed real cap hash
     */
     function computeRealCap(uint256 _cap, uint256 _key) public pure returns (bytes32) {
-        return keccak256(_cap, _key);
+        return keccak256(abi.encodePacked(_cap, _key));
     }
 
     /**
