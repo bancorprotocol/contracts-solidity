@@ -1,29 +1,37 @@
 {{{frontmatter}}}
 {{{intro}}}
 
-# Contracts
 {{#contracts}}
 
-## `{{name}}`
+# Contract `{{name}}`
 
 {{{natspec.devdoc}}}
 
+{{#if functions}}
+#### Functions:
 {{#functions}}
 - `{{name}}({{args}})`
 {{/functions}}
+{{/if}}
 
+{{#if events}}
+#### Events:
 {{#events}}
 - `{{name}}({{args}})`
 {{/events}}
+{{/if}}
 
 {{#ownFunctions}}
-### `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}`
+#### Function `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}`
 
-{{{natspec.devdoc}}}
+{{#if natspec.devdoc}}{{natspec.devdoc}}{{else}}No description{{/if}}
 
-{{#each natspec.params}}
+{{#if natspec.params}}
+###### Parameters:
+{{#natspec.params}}
 - `{{param}}`: {{description}}
-{{/each}}
+{{/natspec.params}}
+{{/if}}
 
 {{/ownFunctions}}
 {{/contracts}}
