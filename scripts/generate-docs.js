@@ -1,6 +1,6 @@
 const NODE_DIR = "node_modules";
 const CONS_DIR = "solidity/contracts";
-const DOCS_DIR = "documents";
+const DOCS_DIR = "docs";
 
 const fs        = require("fs");
 const spawnSync = require("child_process").spawnSync;
