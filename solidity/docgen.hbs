@@ -23,15 +23,24 @@
 
 {{#ownFunctions}}
 #### Function `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}`
-
 {{#if natspec.devdoc}}{{natspec.devdoc}}{{else}}No description{{/if}}
-
 {{#if natspec.params}}
 ###### Parameters:
 {{#natspec.params}}
 - `{{param}}`: {{description}}
 {{/natspec.params}}
 {{/if}}
-
 {{/ownFunctions}}
+
+{{#ownEvents}}
+#### Event `{{name}}({{args}})`
+{{#if natspec.devdoc}}{{natspec.devdoc}}{{else}}No description{{/if}}
+{{#if natspec.params}}
+###### Parameters:
+{{#natspec.params}}
+- `{{param}}`: {{description}}
+{{/natspec.params}}
+{{/if}}
+{{/ownEvents}}
+
 {{/contracts}}
