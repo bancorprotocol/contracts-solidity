@@ -1,0 +1,29 @@
+{{{frontmatter}}}
+{{{intro}}}
+
+# Contracts
+{{#contracts}}
+
+## `{{name}}`
+
+{{{natspec.devdoc}}}
+
+{{#functions}}
+- `{{name}}({{args}})`
+{{/functions}}
+
+{{#events}}
+- `{{name}}({{args}})`
+{{/events}}
+
+{{#ownFunctions}}
+### `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}`
+
+{{{natspec.devdoc}}}
+
+{{#each natspec.params}}
+- `{{param}}`: {{description}}
+{{/each}}
+
+{{/ownFunctions}}
+{{/contracts}}

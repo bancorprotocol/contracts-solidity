@@ -38,38 +38,3 @@ fix("./node_modules/solidity-coverage/lib/coverageMap.js", [
     {prev: "      const event = JSON.parse(events[idx]);", next: "      const event = JSON.parse(line);"},
     {prev: "    // Finally, interpret the assert pre/post events", next: "  generate(events, pathPrefix) {"}]
 );
-
-fix("./node_modules/solidity-docgen/dist/gather/solidity/compile.js", [
-    {prev: "_solc.default.compile", next: "_solc.default.compileStandard"}]
-);
-
-fix("./node_modules/solidity-docgen/dist/gather/solidity/extract.js", [
-    {prev: "? name : kind", next: "? name : name"}]
-);
-
-fix("./node_modules/solidity-docgen/dist/gather/index.js", [
-    {prev: "return 'index';", next: "return 'main';"}]
-);
-
-fix("./node_modules/solidity-docgen/dist/render/index.js", [
-    {prev: "'<div class=\"contracts\">', sections.map(renderSection), '</div>'", next: "sections.map(renderSection)"}]
-);
-
-function copyDir(src, dest) {
-    try {
-        fs.mkdirSync(dest);
-        for (const file of fs.readdirSync(src)) {
-            if (fs.lstatSync(src + "/" + file).isDirectory()) {
-                copyDir(src + "/" + file, dest + "/" + file);
-            }
-            else {
-                fs.copyFileSync(src + "/" + file, dest + "/" + file);
-            }
-        }
-    }
-    catch (error) {
-        console.log(error.message);
-    }
-};
-
-copyDir("./node_modules/truffle/node_modules/solc", "./node_modules/solidity-docgen/node_modules/solc");
