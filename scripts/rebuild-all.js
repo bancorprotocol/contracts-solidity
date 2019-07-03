@@ -19,4 +19,4 @@ const cp = spawn("node", [NODE_DIR + "/truffle/build/cli.bundled.js", "compile",
 cp.stdout.on("data", function(data) {process.stdout.write(data.toString());});
 cp.stderr.on("data", function(data) {process.stderr.write(data.toString());});
 cp.on("error", function(error) {process.stderr.write(error.toString());});
-cp.on("exit", function(code, signal) {extractBinaries()});
+cp.on("exit", function(code, signal) {extractBinaries();});
