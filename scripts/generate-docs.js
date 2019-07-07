@@ -16,7 +16,14 @@ for (const fileName of fs.readdirSync(CONS_DIR)) {
     }
 }
 
-spawnSync("node", [
+function runNode(args) {
+    const result = spawnSync("node", args)
+    if (result.stdout.toString()) process.stdout.write(result.stdout.toString());
+    if (result.stderr.toString()) throw new Error(result.stderr.toString());
+    if (result.error) throw result.error;
+}
+
+runNode([
     NODE_DIR + "/solidity-docgen/dist/cli.js",
     "--contractsDir=" + CONS_DIR,
     "--outputDir="    + DOCS_DIR,
@@ -25,7 +32,7 @@ spawnSync("node", [
     "--solcModule="   + NODE_DIR + "/truffle/node_modules/solc"
 ]);
 
-spawnSync("node", [
+runNode([
     NODE_DIR + "/gitbook-cli/bin/gitbook.js",
     "build"
 ]);
