@@ -20,9 +20,6 @@ const fs        = require("fs");
 const basename  = require("path").basename;
 const spawnSync = require("child_process").spawnSync;
 
-fs.writeFileSync(CONS_DIR + "/README.md", "");
-fs.writeFileSync("SUMMARY.md", "# Summary\n");
-
 function scanDir(pathName = CONS_DIR, indentation = "") {
     if (!SKIP_LIST.map(x => CONS_DIR + "/" + x).includes(pathName)) {
         if (fs.lstatSync(pathName).isDirectory()) {
@@ -36,7 +33,15 @@ function scanDir(pathName = CONS_DIR, indentation = "") {
     }
 }
 
-scanDir();
+function removeDir(pathName) {
+    for (const fileName of fs.readdirSync(pathName)) {
+        if (fs.lstatSync(pathName + "/" + fileName).isDirectory())
+            removeDir(pathName + "/" + fileName);
+        else
+            fs.unlinkSync(pathName + "/" + fileName);
+    }
+    fs.rmdirSync(pathName);
+};
 
 function runNode(args) {
     const result = spawnSync("node", args)
@@ -44,6 +49,10 @@ function runNode(args) {
     if (result.stderr.toString()) throw new Error(result.stderr.toString());
     if (result.error) throw result.error;
 }
+
+fs.writeFileSync(CONS_DIR + "/README.md", "");
+fs.writeFileSync("SUMMARY.md", "# Summary\n");
+scanDir();
 
 runNode([
     NODE_DIR + "/solidity-docgen/dist/cli.js",
@@ -60,18 +69,6 @@ runNode([
     NODE_DIR + "/gitbook-cli/bin/gitbook.js",
     "build"
 ]);
-
-function removeDir(src) {
-    for (const file of fs.readdirSync(src)) {
-        if (fs.lstatSync(src + "/" + file).isDirectory()) {
-            removeDir(src + "/" + file);
-        }
-        else {
-            fs.unlinkSync(src + "/" + file);
-        }
-    }
-    fs.rmdirSync(src);
-};
 
 fs.unlinkSync(CONS_DIR + "/README.md");
 fs.unlinkSync("SUMMARY.md");
