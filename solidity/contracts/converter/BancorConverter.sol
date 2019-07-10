@@ -603,6 +603,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     /**
         @dev converts a specific amount of _fromToken to _toToken
+        can only be called by the bancor network contract
 
         @param _fromToken  ERC20 token to convert from
         @param _toToken    ERC20 token to convert to
