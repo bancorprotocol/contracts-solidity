@@ -17,15 +17,15 @@
     "docify": "node scripts/generate-docs.js"
   },
   "dependencies": {
-    "decimal.js": "^10.0.2",
+    "decimal.js": "^10.0.0",
     "ethereumjs-util": "^5.2.0",
-    "ganache-cli": "6.2.5",
+    "ganache-cli": "6.4.4",
+    "gitbook-cli": "2.3.2",
     "solidity-coverage": "0.5.11",
+    "solidity-docgen": "github:OpenZeppelin/solidity-docgen#f662b211103bfcd93f7b69ceef8694efd3185ec",
     "truffle": "4.1.14",
     "truffle-contract": "^3.0.7",
-    "truffle-flattener": "^1.2.10",
-    "web3-utils": "^1.0.0-beta.39",
-    "solidity-docgen": "github:OpenZeppelin/solidity-docgen#f662b211103bfcd93f7b69ceef8694efd3185ec",
-    "gitbook-cli": "2.3.2"
+    "truffle-flattener": "1.2.10",
+    "web3-utils": "1.0.0-beta.55"
   }
 }
