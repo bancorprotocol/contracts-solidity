@@ -9,14 +9,14 @@ npm-debug.log
 *.pyc
 
 # npm test 1
-project/build/contracts
+solidity/build/contracts
 
 # npm test 2
-project/allFiredEvents
-project/coverageEnv
-project/coverage
-project/coverage.json
-project/scTopics
+solidity/allFiredEvents
+solidity/coverageEnv
+solidity/coverage
+solidity/coverage.json
+solidity/scTopics
 
 # npm run docify
 solidity/contracts/README.md
