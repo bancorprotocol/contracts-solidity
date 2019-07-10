@@ -60,3 +60,19 @@ runNode([
     NODE_DIR + "/gitbook-cli/bin/gitbook.js",
     "build"
 ]);
+
+function removeDir(src) {
+    for (const file of fs.readdirSync(src)) {
+        if (fs.lstatSync(src + "/" + file).isDirectory()) {
+            removeDir(src + "/" + file);
+        }
+        else {
+            fs.unlinkSync(src + "/" + file);
+        }
+    }
+    fs.rmdirSync(src);
+};
+
+fs.unlinkSync(CONS_DIR + "/README.md");
+fs.unlinkSync("SUMMARY.md");
+removeDir(DOCS_DIR);

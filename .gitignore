@@ -19,7 +19,4 @@ solidity/coverage.json
 solidity/scTopics
 
 # npm run docify
-solidity/contracts/README.md
-SUMMARY.md
-docs
 _book
