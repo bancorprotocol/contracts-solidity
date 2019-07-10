@@ -1,7 +1,25 @@
 .DS_STORE
 .vscode
+
+# node
 node_modules
 npm-debug.log
+
+# python
 *.pyc
+
+# npm test 1
+project/build/contracts
+
+# npm test 2
+project/allFiredEvents
+project/coverageEnv
+project/coverage
+project/coverage.json
+project/scTopics
+
+# npm run docify
+solidity/contracts/README.md
+SUMMARY.md
 docs
 _book
