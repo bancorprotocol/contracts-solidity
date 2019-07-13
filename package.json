@@ -22,7 +22,7 @@
     "ganache-cli": "6.4.4",
     "gitbook-cli": "2.3.2",
     "solidity-coverage": "0.5.11",
-    "solidity-docgen": "github:OpenZeppelin/solidity-docgen#f662b211103bfcd93f7b69ceef8694efd3185ec",
+    "solidity-docgen": "0.3.0-beta.1",
     "truffle": "4.1.14",
     "truffle-contract": "^3.0.7",
     "truffle-flattener": "1.2.10",

@@ -1,6 +1,7 @@
 const NODE_DIR = "node_modules";
-const CONS_DIR = "solidity/contracts";
-const DOCS_DIR = "docs";
+const INPUT_DIR = "solidity/contracts";
+const OUTPUT_DIR = "docs";
+const TEMPLATE_DIR = "solidity/docgen";
 
 // Skip any file or folder whose name is in the list below
 const SKIP_LIST = [
@@ -20,15 +21,15 @@ const fs        = require("fs");
 const basename  = require("path").basename;
 const spawnSync = require("child_process").spawnSync;
 
-function scanDir(pathName = CONS_DIR, indentation = "") {
-    if (!SKIP_LIST.map(x => CONS_DIR + "/" + x).includes(pathName)) {
+function scanDir(pathName = INPUT_DIR, indentation = "") {
+    if (!SKIP_LIST.map(x => INPUT_DIR + "/" + x).includes(pathName)) {
         if (fs.lstatSync(pathName).isDirectory()) {
             fs.appendFileSync("SUMMARY.md", indentation + "* " + basename(pathName) + ":\n");
             for (const fileName of fs.readdirSync(pathName))
                 scanDir(pathName + "/" + fileName, indentation + "  ");
         }
         else if (pathName.endsWith(".sol")) {
-            fs.appendFileSync("SUMMARY.md", indentation + "* [" + basename(pathName).replace(".sol", "") + "](" + DOCS_DIR + "/" + basename(pathName).replace(".sol", ".md") + ")\n");
+            fs.appendFileSync("SUMMARY.md", indentation + "* [" + basename(pathName).replace(".sol", "") + "](" + OUTPUT_DIR + pathName.replace(INPUT_DIR, "").replace(".sol", ".md") + ")\n");
         }
     }
 }
@@ -50,26 +51,22 @@ function runNode(args) {
     if (result.error) throw result.error;
 }
 
-fs.writeFileSync(CONS_DIR + "/README.md", "");
 fs.writeFileSync("SUMMARY.md", "# Summary\n");
 scanDir();
 
 runNode([
     NODE_DIR + "/solidity-docgen/dist/cli.js",
-    "--contractsDir=" + CONS_DIR,
-    "--outputDir="    + DOCS_DIR,
-    "--templateFile=" + CONS_DIR + "/../docgen.hbs",
-    "--solcModule="   + NODE_DIR + "/truffle/node_modules/solc"
+    "--input="       + INPUT_DIR,
+    "--output="      + OUTPUT_DIR,
+    "--templates="   + TEMPLATE_DIR,
+    "--solc-module=" + NODE_DIR + "/truffle/node_modules/solc",
+    "--contract-pages"
 ]);
-
-for (const contractDoc of fs.readFileSync(DOCS_DIR + "/index.md").toString().split("# Contract "))
-    fs.writeFileSync(DOCS_DIR + "/" + contractDoc.split("`")[1] + ".md", "# Contract " + contractDoc);
 
 runNode([
     NODE_DIR + "/gitbook-cli/bin/gitbook.js",
     "build"
 ]);
 
-fs.unlinkSync(CONS_DIR + "/README.md");
 fs.unlinkSync("SUMMARY.md");
-removeDir(DOCS_DIR);
+removeDir(OUTPUT_DIR);
