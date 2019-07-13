@@ -5,21 +5,21 @@
 {{#if ownFunctions}}
 #### Functions:
 {{#ownFunctions}}
-- `{{name}}({{args}})`
+- [`{{name}}({{args}})`](#{{anchor}})
 {{/ownFunctions}}
 {{/if}}
 
 {{#if ownEvents}}
 #### Events:
 {{#ownEvents}}
-- `{{name}}({{args}})`
+- [`{{name}}({{args}})`](#{{anchor}})
 {{/ownEvents}}
 {{/if}}
 
 ---
 
 {{#ownFunctions}}
-#### Function `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}`
+#### Function `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}` {#{{anchor~}}}
 {{#if natspec.devdoc}}{{natspec.devdoc}}{{else}}No description{{/if}}
 {{#if natspec.params}}
 ###### Parameters:
@@ -30,7 +30,7 @@
 {{/ownFunctions}}
 
 {{#ownEvents}}
-#### Event `{{name}}({{args}})`
+#### Event `{{name}}({{args}})` {#{{anchor~}}}
 {{#if natspec.devdoc}}{{natspec.devdoc}}{{else}}No description{{/if}}
 {{#if natspec.params}}
 ###### Parameters:
