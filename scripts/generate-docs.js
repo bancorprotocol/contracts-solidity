@@ -29,7 +29,7 @@ function scanDir(pathName = INPUT_DIR, indentation = "") {
                 scanDir(pathName + "/" + fileName, indentation + "  ");
         }
         else if (pathName.endsWith(".sol")) {
-            fs.appendFileSync("SUMMARY.md", indentation + "* [" + basename(pathName).replace(".sol", "") + "](" + OUTPUT_DIR + pathName.replace(INPUT_DIR, "").replace(".sol", ".md") + ")\n");
+            fs.appendFileSync("SUMMARY.md", indentation + "* [" + basename(pathName).slice(0, -4) + "](" + OUTPUT_DIR + pathName.slice(INPUT_DIR.length, -4) + ".md)\n");
         }
     }
 }
