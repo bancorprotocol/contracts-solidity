@@ -19,11 +19,4 @@ solidity/coverage.json
 solidity/scTopics
 
 # npm run docify
-_book/solidity
-_book/scripts
-_book/.gitignore
-_book/.node-version
-_book/.npmrc
-_book/CHANGELOG.md
-_book/LICENSE
-_book/package.json
+_book
