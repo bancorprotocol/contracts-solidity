@@ -55,10 +55,9 @@ function removeDir(pathName) {
 };
 
 function runNode(args) {
-    const result = spawnSync("node", args)
-    if (result.stdout.toString()) process.stdout.write(result.stdout.toString());
-    if (result.stderr.toString()) throw new Error(result.stderr.toString());
-    if (result.error) throw result.error;
+    const result = spawnSync("node", args, {stdio: "inherit"});
+    if (result.error)
+        throw result.error;
 }
 
 fs.writeFileSync("SUMMARY.md", "# Summary\n");
