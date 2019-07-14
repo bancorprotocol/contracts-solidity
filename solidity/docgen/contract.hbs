@@ -1,24 +1,24 @@
 {{{natspec.devdoc}}}
 
 {{#if ownFunctions}}
-#### Functions:
+# Functions:
 {{#ownFunctions}}
 - [`{{name}}({{args}})`](#{{anchor}})
 {{/ownFunctions}}
 {{/if}}
 
 {{#if ownEvents}}
-#### Events:
+# Events:
 {{#ownEvents}}
 - [`{{name}}({{args}})`](#{{anchor}})
 {{/ownEvents}}
 {{/if}}
 
 {{#ownFunctions}}
-##### Function `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}` {#{{anchor~}}}
+## Function `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}` {#{{anchor~}}}
 {{#if natspec.devdoc}}{{natspec.devdoc}}{{else}}No description{{/if}}
 {{#if natspec.params}}
-###### Parameters:
+### Parameters:
 {{#natspec.params}}
 - `{{param}}`: {{description}}
 {{/natspec.params}}
@@ -26,10 +26,10 @@
 {{/ownFunctions}}
 
 {{#ownEvents}}
-##### Event `{{name}}({{args}})` {#{{anchor~}}}
+## Event `{{name}}({{args}})` {#{{anchor~}}}
 {{#if natspec.devdoc}}{{natspec.devdoc}}{{else}}No description{{/if}}
 {{#if natspec.params}}
-###### Parameters:
+### Parameters:
 {{#natspec.params}}
 - `{{param}}`: {{description}}
 {{/natspec.params}}
