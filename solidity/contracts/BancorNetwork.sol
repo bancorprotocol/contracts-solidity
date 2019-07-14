@@ -37,7 +37,7 @@ import './bancorx/interfaces/IBancorX.sol';
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     using SafeMath for uint256;
 
-    
+
     uint64 private constant MAX_CONVERSION_FEE = 1000000;
 
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
@@ -105,8 +105,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev verifies that the signer address is trusted by recovering 
-        the address associated with the public key from elliptic 
+        @dev verifies that the signer address is trusted by recovering
+        the address associated with the public key from elliptic
         curve signature, returns zero on error.
         notice that the signature is valid only for one conversion
         and expires after the give block.
@@ -151,9 +151,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint8 _v,
         bytes32 _r,
         bytes32 _s
-    ) 
-        private 
-        validConversionPath(_path)    
+    )
+        private
+        validConversionPath(_path)
     {
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
         IERC20Token fromToken = _path[0];
@@ -253,7 +253,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _minReturn        if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _toBlockchain     blockchain BNT will be issued on
         @param _to               address/account on _toBlockchain to send the BNT to
-        @param _conversionId     pre-determined unique (if non zero) id which refers to this transaction 
+        @param _conversionId     pre-determined unique (if non zero) id which refers to this transaction
 
         @return the amount of BNT received from this conversion
     */
@@ -285,7 +285,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _toBlockchain    blockchain BNT will be issued on
         @param _to              address/account on _toBlockchain to send the BNT to
-        @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction 
+        @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction
         @param _block           if the current block exceeded the given parameter - it is cancelled
         @param _v               (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
         @param _r               (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
@@ -338,14 +338,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @return tokens issued in return
     */
     function convertForInternal(
-        IERC20Token[] _path, 
-        uint256 _amount, 
-        uint256 _minReturn, 
-        address _for, 
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _for,
         uint256 _customVal,
         uint256 _block,
-        uint8 _v, 
-        bytes32 _r, 
+        uint8 _v,
+        bytes32 _r,
         bytes32 _s
     )
         private
@@ -364,7 +364,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         IERC20Token fromToken = _path[0];
 
         IERC20Token toToken;
-        
+
         (toToken, _amount) = convertByPath(_path, _amount, _minReturn, fromToken, _for);
 
         // finished the conversion, transfer the funds to the target account
@@ -429,11 +429,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _fromToken, _toToken, _amount);
 
         assembly {
-            /* SC0 */ if iszero(staticcall(gas, _dest, add(data, 32), mload(data), ret, 64)) {revert(0, 0)}
-            // SC1 // switch call(gas, _dest, 0, add(data, 32), mload(data), ret, 64) case 0 {revert(0, 0)}
-            // Prior to being instrumented by solidity-coverage, the SC0 line should be disabled and the SC1 line should be enabled:
-            // - The `if` should be replaced with a `switch` because it would otherwise yield a compilation error (https://github.com/sc-forks/solidity-coverage/issues/328)
-            // - The `staticcall` should be replaced with a `call` because it would otherwise yield a runtime error (https://github.com/sc-forks/solidity-coverage/issues/329)
+            if iszero(staticcall(gas, _dest, add(data, 32), mload(data), ret, 64)) {revert(0, 0)}
         }
 
         return (ret[0], ret[1]);
@@ -451,7 +447,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     */
     function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
         IERC20Token fromToken;
-        ISmartToken smartToken; 
+        ISmartToken smartToken;
         IERC20Token toToken;
         IBancorConverter converter;
         uint256 amount;
@@ -665,7 +661,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return connector's weight
     */
-    function getConnectorWeight(IBancorConverter _converter, IERC20Token _connector) 
+    function getConnectorWeight(IBancorConverter _converter, IERC20Token _connector)
         private
         view
         returns(uint32)
@@ -687,7 +683,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return true if connector sale is enabled, otherwise - false
     */
-    function getConnectorSaleEnabled(IBancorConverter _converter, IERC20Token _connector) 
+    function getConnectorSaleEnabled(IBancorConverter _converter, IERC20Token _connector)
         private
         view
         returns(bool)
