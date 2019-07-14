@@ -37,7 +37,7 @@ As such, it implements both the standard token methods and the standard token ev
 Note that these methods can only be executed by the token owner.
 
 **issue**
-```cs
+```solidity
 function issue(address _to, uint256 _amount)
 ```
 Increases the token supply and sends the new tokens to an account.
@@ -45,7 +45,7 @@ Increases the token supply and sends the new tokens to an account.
 <br>
 <br>
 **destroy**
-```cs
+```solidity
 function destroy(address _from, uint256 _amount)
 ```
 Removes tokens from an account and decreases the token supply.
@@ -53,7 +53,7 @@ Removes tokens from an account and decreases the token supply.
 <br>
 <br>
 **disableTransfers**
-```cs
+```solidity
 function disableTransfers(bool _disable)
 ```
 Disables transfer/transferFrom functionality.
@@ -63,7 +63,7 @@ Disables transfer/transferFrom functionality.
 ### Events
 
 **NewSmartToken**
-```cs
+```solidity
 event NewSmartToken(address _token)
 ```
 Triggered when a smart token is deployed.
@@ -71,7 +71,7 @@ Triggered when a smart token is deployed.
 <br>
 <br>
 **Issuance**
-```cs
+```solidity
 event Issuance(uint256 _amount)
 ```
 Triggered when the total supply is increased.
@@ -79,7 +79,7 @@ Triggered when the total supply is increased.
 <br>
 <br>
 **Destruction**
-```cs
+```solidity
 event Destruction(uint256 _amount)
 ```
 Triggered when the total supply is decreased.
@@ -102,7 +102,7 @@ The most important here is `convert`.
 ### Methods
 
 **connectorTokenCount**
-```cs
+```solidity
 function connectorTokenCount() public constant returns (uint16 count)
 ```
 Gets the number of connector tokens defined for the token.
@@ -110,7 +110,7 @@ Gets the number of connector tokens defined for the token.
 <br>
 <br>
 **connectorTokens**
-```cs
+```solidity
 function connectorTokens() public constant returns (address[] connectorTokens)
 ```
 Gets an array of the connector token contract addresses.
@@ -118,7 +118,7 @@ Gets an array of the connector token contract addresses.
 <br>
 <br>
 **connectors**
-```cs
+```solidity
 function connectors(address _connectorToken) public constant
 ```
 Gets the connector token details.
@@ -126,7 +126,7 @@ Gets the connector token details.
 <br>
 <br>
 **convert**
-```cs
+```solidity
 function convert(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn)
 ```
 converts a specific amount of _fromToken to _toToken
@@ -138,7 +138,7 @@ The conversion will only take place if it returns a value greater or equal to `_
 ### Events
 
 **Conversion**
-```cs
+```solidity
 event Conversion(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return, uint256 _currentPriceN, uint256 _currentPriceD);
 ```
 Triggered when a conversion between one of the convertible tokens takes place.
