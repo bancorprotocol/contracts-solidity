@@ -30,12 +30,16 @@ function scan(pathName, indentation) {
                 scan(pathName + "/" + fileName, indentation + "  ");
         }
         else if (pathName.endsWith(".sol")) {
-            fs.appendFileSync(SUMMARY_FILE, indentation + "* [" + basename(pathName).slice(0, -4) + "](" + OUTPUT_DIR + pathName.slice(INPUT_DIR.length, -4) + ".md)\n");
+            fs.appendFileSync(SUMMARY_FILE, indentation + "* [" + basename(pathName).slice(0, -4) + "](" + basename(OUTPUT_DIR) + pathName.slice(INPUT_DIR.length, -4) + ".md)\n");
         }
     }
 }
 
-fs.writeFileSync(SUMMARY_FILE, "# Summary\n");
+fs.writeFileSync (SUMMARY_FILE, "# Summary\n");
+fs.writeFileSync (".gitbook.yaml", "root: ./\n");
+fs.appendFileSync(".gitbook.yaml", "structure:\n");
+fs.appendFileSync(".gitbook.yaml", "  readme: README.md\n");
+fs.appendFileSync(".gitbook.yaml", "  summary: " + SUMMARY_FILE + "\n");
 
 scan(INPUT_DIR, "");
 
