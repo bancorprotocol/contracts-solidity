@@ -13,8 +13,6 @@
 - [`change(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#IBancorConverter-change-contract-IERC20Token-contract-IERC20Token-uint256-uint256)
 
 
----
-
 #### Function `getReturn(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount) → uint256, uint256` {#IBancorConverter-getReturn-contract-IERC20Token-contract-IERC20Token-uint256}
 No description
 #### Function `convert(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn) → uint256` {#IBancorConverter-convert-contract-IERC20Token-contract-IERC20Token-uint256-uint256}

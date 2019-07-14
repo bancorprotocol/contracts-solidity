@@ -16,8 +16,6 @@
 - [`optimalExp(uint256 x)`](#BancorFormula-optimalExp-uint256)
 
 
----
-
 #### Function `constructor()` {#BancorFormula-constructor}
 No description
 #### Function `calculatePurchaseReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _depositAmount) → uint256` {#BancorFormula-calculatePurchaseReturn-uint256-uint256-uint32-uint256}

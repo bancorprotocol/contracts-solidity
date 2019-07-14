@@ -7,8 +7,6 @@
 - [`withdrawTokens(contract IERC20Token _token, address _to, uint256 _amount)`](#TokenHolder-withdrawTokens-contract-IERC20Token-address-uint256)
 
 
----
-
 #### Function `constructor()` {#TokenHolder-constructor}
 constructor
 #### Function `withdrawTokens(contract IERC20Token _token, address _to, uint256 _amount)` {#TokenHolder-withdrawTokens-contract-IERC20Token-address-uint256}

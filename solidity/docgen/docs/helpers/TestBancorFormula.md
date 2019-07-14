@@ -13,8 +13,6 @@
 - [`optimalExpTest(uint256 x)`](#TestBancorFormula-optimalExpTest-uint256)
 
 
----
-
 #### Function `constructor()` {#TestBancorFormula-constructor}
 No description
 #### Function `powerTest(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) → uint256, uint8` {#TestBancorFormula-powerTest-uint256-uint256-uint32-uint32}

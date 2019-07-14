@@ -10,8 +10,6 @@
 #### Events:
 - [`ManagerUpdate(address _prevManager, address _newManager)`](#Managed-ManagerUpdate-address-address)
 
----
-
 #### Function `constructor()` {#Managed-constructor}
 constructor
 #### Function `transferManagement(address _newManager)` {#Managed-transferManagement-address}

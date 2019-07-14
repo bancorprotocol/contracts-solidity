@@ -9,8 +9,6 @@
 - [`fallback()`](#BancorPriceFloor-fallback)
 
 
----
-
 #### Function `constructor(contract ISmartToken _token)` {#BancorPriceFloor-constructor-contract-ISmartToken}
 constructor
 

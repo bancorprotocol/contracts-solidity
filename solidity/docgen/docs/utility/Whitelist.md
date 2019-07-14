@@ -14,8 +14,6 @@
 - [`AddressAddition(address _address)`](#Whitelist-AddressAddition-address)
 - [`AddressRemoval(address _address)`](#Whitelist-AddressRemoval-address)
 
----
-
 #### Function `constructor()` {#Whitelist-constructor}
 constructor
 #### Function `isWhitelisted(address _address) → bool` {#Whitelist-isWhitelisted-address}

@@ -31,8 +31,6 @@
 - [`TxReport(address _reporter, bytes32 _fromBlockchain, uint256 _txId, address _to, uint256 _amount, uint256 _xTransferId)`](#BancorX-TxReport-address-bytes32-uint256-address-uint256-uint256)
 - [`XTransferComplete(address _to, uint256 _id)`](#BancorX-XTransferComplete-address-uint256)
 
----
-
 #### Function `constructor(uint256 _maxLockLimit, uint256 _maxReleaseLimit, uint256 _minLimit, uint256 _limitIncPerBlock, uint256 _minRequiredReports, address _registry)` {#BancorX-constructor-uint256-uint256-uint256-uint256-uint256-address}
 constructor
 

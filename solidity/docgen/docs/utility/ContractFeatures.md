@@ -11,8 +11,6 @@
 - [`FeaturesAddition(address _address, uint256 _features)`](#ContractFeatures-FeaturesAddition-address-uint256)
 - [`FeaturesRemoval(address _address, uint256 _features)`](#ContractFeatures-FeaturesRemoval-address-uint256)
 
----
-
 #### Function `constructor()` {#ContractFeatures-constructor}
 constructor
 #### Function `isSupported(address _contract, uint256 _features) → bool` {#ContractFeatures-isSupported-address-uint256}

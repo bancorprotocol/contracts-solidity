@@ -13,8 +13,6 @@
 - [`ConverterOwned(address _converter, address _owner)`](#BancorConverterUpgrader-ConverterOwned-address-address)
 - [`ConverterUpgrade(address _oldConverter, address _newConverter)`](#BancorConverterUpgrader-ConverterUpgrade-address-address)
 
----
-
 #### Function `constructor(contract IContractRegistry _registry)` {#BancorConverterUpgrader-constructor-contract-IContractRegistry}
 constructor
 #### Function `setRegistry(contract IContractRegistry _registry)` {#BancorConverterUpgrader-setRegistry-contract-IContractRegistry}

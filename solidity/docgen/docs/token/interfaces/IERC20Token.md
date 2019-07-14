@@ -14,8 +14,6 @@
 - [`approve(address _spender, uint256 _value)`](#IERC20Token-approve-address-uint256)
 
 
----
-
 #### Function `name() → string` {#IERC20Token-name}
 No description
 #### Function `symbol() → string` {#IERC20Token-symbol}

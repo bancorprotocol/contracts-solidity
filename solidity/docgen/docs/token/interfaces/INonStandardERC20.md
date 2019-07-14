@@ -14,8 +14,6 @@
 - [`approve(address _spender, uint256 _value)`](#INonStandardERC20-approve-address-uint256)
 
 
----
-
 #### Function `name() → string` {#INonStandardERC20-name}
 No description
 #### Function `symbol() → string` {#INonStandardERC20-symbol}

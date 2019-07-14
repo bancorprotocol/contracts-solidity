@@ -10,8 +10,6 @@
 #### Events:
 - [`OwnerUpdate(address _prevOwner, address _newOwner)`](#Owned-OwnerUpdate-address-address)
 
----
-
 #### Function `constructor()` {#Owned-constructor}
 constructor
 #### Function `transferOwnership(address _newOwner)` {#Owned-transferOwnership-address}
