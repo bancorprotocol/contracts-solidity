@@ -45,14 +45,15 @@ function fixBook(pathName = "_book") {
 }
 
 function removeDir(pathName) {
-    for (const fileName of fs.readdirSync(pathName)) {
-        if (fs.lstatSync(pathName + "/" + fileName).isDirectory())
+    if (fs.lstatSync(pathName).isDirectory()) {
+        for (const fileName of fs.readdirSync(pathName))
             removeDir(pathName + "/" + fileName);
-        else
-            fs.unlinkSync(pathName + "/" + fileName);
+        fs.rmdirSync(pathName);
     }
-    fs.rmdirSync(pathName);
-};
+    else {
+        fs.unlinkSync(pathName);
+    }
+}
 
 function runNode(args) {
     const result = spawnSync("node", args, {stdio: "inherit"});
