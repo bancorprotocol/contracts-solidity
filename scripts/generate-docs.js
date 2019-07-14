@@ -24,13 +24,23 @@ const spawnSync = require("child_process").spawnSync;
 function scanDir(pathName = INPUT_DIR, indentation = "") {
     if (!SKIP_LIST.map(x => INPUT_DIR + "/" + x).includes(pathName)) {
         if (fs.lstatSync(pathName).isDirectory()) {
-            fs.appendFileSync("SUMMARY.md", indentation + "* " + basename(pathName) + ":\n");
+            fs.appendFileSync("SUMMARY.md", indentation + "* " + basename(pathName) + "\n");
             for (const fileName of fs.readdirSync(pathName))
                 scanDir(pathName + "/" + fileName, indentation + "  ");
         }
         else if (pathName.endsWith(".sol")) {
             fs.appendFileSync("SUMMARY.md", indentation + "* [" + basename(pathName).slice(0, -4) + "](" + OUTPUT_DIR + pathName.slice(INPUT_DIR.length, -4) + ".md)\n");
         }
+    }
+}
+
+function fixBook(pathName = "_book") {
+    if (fs.lstatSync(pathName).isDirectory()) {
+        for (const fileName of fs.readdirSync(pathName))
+            fixBook(pathName + "/" + fileName);
+    }
+    else if (pathName.endsWith(".html")) {
+        fs.writeFileSync(pathName, fs.readFileSync(pathName, {encoding: "utf8"}).split("<span>").join("<span style=\"color:gray\">"), {encoding: "utf8"});
     }
 }
 
@@ -67,6 +77,8 @@ runNode([
     NODE_DIR + "/gitbook-cli/bin/gitbook.js",
     "build"
 ]);
+
+fixBook();
 
 fs.unlinkSync("SUMMARY.md");
 removeDir(OUTPUT_DIR);
