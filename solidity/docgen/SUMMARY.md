@@ -1,0 +1,28 @@
+# Summary
+* contracts
+  * [BancorConverterRegistry](solidity/docgen/docs/BancorConverterRegistry.md)
+  * [BancorNetwork](solidity/docgen/docs/BancorNetwork.md)
+  * bancorx
+    * [BancorX](solidity/docgen/docs/bancorx/BancorX.md)
+    * [XTransferRerouter](solidity/docgen/docs/bancorx/XTransferRerouter.md)
+  * converter
+    * [BancorConverter](solidity/docgen/docs/converter/BancorConverter.md)
+    * [BancorConverterFactory](solidity/docgen/docs/converter/BancorConverterFactory.md)
+    * [BancorConverterUpgrader](solidity/docgen/docs/converter/BancorConverterUpgrader.md)
+    * [BancorFormula](solidity/docgen/docs/converter/BancorFormula.md)
+    * [BancorGasPriceLimit](solidity/docgen/docs/converter/BancorGasPriceLimit.md)
+  * token
+    * [ERC20Token](solidity/docgen/docs/token/ERC20Token.md)
+    * [EtherToken](solidity/docgen/docs/token/EtherToken.md)
+    * [SmartToken](solidity/docgen/docs/token/SmartToken.md)
+    * [SmartTokenController](solidity/docgen/docs/token/SmartTokenController.md)
+  * utility
+    * [ContractFeatures](solidity/docgen/docs/utility/ContractFeatures.md)
+    * [ContractRegistry](solidity/docgen/docs/utility/ContractRegistry.md)
+    * [Managed](solidity/docgen/docs/utility/Managed.md)
+    * [NonStandardTokenRegistry](solidity/docgen/docs/utility/NonStandardTokenRegistry.md)
+    * [Owned](solidity/docgen/docs/utility/Owned.md)
+    * [SafeMath](solidity/docgen/docs/utility/SafeMath.md)
+    * [TokenHolder](solidity/docgen/docs/utility/TokenHolder.md)
+    * [Utils](solidity/docgen/docs/utility/Utils.md)
+    * [Whitelist](solidity/docgen/docs/utility/Whitelist.md)
