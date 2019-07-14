@@ -19,18 +19,20 @@ const SKIP_LIST = [
 ];
 
 const fs        = require("fs");
-const basename  = require("path").basename;
+const path      = require("path");
 const spawnSync = require("child_process").spawnSync;
+
+const relativePath = path.relative(path.dirname(SUMMARY_FILE), OUTPUT_DIR);
 
 function scan(pathName, indentation) {
     if (!SKIP_LIST.includes(pathName)) {
         if (fs.lstatSync(pathName).isDirectory()) {
-            fs.appendFileSync(SUMMARY_FILE, indentation + "* " + basename(pathName) + "\n");
+            fs.appendFileSync(SUMMARY_FILE, indentation + "* " + path.basename(pathName) + "\n");
             for (const fileName of fs.readdirSync(pathName))
                 scan(pathName + "/" + fileName, indentation + "  ");
         }
         else if (pathName.endsWith(".sol")) {
-            fs.appendFileSync(SUMMARY_FILE, indentation + "* [" + basename(pathName).slice(0, -4) + "](" + basename(OUTPUT_DIR) + pathName.slice(INPUT_DIR.length, -4) + ".md)\n");
+            fs.appendFileSync(SUMMARY_FILE, indentation + "* [" + path.basename(pathName).slice(0, -4) + "](" + relativePath + pathName.slice(INPUT_DIR.length, -4) + ".md)\n");
         }
     }
 }
