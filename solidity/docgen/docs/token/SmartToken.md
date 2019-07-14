@@ -1,5 +1,3 @@
-# Contract `SmartToken`
-
 
 
 #### Functions:
@@ -14,8 +12,6 @@
 - [`NewSmartToken(address _token)`](#SmartToken-NewSmartToken-address)
 - [`Issuance(uint256 _amount)`](#SmartToken-Issuance-uint256)
 - [`Destruction(uint256 _amount)`](#SmartToken-Destruction-uint256)
-
----
 
 #### Function `constructor(string _name, string _symbol, uint8 _decimals)` {#SmartToken-constructor-string-string-uint8}
 constructor

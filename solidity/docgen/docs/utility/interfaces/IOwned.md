@@ -1,5 +1,3 @@
-# Contract `IOwned`
-
 
 
 #### Functions:
@@ -7,8 +5,6 @@
 - [`transferOwnership(address _newOwner)`](#IOwned-transferOwnership-address)
 - [`acceptOwnership()`](#IOwned-acceptOwnership)
 
-
----
 
 #### Function `owner() → address` {#IOwned-owner}
 No description

@@ -1,5 +1,3 @@
-# Contract `SmartTokenController`
-
 
 
 #### Functions:
@@ -9,8 +7,6 @@
 - [`disableTokenTransfers(bool _disable)`](#SmartTokenController-disableTokenTransfers-bool)
 - [`withdrawFromToken(contract IERC20Token _token, address _to, uint256 _amount)`](#SmartTokenController-withdrawFromToken-contract-IERC20Token-address-uint256)
 
-
----
 
 #### Function `constructor(contract ISmartToken _token)` {#SmartTokenController-constructor-contract-ISmartToken}
 constructor

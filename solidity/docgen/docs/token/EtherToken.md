@@ -1,5 +1,3 @@
-# Contract `EtherToken`
-
 
 
 #### Functions:
@@ -14,8 +12,6 @@
 #### Events:
 - [`Issuance(uint256 _amount)`](#EtherToken-Issuance-uint256)
 - [`Destruction(uint256 _amount)`](#EtherToken-Destruction-uint256)
-
----
 
 #### Function `constructor()` {#EtherToken-constructor}
 constructor

@@ -1,5 +1,3 @@
-# Contract `BancorConverter`
-
 
 
 #### Functions:
@@ -41,8 +39,6 @@
 - [`PriceDataUpdate(address _connectorToken, uint256 _tokenSupply, uint256 _connectorBalance, uint32 _connectorWeight)`](#BancorConverter-PriceDataUpdate-address-uint256-uint256-uint32)
 - [`ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee)`](#BancorConverter-ConversionFeeUpdate-uint32-uint32)
 - [`ConversionsEnable(bool _conversionsEnabled)`](#BancorConverter-ConversionsEnable-bool)
-
----
 
 #### Function `constructor(contract ISmartToken _token, contract IContractRegistry _registry, uint32 _maxConversionFee, contract IERC20Token _connectorToken, uint32 _connectorWeight)` {#BancorConverter-constructor-contract-ISmartToken-contract-IContractRegistry-uint32-contract-IERC20Token-uint32}
 constructor

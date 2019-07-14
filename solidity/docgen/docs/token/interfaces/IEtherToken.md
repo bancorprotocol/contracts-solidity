@@ -1,5 +1,3 @@
-# Contract `IEtherToken`
-
 
 
 #### Functions:
@@ -7,8 +5,6 @@
 - [`withdraw(uint256 _amount)`](#IEtherToken-withdraw-uint256)
 - [`withdrawTo(address _to, uint256 _amount)`](#IEtherToken-withdrawTo-address-uint256)
 
-
----
 
 #### Function `deposit()` {#IEtherToken-deposit}
 No description

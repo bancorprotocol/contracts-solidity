@@ -1,5 +1,3 @@
-# Contract `Whitelist`
-
 
 
 #### Functions:
@@ -13,8 +11,6 @@
 #### Events:
 - [`AddressAddition(address _address)`](#Whitelist-AddressAddition-address)
 - [`AddressRemoval(address _address)`](#Whitelist-AddressRemoval-address)
-
----
 
 #### Function `constructor()` {#Whitelist-constructor}
 constructor

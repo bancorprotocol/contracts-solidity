@@ -1,5 +1,3 @@
-# Contract `NonStandardERC20Token`
-
 
 
 #### Functions:
@@ -11,8 +9,6 @@
 #### Events:
 - [`Transfer(address _from, address _to, uint256 _value)`](#NonStandardERC20Token-Transfer-address-address-uint256)
 - [`Approval(address _owner, address _spender, uint256 _value)`](#NonStandardERC20Token-Approval-address-address-uint256)
-
----
 
 #### Function `constructor(string _name, string _symbol, uint8 _decimals)` {#NonStandardERC20Token-constructor-string-string-uint8}
 constructor

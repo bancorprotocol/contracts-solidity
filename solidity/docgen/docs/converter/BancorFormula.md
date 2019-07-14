@@ -1,5 +1,3 @@
-# Contract `BancorFormula`
-
 
 
 #### Functions:
@@ -15,8 +13,6 @@
 - [`optimalLog(uint256 x)`](#BancorFormula-optimalLog-uint256)
 - [`optimalExp(uint256 x)`](#BancorFormula-optimalExp-uint256)
 
-
----
 
 #### Function `constructor()` {#BancorFormula-constructor}
 No description

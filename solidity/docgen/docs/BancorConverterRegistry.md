@@ -1,5 +1,3 @@
-# Contract `BancorConverterRegistry`
-
 
 
 #### Functions:
@@ -14,8 +12,6 @@
 #### Events:
 - [`ConverterAddition(address _token, address _address)`](#BancorConverterRegistry-ConverterAddition-address-address)
 - [`ConverterRemoval(address _token, address _address)`](#BancorConverterRegistry-ConverterRemoval-address-address)
-
----
 
 #### Function `constructor()` {#BancorConverterRegistry-constructor}
 constructor

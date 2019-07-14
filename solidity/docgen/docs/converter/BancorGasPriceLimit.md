@@ -1,5 +1,3 @@
-# Contract `BancorGasPriceLimit`
-
 
 
 #### Functions:
@@ -7,8 +5,6 @@
 - [`setGasPrice(uint256 _gasPrice)`](#BancorGasPriceLimit-setGasPrice-uint256)
 - [`validateGasPrice(uint256 _gasPrice)`](#BancorGasPriceLimit-validateGasPrice-uint256)
 
-
----
 
 #### Function `constructor(uint256 _gasPrice)` {#BancorGasPriceLimit-constructor-uint256}
 constructor

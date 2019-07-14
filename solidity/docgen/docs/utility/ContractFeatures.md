@@ -1,5 +1,3 @@
-# Contract `ContractFeatures`
-
 
 
 #### Functions:
@@ -10,8 +8,6 @@
 #### Events:
 - [`FeaturesAddition(address _address, uint256 _features)`](#ContractFeatures-FeaturesAddition-address-uint256)
 - [`FeaturesRemoval(address _address, uint256 _features)`](#ContractFeatures-FeaturesRemoval-address-uint256)
-
----
 
 #### Function `constructor()` {#ContractFeatures-constructor}
 constructor

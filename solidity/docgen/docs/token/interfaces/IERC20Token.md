@@ -1,5 +1,3 @@
-# Contract `IERC20Token`
-
 
 
 #### Functions:
@@ -13,8 +11,6 @@
 - [`transferFrom(address _from, address _to, uint256 _value)`](#IERC20Token-transferFrom-address-address-uint256)
 - [`approve(address _spender, uint256 _value)`](#IERC20Token-approve-address-uint256)
 
-
----
 
 #### Function `name() → string` {#IERC20Token-name}
 No description

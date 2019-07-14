@@ -1,5 +1,3 @@
-# Contract `ContractRegistry`
-
 
 
 #### Functions:
@@ -12,8 +10,6 @@
 
 #### Events:
 - [`AddressUpdate(bytes32 _contractName, address _contractAddress)`](#ContractRegistry-AddressUpdate-bytes32-address)
-
----
 
 #### Function `constructor()` {#ContractRegistry-constructor}
 constructor

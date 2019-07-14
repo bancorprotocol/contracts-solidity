@@ -1,5 +1,3 @@
-# Contract `TestBancorNetwork`
-
 
 
 #### Functions:
@@ -7,8 +5,6 @@
 - [`getReturnOld()`](#TestBancorNetwork-getReturnOld)
 - [`getReturnNew()`](#TestBancorNetwork-getReturnNew)
 
-
----
 
 #### Function `constructor(uint256 _amount, uint256 _fee)` {#TestBancorNetwork-constructor-uint256-uint256}
 No description

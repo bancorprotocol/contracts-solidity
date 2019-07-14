@@ -1,5 +1,3 @@
-# Contract `TestSafeMath`
-
 
 
 #### Functions:
@@ -8,8 +6,6 @@
 - [`testSafeSub(uint256 _x, uint256 _y)`](#TestSafeMath-testSafeSub-uint256-uint256)
 - [`testSafeMul(uint256 _x, uint256 _y)`](#TestSafeMath-testSafeMul-uint256-uint256)
 
-
----
 
 #### Function `constructor()` {#TestSafeMath-constructor}
 No description

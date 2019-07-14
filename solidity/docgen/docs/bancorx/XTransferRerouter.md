@@ -1,5 +1,3 @@
-# Contract `XTransferRerouter`
-
 
 
 #### Functions:
@@ -9,8 +7,6 @@
 
 #### Events:
 - [`TxReroute(uint256 _txId, bytes32 _toBlockchain, bytes32 _to)`](#XTransferRerouter-TxReroute-uint256-bytes32-bytes32)
-
----
 
 #### Function `constructor(bool _reroutingEnabled)` {#XTransferRerouter-constructor-bool}
 constructor

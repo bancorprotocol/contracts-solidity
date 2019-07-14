@@ -1,5 +1,3 @@
-# Contract `BancorConverterFactory`
-
 
 
 #### Functions:
@@ -8,8 +6,6 @@
 
 #### Events:
 - [`NewConverter(address _converter, address _owner)`](#BancorConverterFactory-NewConverter-address-address)
-
----
 
 #### Function `constructor()` {#BancorConverterFactory-constructor}
 constructor
