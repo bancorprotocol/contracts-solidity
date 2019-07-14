@@ -6,10 +6,10 @@
 - [`destroy(address _from, uint256 _amount)`](#INonStandardSmartToken-destroy-address-uint256)
 
 
-#### Function `disableTransfers(bool _disable)` {#INonStandardSmartToken-disableTransfers-bool}
+##### Function `disableTransfers(bool _disable)` {#INonStandardSmartToken-disableTransfers-bool}
 No description
-#### Function `issue(address _to, uint256 _amount)` {#INonStandardSmartToken-issue-address-uint256}
+##### Function `issue(address _to, uint256 _amount)` {#INonStandardSmartToken-issue-address-uint256}
 No description
-#### Function `destroy(address _from, uint256 _amount)` {#INonStandardSmartToken-destroy-address-uint256}
+##### Function `destroy(address _from, uint256 _amount)` {#INonStandardSmartToken-destroy-address-uint256}
 No description
 

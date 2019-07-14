@@ -5,8 +5,8 @@
 - [`setAddress(address token, bool register)`](#NonStandardTokenRegistry-setAddress-address-bool)
 
 
-#### Function `constructor()` {#NonStandardTokenRegistry-constructor}
+##### Function `constructor()` {#NonStandardTokenRegistry-constructor}
 constructor
-#### Function `setAddress(address token, bool register)` {#NonStandardTokenRegistry-setAddress-address-bool}
+##### Function `setAddress(address token, bool register)` {#NonStandardTokenRegistry-setAddress-address-bool}
 No description
 
