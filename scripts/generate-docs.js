@@ -5,24 +5,24 @@ const TEMPLATE_DIR = "solidity/docgen";
 
 // Skip any file or folder whose name is in the list below
 const SKIP_LIST = [
-    "bancorx/interfaces",
-    "converter/interfaces",
-    "crowdsale",
-    "helpers",
-    "legacy",
-    "token/interfaces",
-    "utility/interfaces",
-    "ContractIds.sol",
-    "FeatureIds.sol",
-    "IBancorNetwork.sol"
+    INPUT_DIR + "/bancorx/interfaces",
+    INPUT_DIR + "/converter/interfaces",
+    INPUT_DIR + "/crowdsale",
+    INPUT_DIR + "/helpers",
+    INPUT_DIR + "/legacy",
+    INPUT_DIR + "/token/interfaces",
+    INPUT_DIR + "/utility/interfaces",
+    INPUT_DIR + "/ContractIds.sol",
+    INPUT_DIR + "/FeatureIds.sol",
+    INPUT_DIR + "/IBancorNetwork.sol"
 ];
 
 const fs        = require("fs");
 const basename  = require("path").basename;
 const spawnSync = require("child_process").spawnSync;
 
-function scanDir(pathName = INPUT_DIR, indentation = "") {
-    if (!SKIP_LIST.map(x => INPUT_DIR + "/" + x).includes(pathName)) {
+function scanDir(pathName, indentation = "") {
+    if (!SKIP_LIST.includes(pathName)) {
         if (fs.lstatSync(pathName).isDirectory()) {
             fs.appendFileSync("SUMMARY.md", indentation + "* " + basename(pathName) + "\n");
             for (const fileName of fs.readdirSync(pathName))
@@ -34,7 +34,7 @@ function scanDir(pathName = INPUT_DIR, indentation = "") {
     }
 }
 
-function fixBook(pathName = "_book") {
+function fixBook(pathName) {
     if (fs.lstatSync(pathName).isDirectory()) {
         for (const fileName of fs.readdirSync(pathName))
             fixBook(pathName + "/" + fileName);
@@ -62,7 +62,7 @@ function runNode(args) {
 }
 
 fs.writeFileSync("SUMMARY.md", "# Summary\n");
-scanDir();
+scanDir(INPUT_DIR);
 
 runNode([
     NODE_DIR + "/solidity-docgen/dist/cli.js",
@@ -78,7 +78,7 @@ runNode([
     "build"
 ]);
 
-fixBook();
+fixBook("_book");
 
 fs.unlinkSync("SUMMARY.md");
 removeDir(OUTPUT_DIR);
