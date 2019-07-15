@@ -429,7 +429,15 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _fromToken, _toToken, _amount);
 
         assembly {
-            if iszero(staticcall(gas, _dest, add(data, 32), mload(data), ret, 64)) {
+            let success := staticcall(
+                gas,           // gas remaining
+                _dest,         // destination address
+                add(data, 32), // input buffer (starts after the first 32 bytes)
+                mload(data),   // input length (loaded from the first 32 bytes)
+                ret,           // output buffer
+                64             // output length
+            )
+            if iszero(success) {
                 revert(0, 0)
             }
         }
