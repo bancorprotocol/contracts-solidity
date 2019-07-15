@@ -432,8 +432,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             let success := staticcall(
                 gas,           // gas remaining
                 _dest,         // destination address
-                add(data, 32), // input buffer (starts after the first 32 bytes)
-                mload(data),   // input length (loaded from the first 32 bytes)
+                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
+                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
                 ret,           // output buffer
                 64             // output length
             )
