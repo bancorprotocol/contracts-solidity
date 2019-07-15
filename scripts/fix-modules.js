@@ -14,7 +14,7 @@ function fix(fileName, tokens) {
         let data = fs.readFileSync(fileName, {encoding: "utf8"});
         for (const token of tokens)
             data = data.split(token.prev).join(token.next);
-        fs.writeFileSync(fileName, data, {encoding: "utf8"});    
+        fs.writeFileSync(fileName, data, {encoding: "utf8"});
     }
     catch (error) {
         console.log(error.message);
