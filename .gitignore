@@ -17,6 +17,3 @@ solidity/coverageEnv
 solidity/coverage
 solidity/coverage.json
 solidity/scTopics
-
-# npm run docify
-_book
