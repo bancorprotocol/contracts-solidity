@@ -6,8 +6,12 @@
 - [`testSafeSub(uint256 _x, uint256 _y)`](#TestSafeMath-testSafeSub-uint256-uint256-)
 - [`testSafeMul(uint256 _x, uint256 _y)`](#TestSafeMath-testSafeMul-uint256-uint256-)
 
+---
+
 # Events:
 None
+
+---
 
 ## Function `constructor()` {#TestSafeMath-constructor--}
 No description
@@ -17,4 +21,6 @@ No description
 No description
 ## Function `testSafeMul(uint256 _x, uint256 _y) → uint256` {#TestSafeMath-testSafeMul-uint256-uint256-}
 No description
+
+---
 

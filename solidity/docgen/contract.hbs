@@ -8,6 +8,8 @@
 None
 {{/unless}}
 
+---
+
 # Events:
 {{#ownEvents}}
 - [`{{name}}({{args}})`](#{{anchor}})
@@ -15,6 +17,8 @@ None
 {{#unless ownEvents}}
 None
 {{/unless}}
+
+---
 
 {{#ownFunctions}}
 ## Function `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}` {#{{anchor~}} }
@@ -26,6 +30,8 @@ None
 {{/natspec.params}}
 {{/if}}
 {{/ownFunctions}}
+
+---
 
 {{#ownEvents}}
 ## Event `{{name}}({{args}})` {#{{anchor~}} }

@@ -22,12 +22,16 @@
 - [`getCurrentLockLimit()`](#BancorX-getCurrentLockLimit--)
 - [`getCurrentReleaseLimit()`](#BancorX-getCurrentReleaseLimit--)
 
+---
+
 # Events:
 - [`TokensLock(address _from, uint256 _amount)`](#BancorX-TokensLock-address-uint256-)
 - [`TokensRelease(address _to, uint256 _amount)`](#BancorX-TokensRelease-address-uint256-)
 - [`XTransfer(address _from, bytes32 _toBlockchain, bytes32 _to, uint256 _amount, uint256 _id)`](#BancorX-XTransfer-address-bytes32-bytes32-uint256-uint256-)
 - [`TxReport(address _reporter, bytes32 _fromBlockchain, uint256 _txId, address _to, uint256 _amount, uint256 _xTransferId)`](#BancorX-TxReport-address-bytes32-uint256-address-uint256-uint256-)
 - [`XTransferComplete(address _to, uint256 _id)`](#BancorX-XTransferComplete-address-uint256-)
+
+---
 
 ## Function `constructor(uint256 _maxLockLimit, uint256 _maxReleaseLimit, uint256 _minLimit, uint256 _limitIncPerBlock, uint256 _minRequiredReports, address _registry)` {#BancorX-constructor-uint256-uint256-uint256-uint256-uint256-address-}
 constructor
@@ -155,6 +159,8 @@ method for calculating current lock limit
 ## Function `getCurrentReleaseLimit() → uint256` {#BancorX-getCurrentReleaseLimit--}
 method for calculating current release limit
 
+
+---
 
 ## Event `TokensLock(address _from, uint256 _amount)` {#BancorX-TokensLock-address-uint256-}
 No description

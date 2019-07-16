@@ -5,8 +5,12 @@
 - [`transferOwnership(address _newOwner)`](#Owned-transferOwnership-address-)
 - [`acceptOwnership()`](#Owned-acceptOwnership--)
 
+---
+
 # Events:
 - [`OwnerUpdate(address _prevOwner, address _newOwner)`](#Owned-OwnerUpdate-address-address-)
+
+---
 
 ## Function `constructor()` {#Owned-constructor--}
 constructor
@@ -19,6 +23,8 @@ can only be called by the contract owner
 - `_newOwner`:    new contract owner
 ## Function `acceptOwnership()` {#Owned-acceptOwnership--}
 used by a new owner to accept an ownership transfer
+
+---
 
 ## Event `OwnerUpdate(address _prevOwner, address _newOwner)` {#Owned-OwnerUpdate-address-address-}
 No description

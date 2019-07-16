@@ -9,9 +9,13 @@
 - [`registerConverter(address _token, address _converter)`](#BancorConverterRegistry-registerConverter-address-address-)
 - [`unregisterConverter(address _token, uint32 _index)`](#BancorConverterRegistry-unregisterConverter-address-uint32-)
 
+---
+
 # Events:
 - [`ConverterAddition(address _token, address _address)`](#BancorConverterRegistry-ConverterAddition-address-address-)
 - [`ConverterRemoval(address _token, address _address)`](#BancorConverterRegistry-ConverterRemoval-address-address-)
+
+---
 
 ## Function `constructor()` {#BancorConverterRegistry-constructor--}
 constructor
@@ -58,6 +62,8 @@ multiple times when removing an older converter from a large converter list
 - `_token`:   token address
 
 - `_index`:   converter index
+
+---
 
 ## Event `ConverterAddition(address _token, address _address)` {#BancorConverterRegistry-ConverterAddition-address-address-}
 No description

@@ -9,9 +9,13 @@
 - [`transferFrom(address _from, address _to, uint256 _value)`](#EtherToken-transferFrom-address-address-uint256-)
 - [`fallback()`](#EtherToken-fallback--)
 
+---
+
 # Events:
 - [`Issuance(uint256 _amount)`](#EtherToken-Issuance-uint256-)
 - [`Destruction(uint256 _amount)`](#EtherToken-Destruction-uint256-)
+
+---
 
 ## Function `constructor()` {#EtherToken-constructor--}
 constructor
@@ -51,6 +55,8 @@ throws on any error rather then return a false flag to minimize user errors
 
 ## Function `fallback()` {#EtherToken-fallback--}
 deposit ether in the account
+
+---
 
 ## Event `Issuance(uint256 _amount)` {#EtherToken-Issuance-uint256-}
 No description

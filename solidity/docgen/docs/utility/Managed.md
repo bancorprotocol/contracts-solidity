@@ -5,8 +5,12 @@
 - [`transferManagement(address _newManager)`](#Managed-transferManagement-address-)
 - [`acceptManagement()`](#Managed-acceptManagement--)
 
+---
+
 # Events:
 - [`ManagerUpdate(address _prevManager, address _newManager)`](#Managed-ManagerUpdate-address-address-)
+
+---
 
 ## Function `constructor()` {#Managed-constructor--}
 constructor
@@ -19,6 +23,8 @@ can only be called by the contract manager
 - `_newManager`:    new contract manager
 ## Function `acceptManagement()` {#Managed-acceptManagement--}
 used by a new manager to accept a management transfer
+
+---
 
 ## Event `ManagerUpdate(address _prevManager, address _newManager)` {#Managed-ManagerUpdate-address-address-}
 No description

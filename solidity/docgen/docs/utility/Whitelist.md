@@ -8,9 +8,13 @@
 - [`removeAddress(address _address)`](#Whitelist-removeAddress-address-)
 - [`removeAddresses(address[] _addresses)`](#Whitelist-removeAddresses-address---)
 
+---
+
 # Events:
 - [`AddressAddition(address _address)`](#Whitelist-AddressAddition-address-)
 - [`AddressRemoval(address _address)`](#Whitelist-AddressRemoval-address-)
+
+---
 
 ## Function `constructor()` {#Whitelist-constructor--}
 constructor
@@ -40,6 +44,8 @@ removes a list of addresses from the whitelist
 
 ### Parameters:
 - `_addresses`: addresses to remove
+
+---
 
 ## Event `AddressAddition(address _address)` {#Whitelist-AddressAddition-address-}
 No description

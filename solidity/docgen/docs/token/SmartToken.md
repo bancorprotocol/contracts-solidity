@@ -8,10 +8,14 @@
 - [`transfer(address _to, uint256 _value)`](#SmartToken-transfer-address-uint256-)
 - [`transferFrom(address _from, address _to, uint256 _value)`](#SmartToken-transferFrom-address-address-uint256-)
 
+---
+
 # Events:
 - [`NewSmartToken(address _token)`](#SmartToken-NewSmartToken-address-)
 - [`Issuance(uint256 _amount)`](#SmartToken-Issuance-uint256-)
 - [`Destruction(uint256 _amount)`](#SmartToken-Destruction-uint256-)
+
+---
 
 ## Function `constructor(string _name, string _symbol, uint8 _decimals)` {#SmartToken-constructor-string-string-uint8-}
 constructor
@@ -66,6 +70,8 @@ in addition to the standard checks, the function throws if transfers are disable
 
 - `_value`:   transfer amount
 
+
+---
 
 ## Event `NewSmartToken(address _token)` {#SmartToken-NewSmartToken-address-}
 No description

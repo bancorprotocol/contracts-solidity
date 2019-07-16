@@ -4,8 +4,12 @@
 - [`constructor()`](#BancorConverterFactory-constructor--)
 - [`createConverter(contract ISmartToken _token, contract IContractRegistry _registry, uint32 _maxConversionFee, contract IERC20Token _connectorToken, uint32 _connectorWeight)`](#BancorConverterFactory-createConverter-contract-ISmartToken-contract-IContractRegistry-uint32-contract-IERC20Token-uint32-)
 
+---
+
 # Events:
 - [`NewConverter(address _converter, address _owner)`](#BancorConverterFactory-NewConverter-address-address-)
+
+---
 
 ## Function `constructor()` {#BancorConverterFactory-constructor--}
 constructor
@@ -24,6 +28,8 @@ the ownership and management to the sender.
 
 - `_connectorWeight`:    optional, weight for the initial connector
 
+
+---
 
 ## Event `NewConverter(address _converter, address _owner)` {#BancorConverterFactory-NewConverter-address-address-}
 No description

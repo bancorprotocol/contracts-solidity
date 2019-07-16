@@ -9,8 +9,12 @@
 - [`contributeBTCs()`](#CrowdsaleController-contributeBTCs--)
 - [`fallback()`](#CrowdsaleController-fallback--)
 
+---
+
 # Events:
 - [`Contribution(address _contributor, uint256 _amount, uint256 _return)`](#CrowdsaleController-Contribution-address-uint256-uint256-)
+
+---
 
 ## Function `constructor(contract ISmartToken _token, uint256 _startTime, address _beneficiary, address _btcs, bytes32 _realEtherCapHash)` {#CrowdsaleController-constructor-contract-ISmartToken-uint256-address-address-bytes32-}
 constructor
@@ -54,6 +58,8 @@ can only be called before the crowdsale started
 
 ## Function `fallback()` {#CrowdsaleController-fallback--}
 No description
+
+---
 
 ## Event `Contribution(address _contributor, uint256 _amount, uint256 _return)` {#CrowdsaleController-Contribution-address-uint256-uint256-}
 No description

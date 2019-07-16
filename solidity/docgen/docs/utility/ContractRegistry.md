@@ -8,8 +8,12 @@
 - [`unregisterAddress(bytes32 _contractName)`](#ContractRegistry-unregisterAddress-bytes32-)
 - [`getAddress(bytes32 _contractName)`](#ContractRegistry-getAddress-bytes32-)
 
+---
+
 # Events:
 - [`AddressUpdate(bytes32 _contractName, address _contractAddress)`](#ContractRegistry-AddressUpdate-bytes32-address-)
+
+---
 
 ## Function `constructor()` {#ContractRegistry-constructor--}
 constructor
@@ -36,6 +40,8 @@ removes an existing contract address from the registry
 - `_contractName`: contract name
 ## Function `getAddress(bytes32 _contractName) → address` {#ContractRegistry-getAddress-bytes32-}
 No description
+
+---
 
 ## Event `AddressUpdate(bytes32 _contractName, address _contractAddress)` {#ContractRegistry-AddressUpdate-bytes32-address-}
 No description

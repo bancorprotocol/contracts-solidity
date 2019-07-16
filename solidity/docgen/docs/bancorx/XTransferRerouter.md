@@ -5,8 +5,12 @@
 - [`enableRerouting(bool _enable)`](#XTransferRerouter-enableRerouting-bool-)
 - [`rerouteTx(uint256 _txId, bytes32 _blockchain, bytes32 _to)`](#XTransferRerouter-rerouteTx-uint256-bytes32-bytes32-)
 
+---
+
 # Events:
 - [`TxReroute(uint256 _txId, bytes32 _toBlockchain, bytes32 _to)`](#XTransferRerouter-TxReroute-uint256-bytes32-bytes32-)
+
+---
 
 ## Function `constructor(bool _reroutingEnabled)` {#XTransferRerouter-constructor-bool-}
 constructor
@@ -27,6 +31,8 @@ allows the owner to disable/enable rerouting
 - `_blockchain`:  the new blockchain name
 
 - `_to`:          the new target address/account
+
+---
 
 ## Event `TxReroute(uint256 _txId, bytes32 _toBlockchain, bytes32 _to)` {#XTransferRerouter-TxReroute-uint256-bytes32-bytes32-}
 No description

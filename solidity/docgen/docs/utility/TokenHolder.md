@@ -4,8 +4,12 @@
 - [`constructor()`](#TokenHolder-constructor--)
 - [`withdrawTokens(contract IERC20Token _token, address _to, uint256 _amount)`](#TokenHolder-withdrawTokens-contract-IERC20Token-address-uint256-)
 
+---
+
 # Events:
 None
+
+---
 
 ## Function `constructor()` {#TokenHolder-constructor--}
 constructor
@@ -19,4 +23,6 @@ can only be called by the owner
 - `_to`:      account to receive the new amount
 
 - `_amount`:  amount to withdraw
+
+---
 

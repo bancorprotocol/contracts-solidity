@@ -6,9 +6,13 @@
 - [`transferFrom(address _from, address _to, uint256 _value)`](#ERC20Token-transferFrom-address-address-uint256-)
 - [`approve(address _spender, uint256 _value)`](#ERC20Token-approve-address-uint256-)
 
+---
+
 # Events:
 - [`Transfer(address _from, address _to, uint256 _value)`](#ERC20Token-Transfer-address-address-uint256-)
 - [`Approval(address _owner, address _spender, uint256 _value)`](#ERC20Token-Approval-address-address-uint256-)
+
+---
 
 ## Function `constructor(string _name, string _symbol, uint8 _decimals)` {#ERC20Token-constructor-string-string-uint8-}
 constructor
@@ -51,6 +55,8 @@ in 2 separate transactions - once to change the allowance to 0 and secondly to c
 
 - `_value`:   allowance amount
 
+
+---
 
 ## Event `Transfer(address _from, address _to, uint256 _value)` {#ERC20Token-Transfer-address-address-uint256-}
 No description

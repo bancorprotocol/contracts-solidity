@@ -7,9 +7,13 @@
 - [`upgrade(uint16 _version)`](#BancorConverterUpgrader-upgrade-uint16-)
 - [`upgradeOld(contract IBancorConverter _converter, bytes32 _version)`](#BancorConverterUpgrader-upgradeOld-contract-IBancorConverter-bytes32-)
 
+---
+
 # Events:
 - [`ConverterOwned(address _converter, address _owner)`](#BancorConverterUpgrader-ConverterOwned-address-address-)
 - [`ConverterUpgrade(address _oldConverter, address _newConverter)`](#BancorConverterUpgrader-ConverterUpgrade-address-address-)
+
+---
 
 ## Function `constructor(contract IContractRegistry _registry)` {#BancorConverterUpgrader-constructor-contract-IContractRegistry-}
 constructor
@@ -43,6 +47,8 @@ fires the ConverterUpgrade event upon success.
 - `_converter`:   old converter contract address
 
 - `_version`:     old converter version
+
+---
 
 ## Event `ConverterOwned(address _converter, address _owner)` {#BancorConverterUpgrader-ConverterOwned-address-address-}
 No description
