@@ -1,7 +1,6 @@
 
 
 # Functions:
-
 - [`constructor(contract IContractRegistry _registry)`](#BancorNetwork-constructor-contract-IContractRegistry-)
 - [`setRegistry(contract IContractRegistry _registry)`](#BancorNetwork-setRegistry-contract-IContractRegistry-)
 - [`setSignerAddress(address _signerAddress)`](#BancorNetwork-setSignerAddress-address-)
@@ -18,6 +17,7 @@
 - [`convertForPrioritized2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)`](#BancorNetwork-convertForPrioritized2-contract-IERC20Token---uint256-uint256-address-uint256-uint8-bytes32-bytes32-)
 - [`convertForPrioritized(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _block, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s)`](#BancorNetwork-convertForPrioritized-contract-IERC20Token---uint256-uint256-address-uint256-uint256-uint8-bytes32-bytes32-)
 
+# Events:
 
 ## Function `constructor(contract IContractRegistry _registry)` {#BancorNetwork-constructor-contract-IContractRegistry-}
 constructor
