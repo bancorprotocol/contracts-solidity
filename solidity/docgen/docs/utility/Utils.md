@@ -3,15 +3,7 @@
 # Functions:
 - [`constructor()`](#Utils-constructor--)
 
----
 
-# Events:
-None
-
----
-
-## Function `constructor()` {#Utils-constructor--}
+# Function `constructor()` {#Utils-constructor--}
 No description
-
----
 
