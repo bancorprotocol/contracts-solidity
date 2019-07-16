@@ -1,18 +1,20 @@
 {{{natspec.devdoc}}}
 
-{{#if ownFunctions}}
 # Functions:
 {{#ownFunctions}}
 - [`{{name}}({{args}})`](#{{anchor}})
 {{/ownFunctions}}
-{{/if}}
+{{#unless ownFunctions}}
+None
+{{/unless}}
 
-{{#if ownEvents}}
 # Events:
 {{#ownEvents}}
 - [`{{name}}({{args}})`](#{{anchor}})
 {{/ownEvents}}
-{{/if}}
+{{#unless ownEvents}}
+None
+{{/unless}}
 
 {{#ownFunctions}}
 ## Function `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}` {#{{anchor~}} }

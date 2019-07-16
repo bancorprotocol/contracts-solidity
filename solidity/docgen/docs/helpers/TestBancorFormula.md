@@ -10,6 +10,8 @@
 - [`optimalLogTest(uint256 x)`](#TestBancorFormula-optimalLogTest-uint256-)
 - [`optimalExpTest(uint256 x)`](#TestBancorFormula-optimalExpTest-uint256-)
 
+# Events:
+None
 
 ## Function `constructor()` {#TestBancorFormula-constructor--}
 No description

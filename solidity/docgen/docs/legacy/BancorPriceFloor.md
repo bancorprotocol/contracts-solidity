@@ -6,6 +6,8 @@
 - [`withdraw(uint256 _amount)`](#BancorPriceFloor-withdraw-uint256-)
 - [`fallback()`](#BancorPriceFloor-fallback--)
 
+# Events:
+None
 
 ## Function `constructor(contract ISmartToken _token)` {#BancorPriceFloor-constructor-contract-ISmartToken-}
 constructor

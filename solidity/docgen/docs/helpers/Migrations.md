@@ -5,6 +5,8 @@
 - [`setCompleted(uint256 completed)`](#Migrations-setCompleted-uint256-)
 - [`upgrade(address new_address)`](#Migrations-upgrade-address-)
 
+# Events:
+None
 
 ## Function `constructor()` {#Migrations-constructor--}
 No description

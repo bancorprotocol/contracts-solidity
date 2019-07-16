@@ -11,6 +11,8 @@
 - [`transferFrom(address _from, address _to, uint256 _value)`](#INonStandardERC20-transferFrom-address-address-uint256-)
 - [`approve(address _spender, uint256 _value)`](#INonStandardERC20-approve-address-uint256-)
 
+# Events:
+None
 
 ## Function `name() → string` {#INonStandardERC20-name--}
 No description

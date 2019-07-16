@@ -6,6 +6,8 @@
 - [`mul(uint256 _x, uint256 _y)`](#SafeMath-mul-uint256-uint256-)
 - [`div(uint256 _x, uint256 _y)`](#SafeMath-div-uint256-uint256-)
 
+# Events:
+None
 
 ## Function `add(uint256 _x, uint256 _y) → uint256` {#SafeMath-add-uint256-uint256-}
 returns the sum of _x and _y, reverts if the calculation overflows

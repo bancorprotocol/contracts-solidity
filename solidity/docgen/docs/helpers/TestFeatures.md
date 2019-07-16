@@ -4,6 +4,8 @@
 - [`constructor(contract IContractFeatures _features)`](#TestFeatures-constructor-contract-IContractFeatures-)
 - [`enableFeatures(uint256 _features, bool _enable)`](#TestFeatures-enableFeatures-uint256-bool-)
 
+# Events:
+None
 
 ## Function `constructor(contract IContractFeatures _features)` {#TestFeatures-constructor-contract-IContractFeatures-}
 No description

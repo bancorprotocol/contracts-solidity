@@ -10,6 +10,8 @@
 - [`claimTokens(address _from, uint256 _amount)`](#IBancorConverter-claimTokens-address-uint256-)
 - [`change(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#IBancorConverter-change-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
 
+# Events:
+None
 
 ## Function `getReturn(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount) → uint256, uint256` {#IBancorConverter-getReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
 No description
