@@ -4,7 +4,6 @@
   * [BancorNetwork](docs/BancorNetwork.md)
   * bancorx
     * [BancorX](docs/bancorx/BancorX.md)
-    * [XTransferRerouter](docs/bancorx/XTransferRerouter.md)
   * converter
     * [BancorConverter](docs/converter/BancorConverter.md)
     * [BancorConverterFactory](docs/converter/BancorConverterFactory.md)

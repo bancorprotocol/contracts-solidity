@@ -7,6 +7,7 @@ const SUMMARY_FILE = "solidity/docgen/SUMMARY.md";
 // Skip any file or folder whose name is in the list below
 const SKIP_LIST = [
     INPUT_DIR + "/bancorx/interfaces",
+    INPUT_DIR + "/bancorx/XTransferRerouter.sol",
     INPUT_DIR + "/converter/interfaces",
     INPUT_DIR + "/crowdsale",
     INPUT_DIR + "/helpers",
