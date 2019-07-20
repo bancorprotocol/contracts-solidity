@@ -16,7 +16,8 @@ import './token/interfaces/ISmartToken.sol';
 import './token/interfaces/INonStandardERC20.sol';
 import './bancorx/interfaces/IBancorX.sol';
 
-/*
+/**
+    @dev
     The BancorNetwork contract is the main entry point for bancor token conversions.
     It also allows converting between any token in the bancor network to any other token
     in a single transaction by providing a conversion path.
