@@ -22,7 +22,7 @@ contract NonStandardERC20Token is INonStandardERC20, Utils {
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     /**
-        @dev constructor
+        @dev initializes a new NonStandardERC20Token instance
 
         @param _name        token name
         @param _symbol      token symbol

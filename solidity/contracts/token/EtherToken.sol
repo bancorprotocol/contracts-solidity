@@ -6,21 +6,29 @@ import '../utility/TokenHolder.sol';
 import '../utility/SafeMath.sol';
 
 /**
-    Ether tokenization contract
+    @dev Ether tokenization contract
 
     'Owned' is specified here for readability reasons
 */
 contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     using SafeMath for uint256;
 
+    /**
+        @dev triggered when the total supply is increased
 
-    // triggered when the total supply is increased
+        @param _amount  amount that gets added to the supply
+    */
     event Issuance(uint256 _amount);
-    // triggered when the total supply is decreased
+
+    /**
+        @dev triggered when the total supply is decreased
+
+        @param _amount  amount that gets removed from the supply
+    */
     event Destruction(uint256 _amount);
 
     /**
-        @dev constructor
+        @dev initializes a new EtherToken instance
     */
     constructor()
         public

@@ -16,8 +16,8 @@ import './token/interfaces/ISmartToken.sol';
 import './token/interfaces/INonStandardERC20.sol';
 import './bancorx/interfaces/IBancorX.sol';
 
-/*
-    The BancorNetwork contract is the main entry point for bancor token conversions.
+/**
+    @dev The BancorNetwork contract is the main entry point for bancor token conversions.
     It also allows converting between any token in the bancor network to any other token
     in a single transaction by providing a conversion path.
 
@@ -37,7 +37,6 @@ import './bancorx/interfaces/IBancorX.sol';
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     using SafeMath for uint256;
 
-    
     uint64 private constant MAX_CONVERSION_FEE = 1000000;
 
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
@@ -47,7 +46,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     mapping (bytes32 => bool) public conversionHashes;  // list of conversion hashes, to prevent re-use of the same hash
 
     /**
-        @dev constructor
+        @dev initializes a new BancorNetwork instance
 
         @param _registry    address of a contract registry contract
     */
@@ -61,7 +60,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         _;
     }
 
-    /*
+    /**
         @dev allows the owner to update the contract registry contract address
 
         @param _registry   address of a contract registry contract
@@ -75,7 +74,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         registry = _registry;
     }
 
-    /*
+    /**
         @dev allows the owner to update the signer address
 
         @param _signerAddress    new signer address
@@ -114,7 +113,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @return true if the signer is verified
     */
     function verifyTrustedSender(IERC20Token[] _path, uint256 _customVal, uint256 _block, address _addr, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
-        bytes32 hash = keccak256(_block, tx.gasprice, _addr, msg.sender, _customVal, _path);
+        bytes32 hash = keccak256(abi.encodePacked(_block, tx.gasprice, _addr, msg.sender, _customVal, _path));
 
         // checking that it is the first conversion with the given signature
         // and that the current block number doesn't exceeded the maximum block
@@ -123,7 +122,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         // recovering the signing address and comparing it to the trusted signer
         // address that was set in the contract
-        bytes32 prefixedHash = keccak256("\x19Ethereum Signed Message:\n32", hash);
+        bytes32 prefixedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
         bool verified = ecrecover(prefixedHash, _v, _r, _s) == signerAddress;
 
         // if the signer is the trusted signer - mark the hash so that it can't
@@ -422,6 +421,29 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         return (toToken, _amount);
     }
 
+    bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(uint256(keccak256("getReturn(address,address,uint256)") >> (256 - 4 * 8)));
+
+    function getReturn(address _dest, address _fromToken, address _toToken, uint256 _amount) internal view returns (uint256, uint256) {
+        uint256[2] memory ret;
+        bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _fromToken, _toToken, _amount);
+
+        assembly {
+            let success := staticcall(
+                gas,           // gas remaining
+                _dest,         // destination address
+                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
+                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
+                ret,           // output buffer
+                64             // output length
+            )
+            if iszero(success) {
+                revert(0, 0)
+            }
+        }
+
+        return (ret[0], ret[1]);
+    }
+
     /**
         @dev returns the expected return amount for converting a specific amount by following
         a given conversion path.
@@ -486,7 +508,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 supply = smartToken.totalSupply() - amount;
             }
             else { // cross connector conversion
-                (amount, fee) = converter.getReturn(fromToken, toToken, amount);
+                (amount, fee) = getReturn(converter, fromToken, toToken, amount);
             }
 
             prevSmartToken = smartToken;
@@ -684,7 +706,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         return isSaleEnabled;
     }
 
-    // deprecated, backward compatibility
+    /**
+        @dev deprecated, backward compatibility
+    */
     function convertForPrioritized2(
         IERC20Token[] _path,
         uint256 _amount,
@@ -702,7 +726,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         return convertForPrioritized3(_path, _amount, _minReturn, _for, _amount, _block, _v, _r, _s);
     }
 
-    // deprecated, backward compatibility
+    /**
+        @dev deprecated, backward compatibility
+    */
     function convertForPrioritized(
         IERC20Token[] _path,
         uint256 _amount,

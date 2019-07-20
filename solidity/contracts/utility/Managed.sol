@@ -1,18 +1,24 @@
 pragma solidity ^0.4.24;
 import './Owned.sol';
 
-/*
-    Provides support and utilities for contract management
+/**
+    @dev Provides support and utilities for contract management
     Note that a managed contract must also have an owner
 */
 contract Managed is Owned {
     address public manager;
     address public newManager;
 
+    /**
+        @dev triggered when the manager is updated
+
+        @param _prevManager previous manager
+        @param _newManager  new manager
+    */
     event ManagerUpdate(address indexed _prevManager, address indexed _newManager);
 
     /**
-        @dev constructor
+        @dev initializes a new Managed instance
     */
     constructor() public {
         manager = msg.sender;

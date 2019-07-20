@@ -1,4 +1,4 @@
-let fs = require("fs");
+const fs = require("fs");
 
 try {
     fs.closeSync(fs.openSync("./node_modules/run-once", "wx"));
@@ -12,11 +12,12 @@ function fix(fileName, tokens) {
     console.log("Fixing " + fileName);
     try {
         let data = fs.readFileSync(fileName, {encoding: "utf8"});
-        for (let token of tokens)
+        for (const token of tokens)
             data = data.split(token.prev).join(token.next);
-        fs.writeFileSync(fileName, data, {encoding: "utf8"});    
-    } catch (err) {
-        console.log("Error fixing " + fileName);
+        fs.writeFileSync(fileName, data, {encoding: "utf8"});
+    }
+    catch (error) {
+        console.log(error.message);
     }
 }
 

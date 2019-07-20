@@ -1,17 +1,23 @@
 pragma solidity ^0.4.24;
 import './interfaces/IOwned.sol';
 
-/*
-    Provides support and utilities for contract ownership
+/**
+    @dev Provides support and utilities for contract ownership
 */
 contract Owned is IOwned {
     address public owner;
     address public newOwner;
 
+    /**
+        @dev triggered when the owner is updated
+
+        @param _prevOwner previous owner
+        @param _newOwner  new owner
+    */
     event OwnerUpdate(address indexed _prevOwner, address indexed _newOwner);
 
     /**
-        @dev constructor
+        @dev initializes a new Owned instance
     */
     constructor() public {
         owner = msg.sender;

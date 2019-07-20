@@ -7,11 +7,16 @@ import '../utility/interfaces/IContractRegistry.sol';
     Bancor Converter Factory
 */
 contract BancorConverterFactory is IBancorConverterFactory {
-    // triggered when a new converter is created
+    /**
+        @dev triggered when a new converter is created
+
+        @param _converter   new converter address
+        @param _owner       converter owner address
+    */
     event NewConverter(address indexed _converter, address indexed _owner);
 
     /**
-        @dev constructor
+        @dev initializes a new BancorConverterFactory instance
     */
     constructor() public {
     }

@@ -17,8 +17,8 @@ import '../token/interfaces/INonStandardERC20.sol';
 import '../token/interfaces/IEtherToken.sol';
 import '../bancorx/interfaces/IBancorX.sol';
 
-/*
-    Bancor Converter v13
+/**
+    @dev Bancor Converter v13
 
     The Bancor version of the token converter, allows conversion between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
 
@@ -53,11 +53,14 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
+    /**
+        @dev version number
+    */
     uint16 public version = 13;
     string public converterType = 'bancor';
 
     bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
-    bool public claimTokensEnabled = false;             // allows BancorX contract to claim tokens without allowance (one transaction instread of two)
+    bool public claimTokensEnabled = false;             // allows BancorX contract to claim tokens without allowance (to save the extra transaction)
     IContractRegistry public prevRegistry;              // address of previous registry as security mechanism
     IContractRegistry public registry;                  // contract registry contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
@@ -70,7 +73,16 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     bool public conversionsEnabled = true;              // true if token conversions is enabled, false if not
     IERC20Token[] private convertPath;
 
-    // triggered when a conversion between two tokens occurs
+    /**
+        @dev triggered when a conversion between two tokens occurs
+
+        @param _fromToken       ERC20 token converted from
+        @param _toToken         ERC20 token converted to
+        @param _trader          wallet that initiated the trade
+        @param _amount          amount converted, in fromToken
+        @param _return          amount returned, minus conversion fee
+        @param _conversionFee   conversion fee
+    */
     event Conversion(
         address indexed _fromToken,
         address indexed _toToken,
@@ -79,21 +91,39 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 _return,
         int256 _conversionFee
     );
-    // triggered after a conversion with new price data
+
+    /**
+        @dev triggered after a conversion with new price data
+
+        @param  _connectorToken     connector token
+        @param  _tokenSupply        smart token supply
+        @param  _connectorBalance   connector balance
+        @param  _connectorWeight    connector weight
+    */
     event PriceDataUpdate(
         address indexed _connectorToken,
         uint256 _tokenSupply,
         uint256 _connectorBalance,
         uint32 _connectorWeight
     );
-    // triggered when the conversion fee is updated
+
+    /**
+        @dev triggered when the conversion fee is updated
+
+        @param  _prevFee    previous fee percentage, represented in ppm
+        @param  _newFee     new fee percentage, represented in ppm
+    */
     event ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee);
 
-    // triggered when conversions are enabled/disabled
+    /**
+        @dev triggered when conversions are enabled/disabled
+
+        @param  _conversionsEnabled true if conversions are enabled, false if not
+    */
     event ConversionsEnable(bool _conversionsEnabled);
 
     /**
-        @dev constructor
+        @dev initializes a new BancorConverter instance
 
         @param  _token              smart token governed by the converter
         @param  _registry           address of a contract registry contract
@@ -573,6 +603,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     /**
         @dev converts a specific amount of _fromToken to _toToken
+        can only be called by the bancor network contract
 
         @param _fromToken  ERC20 token to convert from
         @param _toToken    ERC20 token to convert to
@@ -953,7 +984,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         }
     }
 
-    // deprecated, backward compatibility
+    /**
+        @dev deprecated, backward compatibility
+    */
     function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
         return convertInternal(_fromToken, _toToken, _amount, _minReturn);
     }

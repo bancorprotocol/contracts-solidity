@@ -23,7 +23,7 @@ const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader.sol')
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry.sol');
 const CrowdsaleController = artifacts.require('CrowdsaleController.sol');
 
-module.exports = async function(deployer, network, accounts) {
+module.exports = function(deployer, network, accounts) {
     if (network == "production") {
         deployer.deploy(Utils);
         deployer.deploy(Owned);
@@ -31,20 +31,20 @@ module.exports = async function(deployer, network, accounts) {
         deployer.deploy(TokenHolder);
         deployer.deploy(ERC20Token, 'DummyToken', 'DUM', 0);
         deployer.deploy(EtherToken);
-        await deployer.deploy(ContractRegistry);
+        deployer.deploy(ContractRegistry);
         deployer.deploy(ContractFeatures);
         deployer.deploy(Whitelist);
-        await deployer.deploy(SmartToken, 'Token1', 'TKN1', 2);
+        deployer.deploy(SmartToken, 'Token1', 'TKN1', 2);
         deployer.deploy(SmartTokenController, SmartToken.address);
         deployer.deploy(BancorFormula);
         deployer.deploy(BancorGasPriceLimit, '22000000000');
         deployer.deploy(BancorNetwork, ContractRegistry.address);
         deployer.deploy(BancorConverter, SmartToken.address, ContractRegistry.address, 0, '0x0', 0);
 
-        await deployer.deploy(BancorConverterFactory);
-        await deployer.deploy(BancorConverterUpgrader, ContractRegistry.address);
+        deployer.deploy(BancorConverterFactory);
+        deployer.deploy(BancorConverterUpgrader, ContractRegistry.address);
 
-        await deployer.deploy(BancorConverterRegistry);
+        deployer.deploy(BancorConverterRegistry);
 
         deployer.deploy(CrowdsaleController, SmartToken.address, 4102444800, '0x125', '0x126', 1);
         deployer.deploy(XTransferRerouter, true);

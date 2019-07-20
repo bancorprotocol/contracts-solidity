@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 import './interfaces/IContractFeatures.sol';
 
 /**
-    Contract Features
+    @dev Contract Features
 
     Generic contract that allows every contract on the blockchain to define which features it supports.
     Other contracts can query this contract to find out whether a given contract on the
@@ -19,11 +19,24 @@ import './interfaces/IContractFeatures.sol';
 contract ContractFeatures is IContractFeatures {
     mapping (address => uint256) private featureFlags;
 
+    /**
+        @dev triggered when a contract notifies of features it supports
+
+        @param _address     contract address
+        @param _features    features supported
+    */
     event FeaturesAddition(address indexed _address, uint256 _features);
+
+    /**
+        @dev triggered when a contract notifies of features it no longer supports
+
+        @param _address     contract address
+        @param _features    features no longer supported
+    */
     event FeaturesRemoval(address indexed _address, uint256 _features);
 
     /**
-        @dev constructor
+        @dev initializes a new ContractFeatures instance
     */
     constructor() public {
     }
