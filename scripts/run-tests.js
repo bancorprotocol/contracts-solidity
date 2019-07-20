@@ -16,8 +16,8 @@ function getArgs(id, args) {
 
 function server(id) {
     const args = getArgs(id, {
-        TRUFFLE_TEST: [NODE_DIR + "/ganache-cli/cli.js"                     , "--port=7545", "--gasPrice=20000000000", "--gasLimit=6721975"         ],
-        SOL_COVERAGE: [NODE_DIR + "/ethereumjs-testrpc-sc/build/cli.node.js", "--port=7555", "--gasPrice=0x1"        , "--gasLimit=0x1fffffffffffff"],
+        TRUFFLE_TEST: [NODE_DIR + "/ganache-cli/cli.js"          , "--port=7545", "--gasPrice=20000000000", "--gasLimit=6721975"         ],
+        SOL_COVERAGE: [NODE_DIR + "/ethereumjs-testrpc-sc/cli.js", "--port=7555", "--gasPrice=0x1"        , "--gasLimit=0x1fffffffffffff"],
     });
     const cp = spawn("node", [...args,
         "--account=0x0000000000000000000000000000000000000000000000000000000000000001,1000000000000000000000000000000000000000",

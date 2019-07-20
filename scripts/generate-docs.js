@@ -1,62 +1,60 @@
-const NODE_DIR = "node_modules";
-const CONS_DIR = "solidity/contracts";
-const DOCS_DIR = "docs";
+const NODE_DIR     = "node_modules";
+const INPUT_DIR    = "solidity/contracts";
+const CONFIG_DIR   = "solidity/docgen";
+const OUTPUT_DIR   = "solidity/docgen/docs";
+const SUMMARY_FILE = "solidity/docgen/SUMMARY.md";
 
 // Skip any file or folder whose name is in the list below
 const SKIP_LIST = [
-    "bancorx/interfaces",
-    "converter/interfaces",
-    "crowdsale",
-    "helpers",
-    "legacy",
-    "token/interfaces",
-    "utility/interfaces",
-    "ContractIds.sol",
-    "FeatureIds.sol",
-    "IBancorNetwork.sol"
+    INPUT_DIR + "/bancorx/interfaces",
+    INPUT_DIR + "/bancorx/XTransferRerouter.sol",
+    INPUT_DIR + "/converter/interfaces",
+    INPUT_DIR + "/crowdsale",
+    INPUT_DIR + "/helpers",
+    INPUT_DIR + "/legacy",
+    INPUT_DIR + "/token/interfaces",
+    INPUT_DIR + "/utility/interfaces",
+    INPUT_DIR + "/ContractIds.sol",
+    INPUT_DIR + "/FeatureIds.sol",
+    INPUT_DIR + "/IBancorNetwork.sol"
 ];
 
 const fs        = require("fs");
-const basename  = require("path").basename;
+const path      = require("path");
 const spawnSync = require("child_process").spawnSync;
 
-fs.writeFileSync(CONS_DIR + "/README.md", "");
-fs.writeFileSync("SUMMARY.md", "# Summary\n");
+const relativePath = path.relative(path.dirname(SUMMARY_FILE), OUTPUT_DIR);
 
-function scanDir(pathName = CONS_DIR, indentation = "") {
-    if (!SKIP_LIST.map(x => CONS_DIR + "/" + x).includes(pathName)) {
+function scan(pathName, indentation) {
+    if (!SKIP_LIST.includes(pathName)) {
         if (fs.lstatSync(pathName).isDirectory()) {
-            fs.appendFileSync("SUMMARY.md", indentation + "* " + basename(pathName) + ":\n");
+            fs.appendFileSync(SUMMARY_FILE, indentation + "* " + path.basename(pathName) + "\n");
             for (const fileName of fs.readdirSync(pathName))
-                scanDir(pathName + "/" + fileName, indentation + "  ");
+                scan(pathName + "/" + fileName, indentation + "  ");
         }
         else if (pathName.endsWith(".sol")) {
-            fs.appendFileSync("SUMMARY.md", indentation + "* [" + basename(pathName).replace(".sol", "") + "](" + DOCS_DIR + "/" + basename(pathName).replace(".sol", ".md") + ")\n");
+            fs.appendFileSync(SUMMARY_FILE, indentation + "* [" + path.basename(pathName).slice(0, -4) + "](" + relativePath + pathName.slice(INPUT_DIR.length, -4) + ".md)\n");
         }
     }
 }
 
-scanDir();
+fs.writeFileSync (SUMMARY_FILE, "# Summary\n");
+fs.writeFileSync (".gitbook.yaml", "root: ./\n");
+fs.appendFileSync(".gitbook.yaml", "structure:\n");
+fs.appendFileSync(".gitbook.yaml", "  readme: README.md\n");
+fs.appendFileSync(".gitbook.yaml", "  summary: " + SUMMARY_FILE + "\n");
 
-function runNode(args) {
-    const result = spawnSync("node", args)
-    if (result.stdout.toString()) process.stdout.write(result.stdout.toString());
-    if (result.stderr.toString()) throw new Error(result.stderr.toString());
-    if (result.error) throw result.error;
-}
+scan(INPUT_DIR, "");
 
-runNode([
+const args = [
     NODE_DIR + "/solidity-docgen/dist/cli.js",
-    "--contractsDir=" + CONS_DIR,
-    "--outputDir="    + DOCS_DIR,
-    "--templateFile=" + CONS_DIR + "/../docgen.hbs",
-    "--solcModule="   + NODE_DIR + "/truffle/node_modules/solc"
-]);
+    "--input="       + INPUT_DIR,
+    "--output="      + OUTPUT_DIR,
+    "--templates="   + CONFIG_DIR,
+    "--solc-module=" + NODE_DIR + "/truffle/node_modules/solc",
+    "--contract-pages"
+];
 
-for (const contractDoc of fs.readFileSync(DOCS_DIR + "/index.md").toString().split("# Contract "))
-    fs.writeFileSync(DOCS_DIR + "/" + contractDoc.split("`")[1] + ".md", "# Contract " + contractDoc);
-
-runNode([
-    NODE_DIR + "/gitbook-cli/bin/gitbook.js",
-    "build"
-]);
+const result = spawnSync("node", args, {stdio: "inherit"});
+if (result.error)
+    throw result.error;

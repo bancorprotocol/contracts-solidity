@@ -14,7 +14,7 @@ function fix(fileName, tokens) {
         let data = fs.readFileSync(fileName, {encoding: "utf8"});
         for (const token of tokens)
             data = data.split(token.prev).join(token.next);
-        fs.writeFileSync(fileName, data, {encoding: "utf8"});    
+        fs.writeFileSync(fileName, data, {encoding: "utf8"});
     }
     catch (error) {
         console.log(error.message);
@@ -28,8 +28,7 @@ fix("./node_modules/truffle/build/cli.bundled.js", [
 );
 
 fix("./node_modules/solidity-coverage/lib/app.js", [
-    {prev: "events.push", next: "coverage.processEvent"},
-    {prev: "readFileSync(contractPath).toString()", next: "readFileSync(contractPath).toString().replace('/* SC0 */', '// SC0 //').replace('// SC1 //', '/* SC1 */')"}]
+    {prev: "events.push", next: "coverage.processEvent"}]
 );
 
 fix("./node_modules/solidity-coverage/lib/coverageMap.js", [

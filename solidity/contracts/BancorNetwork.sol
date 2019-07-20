@@ -429,11 +429,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _fromToken, _toToken, _amount);
 
         assembly {
-            /* SC0 */ if iszero(staticcall(gas, _dest, add(data, 32), mload(data), ret, 64)) {revert(0, 0)}
-            // SC1 // switch call(gas, _dest, 0, add(data, 32), mload(data), ret, 64) case 0 {revert(0, 0)}
-            // Prior to being instrumented by solidity-coverage, the SC0 line should be disabled and the SC1 line should be enabled:
-            // - The `if` should be replaced with a `switch` because it would otherwise yield a compilation error (https://github.com/sc-forks/solidity-coverage/issues/328)
-            // - The `staticcall` should be replaced with a `call` because it would otherwise yield a runtime error (https://github.com/sc-forks/solidity-coverage/issues/329)
+            let success := staticcall(
+                gas,           // gas remaining
+                _dest,         // destination address
+                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
+                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
+                ret,           // output buffer
+                64             // output length
+            )
+            if iszero(success) {
+                revert(0, 0)
+            }
         }
 
         return (ret[0], ret[1]);
