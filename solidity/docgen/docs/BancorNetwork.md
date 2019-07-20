@@ -1,4 +1,16 @@
-
+The BancorNetwork contract is the main entry point for bancor token conversions.
+It also allows converting between any token in the bancor network to any other token
+in a single transaction by providing a conversion path.
+A note on conversion path -
+Conversion path is a data structure that's used when converting a token to another token in the bancor network
+when the conversion cannot necessarily be done by single converter and might require multiple 'hops'.
+The path defines which converters should be used and what kind of conversion should be done in each step.
+The path format doesn't include complex structure and instead, it is represented by a single array
+in which each 'hop' is represented by a 2-tuple - smart token & to token.
+In addition, the first element is always the source token.
+The smart token is only used as a pointer to a converter (since converter addresses are more likely to change).
+Format:
+[source token, smart token, to token, smart token, to token...]
 
 # Functions:
 - [`constructor(contract IContractRegistry _registry)`](#BancorNetwork-constructor-contract-IContractRegistry-)
