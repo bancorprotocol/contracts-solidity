@@ -5,7 +5,7 @@ import './interfaces/IContractRegistry.sol';
 import '../ContractIds.sol';
 
 /**
-    Contract Registry
+    @dev Contract Registry
 
     The contract registry keeps contract addresses by name.
     The owner can update contract addresses so that a contract name always points to the latest version
@@ -24,11 +24,16 @@ contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     mapping (bytes32 => RegistryItem) private items;    // name -> RegistryItem mapping
     string[] public contractNames;                      // list of all registered contract names
 
-    // triggered when an address pointed to by a contract name is modified
+    /**
+        @dev triggered when an address pointed to by a contract name is modified
+
+        @param _contractName    contract name
+        @param _contractAddress new contract address
+    */
     event AddressUpdate(bytes32 indexed _contractName, address _contractAddress);
 
     /**
-        @dev constructor
+        @dev initializes a new ContractRegistry instance
     */
     constructor() public {
         registerAddress(ContractIds.CONTRACT_REGISTRY, address(this));
@@ -129,7 +134,12 @@ contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
         return string(byteArray);
     }
 
-    // @dev utility, converts string to bytes32
+    /**
+        @dev utility, converts string to bytes32
+        note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
+
+        @return string representation of the given bytes32 argument
+    */
     function stringToBytes32(string memory _string) private pure returns (bytes32) {
         bytes32 result;
         assembly {
@@ -138,7 +148,9 @@ contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
         return result;
     }
 
-    // deprecated, backward compatibility
+    /**
+        @dev deprecated, backward compatibility
+    */
     function getAddress(bytes32 _contractName) public view returns (address) {
         return addressOf(_contractName);
     }

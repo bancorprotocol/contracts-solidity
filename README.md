@@ -1,4 +1,5 @@
-﻿# Bancor Protocol Contracts v0.4 (beta)
+﻿
+# Bancor Protocol Contracts v0.4 (beta)
 
 Bancor is a decentralized liquidity network that provides users with a simple, low-cost way to buy and sell tokens. Bancor’s open-source protocol empowers tokens with built-in convertibility directly through their smart contracts, allowing integrated tokens to be instantly converted for one another, without needing to match buyers and sellers in an exchange. The Bancor Wallet enables automated token conversions directly from within the wallet, at prices that are more predictable than exchanges and resistant to manipulation. To convert tokens instantly, including ETH, EOS, DAI and more, visit the [Bancor Web App](https://www.bancor.network/communities/5a780b3a287443a5cdea2477?utm_source=social&utm_medium=github&utm_content=readme), join the [Bancor Telegram group](https://t.me/bancor) or read the Bancor Protocol™ [Whitepaper](https://storage.googleapis.com/website-bancor/2018/04/01ba8253-bancor_protocol_whitepaper_en.pdf) for more information.
 
@@ -36,7 +37,7 @@ As such, it implements both the standard token methods and the standard token ev
 Note that these methods can only be executed by the token owner.
 
 **issue**
-```cs
+```solidity
 function issue(address _to, uint256 _amount)
 ```
 Increases the token supply and sends the new tokens to an account.
@@ -44,7 +45,7 @@ Increases the token supply and sends the new tokens to an account.
 <br>
 <br>
 **destroy**
-```cs
+```solidity
 function destroy(address _from, uint256 _amount)
 ```
 Removes tokens from an account and decreases the token supply.
@@ -52,7 +53,7 @@ Removes tokens from an account and decreases the token supply.
 <br>
 <br>
 **disableTransfers**
-```cs
+```solidity
 function disableTransfers(bool _disable)
 ```
 Disables transfer/transferFrom functionality.
@@ -62,7 +63,7 @@ Disables transfer/transferFrom functionality.
 ### Events
 
 **NewSmartToken**
-```cs
+```solidity
 event NewSmartToken(address _token)
 ```
 Triggered when a smart token is deployed.
@@ -70,7 +71,7 @@ Triggered when a smart token is deployed.
 <br>
 <br>
 **Issuance**
-```cs
+```solidity
 event Issuance(uint256 _amount)
 ```
 Triggered when the total supply is increased.
@@ -78,7 +79,7 @@ Triggered when the total supply is increased.
 <br>
 <br>
 **Destruction**
-```cs
+```solidity
 event Destruction(uint256 _amount)
 ```
 Triggered when the total supply is decreased.
@@ -101,7 +102,7 @@ The most important here is `convert`.
 ### Methods
 
 **connectorTokenCount**
-```cs
+```solidity
 function connectorTokenCount() public constant returns (uint16 count)
 ```
 Gets the number of connector tokens defined for the token.
@@ -109,7 +110,7 @@ Gets the number of connector tokens defined for the token.
 <br>
 <br>
 **connectorTokens**
-```cs
+```solidity
 function connectorTokens() public constant returns (address[] connectorTokens)
 ```
 Gets an array of the connector token contract addresses.
@@ -117,7 +118,7 @@ Gets an array of the connector token contract addresses.
 <br>
 <br>
 **connectors**
-```cs
+```solidity
 function connectors(address _connectorToken) public constant
 ```
 Gets the connector token details.
@@ -125,7 +126,7 @@ Gets the connector token details.
 <br>
 <br>
 **convert**
-```cs
+```solidity
 function convert(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn)
 ```
 converts a specific amount of _fromToken to _toToken
@@ -137,7 +138,7 @@ The conversion will only take place if it returns a value greater or equal to `_
 ### Events
 
 **Conversion**
-```cs
+```solidity
 event Conversion(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return, uint256 _currentPriceN, uint256 _currentPriceD);
 ```
 Triggered when a conversion between one of the convertible tokens takes place.
@@ -146,7 +147,8 @@ Triggered when a conversion between one of the convertible tokens takes place.
 Tests are included and are run using truffle & ganache
 
 ### Prerequisites
-* Node.js v7.6.0+
+* node v10.16.0
+* npm v6.9.0
 
 To run the test:
 - Use `npm install` in order to install all required packages.

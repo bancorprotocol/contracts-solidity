@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
-/*
-    Utilities & Common Modifiers
+/**
+    @dev Utilities & Common Modifiers
 */
 contract Utils {
     /**

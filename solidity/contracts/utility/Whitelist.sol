@@ -4,26 +4,29 @@ import './Utils.sol';
 import './interfaces/IWhitelist.sol';
 
 /**
-    Whitelist
-
-    The contract manages a list of whitelisted addresses
+    @dev The contract manages a list of whitelisted addresses
 */
 contract Whitelist is IWhitelist, Owned, Utils {
     mapping (address => bool) private whitelist;
 
+    /**
+        @dev triggered when an address is added to the whitelist
+
+        @param _address address that's added from the whitelist
+    */
     event AddressAddition(address _address);
+
+    /**
+        @dev triggered when an address is removed from the whitelist
+
+        @param _address address that's removed from the whitelist
+    */
     event AddressRemoval(address _address);
 
     /**
-        @dev constructor
+        @dev initializes a new Whitelist instance
     */
     constructor() public {
-    }
-
-    // allows execution by a whitelisted address only
-    modifier whitelistedOnly() {
-        require(whitelist[msg.sender]);
-        _;
     }
 
     /**

@@ -4,7 +4,7 @@ import '../utility/Utils.sol';
 import '../utility/SafeMath.sol';
 
 /**
-    ERC20 Standard Token implementation
+    @dev ERC20 Standard Token implementation
 */
 contract ERC20Token is IERC20Token, Utils {
     using SafeMath for uint256;
@@ -18,11 +18,26 @@ contract ERC20Token is IERC20Token, Utils {
     mapping (address => uint256) public balanceOf;
     mapping (address => mapping (address => uint256)) public allowance;
 
+    /**
+        @dev triggered when tokens are transferred between wallets
+
+        @param _from    source address
+        @param _to      target address
+        @param _value   transfer amount
+    */
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
+
+    /**
+        @dev triggered when a wallet allows another wallet to transfer tokens from on its behalf
+
+        @param _owner   wallet that approves the allowance
+        @param _spender wallet that receives the allowance
+        @param _value   allowance amount
+    */
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     /**
-        @dev constructor
+        @dev initializes a new ERC20Token instance
 
         @param _name        token name
         @param _symbol      token symbol

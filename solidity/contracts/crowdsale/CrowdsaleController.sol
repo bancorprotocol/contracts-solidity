@@ -3,8 +3,8 @@ import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../utility/SafeMath.sol';
 
-/*
-    Crowdsale v0.1
+/**
+    @dev Crowdsale v0.1
 
     The crowdsale version of the smart token controller, allows contributing ether in exchange for Bancor tokens
     The price remains fixed for the entire duration of the crowdsale
@@ -34,7 +34,7 @@ contract CrowdsaleController is SmartTokenController {
     event Contribution(address indexed _contributor, uint256 _amount, uint256 _return);
 
     /**
-        @dev constructor
+        @dev initializes a new CrowdsaleController instance
 
         @param _token          smart token the crowdsale is for
         @param _startTime      crowdsale start time
@@ -107,7 +107,7 @@ contract CrowdsaleController is SmartTokenController {
         @return computed real cap hash
     */
     function computeRealCap(uint256 _cap, uint256 _key) public pure returns (bytes32) {
-        return keccak256(_cap, _key);
+        return keccak256(abi.encodePacked(_cap, _key));
     }
 
     /**
