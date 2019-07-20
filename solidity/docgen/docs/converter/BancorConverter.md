@@ -1,4 +1,17 @@
-
+Bancor Converter v13
+The Bancor version of the token converter, allows conversion between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
+ERC20 connector balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on
+the actual connector balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract.
+The converter is upgradable (just like any SmartTokenController).
+WARNING: It is NOT RECOMMENDED to use the converter with Smart Tokens that have less than 8 decimal digits
+or with very small numbers because of precision loss
+Open issues:
+- Front-running attacks are currently mitigated by the following mechanisms:
+- minimum return argument for each conversion provides a way to define a minimum/maximum price for the transaction
+- gas price limit prevents users from having control over the order of execution
+- gas price limit check can be skipped if the transaction comes from a trusted, whitelisted signer
+Other potential solutions might include a commit/reveal based schemes
+- Possibly add getters for the connector fields so that the client won't need to rely on the order in the struct
 
 # Functions:
 - [`constructor(contract ISmartToken _token, contract IContractRegistry _registry, uint32 _maxConversionFee, contract IERC20Token _connectorToken, uint32 _connectorWeight)`](#BancorConverter-constructor-contract-ISmartToken-contract-IContractRegistry-uint32-contract-IERC20Token-uint32-)

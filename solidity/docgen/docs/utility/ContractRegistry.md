@@ -1,4 +1,10 @@
-
+Contract Registry
+The contract registry keeps contract addresses by name.
+The owner can update contract addresses so that a contract name always points to the latest version
+of the given contract.
+Other contracts can query the registry to get updated addresses instead of depending on specific
+addresses.
+Note that contract names are limited to 32 bytes UTF8 encoded ASCII strings to optimize gas costs
 
 # Functions:
 - [`constructor()`](#ContractRegistry-constructor--)

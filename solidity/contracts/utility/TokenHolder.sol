@@ -5,8 +5,8 @@ import './interfaces/ITokenHolder.sol';
 import '../token/interfaces/INonStandardERC20.sol';
 import '../token/interfaces/IERC20Token.sol';
 
-/*
-    We consider every contract to be a 'token holder' since it's currently not possible
+/**
+    @dev We consider every contract to be a 'token holder' since it's currently not possible
     for a contract to deny receiving tokens.
 
     The TokenHolder's contract sole purpose is to provide a safety mechanism that allows

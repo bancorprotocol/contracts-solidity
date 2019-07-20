@@ -1,4 +1,5 @@
-
+Smart Token v0.3
+'Owned' is specified here for readability reasons
 
 # Functions:
 - [`constructor(string _name, string _symbol, uint8 _decimals)`](#SmartToken-constructor-string-string-uint8-)

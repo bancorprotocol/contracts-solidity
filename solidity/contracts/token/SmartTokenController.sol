@@ -2,8 +2,8 @@ pragma solidity ^0.4.24;
 import './interfaces/ISmartToken.sol';
 import '../utility/TokenHolder.sol';
 
-/*
-    The smart token controller is an upgradable part of the smart token that allows
+/**
+    @dev The smart token controller is an upgradable part of the smart token that allows
     more functionality as well as fixes for bugs/exploits.
     Once it accepts ownership of the token, it becomes the token's sole controller
     that can execute any of its functions.

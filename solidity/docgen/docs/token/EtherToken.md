@@ -1,4 +1,5 @@
-
+Ether tokenization contract
+'Owned' is specified here for readability reasons
 
 # Functions:
 - [`constructor()`](#EtherToken-constructor--)

@@ -40,8 +40,8 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     );
 }
 
-/*
-    Bancor Converter Upgrader
+/**
+    @dev Bancor Converter Upgrader
 
     The Bancor converter upgrader contract allows upgrading an older Bancor converter
     contract (0.4 and up) to the latest version.

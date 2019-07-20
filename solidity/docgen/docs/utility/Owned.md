@@ -1,4 +1,4 @@
-
+Provides support and utilities for contract ownership
 
 # Functions:
 - [`constructor()`](#Owned-constructor--)

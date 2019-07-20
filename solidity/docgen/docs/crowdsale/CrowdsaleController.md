@@ -1,4 +1,7 @@
-
+Crowdsale v0.1
+The crowdsale version of the smart token controller, allows contributing ether in exchange for Bancor tokens
+The price remains fixed for the entire duration of the crowdsale
+Note that 20% of the contributions are the BNT token's ETH connector balance
 
 # Functions:
 - [`constructor(contract ISmartToken _token, uint256 _startTime, address _beneficiary, address _btcs, bytes32 _realEtherCapHash)`](#CrowdsaleController-constructor-contract-ISmartToken-uint256-address-address-bytes32-)

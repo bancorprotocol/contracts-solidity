@@ -4,8 +4,8 @@ import './interfaces/ISmartToken.sol';
 import '../utility/Owned.sol';
 import '../utility/TokenHolder.sol';
 
-/*
-    Smart Token v0.3
+/**
+    @dev Smart Token v0.3
 
     'Owned' is specified here for readability reasons
 */

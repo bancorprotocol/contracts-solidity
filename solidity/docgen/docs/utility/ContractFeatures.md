@@ -1,4 +1,14 @@
-
+Contract Features
+Generic contract that allows every contract on the blockchain to define which features it supports.
+Other contracts can query this contract to find out whether a given contract on the
+blockchain supports a certain feature.
+Each contract type can define its own list of feature flags.
+Features can be only enabled/disabled by the contract they are defined for.
+Features should be defined by each contract type as bit flags, e.g. -
+uint256 public constant FEATURE1 = 1 << 0;
+uint256 public constant FEATURE2 = 1 << 1;
+uint256 public constant FEATURE3 = 1 << 2;
+...
 
 # Functions:
 - [`constructor()`](#ContractFeatures-constructor--)

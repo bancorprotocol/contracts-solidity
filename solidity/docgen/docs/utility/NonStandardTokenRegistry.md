@@ -1,4 +1,5 @@
-
+Non standard token registry
+manages tokens who don't return true/false on transfer/transferFrom/approve but revert on failure instead 
 
 # Functions:
 - [`constructor()`](#NonStandardTokenRegistry-constructor--)

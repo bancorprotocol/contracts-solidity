@@ -1,4 +1,4 @@
-
+The contract manages a list of whitelisted addresses
 
 # Functions:
 - [`constructor()`](#Whitelist-constructor--)

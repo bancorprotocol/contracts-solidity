@@ -3,7 +3,7 @@ import './utility/Owned.sol';
 import './utility/Utils.sol';
 
 /**
-    Bancor Converter Registry
+    @dev Bancor Converter Registry
 
     The bancor converter registry keeps converter addresses by token addresses and vice versa.
     The owner can update converter addresses so that a the token address always points to

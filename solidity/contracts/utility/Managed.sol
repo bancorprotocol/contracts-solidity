@@ -1,8 +1,8 @@
 pragma solidity ^0.4.24;
 import './Owned.sol';
 
-/*
-    Provides support and utilities for contract management
+/**
+    @dev Provides support and utilities for contract management
     Note that a managed contract must also have an owner
 */
 contract Managed is Owned {

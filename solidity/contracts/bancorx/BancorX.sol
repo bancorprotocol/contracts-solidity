@@ -10,8 +10,8 @@ import '../utility/SafeMath.sol';
 import '../utility/TokenHolder.sol';
 import '../token/interfaces/ISmartToken.sol';
 
-/*
-    The BancorX contract allows cross chain token transfers.
+/**
+    @dev The BancorX contract allows cross chain token transfers.
 
     There are two processes that take place in the contract -
     - Initiate a cross chain transfer to a target blockchain (locks tokens from the caller account on Ethereum)

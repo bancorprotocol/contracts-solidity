@@ -6,7 +6,7 @@ import '../utility/TokenHolder.sol';
 import '../utility/SafeMath.sol';
 
 /**
-    Ether tokenization contract
+    @dev Ether tokenization contract
 
     'Owned' is specified here for readability reasons
 */

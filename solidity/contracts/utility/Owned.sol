@@ -1,8 +1,8 @@
 pragma solidity ^0.4.24;
 import './interfaces/IOwned.sol';
 
-/*
-    Provides support and utilities for contract ownership
+/**
+    @dev Provides support and utilities for contract ownership
 */
 contract Owned is IOwned {
     address public owner;

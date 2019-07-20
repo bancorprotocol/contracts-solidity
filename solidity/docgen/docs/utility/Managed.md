@@ -1,4 +1,5 @@
-
+Provides support and utilities for contract management
+Note that a managed contract must also have an owner
 
 # Functions:
 - [`constructor()`](#Managed-constructor--)

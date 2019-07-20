@@ -2,8 +2,8 @@ pragma solidity ^0.4.24;
 import './Owned.sol';
 import './interfaces/IAddressList.sol';
 
-/*
-    Non standard token registry
+/**
+    @dev Non standard token registry
 
     manages tokens who don't return true/false on transfer/transferFrom/approve but revert on failure instead 
 */

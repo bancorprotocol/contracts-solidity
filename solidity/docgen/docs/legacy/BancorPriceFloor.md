@@ -1,4 +1,6 @@
-
+BancorPriceFloor v0.1
+The bancor price floor contract is a simple contract that allows selling smart tokens for a constant ETH price
+'Owned' is specified here for readability reasons
 
 # Functions:
 - [`constructor(contract ISmartToken _token)`](#BancorPriceFloor-constructor-contract-ISmartToken-)

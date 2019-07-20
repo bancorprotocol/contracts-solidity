@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 import './interfaces/IContractFeatures.sol';
 
 /**
-    Contract Features
+    @dev Contract Features
 
     Generic contract that allows every contract on the blockchain to define which features it supports.
     Other contracts can query this contract to find out whether a given contract on the

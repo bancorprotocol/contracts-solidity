@@ -1,4 +1,4 @@
-
+ERC20 Standard Token implementation
 
 # Functions:
 - [`constructor(string _name, string _symbol, uint8 _decimals)`](#ERC20Token-constructor-string-string-uint8-)
