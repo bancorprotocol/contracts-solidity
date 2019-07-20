@@ -9,6 +9,12 @@ contract Managed is Owned {
     address public manager;
     address public newManager;
 
+    /**
+        @dev triggered when the manager is updated
+
+        @param _prevManager previous manager
+        @param _newManager  new manager
+    */
     event ManagerUpdate(address indexed _prevManager, address indexed _newManager);
 
     /**

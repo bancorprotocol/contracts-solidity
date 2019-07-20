@@ -25,7 +25,7 @@ contract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {
         gasPrice = _gasPrice;
     }
 
-    /*
+    /**
         @dev allows the owner to update the gas price limit
 
         @param _gasPrice    new gas price limit
@@ -38,7 +38,7 @@ contract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {
         gasPrice = _gasPrice;
     }
 
-    /*
+    /**
         @dev validate that the given gas price is equal to the current network gas price
 
         @param _gasPrice    tested gas price

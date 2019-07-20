@@ -15,9 +15,14 @@ contract NonStandardTokenRegistry is IAddressList, Owned {
         @dev initializes a new NonStandardTokenRegistry instance
     */
     constructor() public {
-
     }
 
+    /**
+        @dev registers/unregisters a new non standard ERC20 token in the registry
+
+        @param token    token address
+        @param register true to register the token, false to remove it
+    */
     function setAddress(address token, bool register) public ownerOnly {
         listedAddresses[token] = register;
     }

@@ -17,11 +17,26 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
 
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
 
-    // triggered when a smart token is deployed - the _token address is defined for forward compatibility, in case we want to trigger the event from a factory
+    /**
+        @dev triggered when a smart token is deployed
+        the _token address is defined for forward compatibility, in case the event is trigger by a factory
+
+        @param _token  new smart token address
+    */
     event NewSmartToken(address _token);
-    // triggered when the total supply is increased
+
+    /**
+        @dev triggered when the total supply is increased
+
+        @param _amount  amount that gets added to the supply
+    */
     event Issuance(uint256 _amount);
-    // triggered when the total supply is decreased
+
+    /**
+        @dev triggered when the total supply is decreased
+
+        @param _amount  amount that gets removed from the supply
+    */
     event Destruction(uint256 _amount);
 
     /**

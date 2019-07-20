@@ -65,19 +65,37 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     // address -> true if address is reporter
     mapping (address => bool) public reporters;
 
-    // triggered when BNT is locked in smart contract
+    /**
+        @dev triggered when BNT is locked in smart contract
+
+        @param _from    wallet address that the tokens are locked from
+        @param _amount  amount locked
+    */
     event TokensLock(
         address indexed _from,
         uint256 _amount
     );
 
-    // triggered when BNT is released by the smart contract
+    /**
+        @dev triggered when BNT is released by the smart contract
+
+        @param _to      wallet address that the tokens are released to
+        @param _amount  amount released
+    */
     event TokensRelease(
         address indexed _to,
         uint256 _amount
     );
 
-    // triggered when xTransfer is successfully called
+    /**
+        @dev triggered when xTransfer is successfully called
+
+        @param _from            wallet address that initiated the xtransfer
+        @param _toBlockchain    target blockchain
+        @param _to              target wallet
+        @param _amount          transfer amount
+        @param _id              xtransfer id
+    */
     event XTransfer(
         address indexed _from,
         bytes32 _toBlockchain,
@@ -86,7 +104,16 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         uint256 _id
     );
 
-    // triggered when report is successfully submitted
+    /**
+        @dev triggered when report is successfully submitted
+
+        @param _reporter        reporter wallet
+        @param _fromBlockchain  source blockchain
+        @param _txId            tx id on the source blockchain
+        @param _to              target wallet
+        @param _amount          transfer amount
+        @param _xTransferId     xtransfer id
+    */
     event TxReport(
         address indexed _reporter,
         bytes32 _fromBlockchain,
@@ -96,7 +123,12 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         uint256 _xTransferId
     );
 
-    // triggered when final report is successfully submitted
+    /**
+        @dev triggered when final report is successfully submitted
+
+        @param _to  target wallet
+        @param _id  xtransfer id
+    */
     event XTransferComplete(
         address _to,
         uint256 _id

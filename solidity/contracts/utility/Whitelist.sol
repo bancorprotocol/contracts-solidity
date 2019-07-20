@@ -11,7 +11,18 @@ import './interfaces/IWhitelist.sol';
 contract Whitelist is IWhitelist, Owned, Utils {
     mapping (address => bool) private whitelist;
 
+    /**
+        @dev triggered when an address is added to the whitelist
+
+        @param _address address that's added from the whitelist
+    */
     event AddressAddition(address _address);
+
+    /**
+        @dev triggered when an address is removed from the whitelist
+
+        @param _address address that's removed from the whitelist
+    */
     event AddressRemoval(address _address);
 
     /**

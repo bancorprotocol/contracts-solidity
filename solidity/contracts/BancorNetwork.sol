@@ -37,7 +37,6 @@ import './bancorx/interfaces/IBancorX.sol';
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     using SafeMath for uint256;
 
-    
     uint64 private constant MAX_CONVERSION_FEE = 1000000;
 
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
@@ -61,7 +60,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         _;
     }
 
-    /*
+    /**
         @dev allows the owner to update the contract registry contract address
 
         @param _registry   address of a contract registry contract
@@ -75,7 +74,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         registry = _registry;
     }
 
-    /*
+    /**
         @dev allows the owner to update the signer address
 
         @param _signerAddress    new signer address
@@ -424,7 +423,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(uint256(keccak256("getReturn(address,address,uint256)") >> (256 - 4 * 8)));
 
-    function getReturn(address _dest, address _fromToken, address _toToken, uint256 _amount) internal view returns (uint256, uint256) {
+    function getReturn(address _dest, address _fromToken, address _toToken, uint256 _amount) private view returns (uint256, uint256) {
         uint256[2] memory ret;
         bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _fromToken, _toToken, _amount);
 
@@ -707,7 +706,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         return isSaleEnabled;
     }
 
-    // deprecated, backward compatibility
+    /**
+        @dev deprecated, backward compatibility
+    */
     function convertForPrioritized2(
         IERC20Token[] _path,
         uint256 _amount,
@@ -725,7 +726,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         return convertForPrioritized3(_path, _amount, _minReturn, _for, _amount, _block, _v, _r, _s);
     }
 
-    // deprecated, backward compatibility
+    /**
+        @dev deprecated, backward compatibility
+    */
     function convertForPrioritized(
         IERC20Token[] _path,
         uint256 _amount,

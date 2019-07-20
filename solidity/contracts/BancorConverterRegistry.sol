@@ -20,10 +20,20 @@ contract BancorConverterRegistry is Owned, Utils {
     mapping (address => address) private convertersToTokens;    // converter address -> token address
     address[] public tokens;                                    // list of all token addresses
 
-    // triggered when a converter is added to the registry
+    /**
+        @dev triggered when a converter is added to the registry
+
+        @param _token   token
+        @param _address converter
+    */
     event ConverterAddition(address indexed _token, address _address);
 
-    // triggered when a converter is removed from the registry
+    /**
+        @dev triggered when a converter is removed from the registry
+
+        @param _token   token
+        @param _address converter
+    */
     event ConverterRemoval(address indexed _token, address _address);
 
     /**

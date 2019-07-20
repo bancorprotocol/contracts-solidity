@@ -56,9 +56,20 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
 
     IContractRegistry public registry;                      // contract registry contract address
 
-    // triggered when the contract accept a converter ownership
+    /**
+        @dev triggered when the contract accept a converter ownership
+
+        @param _converter   converter address
+        @param _owner       new owner - local upgrader address
+    */
     event ConverterOwned(address indexed _converter, address indexed _owner);
-    // triggered when the upgrading process is done
+
+    /**
+        @dev triggered when the upgrading process is done
+
+        @param _oldConverter    old converter address
+        @param _newConverter    new converter address
+    */
     event ConverterUpgrade(address indexed _oldConverter, address indexed _newConverter);
 
     /**
@@ -68,7 +79,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
         registry = _registry;
     }
 
-    /*
+    /**
         @dev allows the owner to update the contract registry contract address
 
         @param _registry   address of a contract registry contract
