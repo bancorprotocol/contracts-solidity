@@ -1,4 +1,14 @@
-﻿### 0.4.7 (2019-05-11)
+﻿### 0.4.8 (2019-07-20)
+General:
+* Added support for auto generation of documentation
+* Updated contract documentation
+* Cleaned up tests
+
+Network:
+* Fixed an issue that caused getReturnByPath to fail if the path contained old converters
+
+
+### 0.4.7 (2019-05-11)
 * added the ConverterRegistry contract
 
 
