@@ -6,7 +6,12 @@
 
 
 # Function `constructor()` {#NonStandardTokenRegistry-constructor--}
-constructor
+initializes a new NonStandardTokenRegistry instance
 # Function `setAddress(address token, bool register)` {#NonStandardTokenRegistry-setAddress-address-bool-}
-No description
+registers/unregisters a new non standard ERC20 token in the registry
+
+## Parameters:
+- `token`:    token address
+
+- `register`: true to register the token, false to remove it
 

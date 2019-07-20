@@ -13,7 +13,7 @@
 - [`Contribution(address _contributor, uint256 _amount, uint256 _return)`](#CrowdsaleController-Contribution-address-uint256-uint256-)
 
 # Function `constructor(contract ISmartToken _token, uint256 _startTime, address _beneficiary, address _btcs, bytes32 _realEtherCapHash)` {#CrowdsaleController-constructor-contract-ISmartToken-uint256-address-address-bytes32-}
-constructor
+initializes a new CrowdsaleController instance
 
 ## Parameters:
 - `_token`:          smart token the crowdsale is for
@@ -22,7 +22,7 @@ constructor
 
 - `_beneficiary`:    address to receive all ether contributions
 
-- `_btcs`:           bitcoin suisse address
+- `_btcs`:           bitcoin suisse address
 # Function `computeRealCap(uint256 _cap, uint256 _key) → bytes32` {#CrowdsaleController-computeRealCap-uint256-uint256-}
 computes the real cap based on the given cap & key
 
@@ -37,7 +37,7 @@ enables the real cap defined on deployment
 ## Parameters:
 - `_cap`:    predefined cap
 
-- `_key`:    key used to compute the cap hash
+- `_key`:    key used to compute the cap hash
 # Function `computeReturn(uint256 _contribution) → uint256` {#CrowdsaleController-computeReturn-uint256-}
 computes the number of tokens that should be issued for a given contribution
 

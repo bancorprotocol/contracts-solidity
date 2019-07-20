@@ -11,14 +11,14 @@
 - [`Approval(address _owner, address _spender, uint256 _value)`](#NonStandardERC20Token-Approval-address-address-uint256-)
 
 # Function `constructor(string _name, string _symbol, uint8 _decimals)` {#NonStandardERC20Token-constructor-string-string-uint8-}
-constructor
+initializes a new NonStandardERC20Token instance
 
 ## Parameters:
 - `_name`:        token name
 
 - `_symbol`:      token symbol
 
-- `_decimals`:    decimal points, for display purposes
+- `_decimals`:    decimal points, for display purposes
 # Function `transfer(address _to, uint256 _value)` {#NonStandardERC20Token-transfer-address-uint256-}
 send coins
 throws on any error rather then return a false flag to minimize user errors

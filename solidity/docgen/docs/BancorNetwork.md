@@ -19,21 +19,27 @@
 
 
 # Function `constructor(contract IContractRegistry _registry)` {#BancorNetwork-constructor-contract-IContractRegistry-}
-constructor
+initializes a new BancorNetwork instance
 
 ## Parameters:
-- `_registry`:    address of a contract registry contract
+- `_registry`:    address of a contract registry contract
 # Function `setRegistry(contract IContractRegistry _registry)` {#BancorNetwork-setRegistry-contract-IContractRegistry-}
-No description
+allows the owner to update the contract registry contract address
+
+## Parameters:
+- `_registry`:   address of a contract registry contract
 # Function `setSignerAddress(address _signerAddress)` {#BancorNetwork-setSignerAddress-address-}
-No description
+allows the owner to update the signer address
+
+## Parameters:
+- `_signerAddress`:    new signer address
 # Function `registerEtherToken(contract IEtherToken _token, bool _register)` {#BancorNetwork-registerEtherToken-contract-IEtherToken-bool-}
 allows the owner to register/unregister ether tokens
 
 ## Parameters:
 - `_token`:       ether token contract address
 
-- `_register`:    true to register, false to unregister
+- `_register`:    true to register, false to unregister
 # Function `convertFor(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) → uint256` {#BancorNetwork-convertFor-contract-IERC20Token---uint256-uint256-address-}
 converts the token to any other token in the bancor network by following
 a predefined conversion path and transfers the result tokens to a target account
@@ -174,7 +180,7 @@ note that allowance must be set beforehand
 - `_minReturn`:   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
 # Function `convertForPrioritized2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) → uint256` {#BancorNetwork-convertForPrioritized2-contract-IERC20Token---uint256-uint256-address-uint256-uint8-bytes32-bytes32-}
-No description
+deprecated, backward compatibility
 # Function `convertForPrioritized(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _block, uint256 _nonce, uint8 _v, bytes32 _r, bytes32 _s) → uint256` {#BancorNetwork-convertForPrioritized-contract-IERC20Token---uint256-uint256-address-uint256-uint256-uint8-bytes32-bytes32-}
-No description
+deprecated, backward compatibility
 

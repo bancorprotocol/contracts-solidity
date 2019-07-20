@@ -12,7 +12,7 @@
 - [`AddressUpdate(bytes32 _contractName, address _contractAddress)`](#ContractRegistry-AddressUpdate-bytes32-address-)
 
 # Function `constructor()` {#ContractRegistry-constructor--}
-constructor
+initializes a new ContractRegistry instance
 # Function `itemCount() → uint256` {#ContractRegistry-itemCount--}
 returns the number of items in the registry
 
@@ -28,14 +28,19 @@ registers a new address for the contract name in the registry
 ## Parameters:
 - `_contractName`:     contract name
 
-- `_contractAddress`:  contract address
+- `_contractAddress`:  contract address
 # Function `unregisterAddress(bytes32 _contractName)` {#ContractRegistry-unregisterAddress-bytes32-}
 removes an existing contract address from the registry
 
 ## Parameters:
-- `_contractName`: contract name
+- `_contractName`: contract name
 # Function `getAddress(bytes32 _contractName) → address` {#ContractRegistry-getAddress-bytes32-}
-No description
+deprecated, backward compatibility
 
 # Event `AddressUpdate(bytes32 _contractName, address _contractAddress)` {#ContractRegistry-AddressUpdate-bytes32-address-}
-No description
+triggered when an address pointed to by a contract name is modified
+
+## Parameters:
+- `_contractName`:    contract name
+
+- `_contractAddress`: new contract address

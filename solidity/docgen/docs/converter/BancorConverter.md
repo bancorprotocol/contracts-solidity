@@ -41,7 +41,7 @@
 - [`ConversionsEnable(bool _conversionsEnabled)`](#BancorConverter-ConversionsEnable-bool-)
 
 # Function `constructor(contract ISmartToken _token, contract IContractRegistry _registry, uint32 _maxConversionFee, contract IERC20Token _connectorToken, uint32 _connectorWeight)` {#BancorConverter-constructor-contract-ISmartToken-contract-IContractRegistry-uint32-contract-IERC20Token-uint32-}
-constructor
+initializes a new BancorConverter instance
 
 ## Parameters:
 - `_token`:              smart token governed by the converter
@@ -52,24 +52,24 @@ constructor
 
 - `_connectorToken`:     optional, initial connector, allows defining the first connector at deployment time
 
-- `_connectorWeight`:    optional, weight for the initial connector
+- `_connectorWeight`:    optional, weight for the initial connector
 # Function `updateRegistry()` {#BancorConverter-updateRegistry--}
-sets the contract registry to whichever address the current registry is pointing to
+sets the contract registry to whichever address the current registry is pointing to
 # Function `restoreRegistry()` {#BancorConverter-restoreRegistry--}
 security mechanism allowing the converter owner to revert to the previous registry,
-to be used in emergency scenario
+to be used in emergency scenario
 # Function `disableRegistryUpdate(bool _disable)` {#BancorConverter-disableRegistryUpdate-bool-}
 disables the registry update functionality
 this is a safety mechanism in case of a emergency
 can only be called by the manager or owner
 
 ## Parameters:
-- `_disable`:    true to disable registry updates, false to re-enable them
+- `_disable`:    true to disable registry updates, false to re-enable them
 # Function `enableClaimTokens(bool _enable)` {#BancorConverter-enableClaimTokens-bool-}
 disables/enables the claim tokens functionality
 
 ## Parameters:
-- `_enable`:    true to enable claiming of tokens, false to disable
+- `_enable`:    true to enable claiming of tokens, false to disable
 # Function `connectorTokenCount() → uint16` {#BancorConverter-connectorTokenCount--}
 returns the number of connector tokens defined
 
@@ -79,14 +79,14 @@ when set, only addresses that are whitelisted are actually allowed to use the co
 note that the whitelist check is actually done by the BancorNetwork contract
 
 ## Parameters:
-- `_whitelist`:    address of a whitelist contract
+- `_whitelist`:    address of a whitelist contract
 # Function `disableConversions(bool _disable)` {#BancorConverter-disableConversions-bool-}
 disables the entire conversion functionality
 this is a safety mechanism in case of a emergency
 can only be called by the manager
 
 ## Parameters:
-- `_disable`: true to disable conversions, false to re-enable them
+- `_disable`: true to disable conversions, false to re-enable them
 # Function `transferTokenOwnership(address _newOwner)` {#BancorConverter-transferTokenOwnership-address-}
 allows transferring the token ownership
 the new owner needs to accept the transfer
@@ -94,13 +94,13 @@ can only be called by the contract owner
 note that token ownership can only be transferred while the owner is the converter upgrader contract
 
 ## Parameters:
-- `_newOwner`:    new token owner
+- `_newOwner`:    new token owner
 # Function `setConversionFee(uint32 _conversionFee)` {#BancorConverter-setConversionFee-uint32-}
 updates the current conversion fee
 can only be called by the manager
 
 ## Parameters:
-- `_conversionFee`: new conversion fee, represented in ppm
+- `_conversionFee`: new conversion fee, represented in ppm
 # Function `getFinalAmount(uint256 _amount, uint8 _magnitude) → uint256` {#BancorConverter-getFinalAmount-uint256-uint8-}
 given a return amount, returns the amount minus the conversion fee
 
@@ -120,7 +120,7 @@ unless the owner is the converter upgrader contract
 
 - `_to`:      account to receive the new amount
 
-- `_amount`:  amount to withdraw
+- `_amount`:  amount to withdraw
 # Function `claimTokens(address _from, uint256 _amount)` {#BancorConverter-claimTokens-address-uint256-}
 allows the BancorX contract to claim BNT from any address (so that users
 dont have to first give allowance when calling BancorX)
@@ -128,11 +128,11 @@ dont have to first give allowance when calling BancorX)
 ## Parameters:
 - `_from`:      address to claim the BNT from
 
-- `_amount`:    the amount to claim
+- `_amount`:    the amount to claim
 # Function `upgrade()` {#BancorConverter-upgrade--}
 upgrades the converter to the latest version
 can only be called by the owner
-note that the owner needs to call acceptOwnership/acceptManagement on the new converter after the upgrade
+note that the owner needs to call acceptOwnership/acceptManagement on the new converter after the upgrade
 # Function `addConnector(contract IERC20Token _token, uint32 _weight, bool _enableVirtualBalance)` {#BancorConverter-addConnector-contract-IERC20Token-uint32-bool-}
 defines a new connector for the token
 can only be called by the owner while the converter is inactive
@@ -142,7 +142,7 @@ can only be called by the owner while the converter is inactive
 
 - `_weight`:                 constant connector weight, represented in ppm, 1-1000000
 
-- `_enableVirtualBalance`:   true to enable virtual balance for the connector, false to disable it
+- `_enableVirtualBalance`:   true to enable virtual balance for the connector, false to disable it
 # Function `updateConnector(contract IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance)` {#BancorConverter-updateConnector-contract-IERC20Token-uint32-bool-uint256-}
 updates one of the token connectors
 can only be called by the owner
@@ -154,7 +154,7 @@ can only be called by the owner
 
 - `_enableVirtualBalance`:   true to enable virtual balance for the connector, false to disable it
 
-- `_virtualBalance`:         new connector's virtual balance
+- `_virtualBalance`:         new connector's virtual balance
 # Function `disableConnectorSale(contract IERC20Token _connectorToken, bool _disable)` {#BancorConverter-disableConnectorSale-contract-IERC20Token-bool-}
 disables converting from the given connector token in case the connector token got compromised
 can only be called by the owner
@@ -163,7 +163,7 @@ note that converting to the token is still enabled regardless of this flag and i
 ## Parameters:
 - `_connectorToken`:  connector token contract address
 
-- `_disable`:         true to disable the token, false to re-enable it
+- `_disable`:         true to disable the token, false to re-enable it
 # Function `getConnectorBalance(contract IERC20Token _connectorToken) → uint256` {#BancorConverter-getConnectorBalance-contract-IERC20Token-}
 returns the connector's virtual balance if one is defined, otherwise returns the actual balance
 
@@ -308,7 +308,7 @@ i.e. if the caller increases the supply by 10%, it will cost an amount equal to
 can only be called if the max total weight is exactly 100% and while conversions are enabled
 
 ## Parameters:
-- `_amount`:  amount to increase the supply by (in the smart token)
+- `_amount`:  amount to increase the supply by (in the smart token)
 # Function `liquidate(uint256 _amount)` {#BancorConverter-liquidate-uint256-}
 sells the token for all connector tokens using the same percentage
 i.e. if the holder sells 10% of the supply, they will receive 10% of each
@@ -317,9 +317,9 @@ can only be called if the max total weight is exactly 100%
 note that the function can also be called if conversions are disabled
 
 ## Parameters:
-- `_amount`:  amount to liquidate (in the smart token)
+- `_amount`:  amount to liquidate (in the smart token)
 # Function `change(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn) → uint256` {#BancorConverter-change-contract-IERC20Token-contract-IERC20Token-uint256-uint256-}
-deprecated, backward compatibility
+deprecated, backward compatibility
 
 # Event `Conversion(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return, int256 _conversionFee)` {#BancorConverter-Conversion-address-address-address-uint256-uint256-int256-}
 triggered when a conversion between two tokens occurs
@@ -335,7 +335,7 @@ triggered when a conversion between two tokens occurs
 
 - `_return`:          amount returned, minus conversion fee
 
-- `_conversionFee`:   conversion fee
+- `_conversionFee`:   conversion fee
 # Event `PriceDataUpdate(address _connectorToken, uint256 _tokenSupply, uint256 _connectorBalance, uint32 _connectorWeight)` {#BancorConverter-PriceDataUpdate-address-uint256-uint256-uint32-}
 triggered after a conversion with new price data
 
@@ -346,16 +346,16 @@ triggered after a conversion with new price data
 
 - `_connectorBalance`:   connector balance
 
-- `_connectorWeight`:    connector weight
+- `_connectorWeight`:    connector weight
 # Event `ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee)` {#BancorConverter-ConversionFeeUpdate-uint32-uint32-}
 triggered when the conversion fee is updated
 
 ## Parameters:
 - `_prevFee`:    previous fee percentage, represented in ppm
 
-- `_newFee`:     new fee percentage, represented in ppm
+- `_newFee`:     new fee percentage, represented in ppm
 # Event `ConversionsEnable(bool _conversionsEnabled)` {#BancorConverter-ConversionsEnable-bool-}
 triggered when conversions are enabled/disabled
 
 ## Parameters:
-- `_conversionsEnabled`: true if conversions are enabled, false if not
+- `_conversionsEnabled`: true if conversions are enabled, false if not

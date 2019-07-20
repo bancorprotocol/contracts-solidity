@@ -11,14 +11,14 @@
 - [`Approval(address _owner, address _spender, uint256 _value)`](#ERC20Token-Approval-address-address-uint256-)
 
 # Function `constructor(string _name, string _symbol, uint8 _decimals)` {#ERC20Token-constructor-string-string-uint8-}
-constructor
+initializes a new ERC20Token instance
 
 ## Parameters:
 - `_name`:        token name
 
 - `_symbol`:      token symbol
 
-- `_decimals`:    decimal points, for display purposes
+- `_decimals`:    decimal points, for display purposes
 # Function `transfer(address _to, uint256 _value) → bool success` {#ERC20Token-transfer-address-uint256-}
 send coins
 throws on any error rather then return a false flag to minimize user errors
@@ -53,6 +53,20 @@ in 2 separate transactions - once to change the allowance to 0 and secondly to c
 
 
 # Event `Transfer(address _from, address _to, uint256 _value)` {#ERC20Token-Transfer-address-address-uint256-}
-No description
+triggered when tokens are transferred between wallets
+
+## Parameters:
+- `_from`:    source address
+
+- `_to`:      target address
+
+- `_value`:   transfer amount
 # Event `Approval(address _owner, address _spender, uint256 _value)` {#ERC20Token-Approval-address-address-uint256-}
-No description
+triggered when a wallet allows another wallet to transfer tokens from on its behalf
+
+## Parameters:
+- `_owner`:   wallet that approves the allowance
+
+- `_spender`: wallet that receives the allowance
+
+- `_value`:   allowance amount

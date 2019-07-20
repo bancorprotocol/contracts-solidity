@@ -8,7 +8,7 @@
 - [`NewConverter(address _converter, address _owner)`](#BancorConverterFactory-NewConverter-address-address-)
 
 # Function `constructor()` {#BancorConverterFactory-constructor--}
-constructor
+initializes a new BancorConverterFactory instance
 # Function `createConverter(contract ISmartToken _token, contract IContractRegistry _registry, uint32 _maxConversionFee, contract IERC20Token _connectorToken, uint32 _connectorWeight) → address converterAddress` {#BancorConverterFactory-createConverter-contract-ISmartToken-contract-IContractRegistry-uint32-contract-IERC20Token-uint32-}
 creates a new converter with the given arguments and transfers
 the ownership and management to the sender.
@@ -26,4 +26,9 @@ the ownership and management to the sender.
 
 
 # Event `NewConverter(address _converter, address _owner)` {#BancorConverterFactory-NewConverter-address-address-}
-No description
+triggered when a new converter is created
+
+## Parameters:
+- `_converter`:   new converter address
+
+- `_owner`:       converter owner address
