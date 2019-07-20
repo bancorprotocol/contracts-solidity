@@ -11,7 +11,7 @@ contract BancorConverterFactory is IBancorConverterFactory {
     event NewConverter(address indexed _converter, address indexed _owner);
 
     /**
-        @dev constructor
+        @dev initializes a new BancorConverterFactory instance
     */
     constructor() public {
     }

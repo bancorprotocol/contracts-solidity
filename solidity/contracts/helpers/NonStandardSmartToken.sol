@@ -24,7 +24,7 @@ contract NonStandardSmartToken is INonStandardSmartToken, Owned, NonStandardERC2
     event Destruction(uint256 _amount);
 
     /**
-        @dev constructor
+        @dev initializes a new NonStandardSmartToken instance
 
         @param _name       token name
         @param _symbol     token short symbol, minimum 1 character

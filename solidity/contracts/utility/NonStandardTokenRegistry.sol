@@ -12,7 +12,7 @@ contract NonStandardTokenRegistry is IAddressList, Owned {
     mapping (address => bool) public listedAddresses;
 
     /**
-        @dev constructor
+        @dev initializes a new NonStandardTokenRegistry instance
     */
     constructor() public {
 

@@ -13,7 +13,7 @@ contract XTransferRerouter is Owned {
     );
 
     /**
-        @dev constructor
+        @dev initializes a new XTransferRerouter instance
 
         @param _reroutingEnabled    intializes transactions routing to enabled/disabled   
      */

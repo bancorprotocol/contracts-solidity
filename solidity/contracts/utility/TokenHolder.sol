@@ -18,7 +18,7 @@ import '../token/interfaces/IERC20Token.sol';
 */
 contract TokenHolder is ITokenHolder, Owned, Utils {
     /**
-        @dev constructor
+        @dev initializes a new TokenHolder instance
     */
     constructor() public {
     }

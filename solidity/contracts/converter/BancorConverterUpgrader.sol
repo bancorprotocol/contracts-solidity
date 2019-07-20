@@ -62,7 +62,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
     event ConverterUpgrade(address indexed _oldConverter, address indexed _newConverter);
 
     /**
-        @dev constructor
+        @dev initializes a new BancorConverterUpgrader instance
     */
     constructor(IContractRegistry _registry) public {
         registry = _registry;

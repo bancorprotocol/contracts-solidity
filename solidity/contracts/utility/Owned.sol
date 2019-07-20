@@ -11,7 +11,7 @@ contract Owned is IOwned {
     event OwnerUpdate(address indexed _prevOwner, address indexed _newOwner);
 
     /**
-        @dev constructor
+        @dev initializes a new Owned instance
     */
     constructor() public {
         owner = msg.sender;

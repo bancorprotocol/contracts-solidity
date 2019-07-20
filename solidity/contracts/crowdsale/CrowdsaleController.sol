@@ -34,7 +34,7 @@ contract CrowdsaleController is SmartTokenController {
     event Contribution(address indexed _contributor, uint256 _amount, uint256 _return);
 
     /**
-        @dev constructor
+        @dev initializes a new CrowdsaleController instance
 
         @param _token          smart token the crowdsale is for
         @param _startTime      crowdsale start time

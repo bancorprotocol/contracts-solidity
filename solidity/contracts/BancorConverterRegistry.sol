@@ -27,7 +27,7 @@ contract BancorConverterRegistry is Owned, Utils {
     event ConverterRemoval(address indexed _token, address _address);
 
     /**
-        @dev constructor
+        @dev initializes a new BancorConverterRegistry instance
     */
     constructor() public {
     }

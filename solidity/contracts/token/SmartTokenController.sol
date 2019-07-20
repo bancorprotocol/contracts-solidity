@@ -22,7 +22,7 @@ contract SmartTokenController is TokenHolder {
     ISmartToken public token;   // smart token
 
     /**
-        @dev constructor
+        @dev initializes a new SmartTokenController instance
     */
     constructor(ISmartToken _token)
         public

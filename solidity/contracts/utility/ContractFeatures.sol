@@ -23,7 +23,7 @@ contract ContractFeatures is IContractFeatures {
     event FeaturesRemoval(address indexed _address, uint256 _features);
 
     /**
-        @dev constructor
+        @dev initializes a new ContractFeatures instance
     */
     constructor() public {
     }

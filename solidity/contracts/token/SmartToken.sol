@@ -25,7 +25,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     event Destruction(uint256 _amount);
 
     /**
-        @dev constructor
+        @dev initializes a new SmartToken instance
 
         @param _name       token name
         @param _symbol     token short symbol, minimum 1 character

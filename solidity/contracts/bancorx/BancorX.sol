@@ -103,7 +103,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     );
 
     /**
-        @dev constructor
+        @dev initializes a new BancorX instance
 
         @param _maxLockLimit          maximum amount of BNT that can be locked in one transaction
         @param _maxReleaseLimit       maximum amount of BNT that can be released in one transaction

@@ -14,7 +14,7 @@ contract BancorGasPriceLimit is IBancorGasPriceLimit, Owned, Utils {
     uint256 public gasPrice = 0 wei;    // maximum gas price for bancor transactions
     
     /**
-        @dev constructor
+        @dev initializes a new BancorGasPriceLimit instance
 
         @param _gasPrice    gas price limit
     */

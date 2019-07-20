@@ -12,7 +12,7 @@ contract Managed is Owned {
     event ManagerUpdate(address indexed _prevManager, address indexed _newManager);
 
     /**
-        @dev constructor
+        @dev initializes a new Managed instance
     */
     constructor() public {
         manager = msg.sender;

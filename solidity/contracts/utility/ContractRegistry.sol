@@ -28,7 +28,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     event AddressUpdate(bytes32 indexed _contractName, address _contractAddress);
 
     /**
-        @dev constructor
+        @dev initializes a new ContractRegistry instance
     */
     constructor() public {
         registerAddress(ContractIds.CONTRACT_REGISTRY, address(this));

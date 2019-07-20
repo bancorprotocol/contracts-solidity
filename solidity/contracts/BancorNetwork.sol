@@ -47,7 +47,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     mapping (bytes32 => bool) public conversionHashes;  // list of conversion hashes, to prevent re-use of the same hash
 
     /**
-        @dev constructor
+        @dev initializes a new BancorNetwork instance
 
         @param _registry    address of a contract registry contract
     */

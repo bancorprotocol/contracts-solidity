@@ -123,7 +123,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     event ConversionsEnable(bool _conversionsEnabled);
 
     /**
-        @dev constructor
+        @dev initializes a new BancorConverter instance
 
         @param  _token              smart token governed by the converter
         @param  _registry           address of a contract registry contract

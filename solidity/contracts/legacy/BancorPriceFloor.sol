@@ -23,7 +23,7 @@ contract BancorPriceFloor is Owned, TokenHolder {
     ISmartToken public token; // smart token the contract allows selling
 
     /**
-        @dev constructor
+        @dev initializes a new BancorPriceFloor instance
 
         @param _token   smart token the contract allows selling
     */

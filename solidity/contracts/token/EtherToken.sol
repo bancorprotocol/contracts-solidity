@@ -20,7 +20,7 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     event Destruction(uint256 _amount);
 
     /**
-        @dev constructor
+        @dev initializes a new EtherToken instance
     */
     constructor()
         public
