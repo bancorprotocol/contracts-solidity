@@ -1,7 +1,7 @@
 /* global artifacts, contract, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
-const TestSafeMath = artifacts.require('TestSafeMath.sol');
+const TestSafeMath = artifacts.require('TestSafeMath');
 const utils = require('./helpers/Utils');
 
 contract('SafeMath', () => {

@@ -3,7 +3,7 @@
 
 let constants = require('./helpers/FormulaConstants.js');
 let catchRevert = require('./helpers/Utils.js').catchRevert;
-let TestBancorFormula = artifacts.require('./helpers/TestBancorFormula.sol');
+let TestBancorFormula = artifacts.require('./helpers/TestBancorFormula');
 
 contract('BancorFormula', () => {
     let formula;

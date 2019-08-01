@@ -1,7 +1,7 @@
 /* global artifacts, contract, before, it, assert */
 /* eslint-disable prefer-reflect */
 
-const XTransferRerouter = artifacts.require('XTransferRerouter.sol');
+const XTransferRerouter = artifacts.require('XTransferRerouter');
 const utils = require('./helpers/Utils');
 
 

@@ -1,9 +1,9 @@
 /* global artifacts, contract, before, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
-const CrowdsaleController = artifacts.require('CrowdsaleController.sol');
-const SmartToken = artifacts.require('SmartToken.sol');
-const TestCrowdsaleController = artifacts.require('TestCrowdsaleController.sol');
+const CrowdsaleController = artifacts.require('CrowdsaleController');
+const SmartToken = artifacts.require('SmartToken');
+const TestCrowdsaleController = artifacts.require('TestCrowdsaleController');
 const utils = require('./helpers/Utils');
 
 let token;

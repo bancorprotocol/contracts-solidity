@@ -3,16 +3,16 @@
 
 const fs = require("fs");
 const truffleContract = require("truffle-contract");
-const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry.sol');
-const BancorNetwork = artifacts.require('BancorNetwork.sol');
-const TestBancorNetwork = artifacts.require('TestBancorNetwork.sol');
-const ContractIds = artifacts.require('ContractIds.sol');
-const SmartToken = artifacts.require('SmartToken.sol');
-const NonStandardSmartToken = artifacts.require('NonStandardSmartToken.sol');
-const BancorFormula = artifacts.require('BancorFormula.sol');
-const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
-const ContractRegistry = artifacts.require('ContractRegistry.sol');
-const ContractFeatures = artifacts.require('ContractFeatures.sol');
+const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
+const BancorNetwork = artifacts.require('BancorNetwork');
+const TestBancorNetwork = artifacts.require('TestBancorNetwork');
+const ContractIds = artifacts.require('ContractIds');
+const SmartToken = artifacts.require('SmartToken');
+const NonStandardSmartToken = artifacts.require('NonStandardSmartToken');
+const BancorFormula = artifacts.require('BancorFormula');
+const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
+const ContractRegistry = artifacts.require('ContractRegistry');
+const ContractFeatures = artifacts.require('ContractFeatures');
 
 let smartToken1;
 let smartToken2;

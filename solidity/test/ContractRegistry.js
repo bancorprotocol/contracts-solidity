@@ -1,7 +1,7 @@
 /* global artifacts, contract, it, assert */
 /* eslint-disable prefer-reflect */
 
-const ContractRegistry = artifacts.require('ContractRegistry.sol');
+const ContractRegistry = artifacts.require('ContractRegistry');
 const utils = require('./helpers/Utils');
 
 let contractName1 = 'red';

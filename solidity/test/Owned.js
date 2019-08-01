@@ -1,7 +1,7 @@
 /* global artifacts, contract, it, assert */
 /* eslint-disable prefer-reflect */
 
-const Owned = artifacts.require('Owned.sol');
+const Owned = artifacts.require('Owned');
 const utils = require('./helpers/Utils');
 
 contract('Owned', accounts => {

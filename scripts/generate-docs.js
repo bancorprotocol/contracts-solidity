@@ -55,6 +55,6 @@ const args = [
     "--contract-pages"
 ];
 
-const result = spawnSync("node", args, {stdio: "inherit"});
-if (result.error)
-    throw result.error;
+const result = spawnSync("node", args, {stdio: ["inherit", "inherit", "pipe"]});
+if (result.stderr.length > 0)
+    throw new Error(result.stderr);

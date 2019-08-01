@@ -1,7 +1,7 @@
 /* global artifacts, contract, it, assert */
 /* eslint-disable prefer-reflect */
 
-const TestERC20Token = artifacts.require('TestERC20Token.sol');
+const TestERC20Token = artifacts.require('TestERC20Token');
 const utils = require('./helpers/Utils');
 
 const invalidAccount = '0x0';

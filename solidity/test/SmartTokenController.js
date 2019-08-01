@@ -1,9 +1,9 @@
 /* global artifacts, contract, before, it, assert */
 /* eslint-disable prefer-reflect */
 
-const SmartToken = artifacts.require('SmartToken.sol');
-const SmartTokenController = artifacts.require('SmartTokenController.sol');
-const TestERC20Token = artifacts.require('TestERC20Token.sol');
+const SmartToken = artifacts.require('SmartToken');
+const SmartTokenController = artifacts.require('SmartTokenController');
+const TestERC20Token = artifacts.require('TestERC20Token');
 const utils = require('./helpers/Utils');
 
 let token;

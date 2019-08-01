@@ -1,7 +1,7 @@
 /* global artifacts, contract, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
-const EtherToken = artifacts.require('EtherToken.sol');
+const EtherToken = artifacts.require('EtherToken');
 const utils = require('./helpers/Utils');
 
 contract('EtherToken', accounts => {
