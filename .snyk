@@ -1,0 +1,338 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.13.5
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-LODASH-450202:
+    - solidity-coverage > web3 > web3-shh > web3-net > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - truffle-flattener > truffle-config > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-bzz > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-net > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - truffle-flattener > truffle-resolver > async > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3-eth-abi > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-net > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-net > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-net > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-accounts > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-net > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-abi > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-core-subscriptions > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-core-subscriptions > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-net > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-net > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-net > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-net > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-eth-abi > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-net > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-core-subscriptions > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-eth-accounts > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-net > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-net > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-abi > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-net > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-accounts > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-net > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-net > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-net > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-net > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-net > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-net > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-net > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-accounts > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-net > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-accounts > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-net > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-net > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-net > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3-eth-abi > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-accounts > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-abi > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-net > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-net > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-net > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-accounts > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-net > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-net > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-eth-accounts > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-accounts > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-net > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-eth-accounts > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-net > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-net > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-eth-accounts > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-net > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-eth-accounts > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-net > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-net > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-net > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-net > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-net > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-net > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-eth-accounts > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-abi > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-eth-abi > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-core-subscriptions > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-net > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-net > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-eth-abi > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-net > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-accounts > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-net > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-net > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-eth-accounts > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-eth-accounts > web3-providers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-net > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-net > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-net > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-eth-accounts > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-eth-accounts > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-net > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-eth-abi > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-eth-accounts > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-eth-accounts > web3-core > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-eth-accounts > web3-core-method > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-shh > web3-net > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-net > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth-personal > web3-net > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-eth-accounts > web3-core-helpers > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-accounts > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-contract > web3-eth-accounts > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-net > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-personal > web3-net > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-eth-accounts > web3-core-helpers > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-eth-accounts > web3-core > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
+    - solidity-coverage > web3 > web3-eth > web3-eth-ens > web3-eth-contract > web3-eth-accounts > web3-core-helpers > web3-eth-iban > web3-utils > lodash:
+        patched: '2019-08-01T17:21:20.527Z'
