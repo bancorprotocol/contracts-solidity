@@ -1,11 +1,11 @@
 /* global artifacts, contract, before, it, assert */
 /* eslint-disable prefer-reflect */
 
-const BancorConverter = artifacts.require('BancorConverter.sol');
-const BancorX = artifacts.require('BancorX.sol');
-const SmartToken = artifacts.require('SmartToken.sol');
-const EtherToken = artifacts.require('EtherToken.sol');
-const ContractRegistry = artifacts.require('ContractRegistry.sol');
+const BancorConverter = artifacts.require('BancorConverter');
+const BancorX = artifacts.require('BancorX');
+const SmartToken = artifacts.require('SmartToken');
+const EtherToken = artifacts.require('EtherToken');
+const ContractRegistry = artifacts.require('ContractRegistry');
 
 const web3Utils = require('web3-utils')
 

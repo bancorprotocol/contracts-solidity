@@ -1,8 +1,8 @@
 /* global artifacts, contract, it, assert */
 /* eslint-disable prefer-reflect */
 
-const ContractFeatures = artifacts.require('ContractFeatures.sol');
-const TestFeatures = artifacts.require('TestFeatures.sol');
+const ContractFeatures = artifacts.require('ContractFeatures');
+const TestFeatures = artifacts.require('TestFeatures');
 
 let FEATURE1 = 1 << 0;
 let FEATURE2 = 1 << 1;

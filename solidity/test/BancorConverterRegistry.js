@@ -1,7 +1,7 @@
 /* global artifacts, contract, it, assert */
 /* eslint-disable prefer-reflect */
 
-const BancorConverterRegistry = artifacts.require('BancorConverterRegistry.sol');
+const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const utils = require('./helpers/Utils');
 
 contract('BancorConverterRegistry', accounts => {

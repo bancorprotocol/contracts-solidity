@@ -1,17 +1,17 @@
 /* global artifacts, contract, before, it, assert */
 /* eslint-disable prefer-reflect */
 
-const BancorConverter = artifacts.require('BancorConverter.sol');
-const BancorX = artifacts.require('BancorX.sol');
-const SmartToken = artifacts.require('SmartToken.sol');
-const EtherToken = artifacts.require('EtherToken.sol');
-const ContractRegistry = artifacts.require('ContractRegistry.sol');
-const BancorNetwork = artifacts.require('BancorNetwork.sol');
-const BancorFormula = artifacts.require('BancorFormula.sol');
-const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
-const ContractFeatures = artifacts.require("ContractFeatures.sol");
-const TestERC20Token = artifacts.require('TestERC20Token.sol');
-const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry.sol');
+const BancorConverter = artifacts.require('BancorConverter');
+const BancorX = artifacts.require('BancorX');
+const SmartToken = artifacts.require('SmartToken');
+const EtherToken = artifacts.require('EtherToken');
+const ContractRegistry = artifacts.require('ContractRegistry');
+const BancorNetwork = artifacts.require('BancorNetwork');
+const BancorFormula = artifacts.require('BancorFormula');
+const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
+const ContractFeatures = artifacts.require('ContractFeatures');
+const TestERC20Token = artifacts.require('TestERC20Token');
+const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 
 const web3Utils = require('web3-utils')
 const ethUtil = require('ethereumjs-util');

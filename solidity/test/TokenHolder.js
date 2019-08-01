@@ -1,8 +1,8 @@
 /* global artifacts, contract, it, assert */
 /* eslint-disable prefer-reflect */
 
-const TokenHolder = artifacts.require('TokenHolder.sol');
-const TestERC20Token = artifacts.require('TestERC20Token.sol');
+const TokenHolder = artifacts.require('TokenHolder');
+const TestERC20Token = artifacts.require('TestERC20Token');
 const utils = require('./helpers/Utils');
 
 let holderAddress;

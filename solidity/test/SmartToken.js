@@ -1,7 +1,7 @@
 /* global artifacts, contract, it, assert */
 /* eslint-disable prefer-reflect */
 
-const SmartToken = artifacts.require('SmartToken.sol');
+const SmartToken = artifacts.require('SmartToken');
 const utils = require('./helpers/Utils');
 
 contract('SmartToken', accounts => {

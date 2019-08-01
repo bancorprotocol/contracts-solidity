@@ -1,7 +1,7 @@
 /* global artifacts, contract, it, assert */
 /* eslint-disable prefer-reflect */
 
-const Whitelist = artifacts.require('Whitelist.sol');
+const Whitelist = artifacts.require('Whitelist');
 const utils = require('./helpers/Utils');
 
 const invalidAccount = '0x0';

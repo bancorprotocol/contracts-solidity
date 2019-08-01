@@ -1,7 +1,7 @@
 /* global artifacts, contract, it, assert */
 /* eslint-disable prefer-reflect */
 
-const Managed = artifacts.require('Managed.sol');
+const Managed = artifacts.require('Managed');
 const utils = require('./helpers/Utils');
 
 contract('Managed', accounts => {
