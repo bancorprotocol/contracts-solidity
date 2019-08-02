@@ -14,7 +14,9 @@
     "build": "node scripts/rebuild-all.js",
     "test": "node scripts/run-tests.js",
     "verify": "node scripts/verify-all.js",
-    "docify": "node scripts/generate-docs.js"
+    "docify": "node scripts/generate-docs.js",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "dependencies": {
     "decimal.js": "^10.0.0",
@@ -25,6 +27,8 @@
     "truffle": "4.1.14",
     "truffle-contract": "^3.0.7",
     "truffle-flattener": "1.2.10",
-    "web3-utils": "1.0.0-beta.55"
-  }
+    "web3-utils": "1.0.0-beta.55",
+    "snyk": "^1.208.0"
+  },
+  "snyk": true
 }
