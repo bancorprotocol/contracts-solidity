@@ -164,12 +164,11 @@ contract('BancorX', async accounts => {
     it('should properly calculate the current lock limit after a single transaction', async () => {
         let amountToSend = (web3Utils.toWei('10', 'ether')).toString(10)
         await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amountToSend)
-        // after the transaction, a block was mined, so the limit is 991 (not 990)
-        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei('991', 'ether')).toString(10))
+        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei('990', 'ether')).toString(10))
 
         // after 5 blocks, the limit should increase by 5 bnt
         await mineBlocks(5)
-        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei('996', 'ether')).toString(10))
+        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei('995', 'ether')).toString(10))
 
         // after another 5 blocks, the limit should be back to 1000
         await mineBlocks(5)
