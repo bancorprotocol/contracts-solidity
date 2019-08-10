@@ -268,7 +268,7 @@ def calculateCrossConnectorReturn(_fromConnectorBalance, _fromConnectorWeight, _
 '''
 def calculateFundReturn(_supply, _connectorBalance, _totalWeight, _amount):
     # validate input
-    assert(_supply > 0 and _connectorBalance > 0 and _totalWeight > 0 and _totalWeight <= MAX_WEIGHT);
+    assert(_supply > 0 and _connectorBalance > 0 and _totalWeight > 1 and _totalWeight <= MAX_WEIGHT * 2);
 
     # special case for 0 amount
     if (_amount == 0):
@@ -301,7 +301,7 @@ def calculateFundReturn(_supply, _connectorBalance, _totalWeight, _amount):
 '''
 def calculateLiquidateReturn(_supply, _connectorBalance, _totalWeight, _amount):
     # validate input
-    assert(_supply > 0 and _connectorBalance > 0 and _totalWeight > 0 and _totalWeight <= MAX_WEIGHT and _amount <= _supply);
+    assert(_supply > 0 and _connectorBalance > 0 and _totalWeight > 1 and _totalWeight <= MAX_WEIGHT * 2 and _amount <= _supply);
 
     # special case for 0 amount
     if (_amount == 0):

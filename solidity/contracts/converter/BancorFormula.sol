@@ -289,7 +289,7 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     function calculateFundReturn(uint256 _supply, uint256 _connectorBalance, uint32 _totalWeight, uint256 _amount) public view returns (uint256) {
         // validate input
-        require(_supply > 0 && _connectorBalance > 0 && _totalWeight > 0 && _totalWeight <= MAX_WEIGHT);
+        require(_supply > 0 && _connectorBalance > 0 && _totalWeight > 1 && _totalWeight <= MAX_WEIGHT * 2);
 
         // special case for 0 amount
         if (_amount == 0)
@@ -323,7 +323,7 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     function calculateLiquidateReturn(uint256 _supply, uint256 _connectorBalance, uint32 _totalWeight, uint256 _amount) public view returns (uint256) {
         // validate input
-        require(_supply > 0 && _connectorBalance > 0 && _totalWeight > 0 && _totalWeight <= MAX_WEIGHT && _amount <= _supply);
+        require(_supply > 0 && _connectorBalance > 0 && _totalWeight > 1 && _totalWeight <= MAX_WEIGHT * 2 && _amount <= _supply);
 
         // special case for 0 amount
         if (_amount == 0)
