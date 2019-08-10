@@ -278,8 +278,6 @@ def calculateFundReturn(_supply, _connectorBalance, _totalWeight, _amount):
     if (_totalWeight == MAX_WEIGHT):
         return safeMul(_amount, _connectorBalance) // _supply;
 
-    result;
-    precision;
     baseN = safeAdd(_supply, _amount);
     (result, precision) = power(baseN, _supply, MAX_WEIGHT, _totalWeight);
     temp = safeMul(_connectorBalance, result) >> precision;
@@ -311,8 +309,6 @@ def calculateLiquidateReturn(_supply, _connectorBalance, _totalWeight, _amount):
     if (_totalWeight == MAX_WEIGHT):
         return safeMul(_amount, _connectorBalance) // _supply;
 
-    result;
-    precision;
     baseN = _supply - _amount;
     (result, precision) = power(baseN, _supply, MAX_WEIGHT, _totalWeight);
     temp = safeMul(_connectorBalance, result) >> precision;
