@@ -1107,22 +1107,6 @@ contract('BancorConverter', accounts => {
         await utils.catchInvalidOpcode(converter.fund(100));
     });
 
-    it('should throw when attempting to fund the converter when the total connector weight is not equal to 100%', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addConnector(connectorToken3.address, 500000, false);
-
-        await connectorToken3.transfer(converter.address, 6000);
-
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
-
-        await connectorToken.approve(converter.address, 100000);
-        await connectorToken2.approve(converter.address, 100000);
-        await connectorToken3.approve(converter.address, 100000);
-
-        await utils.catchRevert(converter.fund(100));
-    });
-
     it('should throw when attempting to fund the converter with insufficient funds', async () => {
         let converter = await initConverter(accounts, false);
         await converter.addConnector(connectorToken3.address, 600000, false);
@@ -1309,18 +1293,6 @@ contract('BancorConverter', accounts => {
         let supply = await token.totalSupply();
 
         assert.equal(prevSupply - 100, supply);
-    });
-
-    it('should throw when attempting to liquidate when the total connector weight is not equal to 100%', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addConnector(connectorToken3.address, 500000, false);
-
-        await connectorToken3.transfer(converter.address, 6000);
-
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
-
-        await utils.catchRevert(converter.liquidate(100));
     });
 
     it('should throw when attempting to liquidate when the virtual balance is insufficient', async () => {

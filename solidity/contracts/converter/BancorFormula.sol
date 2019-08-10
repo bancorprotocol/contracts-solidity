@@ -274,6 +274,74 @@ contract BancorFormula is IBancorFormula, Utils {
     }
 
     /**
+        @dev given a relay token supply, connector balance, total weight and an amount of relay tokens,
+        calculates the amount of connector tokens required for purchasing the given amount of relay tokens
+
+        Formula:
+        Return = _connectorBalance * (((_supply + _amount) / _supply) ^ (MAX_WEIGHT / _totalWeight) - 1)
+
+        @param _supply              relay token supply
+        @param _connectorBalance    connector token balance
+        @param _totalWeight         total weight, represented in ppm, 1-1000000
+        @param _amount              amount of relay tokens
+
+        @return amount of connector tokens
+    */
+    function calculateFundReturn(uint256 _supply, uint256 _connectorBalance, uint32 _totalWeight, uint256 _amount) public view returns (uint256) {
+        // validate input
+        require(_supply > 0 && _connectorBalance > 0 && _totalWeight > 0 && _totalWeight <= MAX_WEIGHT);
+
+        // special case for 0 amount
+        if (_amount == 0)
+            return 0;
+
+        // special case if the total weight = 100%
+        if (_totalWeight == MAX_WEIGHT)
+            return _amount.mul(_connectorBalance) / _supply;
+
+        uint256 result;
+        uint8 precision;
+        uint256 baseN = _supply.add(_amount);
+        (result, precision) = power(baseN, _supply, MAX_WEIGHT, _totalWeight);
+        uint256 temp = _connectorBalance.mul(result) >> precision;
+        return temp - _connectorBalance;
+    }
+
+    /**
+        @dev given a relay token supply, connector balance, total weight and an amount of relay tokens,
+        calculates the amount of connector tokens received for selling the given amount of relay tokens
+
+        Formula:
+        Return = _connectorBalance * (((_supply - _amount) / _supply) ^ (MAX_WEIGHT / _totalWeight) - 1)
+
+        @param _supply              relay token supply
+        @param _connectorBalance    connector token balance
+        @param _totalWeight         total weight, represented in ppm, 1-1000000
+        @param _amount              amount of relay tokens
+
+        @return amount of connector tokens
+    */
+    function calculateLiquidateReturn(uint256 _supply, uint256 _connectorBalance, uint32 _totalWeight, uint256 _amount) public view returns (uint256) {
+        // validate input
+        require(_supply > 0 && _connectorBalance > 0 && _totalWeight > 0 && _totalWeight <= MAX_WEIGHT && _amount <= _supply);
+
+        // special case for 0 amount
+        if (_amount == 0)
+            return 0;
+
+        // special case if the total weight = 100%
+        if (_totalWeight == MAX_WEIGHT)
+            return _amount.mul(_connectorBalance) / _supply;
+
+        uint256 result;
+        uint8 precision;
+        uint256 baseN = _supply.sub(_amount);
+        (result, precision) = power(baseN, _supply, MAX_WEIGHT, _totalWeight);
+        uint256 temp = _connectorBalance.mul(result) >> precision;
+        return temp - _connectorBalance;
+    }
+
+    /**
         @dev General Description:
             Determine a value of precision.
             Calculate an integer approximation of (_baseN / _baseD) ^ (_expN / _expD) * 2 ^ precision.

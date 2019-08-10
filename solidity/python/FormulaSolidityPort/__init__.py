@@ -253,6 +253,72 @@ def calculateCrossConnectorReturn(_fromConnectorBalance, _fromConnectorWeight, _
     return (temp1 - temp2) // result;
 
 '''
+    @dev given a relay token supply, connector balance, total weight and an amount of relay tokens,
+    calculates the amount of connector tokens required for purchasing the given amount of relay tokens
+
+    Formula:
+    Return = _connectorBalance * (((_supply + _amount) / _supply) ^ (MAX_WEIGHT / _totalWeight) - 1)
+
+    @param _supply              relay token supply
+    @param _connectorBalance    connector token balance
+    @param _totalWeight         total weight, represented in ppm, 1-1000000
+    @param _amount              amount of relay tokens
+
+    @return amount of connector tokens
+'''
+def calculateFundReturn(_supply, _connectorBalance, _totalWeight, _amount):
+    # validate input
+    assert(_supply > 0 and _connectorBalance > 0 and _totalWeight > 0 and _totalWeight <= MAX_WEIGHT);
+
+    # special case for 0 amount
+    if (_amount == 0):
+        return 0;
+
+    # special case if the total weight = 100%
+    if (_totalWeight == MAX_WEIGHT):
+        return safeMul(_amount, _connectorBalance) // _supply;
+
+    result;
+    precision;
+    baseN = safeAdd(_supply, _amount);
+    (result, precision) = power(baseN, _supply, MAX_WEIGHT, _totalWeight);
+    temp = safeMul(_connectorBalance, result) >> precision;
+    return temp - _connectorBalance;
+
+'''
+    @dev given a relay token supply, connector balance, total weight and an amount of relay tokens,
+    calculates the amount of connector tokens received for selling the given amount of relay tokens
+
+    Formula:
+    Return = _connectorBalance * (((_supply - _amount) / _supply) ^ (MAX_WEIGHT / _totalWeight) - 1)
+
+    @param _supply              relay token supply
+    @param _connectorBalance    connector token balance
+    @param _totalWeight         total weight, represented in ppm, 1-1000000
+    @param _amount              amount of relay tokens
+
+    @return amount of connector tokens
+'''
+def calculateLiquidateReturn(_supply, _connectorBalance, _totalWeight, _amount):
+    # validate input
+    assert(_supply > 0 and _connectorBalance > 0 and _totalWeight > 0 and _totalWeight <= MAX_WEIGHT and _amount <= _supply);
+
+    # special case for 0 amount
+    if (_amount == 0):
+        return 0;
+
+    # special case if the total weight = 100%
+    if (_totalWeight == MAX_WEIGHT):
+        return safeMul(_amount, _connectorBalance) // _supply;
+
+    result;
+    precision;
+    baseN = safeSub(_supply, _amount);
+    (result, precision) = power(baseN, _supply, MAX_WEIGHT, _totalWeight);
+    temp = safeMul(_connectorBalance, result) >> precision;
+    return temp - _connectorBalance;
+
+'''
     @dev General Description:
         Determine a value of precision.
         Calculate an integer approximation of (_baseN / _baseD) ^ (_expN / _expD) * 2 ^ precision.

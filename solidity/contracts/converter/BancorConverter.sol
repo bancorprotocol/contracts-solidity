@@ -914,10 +914,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     function fund(uint256 _amount)
         public
-        maxTotalWeightOnly
         conversionsAllowed
     {
         uint256 supply = token.totalSupply();
+        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
 
         // iterate through the connector tokens and transfer a percentage equal to the ratio between _amount
         // and the total supply in each connector from the caller to the converter
@@ -927,7 +927,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < connectorTokens.length; i++) {
             connectorToken = connectorTokens[i];
             connectorBalance = getConnectorBalance(connectorToken);
-            connectorAmount = _amount.mul(connectorBalance).div(supply);
+            connectorAmount = formula.calculateFundReturn(supply, connectorBalance, totalConnectorWeight, _amount);
 
             // update virtual balance if relevant
             Connector storage connector = connectors[connectorToken];
@@ -954,8 +954,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @param _amount  amount to liquidate (in the smart token)
     */
-    function liquidate(uint256 _amount) public maxTotalWeightOnly {
+    function liquidate(uint256 _amount) public {
         uint256 supply = token.totalSupply();
+        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
 
         // destroy _amount from the caller's balance in the smart token
         token.destroy(msg.sender, _amount);
@@ -968,7 +969,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < connectorTokens.length; i++) {
             connectorToken = connectorTokens[i];
             connectorBalance = getConnectorBalance(connectorToken);
-            connectorAmount = _amount.mul(connectorBalance).div(supply);
+            connectorAmount = formula.calculateLiquidateReturn(supply, connectorBalance, totalConnectorWeight, _amount);
 
             // update virtual balance if relevant
             Connector storage connector = connectors[connectorToken];
