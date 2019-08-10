@@ -335,7 +335,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
         uint256 result;
         uint8 precision;
-        uint256 baseN = _supply.sub(_amount);
+        uint256 baseN = _supply - _amount;
         (result, precision) = power(baseN, _supply, MAX_WEIGHT, _totalWeight);
         uint256 temp = _connectorBalance.mul(result) >> precision;
         return temp - _connectorBalance;

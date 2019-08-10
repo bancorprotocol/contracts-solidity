@@ -313,7 +313,7 @@ def calculateLiquidateReturn(_supply, _connectorBalance, _totalWeight, _amount):
 
     result;
     precision;
-    baseN = safeSub(_supply, _amount);
+    baseN = _supply - _amount;
     (result, precision) = power(baseN, _supply, MAX_WEIGHT, _totalWeight);
     temp = safeMul(_connectorBalance, result) >> precision;
     return temp - _connectorBalance;
