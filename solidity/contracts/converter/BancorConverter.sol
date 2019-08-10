@@ -193,12 +193,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
-    // allows execution only when the total weight is 100%
-    modifier maxTotalWeightOnly() {
-        require(totalConnectorWeight == MAX_WEIGHT);
-        _;
-    }
-
     // allows execution only when conversions aren't disabled
     modifier conversionsAllowed {
         assert(conversionsEnabled);
@@ -908,7 +902,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @dev buys the token with all connector tokens using the same percentage
         i.e. if the caller increases the supply by 10%, it will cost an amount equal to
         10% of each connector token balance
-        can only be called if the max total weight is exactly 100% and while conversions are enabled
+        can only be called if conversions are enabled
 
         @param _amount  amount to increase the supply by (in the smart token)
     */
@@ -949,7 +943,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @dev sells the token for all connector tokens using the same percentage
         i.e. if the holder sells 10% of the supply, they will receive 10% of each
         connector token balance in return
-        can only be called if the max total weight is exactly 100%
         note that the function can also be called if conversions are disabled
 
         @param _amount  amount to liquidate (in the smart token)
