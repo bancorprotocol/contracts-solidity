@@ -282,7 +282,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
         @param _supply              relay token supply
         @param _connectorBalance    connector token balance
-        @param _totalWeight         total weight, represented in ppm, 1-1000000
+        @param _totalWeight         total weight, represented in ppm, 2-2000000
         @param _amount              amount of relay tokens
 
         @return amount of connector tokens
@@ -316,7 +316,7 @@ contract BancorFormula is IBancorFormula, Utils {
 
         @param _supply              relay token supply
         @param _connectorBalance    connector token balance
-        @param _totalWeight         total weight, represented in ppm, 1-1000000
+        @param _totalWeight         total weight, represented in ppm, 2-2000000
         @param _amount              amount of relay tokens
 
         @return amount of connector tokens
