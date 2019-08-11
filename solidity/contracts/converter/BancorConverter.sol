@@ -962,7 +962,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < connectorTokens.length; i++) {
             connectorToken = connectorTokens[i];
             connectorBalance = getConnectorBalance(connectorToken);
-            connectorAmount = formula.calculateFundReturn(supply.sub(_amount), connectorBalance, totalConnectorWeight, _amount);
+            connectorAmount = formula.calculateLiquidateReturn(supply, connectorBalance, totalConnectorWeight, _amount);
 
             // update virtual balance if relevant
             Connector storage connector = connectors[connectorToken];
