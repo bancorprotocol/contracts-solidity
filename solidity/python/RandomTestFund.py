@@ -12,9 +12,9 @@ def formulaTest(supply, balance1, weight1, balance2, weight2, amount):
     try:
         amount1 = FormulaSolidityPort.calculateFundReturn(supply, balance1, weight1 + weight2, amount)
         amount2 = FormulaSolidityPort.calculateFundReturn(supply, balance2, weight1 + weight2, amount)
-        amount = FormulaSolidityPort.calculatePurchaseReturn(supply, balance1, weight1, amount1)
-        amount += FormulaSolidityPort.calculatePurchaseReturn(supply + amount, balance2, weight2, amount2)
-        return amount
+        amount3 = FormulaSolidityPort.calculatePurchaseReturn(supply, balance1, weight1, amount1)
+        amount4 = FormulaSolidityPort.calculatePurchaseReturn(supply + amount3, balance2, weight2, amount2)
+        return amount3 + amount4
     except:
         return -1
 
