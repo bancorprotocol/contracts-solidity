@@ -47,7 +47,7 @@ contract('XConversions', async accounts => {
         const gasPrice = defaultGasPrice
         const maximumBlock = (await web3.eth.blockNumber) + 100;
         const path = ethBntPath
-        const amount = web3Utils.toWei('1')
+        const amount = web3.toWei('1')
         const { v, r, s } = signConversionDetails(
             maximumBlock,
             gasPrice,
@@ -93,7 +93,7 @@ contract('XConversions', async accounts => {
 
     it('should be able to xConvert from eth without being prioritized', async () => {
         const path = ethBntPath
-        const amount = web3Utils.toWei('1')
+        const amount = web3.toWei('1')
 
         const retAmount = await bancorNetwork.xConvert.call(
             path,                         
@@ -124,7 +124,7 @@ contract('XConversions', async accounts => {
         const gasPrice = defaultGasPrice
         const maximumBlock = (await web3.eth.blockNumber) + 100;
         const path = erc20TokenBntPath
-        const amount = web3Utils.toWei('1')
+        const amount = web3.toWei('1')
 
         await erc20Token.approve(bancorNetwork.address, amount, { from: accounts[5] })
 
@@ -157,7 +157,7 @@ contract('XConversions', async accounts => {
     it('should be able to completeXConversion to eth', async () => {
         const txId = getRandomTxId()
         const xTransferId = getRandomTxId() + 1 // in case it's 0... lol
-        const amount = web3Utils.toWei('10') // releasing 10 BNT
+        const amount = web3.toWei('10') // releasing 10 BNT
         const path = bntEthPath
 
         await reportAndRelease(accounts[5], amount, txId, EOS_BLOCKCHAIN, xTransferId)
@@ -185,7 +185,7 @@ contract('XConversions', async accounts => {
         const xTransferId = getRandomTxId() + 1 // in case it's 0... lol
         const maximumBlock = (await web3.eth.blockNumber) + 100;
         const gasPrice = defaultGasPrice
-        const amount = web3Utils.toWei('10') // releasing 10 BNT
+        const amount = web3.toWei('10') // releasing 10 BNT
         const path = bntErc20Path
 
         const { v, r, s } = signConversionDetails(
@@ -234,7 +234,7 @@ contract('XConversions', async accounts => {
         const xTransferId = getRandomTxId() + 1 // in case it's 0... lol
         const maximumBlock = (await web3.eth.blockNumber) + 100;
         const gasPrice = defaultGasPrice
-        const amount = web3Utils.toWei('10') // releasing 10 BNT
+        const amount = web3.toWei('10') // releasing 10 BNT
         const path = bntErc20Path
 
         const { v, r, s } = signConversionDetails(
@@ -265,7 +265,7 @@ contract('XConversions', async accounts => {
         const gasPrice = defaultGasPrice
         const maximumBlock = (await web3.eth.blockNumber) + 100;
         const path = ethBntPath
-        const amount = web3Utils.toWei('1')
+        const amount = web3.toWei('1')
         const { v, r, s } = signConversionDetails(
             maximumBlock,
             gasPrice,
@@ -298,7 +298,7 @@ contract('XConversions', async accounts => {
         const xTransferId2 = getRandomTxId() + 1 // in case it's 0... lol
         const maximumBlock = (await web3.eth.blockNumber) + 100;
         const gasPrice = defaultGasPrice
-        const amount = web3Utils.toWei('10') // releasing 10 BNT
+        const amount = web3.toWei('10') // releasing 10 BNT
         const path = bntErc20Path
 
         const { v, r, s } = signConversionDetails(
@@ -384,13 +384,13 @@ const initBancorNetwork = async accounts => {
     await bancorNetwork.setSignerAddress(signerAddress);
     await bancorNetwork.registerEtherToken(etherToken.address, true);
 
-    await contractRegistry.registerAddress(web3Utils.asciiToHex('BNTConverter'), bntConverter.address)
-    await contractRegistry.registerAddress(web3Utils.asciiToHex('BNTToken'), bntToken.address)
-    await contractRegistry.registerAddress(web3Utils.asciiToHex('BancorGasPriceLimit'), gasPriceLimit.address)
-    await contractRegistry.registerAddress(web3Utils.asciiToHex('BancorFormula'), formula.address)
-    await contractRegistry.registerAddress(web3Utils.asciiToHex('BancorNetwork'), bancorNetwork.address)
-    await contractRegistry.registerAddress(web3Utils.asciiToHex('ContractFeatures'), contractFeatures.address)
-    await contractRegistry.registerAddress(web3Utils.asciiToHex('NonStandardTokenRegistry'), tokenWhitelist.address)
+    await contractRegistry.registerAddress(web3.fromAscii('BNTConverter'), bntConverter.address)
+    await contractRegistry.registerAddress(web3.fromAscii('BNTToken'), bntToken.address)
+    await contractRegistry.registerAddress(web3.fromAscii('BancorGasPriceLimit'), gasPriceLimit.address)
+    await contractRegistry.registerAddress(web3.fromAscii('BancorFormula'), formula.address)
+    await contractRegistry.registerAddress(web3.fromAscii('BancorNetwork'), bancorNetwork.address)
+    await contractRegistry.registerAddress(web3.fromAscii('ContractFeatures'), contractFeatures.address)
+    await contractRegistry.registerAddress(web3.fromAscii('NonStandardTokenRegistry'), tokenWhitelist.address)
 
 
     bancorX = await BancorX.new(
@@ -407,7 +407,7 @@ const initBancorNetwork = async accounts => {
     await bancorX.setReporter(reporter3, true)
 
     // register BancorX address
-    await contractRegistry.registerAddress(web3Utils.asciiToHex('BancorX'), bancorX.address)
+    await contractRegistry.registerAddress(web3.fromAscii('BancorX'), bancorX.address)
 
     // issue bnt and transfer ownership to converter
     await bntToken.issue(accounts[0], BNT_AMOUNT)
@@ -421,7 +421,7 @@ const initBancorNetwork = async accounts => {
     // creating second converter
     const relayToken = await SmartToken.new('Relay Token', 'RLY', 18)
 
-    erc20Token = await TestERC20Token.new('Test Token', 'TST', web3Utils.toWei('100'))
+    erc20Token = await TestERC20Token.new('Test Token', 'TST', web3.toWei('100'))
     erc20TokenConverter = await BancorConverter.new(
         relayToken.address,
         contractRegistry.address,
@@ -430,10 +430,10 @@ const initBancorNetwork = async accounts => {
         '500000' // 100% connector weight
     )
 
-    await relayToken.issue(accounts[0], web3Utils.toWei('200'))
-    await erc20Token.transfer(erc20TokenConverter.address, web3Utils.toWei('50'))
-    await erc20Token.transfer(accounts[5], web3Utils.toWei('50'))
-    await bntToken.transfer(erc20TokenConverter.address, web3Utils.toWei('100'))
+    await relayToken.issue(accounts[0], web3.toWei('200'))
+    await erc20Token.transfer(erc20TokenConverter.address, web3.toWei('50'))
+    await erc20Token.transfer(accounts[5], web3.toWei('50'))
+    await bntToken.transfer(erc20TokenConverter.address, web3.toWei('100'))
 
     await erc20TokenConverter.addConnector(erc20Token.address, '500000', false)
     await relayToken.transferOwnership(erc20TokenConverter.address)

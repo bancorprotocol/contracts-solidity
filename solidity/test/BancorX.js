@@ -38,8 +38,8 @@ const initBancorX = async accounts => {
         '100000'
     )
 
-    await contractRegistry.registerAddress(web3Utils.asciiToHex('BNTConverter'), bancorConverter.address)
-    await contractRegistry.registerAddress(web3Utils.asciiToHex('BNTToken'), smartToken.address)
+    await contractRegistry.registerAddress(web3.fromAscii('BNTConverter'), bancorConverter.address)
+    await contractRegistry.registerAddress(web3.fromAscii('BNTToken'), smartToken.address)
 
     bancorX = await BancorX.new(
         MAX_LOCK_LIMIT,
@@ -51,7 +51,7 @@ const initBancorX = async accounts => {
     )
 
     // register BancorX address
-    await contractRegistry.registerAddress(web3Utils.asciiToHex('BancorX'), bancorX.address)
+    await contractRegistry.registerAddress(web3.fromAscii('BancorX'), bancorX.address)
 
     // issue bnt and transfer ownership to converter
     await smartToken.issue(accounts[0], BNT_AMOUNT)
@@ -141,8 +141,8 @@ contract('BancorX', async accounts => {
     })
 
     it('should not be able to lock above or below the max/min limit', async () => {
-        let amountAboveLimit = web3Utils.toWei('1001', 'ether')
-        let amountBelowLimit = web3Utils.toWei('0.5', 'ether')
+        let amountAboveLimit = web3.toWei('1001', 'ether')
+        let amountBelowLimit = web3.toWei('0.5', 'ether')
 
         await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amountAboveLimit))
 
@@ -150,33 +150,30 @@ contract('BancorX', async accounts => {
     })
 
     it('should emit an event when successfuly locking bnt', async () => {
-        let amountToSend = (web3Utils.toWei('1', 'ether')).toString(10)
+        let amountToSend = (web3.toWei('1', 'ether')).toString(10)
         let result = await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amountToSend)
         let eventArgs = result.logs[0].args
 
-        let amount = web3Utils.hexToNumberString(eventArgs._amount)
-        let from = eventArgs._from
-
-        assert.equal(amount, amountToSend)
-        assert.equal(from.toLowerCase(), accounts[0].toLowerCase())
+        assert.equal(eventArgs._amount, amountToSend)
+        assert.equal(eventArgs._from.toLowerCase(), accounts[0].toLowerCase())
     })
 
     it('should properly calculate the current lock limit after a single transaction', async () => {
-        let amountToSend = (web3Utils.toWei('10', 'ether')).toString(10)
+        let amountToSend = (web3.toWei('10', 'ether')).toString(10)
         await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amountToSend)
-        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei('990', 'ether')).toString(10))
+        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3.toWei('990', 'ether')).toString(10))
 
         // after 5 blocks, the limit should increase by 5 bnt
         await mineBlocks(5)
-        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei('995', 'ether')).toString(10))
+        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3.toWei('995', 'ether')).toString(10))
 
         // after another 5 blocks, the limit should be back to 1000
         await mineBlocks(5)
-        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3Utils.toWei('1000', 'ether')).toString(10))
+        assert.equal((await bancorX.getCurrentLockLimit.call()).toString(10), (web3.toWei('1000', 'ether')).toString(10))
     })
 
     it('should not allow a reporter to report the same transaction twice', async () => {
-        let amountToSend = (web3Utils.toWei('1', 'ether'))
+        let amountToSend = (web3.toWei('1', 'ether'))
         let randomTxId = getRandomTxId()
         await bancorX.reportTx(
             EOS_BLOCKCHAIN,
@@ -197,7 +194,7 @@ contract('BancorX', async accounts => {
     })
 
     it('should not allow two reporters to give conflicting transaction details', async () => {
-        let amountToSend = (web3Utils.toWei('1', 'ether'))
+        let amountToSend = (web3.toWei('1', 'ether'))
         let randomTxId = getRandomTxId()
 
         await bancorX.reportTx(
@@ -220,8 +217,8 @@ contract('BancorX', async accounts => {
     })
 
     it('should not be able to release above or below the max/min limit', async () => {
-        let amountAboveLimit = web3Utils.toWei('1001', 'ether')
-        let amountBelowLimit = web3Utils.toWei('0.5', 'ether')
+        let amountAboveLimit = web3.toWei('1001', 'ether')
+        let amountBelowLimit = web3.toWei('0.5', 'ether')
         let randomTxId = getRandomTxId()
 
         await utils.catchRevert(reportAndRelease(accounts[0], eosAddress, amountAboveLimit, randomTxId, EOS_BLOCKCHAIN))
@@ -231,7 +228,7 @@ contract('BancorX', async accounts => {
 
     it('should only allow reporters to report', async () => {
         let randomTxId = getRandomTxId()
-        let amountToSend = (web3Utils.toWei('1', 'ether'))
+        let amountToSend = (web3.toWei('1', 'ether'))
         await utils.catchRevert(bancorX.reportTx(
             EOS_BLOCKCHAIN,
             randomTxId,
@@ -244,7 +241,7 @@ contract('BancorX', async accounts => {
 
     it('shouldnt allow reports when disabled', async () => {
         await bancorX.enableReporting(false)
-        let amountToSend = (web3Utils.toWei('1', 'ether'))
+        let amountToSend = (web3.toWei('1', 'ether'))
         let randomTxId = getRandomTxId()        
         await utils.catchRevert(bancorX.reportTx(
             EOS_BLOCKCHAIN,
@@ -259,7 +256,7 @@ contract('BancorX', async accounts => {
 
     it('shouldnt allow xTransfers when disabled', async () => {
         await bancorX.enableXTransfers(false)
-        let amountToSend = (web3Utils.toWei('1', 'ether'))
+        let amountToSend = (web3.toWei('1', 'ether'))
         await utils.catchRevert(bancorX.xTransfer(
             EOS_BLOCKCHAIN,
             eosAddress,
@@ -269,7 +266,7 @@ contract('BancorX', async accounts => {
     })
 
     it('Gas Test', async () => {
-        let amountToSend = (web3Utils.toWei('10', 'ether')).toString(10)
+        let amountToSend = (web3.toWei('10', 'ether')).toString(10)
         let randomTxId = getRandomTxId()
 
         // gas cost for xTransfer
