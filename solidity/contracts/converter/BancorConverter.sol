@@ -219,6 +219,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
+    // allows execution only on a multiple-connector converter
+    modifier multipleConnectorsOnly {
+        require(connectorTokens.length > 1);
+        _;
+    }
+
     /**
         @dev sets the contract registry to whichever address the current registry is pointing to
      */
@@ -909,6 +915,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function fund(uint256 _amount)
         public
         conversionsAllowed
+        multipleConnectorsOnly
     {
         uint256 supply = token.totalSupply();
         IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
@@ -947,7 +954,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @param _amount  amount to liquidate (in the smart token)
     */
-    function liquidate(uint256 _amount) public {
+    function liquidate(uint256 _amount)
+        public
+        multipleConnectorsOnly
+    {
         uint256 supply = token.totalSupply();
         IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
 
