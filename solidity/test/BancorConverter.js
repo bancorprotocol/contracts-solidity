@@ -956,24 +956,26 @@ contract('BancorConverter', accounts => {
         assert.equal(returnAmount.toNumber(), returnAmount2);
     });
 
-    it('verifies that fund executes when the total connector weight equals 100%', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addConnector(connectorToken3.address, 600000, false);
+    for (const percent of [50, 75, 100]) {
+        it(`verifies that fund executes when the total connector weight equals ${percent}%`, async () => {
+            let converter = await initConverter(accounts, false);
+            await converter.addConnector(connectorToken3.address, (percent - 40) * 10000, false);
 
-        await connectorToken3.transfer(converter.address, 6000);
+            await connectorToken3.transfer(converter.address, 6000);
 
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
+            await token.transferOwnership(converter.address);
+            await converter.acceptTokenOwnership();
 
-        let prevBalance = await token.balanceOf.call(accounts[0]);
-        await connectorToken.approve(converter.address, 100000);
-        await connectorToken2.approve(converter.address, 100000);
-        await connectorToken3.approve(converter.address, 100000);
-        await converter.fund(100);
-        let balance = await token.balanceOf.call(accounts[0]);
+            let prevBalance = await token.balanceOf.call(accounts[0]);
+            await connectorToken.approve(converter.address, 100000);
+            await connectorToken2.approve(converter.address, 100000);
+            await connectorToken3.approve(converter.address, 100000);
+            await converter.fund(100);
+            let balance = await token.balanceOf.call(accounts[0]);
 
-        assert.equal(balance.toNumber(), prevBalance.toNumber() + 100);
-    });
+            assert.equal(balance.toNumber(), prevBalance.toNumber() + 100);
+        });
+    }
 
     it('verifies that fund updates the virtual balance correctly', async () => {
         let converter = await initConverter(accounts, false);
@@ -1136,21 +1138,23 @@ contract('BancorConverter', accounts => {
         
     });
 
-    it('verifies that liquidate executes when the total connector weight equals 100%', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addConnector(connectorToken3.address, 600000, false);
+    for (const percent of [50, 75, 100]) {
+        it(`verifies that liquidate executes when the total connector weight equals ${percent}%`, async () => {
+            let converter = await initConverter(accounts, false);
+            await converter.addConnector(connectorToken3.address, (percent - 40) * 10000, false);
 
-        await connectorToken3.transfer(converter.address, 6000);
+            await connectorToken3.transfer(converter.address, 6000);
 
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
+            await token.transferOwnership(converter.address);
+            await converter.acceptTokenOwnership();
 
-        let prevSupply = await token.totalSupply.call();
-        await converter.liquidate(100);
-        let supply = await token.totalSupply();
+            let prevSupply = await token.totalSupply.call();
+            await converter.liquidate(100);
+            let supply = await token.totalSupply();
 
-        assert.equal(prevSupply - 100, supply);
-    });
+            assert.equal(prevSupply - 100, supply);
+        });
+    }
 
     it('verifies that liquidate updates the virtual balance correctly', async () => {
         let converter = await initConverter(accounts, false);
