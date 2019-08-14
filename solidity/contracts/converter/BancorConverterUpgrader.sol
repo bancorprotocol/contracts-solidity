@@ -43,7 +43,17 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
 /**
     @dev Bancor Converter Upgrader
 
-    The Bancor converter upgrader contract allows upgrading an older Bancor converter contract (0.4 and up) to the latest version. To begin the upgrade process, first transfer the converter ownership to the upgrader contract and then call the upgrade function. At the end of the process, the ownership of the newly upgraded converter will be transferred back to the original owner. The address of the new converter is available in the ConverterUpgrade event.
+    The Bancor converter upgrader contract allows upgrading an older Bancor converter contract (0.4 and up)
+    to the latest version.
+    To begin the upgrade process, simply execute the 'upgrade' function.
+    At the end of the process, the ownership of the newly upgraded converter will be transferred
+    back to the original owner and the original owner will need to execute the 'acceptOwnership' function.
+    
+    The address of the new converter is available in the ConverterUpgrade event.
+    
+    Note that for older converters that don't yet have the 'upgrade' function, ownership should first
+    be transferred manually to the ConverterUpgrader contract using the 'transferOwnership' function
+    and then the upgrader 'upgrade' function should be executed directly.
 */
 contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds, FeatureIds {
     string public version = '0.3';
