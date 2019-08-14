@@ -1,0 +1,9 @@
+{
+      "network"        : "api",
+      "apiKey"         : "V6W6Q9CHBMFMYDUHEBQ5RKG3AGTHR3MW28",
+      "compilerVersion": "v0.4.24+commit.e67f0147",
+      "optimization"   : {"used": 1, "runs": 200},
+      "contracts"      : {
+          "BancorNetwork": {"addr": "0xEee90e509a639E95E3BB502B17A0eEd6E014BFc0", "args": "00000000000000000000000052ae12abe5d8bd778bd5397f99ca900624cfadd4"}
+      }
+}
