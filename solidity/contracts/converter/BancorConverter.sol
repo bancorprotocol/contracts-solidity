@@ -20,7 +20,7 @@ import '../bancorx/interfaces/IBancorX.sol';
 /**
     @dev Bancor Converter v13
 
-    The Bancor version of the token converter allows for conversions between a Smart Token and other ERC20 tokens and between different ERC20 tokens and themselves. 
+    The Bancor converter allows for conversions between a Smart Token and other ERC20 tokens and between different ERC20 tokens and themselves. 
     
     The ERC20 connector balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on the actual connector balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract. 
 
