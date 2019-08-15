@@ -32,7 +32,7 @@ All smart contract functions are public and all upgrades are opt-in. If signific
 
 ## Language
 
-A “Smart Token” refers to tokens which utilize reserves to automate trading, including “Liquid Tokens” (one or more reserves), “Relay Tokens” (two or more reserves) and “Array Tokens” (three or more reserves). See Section 6 of the [Bancor Whitepaper](https://storage.googleapis.com/website-bancor/2018/04/01ba8253-bancor_protocol_whitepaper_en.pdf) (“Smart Token Configurations”) for more details.
+A “Smart Token” refers to tokens which utilize reserves to automate trading, including “Liquid Tokens” (one reserve), “Relay Tokens” (two reserves) and “Array Tokens” (three or more reserves). See Section 6 of the [Bancor Whitepaper](https://storage.googleapis.com/website-bancor/2018/04/01ba8253-bancor_protocol_whitepaper_en.pdf) (“Smart Token Configurations”) for more details.
 
 The terms “reserves” and “connectors” have the same meaning throughout Bancor’s smart contract code and documentation. “Reserve ratio” and “connector weight” are also used interchangeably. “Connector balance” refers to the token inventories held in a Smart Token’s reserve.
 
