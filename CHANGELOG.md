@@ -1,4 +1,9 @@
-﻿### 0.4.8 (2019-07-20)
+﻿### 0.4.9 (2019-08-18)
+Converters:
+* Fixed a rounding error in the `fund` function
+
+
+### 0.4.8 (2019-07-20)
 General:
 * Added support for auto generation of documentation
 * Updated contract documentation
