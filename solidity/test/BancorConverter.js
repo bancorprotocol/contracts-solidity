@@ -1029,9 +1029,9 @@ contract('BancorConverter', accounts => {
         let connector2Balance = await converter.getConnectorBalance.call(connectorToken2.address);
         let connector3Balance = await converter.getConnectorBalance.call(connectorToken3.address);
 
-        assert.equal(connector1Balance.toNumber(), prevConnector1Balance.plus(Math.floor(token1Amount)));
-        assert.equal(connector2Balance.toNumber(), prevConnector2Balance.plus(Math.floor(token2Amount)));
-        assert.equal(connector3Balance.toNumber(), prevConnector3Balance.plus(Math.floor(token3Amount)));
+        assert.equal(connector1Balance.toNumber(), prevConnector1Balance.plus(Math.ceil(token1Amount)));
+        assert.equal(connector2Balance.toNumber(), prevConnector2Balance.plus(Math.ceil(token2Amount)));
+        assert.equal(connector3Balance.toNumber(), prevConnector3Balance.plus(Math.ceil(token3Amount)));
 
         let token1Balance = await connectorToken.balanceOf.call(accounts[9]);
         let token2Balance = await connectorToken2.balanceOf.call(accounts[9]);
@@ -1073,9 +1073,9 @@ contract('BancorConverter', accounts => {
         let connector2Balance = await converter.getConnectorBalance.call(connectorToken2.address);
         let connector3Balance = await converter.getConnectorBalance.call(connectorToken3.address);
 
-        assert.equal(connector1Balance.toNumber(), prevConnector1Balance.plus(Math.floor(token1Amount)));
-        assert.equal(connector2Balance.toNumber(), prevConnector2Balance.plus(Math.floor(token2Amount)));
-        assert.equal(connector3Balance.toNumber(), prevConnector3Balance.plus(Math.floor(token3Amount)));
+        assert.equal(connector1Balance.toNumber(), prevConnector1Balance.plus(Math.ceil(token1Amount)));
+        assert.equal(connector2Balance.toNumber(), prevConnector2Balance.plus(Math.ceil(token2Amount)));
+        assert.equal(connector3Balance.toNumber(), prevConnector3Balance.plus(Math.ceil(token3Amount)));
 
         let token1Balance = await connectorToken.balanceOf.call(accounts[9]);
         let token2Balance = await connectorToken2.balanceOf.call(accounts[9]);
