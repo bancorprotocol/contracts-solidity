@@ -6,7 +6,7 @@ import '../utility/SafeMath.sol';
 import '../token/interfaces/ISmartToken.sol';
 
 /**
-    @dev BancorPriceFloor v0.1
+    @dev BancorPriceFloor
 
     The bancor price floor contract is a simple contract that allows selling smart tokens for a constant ETH price
 

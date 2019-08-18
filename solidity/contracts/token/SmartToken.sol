@@ -5,7 +5,7 @@ import '../utility/Owned.sol';
 import '../utility/TokenHolder.sol';
 
 /**
-    @dev Smart Token v0.3
+    @dev Smart Token
 
     'Owned' is specified here for readability reasons
 */

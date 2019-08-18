@@ -18,7 +18,7 @@ import '../token/interfaces/IEtherToken.sol';
 import '../bancorx/interfaces/IBancorX.sol';
 
 /**
-    @dev Bancor Converter v13
+    @dev Bancor Converter
 
     The Bancor converter allows for conversions between a Smart Token and other ERC20 tokens and between different ERC20 tokens and themselves. 
     
@@ -54,7 +54,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
         @dev version number
     */
-    uint16 public version = 13;
+    uint16 public version = 14;
     string public converterType = 'bancor';
 
     bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
@@ -925,7 +925,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < connectorTokens.length; i++) {
             connectorToken = connectorTokens[i];
             connectorBalance = getConnectorBalance(connectorToken);
-            connectorAmount = _amount.mul(connectorBalance).div(supply);
+            connectorAmount = _amount.mul(connectorBalance).sub(1).div(supply).add(1);
 
             // update virtual balance if relevant
             Connector storage connector = connectors[connectorToken];
