@@ -46,7 +46,7 @@ for n in range(size):
     weight1 = random.randrange(1, 1000000)
     balance2 = random.randrange(1, 10 ** 23)
     weight2 = random.randrange(1, 1000000)
-    amount = random.randrange(1, supply)
+    amount = random.randrange(1, balance1 * 10)
     singleHopFixed = singleHopTestFixed(balance1, weight1, balance2, weight2, amount)
     doubleHopFixed = doubleHopTestFixed(supply, balance1, weight1, balance2, weight2, amount)
     doubleHopFloat = doubleHopTestFloat(supply, balance1, weight1, balance2, weight2, amount)
