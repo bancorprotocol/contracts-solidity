@@ -1,5 +1,5 @@
-Smart Token v0.3
-'Owned' is specified here for readability reasons
+Smart Token
+'Owned' is specified here for readability reasons
 
 # Functions:
 - [`constructor(string _name, string _symbol, uint8 _decimals)`](#SmartToken-constructor-string-string-uint8-)
@@ -22,13 +22,13 @@ initializes a new SmartToken instance
 
 - `_symbol`:     token short symbol, minimum 1 character
 
-- `_decimals`:   for display purposes only
+- `_decimals`:   for display purposes only
 # Function `disableTransfers(bool _disable)` {#SmartToken-disableTransfers-bool-}
 disables/enables transfers
 can only be called by the contract owner
 
 ## Parameters:
-- `_disable`:    true to disable transfers, false to enable them
+- `_disable`:    true to disable transfers, false to enable them
 # Function `issue(address _to, uint256 _amount)` {#SmartToken-issue-address-uint256-}
 increases the token supply and sends the new tokens to an account
 can only be called by the contract owner
@@ -36,7 +36,7 @@ can only be called by the contract owner
 ## Parameters:
 - `_to`:         account to receive the new amount
 
-- `_amount`:     amount to increase the supply by
+- `_amount`:     amount to increase the supply by
 # Function `destroy(address _from, uint256 _amount)` {#SmartToken-destroy-address-uint256-}
 removes tokens from an account and decreases the token supply
 can be called by the contract owner to destroy tokens from any account or by any holder to destroy tokens from his/her own account
@@ -44,7 +44,7 @@ can be called by the contract owner to destroy tokens from any account or by any
 ## Parameters:
 - `_from`:       account to remove the amount from
 
-- `_amount`:     amount to decrease the supply by
+- `_amount`:     amount to decrease the supply by
 # Function `transfer(address _to, uint256 _value) → bool success` {#SmartToken-transfer-address-uint256-}
 send coins
 throws on any error rather then return a false flag to minimize user errors
@@ -73,14 +73,14 @@ triggered when a smart token is deployed
 the _token address is defined for forward compatibility, in case the event is trigger by a factory
 
 ## Parameters:
-- `_token`:  new smart token address
+- `_token`:  new smart token address
 # Event `Issuance(uint256 _amount)` {#SmartToken-Issuance-uint256-}
 triggered when the total supply is increased
 
 ## Parameters:
-- `_amount`:  amount that gets added to the supply
+- `_amount`:  amount that gets added to the supply
 # Event `Destruction(uint256 _amount)` {#SmartToken-Destruction-uint256-}
 triggered when the total supply is decreased
 
 ## Parameters:
-- `_amount`:  amount that gets removed from the supply
+- `_amount`:  amount that gets removed from the supply

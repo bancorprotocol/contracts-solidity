@@ -4,7 +4,7 @@ import '../token/interfaces/ISmartToken.sol';
 import '../utility/SafeMath.sol';
 
 /**
-    @dev Crowdsale v0.1
+    @dev Crowdsale
 
     The crowdsale version of the smart token controller, allows contributing ether in exchange for Bancor tokens
     The price remains fixed for the entire duration of the crowdsale
