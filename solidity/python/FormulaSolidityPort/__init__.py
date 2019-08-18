@@ -276,11 +276,11 @@ def calculateFundReturn(_supply, _connectorBalance, _totalWeight, _amount):
 
     # special case if the total weight = 100%
     if (_totalWeight == MAX_WEIGHT):
-        return safeMul(_amount, _connectorBalance) // _supply;
+        return (safeMul(_amount, _connectorBalance) - 1) // _supply + 1;
 
     baseN = safeAdd(_supply, _amount);
     (result, precision) = power(baseN, _supply, MAX_WEIGHT, _totalWeight);
-    temp = safeMul(_connectorBalance, result) >> precision;
+    temp = ((safeMul(_connectorBalance, result) - 1) >> precision) + 1;
     return temp - _connectorBalance;
 
 '''
