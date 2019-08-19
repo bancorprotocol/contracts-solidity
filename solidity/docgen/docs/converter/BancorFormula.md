@@ -84,7 +84,7 @@ Return = _connectorBalance * (((_supply + _amount) / _supply) ^ (MAX_WEIGHT / _t
 given a relay token supply, connector balance, total weight and an amount of relay tokens,
 calculates the amount of connector tokens received for selling the given amount of relay tokens
 Formula:
-Return = _connectorBalance * (((_supply - _amount) / _supply) ^ (MAX_WEIGHT / _totalWeight) - 1)
+Return = _connectorBalance * ((_supply / (_supply - _amount)) ^ (MAX_WEIGHT / _totalWeight) - 1)
 
 ## Parameters:
 - `_supply`:              relay token supply
