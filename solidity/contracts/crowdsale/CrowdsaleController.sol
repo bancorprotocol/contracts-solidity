@@ -37,14 +37,13 @@ contract CrowdsaleController is SmartTokenController {
         @dev initializes a new CrowdsaleController instance
 
         @param _token          smart token the crowdsale is for
-        @param  _registry      address of a contract registry contract
         @param _startTime      crowdsale start time
         @param _beneficiary    address to receive all ether contributions
         @param _btcs           bitcoin suisse address
     */
-    constructor(ISmartToken _token, IContractRegistry _registry, uint256 _startTime, address _beneficiary, address _btcs, bytes32 _realEtherCapHash)
+    constructor(ISmartToken _token, uint256 _startTime, address _beneficiary, address _btcs, bytes32 _realEtherCapHash)
         public
-        SmartTokenController(_token, _registry)
+        SmartTokenController(_token)
         validAddress(_beneficiary)
         validAddress(_btcs)
         earlierThan(_startTime)

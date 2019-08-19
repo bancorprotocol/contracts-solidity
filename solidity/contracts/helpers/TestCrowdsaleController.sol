@@ -12,14 +12,13 @@ contract TestCrowdsaleController is CrowdsaleController {
 
     constructor(
         ISmartToken _token,
-        IContractRegistry _registry,
         uint256 _startTime,
         address _beneficiary,
         address _btcs,
         bytes32 _realEtherCapHash,
         uint256 _startTimeOverride)
         public
-        CrowdsaleController(_token, _registry, _startTime, _beneficiary, _btcs, _realEtherCapHash)
+        CrowdsaleController(_token, _startTime, _beneficiary, _btcs, _realEtherCapHash)
     {
         startTime = _startTimeOverride;
         endTime = startTime + DURATION;

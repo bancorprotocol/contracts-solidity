@@ -1,8 +1,5 @@
 pragma solidity ^0.4.24;
 import './interfaces/ISmartTokenController.sol';
-import '../utility/interfaces/IContractRegistry.sol';
-import '../utility/Managed.sol';
-import '../ContractIds.sol';
 import './interfaces/ISmartToken.sol';
 import '../utility/TokenHolder.sol';
 
@@ -22,28 +19,20 @@ import '../utility/TokenHolder.sol';
     doesn't allow executing any function on the token, for a trustless solution.
     Doing that will also remove the owner's ability to upgrade the controller.
 */
-contract SmartTokenController is ISmartTokenController, Managed, ContractIds, TokenHolder {
-    ISmartToken public token;   // smart token
-    bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
-    bool public claimTokensEnabled = false;             // allows a BancorX contract to claim tokens without allowance (to save the extra transaction)
-    IContractRegistry public prevRegistry;              // address of previous registry as security mechanism
-    IContractRegistry public registry;                  // contract registry contract
-    address public bancorX;                             // a BancorX contract
+contract SmartTokenController is ISmartTokenController, TokenHolder {
+    ISmartToken public token;   // Smart Token contract
+    address public bancorX;     // BancorX contract
 
     /**
         @dev initializes a new SmartTokenController instance
 
         @param  _token              smart token governed by the controller
-        @param  _registry           address of a contract registry contract
     */
-    constructor(ISmartToken _token, IContractRegistry _registry)
+    constructor(ISmartToken _token)
         public
         validAddress(_token)
-        validAddress(_registry)
     {
         token = _token;
-        registry = _registry;
-        prevRegistry = _registry;
     }
 
     // ensures that the controller is the token's owner
@@ -99,85 +88,27 @@ contract SmartTokenController is ISmartTokenController, Managed, ContractIds, To
         ITokenHolder(token).withdrawTokens(_token, _to, _amount);
     }
 
-    // allows execution only when claim tokens is enabled
-    modifier whenClaimTokensEnabled {
-        require(claimTokensEnabled);
-        _;
-    }
-
-    /**
-        @dev sets the contract registry to whichever address the current registry is pointing to
-     */
-    function updateRegistry() public {
-        // require that upgrading is allowed or that the caller is the owner
-        require(allowRegistryUpdate || msg.sender == owner);
-
-        // get the address of whichever registry the current registry is pointing to
-        address newRegistry = registry.addressOf(ContractIds.CONTRACT_REGISTRY);
-
-        // if the new registry hasn't changed or is the zero address, revert
-        require(newRegistry != address(registry) && newRegistry != address(0));
-
-        // set the previous registry as current registry and current registry as newRegistry
-        prevRegistry = registry;
-        registry = IContractRegistry(newRegistry);
-    }
-
-    /**
-        @dev security mechanism allowing the controller owner to revert to the previous registry,
-        to be used in emergency scenario
-    */
-    function restoreRegistry() public ownerOrManagerOnly {
-        // set the registry as previous registry
-        registry = prevRegistry;
-
-        // after a previous registry is restored, only the owner can allow future updates
-        allowRegistryUpdate = false;
-    }
-
-    /**
-        @dev disables the registry update functionality
-        this is a safety mechanism in case of a emergency
-        can only be called by the manager or owner
-
-        @param _disable    true to disable registry updates, false to re-enable them
-    */
-    function disableRegistryUpdate(bool _disable) public ownerOrManagerOnly {
-        allowRegistryUpdate = !_disable;
-    }
-
-    /**
-        @dev disables/enables the claim tokens functionality
-
-        @param _enable    true to enable claiming of tokens, false to disable
-     */
-    function enableClaimTokens(bool _enable) public ownerOnly {
-        claimTokensEnabled = _enable;
-    }
-
     /**
         @dev allows the associated BancorX contract to claim tokens from any address (so that users
         dont have to first give allowance when calling BancorX)
 
         @param _from      address to claim the tokens from
-        @param _amount    the amount to claim
+        @param _amount    the amount of tokens to claim
      */
-    function claimTokens(address _from, uint256 _amount) public whenClaimTokensEnabled {
-        // only the associated bancorX contract may call this method
+    function claimTokens(address _from, uint256 _amount) public {
+        // only the associated BancorX contract may call this method
         require(msg.sender == bancorX);
 
-        // destroy the tokens belonging to _from, and issue the same amount to bancorX contract
+        // destroy the tokens belonging to _from, and issue the same amount to bancorX
         token.destroy(_from, _amount);
         token.issue(msg.sender, _amount);
     }
 
     /**
-        @dev allows the owner to set the BancorX to wherever the
-        contract registry currently points to
-
-        @param _bancorXId    BancorX ID
+        @dev allows the owner to set the associated BancorX contract
+        @param _bancorX    BancorX contract
      */
-    function setBancorX(bytes32 _bancorXId) public ownerOnly {
-        bancorX = registry.addressOf(_bancorXId);
+    function setBancorX(address _bancorX) public ownerOnly {
+        bancorX = _bancorX;
     }
 }
