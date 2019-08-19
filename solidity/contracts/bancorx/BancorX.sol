@@ -23,7 +23,7 @@ import '../token/interfaces/ISmartToken.sol';
 contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     using SafeMath for uint256;
 
-    // represents a transaction on another blockchain where BNT was destroyed/locked
+    // represents a transaction on another blockchain where tokens were destroyed/locked
     struct Transaction {
         uint256 amount;
         bytes32 fromBlockchain;
@@ -34,9 +34,9 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
 
     uint16 public version = 2;
 
-    uint256 public maxLockLimit;            // the maximum amount of BNT that can be locked in one transaction
-    uint256 public maxReleaseLimit;         // the maximum amount of BNT that can be released in one transaction
-    uint256 public minLimit;                // the minimum amount of BNT that can be transferred in one transaction
+    uint256 public maxLockLimit;            // the maximum amount of tokens that can be locked in one transaction
+    uint256 public maxReleaseLimit;         // the maximum amount of tokens that can be released in one transaction
+    uint256 public minLimit;                // the minimum amount of tokens that can be transferred in one transaction
     uint256 public prevLockLimit;           // the lock limit *after* the last transaction
     uint256 public prevReleaseLimit;        // the release limit *after* the last transaction
     uint256 public limitIncPerBlock;        // how much the limit increases per block
@@ -46,8 +46,9 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     
     IContractRegistry public registry;      // contract registry
     IContractRegistry public prevRegistry;  // address of previous registry as security mechanism
-    ISmartTokenController public smartTokenController;   // Smart Token Controller
-    ISmartToken public bntToken;            // BNT token
+
+    IERC20Token public token;               // ERC20 Token or Smart Token
+    bool public isSmartToken;               // false - ERC20 Token; true - Smart Token
 
     bool public xTransfersEnabled = true;   // true if x transfers are enabled, false if not
     bool public reportingEnabled = true;    // true if reporting is enabled, false if not
@@ -66,7 +67,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     mapping (address => bool) public reporters;
 
     /**
-        @dev triggered when BNT is locked in smart contract
+        @dev triggered when tokens are locked in smart contract
 
         @param _from    wallet address that the tokens are locked from
         @param _amount  amount locked
@@ -77,7 +78,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     );
 
     /**
-        @dev triggered when BNT is released by the smart contract
+        @dev triggered when tokens are released by the smart contract
 
         @param _to      wallet address that the tokens are released to
         @param _amount  amount released
@@ -137,13 +138,13 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     /**
         @dev initializes a new BancorX instance
 
-        @param _maxLockLimit          maximum amount of BNT that can be locked in one transaction
-        @param _maxReleaseLimit       maximum amount of BNT that can be released in one transaction
-        @param _minLimit              minimum amount of BNT that can be transferred in one transaction
+        @param _maxLockLimit          maximum amount of tokens that can be locked in one transaction
+        @param _maxReleaseLimit       maximum amount of tokens that can be released in one transaction
+        @param _minLimit              minimum amount of tokens that can be transferred in one transaction
         @param _limitIncPerBlock      how much the limit increases per block
         @param _minRequiredReports    minimum number of reporters to report transaction before tokens can be released
         @param _registry              address of contract registry
-        @param _smartTokenControllerId smart token controller ID
+        @param _token                 token
      */
     constructor(
         uint256 _maxLockLimit,
@@ -152,7 +153,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         uint256 _limitIncPerBlock,
         uint256 _minRequiredReports,
         address _registry,
-        bytes32 _smartTokenControllerId
+        IERC20Token _token
     )
         public
     {
@@ -171,8 +172,8 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
 
         registry = IContractRegistry(_registry);
         prevRegistry = IContractRegistry(_registry);
-        bntToken = ISmartToken(registry.addressOf(ContractIds.BNT_TOKEN));
-        smartTokenController = ISmartTokenController(registry.addressOf(_smartTokenControllerId));
+
+        token = _token;
     }
 
     // validates that the caller is a reporter
@@ -278,13 +279,12 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     }
 
     /**
-        @dev allows the owner to set the smart token controller address to wherever the
-        contract registry currently points to
+        @dev allows the owner to set the token
 
-        @param _smartTokenControllerId    smart token controller ID
+        @param _token    token
      */
-    function setSmartTokenControllerAddress(bytes32 _smartTokenControllerId) public ownerOnly {
-        smartTokenController = ISmartTokenController(registry.addressOf(_smartTokenControllerId));
+    function setToken(IERC20Token _token) public ownerOnly {
+        token = _token;
     }
 
     /**
@@ -333,11 +333,11 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     }
 
     /**
-        @dev claims BNT from msg.sender to be converted to BNT on another blockchain
+        @dev claims tokens from msg.sender to be converted to tokens on another blockchain
 
-        @param _toBlockchain    blockchain BNT will be issued on
-        @param _to              address to send the BNT to
-        @param _amount          the amount to transfer
+        @param _toBlockchain    blockchain on which tokens will be issued
+        @param _to              address to send the tokens to
+        @param _amount          the amount of tokens to transfer
      */
     function xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount) public whenXTransfersEnabled {
         // get the current lock limit
@@ -357,11 +357,11 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     }
 
     /**
-        @dev claims BNT from msg.sender to be converted to BNT on another blockchain
+        @dev claims tokens from msg.sender to be converted to tokens on another blockchain
 
-        @param _toBlockchain    blockchain BNT will be issued on
-        @param _to              address to send the BNT to
-        @param _amount          the amount to transfer
+        @param _toBlockchain    blockchain on which tokens will be issued
+        @param _to              address to send the tokens to
+        @param _amount          the amount of tokens to transfer
         @param _id              pre-determined unique (if non zero) id which refers to this transaction 
      */
     function xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount, uint256 _id) public whenXTransfersEnabled {
@@ -384,10 +384,10 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     /**
         @dev allows reporter to report transaction which occured on another blockchain
 
-        @param _fromBlockchain  blockchain BNT was destroyed in
+        @param _fromBlockchain  blockchain in which tokens were destroyed
         @param _txId            transactionId of transaction thats being reported
-        @param _to              address to receive BNT
-        @param _amount          amount of BNT destroyed on another blockchain
+        @param _to              address to receive tokens
+        @param _amount          amount of tokens destroyed on another blockchain
         @param _xTransferId     unique (if non zero) pre-determined id (unlike _txId which is determined after the transactions been mined)
      */
     function reportTx(
@@ -468,7 +468,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     /**
         @dev method for calculating current lock limit
 
-        @return the current maximum limit of BNT that can be locked
+        @return the current maximum limit of tokens that can be locked
      */
     function getCurrentLockLimit() public view returns (uint256) {
         // prevLockLimit + ((currBlockNumber - prevLockBlockNumber) * limitIncPerBlock)
@@ -481,7 +481,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     /**
         @dev method for calculating current release limit
 
-        @return the current maximum limit of BNT that can be released
+        @return the current maximum limit of tokens that can be released
      */
     function getCurrentReleaseLimit() public view returns (uint256) {
         // prevReleaseLimit + ((currBlockNumber - prevReleaseBlockNumber) * limitIncPerBlock)
@@ -492,22 +492,23 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     }
 
     /**
-        @dev claims and locks BNT from msg.sender to be converted to BNT on another blockchain
+        @dev claims and locks tokens from msg.sender to be converted to tokens on another blockchain
 
-        @param _amount  the amount to lock
+        @param _amount  the amount of tokens to lock
      */
     function lockTokens(uint256 _amount) private {
-        // lock the BNT from msg.sender in this contract
-        smartTokenController.claimTokens(msg.sender, _amount);
-
+        if (isSmartToken)
+            ISmartTokenController(ISmartToken(token).owner()).claimTokens(msg.sender, _amount);
+        else
+            token.transferFrom(msg.sender, address(this), _amount);
         emit TokensLock(msg.sender, _amount);
     }
 
     /**
-        @dev private method to release BNT the contract holds
+        @dev private method to release tokens held by the contract
 
-        @param _to      the address to release BNT to
-        @param _amount  the amount to release
+        @param _to      the address to release tokens to
+        @param _amount  the amount of tokens to release
      */
     function releaseTokens(address _to, uint256 _amount) private {
         // get the current release limit
@@ -520,7 +521,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         prevReleaseBlockNumber = block.number;
 
         // no need to require, reverts on failure
-        bntToken.transfer(_to, _amount);
+        token.transfer(_to, _amount);
 
         emit TokensRelease(_to, _amount);
     }
