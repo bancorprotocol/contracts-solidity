@@ -47,8 +47,8 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     IContractRegistry public registry;      // contract registry
     IContractRegistry public prevRegistry;  // address of previous registry as security mechanism
 
-    IERC20Token public token;               // ERC20 Token or Smart Token
-    bool public isSmartToken;               // false - ERC20 Token; true - Smart Token
+    IERC20Token public token;               // erc20 token or smart token
+    bool public isSmartToken;               // false - erc20 token; true - smart token
 
     bool public xTransfersEnabled = true;   // true if x transfers are enabled, false if not
     bool public reportingEnabled = true;    // true if reporting is enabled, false if not
@@ -144,7 +144,8 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @param _limitIncPerBlock      how much the limit increases per block
         @param _minRequiredReports    minimum number of reporters to report transaction before tokens can be released
         @param _registry              address of contract registry
-        @param _token                 token
+        @param _token                 erc20 token or smart token
+        @param _isSmartToken          false - erc20 token; true - smart token
      */
     constructor(
         uint256 _maxLockLimit,
@@ -153,7 +154,8 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         uint256 _limitIncPerBlock,
         uint256 _minRequiredReports,
         address _registry,
-        IERC20Token _token
+        IERC20Token _token,
+        bool _isSmartToken
     )
         public
     {
@@ -174,6 +176,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         prevRegistry = IContractRegistry(_registry);
 
         token = _token;
+        isSmartToken = _isSmartToken;
     }
 
     // validates that the caller is a reporter
@@ -276,15 +279,6 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     */
     function disableRegistryUpdate(bool _disable) public ownerOnly {
         allowRegistryUpdate = !_disable;
-    }
-
-    /**
-        @dev allows the owner to set the token
-
-        @param _token    token
-     */
-    function setToken(IERC20Token _token) public ownerOnly {
-        token = _token;
     }
 
     /**
