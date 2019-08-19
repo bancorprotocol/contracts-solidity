@@ -4,15 +4,14 @@ import FormulaSolidityPort
 import FormulaNativePython
 
 
-def formulaTest(balance1, weight1, balance2, weight2, amount):
-    resultSolidityPort = FormulaSolidityPort.calculateCrossConnectorReturn(balance1, weight1, balance2, weight2, amount)
-    resultNativePython = FormulaNativePython.calculateCrossConnectorReturn(balance1, weight1, balance2, weight2, amount)
+def formulaTest(supply, balance, weights, amount):
+    resultSolidityPort = FormulaSolidityPort.calculateLiquidateReturn(supply, balance, weights, amount)
+    resultNativePython = FormulaNativePython.calculateLiquidateReturn(supply, balance, weights, amount)
     if resultSolidityPort > resultNativePython:
         error = ['Implementation Error:']
-        error.append('balance1           = {}'.format(balance1))
-        error.append('weight1            = {}'.format(weight1))
-        error.append('balance2           = {}'.format(balance2))
-        error.append('weight2            = {}'.format(weight2))
+        error.append('supply             = {}'.format(supply))
+        error.append('balance            = {}'.format(balance))
+        error.append('weights            = {}'.format(weights))
         error.append('amount             = {}'.format(amount))
         error.append('resultSolidityPort = {}'.format(resultSolidityPort))
         error.append('resultNativePython = {}'.format(resultNativePython))
@@ -30,13 +29,12 @@ numOfFailures = 0
 
 
 for n in range(size):
-    balance1 = random.randrange(1, 10 ** 23)
-    weight1 = random.randrange(1, 1000000)
-    balance2 = random.randrange(1, 10 ** 23)
-    weight2 = random.randrange(1, 1000000)
-    amount = random.randrange(1, balance1 * 10)
+    supply = random.randrange(2, 10 ** 26)
+    balance = random.randrange(1, 10 ** 23)
+    weights = random.randrange(10000, 2000001)
+    amount = random.randrange(1, supply // 10)
     try:
-        accuracy = formulaTest(balance1, weight1, balance2, weight2, amount)
+        accuracy = formulaTest(supply, balance, weights, amount)
         worstAccuracy = min(worstAccuracy, accuracy)
     except Exception as error:
         accuracy = 0

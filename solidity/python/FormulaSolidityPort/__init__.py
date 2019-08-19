@@ -288,7 +288,7 @@ def calculateFundReturn(_supply, _connectorBalance, _totalWeight, _amount):
     calculates the amount of connector tokens received for selling the given amount of relay tokens
 
     Formula:
-    Return = _connectorBalance * (((_supply - _amount) / _supply) ^ (MAX_WEIGHT / _totalWeight) - 1)
+    Return = _connectorBalance * ((_supply / (_supply - _amount)) ^ (MAX_WEIGHT / _totalWeight) - 1)
 
     @param _supply              relay token supply
     @param _connectorBalance    connector token balance

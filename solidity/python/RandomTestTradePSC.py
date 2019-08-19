@@ -8,13 +8,11 @@ from decimal import getcontext
 getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
 
 
-def formulaTest(supply, balance1, weight1, balance2, weight2, amount0):
-    amount1 = FormulaSolidityPort.calculateFundReturn(supply, balance1, weight1 + weight2, amount0)
-    amount2 = FormulaSolidityPort.calculateFundReturn(supply, balance2, weight1 + weight2, amount0)
-    amount3 = FormulaSolidityPort.calculateSaleReturn(supply + amount0, balance1 + amount1, weight1, amount0)
-    amount4 = FormulaSolidityPort.calculatePurchaseReturn(supply, balance1 + amount1 - amount3, weight1, amount3 - amount1)
-    amount5 = FormulaSolidityPort.calculateSaleReturn(supply + amount4, balance2 + amount2, weight2, amount4)
-    before, after = amount2, amount5
+def formulaTest(supply, balance1, weight1, balance2, weight2, amount1):
+    amount0 = FormulaSolidityPort.calculatePurchaseReturn(supply, balance1, weight1, amount1)
+    amount2 = FormulaSolidityPort.calculateSaleReturn(supply + amount0, balance2, weight2, amount0)
+    amount3 = FormulaSolidityPort.calculateCrossConnectorReturn(balance2 - amount2, weight2, balance1 + amount1, weight1, amount2)
+    before, after = amount1, amount3
     if after > before:
         error = ['Implementation Error:']
         error.append('supply   = {}'.format(supply))
@@ -26,8 +24,6 @@ def formulaTest(supply, balance1, weight1, balance2, weight2, amount0):
         error.append('amount1  = {}'.format(amount1))
         error.append('amount2  = {}'.format(amount2))
         error.append('amount3  = {}'.format(amount3))
-        error.append('amount4  = {}'.format(amount4))
-        error.append('amount5  = {}'.format(amount5))
         error.append('before   = {}'.format(before))
         error.append('after    = {}'.format(after))
         raise BaseException('\n'.join(error))
@@ -49,9 +45,9 @@ for n in range(size):
     weight1 = random.randrange(1, 1000000)
     balance2 = random.randrange(1, 10 ** 23)
     weight2 = random.randrange(1, 1000000)
-    amount0 = random.randrange(1, supply * 10)
+    amount1 = random.randrange(1, balance1 * 10)
     try:
-        accuracy = formulaTest(supply, balance1, weight1, balance2, weight2, amount0)
+        accuracy = formulaTest(supply, balance1, weight1, balance2, weight2, amount1)
         worstAccuracy = min(worstAccuracy, accuracy)
     except Exception as error:
         accuracy = 0
