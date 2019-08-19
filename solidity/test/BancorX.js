@@ -7,8 +7,6 @@ const SmartToken = artifacts.require('SmartToken');
 const EtherToken = artifacts.require('EtherToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 
-const web3Utils = require('web3-utils')
-
 const utils = require('./helpers/Utils');
 const miningUtils = require('./helpers/MiningUtils');
 
