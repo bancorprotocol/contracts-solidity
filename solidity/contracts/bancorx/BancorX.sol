@@ -3,7 +3,7 @@ pragma solidity ^0.4.24;
 import './interfaces/IBancorXUpgrader.sol';
 import './interfaces/IBancorX.sol';
 import '../ContractIds.sol';
-import '../converter/interfaces/IBancorConverter.sol';
+import '../token/interfaces/ISmartTokenController.sol';
 import '../utility/interfaces/IContractRegistry.sol';
 import '../utility/Owned.sol';
 import '../utility/SafeMath.sol';
@@ -46,7 +46,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     
     IContractRegistry public registry;      // contract registry
     IContractRegistry public prevRegistry;  // address of previous registry as security mechanism
-    IBancorConverter public bntConverter;   // BNT converter
+    ISmartTokenController public smartTokenController;   // Smart Token Controller
     ISmartToken public bntToken;            // BNT token
 
     bool public xTransfersEnabled = true;   // true if x transfers are enabled, false if not
@@ -143,6 +143,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         @param _limitIncPerBlock      how much the limit increases per block
         @param _minRequiredReports    minimum number of reporters to report transaction before tokens can be released
         @param _registry              address of contract registry
+        @param _smartTokenControllerId smart token controller ID
      */
     constructor(
         uint256 _maxLockLimit,
@@ -150,7 +151,8 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         uint256 _minLimit,
         uint256 _limitIncPerBlock,
         uint256 _minRequiredReports,
-        address _registry
+        address _registry,
+        bytes32 _smartTokenControllerId
     )
         public
     {
@@ -170,7 +172,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         registry = IContractRegistry(_registry);
         prevRegistry = IContractRegistry(_registry);
         bntToken = ISmartToken(registry.addressOf(ContractIds.BNT_TOKEN));
-        bntConverter = IBancorConverter(registry.addressOf(ContractIds.BNT_CONVERTER));
+        smartTokenController = ISmartTokenController(registry.addressOf(_smartTokenControllerId));
     }
 
     // validates that the caller is a reporter
@@ -276,11 +278,13 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     }
 
     /**
-        @dev allows the owner to set the BNT converters address to wherever the
+        @dev allows the owner to set the smart token controller address to wherever the
         contract registry currently points to
+
+        @param _smartTokenControllerId    smart token controller ID
      */
-    function setBNTConverterAddress() public ownerOnly {
-        bntConverter = IBancorConverter(registry.addressOf(ContractIds.BNT_CONVERTER));
+    function setSmartTokenControllerAddress(bytes32 _smartTokenControllerId) public ownerOnly {
+        smartTokenController = ISmartTokenController(registry.addressOf(_smartTokenControllerId));
     }
 
     /**
@@ -494,7 +498,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
      */
     function lockTokens(uint256 _amount) private {
         // lock the BNT from msg.sender in this contract
-        bntConverter.claimTokens(msg.sender, _amount);
+        smartTokenController.claimTokens(msg.sender, _amount);
 
         emit TokensLock(msg.sender, _amount);
     }
