@@ -26,7 +26,7 @@ const EOS_BLOCKCHAIN = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c00000000000000
 
 let bancorX, defAccounts
 
-const initBancorX = async accounts => {
+async function initBancorX(accounts, isSmartToken) {
     const etherToken = await EtherToken.new()
     const contractRegistry = await ContractRegistry.new()
     const smartToken = await SmartToken.new('Bancor', 'BNT', 18)
@@ -49,27 +49,33 @@ const initBancorX = async accounts => {
         MIN_REQUIRED_REPORTS,
         contractRegistry.address,
         smartToken.address,
-        true
+        isSmartToken
     )
 
     // register BancorX address
     await contractRegistry.registerAddress(web3Utils.asciiToHex('BancorX'), bancorX.address)
     await bancorConverter.setBancorX(bancorX.address)
 
-    // issue bnt and transfer ownership to converter
+    // issue bnt
     await smartToken.issue(accounts[0], BNT_AMOUNT)
-    await smartToken.transferOwnership(bancorConverter.address)
 
-    // set virtual weight and bancorx address for bnt converter, and accept token ownership
+    // set virtual weight and bancorx address for bnt converter
     await bancorConverter.updateConnector(etherToken.address, '100000', true, BNT_RESERVE_AMOUNT)
-    await bancorConverter.acceptTokenOwnership()
+
+    if (isSmartToken) {
+        await smartToken.transferOwnership(bancorConverter.address)
+        await bancorConverter.acceptTokenOwnership()
+    }
+    else {
+        await smartToken.approve(bancorX.address, BNT_AMOUNT)
+    }
 }
 
 contract('BancorX', async accounts => {
     // initialize BancorX contracts
     before(async () => {
         defAccounts = accounts
-        await initBancorX(accounts)
+        await initBancorX(accounts, true)
     })
 
     it('should have the correct state variables after constructions', async () => {
