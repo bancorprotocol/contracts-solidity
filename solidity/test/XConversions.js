@@ -399,7 +399,9 @@ const initBancorNetwork = async accounts => {
         MIN_LIMIT,
         LIM_INC_PER_BLOCK,
         MIN_REQUIRED_REPORTS,
-        contractRegistry.address
+        contractRegistry.address,
+        bntToken.address,
+        true
     )
 
     await bancorX.setReporter(reporter1, true)
@@ -416,7 +418,7 @@ const initBancorNetwork = async accounts => {
     // set virtual weight and bancorx address for bnt converter, and accept token ownership
     await bntConverter.updateConnector(etherToken.address, '100000', true, BNT_RESERVE_AMOUNT)
     await bntConverter.acceptTokenOwnership()
-    await bntConverter.enableClaimTokens(true);
+    await bntConverter.setBancorX(bancorX.address)
 
     // creating second converter
     const relayToken = await SmartToken.new('Relay Token', 'RLY', 18)
