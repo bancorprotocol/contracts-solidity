@@ -18,7 +18,8 @@ const TEST_AMOUNT       = web3.toBigNumber('10000000000000000000') // 10 tokens
 const SUPPLY_AMOUNT     = web3.toBigNumber('77492920201018469141404133')
 const RESERVE_AMOUNT    = web3.toBigNumber('45688650129186275318509')
 const MIN_REQ_REPORTS   = web3.toBigNumber('3')
-const X_TRANSFER_ID     = web3.toBigNumber('12345678')
+const TRANSACTION_ID    = web3.toBigNumber('12345678')
+const X_TRANSFER_ID     = web3.toBigNumber('87654321')
 
 // this is just gibberish bytes32
 const eosAddress = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c000000000000000000000000'
@@ -158,9 +159,9 @@ contract('BancorX', async accounts => {
         await bancorX.setReporter(accounts[1], true)
         await bancorX.setReporter(accounts[2], true)
         await bancorX.setReporter(accounts[3], true)
-        await bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], amount, 0, {from: accounts[1]})
-        await bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], amount, 0, {from: accounts[2]})
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], amount, 0, {from: accounts[3]}))
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[1]})
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[2]})
+        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[3]}))
     })
 
     it('should not be able to release above the max limit', async () => {
@@ -169,9 +170,9 @@ contract('BancorX', async accounts => {
         await bancorX.setReporter(accounts[1], true)
         await bancorX.setReporter(accounts[2], true)
         await bancorX.setReporter(accounts[3], true)
-        await bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], amount, 0, {from: accounts[1]})
-        await bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], amount, 0, {from: accounts[2]})
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], amount, 0, {from: accounts[3]}))
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[1]})
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[2]})
+        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[3]}))
     })
 
     it('should emit an event when successfuly locking tokens', async () => {
@@ -202,28 +203,28 @@ contract('BancorX', async accounts => {
     it('should not allow a reporter to report the same transaction twice', async () => {
         let bancorX = await initBancorX(accounts, true)
         await bancorX.setReporter(accounts[1], true)
-        await bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], TEST_AMOUNT, 0, {from: accounts[1]})
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], TEST_AMOUNT, 0, {from: accounts[1]}))
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
+        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]}))
     })
 
     it('should not allow two reporters to give conflicting transaction details', async () => {
         let bancorX = await initBancorX(accounts, true)
         await bancorX.setReporter(accounts[1], true)
         await bancorX.setReporter(accounts[2], true)
-        await bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[1], TEST_AMOUNT, 0, {from: accounts[1]})
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[2], TEST_AMOUNT, 0, {from: accounts[2]}))
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[1], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
+        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[2], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[2]}))
     })
 
     it('should not allow a non-reporter to report', async () => {
         let bancorX = await initBancorX(accounts, true)
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], TEST_AMOUNT, 0, {from: accounts[1]}))
+        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]}))
     })
 
     it('should not allow reports when disabled', async () => {
         let bancorX = await initBancorX(accounts, true)
         await bancorX.setReporter(accounts[1], true)
         await bancorX.enableReporting(false)
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], TEST_AMOUNT, 0, {from: accounts[1]}))
+        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]}))
     })
 
     it('should not allow xTransfers when disabled', async () => {
@@ -238,9 +239,9 @@ contract('BancorX', async accounts => {
         await bancorX.setReporter(accounts[2], true)
         await bancorX.setReporter(accounts[3], true)
         let result0 = await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, TEST_AMOUNT)
-        let result1 = await bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], TEST_AMOUNT, 0, {from: accounts[1]})
-        let result2 = await bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], TEST_AMOUNT, 0, {from: accounts[2]})
-        let result3 = await bancorX.reportTx(EOS_BLOCKCHAIN, X_TRANSFER_ID, accounts[0], TEST_AMOUNT, 0, {from: accounts[3]})
+        let result1 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
+        let result2 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[2]})
+        let result3 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[3]})
         console.log(`GasPrice for xTransfer: ${result0.receipt.gasUsed}`)
         console.log(`GasPrice for reportTx (first reporter, no release): ${result1.receipt.gasUsed}`)
         console.log(`GasPrice for reportTx (second reporter, no release): ${result2.receipt.gasUsed}`)
