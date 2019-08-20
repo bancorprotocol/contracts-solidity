@@ -57,7 +57,6 @@ async function initBancorX(accounts, isSmartToken) {
 
     // register BancorX address
     await contractRegistry.registerAddress(web3.fromAscii('BancorX'), bancorX.address)
-    await bancorConverter.setBancorX(bancorX.address)
 
     // issue bnt
     await smartToken.issue(accounts[0], SUPPLY_AMOUNT)
@@ -68,6 +67,7 @@ async function initBancorX(accounts, isSmartToken) {
     if (isSmartToken) {
         await smartToken.transferOwnership(bancorConverter.address)
         await bancorConverter.acceptTokenOwnership()
+        await bancorConverter.setBancorX(bancorX.address)
     }
     else {
         await smartToken.approve(bancorX.address, SUPPLY_AMOUNT)
