@@ -47,11 +47,14 @@ const initBancorX = async accounts => {
         MIN_LIMIT,
         LIM_INC_PER_BLOCK,
         MIN_REQUIRED_REPORTS,
-        contractRegistry.address
+        contractRegistry.address,
+        smartToken.address,
+        true
     )
 
     // register BancorX address
     await contractRegistry.registerAddress(web3Utils.asciiToHex('BancorX'), bancorX.address)
+    await bancorConverter.setBancorX(bancorX.address)
 
     // issue bnt and transfer ownership to converter
     await smartToken.issue(accounts[0], BNT_AMOUNT)
@@ -60,7 +63,6 @@ const initBancorX = async accounts => {
     // set virtual weight and bancorx address for bnt converter, and accept token ownership
     await bancorConverter.updateConnector(etherToken.address, '100000', true, BNT_RESERVE_AMOUNT)
     await bancorConverter.acceptTokenOwnership()
-    await bancorConverter.enableClaimTokens(true);
 }
 
 contract('BancorX', async accounts => {

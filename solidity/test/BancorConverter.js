@@ -110,9 +110,6 @@ contract('BancorConverter', accounts => {
         let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
         await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
 
-        let bancorXId = await contractIds.BANCOR_X.call();
-        await contractRegistry.registerAddress(bancorXId, accounts[0])
-
         let token = await SmartToken.new('Token1', 'TKN1', 2); 
         tokenAddress = token.address;
         
@@ -140,24 +137,23 @@ contract('BancorConverter', accounts => {
         assert.equal(conversionsEnabled, true);
     });
 
-    it('should throw when attempting to claim tokens when not enabled', async () => {
+    it('should allow to claim tokens if caller is set as BancorX in the converter', async () => {
+        let bancorX = accounts[2];
         let converter = await initConverter(accounts, true);
-        await utils.catchRevert(converter.claimTokens(accounts[0], 1));
-    });
-
-    it('should only allow the owner to enable claiming tokens', async () => {
-        let converter = await initConverter(accounts, true);
-        await converter.enableClaimTokens(true);
-        await utils.catchRevert(converter.enableClaimTokens(true, { from: accounts[1] }));
-    });
-
-    it('should only allow BancorX (as per the registry) to claim tokens', async () => {
-        let converter = await initConverter(accounts, true);
-        await converter.enableClaimTokens(true);
+        await converter.setBancorX(bancorX);
         await token.transfer(accounts[1], 100);
         assert.equal((await token.balanceOf(accounts[1])).toNumber(), 100);
-        await converter.claimTokens(accounts[1], 100)
+        await converter.claimTokens(accounts[1], 100, {from: bancorX});
         assert.equal((await token.balanceOf(accounts[1])).toNumber(), 0);
+    });
+
+    it('should not allow to claim tokens if caller is not set as BancorX in the converter', async () => {
+        let bancorX = accounts[2];
+        let converter = await initConverter(accounts, true);
+        await token.transfer(accounts[1], 100);
+        assert.equal((await token.balanceOf(accounts[1])).toNumber(), 100);
+        await utils.catchRevert(converter.claimTokens(accounts[1], 100, {from: bancorX}));
+        assert.equal((await token.balanceOf(accounts[1])).toNumber(), 100);
     });
 
     it('should throw when attempting to construct a converter with no token', async () => {
