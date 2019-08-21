@@ -32,7 +32,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         bool completed;
     }
 
-    uint16 public version = 2;
+    uint16 public version = 3;
 
     uint256 public maxLockLimit;            // the maximum amount of tokens that can be locked in one transaction
     uint256 public maxReleaseLimit;         // the maximum amount of tokens that can be released in one transaction
