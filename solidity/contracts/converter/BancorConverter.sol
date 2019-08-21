@@ -61,7 +61,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     string public converterType = 'bancor';
 
     bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
-    bool public claimTokensEnabled = false;             // allows BancorX contract to claim tokens without allowance (to save the extra transaction)
     IContractRegistry public prevRegistry;              // address of previous registry as security mechanism
     IContractRegistry public registry;                  // contract registry contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
@@ -220,12 +219,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
-    // allows execution only when claim tokens is enabled
-    modifier whenClaimTokensEnabled {
-        require(claimTokensEnabled);
-        _;
-    }
-
     /**
         @dev sets the contract registry to whichever address the current registry is pointing to
      */
@@ -265,15 +258,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     function disableRegistryUpdate(bool _disable) public ownerOrManagerOnly {
         allowRegistryUpdate = !_disable;
-    }
-
-    /**
-        @dev disables/enables the claim tokens functionality
-
-        @param _enable    true to enable claiming of tokens, false to disable
-     */
-    function enableClaimTokens(bool _enable) public ownerOnly {
-        claimTokensEnabled = _enable;
     }
 
     /**
@@ -374,24 +358,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
         require(!connectors[_token].isSet || token.owner() != address(this) || owner == converterUpgrader);
         super.withdrawTokens(_token, _to, _amount);
-    }
-
-    /**
-        @dev allows the BancorX contract to claim BNT from any address (so that users
-        dont have to first give allowance when calling BancorX)
-
-        @param _from      address to claim the BNT from
-        @param _amount    the amount to claim
-     */
-    function claimTokens(address _from, uint256 _amount) public whenClaimTokensEnabled {
-        address bancorX = registry.addressOf(ContractIds.BANCOR_X);
-
-        // only the bancorX contract may call this method
-        require(msg.sender == bancorX);
-
-        // destroy the tokens belonging to _from, and issue the same amount to bancorX contract
-        token.destroy(_from, _amount);
-        token.issue(msg.sender, _amount);
     }
 
     /**

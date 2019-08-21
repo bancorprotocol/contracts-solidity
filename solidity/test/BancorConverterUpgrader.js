@@ -14,7 +14,6 @@ const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 const utils = require('./helpers/Utils');
 const truffleContract = require('truffle-contract');
-const web3Utils = require('web3-utils')
 
 let token;
 let contractRegistry;
@@ -94,7 +93,7 @@ async function upgradeConverter(converter, version = null) {
         // for previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
         // then accept ownership of the new and old converter. The end results should be the same.
         await converter.transferOwnership(converterUpgrader.address);
-        await converterUpgrader.upgradeOld(converter.address, web3Utils.asciiToHex(version));
+        await converterUpgrader.upgradeOld(converter.address, web3.fromAscii(version));
         newConverter = await getNewConverter();
         await converter.acceptOwnership();
     }
