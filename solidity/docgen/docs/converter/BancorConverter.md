@@ -17,7 +17,6 @@ Other potential solutions might include a commit/reveal based schemes
 - [`updateRegistry()`](#BancorConverter-updateRegistry--)
 - [`restoreRegistry()`](#BancorConverter-restoreRegistry--)
 - [`disableRegistryUpdate(bool _disable)`](#BancorConverter-disableRegistryUpdate-bool-)
-- [`enableClaimTokens(bool _enable)`](#BancorConverter-enableClaimTokens-bool-)
 - [`connectorTokenCount()`](#BancorConverter-connectorTokenCount--)
 - [`setConversionWhitelist(contract IWhitelist _whitelist)`](#BancorConverter-setConversionWhitelist-contract-IWhitelist-)
 - [`disableConversions(bool _disable)`](#BancorConverter-disableConversions-bool-)
@@ -25,7 +24,6 @@ Other potential solutions might include a commit/reveal based schemes
 - [`setConversionFee(uint32 _conversionFee)`](#BancorConverter-setConversionFee-uint32-)
 - [`getFinalAmount(uint256 _amount, uint8 _magnitude)`](#BancorConverter-getFinalAmount-uint256-uint8-)
 - [`withdrawTokens(contract IERC20Token _token, address _to, uint256 _amount)`](#BancorConverter-withdrawTokens-contract-IERC20Token-address-uint256-)
-- [`claimTokens(address _from, uint256 _amount)`](#BancorConverter-claimTokens-address-uint256-)
 - [`upgrade()`](#BancorConverter-upgrade--)
 - [`addConnector(contract IERC20Token _token, uint32 _weight, bool _enableVirtualBalance)`](#BancorConverter-addConnector-contract-IERC20Token-uint32-bool-)
 - [`updateConnector(contract IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance)`](#BancorConverter-updateConnector-contract-IERC20Token-uint32-bool-uint256-)
@@ -77,11 +75,6 @@ can only be called by the manager or owner
 
 ## Parameters:
 - `_disable`:    true to disable registry updates, false to re-enable them
-# Function `enableClaimTokens(bool _enable)` {#BancorConverter-enableClaimTokens-bool-}
-disables/enables the claim tokens functionality
-
-## Parameters:
-- `_enable`:    true to enable claiming of tokens, false to disable
 # Function `connectorTokenCount() → uint16` {#BancorConverter-connectorTokenCount--}
 returns the number of connector tokens defined
 
@@ -133,14 +126,6 @@ unless the owner is the converter upgrader contract
 - `_to`:      account to receive the new amount
 
 - `_amount`:  amount to withdraw
-# Function `claimTokens(address _from, uint256 _amount)` {#BancorConverter-claimTokens-address-uint256-}
-allows the BancorX contract to claim BNT from any address (so that users
-dont have to first give allowance when calling BancorX)
-
-## Parameters:
-- `_from`:      address to claim the BNT from
-
-- `_amount`:    the amount to claim
 # Function `upgrade()` {#BancorConverter-upgrade--}
 upgrades the converter to the latest version
 can only be called by the owner
