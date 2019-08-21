@@ -77,174 +77,178 @@ async function initBancorX(accounts, isSmartToken) {
 }
 
 contract('BancorX', async accounts => {
-    it('should allow the owner to set reporters', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.setReporter(accounts[2], true)
-        await bancorX.setReporter(accounts[3], true)
+    for (const isSmartToken of [false, true]) {
+        describe(`with ${isSmartToken ? 'smart' : 'erc20'} token:`, () => {
+            it('should allow the owner to set reporters', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                await bancorX.setReporter(accounts[1], true)
+                await bancorX.setReporter(accounts[2], true)
+                await bancorX.setReporter(accounts[3], true)
 
-        assert.equal(await bancorX.reporters.call(accounts[1]), true)
-        assert.equal(await bancorX.reporters.call(accounts[2]), true)
-        assert.equal(await bancorX.reporters.call(accounts[3]), true)
-    })
+                assert.equal(await bancorX.reporters.call(accounts[1]), true)
+                assert.equal(await bancorX.reporters.call(accounts[2]), true)
+                assert.equal(await bancorX.reporters.call(accounts[3]), true)
+            })
 
-    it('should not allow a non-owner to set reporters', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        await utils.catchRevert(bancorX.setReporter(accounts[1], true, {from: accounts[1]}))
-        await utils.catchRevert(bancorX.setReporter(accounts[2], true, {from: accounts[1]}))
-        await utils.catchRevert(bancorX.setReporter(accounts[3], true, {from: accounts[1]}))
+            it('should not allow a non-owner to set reporters', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                await utils.catchRevert(bancorX.setReporter(accounts[1], true, {from: accounts[1]}))
+                await utils.catchRevert(bancorX.setReporter(accounts[2], true, {from: accounts[1]}))
+                await utils.catchRevert(bancorX.setReporter(accounts[3], true, {from: accounts[1]}))
 
-        assert.equal(await bancorX.reporters.call(accounts[1]), false)
-        assert.equal(await bancorX.reporters.call(accounts[2]), false)
-        assert.equal(await bancorX.reporters.call(accounts[3]), false)
-    })
+                assert.equal(await bancorX.reporters.call(accounts[1]), false)
+                assert.equal(await bancorX.reporters.call(accounts[2]), false)
+                assert.equal(await bancorX.reporters.call(accounts[3]), false)
+            })
 
-    it('should allow the owner to set limits', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        await bancorX.setMaxLockLimit(MAX_LOCK_LIMIT.plus(1))
-        await bancorX.setMaxReleaseLimit(MAX_RELEASE_LIMIT.plus(1))
-        await bancorX.setMinLimit(MIN_LIMIT.plus(1))
-        await bancorX.setLimitIncPerBlock(LIM_INC_PER_BLOCK.plus(1))
-        await bancorX.setMinRequiredReports(MIN_REQ_REPORTS.plus(1))
+            it('should allow the owner to set limits', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                await bancorX.setMaxLockLimit(MAX_LOCK_LIMIT.plus(1))
+                await bancorX.setMaxReleaseLimit(MAX_RELEASE_LIMIT.plus(1))
+                await bancorX.setMinLimit(MIN_LIMIT.plus(1))
+                await bancorX.setLimitIncPerBlock(LIM_INC_PER_BLOCK.plus(1))
+                await bancorX.setMinRequiredReports(MIN_REQ_REPORTS.plus(1))
 
-        let maxLockLimit = await bancorX.maxLockLimit.call()
-        let maxReleaseLimit = await bancorX.maxReleaseLimit.call()
-        let minLimit = await bancorX.minLimit.call()
-        let limitIncPerBlock = await bancorX.limitIncPerBlock.call()
-        let minRequiredReports = await bancorX.minRequiredReports.call()
+                let maxLockLimit = await bancorX.maxLockLimit.call()
+                let maxReleaseLimit = await bancorX.maxReleaseLimit.call()
+                let minLimit = await bancorX.minLimit.call()
+                let limitIncPerBlock = await bancorX.limitIncPerBlock.call()
+                let minRequiredReports = await bancorX.minRequiredReports.call()
 
-        assertEqual(maxLockLimit, MAX_LOCK_LIMIT.plus(1))
-        assertEqual(maxReleaseLimit, MAX_RELEASE_LIMIT.plus(1))
-        assertEqual(minLimit, MIN_LIMIT.plus(1))
-        assertEqual(limitIncPerBlock, LIM_INC_PER_BLOCK.plus(1))
-        assertEqual(minRequiredReports, MIN_REQ_REPORTS.plus(1))
-    })
+                assertEqual(maxLockLimit, MAX_LOCK_LIMIT.plus(1))
+                assertEqual(maxReleaseLimit, MAX_RELEASE_LIMIT.plus(1))
+                assertEqual(minLimit, MIN_LIMIT.plus(1))
+                assertEqual(limitIncPerBlock, LIM_INC_PER_BLOCK.plus(1))
+                assertEqual(minRequiredReports, MIN_REQ_REPORTS.plus(1))
+            })
 
-    it('should not allow a non-owner to set limits', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        await utils.catchRevert(bancorX.setMaxLockLimit(MAX_LOCK_LIMIT.plus(1), {from: accounts[1]}))
-        await utils.catchRevert(bancorX.setMaxReleaseLimit(MAX_RELEASE_LIMIT.plus(1), {from: accounts[1]}))
-        await utils.catchRevert(bancorX.setMinLimit(MIN_LIMIT.plus(1), {from: accounts[1]}))
-        await utils.catchRevert(bancorX.setLimitIncPerBlock(LIM_INC_PER_BLOCK.plus(1), {from: accounts[1]}))
-        await utils.catchRevert(bancorX.setMinRequiredReports(MIN_REQ_REPORTS.plus(1), {from: accounts[1]}))
+            it('should not allow a non-owner to set limits', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                await utils.catchRevert(bancorX.setMaxLockLimit(MAX_LOCK_LIMIT.plus(1), {from: accounts[1]}))
+                await utils.catchRevert(bancorX.setMaxReleaseLimit(MAX_RELEASE_LIMIT.plus(1), {from: accounts[1]}))
+                await utils.catchRevert(bancorX.setMinLimit(MIN_LIMIT.plus(1), {from: accounts[1]}))
+                await utils.catchRevert(bancorX.setLimitIncPerBlock(LIM_INC_PER_BLOCK.plus(1), {from: accounts[1]}))
+                await utils.catchRevert(bancorX.setMinRequiredReports(MIN_REQ_REPORTS.plus(1), {from: accounts[1]}))
 
-        let maxLockLimit = await bancorX.maxLockLimit.call()
-        let maxReleaseLimit = await bancorX.maxReleaseLimit.call()
-        let minLimit = await bancorX.minLimit.call()
-        let limitIncPerBlock = await bancorX.limitIncPerBlock.call()
-        let minRequiredReports = await bancorX.minRequiredReports.call()
+                let maxLockLimit = await bancorX.maxLockLimit.call()
+                let maxReleaseLimit = await bancorX.maxReleaseLimit.call()
+                let minLimit = await bancorX.minLimit.call()
+                let limitIncPerBlock = await bancorX.limitIncPerBlock.call()
+                let minRequiredReports = await bancorX.minRequiredReports.call()
 
-        assertEqual(maxLockLimit, MAX_LOCK_LIMIT)
-        assertEqual(maxReleaseLimit, MAX_RELEASE_LIMIT)
-        assertEqual(minLimit, MIN_LIMIT)
-        assertEqual(limitIncPerBlock, LIM_INC_PER_BLOCK)
-        assertEqual(minRequiredReports, MIN_REQ_REPORTS)
-    })
+                assertEqual(maxLockLimit, MAX_LOCK_LIMIT)
+                assertEqual(maxReleaseLimit, MAX_RELEASE_LIMIT)
+                assertEqual(minLimit, MIN_LIMIT)
+                assertEqual(limitIncPerBlock, LIM_INC_PER_BLOCK)
+                assertEqual(minRequiredReports, MIN_REQ_REPORTS)
+            })
 
-    it('should not be able to lock below the min limit', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        let amount = MIN_LIMIT.minus(1)
-        await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount))
-    })
+            it('should not be able to lock below the min limit', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                let amount = MIN_LIMIT.minus(1)
+                await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount))
+            })
 
-    it('should not be able to lock above the max limit', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        let amount = MAX_LOCK_LIMIT.plus(1)
-        await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount))
-    })
+            it('should not be able to lock above the max limit', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                let amount = MAX_LOCK_LIMIT.plus(1)
+                await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount))
+            })
 
-    it('should not be able to release below the min limit', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        let amount = MIN_LIMIT.minus(1)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.setReporter(accounts[2], true)
-        await bancorX.setReporter(accounts[3], true)
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[1]})
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[2]})
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[3]}))
-    })
+            it('should not be able to release below the min limit', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                let amount = MIN_LIMIT.minus(1)
+                await bancorX.setReporter(accounts[1], true)
+                await bancorX.setReporter(accounts[2], true)
+                await bancorX.setReporter(accounts[3], true)
+                await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[1]})
+                await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[2]})
+                await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[3]}))
+            })
 
-    it('should not be able to release above the max limit', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        let amount = MAX_RELEASE_LIMIT.plus(1)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.setReporter(accounts[2], true)
-        await bancorX.setReporter(accounts[3], true)
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[1]})
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[2]})
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[3]}))
-    })
+            it('should not be able to release above the max limit', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                let amount = MAX_RELEASE_LIMIT.plus(1)
+                await bancorX.setReporter(accounts[1], true)
+                await bancorX.setReporter(accounts[2], true)
+                await bancorX.setReporter(accounts[3], true)
+                await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[1]})
+                await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[2]})
+                await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[3]}))
+            })
 
-    it('should emit an event when successfuly locking tokens', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        let amount = TEST_AMOUNT
-        let result = await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount)
-        assert.equal(result.logs[0].args._amount, amount.toFixed())
-        assert.equal(result.logs[0].args._from.toLowerCase(), accounts[0].toLowerCase())
-    })
+            it('should emit an event when successfuly locking tokens', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                let amount = TEST_AMOUNT
+                let result = await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount)
+                assert.equal(result.logs[0].args._amount, amount.toFixed())
+                assert.equal(result.logs[0].args._from.toLowerCase(), accounts[0].toLowerCase())
+            })
 
-    it('should properly calculate the current lock limit after a single transaction', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        let numOfTests = 10;
-        let amount = LIM_INC_PER_BLOCK.times(numOfTests)
-        await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount)
+            it('should properly calculate the current lock limit after a single transaction', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                let numOfTests = 10;
+                let amount = LIM_INC_PER_BLOCK.times(numOfTests)
+                await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount)
 
-        for (let i = 0; i <= numOfTests; i++) {
-            assertEqual(await bancorX.getCurrentLockLimit.call(), MAX_LOCK_LIMIT.minus(amount).plus(MIN_LIMIT.times(i)))
-            await miningUtils.mineBlock(web3.currentProvider)
-        }
+                for (let i = 0; i <= numOfTests; i++) {
+                    assertEqual(await bancorX.getCurrentLockLimit.call(), MAX_LOCK_LIMIT.minus(amount).plus(MIN_LIMIT.times(i)))
+                    await miningUtils.mineBlock(web3.currentProvider)
+                }
 
-        for (let i = 0; i < 3; i++) {
-            assertEqual(await bancorX.getCurrentLockLimit.call(), MAX_LOCK_LIMIT)
-            await miningUtils.mineBlock(web3.currentProvider)
-        }
-    })
+                for (let i = 0; i < 3; i++) {
+                    assertEqual(await bancorX.getCurrentLockLimit.call(), MAX_LOCK_LIMIT)
+                    await miningUtils.mineBlock(web3.currentProvider)
+                }
+            })
 
-    it('should not allow a reporter to report the same transaction twice', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]}))
-    })
+            it('should not allow a reporter to report the same transaction twice', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                await bancorX.setReporter(accounts[1], true)
+                await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
+                await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]}))
+            })
 
-    it('should not allow two reporters to give conflicting transaction details', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.setReporter(accounts[2], true)
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[1], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[2], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[2]}))
-    })
+            it('should not allow two reporters to give conflicting transaction details', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                await bancorX.setReporter(accounts[1], true)
+                await bancorX.setReporter(accounts[2], true)
+                await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[1], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
+                await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[2], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[2]}))
+            })
 
-    it('should not allow a non-reporter to report', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]}))
-    })
+            it('should not allow a non-reporter to report', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]}))
+            })
 
-    it('should not allow reports when disabled', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.enableReporting(false)
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]}))
-    })
+            it('should not allow reports when disabled', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                await bancorX.setReporter(accounts[1], true)
+                await bancorX.enableReporting(false)
+                await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]}))
+            })
 
-    it('should not allow xTransfers when disabled', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        await bancorX.enableXTransfers(false)
-        await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, TEST_AMOUNT))
-    })
+            it('should not allow xTransfers when disabled', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                await bancorX.enableXTransfers(false)
+                await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, TEST_AMOUNT))
+            })
 
-    it('Gas Test', async () => {
-        let bancorX = await initBancorX(accounts, true)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.setReporter(accounts[2], true)
-        await bancorX.setReporter(accounts[3], true)
-        let result0 = await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, TEST_AMOUNT)
-        let result1 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
-        let result2 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[2]})
-        let result3 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[3]})
-        console.log(`GasPrice for xTransfer: ${result0.receipt.gasUsed}`)
-        console.log(`GasPrice for reportTx (first reporter, no release): ${result1.receipt.gasUsed}`)
-        console.log(`GasPrice for reportTx (second reporter, no release): ${result2.receipt.gasUsed}`)
-        console.log(`GasPrice for reportTx (third reporter, yes release): ${result3.receipt.gasUsed}`)
-    })
+            it('Gas Test', async () => {
+                let bancorX = await initBancorX(accounts, isSmartToken)
+                await bancorX.setReporter(accounts[1], true)
+                await bancorX.setReporter(accounts[2], true)
+                await bancorX.setReporter(accounts[3], true)
+                let result0 = await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, TEST_AMOUNT)
+                let result1 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
+                let result2 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[2]})
+                let result3 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[3]})
+                console.log(`\nGasPrice for xTransfer: ${result0.receipt.gasUsed}`)
+                console.log(`GasPrice for reportTx (first reporter, no release): ${result1.receipt.gasUsed}`)
+                console.log(`GasPrice for reportTx (second reporter, no release): ${result2.receipt.gasUsed}`)
+                console.log(`GasPrice for reportTx (third reporter, yes release): ${result3.receipt.gasUsed}`)
+            })
+        })
+    }
 })
