@@ -1,6 +1,6 @@
 BancorPriceFloor
 The bancor price floor contract is a simple contract that allows selling smart tokens for a constant ETH price
-'Owned' is specified here for readability reasons
+'Owned' is specified here for readability reasons
 
 # Functions:
 - [`constructor(contract ISmartToken _token)`](#BancorPriceFloor-constructor-contract-ISmartToken-)
@@ -13,7 +13,7 @@ The bancor price floor contract is a simple contract that allows selling smart t
 initializes a new BancorPriceFloor instance
 
 ## Parameters:
-- `_token`:   smart token the contract allows selling
+- `_token`:   smart token the contract allows selling
 # Function `sell() → uint256 amount` {#BancorPriceFloor-sell--}
 sells the smart token for ETH
 note that the function will sell the full allowance amount
@@ -22,7 +22,7 @@ note that the function will sell the full allowance amount
 withdraws ETH from the contract
 
 ## Parameters:
-- `_amount`:  amount of ETH to withdraw
+- `_amount`:  amount of ETH to withdraw
 # Function `fallback()` {#BancorPriceFloor-fallback--}
-deposits ETH in the contract
+deposits ETH in the contract
 

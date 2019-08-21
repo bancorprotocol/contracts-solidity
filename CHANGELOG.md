@@ -1,4 +1,9 @@
-﻿### 0.4.9 (2019-08-18)
+﻿### 0.4.10 (2019-08-21)
+BancorX:
+* Added support for any ERC20/Smart token (was previously BNT specific)
+
+
+### 0.4.9 (2019-08-18)
 Converters:
 * Fixed a rounding error in the `fund` function
 

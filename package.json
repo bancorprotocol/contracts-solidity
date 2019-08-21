@@ -1,6 +1,6 @@
 {
   "name": "bancor-contracts",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "author": "Yudi Levi",
   "repository": {
     "type": "git",
@@ -25,6 +25,6 @@
     "truffle": "4.1.14",
     "truffle-contract": "^3.0.7",
     "truffle-flattener": "1.2.10",
-    "web3-utils": "1.0.0-beta.55"
+    "web3-utils": "1.2.1"
   }
 }
