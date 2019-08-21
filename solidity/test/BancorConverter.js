@@ -2,7 +2,6 @@
 /* eslint-disable prefer-reflect */
 
 const fs = require('fs');
-const path = require('path');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const ContractIds = artifacts.require('ContractIds');
@@ -31,11 +30,6 @@ let connectorToken;
 let connectorToken2;
 let connectorToken3;
 let upgrader;
-
-const contractsPath = path.resolve(__dirname, '../build');
-let abi;
-abi = fs.readFileSync(path.resolve(contractsPath, 'SmartToken.abi'), 'utf-8');
-let SmartTokenAbi = JSON.parse(abi);
 
 // used by purchase/sale tests
 async function initConverter(accounts, activate, maxConversionFee = 0) {
@@ -527,7 +521,7 @@ contract('BancorConverter', accounts => {
 
         await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
         let tokenAddress = await converter.token.call();
-        let contract = await web3.eth.contract(SmartTokenAbi);
+        let contract = await web3.eth.contract(JSON.parse(fs.readFileSync(__dirname + '/../build/SmartToken.abi')));
         let token = await contract.at(tokenAddress);
         let newOwner = await token.newOwner.call();
         assert.equal(newOwner, accounts[1]);
