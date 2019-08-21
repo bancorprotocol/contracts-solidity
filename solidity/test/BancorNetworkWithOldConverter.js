@@ -21,7 +21,6 @@ let contractRegistry;
 let contractIds;
 let converter;
 let bancorNetwork;
-let defaultGasPriceLimit = BancorGasPriceLimit.class_defaults.gasPrice;
 
 async function createOldConverter(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight) {
     const abi = fs.readFileSync(__dirname + "/bin/bancor_converter_v9.abi");
@@ -51,7 +50,7 @@ contract('BancorNetworkWithOldConverter', accounts => {
         let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
         await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
 
-        let gasPriceLimit = await BancorGasPriceLimit.new(defaultGasPriceLimit);
+        let gasPriceLimit = await BancorGasPriceLimit.new(BancorGasPriceLimit.class_defaults.gasPrice);
         let gasPriceLimitId = await contractIds.BANCOR_GAS_PRICE_LIMIT.call();
         await contractRegistry.registerAddress(gasPriceLimitId, gasPriceLimit.address);
 

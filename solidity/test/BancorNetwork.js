@@ -35,7 +35,6 @@ let smartToken1BuyPath;
 let smartToken2BuyPath;
 let smartToken1SellPath;
 let smartToken2SellPath;
-let defaultGasPriceLimit = BancorGasPriceLimit.class_defaults.gasPrice;
 
 function sign(msgToSign, signerAddress) {
     try {
@@ -73,7 +72,7 @@ contract('BancorNetwork', accounts => {
         let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
         await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
 
-        let gasPriceLimit = await BancorGasPriceLimit.new(defaultGasPriceLimit);
+        let gasPriceLimit = await BancorGasPriceLimit.new(BancorGasPriceLimit.class_defaults.gasPrice);
         let gasPriceLimitId = await contractIds.BANCOR_GAS_PRICE_LIMIT.call();
         await contractRegistry.registerAddress(gasPriceLimitId, gasPriceLimit.address);
 
@@ -487,9 +486,8 @@ contract('BancorNetwork', accounts => {
     it('verifies prioritized quick buy with trusted signature', async () => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
-        let block = await web3.eth.blockNumber;
-        let maximumBlock = block + 100;
-        let gasPrice = defaultGasPriceLimit;
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, trustedAddress);
@@ -500,9 +498,8 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempts to call quick convert prioritized with untrusted signature', async () => {
-        let block = await web3.eth.blockNumber;
-        let maximumBlock = block + 100;
-        let gasPrice = defaultGasPriceLimit;
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, untrustedAddress);
@@ -512,9 +509,8 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when attempts to call quick convert prioritized with wrong path', async () => {
         let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
-        let block = await web3.eth.blockNumber;
-        let maximumBlock = block + 100;
-        let gasPrice = defaultGasPriceLimit;
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': wrongPath});
         let result = sign(soliditySha3, trustedAddress);
@@ -523,9 +519,8 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempts to call quick convert prioritized with wrong amount', async () => {
-        let block = await web3.eth.blockNumber;
-        let maximumBlock = block + 100;
-        let gasPrice = defaultGasPriceLimit;
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, trustedAddress);
@@ -534,10 +529,9 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempts to call quick convert prioritized with higher block number than what appears in the signing data', async () => {
-        let block = await web3.eth.blockNumber;
-        let maximumBlock = block + 100;
+        let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock + 100;
-        let gasPrice = defaultGasPriceLimit;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, trustedAddress);
@@ -546,10 +540,9 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempts to call quick convert prioritized with lower block number than what appears in the signing data', async () => {
-        let block = await web3.eth.blockNumber;
-        let maximumBlock = block + 100;
+        let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock - 1;
-        let gasPrice = defaultGasPriceLimit;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, trustedAddress);
@@ -558,9 +551,8 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempts to call quick convert prioritized with higher gas price than what appears in the signing data', async () => {
-        let block = await web3.eth.blockNumber;
-        let maximumBlock = block + 100;
-        let gasPrice = defaultGasPriceLimit - 1;
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
 
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, trustedAddress);
@@ -569,9 +561,8 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempts to call quick convert prioritized with lower gas price than what appears in the signing data', async () => {
-        let block = await web3.eth.blockNumber;
-        let maximumBlock = block + 100;
-        let gasPrice = defaultGasPriceLimit + 1;
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
 
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, trustedAddress);
