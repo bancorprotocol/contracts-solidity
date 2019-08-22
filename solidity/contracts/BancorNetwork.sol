@@ -140,52 +140,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev validates xConvert call by verifying the path format, claiming the callers tokens (if not ETH),
-        and verifying the gas price limit
-
-        @param _path        conversion path, see conversion path format above
-        @param _amount      amount to convert from (in the initial source token)
-        @param _block       if the current block exceeded the given parameter - it is cancelled
-        @param _v           (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-        @param _r           (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-        @param _s           (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
-    */
-    function validateXConversion(
-        IERC20Token[] _path,
-        uint256 _amount,
-        uint256 _block,
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s
-    ) 
-        private 
-        validConversionPath(_path)    
-    {
-        // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
-        IERC20Token fromToken = _path[0];
-        require(msg.value == 0 || (_amount == msg.value && etherTokens[fromToken]));
-
-        // require that the dest token is BNT
-        require(_path[_path.length - 1] == registry.addressOf(ContractIds.BNT_TOKEN));
-
-        // if ETH was sent with the call, the source is an ether token - deposit the ETH in it
-        // otherwise, we claim the tokens from the sender
-        if (msg.value > 0) {
-            IEtherToken(fromToken).deposit.value(msg.value)();
-        } else {
-            ensureTransferFrom(fromToken, msg.sender, this, _amount);
-        }
-
-        // verify gas price limit
-        if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
-            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
-            gasPriceLimit.validateGasPrice(tx.gasprice);
-        } else {
-            require(verifyTrustedSender(_path, _amount, _block, msg.sender, _v, _r, _s));
-        }
-    }
-
-    /**
         @dev converts the token to any other token in the bancor network by following
         a predefined conversion path and transfers the result tokens to a target account
         note that the converter should already own the source tokens
@@ -337,10 +291,31 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     )
         public
         payable
+        validConversionPath(_path)    
         returns (uint256)
     {
-        // do a lot of validation and transfers in separate function to work around 16 variable limit
-        validateXConversion(_path, _amount, _block, _v, _r, _s);
+        // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
+        IERC20Token fromToken = _path[0];
+        require(msg.value == 0 || (_amount == msg.value && etherTokens[fromToken]));
+
+        // require that the dest token is BNT
+        require(_path[_path.length - 1] == registry.addressOf(ContractIds.BNT_TOKEN));
+
+        // if ETH was sent with the call, the source is an ether token - deposit the ETH in it
+        // otherwise, we claim the tokens from the sender
+        if (msg.value > 0) {
+            IEtherToken(fromToken).deposit.value(msg.value)();
+        } else {
+            ensureTransferFrom(fromToken, msg.sender, this, _amount);
+        }
+
+        // verify gas price limit
+        if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
+            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
+            gasPriceLimit.validateGasPrice(tx.gasprice);
+        } else {
+            require(verifyTrustedSender(_path, _amount, _block, msg.sender, _v, _r, _s));
+        }
 
         // convert to BNT and get the resulting amount
         uint256 amount = convertByPath(_path, _amount, _minReturn, this, address(0), 0);
