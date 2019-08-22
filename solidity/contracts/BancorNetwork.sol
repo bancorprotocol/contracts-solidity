@@ -209,17 +209,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         to bypass the universal gas price limit.
         note that the converter should already own the source tokens
 
-        @param _path        conversion path, see conversion path format above
-        @param _amount      amount to convert from (in the initial source token)
-        @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _for         account that will receive the conversion result
-        @param _customVal   custom value that was signed for prioritized conversion
-        @param _block       if the current block exceeded the given parameter - it is cancelled
-        @param _v           (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-        @param _r           (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-        @param _s           (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
-        @param _affiliateAccount ???
-        @param _affiliateFee     ???
+        @param _path                conversion path, see conversion path format above
+        @param _amount              amount to convert from (in the initial source token)
+        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _for                 account that will receive the conversion result
+        @param _customVal           custom value that was signed for prioritized conversion
+        @param _block               if the current block exceeded the given parameter - it is cancelled
+        @param _v                   (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+        @param _r                   (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+        @param _s                   (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+        @param _affiliateAccount    affiliate account
+        @param _affiliateFee        affiliate fee in PPM
 
         @return tokens issued in return
     */
@@ -344,12 +344,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         by following a predefined conversion paths and transfers the result
         tokens to a target account.
 
-        @param _path        conversion path, see conversion path format above
-        @param _amount      amount to convert from (in the initial source token)
-        @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _for         account that will receive the conversion result
-        @param _affiliateAccount ???
-        @param _affiliateFee     ???
+        @param _path                conversion path, see conversion path format above
+        @param _amount              amount to convert from (in the initial source token)
+        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _for                 account that will receive the conversion result
+        @param _affiliateAccount    affiliate account
+        @param _affiliateFee        affiliate fee in PPM
 
         @return tokens issued in return
     */
