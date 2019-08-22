@@ -29,11 +29,10 @@ import './bancorx/interfaces/IBancorX.sol';
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     using SafeMath for uint256;
 
-    uint64 private constant MAX_CONVERSION_FEE = 1000000;
-
+    uint64 private constant CONVERSION_FEE_RESOLUTION = 1000000;
     uint256 private constant AFFILIATE_FEE_RESOLUTION = 1000000;
-    uint256 public maxAffiliateFee = 30000;     // maximum affiliate-fee
 
+    uint256 public maxAffiliateFee = 30000;     // maximum affiliate-fee
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
     IContractRegistry public registry;          // contract registry contract address
 
@@ -513,7 +512,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 balance = converter.getConnectorBalance(fromToken);
                 weight = getConnectorWeight(converter, fromToken);
                 amount = formula.calculatePurchaseReturn(supply, balance, weight, amount);
-                fee = amount.mul(converter.conversionFee()).div(MAX_CONVERSION_FEE);
+                fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
                 amount -= fee;
 
                 // update the smart token supply for the next iteration
@@ -527,7 +526,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 balance = converter.getConnectorBalance(toToken);
                 weight = getConnectorWeight(converter, toToken);
                 amount = formula.calculateSaleReturn(supply, balance, weight, amount);
-                fee = amount.mul(converter.conversionFee()).div(MAX_CONVERSION_FEE);
+                fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
                 amount -= fee;
 
                 // update the smart token supply for the next iteration
