@@ -368,11 +368,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         IERC20Token fromToken = _path[0];
         IERC20Token toToken;
         
-        if (address(_affiliateAccount) == 0)
-            require(_affiliateFee == 0);
-        else
-            require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee);
-
         (toToken, _amount) = convertByPath(_path, _amount, _minReturn, fromToken, _for, _affiliateAccount, _affiliateFee);
 
         // finished the conversion, transfer the funds to the target account
@@ -416,8 +411,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         IContractFeatures features = IContractFeatures(registry.addressOf(ContractIds.CONTRACT_FEATURES));
 
         address bntToken;
-        if (_affiliateAccount != address(0) && _affiliateFee != 0)
+        if (address(_affiliateAccount) == 0) {
+            require(_affiliateFee == 0);
+        }
+        else {
+            require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee);
             bntToken = registry.addressOf(ContractIds.BNT_TOKEN);
+        }
 
         // iterate over the conversion path
         uint256 pathLength = _path.length;
