@@ -72,7 +72,7 @@ def TestAll(collection):
                         elif resultNativePython < resultSolidityPort:
                             status = IMPLEMENTATION_ERROR
                             loss = {'absolute': 0, 'relative': 0}
-                        else:  # 0 <= resultSolidityPort <= resultNativePython
+                        else: # 0 <= resultSolidityPort <= resultNativePython
                             status = TRANSACTION_SUCCESS
                             loss = {'absolute': float(resultNativePython - resultSolidityPort), 'relative': 1 - float(resultSolidityPort / resultNativePython)}
                         filter = {
