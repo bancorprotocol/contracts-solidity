@@ -366,7 +366,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         returns (uint256)
     {
         IERC20Token fromToken = _path[0];
-
         IERC20Token toToken;
         
         if (address(_affiliateAccount) == 0)
@@ -390,11 +389,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     /**
         @dev executes the actual conversion by following the conversion path
 
-        @param _path        conversion path, see conversion path format above
-        @param _amount      amount to convert from (in the initial source token)
-        @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _fromToken   ERC20 token to convert from (the first element in the path)
-        @param _for         account that will receive the conversion result
+        @param _path                conversion path, see conversion path format above
+        @param _amount              amount to convert from (in the initial source token)
+        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _fromToken           ERC20 token to convert from (the first element in the path)
+        @param _for                 account that will receive the conversion result
+        @param _affiliateAccount    affiliate account
+        @param _affiliateFee        affiliate fee in PPM
 
         @return ERC20 token to convert to (the last element in the path) & tokens issued in return
     */
