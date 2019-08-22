@@ -238,6 +238,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     )
         public
         payable
+        validConversionPath(_path)
         returns (uint256)
     {
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
@@ -257,7 +258,18 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             require(verifyTrustedSender(_path, _customVal, _block, _for, _v, _r, _s));
         }
 
-        return convertForInternal(_path, _amount, _minReturn, _for, _affiliateAccount, _affiliateFee);
+        uint256 amount = convertByPath(_path, _amount, _minReturn, _for, _affiliateAccount, _affiliateFee);
+
+        // finished the conversion, transfer the funds to the target account
+        // if the target token is an ether token, withdraw the tokens and send them as ETH
+        // otherwise, transfer the tokens as is
+        IERC20Token toToken = _path[_path.length - 1];
+        if (etherTokens[toToken])
+            IEtherToken(toToken).withdrawTo(_for, amount);
+        else
+            ensureTransfer(toToken, _for, amount);
+
+        return amount;
     }
 
     /**
@@ -331,54 +343,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         validateXConversion(_path, _amount, _block, _v, _r, _s);
 
         // convert to BNT and get the resulting amount
-        (, uint256 retAmount) = convertByPath(_path, _amount, _minReturn, _path[0], this, address(0), 0);
+        uint256 amount = convertByPath(_path, _amount, _minReturn, this, address(0), 0);
 
         // transfer the resulting amount to BancorX, and return the amount
-        IBancorX(registry.addressOf(ContractIds.BANCOR_X)).xTransfer(_toBlockchain, _to, retAmount, _conversionId);
+        IBancorX(registry.addressOf(ContractIds.BANCOR_X)).xTransfer(_toBlockchain, _to, amount, _conversionId);
 
-        return retAmount;
-    }
-
-    /**
-        @dev converts token to any other token in the bancor network
-        by following a predefined conversion paths and transfers the result
-        tokens to a target account.
-
-        @param _path                conversion path, see conversion path format above
-        @param _amount              amount to convert from (in the initial source token)
-        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _for                 account that will receive the conversion result
-        @param _affiliateAccount    affiliate account
-        @param _affiliateFee        affiliate fee in PPM
-
-        @return tokens issued in return
-    */
-    function convertForInternal(
-        IERC20Token[] _path, 
-        uint256 _amount, 
-        uint256 _minReturn, 
-        address _for, 
-        address _affiliateAccount,
-        uint256 _affiliateFee
-    )
-        private
-        validConversionPath(_path)
-        returns (uint256)
-    {
-        IERC20Token fromToken = _path[0];
-        IERC20Token toToken;
-        
-        (toToken, _amount) = convertByPath(_path, _amount, _minReturn, fromToken, _for, _affiliateAccount, _affiliateFee);
-
-        // finished the conversion, transfer the funds to the target account
-        // if the target token is an ether token, withdraw the tokens and send them as ETH
-        // otherwise, transfer the tokens as is
-        if (etherTokens[toToken])
-            IEtherToken(toToken).withdrawTo(_for, _amount);
-        else
-            ensureTransfer(toToken, _for, _amount);
-
-        return _amount;
+        return amount;
     }
 
     /**
@@ -387,7 +357,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _path                conversion path, see conversion path format above
         @param _amount              amount to convert from (in the initial source token)
         @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _fromToken           ERC20 token to convert from (the first element in the path)
         @param _for                 account that will receive the conversion result
         @param _affiliateAccount    affiliate account
         @param _affiliateFee        affiliate fee in PPM
@@ -398,16 +367,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         IERC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
-        IERC20Token _fromToken,
         address _for,
         address _affiliateAccount,
         uint256 _affiliateFee
-    ) private returns (IERC20Token, uint256) {
-        ISmartToken smartToken;
-        IERC20Token toToken;
-        IBancorConverter converter;
-
-        // get the contract features address from the registry
+    ) private returns (uint256) {
+        uint256 amount = _amount;
+        IERC20Token fromToken = _path[0];
+        uint256 pathLength = _path.length;
         IContractFeatures features = IContractFeatures(registry.addressOf(ContractIds.CONTRACT_FEATURES));
 
         address bntToken;
@@ -420,31 +386,30 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         }
 
         // iterate over the conversion path
-        uint256 pathLength = _path.length;
         for (uint256 i = 1; i < pathLength; i += 2) {
-            smartToken = ISmartToken(_path[i]);
-            toToken = _path[i + 1];
-            converter = IBancorConverter(smartToken.owner());
+            ISmartToken smartToken = ISmartToken(_path[i]);
+            IERC20Token toToken = _path[i + 1];
+            IBancorConverter converter = IBancorConverter(smartToken.owner());
             checkWhitelist(converter, _for, features);
 
             // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
-            if (smartToken != _fromToken)
-                ensureAllowance(_fromToken, converter, _amount);
+            if (smartToken != fromToken)
+                ensureAllowance(fromToken, converter, amount);
 
             // make the conversion - if it's the last one, also provide the minimum return value
-            _amount = converter.change(_fromToken, toToken, _amount, i == pathLength - 2 ? _minReturn : 1);
+            amount = converter.change(fromToken, toToken, amount, i == pathLength - 2 ? _minReturn : 1);
 
             // pay affiliate-fee if needed
             if (address(toToken) == bntToken) {
-                uint256 affiliateAmount = _amount.mul(_affiliateFee).div(AFFILIATE_FEE_RESOLUTION);
+                uint256 affiliateAmount = amount.mul(_affiliateFee).div(AFFILIATE_FEE_RESOLUTION);
                 require(toToken.transfer(_affiliateAccount, affiliateAmount));
-                _amount -= affiliateAmount;
+                amount -= affiliateAmount;
                 bntToken = address(0);
             }
 
-            _fromToken = toToken;
+            fromToken = toToken;
         }
-        return (toToken, _amount);
+        return amount;
     }
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(uint256(keccak256("getReturn(address,address,uint256)") >> (256 - 4 * 8)));
