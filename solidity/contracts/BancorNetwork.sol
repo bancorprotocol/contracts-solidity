@@ -201,8 +201,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         // if ETH was sent with the call, the source is an ether token - deposit the ETH in it
         // otherwise, we assume we already have the tokens
-        if (msg.value > 0)
+        if (msg.value > 0) {
             IEtherToken(fromToken).deposit.value(msg.value)();
+        }
 
         // verify gas price limit
         if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
