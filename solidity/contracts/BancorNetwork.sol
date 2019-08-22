@@ -29,7 +29,7 @@ import './bancorx/interfaces/IBancorX.sol';
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     using SafeMath for uint256;
 
-    uint64 private constant CONVERSION_FEE_RESOLUTION = 1000000;
+    uint256 private constant CONVERSION_FEE_RESOLUTION = 1000000;
     uint256 private constant AFFILIATE_FEE_RESOLUTION = 1000000;
 
     uint256 public maxAffiliateFee = 30000;     // maximum affiliate-fee
