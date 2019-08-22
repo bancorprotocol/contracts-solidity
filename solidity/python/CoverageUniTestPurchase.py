@@ -51,7 +51,7 @@ def Main():
                             elif resultNativePython < resultSolidityPort:
                                 print('Implementation Error: {}'.format(Record(supply, balance, weight, amount, resultSolidityPort, resultNativePython)))
                                 return
-                            else:  # 0 <= resultSolidityPort <= resultNativePython
+                            else: # 0 <= resultSolidityPort <= resultNativePython
                                 absoluteLoss = resultNativePython - resultSolidityPort
                                 relativeLoss = 1 - resultSolidityPort / resultNativePython
                                 worstAbsoluteLoss.Update(supply, balance, weight, amount, resultSolidityPort, resultNativePython, absoluteLoss, relativeLoss)
