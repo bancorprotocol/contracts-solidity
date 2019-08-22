@@ -32,7 +32,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     uint64 private constant MAX_CONVERSION_FEE = 1000000;
 
     uint256 private constant AFFILIATE_FEE_RESOLUTION = 1000000;
-    uint256 public affiliateFeeMax = 30000;
+    uint256 public maxAffiliateFee = 30000;     // maximum affiliate-fee
 
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
     IContractRegistry public registry;          // contract registry contract address
@@ -53,6 +53,19 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     modifier validConversionPath(IERC20Token[] _path) {
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
         _;
+    }
+
+    /**
+        @dev allows the owner to update the maximum affiliate-fee
+
+        @param _maxAffiliateFee   maximum affiliate-fee
+    */
+    function setMaxAffiliateFee(uint256 _maxAffiliateFee)
+        public
+        ownerOnly
+    {
+        require(_maxAffiliateFee <= AFFILIATE_FEE_RESOLUTION);
+        maxAffiliateFee = _maxAffiliateFee;
     }
 
     /**
@@ -360,7 +373,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         if (address(_affiliateAccount) == 0)
             require(_affiliateFee == 0);
         else
-            require(0 < _affiliateFee && _affiliateFee <= affiliateFeeMax);
+            require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee);
 
         (toToken, _amount) = convertByPath(_path, _amount, _minReturn, fromToken, _for, _affiliateAccount, _affiliateFee);
 
