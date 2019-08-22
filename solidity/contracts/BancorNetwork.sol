@@ -341,7 +341,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _affiliateAccount    affiliate account
         @param _affiliateFee        affiliate fee in PPM
 
-        @return ERC20 token to convert to (the last element in the path) & tokens issued in return
+        @return amount of tokens issued
     */
     function convertByPath(
         IERC20Token[] _path,
