@@ -204,6 +204,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         if (msg.value > 0)
             IEtherToken(fromToken).deposit.value(msg.value)();
 
+        // verify gas price limit
         if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
             IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
             gasPriceLimit.validateGasPrice(tx.gasprice);
@@ -212,6 +213,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             require(verifyTrustedSender(_path, _customVal, _block, _for, _v, _r, _s));
         }
 
+        // convert and get the resulting amount
         uint256 amount = convertByPath(_path, _amount, _minReturn, _for, _affiliateAccount, _affiliateFee);
 
         // finished the conversion, transfer the funds to the target account
@@ -291,7 +293,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     )
         public
         payable
-        validConversionPath(_path)    
+        validConversionPath(_path)
         returns (uint256)
     {
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
@@ -305,7 +307,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         // otherwise, we claim the tokens from the sender
         if (msg.value > 0) {
             IEtherToken(fromToken).deposit.value(msg.value)();
-        } else {
+        }
+        else {
             ensureTransferFrom(fromToken, msg.sender, this, _amount);
         }
 
@@ -313,11 +316,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
             IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
             gasPriceLimit.validateGasPrice(tx.gasprice);
-        } else {
+        }
+        else {
             require(verifyTrustedSender(_path, _amount, _block, msg.sender, _v, _r, _s));
         }
 
-        // convert to BNT and get the resulting amount
+        // convert and get the resulting amount
         uint256 amount = convertByPath(_path, _amount, _minReturn, this, address(0), 0);
 
         // transfer the resulting amount to BancorX, and return the amount
