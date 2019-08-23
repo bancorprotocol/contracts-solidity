@@ -189,13 +189,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         returns (uint256)
     {
         // verify that the conversion parameters are legal
-        verifyConversionParams(_path, _customVal, _for, _block, _v, _r, _s);
+        verifyConversionParams(_path, _customVal, _for, _for, _block, _v, _r, _s);
 
         // handle msg.value
         handleValue(_path[0], _amount, false);
 
         // convert and get the resulting amount
-        uint256 amount = convertByPath(_path, _amount, _minReturn, _for, _affiliateAccount, _affiliateFee);
+        uint256 amount = convertByPath(_path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
 
         // finished the conversion, transfer the funds to the target account
         // if the target token is an ether token, withdraw the tokens and send them as ETH
@@ -277,13 +277,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         returns (uint256)
     {
         // verify that the conversion parameters are legal
-        verifyConversionParams(_path, _amount, msg.sender, _block, _v, _r, _s);
+        verifyConversionParams(_path, _amount, msg.sender, this, _block, _v, _r, _s);
 
         // handle msg.value
         handleValue(_path[0], _amount, true);
 
         // convert and get the resulting amount
-        uint256 amount = convertByPath(_path, _amount, _minReturn, this, address(0), 0);
+        uint256 amount = convertByPath(_path, _amount, _minReturn, address(0), 0);
 
         // transfer the resulting amount to BancorX
         IBancorX(registry.addressOf(ContractIds.BANCOR_X)).xTransfer(_toBlockchain, _to, amount, _conversionId);
@@ -297,7 +297,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _path                conversion path, see conversion path format above
         @param _amount              amount to convert from (in the initial source token)
         @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _for                 account that will receive the conversion result
         @param _affiliateAccount    affiliate account
         @param _affiliateFee        affiliate fee in PPM
 
@@ -307,13 +306,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         IERC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
-        address _for,
         address _affiliateAccount,
         uint256 _affiliateFee
     ) private returns (uint256) {
         uint256 amount = _amount;
         uint256 length = _path.length - 3; // '_path.length > 2' verified at this point
-        IContractFeatures features = IContractFeatures(registry.addressOf(ContractIds.CONTRACT_FEATURES));
 
         address bntToken;
         if (address(_affiliateAccount) == 0) {
@@ -331,12 +328,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             IERC20Token smartToken = _path[i + 1];
             IERC20Token toToken = _path[i + 2];
             IBancorConverter converter = IBancorConverter(ISmartToken(smartToken).owner());
-
-            // ensure that the account which should receive the conversion result is whitelisted
-            if (features.isSupported(converter, FeatureIds.CONVERTER_CONVERSION_WHITELIST)) {
-                IWhitelist whitelist = converter.conversionWhitelist();
-                require (whitelist == address(0) || whitelist.isWhitelisted(_for));
-            }
 
             // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
             if (smartToken != fromToken)
@@ -621,7 +612,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     function verifyConversionParams(
         IERC20Token[] _path,
         uint256 _amount,
-        address _for,
+        address _sender,
+        address _receiver,
         uint256 _block,
         uint8 _v,
         bytes32 _r,
@@ -633,13 +625,23 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         // verify that the number of elements is odd and that maximum number of 'hops' is 10
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
 
+        // verify that the account which should receive the conversion result is whitelisted
+        IContractFeatures features = IContractFeatures(registry.addressOf(ContractIds.CONTRACT_FEATURES));
+        for (uint256 i = 1; i < _path.length; i += 2) {
+            IBancorConverter converter = IBancorConverter(ISmartToken(_path[i]).owner());
+            if (features.isSupported(converter, FeatureIds.CONVERTER_CONVERSION_WHITELIST)) {
+                IWhitelist whitelist = converter.conversionWhitelist();
+                require (whitelist == address(0) || whitelist.isWhitelisted(_receiver));
+            }
+        }
+
         // verify gas price limit
         if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
             IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
             gasPriceLimit.validateGasPrice(tx.gasprice);
         }
         else {
-            require(verifyTrustedSender(_path, _amount, _block, _for, _v, _r, _s));
+            require(verifyTrustedSender(_path, _amount, _block, _sender, _v, _r, _s));
         }
     }
 
