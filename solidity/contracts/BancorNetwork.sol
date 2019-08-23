@@ -189,7 +189,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         returns (uint256)
     {
         // verify that the conversion parameters are legal
-        verifyConversionParams(_path, _amount, _for, _customVal, _block, _v, _r, _s);
+        verifyConversionParams(_path, _customVal, _for, _block, _v, _r, _s);
+
+        // handle msg.value
+        handleValue(_path[0], _amount, false);
 
         // convert and get the resulting amount
         uint256 amount = convertByPath(_path, _amount, _minReturn, _for, _affiliateAccount, _affiliateFee);
@@ -274,12 +277,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         returns (uint256)
     {
         // verify that the conversion parameters are legal
-        verifyConversionParams(_path, _amount, msg.sender, _amount, _block, _v, _r, _s);
+        verifyConversionParams(_path, _amount, msg.sender, _block, _v, _r, _s);
 
-        // if ETH was not sent with the call, we claim the tokens from the sender
-        if (msg.value == 0) {
-            ensureTransferFrom(_path[0], msg.sender, this, _amount);
-        }
+        // handle msg.value
+        handleValue(_path[0], _amount, true);
 
         // convert and get the resulting amount
         uint256 amount = convertByPath(_path, _amount, _minReturn, this, address(0), 0);
@@ -640,7 +641,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         IERC20Token[] _path,
         uint256 _amount,
         address _for,
-        uint256 _customVal,
         uint256 _block,
         uint8 _v,
         bytes32 _r,
@@ -658,13 +658,19 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             gasPriceLimit.validateGasPrice(tx.gasprice);
         }
         else {
-            require(verifyTrustedSender(_path, _customVal, _block, _for, _v, _r, _s));
+            require(verifyTrustedSender(_path, _amount, _block, _for, _v, _r, _s));
         }
+    }
 
+    function handleValue(IERC20Token _token, uint256 _amount, bool _claim) private {
         // if ETH is provided, ensure that the amount is identical to _amount, verify that the source token is an ether token and deposit the ETH in it
         if (msg.value > 0) {
-            require(_amount == msg.value && etherTokens[_path[0]]);
-            IEtherToken(_path[0]).deposit.value(msg.value)();
+            require(_amount == msg.value && etherTokens[_token]);
+            IEtherToken(_token).deposit.value(msg.value)();
+        }
+        // Otherwise, claim the tokens from the sender if needed
+        else if (_claim) {
+            ensureTransferFrom(_token, msg.sender, this, _amount);
         }
     }
 
