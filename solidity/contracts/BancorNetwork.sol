@@ -324,22 +324,19 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         // iterate over the conversion path
         for (uint256 i = 2; i < length; i += 2) {
-            IERC20Token fromToken = _path[i - 2];
-            IERC20Token smartToken = _path[i - 1];
-            IERC20Token toToken = _path[i];
-            IBancorConverter converter = IBancorConverter(ISmartToken(smartToken).owner());
+            IBancorConverter converter = IBancorConverter(ISmartToken(_path[i - 1]).owner());
 
             // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
-            if (smartToken != fromToken)
-                ensureAllowance(fromToken, converter, amount);
+            if (_path[i - 1] != _path[i - 2])
+                ensureAllowance(_path[i - 2], converter, amount);
 
             // make the conversion - if it's the last one, also provide the minimum return value
-            amount = converter.change(fromToken, toToken, amount, i + 1 == length ? _minReturn : 1);
+            amount = converter.change(_path[i - 2], _path[i], amount, i + 1 == length ? _minReturn : 1);
 
             // pay affiliate-fee if needed
-            if (address(toToken) == bntToken) {
+            if (address(_path[i]) == bntToken) {
                 uint256 affiliateAmount = amount.mul(_affiliateFee).div(AFFILIATE_FEE_RESOLUTION);
-                require(toToken.transfer(_affiliateAccount, affiliateAmount));
+                require(_path[i].transfer(_affiliateAccount, affiliateAmount));
                 amount -= affiliateAmount;
                 bntToken = address(0);
             }
