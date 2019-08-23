@@ -312,7 +312,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint256 _affiliateFee
     ) private returns (uint256) {
         uint256 amount = _amount;
-        IERC20Token fromToken = _path[0];
         uint256 pathLength = _path.length;
         IContractFeatures features = IContractFeatures(registry.addressOf(ContractIds.CONTRACT_FEATURES));
 
@@ -328,6 +327,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         // iterate over the conversion path
         for (uint256 i = 1; i < pathLength; i += 2) {
+            IERC20Token fromToken = _path[i - 1];
             ISmartToken smartToken = ISmartToken(_path[i]);
             IERC20Token toToken = _path[i + 1];
             IBancorConverter converter = IBancorConverter(smartToken.owner());
@@ -347,9 +347,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 amount -= affiliateAmount;
                 bntToken = address(0);
             }
-
-            fromToken = toToken;
         }
+
         return amount;
     }
 
