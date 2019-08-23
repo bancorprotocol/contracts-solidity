@@ -319,6 +319,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         address bntToken;
         if (address(_affiliateAccount) == 0) {
             require(_affiliateFee == 0);
+            bntToken = address(0);
         }
         else {
             require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee);
