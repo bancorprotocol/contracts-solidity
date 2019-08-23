@@ -48,12 +48,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         registry = _registry;
     }
 
-    // validates a conversion path - verifies that the number of elements is odd and that maximum number of 'hops' is 10
-    modifier validConversionPath(IERC20Token[] _path) {
-        require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
-        _;
-    }
-
     /**
         @dev allows the owner to update the maximum affiliate-fee
 
@@ -192,27 +186,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     )
         public
         payable
-        validConversionPath(_path)
         returns (uint256)
     {
-        // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
-        IERC20Token fromToken = _path[0];
-        require(msg.value == 0 || (_amount == msg.value && etherTokens[fromToken]));
-
-        // if ETH was sent with the call, the source is an ether token - deposit the ETH in it
-        // otherwise, we assume we already have the tokens
-        if (msg.value > 0) {
-            IEtherToken(fromToken).deposit.value(msg.value)();
-        }
-
-        // verify gas price limit
-        if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
-            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
-            gasPriceLimit.validateGasPrice(tx.gasprice);
-        }
-        else {
-            require(verifyTrustedSender(_path, _customVal, _block, _for, _v, _r, _s));
-        }
+        // verify that the conversion parameters are legal
+        verifyConversionParams(_path, _amount, _for, _customVal, _block, _v, _r, _s);
 
         // convert and get the resulting amount
         uint256 amount = convertByPath(_path, _amount, _minReturn, _for, _affiliateAccount, _affiliateFee);
@@ -294,38 +271,20 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     )
         public
         payable
-        validConversionPath(_path)
         returns (uint256)
     {
-        // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
-        IERC20Token fromToken = _path[0];
-        require(msg.value == 0 || (_amount == msg.value && etherTokens[fromToken]));
+        // verify that the conversion parameters are legal
+        verifyConversionParams(_path, _amount, msg.sender, _amount, _block, _v, _r, _s);
 
-        // require that the dest token is BNT
-        require(_path[_path.length - 1] == registry.addressOf(ContractIds.BNT_TOKEN));
-
-        // if ETH was sent with the call, the source is an ether token - deposit the ETH in it
-        // otherwise, we claim the tokens from the sender
-        if (msg.value > 0) {
-            IEtherToken(fromToken).deposit.value(msg.value)();
-        }
-        else {
-            ensureTransferFrom(fromToken, msg.sender, this, _amount);
-        }
-
-        // verify gas price limit
-        if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
-            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
-            gasPriceLimit.validateGasPrice(tx.gasprice);
-        }
-        else {
-            require(verifyTrustedSender(_path, _amount, _block, msg.sender, _v, _r, _s));
+        // if ETH was not sent with the call, we claim the tokens from the sender
+        if (msg.value == 0) {
+            ensureTransferFrom(_path[0], msg.sender, this, _amount);
         }
 
         // convert and get the resulting amount
         uint256 amount = convertByPath(_path, _amount, _minReturn, this, address(0), 0);
 
-        // transfer the resulting amount to BancorX, and return the amount
+        // transfer the resulting amount to BancorX
         IBancorX(registry.addressOf(ContractIds.BANCOR_X)).xTransfer(_toBlockchain, _to, amount, _conversionId);
 
         return amount;
@@ -675,6 +634,38 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         bool isSet;
         (virtualBalance, weight, isVirtualBalanceEnabled, isSaleEnabled, isSet) = _converter.connectors(_connector);
         return isSaleEnabled;
+    }
+
+    function verifyConversionParams(
+        IERC20Token[] _path,
+        uint256 _amount,
+        address _for,
+        uint256 _customVal,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        private
+        view
+    {
+        // verify that the number of elements is odd and that maximum number of 'hops' is 10
+        require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
+
+        // verify gas price limit
+        if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
+            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
+            gasPriceLimit.validateGasPrice(tx.gasprice);
+        }
+        else {
+            require(verifyTrustedSender(_path, _customVal, _block, _for, _v, _r, _s));
+        }
+
+        // if ETH is provided, ensure that the amount is identical to _amount, verify that the source token is an ether token and deposit the ETH in it
+        if (msg.value > 0) {
+            require(_amount == msg.value && etherTokens[_path[0]]);
+            IEtherToken(_path[0]).deposit.value(msg.value)();
+        }
     }
 
     /**
