@@ -328,9 +328,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         // iterate over the conversion path
         for (uint256 i = 1; i < length; i += 2) {
             IERC20Token fromToken = _path[i - 1];
-            ISmartToken smartToken = ISmartToken(_path[i]);
+            IERC20Token smartToken = _path[i];
             IERC20Token toToken = _path[i + 1];
-            IBancorConverter converter = IBancorConverter(smartToken.owner());
+            IBancorConverter converter = IBancorConverter(ISmartToken(smartToken).owner());
             checkWhitelist(converter, _for, features);
 
             // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
