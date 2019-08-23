@@ -685,6 +685,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint256 _amount,
         uint256 _minReturn,
         address _for,
+        uint256 _customVal,
         uint256 _block,
         uint8 _v,
         bytes32 _r,
@@ -694,7 +695,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         payable
         returns (uint256)
     {
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, _amount, _block, _v, _r, _s, address(0), 0);
+        return convertForPrioritized4(_path, _amount, _minReturn, _for, _customVal, _block, _v, _r, _s, address(0), 0);
     }
 
     /**
