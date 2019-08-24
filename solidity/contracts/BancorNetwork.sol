@@ -310,7 +310,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint256 _affiliateFee
     ) private returns (uint256) {
         uint256 amount = _amount;
-        uint256 length = _path.length;
+        uint256 lastIndex = _path.length - 1;
 
         address bntToken;
         if (address(_affiliateAccount) == 0) {
@@ -323,7 +323,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         }
 
         // iterate over the conversion path
-        for (uint256 i = 2; i < length; i += 2) {
+        for (uint256 i = 2; i <= lastIndex; i += 2) {
             IBancorConverter converter = IBancorConverter(ISmartToken(_path[i - 1]).owner());
 
             // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
@@ -331,7 +331,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 ensureAllowance(_path[i - 2], converter, amount);
 
             // make the conversion - if it's the last one, also provide the minimum return value
-            amount = converter.change(_path[i - 2], _path[i], amount, i + 1 == length ? _minReturn : 1);
+            amount = converter.change(_path[i - 2], _path[i], amount, i == lastIndex ? _minReturn : 1);
 
             // pay affiliate-fee if needed
             if (address(_path[i]) == bntToken) {
