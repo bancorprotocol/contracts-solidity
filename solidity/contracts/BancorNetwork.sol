@@ -191,7 +191,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         returns (uint256)
     {
         // verify that the conversion parameters are legal
-        verifyConversionParams(_path, _customVal, _for, _for, _block, _v, _r, _s);
+        verifyConversionParams(_path, _for, _for, _customVal, _block, _v, _r, _s);
 
         // handle msg.value
         handleValue(_path[0], _amount, false);
@@ -279,7 +279,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         returns (uint256)
     {
         // verify that the conversion parameters are legal
-        verifyConversionParams(_path, _amount, msg.sender, this, _block, _v, _r, _s);
+        verifyConversionParams(_path, msg.sender, this, _amount, _block, _v, _r, _s);
+
+        // verify that the destination token is BNT
+        require(_path[_path.length - 1] == registry.addressOf(ContractIds.BNT_TOKEN));
 
         // handle msg.value
         handleValue(_path[0], _amount, true);
@@ -616,9 +619,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
     function verifyConversionParams(
         IERC20Token[] _path,
-        uint256 _amount,
         address _sender,
         address _receiver,
+        uint256 _customVal,
         uint256 _block,
         uint8 _v,
         bytes32 _r,
@@ -645,7 +648,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             gasPriceLimit.validateGasPrice(tx.gasprice);
         }
         else {
-            require(verifyTrustedSender(_path, _amount, _block, _sender, _v, _r, _s));
+            require(verifyTrustedSender(_path, _customVal, _block, _sender, _v, _r, _s));
         }
     }
 
