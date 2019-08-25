@@ -664,6 +664,56 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     /**
         @dev deprecated, backward compatibility
     */
+    function convert(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn
+    ) public payable returns (uint256)
+    {
+        return convert2(_path, _amount, _minReturn, address(0), 0);
+    }
+
+    /**
+        @dev deprecated, backward compatibility
+    */
+    function claimAndConvert(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn
+    ) public returns (uint256)
+    {
+        return claimAndConvert2(_path, _amount, _minReturn, address(0), 0);
+    }
+
+    /**
+        @dev deprecated, backward compatibility
+    */
+    function convertFor(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _for
+    ) public payable returns (uint256)
+    {
+        return convertFor2(_path, _amount, _minReturn, _for, address(0), 0);
+    }
+
+    /**
+        @dev deprecated, backward compatibility
+    */
+    function claimAndConvertFor(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _for
+    ) public returns (uint256)
+    {
+        return claimAndConvertFor2(_path, _amount, _minReturn, _for, address(0), 0);
+    }
+
+    /**
+        @dev deprecated, backward compatibility
+    */
     function convertForPrioritized3(
         IERC20Token[] _path,
         uint256 _amount,
@@ -719,33 +769,5 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     {
         _nonce;
         return convertForPrioritized4(_path, _amount, _minReturn, _for, _amount, _block, _v, _r, _s, address(0), 0);
-    }
-
-    /**
-        @dev deprecated, backward compatibility
-    */
-    function claimAndConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        return claimAndConvert2(_path, _amount, _minReturn, address(0), 0);
-    }
-
-    /**
-        @dev deprecated, backward compatibility
-    */
-    function claimAndConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public returns (uint256) {
-        return claimAndConvertFor2(_path, _amount, _minReturn, _for, address(0), 0);
-    }
-
-    /**
-        @dev deprecated, backward compatibility
-    */
-    function convert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256) {
-        return convert2(_path, _amount, _minReturn, address(0), 0);
-    }
-
-    /**
-        @dev deprecated, backward compatibility
-    */
-    function convertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public payable returns (uint256) {
-        return convertFor2(_path, _amount, _minReturn, _for, address(0), 0);
     }
 }
