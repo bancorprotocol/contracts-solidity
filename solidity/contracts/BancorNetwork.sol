@@ -142,11 +142,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _for         account that will receive the conversion result
+        @param _affiliateAccount    affiliate account
+        @param _affiliateFee        affiliate fee in PPM
 
         @return tokens issued in return
     */
-    function convertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public payable returns (uint256) {
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, _amount, 0x0, 0x0, 0x0, 0x0, address(0), 0);
+    function convertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
+        return convertForPrioritized4(_path, _amount, _minReturn, _for, _amount, 0x0, 0x0, 0x0, 0x0, _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -451,16 +453,18 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _for         account that will receive the conversion result
+        @param _affiliateAccount    affiliate account
+        @param _affiliateFee        affiliate fee in PPM
 
         @return tokens issued in return
     */
-    function claimAndConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public returns (uint256) {
+    function claimAndConvertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
         // we need to transfer the tokens from the caller to the converter before we follow
         // the conversion path, to allow it to execute the conversion on behalf of the caller
         // note: we assume we already have allowance
         IERC20Token fromToken = _path[0];
         ensureTransferFrom(fromToken, msg.sender, this, _amount);
-        return convertFor(_path, _amount, _minReturn, _for);
+        return convertFor2(_path, _amount, _minReturn, _for, _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -471,11 +475,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _path        conversion path, see conversion path format above
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _affiliateAccount    affiliate account
+        @param _affiliateFee        affiliate fee in PPM
 
         @return tokens issued in return
     */
-    function convert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256) {
-        return convertFor(_path, _amount, _minReturn, msg.sender);
+    function convert2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
+        return convertFor2(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -486,11 +492,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _path        conversion path, see conversion path format above
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _affiliateAccount    affiliate account
+        @param _affiliateFee        affiliate fee in PPM
 
         @return tokens issued in return
     */
-    function claimAndConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        return claimAndConvertFor(_path, _amount, _minReturn, msg.sender);
+    function claimAndConvert2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
+        return claimAndConvertFor2(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -617,7 +625,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         bytes32 _s
     )
         private
-        view
     {
         // verify that the number of elements is odd and that maximum number of 'hops' is 10
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
@@ -712,5 +719,33 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     {
         _nonce;
         return convertForPrioritized4(_path, _amount, _minReturn, _for, _amount, _block, _v, _r, _s, address(0), 0);
+    }
+
+    /**
+        @dev deprecated, backward compatibility
+    */
+    function claimAndConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+        return claimAndConvert2(_path, _amount, _minReturn, address(0), 0);
+    }
+
+    /**
+        @dev deprecated, backward compatibility
+    */
+    function claimAndConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public returns (uint256) {
+        return claimAndConvertFor2(_path, _amount, _minReturn, _for, address(0), 0);
+    }
+
+    /**
+        @dev deprecated, backward compatibility
+    */
+    function convert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256) {
+        return convert2(_path, _amount, _minReturn, address(0), 0);
+    }
+
+    /**
+        @dev deprecated, backward compatibility
+    */
+    function convertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public payable returns (uint256) {
+        return convertFor2(_path, _amount, _minReturn, _for, address(0), 0);
     }
 }
