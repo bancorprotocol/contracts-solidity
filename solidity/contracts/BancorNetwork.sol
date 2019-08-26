@@ -113,18 +113,20 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return true if the signer is verified
     */
-    function verifyTrustedSender(IERC20Token[] _path, uint256 _customVal, uint256 _block, address _addr, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
-        bytes32 hash = keccak256(abi.encodePacked(_block, tx.gasprice, _addr, msg.sender, _customVal, _path));
+    function verifyTrustedSender(IERC20Token[] _path, address _addr, uint256[] memory _signature) private returns (bool) {
+        uint256 blockNumber = _signature[1];
+
+        bytes32 hash = keccak256(abi.encodePacked(blockNumber, tx.gasprice, _addr, msg.sender, _signature[0], _path));
 
         // checking that it is the first conversion with the given signature
         // and that the current block number doesn't exceeded the maximum block
         // number that's allowed with the current signature
-        require(!conversionHashes[hash] && block.number <= _block);
+        require(!conversionHashes[hash] && block.number <= _signature[1]);
 
         // recovering the signing address and comparing it to the trusted signer
         // address that was set in the contract
         bytes32 prefixedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
-        bool verified = ecrecover(prefixedHash, _v, _r, _s) == signerAddress;
+        bool verified = ecrecover(prefixedHash, uint8(_signature[2]), bytes32(_signature[3]), bytes32(_signature[4])) == signerAddress;
 
         // if the signer is the trusted signer - mark the hash so that it can't
         // be used multiple times
@@ -621,6 +623,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         bytes32 _r,
         bytes32 _s
     ) private pure returns (uint256[] memory) {
+        if (_v == 0x0 && _r == 0x0 && _s == 0x0)
+            return new uint256[](0);
         uint256[] memory signature = new uint256[](5);
         signature[0] = _customVal;
         signature[1] = _block;
@@ -651,17 +655,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             }
         }
 
-        uint8 _v = uint8(_signature[2]);
-        bytes32 _r = bytes32(_signature[3]);
-        bytes32 _s = bytes32(_signature[4]);
-
-        // verify gas price limit
-        if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
-            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
-            gasPriceLimit.validateGasPrice(tx.gasprice);
+        if (_signature.length >= 5) {
+            // verify signature
+            require(verifyTrustedSender(_path, _sender, _signature));
         }
         else {
-            require(verifyTrustedSender(_path, _signature[0], _signature[1], _sender, _v, _r, _s));
+            // verify gas price limit
+            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
+            gasPriceLimit.validateGasPrice(tx.gasprice);
         }
     }
 
