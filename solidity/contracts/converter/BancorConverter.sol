@@ -759,6 +759,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
                                     [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
                                     [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
                                     [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+                                    if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
         @param _affiliateAccount    affiliate account
         @param _affiliateFee        affiliate fee in PPM
 
@@ -806,6 +807,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
                                 [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
                                 [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
                                 [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+                                if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
 
         @return tokens issued in return
     */
@@ -818,6 +820,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         public
         returns (uint256)
     {
+        // verify that the custom value (if valid) is equal to _conversionId
         require(_signature.length == 0 || _signature[0] == _conversionId);
 
         IBancorX bancorX = IBancorX(registry.addressOf(ContractIds.BANCOR_X));

@@ -172,6 +172,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                                     [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
                                     [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
                                     [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+                                    if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
         @param _affiliateAccount    affiliate account
         @param _affiliateFee        affiliate fee in PPM
 
@@ -261,6 +262,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                                 [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
                                 [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
                                 [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+                                if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
 
         @return the amount of BNT received from this conversion
     */
@@ -277,6 +279,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         payable
         returns (uint256)
     {
+        // verify that the custom value (if valid) is equal to _amount
         require(_signature.length == 0 || _signature[0] == _amount);
 
         // verify that the conversion parameters are legal
