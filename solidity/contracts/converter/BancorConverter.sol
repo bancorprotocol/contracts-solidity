@@ -754,11 +754,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @param _amount              amount to convert from (in the initial source token)
         @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _signature           an array of the following elements:
-                                    [0] uint256      custom value that was signed for prioritized conversion; must be equal to _amount
-                                    [1] uint256      if the current block exceeded the given parameter - it is cancelled
-                                    [2] uint8        (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-                                    [3] bytes32      (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-                                    [4] bytes32      (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+                                    [0] uint256     custom value that was signed for prioritized conversion; must be equal to _amount
+                                    [1] uint256     if the current block exceeded the given parameter - it is cancelled
+                                    [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+                                    [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+                                    [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
         @param _affiliateAccount    affiliate account
         @param _affiliateFee        affiliate fee in PPM
 
@@ -797,15 +797,15 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         token on the BancorNetwork without specifying the amount of BNT to be converted, but
         rather by providing the xTransferId which allows us to get the amount from BancorX.
 
-        @param _path             conversion path, see conversion path format in the BancorNetwork contract
-        @param _minReturn        if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _conversionId     pre-determined unique (if non zero) id which refers to this transaction 
-        @param _signature        an array of the following elements:
-                                 [0] uint256      custom value that was signed for prioritized conversion; must be equal to _conversionId
-                                 [1] uint256      if the current block exceeded the given parameter - it is cancelled
-                                 [2] uint8        (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-                                 [3] bytes32      (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-                                 [4] bytes32      (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+        @param _path            conversion path, see conversion path format in the BancorNetwork contract
+        @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction 
+        @param _signature       an array of the following elements:
+                                [0] uint256     custom value that was signed for prioritized conversion; must be equal to _conversionId
+                                [1] uint256     if the current block exceeded the given parameter - it is cancelled
+                                [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+                                [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+                                [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
 
         @return tokens issued in return
     */
