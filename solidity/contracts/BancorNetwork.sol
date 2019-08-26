@@ -116,22 +116,23 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     function verifyTrustedSender(IERC20Token[] _path, address _addr, uint256[] memory _signature) private returns (bool) {
         uint256 blockNumber = _signature[1];
 
+        // check that the current block number doesn't exceeded the maximum allowed with the current signature
+        require(block.number <= blockNumber);
+
+        // create the hash of the given signature
         bytes32 hash = keccak256(abi.encodePacked(blockNumber, tx.gasprice, _addr, msg.sender, _signature[0], _path));
 
-        // checking that it is the first conversion with the given signature
-        // and that the current block number doesn't exceeded the maximum block
-        // number that's allowed with the current signature
-        require(!conversionHashes[hash] && block.number <= _signature[1]);
+        // check that it is the first conversion with the given signature
+        require(!conversionHashes[hash]);
 
-        // recovering the signing address and comparing it to the trusted signer
-        // address that was set in the contract
+        // recover the signing address and compar it to the trusted signer address that was set in the contract
         bytes32 prefixedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
         bool verified = ecrecover(prefixedHash, uint8(_signature[2]), bytes32(_signature[3]), bytes32(_signature[4])) == signerAddress;
 
-        // if the signer is the trusted signer - mark the hash so that it can't
-        // be used multiple times
+        // if the signer is the trusted signer - mark the hash so that it can't be used multiple times
         if (verified)
             conversionHashes[hash] = true;
+
         return verified;
     }
 
