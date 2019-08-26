@@ -238,7 +238,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         payable
         returns (uint256)
     {
-        return xConvertPrioritized(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, 0x0, 0x0, 0x0, 0x0);
+        return xConvertPrioritized2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, getSignature(0x0, 0x0, 0x0, 0x0, 0x0));
     }
 
     /**
@@ -255,31 +255,32 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _toBlockchain    blockchain BNT will be issued on
         @param _to              address/account on _toBlockchain to send the BNT to
         @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction 
-        @param _block           if the current block exceeded the given parameter - it is cancelled
-        @param _v               (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-        @param _r               (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-        @param _s               (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+        @param _signature       an array of the following elements:
+                                [0] uint256      custom value that was signed for prioritized conversion; must be equal to _amount
+                                [1] uint256      if the current block exceeded the given parameter - it is cancelled
+                                [2] uint8        (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+                                [3] bytes32      (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+                                [4] bytes32      (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
 
         @return the amount of BNT received from this conversion
     */
-    function xConvertPrioritized(
+    function xConvertPrioritized2(
         IERC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
         bytes32 _toBlockchain,
         bytes32 _to,
         uint256 _conversionId,
-        uint256 _block,
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s
+        uint256[] memory _signature
     )
         public
         payable
         returns (uint256)
     {
+        require(_signature.length == 0 || _signature[0] == _amount);
+
         // verify that the conversion parameters are legal
-        verifyConversionParams(_path, msg.sender, this, getSignature(_amount, _block, _v, _r, _s));
+        verifyConversionParams(_path, msg.sender, this, _signature);
 
         // verify that the destination token is BNT
         require(_path[_path.length - 1] == registry.addressOf(ContractIds.BNT_TOKEN));
@@ -727,6 +728,29 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     ) public returns (uint256)
     {
         return claimAndConvertFor2(_path, _amount, _minReturn, _for, address(0), 0);
+    }
+
+    /**
+        @dev deprecated, backward compatibility
+    */
+    function xConvertPrioritized(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        bytes32 _toBlockchain,
+        bytes32 _to,
+        uint256 _conversionId,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    )
+        public
+        payable
+        returns (uint256)
+    {
+        uint256[] memory signature = getSignature(_amount, _block, _v, _r, _s);
+        return xConvertPrioritized2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, signature);
     }
 
     /**
