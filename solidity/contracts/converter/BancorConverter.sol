@@ -743,7 +743,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         payable
         returns (uint256)
     {
-        return quickConvertPrioritized2(_path, _amount, _minReturn, getSignature(_amount, 0x0, 0x0, 0x0, 0x0), _affiliateAccount, _affiliateFee);
+        return quickConvertPrioritized2(_path, _amount, _minReturn, getSignature(0x0, 0x0, 0x0, 0x0, 0x0), _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -769,7 +769,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         payable
         returns (uint256)
     {
-        require(_amount == _signature[0]);
+        require(_signature.length == 0 || _signature[0] == _amount);
 
         IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
 
@@ -818,7 +818,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         public
         returns (uint256)
     {
-        require(_conversionId == _signature[0]);
+        require(_signature.length == 0 || _signature[0] == _conversionId);
 
         IBancorX bancorX = IBancorX(registry.addressOf(ContractIds.BANCOR_X));
         IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
