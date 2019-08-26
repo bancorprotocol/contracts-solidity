@@ -138,10 +138,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         a predefined conversion path and transfers the result tokens to a target account
         note that the converter should already own the source tokens
 
-        @param _path        conversion path, see conversion path format above
-        @param _amount      amount to convert from (in the initial source token)
-        @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _for         account that will receive the conversion result
+        @param _path                conversion path, see conversion path format above
+        @param _amount              amount to convert from (in the initial source token)
+        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _for                 account that will receive the conversion result
         @param _affiliateAccount    affiliate account
         @param _affiliateFee        affiliate fee in PPM
 
@@ -449,10 +449,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         by following a predefined conversion path and transfers the result tokens to a target account
         note that allowance must be set beforehand
 
-        @param _path        conversion path, see conversion path format above
-        @param _amount      amount to convert from (in the initial source token)
-        @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _for         account that will receive the conversion result
+        @param _path                conversion path, see conversion path format above
+        @param _amount              amount to convert from (in the initial source token)
+        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _for                 account that will receive the conversion result
         @param _affiliateAccount    affiliate account
         @param _affiliateFee        affiliate fee in PPM
 
@@ -472,9 +472,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         a predefined conversion path and transfers the result tokens back to the sender
         note that the converter should already own the source tokens
 
-        @param _path        conversion path, see conversion path format above
-        @param _amount      amount to convert from (in the initial source token)
-        @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _path                conversion path, see conversion path format above
+        @param _amount              amount to convert from (in the initial source token)
+        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _affiliateAccount    affiliate account
         @param _affiliateFee        affiliate fee in PPM
 
@@ -489,9 +489,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         by following a predefined conversion path and transfers the result tokens back to the sender
         note that allowance must be set beforehand
 
-        @param _path        conversion path, see conversion path format above
-        @param _amount      amount to convert from (in the initial source token)
-        @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _path                conversion path, see conversion path format above
+        @param _amount              amount to convert from (in the initial source token)
+        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _affiliateAccount    affiliate account
         @param _affiliateFee        affiliate fee in PPM
 
