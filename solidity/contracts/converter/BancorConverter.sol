@@ -743,8 +743,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         payable
         returns (uint256)
     {
-        uint256[] memory signature = getSignature(0x0, 0x0, 0x0, 0x0, 0x0);
-        return quickConvertPrioritized2(_path, _amount, _minReturn, signature, _affiliateAccount, _affiliateFee);
+        return quickConvertPrioritized2(_path, _amount, _minReturn, getSignature(0x0, 0x0, 0x0, 0x0, 0x0), _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -1027,15 +1026,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @dev deprecated, backward compatibility
     */
     function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) public payable returns (uint256) {
-        uint256[] memory signature = getSignature(_amount, _block, _v, _r, _s);
-        return quickConvertPrioritized2(_path, _amount, _minReturn, signature, address(0), 0);
+        return quickConvertPrioritized2(_path, _amount, _minReturn, getSignature(_amount, _block, _v, _r, _s), address(0), 0);
     }
 
     /**
         @dev deprecated, backward compatibility
     */
     function completeXConversion(IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) public returns (uint256) {
-        uint256[] memory signature = getSignature(_conversionId, _block, _v, _r, _s);
-        return completeXConversion2(_path, _minReturn, _conversionId, signature);
+        return completeXConversion2(_path, _minReturn, _conversionId, getSignature(_conversionId, _block, _v, _r, _s));
     }
 }

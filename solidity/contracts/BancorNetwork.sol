@@ -151,8 +151,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @return tokens issued in return
     */
     function convertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
-        uint256[] memory signature = getSignature(0x0, 0x0, 0x0, 0x0, 0x0);
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, signature, _affiliateAccount, _affiliateFee);
+        return convertForPrioritized4(_path, _amount, _minReturn, _for, getSignature(0x0, 0x0, 0x0, 0x0, 0x0), _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -240,8 +239,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         payable
         returns (uint256)
     {
-        uint256[] memory signature = getSignature(0x0, 0x0, 0x0, 0x0, 0x0);
-        return xConvertPrioritized2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, signature);
+        return xConvertPrioritized2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, getSignature(0x0, 0x0, 0x0, 0x0, 0x0));
     }
 
     /**
@@ -776,8 +774,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         payable
         returns (uint256)
     {
-        uint256[] memory signature = getSignature(_customVal, _block, _v, _r, _s);
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, signature, address(0), 0);
+        return convertForPrioritized4(_path, _amount, _minReturn, _for, getSignature(_customVal, _block, _v, _r, _s), address(0), 0);
     }
 
     /**
@@ -797,8 +794,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         payable
         returns (uint256)
     {
-        uint256[] memory signature = getSignature(_amount, _block, _v, _r, _s);
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, signature, address(0), 0);
+        return convertForPrioritized4(_path, _amount, _minReturn, _for, getSignature(_amount, _block, _v, _r, _s), address(0), 0);
     }
 
     /**
@@ -817,7 +813,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         public payable returns (uint256)
     {
         _nonce;
-        uint256[] memory signature = getSignature(_amount, _block, _v, _r, _s);
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, signature, address(0), 0);
+        return convertForPrioritized4(_path, _amount, _minReturn, _for, getSignature(_amount, _block, _v, _r, _s), address(0), 0);
     }
 }
