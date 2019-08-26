@@ -632,26 +632,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-        @dev converts a specific amount of _fromToken to _toToken
-
-        @param _fromToken           ERC20 token to convert from
-        @param _toToken             ERC20 token to convert to
-        @param _amount              amount to convert, in fromToken
-        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _affiliateAccount    affiliate account
-        @param _affiliateFee        affiliate fee in PPM
-
-        @return conversion return amount
-    */
-    function convert2(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
-        IERC20Token[] memory path = new IERC20Token[](3);
-        path[0] = _fromToken;
-        path[1] = token;
-        path[2] = _toToken;
-        return quickConvert2(path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
-    }
-
-    /**
         @dev buys the token by depositing one of its connector tokens
 
         @param _connectorToken  connector token contract address
@@ -724,6 +704,26 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // dispatch price data update for the smart token/connector
         emit PriceDataUpdate(_connectorToken, token.totalSupply(), getConnectorBalance(_connectorToken), connector.weight);
         return amount;
+    }
+
+    /**
+        @dev converts a specific amount of _fromToken to _toToken
+
+        @param _fromToken           ERC20 token to convert from
+        @param _toToken             ERC20 token to convert to
+        @param _amount              amount to convert, in fromToken
+        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+        @param _affiliateAccount    affiliate account
+        @param _affiliateFee        affiliate fee in PPM
+
+        @return conversion return amount
+    */
+    function convert2(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
+        IERC20Token[] memory path = new IERC20Token[](3);
+        path[0] = _fromToken;
+        path[1] = token;
+        path[2] = _toToken;
+        return quickConvert2(path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
     }
 
     /**
