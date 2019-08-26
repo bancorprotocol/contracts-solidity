@@ -761,7 +761,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         payable
         returns (uint256)
     {
-        IERC20Token fromToken = _path[0];
         IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
 
         // we need to transfer the source tokens from the caller to the BancorNetwork contract,
@@ -770,17 +769,17 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
             // not ETH, send the source tokens to the BancorNetwork contract
             // if the token is the smart token, no allowance is required - destroy the tokens
             // from the caller and issue them to the BancorNetwork contract
-            if (fromToken == token) {
+            if (_path[0] == token) {
                 token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
                 token.issue(bancorNetwork, _amount); // issue _amount new tokens to the BancorNetwork contract
             } else {
                 // otherwise, we assume we already have allowance, transfer the tokens directly to the BancorNetwork contract
-                ensureTransferFrom(fromToken, msg.sender, bancorNetwork, _amount);
+                ensureTransferFrom(_path[0], msg.sender, bancorNetwork, _amount);
             }
         }
 
         // execute the conversion and pass on the ETH with the call
-        return bancorNetwork.convertForPrioritized4.value(msg.value)(_path, _amount, _minReturn, msg.sender, _amount, _block, _v, _r, _s, address(0), 0);
+        return bancorNetwork.convertForPrioritized4.value(msg.value)(_path, _amount, _minReturn, msg.sender, getSignature(_amount, _block, _v, _r, _s), address(0), 0);
     }
 
     /**
@@ -823,7 +822,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         token.destroy(msg.sender, amount);
         token.issue(bancorNetwork, amount);
 
-        return bancorNetwork.convertForPrioritized4(_path, amount, _minReturn, msg.sender, _conversionId, _block, _v, _r, _s, address(0), 0);
+        return bancorNetwork.convertForPrioritized4(_path, amount, _minReturn, msg.sender, getSignature(_conversionId, _block, _v, _r, _s), address(0), 0);
     }
 
     /**
@@ -975,5 +974,21 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
         assert(_feeAmount <= 2 ** 255);
         emit Conversion(_fromToken, _toToken, msg.sender, _amount, _returnAmount, int256(_feeAmount));
+    }
+
+    function getSignature(
+        uint256 _customVal,
+        uint256 _block,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) private pure returns (uint256[] memory) {
+        uint256[] memory signature = new uint256[](5);
+        signature[0] = _customVal;
+        signature[1] = _block;
+        signature[2] = uint256(_v);
+        signature[3] = uint256(_r);
+        signature[4] = uint256(_s);
+        return signature;
     }
 }

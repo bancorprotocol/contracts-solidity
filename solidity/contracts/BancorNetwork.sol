@@ -148,7 +148,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @return tokens issued in return
     */
     function convertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, _amount, 0x0, 0x0, 0x0, 0x0, _affiliateAccount, _affiliateFee);
+        return convertForPrioritized4(_path, _amount, _minReturn, _for, getSignature(0x0, 0x0, 0x0, 0x0, 0x0), _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -163,11 +163,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _amount              amount to convert from (in the initial source token)
         @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
         @param _for                 account that will receive the conversion result
-        @param _customVal           custom value that was signed for prioritized conversion
-        @param _block               if the current block exceeded the given parameter - it is cancelled
-        @param _v                   (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-        @param _r                   (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-        @param _s                   (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+        @param _signature           an array of the following elements:
+                                    [0] uint256      custom value that was signed for prioritized conversion
+                                    [1] uint256      if the current block exceeded the given parameter - it is cancelled
+                                    [2] uint8        (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+                                    [3] bytes32      (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+                                    [4] bytes32      (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
         @param _affiliateAccount    affiliate account
         @param _affiliateFee        affiliate fee in PPM
 
@@ -178,11 +179,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint256 _amount,
         uint256 _minReturn,
         address _for,
-        uint256 _customVal,
-        uint256 _block,
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s,
+        uint256[] memory _signature,
         address _affiliateAccount,
         uint256 _affiliateFee
     )
@@ -191,7 +188,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         returns (uint256)
     {
         // verify that the conversion parameters are legal
-        verifyConversionParams(_path, _for, _for, _customVal, _block, _v, _r, _s);
+        verifyConversionParams(_path, _for, _for, _signature);
 
         // handle msg.value
         handleValue(_path[0], _amount, false);
@@ -279,7 +276,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         returns (uint256)
     {
         // verify that the conversion parameters are legal
-        verifyConversionParams(_path, msg.sender, this, _amount, _block, _v, _r, _s);
+        verifyConversionParams(_path, msg.sender, this, getSignature(_amount, _block, _v, _r, _s));
 
         // verify that the destination token is BNT
         require(_path[_path.length - 1] == registry.addressOf(ContractIds.BNT_TOKEN));
@@ -617,15 +614,27 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         return isSaleEnabled;
     }
 
-    function verifyConversionParams(
-        IERC20Token[] _path,
-        address _sender,
-        address _receiver,
+    function getSignature(
         uint256 _customVal,
         uint256 _block,
         uint8 _v,
         bytes32 _r,
         bytes32 _s
+    ) private pure returns (uint256[] memory) {
+        uint256[] memory signature = new uint256[](5);
+        signature[0] = _customVal;
+        signature[1] = _block;
+        signature[2] = uint256(_v);
+        signature[3] = uint256(_r);
+        signature[4] = uint256(_s);
+        return signature;
+    }
+
+    function verifyConversionParams(
+        IERC20Token[] _path,
+        address _sender,
+        address _receiver,
+        uint256[] memory _signature
     )
         private
     {
@@ -642,13 +651,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             }
         }
 
+        uint8 _v = uint8(_signature[2]);
+        bytes32 _r = bytes32(_signature[3]);
+        bytes32 _s = bytes32(_signature[4]);
+
         // verify gas price limit
         if (_v == 0x0 && _r == 0x0 && _s == 0x0) {
             IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
             gasPriceLimit.validateGasPrice(tx.gasprice);
         }
         else {
-            require(verifyTrustedSender(_path, _customVal, _block, _sender, _v, _r, _s));
+            require(verifyTrustedSender(_path, _signature[0], _signature[1], _sender, _v, _r, _s));
         }
     }
 
@@ -732,7 +745,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         payable
         returns (uint256)
     {
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, _customVal, _block, _v, _r, _s, address(0), 0);
+        return convertForPrioritized4(_path, _amount, _minReturn, _for, getSignature(_customVal, _block, _v, _r, _s), address(0), 0);
     }
 
     /**
@@ -752,7 +765,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         payable
         returns (uint256)
     {
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, _amount, _block, _v, _r, _s, address(0), 0);
+        return convertForPrioritized4(_path, _amount, _minReturn, _for, getSignature(_amount, _block, _v, _r, _s), address(0), 0);
     }
 
     /**
@@ -771,6 +784,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         public payable returns (uint256)
     {
         _nonce;
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, _amount, _block, _v, _r, _s, address(0), 0);
+        return convertForPrioritized4(_path, _amount, _minReturn, _for, getSignature(_amount, _block, _v, _r, _s), address(0), 0);
     }
 }

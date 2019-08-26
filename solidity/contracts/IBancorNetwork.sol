@@ -44,11 +44,7 @@ contract IBancorNetwork {
         uint256 _amount,
         uint256 _minReturn,
         address _for,
-        uint256 _customVal,
-        uint256 _block,
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s,
+        uint256[] memory _signature,
         address _affiliateAccount,
         uint256 _affiliateFee
     ) public payable returns (uint256);
