@@ -994,6 +994,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         bytes32 _r,
         bytes32 _s
     ) private pure returns (uint256[] memory) {
+        if (_v == 0x0 && _r == 0x0 && _s == 0x0)
+            return new uint256[](0);
         uint256[] memory signature = new uint256[](5);
         signature[0] = _customVal;
         signature[1] = _block;
