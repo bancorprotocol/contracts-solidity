@@ -752,8 +752,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         payable
         returns (uint256)
     {
+        // workaround the 'stack too deep' compilation error
         uint256[] memory signature = getSignature(_amount, _block, _v, _r, _s);
         return xConvertPrioritized2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, signature);
+        // return xConvertPrioritized2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, getSignature(_amount, _block, _v, _r, _s));
     }
 
     /**
