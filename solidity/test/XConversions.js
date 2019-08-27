@@ -420,7 +420,7 @@ contract("XConversions", accounts => {
         assert.equal(currBalance.minus(prevBalance).toString(10), retAmount.toString(10))
     })
 
-    it("shouldn't be able to completeXConversion with an invalid signature", async () => {
+    it("shouldn't be able to completeXConversion to an ERC20 with an invalid signature", async () => {
         const txId = getId()
         const xTransferId = getId()
         const maximumBlock = web3.eth.blockNumber + 100
@@ -452,7 +452,7 @@ contract("XConversions", accounts => {
         ))
     })
 
-    it("shouldn't be able to completeXConversion with a different xTransferId", async () => {
+    it("shouldn't be able to completeXConversion to an ERC20 with a different xTransferId", async () => {
         const txId1 = getId()
         const xTransferId1 = getId()
         const txId2 = getId()
@@ -553,7 +553,7 @@ contract("XConversions", accounts => {
         assert.equal(currBalance.minus(prevBalance).toString(10), retAmount.toString(10))
     })
 
-    it("shouldn't be able to completeXConversion2 with an invalid signature", async () => {
+    it("shouldn't be able to completeXConversion2 to an ERC20 with an invalid signature", async () => {
         const txId = getId()
         const xTransferId = getId()
         const maximumBlock = web3.eth.blockNumber + 100
@@ -582,7 +582,7 @@ contract("XConversions", accounts => {
         ))
     })
 
-    it("shouldn't be able to completeXConversion2 with a different xTransferId", async () => {
+    it("shouldn't be able to completeXConversion2 to an ERC20 with a different xTransferId", async () => {
         const txId1 = getId()
         const xTransferId1 = getId()
         const txId2 = getId()
