@@ -147,6 +147,10 @@ contract('BancorNetwork', accounts => {
         smartToken2SellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address];
     });
 
+    it('verifies that sending ether to the converter fails', async () => {
+        await utils.catchRevert(converter2.send(100));
+    });
+
     it('should be able to quickConvert from a non compliant erc-20 to another token', async () => {
         await erc20Token.approve(converter4.address, 1000);
         let path = [erc20Token.address, smartToken4.address, smartToken4.address];
@@ -184,10 +188,6 @@ contract('BancorNetwork', accounts => {
 
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
         // console.log(`gas used for converting eth -> 1 -> 2: ${res.receipt.cumulativeGasUsed}`);
-    });
-
-    it('verifies that sending ether to the converter fails', async () => {
-        await utils.catchRevert(converter2.send(100));
     });
 
     it('verifies that quick buy with minimum return equal to the full expected return amount results in the exact increase in balance for the buyer', async () => {
