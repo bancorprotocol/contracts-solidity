@@ -1103,4 +1103,12 @@ contract('BancorNetwork', accounts => {
         let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[2]);
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
+
+    it('verifies that claimAndConvertFor2 transfers the affiliate fee correctly', async () => {
+        await etherToken.approve(bancorNetwork.address, 10000);
+        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[2]);
+        await bancorNetwork.claimAndConvertFor2(smartToken1BuyPath, 10000, 1, accounts[1], accounts[2], 10000);
+        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[2]);
+        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
+    });
 });
