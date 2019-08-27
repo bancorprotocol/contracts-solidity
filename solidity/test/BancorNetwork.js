@@ -147,7 +147,7 @@ contract('BancorNetwork', accounts => {
         smartToken2SellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address];
     });
 
-    it('should be able to convert from a non compliant erc-20 to another token', async () => {
+    it('should be able to quickConvert from a non compliant erc-20 to another token', async () => {
         await erc20Token.approve(converter4.address, 1000);
         let path = [erc20Token.address, smartToken4.address, smartToken4.address];
         let prevBalance = await smartToken4.balanceOf.call(accounts[0]);
@@ -157,7 +157,7 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(postBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });
 
-    it('should be able to convert from a smart token to a non compliant erc-20', async () => {
+    it('should be able to quickConvert from a smart token to a non compliant erc-20', async () => {
         let path = [smartToken4.address, smartToken4.address, erc20Token.address];
         let prevBalance = await erc20Token.balanceOf.call(accounts[0]);
         await converter4.quickConvert(path, 1000, 1);
@@ -310,6 +310,13 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
 
+    it('verifies that convert transfers the converted amount correctly', async () => {
+        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        await bancorNetwork.convert(smartToken1BuyPath, 10000, 1, { from: accounts[1], value: 10000 });
+        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
+    });
+
     it('verifies converting with a path that starts with a smart token and ends with another smart token', async () => {
         await smartToken4.approve(bancorNetwork.address, 10000);
         let path = [smartToken4.address, smartToken3.address, smartToken3.address, smartToken2.address, smartToken2.address];
@@ -329,25 +336,46 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(amount.toNumber(), 1, 'amount converted');
     });
 
-    it('should throw when trying convert ether token without sending ether', async () => {
+    it('should throw when calling convertFor with ether token but without sending ether', async () => {
         await utils.catchRevert(bancorNetwork.convertFor(smartToken1BuyPath, 10000, 1, accounts[1], { }));
     });
 
-    it('should throw when ether is different than the amount sent ', async () => {
+    it('should throw when calling convertFor with ether amount different than the amount sent', async () => {
         await utils.catchRevert(bancorNetwork.convertFor.call(smartToken1BuyPath, 20000, 1, accounts[1], { value: 10000 }));
     });
 
-    it('should throw when trying convert with invalid path', async () => {
+    it('should throw when calling convertFor with invalid path', async () => {
         let invalidPath = [etherToken.address, smartToken1.address];
         await utils.catchRevert(bancorNetwork.convertFor(invalidPath, 10000, 1, accounts[1], { value: 10000 }));
     });
 
-    it('should throw when trying convert with invalid long path', async () => {
+    it('should throw when calling convertFor with invalid long path', async () => {
         let longBuyPath = [];
         for (let i = 0; i < 100; ++i)
             longBuyPath.push(etherToken.address);
 
         await utils.catchRevert(bancorNetwork.convertFor(longBuyPath, 10000, 1, accounts[1], { value: 10000 }));
+    });
+
+    it('should throw when calling convert with ether token but without sending ether', async () => {
+        await utils.catchRevert(bancorNetwork.convert(smartToken1BuyPath, 10000, 1, { from: accounts[1] }));
+    });
+
+    it('should throw when calling convert with ether amount different than the amount sent', async () => {
+        await utils.catchRevert(bancorNetwork.convert.call(smartToken1BuyPath, 20000, 1, { from: accounts[1], value: 10000 }));
+    });
+
+    it('should throw when calling convert with invalid path', async () => {
+        let invalidPath = [etherToken.address, smartToken1.address];
+        await utils.catchRevert(bancorNetwork.convert(invalidPath, 10000, 1, { from: accounts[1], value: 10000 }));
+    });
+
+    it('should throw when calling convert with invalid long path', async () => {
+        let longBuyPath = [];
+        for (let i = 0; i < 100; ++i)
+            longBuyPath.push(etherToken.address);
+
+        await utils.catchRevert(bancorNetwork.convert(longBuyPath, 10000, 1, { from: accounts[1], value: 10000 }));
     });
 
     it('verifies that claimAndConvertFor transfers the converted amount correctly', async () => {
@@ -358,7 +386,7 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
 
-    it('should throw when trying claim and convert without approval', async () => {
+    it('should throw when calling claimAndConvertFor without approval', async () => {
         await utils.catchRevert(bancorNetwork.claimAndConvertFor(smartToken1BuyPath, 10000, 1, accounts[1]));
     });
 
@@ -370,7 +398,7 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
 
-    it('should throw when trying claim and convert without approval with claimAndConvert', async () => {
+    it('should throw when calling claimAndConvert without approval', async () => {
         await utils.catchRevert(bancorNetwork.claimAndConvert(smartToken1BuyPath, 10000, 1));
     });
 
@@ -387,7 +415,7 @@ contract('BancorNetwork', accounts => {
         await converter1.setConversionWhitelist(utils.zeroAddress);
     });
 
-    it('should throw when attempting to convertFor a non whitelisted account', async () => {
+    it('should throw when calling convertFor with a non whitelisted account', async () => {
         let whitelist = await Whitelist.new();
         await converter1.setConversionWhitelist(whitelist.address);
 
@@ -407,6 +435,43 @@ contract('BancorNetwork', accounts => {
         let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken2BuyPath, 10000))[0];
         let balanceBeforeTransfer = await smartToken2.balanceOf.call(accounts[1]);
         await bancorNetwork.convertFor(smartToken2BuyPath, 10000, 1, accounts[1], { value: 10000 });
+        let balanceAfterTransfer = await smartToken2.balanceOf.call(accounts[1]);
+        assert.equal(returnByPath, balanceAfterTransfer - balanceBeforeTransfer);
+    });
+
+    it('verifies that convert is allowed for a whitelisted account', async () => {
+        let whitelist = await Whitelist.new();
+        await whitelist.addAddress(accounts[1]);
+        await converter1.setConversionWhitelist(whitelist.address);
+
+        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        await bancorNetwork.convert(smartToken1BuyPath, 10000, 1, { from: accounts[1], value: 10000 });
+        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
+
+        await converter1.setConversionWhitelist(utils.zeroAddress);
+    });
+
+    it('should throw when calling convert with a non whitelisted account', async () => {
+        let whitelist = await Whitelist.new();
+        await converter1.setConversionWhitelist(whitelist.address);
+
+        await utils.catchRevert(bancorNetwork.convert(smartToken1BuyPath, 10000, 1, { from: accounts[1], value: 10000 }));
+        await converter1.setConversionWhitelist(utils.zeroAddress);
+    });
+
+    it('verifies that getReturnByPath returns the correct amount for buying the smart token', async () => {
+        let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1BuyPath, 10000))[0];
+        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        await bancorNetwork.convert(smartToken1BuyPath, 10000, 1, { from: accounts[1], value: 10000 });
+        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
+        assert.equal(returnByPath, balanceAfterTransfer - balanceBeforeTransfer);
+    });
+
+    it('verifies that getReturnByPath returns the correct amount for buying the smart token through multiple converters', async () => {
+        let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken2BuyPath, 10000))[0];
+        let balanceBeforeTransfer = await smartToken2.balanceOf.call(accounts[1]);
+        await bancorNetwork.convert(smartToken2BuyPath, 10000, 1, { from: accounts[1], value: 10000 });
         let balanceAfterTransfer = await smartToken2.balanceOf.call(accounts[1]);
         assert.equal(returnByPath, balanceAfterTransfer - balanceBeforeTransfer);
     });
@@ -497,7 +562,7 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });
 
-    it('should throw when attempts to call quick convert prioritized with untrusted signature', async () => {
+    it('should throw when calling quickConvertPrioritized with untrusted signature', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
@@ -507,7 +572,7 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
-    it('should throw when attempts to call quick convert prioritized with wrong path', async () => {
+    it('should throw when calling quickConvertPrioritized with wrong path', async () => {
         let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
@@ -518,7 +583,7 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
-    it('should throw when attempts to call quick convert prioritized with wrong amount', async () => {
+    it('should throw when calling quickConvertPrioritized with wrong amount', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
@@ -528,7 +593,7 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 200, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
-    it('should throw when attempts to call quick convert prioritized with higher block number than what appears in the signing data', async () => {
+    it('should throw when calling quickConvertPrioritized with higher block number than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
@@ -539,7 +604,7 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
-    it('should throw when attempts to call quick convert prioritized with lower block number than what appears in the signing data', async () => {
+    it('should throw when calling quickConvertPrioritized with lower block number than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock - 1;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
@@ -550,7 +615,7 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
-    it('should throw when attempts to call quick convert prioritized with higher gas price than what appears in the signing data', async () => {
+    it('should throw when calling quickConvertPrioritized with higher gas price than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
 
@@ -560,7 +625,7 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
-    it('should throw when attempts to call quick convert prioritized with lower gas price than what appears in the signing data', async () => {
+    it('should throw when calling quickConvertPrioritized with lower gas price than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
 
