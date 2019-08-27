@@ -665,6 +665,16 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });
 
+    it('should throw when calling quickConvertPrioritized2 with trusted signature but custom value different than amount', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [101, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+    });
+
     it('should throw when calling quickConvertPrioritized2 with untrusted signature', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
