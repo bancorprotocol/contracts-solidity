@@ -260,6 +260,115 @@ contract('BancorNetwork', accounts => {
         assert(newToken1Balance.lessThan(prevToken1Balance), "sold token balance isn't lower than previous balance");
     });
 
+    it('should be able to quickConvert2 from a non compliant erc-20 to another token', async () => {
+        await erc20Token.approve(converter4.address, 1000);
+        let path = [erc20Token.address, smartToken4.address, smartToken4.address];
+        let prevBalance = await smartToken4.balanceOf.call(accounts[0]);
+        await converter4.quickConvert2(path, 1000, 1, utils.zeroAddress, 0);
+        let postBalance = await smartToken4.balanceOf.call(accounts[0]);
+
+        assert.isAbove(postBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
+    it('should be able to quickConvert2 from a smart token to a non compliant erc-20', async () => {
+        let path = [smartToken4.address, smartToken4.address, erc20Token.address];
+        let prevBalance = await erc20Token.balanceOf.call(accounts[0]);
+        await converter4.quickConvert2(path, 1000, 1, utils.zeroAddress, 0);
+        let postBalance = await erc20Token.balanceOf.call(accounts[0]);
+
+        assert.isAbove(postBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
+    it('verifies that quick buy with a single converter results in increased balance for the buyer', async () => {
+        let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
+
+        let res = await converter1.quickConvert2(smartToken1BuyPath, 100, 1, utils.zeroAddress, 0, { from: accounts[1], value: 100 });
+        let newBalance = await smartToken1.balanceOf.call(accounts[1]);
+
+        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+        // console.log(`gas used for converting eth -> 1: ${res.receipt.cumulativeGasUsed}`);
+    });
+
+    it('verifies that quick buy with multiple converters results in increased balance for the buyer', async () => {
+        let prevBalance = await smartToken2.balanceOf.call(accounts[1]);
+
+        let res = await converter2.quickConvert2(smartToken2BuyPath, 100, 1, utils.zeroAddress, 0, { from: accounts[1], value: 100 });
+        let newBalance = await smartToken2.balanceOf.call(accounts[1]);
+
+        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+        // console.log(`gas used for converting eth -> 1 -> 2: ${res.receipt.cumulativeGasUsed}`);
+    });
+
+    it('verifies that quick buy with minimum return equal to the full expected return amount results in the exact increase in balance for the buyer', async () => {
+        let prevBalance = await smartToken2.balanceOf.call(accounts[0]);
+        
+        let token1Return = (await converter1.getPurchaseReturn(etherToken.address, 100000))[0];
+        let token2Return = (await converter2.getPurchaseReturn(smartToken1.address, token1Return))[0];
+
+        await converter2.quickConvert2(smartToken2BuyPath, 100000, token2Return, utils.zeroAddress, 0, { value: 100000 });
+        let newBalance = await smartToken2.balanceOf.call(accounts[0]);
+
+        assert.equal(token2Return.toNumber(), newBalance.toNumber() - prevBalance.toNumber(), "new balance isn't equal to the expected purchase return");
+    });
+
+    it('should throw when attempting to quick buy and the return amount is lower than the given minimum', async () => {
+        await utils.catchRevert(converter2.quickConvert2(smartToken2BuyPath, 100, 1000000, utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when attempting to quick buy and passing an amount higher than the ETH amount sent with the request', async () => {
+        await utils.catchRevert(converter2.quickConvert2(smartToken2BuyPath, 100001, 1, utils.zeroAddress, 0, { from: accounts[1], value: 100000 }));
+    });
+
+    it('verifies the caller balances after selling directly for ether with a single converter', async () => {
+        let prevETHBalance = web3.eth.getBalance(accounts[0]);
+        let prevTokenBalance = await smartToken1.balanceOf.call(accounts[0]);
+
+        let res = await converter1.quickConvert2(smartToken1SellPath, 10000, 1, utils.zeroAddress, 0);
+        let newETHBalance = web3.eth.getBalance(accounts[0]);
+        let newTokenBalance = await smartToken1.balanceOf.call(accounts[0]);
+
+        let transaction = web3.eth.getTransaction(res.tx);
+        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
+        assert(newETHBalance.greaterThan(prevETHBalance.minus(transactionCost)), "new ETH balance isn't higher than previous balance");
+        assert(newTokenBalance.lessThan(prevTokenBalance), "new token balance isn't lower than previous balance");
+    });
+
+    it('verifies the caller balances after selling directly for ether with multiple converters', async () => {
+        let prevETHBalance = web3.eth.getBalance(accounts[0]);
+        let prevTokenBalance = await smartToken2.balanceOf.call(accounts[0]);
+
+        let res = await converter2.quickConvert2(smartToken2SellPath, 10000, 1, utils.zeroAddress, 0);
+        let newETHBalance = web3.eth.getBalance(accounts[0]);
+        let newTokenBalance = await smartToken2.balanceOf.call(accounts[0]);
+
+        let transaction = web3.eth.getTransaction(res.tx);
+        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
+        assert(newETHBalance.greaterThan(prevETHBalance.minus(transactionCost)), "new ETH balance isn't higher than previous balance");
+        assert(newTokenBalance.lessThan(prevTokenBalance), "new token balance isn't lower than previous balance");
+    });
+
+    it('should throw when attempting to sell directly for ether and the return amount is lower than the given minimum', async () => {
+        await utils.catchRevert(converter2.quickConvert2(smartToken2SellPath, 10000, 20000, utils.zeroAddress, 0));
+    });
+
+    it('verifies the caller balances after converting from one token to another with multiple converters', async () => {
+
+        let path = [smartToken1.address,
+                    smartToken2.address, smartToken2.address,
+                    smartToken2.address, smartToken3.address,
+                    smartToken3.address, smartToken4.address];
+
+        let prevToken1Balance = await smartToken1.balanceOf.call(accounts[0]);
+        let prevToken4Balance = await smartToken4.balanceOf.call(accounts[0]);
+
+        await converter1.quickConvert2(path, 1000, 1, utils.zeroAddress, 0);
+        let newToken1Balance = await smartToken1.balanceOf.call(accounts[0]);
+        let newToken4Balance = await smartToken4.balanceOf.call(accounts[0]);
+
+        assert(newToken4Balance.greaterThan(prevToken4Balance), "bought token balance isn't higher than previous balance");
+        assert(newToken1Balance.lessThan(prevToken1Balance), "sold token balance isn't lower than previous balance");
+    });
+
     it('verifies valid ether token registration', async () => {
         let etherToken1 = await EtherToken.new();
         await etherToken1.deposit({ value: 10000000 });
@@ -516,6 +625,53 @@ contract('BancorNetwork', accounts => {
         let returnByPath = (await bancorNetwork.getReturnByPath.call(path, 100))[0];
         let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
         let res = await converter3.quickConvert(path, 100, 1, { from: accounts[1] });
+        let transaction = web3.eth.getTransaction(res.tx);
+        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
+        let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
+        assert.equal(returnByPath.toNumber(), balanceAfterTransfer.minus(balanceBeforeTransfer).plus(transactionCost).toNumber());
+        // console.log(`gas used for converting 3 -> 2 -> 1 -> eth: ${res.receipt.cumulativeGasUsed}`);
+    });
+
+    it('verifies that getReturnByPath returns the correct amount for cross connector conversion', async () => {
+        await converter2.quickConvert2([etherToken.address, smartToken1.address, smartToken1.address], 1000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 1000 });
+        await smartToken1.approve(converter2.address, 100, { from: accounts[1] });
+        let path = [smartToken1.address, smartToken2.address, smartToken3.address];
+        let returnByPath = (await bancorNetwork.getReturnByPath.call(path, 100))[0];
+        let balanceBeforeTransfer = await smartToken3.balanceOf.call(accounts[1]);
+        await converter2.quickConvert2(path, 100, 1, utils.zeroAddress, 0, { from: accounts[1] });
+        let balanceAfterTransfer = await smartToken3.balanceOf.call(accounts[1]);
+        assert.equal(returnByPath, balanceAfterTransfer - balanceBeforeTransfer);
+    });
+
+    it('verifies that getReturnByPath returns the correct amount for selling the smart token', async () => {
+        await converter1.quickConvert2(smartToken1BuyPath, 100, 1, utils.zeroAddress, 0, { from: accounts[1], value: 100 });
+        let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1SellPath, 100))[0];
+        let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
+        let res = await converter1.quickConvert2(smartToken1SellPath, 100, 1, utils.zeroAddress, 0, { from: accounts[1] });
+        let transaction = web3.eth.getTransaction(res.tx);
+        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
+        let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
+        assert.equal(returnByPath.toNumber(), balanceAfterTransfer.minus(balanceBeforeTransfer).plus(transactionCost).toNumber());
+    });
+
+    it('verifies that getReturnByPath returns the correct amount for selling the smart token through multiple converters', async () => {
+        await converter2.quickConvert2(smartToken2BuyPath, 100, 1, utils.zeroAddress, 0, { from: accounts[1], value: 100 });
+        let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken2SellPath, 100))[0];
+        let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
+        let res = await converter2.quickConvert2(smartToken2SellPath, 100, 1, utils.zeroAddress, 0, { from: accounts[1] });
+        let transaction = web3.eth.getTransaction(res.tx);
+        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
+        let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
+        assert.equal(returnByPath.toNumber(), balanceAfterTransfer.minus(balanceBeforeTransfer).plus(transactionCost).toNumber());
+        // console.log(`gas used for converting 2 -> 1 -> eth: ${res.receipt.cumulativeGasUsed}`);
+    });
+
+    it('verifies that getReturnByPath returns the correct amount for selling the smart token with a long conversion path', async () => {
+        await converter4.quickConvert2([etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken3.address], 1000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 1000 });
+        let path = [smartToken3.address, smartToken2.address, smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address];
+        let returnByPath = (await bancorNetwork.getReturnByPath.call(path, 100))[0];
+        let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
+        let res = await converter3.quickConvert2(path, 100, 1, utils.zeroAddress, 0, { from: accounts[1] });
         let transaction = web3.eth.getTransaction(res.tx);
         let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
         let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
