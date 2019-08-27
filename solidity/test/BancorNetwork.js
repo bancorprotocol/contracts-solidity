@@ -151,7 +151,7 @@ contract('BancorNetwork', accounts => {
         await erc20Token.approve(converter4.address, 1000);
         let path = [erc20Token.address, smartToken4.address, smartToken4.address];
         let prevBalance = await smartToken4.balanceOf.call(accounts[0]);
-        await converter4.quickConvert2(path, 1000, 1, utils.zeroAddress, 0);
+        await converter4.quickConvert(path, 1000, 1);
         let postBalance = await smartToken4.balanceOf.call(accounts[0]);
 
         assert.isAbove(postBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
@@ -160,7 +160,7 @@ contract('BancorNetwork', accounts => {
     it('should be able to convert from a smart token to a non compliant erc-20', async () => {
         let path = [smartToken4.address, smartToken4.address, erc20Token.address];
         let prevBalance = await erc20Token.balanceOf.call(accounts[0]);
-        await converter4.quickConvert2(path, 1000, 1, utils.zeroAddress, 0);
+        await converter4.quickConvert(path, 1000, 1);
         let postBalance = await erc20Token.balanceOf.call(accounts[0]);
 
         assert.isAbove(postBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
@@ -169,7 +169,7 @@ contract('BancorNetwork', accounts => {
     it('verifies that quick buy with a single converter results in increased balance for the buyer', async () => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
-        let res = await converter1.quickConvert2(smartToken1BuyPath, 100, 1, utils.zeroAddress, 0, { from: accounts[1], value: 100 });
+        let res = await converter1.quickConvert(smartToken1BuyPath, 100, 1, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
@@ -179,7 +179,7 @@ contract('BancorNetwork', accounts => {
     it('verifies that quick buy with multiple converters results in increased balance for the buyer', async () => {
         let prevBalance = await smartToken2.balanceOf.call(accounts[1]);
 
-        let res = await converter2.quickConvert2(smartToken2BuyPath, 100, 1, utils.zeroAddress, 0, { from: accounts[1], value: 100 });
+        let res = await converter2.quickConvert(smartToken2BuyPath, 100, 1, { from: accounts[1], value: 100 });
         let newBalance = await smartToken2.balanceOf.call(accounts[1]);
 
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
@@ -196,25 +196,25 @@ contract('BancorNetwork', accounts => {
         let token1Return = (await converter1.getPurchaseReturn(etherToken.address, 100000))[0];
         let token2Return = (await converter2.getPurchaseReturn(smartToken1.address, token1Return))[0];
 
-        await converter2.quickConvert2(smartToken2BuyPath, 100000, token2Return, utils.zeroAddress, 0, { value: 100000 });
+        await converter2.quickConvert(smartToken2BuyPath, 100000, token2Return, { value: 100000 });
         let newBalance = await smartToken2.balanceOf.call(accounts[0]);
 
         assert.equal(token2Return.toNumber(), newBalance.toNumber() - prevBalance.toNumber(), "new balance isn't equal to the expected purchase return");
     });
 
     it('should throw when attempting to quick buy and the return amount is lower than the given minimum', async () => {
-        await utils.catchRevert(converter2.quickConvert2(smartToken2BuyPath, 100, 1000000, utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+        await utils.catchRevert(converter2.quickConvert(smartToken2BuyPath, 100, 1000000, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempting to quick buy and passing an amount higher than the ETH amount sent with the request', async () => {
-        await utils.catchRevert(converter2.quickConvert2(smartToken2BuyPath, 100001, 1, utils.zeroAddress, 0, { from: accounts[1], value: 100000 }));
+        await utils.catchRevert(converter2.quickConvert(smartToken2BuyPath, 100001, 1, { from: accounts[1], value: 100000 }));
     });
 
     it('verifies the caller balances after selling directly for ether with a single converter', async () => {
         let prevETHBalance = web3.eth.getBalance(accounts[0]);
         let prevTokenBalance = await smartToken1.balanceOf.call(accounts[0]);
 
-        let res = await converter1.quickConvert2(smartToken1SellPath, 10000, 1, utils.zeroAddress, 0);
+        let res = await converter1.quickConvert(smartToken1SellPath, 10000, 1);
         let newETHBalance = web3.eth.getBalance(accounts[0]);
         let newTokenBalance = await smartToken1.balanceOf.call(accounts[0]);
 
@@ -228,7 +228,7 @@ contract('BancorNetwork', accounts => {
         let prevETHBalance = web3.eth.getBalance(accounts[0]);
         let prevTokenBalance = await smartToken2.balanceOf.call(accounts[0]);
 
-        let res = await converter2.quickConvert2(smartToken2SellPath, 10000, 1, utils.zeroAddress, 0);
+        let res = await converter2.quickConvert(smartToken2SellPath, 10000, 1);
         let newETHBalance = web3.eth.getBalance(accounts[0]);
         let newTokenBalance = await smartToken2.balanceOf.call(accounts[0]);
 
@@ -239,7 +239,7 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when attempting to sell directly for ether and the return amount is lower than the given minimum', async () => {
-        await utils.catchRevert(converter2.quickConvert2(smartToken2SellPath, 10000, 20000, utils.zeroAddress, 0));
+        await utils.catchRevert(converter2.quickConvert(smartToken2SellPath, 10000, 20000));
     });
 
     it('verifies the caller balances after converting from one token to another with multiple converters', async () => {
@@ -252,7 +252,7 @@ contract('BancorNetwork', accounts => {
         let prevToken1Balance = await smartToken1.balanceOf.call(accounts[0]);
         let prevToken4Balance = await smartToken4.balanceOf.call(accounts[0]);
 
-        await converter1.quickConvert2(path, 1000, 1, utils.zeroAddress, 0);
+        await converter1.quickConvert(path, 1000, 1);
         let newToken1Balance = await smartToken1.balanceOf.call(accounts[0]);
         let newToken4Balance = await smartToken4.balanceOf.call(accounts[0]);
 
@@ -412,21 +412,21 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies that getReturnByPath returns the correct amount for cross connector conversion', async () => {
-        await converter2.quickConvert2([etherToken.address, smartToken1.address, smartToken1.address], 1000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 1000 });
+        await converter2.quickConvert([etherToken.address, smartToken1.address, smartToken1.address], 1000, 1, { from: accounts[1], value: 1000 });
         await smartToken1.approve(converter2.address, 100, { from: accounts[1] });
         let path = [smartToken1.address, smartToken2.address, smartToken3.address];
         let returnByPath = (await bancorNetwork.getReturnByPath.call(path, 100))[0];
         let balanceBeforeTransfer = await smartToken3.balanceOf.call(accounts[1]);
-        await converter2.quickConvert2(path, 100, 1, utils.zeroAddress, 0, { from: accounts[1] });
+        await converter2.quickConvert(path, 100, 1, { from: accounts[1] });
         let balanceAfterTransfer = await smartToken3.balanceOf.call(accounts[1]);
         assert.equal(returnByPath, balanceAfterTransfer - balanceBeforeTransfer);
     });
 
     it('verifies that getReturnByPath returns the correct amount for selling the smart token', async () => {
-        await converter1.quickConvert2(smartToken1BuyPath, 100, 1, utils.zeroAddress, 0, { from: accounts[1], value: 100 });
+        await converter1.quickConvert(smartToken1BuyPath, 100, 1, { from: accounts[1], value: 100 });
         let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1SellPath, 100))[0];
         let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
-        let res = await converter1.quickConvert2(smartToken1SellPath, 100, 1, utils.zeroAddress, 0, { from: accounts[1] });
+        let res = await converter1.quickConvert(smartToken1SellPath, 100, 1, { from: accounts[1] });
         let transaction = web3.eth.getTransaction(res.tx);
         let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
         let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
@@ -434,10 +434,10 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies that getReturnByPath returns the correct amount for selling the smart token through multiple converters', async () => {
-        await converter2.quickConvert2(smartToken2BuyPath, 100, 1, utils.zeroAddress, 0, { from: accounts[1], value: 100 });
+        await converter2.quickConvert(smartToken2BuyPath, 100, 1, { from: accounts[1], value: 100 });
         let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken2SellPath, 100))[0];
         let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
-        let res = await converter2.quickConvert2(smartToken2SellPath, 100, 1, utils.zeroAddress, 0, { from: accounts[1] });
+        let res = await converter2.quickConvert(smartToken2SellPath, 100, 1, { from: accounts[1] });
         let transaction = web3.eth.getTransaction(res.tx);
         let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
         let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
@@ -446,11 +446,11 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies that getReturnByPath returns the correct amount for selling the smart token with a long conversion path', async () => {
-        await converter4.quickConvert2([etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken3.address], 1000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 1000 });
+        await converter4.quickConvert([etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken3.address], 1000, 1, { from: accounts[1], value: 1000 });
         let path = [smartToken3.address, smartToken2.address, smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address];
         let returnByPath = (await bancorNetwork.getReturnByPath.call(path, 100))[0];
         let balanceBeforeTransfer = web3.eth.getBalance(accounts[1]);
-        let res = await converter3.quickConvert2(path, 100, 1, utils.zeroAddress, 0, { from: accounts[1] });
+        let res = await converter3.quickConvert(path, 100, 1, { from: accounts[1] });
         let transaction = web3.eth.getTransaction(res.tx);
         let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
         let balanceAfterTransfer = web3.eth.getBalance(accounts[1]);
@@ -492,7 +492,7 @@ contract('BancorNetwork', accounts => {
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, trustedAddress);
 
-        await converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 });
+        await converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });
@@ -504,7 +504,7 @@ contract('BancorNetwork', accounts => {
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, untrustedAddress);
 
-        await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempts to call quick convert prioritized with wrong path', async () => {
@@ -515,7 +515,7 @@ contract('BancorNetwork', accounts => {
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': wrongPath});
         let result = sign(soliditySha3, trustedAddress);
 
-        await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempts to call quick convert prioritized with wrong amount', async () => {
@@ -525,7 +525,7 @@ contract('BancorNetwork', accounts => {
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, trustedAddress);
 
-        await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 200, 1, [200, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 200, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempts to call quick convert prioritized with higher block number than what appears in the signing data', async () => {
@@ -536,7 +536,7 @@ contract('BancorNetwork', accounts => {
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, trustedAddress);
 
-        await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, wrongBlockNumber, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempts to call quick convert prioritized with lower block number than what appears in the signing data', async () => {
@@ -547,7 +547,7 @@ contract('BancorNetwork', accounts => {
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, trustedAddress);
 
-        await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, wrongBlockNumber, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempts to call quick convert prioritized with higher gas price than what appears in the signing data', async () => {
@@ -557,7 +557,7 @@ contract('BancorNetwork', accounts => {
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, trustedAddress);
 
-        await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
     it('should throw when attempts to call quick convert prioritized with lower gas price than what appears in the signing data', async () => {
@@ -567,6 +567,6 @@ contract('BancorNetwork', accounts => {
         let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
         let result = sign(soliditySha3, trustedAddress);
 
-        await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+        await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 });
