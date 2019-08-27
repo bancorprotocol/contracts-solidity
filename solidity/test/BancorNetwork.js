@@ -106,6 +106,8 @@ contract('BancorNetwork', accounts => {
         smartToken4 = await SmartToken.new('Token4', 'TKN4', 2);
         await smartToken4.issue(accounts[0], 2500000);
 
+        await contractRegistry.registerAddress(await contractIds.BNT_TOKEN.call(), smartToken1.address);
+
         erc20Token = await TestNonStandardERC20Token.new('ERC20Token', 'ERC5', 1000000);
 
         await nonStandardTokenRegistry.setAddress(smartToken2.address, true);
@@ -390,7 +392,7 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(bancorNetwork.claimAndConvertFor(smartToken1BuyPath, 10000, 1, accounts[1]));
     });
 
-    it('verifies that claimAndConvert transfers the converted amount correctly with claimAndConvert', async () => {
+    it('verifies that claimAndConvert transfers the converted amount correctly', async () => {
         await etherToken.approve(bancorNetwork.address, 10000);
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[0]);
         await bancorNetwork.claimAndConvert(smartToken1BuyPath, 10000, 1);
@@ -730,7 +732,7 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(bancorNetwork.claimAndConvertFor2(smartToken1BuyPath, 10000, 1, accounts[1], utils.zeroAddress, 0));
     });
 
-    it('verifies that claimAndConvert2 transfers the converted amount correctly with claimAndConvert2', async () => {
+    it('verifies that claimAndConvert2 transfers the converted amount correctly', async () => {
         await etherToken.approve(bancorNetwork.address, 10000);
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[0]);
         await bancorNetwork.claimAndConvert2(smartToken1BuyPath, 10000, 1, utils.zeroAddress, 0);
@@ -1075,5 +1077,30 @@ contract('BancorNetwork', accounts => {
         let result = sign(soliditySha3, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+    });
+
+    it('verifies that convertFor2 transfers the affiliate fee correctly', async () => {
+        let path = smartToken1BuyPath;
+        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[2]);
+        await bancorNetwork.convertFor2(path, 10000, 1, accounts[1], accounts[2], 10000, { value: 10000 });
+        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[2]);
+        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
+    });
+
+    it('verifies that convert2 transfers the affiliate fee correctly', async () => {
+        let path = smartToken1BuyPath;
+        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[2]);
+        await bancorNetwork.convert2(path, 10000, 1, accounts[2], 10000, { from: accounts[1], value: 10000 });
+        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[2]);
+        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
+    });
+
+    it('verifies that claimAndConvert2 transfers the affiliate fee correctly', async () => {
+        let path = smartToken1BuyPath;
+        await etherToken.approve(bancorNetwork.address, 10000);
+        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[2]);
+        await bancorNetwork.claimAndConvert2(path, 10000, 1, accounts[2], 10000);
+        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[2]);
+        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
 });
