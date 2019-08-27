@@ -1399,4 +1399,294 @@ contract('BancorConverter', accounts => {
         // re register address
         await contractRegistry.registerAddress(contractRegistryId, contractRegistry.address)
     });
+
+    it('verifies that getReturn returns the same amount as buy -> sell when converting between 2 connectors', async () => {
+        let converter = await initConverter(accounts, true);
+        let returnAmount = (await converter.getReturn.call(connectorToken.address, connectorToken2.address, 500))[0];
+
+        await connectorToken.approve(converter.address, 500);
+        let purchaseRes = await converter.convert2(connectorToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0);
+        let purchaseAmount = getConversionAmount(purchaseRes);
+        let saleRes = await converter.convert2(tokenAddress, connectorToken2.address, purchaseAmount, 1, utils.zeroAddress, 0);
+        let saleAmount = getConversionAmount(saleRes);
+
+        // converting directly between 2 tokens is more efficient than buying and then selling
+        // which might result in a very small rounding difference
+        assert(returnAmount.minus(saleAmount).absoluteValue().toNumber() < 2);
+    });
+
+    it('verifies that Conversion event returns conversion fee after buying', async () => {
+        let converter = await initConverter(accounts, true, 5000);
+        await converter.setConversionFee(3000);
+        await connectorToken.approve(converter.address, 500);
+        let purchaseRes = await converter.convert2(connectorToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0);
+        assert(purchaseRes.logs.length > 0 && purchaseRes.logs[0].event == 'Conversion');
+        assert('_conversionFee' in purchaseRes.logs[0].args);
+    });
+
+    it('verifies that Conversion event returns conversion fee after selling', async () => {
+        let converter = await initConverter(accounts, true, 5000);
+        await converter.setConversionFee(3000);
+        await connectorToken.approve(converter.address, 500);
+        let saleRes = await converter.convert2(tokenAddress, connectorToken.address, 500, 1, utils.zeroAddress, 0);
+        assert(saleRes.logs.length > 0 && saleRes.logs[0].event == 'Conversion');
+        assert('_conversionFee' in saleRes.logs[0].args);
+    });
+
+    it('should throw when attempting to get the return with an invalid from token adress', async () => {
+        let converter = await initConverter(accounts, true);
+
+        await utils.catchRevert(converter.getReturn.call('0x0', connectorToken2.address, 500));
+    });
+
+    it('should throw when attempting to get the return with an invalid to token address', async () => {
+        let converter = await initConverter(accounts, true);
+
+        await utils.catchRevert(converter.getReturn.call(connectorToken.address, '0x0', 500));
+    });
+
+    it('should throw when attempting to get the return with identical from/to addresses', async () => {
+        let converter = await initConverter(accounts, true);
+
+        await utils.catchRevert(converter.getReturn.call(connectorToken.address, connectorToken.address, 500));
+    });
+
+    it('should throw when attempting to get the purchase return while the converter is not active', async () => {
+        let converter = await initConverter(accounts, false);
+
+        await utils.catchRevert(converter.getPurchaseReturn.call(connectorToken.address, 500));
+    });
+
+    it('should throw when attempting to get the purchase return with a non connector address', async () => {
+        let converter = await initConverter(accounts, true);
+
+        await utils.catchRevert(converter.getPurchaseReturn.call(tokenAddress, 500));
+    });
+
+    it('should throw when attempting to get the purchase return while selling the connector is disabled', async () => {
+        let converter = await initConverter(accounts, true);
+        await converter.disableConnectorSale(connectorToken.address, true);
+
+        await utils.catchRevert(converter.getPurchaseReturn.call(connectorToken.address, 500));
+    });
+
+    it('should throw when attempting to get the sale return while the converter is not active', async () => {
+        let converter = await initConverter(accounts, false);
+
+        await utils.catchRevert(converter.getSaleReturn.call(connectorToken.address, 500));
+    });
+
+    it('should throw when attempting to get the sale return with a non connector address', async () => {
+        let converter = await initConverter(accounts, true);
+
+        await utils.catchRevert(converter.getSaleReturn.call(tokenAddress, 500));
+    });
+
+    it('verifies that convert2 returns a valid amount', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+        let res = await converter.convert2(connectorToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0);
+        let conversionAmount = getConversionAmount(res);
+        assert.isNumber(conversionAmount);
+        assert.notEqual(conversionAmount, 0);
+    });
+
+    it('verifies that selling right after buying does not result in an amount greater than the original purchase amount', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+        let purchaseRes = await converter.convert2(connectorToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0);
+        let purchaseAmount = getConversionAmount(purchaseRes);
+        let saleRes = await converter.convert2(tokenAddress, connectorToken.address, purchaseAmount, 1, utils.zeroAddress, 0);
+        let saleAmount = getConversionAmount(saleRes);
+        assert(saleAmount <= 500);
+    });
+
+    it('verifies that buying right after selling does not result in an amount greater than the original sale amount', async () => {
+        let converter = await initConverter(accounts, true);
+        let saleRes = await converter.convert2(tokenAddress, connectorToken.address, 500, 1, utils.zeroAddress, 0);
+        let saleAmount = getConversionAmount(saleRes);
+        await connectorToken.approve(converter.address, 500);
+        let purchaseRes = await converter.convert2(connectorToken.address, tokenAddress, saleAmount, 1, utils.zeroAddress, 0);
+        let purchaseAmount = getConversionAmount(purchaseRes);
+
+        assert(purchaseAmount <= 500);
+    });
+
+    it('should throw when attempting to convert2 with an invalid from token adress', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+
+        await utils.catchRevert(converter.convert2('0x0', connectorToken2.address, 500, 1, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to convert2 with an invalid to token address', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+
+        await utils.catchRevert(converter.convert2(connectorToken.address, '0x0', 500, 1, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to convert2 with identical from/to addresses', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+
+        await utils.catchRevert(converter.convert2(connectorToken.address, connectorToken.address, 500, 0, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to convert2 with 0 minimum requested amount', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+
+        await utils.catchRevert(converter.convert2(connectorToken.address, connectorToken2.address, 500, 2000, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to convert2 when the return is smaller than the minimum requested amount', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+
+        await utils.catchRevert(converter.convert2(connectorToken.address, connectorToken2.address, 500, 2000, utils.zeroAddress, 0));
+    });
+
+    it('verifies balances after buy', async () => {
+        let converter = await initConverter(accounts, true);
+
+        let tokenPrevBalance = await token.balanceOf.call(accounts[0]);
+        let connectorTokenPrevBalance = await connectorToken.balanceOf.call(accounts[0]);
+
+        await connectorToken.approve(converter.address, 500);
+        let purchaseRes = await converter.convert2(connectorToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0);
+        let purchaseAmount = getConversionAmount(purchaseRes);
+
+        let connectorTokenNewBalance = await connectorToken.balanceOf.call(accounts[0]);
+        assert.equal(connectorTokenNewBalance.toNumber(), connectorTokenPrevBalance.minus(500).toNumber());
+
+        let tokenNewBalance = await token.balanceOf.call(accounts[0]);
+        assert.equal(tokenNewBalance.toNumber(), tokenPrevBalance.plus(purchaseAmount).toNumber());
+    });
+
+    it('should throw when attempting to buy while the converter is not active', async () => {
+        let converter = await initConverter(accounts, false);
+        await connectorToken.approve(converter.address, 500);
+
+        await utils.catchRevert(converter.convert2(connectorToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to buy with a non connector address', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+
+        await utils.catchRevert(converter.convert2(tokenAddress, tokenAddress, 500, 1, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to buy while the purchase yields 0 return', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+
+        await utils.catchRevert(converter.convert2(connectorToken.address, tokenAddress, 0, 1, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to convert2 while conversions are disabled', async () => {
+        let converter = await initConverter(accounts, true);
+        await converter.disableConversions(true);
+        await connectorToken.approve(converter.address, 500);
+
+        await utils.catchRevert(converter.convert2(connectorToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to buy with gas price higher than the universal limit', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+
+        await utils.catchRevert(converter.convert2(connectorToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0, { gasPrice: gasPriceBadHigh }));
+    });
+
+    it('should throw when attempting to buy with 0 minimum requested amount', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+
+        await utils.catchRevert(converter.convert2(connectorToken.address, tokenAddress, 500, 0, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to buy while the connector sale are disabled', async () => {
+        let converter = await initConverter(accounts, true);
+        await connectorToken.approve(converter.address, 500);
+        await converter.disableConnectorSale(connectorToken.address, true);
+
+        await utils.catchRevert(converter.convert2(connectorToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to buy without first approving the converter to transfer from the buyer account in the connector contract', async () => {
+        let converter = await initConverter(accounts, true);
+
+        await utils.catchRevert(converter.convert2(connectorToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0));
+    });
+
+    it('verifies balances after sell', async () => {
+        let converter = await initConverter(accounts, true);
+
+        let tokenPrevBalance = await token.balanceOf.call(accounts[0]);
+        let connectorTokenPrevBalance = await connectorToken.balanceOf.call(accounts[0]);
+
+        let saleRes = await converter.convert2(tokenAddress, connectorToken.address, 500, 1, utils.zeroAddress, 0);
+        let saleAmount = getConversionAmount(saleRes);
+
+        let connectorTokenNewBalance = await connectorToken.balanceOf.call(accounts[0]);
+        assert.equal(connectorTokenNewBalance.toNumber(), connectorTokenPrevBalance.plus(saleAmount).toNumber());
+
+        let tokenNewBalance = await token.balanceOf.call(accounts[0]);
+        assert.equal(tokenNewBalance.toNumber(), tokenPrevBalance.minus(500).toNumber());
+    });
+
+    it('should throw when attempting to sell while the converter is not active', async () => {
+        let converter = await initConverter(accounts, false);
+
+        await utils.catchRevert(converter.convert2(tokenAddress, connectorToken.address, 500, 1, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to sell with a non connector address', async () => {
+        let converter = await initConverter(accounts, true);
+
+        await utils.catchRevert(converter.convert2(tokenAddress, tokenAddress, 500, 1, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to sell while the sale yields 0 return', async () => {
+        let converter = await initConverter(accounts, true);
+
+        await utils.catchRevert(converter.convert2(tokenAddress, connectorToken.address, 0, 1, utils.zeroAddress, 0));
+    });
+
+    it('should throw when attempting to sell with amount greater then the seller balance', async () => {
+        let converter = await initConverter(accounts, true);
+
+        await utils.catchRevert(converter.convert2(tokenAddress, connectorToken.address, 30000, 1, utils.zeroAddress, 0));
+    });
+
+    it('verifies that getReturn returns the same amount as getCrossConnectorReturn when converting between 2 connectors', async () => {
+        let converter = await initConverter(accounts, true);
+        let returnAmount = (await converter.getReturn.call(connectorToken.address, connectorToken2.address, 500))[0];
+        let returnAmount2 = (await converter.getCrossConnectorReturn.call(connectorToken.address, connectorToken2.address, 500))[0];
+        assert.equal(returnAmount.toNumber(), returnAmount2.toNumber());
+    });
+
+    it('verifies that getCrossConnectorReturn returns the same amount as converting between 2 connectors', async () => {
+        let converter = await initConverter(accounts, true);
+        let returnAmount = (await converter.getCrossConnectorReturn.call(connectorToken.address, connectorToken2.address, 500))[0];
+
+        await connectorToken.approve(converter.address, 500);
+        let convertRes = await converter.convert2(connectorToken.address, connectorToken2.address, 500, 1, utils.zeroAddress, 0);
+        let returnAmount2 = getConversionAmount(convertRes);
+
+        assert.equal(returnAmount.toNumber(), returnAmount2);
+    });
+
+    it('verifies that getCrossConnectorReturn returns the same amount as converting between 2 connectors', async () => {
+        let converter = await initConverter(accounts, true);
+        let returnAmount = (await converter.getCrossConnectorReturn.call(connectorToken.address, connectorToken2.address, 500))[0];
+
+        await connectorToken.approve(converter.address, 500);
+        let convertRes = await converter.convert2(connectorToken.address, connectorToken2.address, 500, 1, utils.zeroAddress, 0);
+        let returnAmount2 = getConversionAmount(convertRes);
+
+        assert.equal(returnAmount.toNumber(), returnAmount2);
+    });
 });
