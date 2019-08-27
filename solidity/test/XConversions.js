@@ -37,13 +37,13 @@ let ethBntPath, bntEthPath, erc20TokenBntPath, bntErc20Path
 
 let reporter1, reporter2, reporter3, signerAddress, nonSignerAddress
 
-contract('XConversions', async accounts => {
+contract("XConversions", accounts => {
     // initialize BancorX contracts
     before(async () => {
         await initBancorNetwork(accounts)
     })
 
-    it('should be able to xConvert from eth', async () => {
+    it("should be able to xConvertPrioritized from eth with a valid signature", async () => {
         const maximumBlock = web3.eth.blockNumber + 100
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = ethBntPath
@@ -91,7 +91,7 @@ contract('XConversions', async accounts => {
         assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
     })
 
-    it("shouldn't be able to xConvert with an invalid signature", async () => {
+    it("shouldn't be able to xConvertPrioritized with an invalid signature", async () => {
         const maximumBlock = web3.eth.blockNumber + 100
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = ethBntPath
@@ -121,7 +121,7 @@ contract('XConversions', async accounts => {
         ))
     })
 
-    it('should be able to xConvert from eth', async () => {
+    it("should be able to xConvertPrioritized2 from eth with a valid signature", async () => {
         const maximumBlock = web3.eth.blockNumber + 100
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = ethBntPath
@@ -163,7 +163,7 @@ contract('XConversions', async accounts => {
         assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
     })
 
-    it("shouldn't be able to xConvert with an invalid signature", async () => {
+    it("shouldn't be able to xConvertPrioritized2 with an invalid signature", async () => {
         const maximumBlock = web3.eth.blockNumber + 100
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = ethBntPath
@@ -190,7 +190,7 @@ contract('XConversions', async accounts => {
         ))
     })
 
-    it('should be able to xConvert from eth without being prioritized', async () => {
+    it("should be able to xConvert from eth with a valid signature", async () => {
         const path = ethBntPath
         const amount = web3.toWei('1')
 
@@ -219,7 +219,7 @@ contract('XConversions', async accounts => {
         assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
     })
 
-    it('should be able to xConvert from an ERC20 without being prioritized', async () => {
+    it("should be able to xConvert from an ERC20 with a valid signature", async () => {
         const maximumBlock = web3.eth.blockNumber + 100
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = erc20TokenBntPath
@@ -253,7 +253,7 @@ contract('XConversions', async accounts => {
         assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
     })
 
-    it('should be able to completeXConversion to eth', async () => {
+    it("should be able to completeXConversion to eth with a valid signature", async () => {
         const txId = getId()
         const xTransferId = getId()
         const amount = web3.toWei('10') // releasing 10 BNT
@@ -279,7 +279,7 @@ contract('XConversions', async accounts => {
         assert(currBalance.greaterThan(prevBalance))
     })
 
-    it('should be able to completeXConversion to an ERC20', async () => {
+    it("should be able to completeXConversion to an ERC20 with a valid signature", async () => {
         const txId = getId()
         const xTransferId = getId()
         const maximumBlock = web3.eth.blockNumber + 100
@@ -395,7 +395,7 @@ contract('XConversions', async accounts => {
         ))
     })
 
-    it('should be able to completeXConversion2 to eth', async () => {
+    it("should be able to completeXConversion2 to eth with a valid signature", async () => {
         const txId = getId()
         const xTransferId = getId()
         const amount = web3.toWei('10') // releasing 10 BNT
@@ -418,7 +418,7 @@ contract('XConversions', async accounts => {
         assert(currBalance.greaterThan(prevBalance))
     })
 
-    it('should be able to completeXConversion2 to an ERC20', async () => {
+    it("should be able to completeXConversion2 to an ERC20 with a valid signature", async () => {
         const txId = getId()
         const xTransferId = getId()
         const maximumBlock = web3.eth.blockNumber + 100
