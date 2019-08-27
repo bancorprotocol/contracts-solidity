@@ -26,6 +26,8 @@ const MIN_REQUIRED_REPORTS = '3'
 const BNT_AMOUNT = '77492920201018469141404133'
 const BNT_RESERVE_AMOUNT = '45688650129186275318509'
 
+const ZERO_BYTES32 = '0x'.padEnd(66, '0');
+
 // this is just gibberish bytes32
 const eosAddress = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c000000000000000000000000'
 const EOS_BLOCKCHAIN = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c000000000000000000000000'
@@ -115,8 +117,8 @@ contract("XConversions", accounts => {
             '0',                                
             0,                                                    
             0,                                                      
-            0,                                                      
-            0,                                                      
+            ZERO_BYTES32,                                                      
+            ZERO_BYTES32,                                                      
             { from: accounts[5], value: amount }
         )
 
@@ -131,8 +133,8 @@ contract("XConversions", accounts => {
             '0',                                                      
             0,                                                    
             0,                                                      
-            0,                                                      
-            0,                                                      
+            ZERO_BYTES32,                                                      
+            ZERO_BYTES32,                                                      
             { from: accounts[5], value: amount }
         )
 
@@ -357,10 +359,10 @@ contract("XConversions", accounts => {
             path,                                                     // _path
             '1',                                                      // _minReturn
             xTransferId,                                              // _xTransferId
-            '0',                                                      // _block
-            '0',                                                      // _v
-            '0',                                                      // _r
-            '0',                                                      // _s
+            0,                                                        // _block
+            0,                                                        // _v
+            ZERO_BYTES32,                                             // _r
+            ZERO_BYTES32,                                             // _s
             { from: accounts[5] }
         )
 
