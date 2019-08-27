@@ -350,7 +350,7 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(bancorNetwork.convertFor(longBuyPath, 10000, 1, accounts[1], { value: 10000 }));
     });
 
-    it('verifies that convertFor transfers the converted amount correctly', async () => {
+    it('verifies that claimAndConvertFor transfers the converted amount correctly', async () => {
         await etherToken.approve(bancorNetwork.address, 10000);
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
         await bancorNetwork.claimAndConvertFor(smartToken1BuyPath, 10000, 1, accounts[1]);
@@ -362,7 +362,7 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(bancorNetwork.claimAndConvertFor(smartToken1BuyPath, 10000, 1, accounts[1]));
     });
 
-    it('verifies that convertFor transfers the converted amount correctly with claimAndConvert', async () => {
+    it('verifies that claimAndConvert transfers the converted amount correctly with claimAndConvert', async () => {
         await etherToken.approve(bancorNetwork.address, 10000);
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[0]);
         await bancorNetwork.claimAndConvert(smartToken1BuyPath, 10000, 1);
