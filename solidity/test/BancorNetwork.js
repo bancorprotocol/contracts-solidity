@@ -562,6 +562,14 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });
 
+    it('verifies quickConvertPrioritized without trusted signature', async () => {
+        let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
+
+        await converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, 0, 0, 0, 0, { from: accounts[1], value: 100 });
+        let newBalance = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
     it('should throw when calling quickConvertPrioritized with untrusted signature', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
@@ -645,6 +653,14 @@ contract('BancorNetwork', accounts => {
         let result = sign(soliditySha3, trustedAddress);
 
         await converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 });
+        let newBalance = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
+    it('verifies quickConvertPrioritized2 without trusted signature', async () => {
+        let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
+
+        await converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [], utils.zeroAddress, 0, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });
