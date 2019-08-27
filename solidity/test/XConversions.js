@@ -91,7 +91,55 @@ contract("XConversions", accounts => {
         assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
     })
 
-    it("shouldn't be able to xConvertPrioritized with an invalid signature", async () => {
+    it("should be able to xConvertPrioritized from eth without a valid signature", async () => {
+        const maximumBlock = web3.eth.blockNumber + 100
+        const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+        const path = ethBntPath
+        const amount = web3.toWei('1')
+        const { v, r, s } = signConversionDetails(
+            maximumBlock,
+            gasPrice,
+            accounts[5],
+            accounts[5],
+            amount,
+            path,
+            signerAddress
+        )
+
+        const retAmount = await bancorNetwork.xConvertPrioritized.call(
+            path,                         
+            amount,               
+            '1',                                
+            EOS_BLOCKCHAIN,                     
+            eosAddress,                         
+            '0',                                
+            0,                                                    
+            0,                                                      
+            0,                                                      
+            0,                                                      
+            { from: accounts[5], value: amount }
+        )
+
+        const prevBalance = await bntToken.balanceOf(bancorX.address)
+
+        const res = await bancorNetwork.xConvertPrioritized(
+            path,                                               
+            amount,                                     
+            '1',                                                      
+            EOS_BLOCKCHAIN,                                           
+            eosAddress,                                               
+            '0',                                                      
+            0,                                                    
+            0,                                                      
+            0,                                                      
+            0,                                                      
+            { from: accounts[5], value: amount }
+        )
+
+        assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
+    })
+
+    it("shouldn't be able to xConvertPrioritized from eth with an invalid signature", async () => {
         const maximumBlock = web3.eth.blockNumber + 100
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = ethBntPath
@@ -163,7 +211,49 @@ contract("XConversions", accounts => {
         assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
     })
 
-    it("shouldn't be able to xConvertPrioritized2 with an invalid signature", async () => {
+    it("should be able to xConvertPrioritized2 from eth without a valid signature", async () => {
+        const maximumBlock = web3.eth.blockNumber + 100
+        const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+        const path = ethBntPath
+        const amount = web3.toWei('1')
+        const { v, r, s } = signConversionDetails(
+            maximumBlock,
+            gasPrice,
+            accounts[5],
+            accounts[5],
+            amount,
+            path,
+            signerAddress
+        )
+
+        const retAmount = await bancorNetwork.xConvertPrioritized2.call(
+            path,                         
+            amount,               
+            '1',                                
+            EOS_BLOCKCHAIN,                     
+            eosAddress,                         
+            '0',                                
+            [amount, maximumBlock, v, r, s],
+            { from: accounts[5], value: amount }
+        )
+
+        const prevBalance = await bntToken.balanceOf(bancorX.address)
+
+        const res = await bancorNetwork.xConvertPrioritized2(
+            path,                                               
+            amount,                                     
+            '1',                                                      
+            EOS_BLOCKCHAIN,                                           
+            eosAddress,                                               
+            '0',                                                      
+            [],
+            { from: accounts[5], value: amount }
+        )
+
+        assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
+    })
+
+    it("shouldn't be able to xConvertPrioritized2 from eth with an invalid signature", async () => {
         const maximumBlock = web3.eth.blockNumber + 100
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = ethBntPath
@@ -190,7 +280,7 @@ contract("XConversions", accounts => {
         ))
     })
 
-    it("should be able to xConvert from eth with a valid signature", async () => {
+    it("should be able to xConvert from eth", async () => {
         const path = ethBntPath
         const amount = web3.toWei('1')
 
@@ -219,7 +309,7 @@ contract("XConversions", accounts => {
         assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
     })
 
-    it("should be able to xConvert from an ERC20 with a valid signature", async () => {
+    it("should be able to xConvert from an ERC20", async () => {
         const maximumBlock = web3.eth.blockNumber + 100
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = erc20TokenBntPath
@@ -253,7 +343,7 @@ contract("XConversions", accounts => {
         assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
     })
 
-    it("should be able to completeXConversion to eth with a valid signature", async () => {
+    it("should be able to completeXConversion to eth without a valid signature", async () => {
         const txId = getId()
         const xTransferId = getId()
         const amount = web3.toWei('10') // releasing 10 BNT
@@ -395,7 +485,7 @@ contract("XConversions", accounts => {
         ))
     })
 
-    it("should be able to completeXConversion2 to eth with a valid signature", async () => {
+    it("should be able to completeXConversion2 to eth without a valid signature", async () => {
         const txId = getId()
         const xTransferId = getId()
         const amount = web3.toWei('10') // releasing 10 BNT
