@@ -924,7 +924,7 @@ contract('BancorConverter', accounts => {
         assert.equal(returnAmount.toNumber(), returnAmount2.toNumber());
     });
 
-    it('verifies that getCrossConnectorReturn returns the same amount as convert between 2 connectors', async () => {
+    it('verifies that getCrossConnectorReturn returns the same amount as converting between 2 connectors', async () => {
         let converter = await initConverter(accounts, true);
         let returnAmount = (await converter.getCrossConnectorReturn.call(connectorToken.address, connectorToken2.address, 500))[0];
 
@@ -935,7 +935,7 @@ contract('BancorConverter', accounts => {
         assert.equal(returnAmount.toNumber(), returnAmount2);
     });
 
-    it('verifies that getCrossConnectorReturn returns the same amount as convert between 2 connectors', async () => {
+    it('verifies that getCrossConnectorReturn returns the same amount as converting between 2 connectors', async () => {
         let converter = await initConverter(accounts, true);
         let returnAmount = (await converter.getCrossConnectorReturn.call(connectorToken.address, connectorToken2.address, 500))[0];
 
