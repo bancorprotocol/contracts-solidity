@@ -548,7 +548,7 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(bancorNetwork.getReturnByPath.call(longBuyPath, 1000));
     });
 
-    it('verifies prioritized quick buy with trusted signature', async () => {
+    it('verifies quickConvertPrioritized with trusted signature', async () => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         let maximumBlock = web3.eth.blockNumber + 100;
@@ -635,7 +635,7 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
-    it('verifies prioritized quick buy with trusted signature', async () => {
+    it('verifies quickConvertPrioritized2 with trusted signature', async () => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         let maximumBlock = web3.eth.blockNumber + 100;
