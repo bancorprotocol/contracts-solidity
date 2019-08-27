@@ -282,6 +282,34 @@ contract("XConversions", accounts => {
         ))
     })
 
+    it("shouldn't be able to xConvertPrioritized2 from eth with a valid signature but custom value different than amount", async () => {
+        const maximumBlock = web3.eth.blockNumber + 100
+        const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+        const path = ethBntPath
+        const amount = web3.toWei('1')
+        const customVal = amount + '1'
+        const { v, r, s } = signConversionDetails(
+            maximumBlock,
+            gasPrice,
+            accounts[5],
+            accounts[5],
+            amount,
+            path,
+            signerAddress
+        )
+
+        await utils.catchRevert(bancorNetwork.xConvertPrioritized2(
+            path,                                               
+            amount,                                     
+            '1',                                                      
+            EOS_BLOCKCHAIN,                                           
+            eosAddress,                                               
+            '0',                                                      
+            [customVal, maximumBlock, v, r, s],
+            { from: accounts[5], value: amount }
+        ))
+    })
+
     it("should be able to xConvert from eth", async () => {
         const path = ethBntPath
         const amount = web3.toWei('1')
@@ -610,6 +638,36 @@ contract("XConversions", accounts => {
             '1',                                               
             xTransferId2,                                       
             [xTransferId2, maximumBlock, v, r, s],
+            { from: accounts[5] }
+        ))
+    })
+
+    it("shouldn't be able to completeXConversion2 to an ERC20 with a valid signature but custom value different than xTransferId", async () => {
+        const txId = getId()
+        const xTransferId = getId()
+        const customVal = xTransferId + '1'
+        const maximumBlock = web3.eth.blockNumber + 100
+        const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+        const amount = web3.toWei('10') // releasing 10 BNT
+        const path = bntErc20Path
+
+        const { v, r, s } = signConversionDetails(
+            maximumBlock,
+            gasPrice,
+            accounts[5],
+            bntConverter.address,
+            xTransferId,
+            path,
+            signerAddress
+        )
+
+        await reportAndRelease(accounts[5], amount, txId, EOS_BLOCKCHAIN, xTransferId)
+
+        await utils.catchRevert(bntConverter.completeXConversion2(
+            path,                                              
+            '1',                                               
+            xTransferId,                                       
+            [customVal, maximumBlock, v, r, s],
             { from: accounts[5] }
         ))
     })
