@@ -426,7 +426,7 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
 
-    it('verifies converting with a path that starts with a smart token and ends with another smart token', async () => {
+    it('verifies claimAndConvertFor with a path that starts with a smart token and ends with another smart token', async () => {
         await smartToken4.approve(bancorNetwork.address, 10000);
         let path = [smartToken4.address, smartToken3.address, smartToken3.address, smartToken2.address, smartToken2.address];
         let balanceBeforeTransfer = await smartToken2.balanceOf.call(accounts[1]);
