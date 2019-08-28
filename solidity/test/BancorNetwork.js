@@ -645,6 +645,101 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
 
+    it('verifies convertForPrioritized3 with trusted signature', async () => {
+        let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
+
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
+        let newBalance = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
+    it('verifies convertForPrioritized3 without trusted signature', async () => {
+        let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
+
+        await bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 0, 0, 0, 0, 0, { from: accounts[1], value: 100 });
+        let newBalance = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
+    it('should throw when calling convertForPrioritized3 with untrusted signature', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, untrustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized3 with wrong path', async () => {
+        let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': wrongPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized3 with wrong amount', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 200, 1, accounts[1], 200, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized3 with higher block number than what appears in the signing data', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let wrongBlockNumber = maximumBlock + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized3 with lower block number than what appears in the signing data', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let wrongBlockNumber = maximumBlock - 1;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized3 with higher gas price than what appears in the signing data', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized3 with lower gas price than what appears in the signing data', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
+    });
+
     it('verifies that convertFor2 transfers the converted amount correctly', async () => {
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
         await bancorNetwork.convertFor2(smartToken1BuyPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 });
@@ -1077,6 +1172,101 @@ contract('BancorNetwork', accounts => {
         let result = sign(soliditySha3, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+    });
+
+    it('verifies convertForPrioritized4 with trusted signature', async () => {
+        let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
+
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 });
+        let newBalance = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
+    it('verifies convertForPrioritized4 without trusted signature', async () => {
+        let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
+
+        await bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [], utils.zeroAddress, 0, { from: accounts[1], value: 100 });
+        let newBalance = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
+    it('should throw when calling convertForPrioritized4 with untrusted signature', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, untrustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized4 with wrong path', async () => {
+        let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': wrongPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized4 with wrong amount', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 200, 1, accounts[1], [200, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized4 with higher block number than what appears in the signing data', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let wrongBlockNumber = maximumBlock + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, wrongBlockNumber, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized4 with lower block number than what appears in the signing data', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let wrongBlockNumber = maximumBlock - 1;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, wrongBlockNumber, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized4 with higher gas price than what appears in the signing data', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized4 with lower gas price than what appears in the signing data', async () => {
+        let maximumBlock = web3.eth.blockNumber + 100;
+        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
+
+        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
+        let result = sign(soliditySha3, trustedAddress);
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
 
     it('verifies that convertFor2 transfers the affiliate fee correctly', async () => {
