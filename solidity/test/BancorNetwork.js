@@ -1111,4 +1111,17 @@ contract('BancorNetwork', accounts => {
         let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[2]);
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
+
+    it('verifies that setMaxAffiliateFee can set the maximum affiliate-fee', async () => {
+        let oldMaxAffiliateFee = await bancorNetwork.maxAffiliateFee.call();
+        await bancorNetwork.setMaxAffiliateFee(oldMaxAffiliateFee.plus(1));
+        let newMaxAffiliateFee = await bancorNetwork.maxAffiliateFee.call();
+        await bancorNetwork.setMaxAffiliateFee(oldMaxAffiliateFee);
+        assert.equal(newMaxAffiliateFee.toString(), oldMaxAffiliateFee.plus(1));
+    });
+
+    it('should throw when calling setMaxAffiliateFee with a non-owner or an illegal value', async () => {
+        await utils.catchRevert(bancorNetwork.setMaxAffiliateFee("1000000", { from: accounts[1] }));
+        await utils.catchRevert(bancorNetwork.setMaxAffiliateFee("1000001", { from: accounts[0] }));
+    });
 });
