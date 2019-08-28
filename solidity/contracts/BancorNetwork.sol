@@ -110,10 +110,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         curve signature, returns zero on error.
         notice that the signature is valid only for one conversion
         and expires after the give block.
-
-        @return true if the signer is verified
     */
-    function verifyTrustedSender(IERC20Token[] _path, address _addr, uint256[] memory _signature) private returns (bool) {
+    function verifyTrustedSender(IERC20Token[] _path, address _addr, uint256[] memory _signature) private {
         uint256 blockNumber = _signature[1];
 
         // check that the current block number doesn't exceeded the maximum allowed with the current signature
@@ -125,15 +123,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         // check that it is the first conversion with the given signature
         require(!conversionHashes[hash]);
 
-        // recover the signing address and compar it to the trusted signer address that was set in the contract
+        // verify that the signing address is identical to the trusted signer address in the contract
         bytes32 prefixedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
-        bool verified = ecrecover(prefixedHash, uint8(_signature[2]), bytes32(_signature[3]), bytes32(_signature[4])) == signerAddress;
+        require(ecrecover(prefixedHash, uint8(_signature[2]), bytes32(_signature[3]), bytes32(_signature[4])) == signerAddress);
 
-        // if the signer is the trusted signer - mark the hash so that it can't be used multiple times
-        if (verified)
-            conversionHashes[hash] = true;
-
-        return verified;
+        // mark the hash so that it can't be used multiple times
+        conversionHashes[hash] = true;
     }
 
     /**
@@ -662,7 +657,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         if (_signature.length >= 5) {
             // verify signature
-            require(verifyTrustedSender(_path, _sender, _signature));
+            verifyTrustedSender(_path, _sender, _signature);
         }
         else {
             // verify gas price limit
