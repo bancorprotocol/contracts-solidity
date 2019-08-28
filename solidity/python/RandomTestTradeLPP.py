@@ -47,7 +47,7 @@ for n in range(size):
     weight1 = random.randrange(1, 1000000)
     balance2 = random.randrange(1, 10 ** 23)
     weight2 = random.randrange(1, 1000000)
-    amount0 = random.randrange(1, supply)
+    amount0 = random.randrange(1, supply // 10)
     try:
         accuracy = formulaTest(supply, balance1, weight1, balance2, weight2, amount0)
         worstAccuracy = min(worstAccuracy, accuracy)
