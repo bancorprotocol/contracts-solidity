@@ -986,7 +986,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // negative amount means the fee is taken from the source token, positive amount means its taken from the target token
         // currently the fee is always taken from the target token
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
-        assert(_feeAmount <= 2 ** 255);
+        assert(_feeAmount < 2 ** 255);
         emit Conversion(_fromToken, _toToken, msg.sender, _amount, _returnAmount, int256(_feeAmount));
     }
 
