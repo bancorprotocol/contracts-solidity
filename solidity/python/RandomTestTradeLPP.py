@@ -47,7 +47,7 @@ for n in range(size):
     weight1 = random.randrange(1, 1000000)
     balance2 = random.randrange(1, 10 ** 23)
     weight2 = random.randrange(1, 1000000)
-    amount0 = random.randrange(1, supply)
+    amount0 = random.randrange(1, supply // 10)
     try:
         accuracy = formulaTest(supply, balance1, weight1, balance2, weight2, amount0)
         worstAccuracy = min(worstAccuracy, accuracy)
@@ -57,4 +57,4 @@ for n in range(size):
     except BaseException as error:
         print(error)
         break
-    print('Test #{}: accuracy = {:.12f}, worst accuracy = {:.12f}, num of failures = {}'.format(n, accuracy, worstAccuracy, numOfFailures))
+    print('Test #{}: accuracy = {:.18f}, worst accuracy = {:.18f}, num of failures = {}'.format(n, accuracy, worstAccuracy, numOfFailures))
