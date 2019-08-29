@@ -34,15 +34,19 @@ Other potential solutions might include a commit/reveal based schemes
 - [`getSaleReturn(contract IERC20Token _connectorToken, uint256 _sellAmount)`](#BancorConverter-getSaleReturn-contract-IERC20Token-uint256-)
 - [`getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _sellAmount)`](#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
 - [`convertInternal(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#BancorConverter-convertInternal-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
-- [`convert(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#BancorConverter-convert-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
 - [`buy(contract IERC20Token _connectorToken, uint256 _depositAmount, uint256 _minReturn)`](#BancorConverter-buy-contract-IERC20Token-uint256-uint256-)
 - [`sell(contract IERC20Token _connectorToken, uint256 _sellAmount, uint256 _minReturn)`](#BancorConverter-sell-contract-IERC20Token-uint256-uint256-)
-- [`quickConvert(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn)`](#BancorConverter-quickConvert-contract-IERC20Token---uint256-uint256-)
-- [`quickConvertPrioritized(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)`](#BancorConverter-quickConvertPrioritized-contract-IERC20Token---uint256-uint256-uint256-uint8-bytes32-bytes32-)
-- [`completeXConversion(contract IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)`](#BancorConverter-completeXConversion-contract-IERC20Token---uint256-uint256-uint256-uint8-bytes32-bytes32-)
+- [`convert2(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)`](#BancorConverter-convert2-contract-IERC20Token-contract-IERC20Token-uint256-uint256-address-uint256-)
+- [`quickConvert2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)`](#BancorConverter-quickConvert2-contract-IERC20Token---uint256-uint256-address-uint256-)
+- [`quickConvertPrioritized2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256[] _signature, address _affiliateAccount, uint256 _affiliateFee)`](#BancorConverter-quickConvertPrioritized2-contract-IERC20Token---uint256-uint256-uint256---address-uint256-)
+- [`completeXConversion2(contract IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256[] _signature)`](#BancorConverter-completeXConversion2-contract-IERC20Token---uint256-uint256-uint256---)
 - [`fund(uint256 _amount)`](#BancorConverter-fund-uint256-)
 - [`liquidate(uint256 _amount)`](#BancorConverter-liquidate-uint256-)
 - [`change(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#BancorConverter-change-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
+- [`convert(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#BancorConverter-convert-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
+- [`quickConvert(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn)`](#BancorConverter-quickConvert-contract-IERC20Token---uint256-uint256-)
+- [`quickConvertPrioritized(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)`](#BancorConverter-quickConvertPrioritized-contract-IERC20Token---uint256-uint256-uint256-uint8-bytes32-bytes32-)
+- [`completeXConversion(contract IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)`](#BancorConverter-completeXConversion-contract-IERC20Token---uint256-uint256-uint256-uint8-bytes32-bytes32-)
 
 # Events:
 - [`Conversion(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return, int256 _conversionFee)`](#BancorConverter-Conversion-address-address-address-uint256-uint256-int256-)
@@ -216,18 +220,6 @@ can only be called by the bancor network contract
 
 - `_minReturn`:  if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
-# Function `convert(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn) → uint256` {#BancorConverter-convert-contract-IERC20Token-contract-IERC20Token-uint256-uint256-}
-converts a specific amount of _fromToken to _toToken
-
-## Parameters:
-- `_fromToken`:  ERC20 token to convert from
-
-- `_toToken`:    ERC20 token to convert to
-
-- `_amount`:     amount to convert, in fromToken
-
-- `_minReturn`:  if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-
 # Function `buy(contract IERC20Token _connectorToken, uint256 _depositAmount, uint256 _minReturn) → uint256` {#BancorConverter-buy-contract-IERC20Token-uint256-uint256-}
 buys the token by depositing one of its connector tokens
 
@@ -248,55 +240,79 @@ sells the token by withdrawing from one of its connector tokens
 
 - `_minReturn`:       if the conversion results in an amount smaller the minimum return - it is cancelled, must be nonzero
 
-# Function `quickConvert(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn) → uint256` {#BancorConverter-quickConvert-contract-IERC20Token---uint256-uint256-}
+# Function `convert2(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorConverter-convert2-contract-IERC20Token-contract-IERC20Token-uint256-uint256-address-uint256-}
+converts a specific amount of _fromToken to _toToken
+
+## Parameters:
+- `_fromToken`:           ERC20 token to convert from
+
+- `_toToken`:             ERC20 token to convert to
+
+- `_amount`:              amount to convert, in fromToken
+
+- `_minReturn`:           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+
+- `_affiliateAccount`:    affiliate account
+
+- `_affiliateFee`:        affiliate fee in PPM
+
+# Function `quickConvert2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorConverter-quickConvert2-contract-IERC20Token---uint256-uint256-address-uint256-}
 converts the token to any other token in the bancor network by following a predefined conversion path
 note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
 
 ## Parameters:
-- `_path`:        conversion path, see conversion path format in the BancorNetwork contract
+- `_path`:                conversion path, see conversion path format in the BancorNetwork contract
 
-- `_amount`:      amount to convert from (in the initial source token)
+- `_amount`:              amount to convert from (in the initial source token)
 
-- `_minReturn`:   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+- `_minReturn`:           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
-# Function `quickConvertPrioritized(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) → uint256` {#BancorConverter-quickConvertPrioritized-contract-IERC20Token---uint256-uint256-uint256-uint8-bytes32-bytes32-}
+- `_affiliateAccount`:    affiliate account
+
+- `_affiliateFee`:        affiliate fee in PPM
+
+# Function `quickConvertPrioritized2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256[] _signature, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorConverter-quickConvertPrioritized2-contract-IERC20Token---uint256-uint256-uint256---address-uint256-}
 converts the token to any other token in the bancor network by following a predefined conversion path
 note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
 
 ## Parameters:
-- `_path`:        conversion path, see conversion path format in the BancorNetwork contract
+- `_path`:                conversion path, see conversion path format in the BancorNetwork contract
 
-- `_amount`:      amount to convert from (in the initial source token)
+- `_amount`:              amount to convert from (in the initial source token)
 
-- `_minReturn`:   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+- `_minReturn`:           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
-- `_block`:       if the current block exceeded the given parameter - it is cancelled
+- `_signature`:           an array of the following elements:
+[0] uint256     custom value that was signed for prioritized conversion; must be equal to _amount
+[1] uint256     if the current block exceeded the given parameter - it is cancelled
+[2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+[3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+[4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
 
-- `_v`:           (signature[128:130]) associated with the signer address and helps validating if the signature is legit
+- `_affiliateAccount`:    affiliate account
 
-- `_r`:           (signature[0:64]) associated with the signer address and helps validating if the signature is legit
+- `_affiliateFee`:        affiliate fee in PPM
 
-- `_s`:           (signature[64:128]) associated with the signer address and helps validating if the signature is legit
-
-# Function `completeXConversion(contract IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) → uint256` {#BancorConverter-completeXConversion-contract-IERC20Token---uint256-uint256-uint256-uint8-bytes32-bytes32-}
+# Function `completeXConversion2(contract IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256[] _signature) → uint256` {#BancorConverter-completeXConversion2-contract-IERC20Token---uint256-uint256-uint256---}
 allows a user to convert BNT that was sent from another blockchain into any other
 token on the BancorNetwork without specifying the amount of BNT to be converted, but
 rather by providing the xTransferId which allows us to get the amount from BancorX.
 
 ## Parameters:
-- `_path`:             conversion path, see conversion path format in the BancorNetwork contract
+- `_path`:            conversion path, see conversion path format in the BancorNetwork contract
 
-- `_minReturn`:        if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+- `_minReturn`:       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
-- `_conversionId`:     pre-determined unique (if non zero) id which refers to this transaction 
+- `_conversionId`:    pre-determined unique (if non zero) id which refers to this transaction 
 
-- `_block`:            if the current block exceeded the given parameter - it is cancelled
-
-- `_v`:                (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-
-- `_r`:                (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-
-- `_s`:                (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+- `_signature`:       an array of the following elements:
+[0] uint256     custom value that was signed for prioritized conversion; must be equal to _conversionId
+[1] uint256     if the current block exceeded the given parameter - it is cancelled
+[2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+[3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+[4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
 
 # Function `fund(uint256 _amount)` {#BancorConverter-fund-uint256-}
 buys the token with all connector tokens using the same percentage
@@ -315,6 +331,14 @@ note that the function can also be called if conversions are disabled
 ## Parameters:
 - `_amount`:  amount to liquidate (in the smart token)
 # Function `change(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn) → uint256` {#BancorConverter-change-contract-IERC20Token-contract-IERC20Token-uint256-uint256-}
+deprecated, backward compatibility
+# Function `convert(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn) → uint256` {#BancorConverter-convert-contract-IERC20Token-contract-IERC20Token-uint256-uint256-}
+deprecated, backward compatibility
+# Function `quickConvert(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn) → uint256` {#BancorConverter-quickConvert-contract-IERC20Token---uint256-uint256-}
+deprecated, backward compatibility
+# Function `quickConvertPrioritized(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) → uint256` {#BancorConverter-quickConvertPrioritized-contract-IERC20Token---uint256-uint256-uint256-uint8-bytes32-bytes32-}
+deprecated, backward compatibility
+# Function `completeXConversion(contract IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) → uint256` {#BancorConverter-completeXConversion-contract-IERC20Token---uint256-uint256-uint256-uint8-bytes32-bytes32-}
 deprecated, backward compatibility
 
 # Event `Conversion(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return, int256 _conversionFee)` {#BancorConverter-Conversion-address-address-address-uint256-uint256-int256-}
