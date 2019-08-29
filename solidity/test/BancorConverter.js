@@ -917,6 +917,18 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.convert(tokenAddress, connectorToken.address, 30000, 1));
     });
 
+    it('should throw when attempting to execute fund on a single-connector converter', async () => {
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, connectorToken.address, 1000000);
+
+        await utils.catchRevert(converter.fund(1));
+    });
+
+    it('should throw when attempting to execute liquidate on a single-connector converter', async () => {
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, connectorToken.address, 1000000);
+
+        await utils.catchRevert(converter.liquidate(1));
+    });
+
     it('verifies that getReturn returns the same amount as getCrossConnectorReturn when converting between 2 connectors', async () => {
         let converter = await initConverter(accounts, true);
         let returnAmount = (await converter.getReturn.call(connectorToken.address, connectorToken2.address, 500))[0];
