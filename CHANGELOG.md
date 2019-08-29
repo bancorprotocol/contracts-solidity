@@ -2,6 +2,9 @@
 BancorNetwork:
 * Added support for affilate fee
 
+BancorConverter:
+* Minor cleanups / bug fixes
+
 
 ### 0.4.10 (2019-08-21)
 BancorX:
