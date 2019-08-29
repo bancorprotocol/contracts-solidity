@@ -1,4 +1,9 @@
-﻿### 0.4.10 (2019-08-21)
+### 0.4.11 (2019-08-29)
+BancorNetwork:
+* Added support for affilate fee
+
+
+### 0.4.10 (2019-08-21)
 BancorX:
 * Added support for any ERC20/Smart token (was previously BNT specific)
 

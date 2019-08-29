@@ -13,6 +13,7 @@
     "install": "node scripts/fix-modules.js",
     "build": "node scripts/rebuild-all.js",
     "test": "node scripts/run-tests.js",
+    "deploy": "node scripts/deploy-one.js",
     "verify": "node scripts/verify-all.js",
     "docify": "node scripts/generate-docs.js"
   },
@@ -25,6 +26,6 @@
     "truffle": "4.1.14",
     "truffle-contract": "^3.0.7",
     "truffle-flattener": "1.2.10",
-    "web3-utils": "1.2.1"
+    "web3": "1.2.1"
   }
 }
