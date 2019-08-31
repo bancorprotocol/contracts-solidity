@@ -1,9 +1,9 @@
 pragma solidity ^0.4.24;
 
 /**
-    @dev Id definitions for bancor contracts
-
-    Can be used in conjunction with the contract registry to get contract addresses
+  * @dev Id definitions for bancor contracts
+  * 
+  * Can be used in conjunction with the contract registry to get contract addresses
 */
 contract ContractIds {
     // generic

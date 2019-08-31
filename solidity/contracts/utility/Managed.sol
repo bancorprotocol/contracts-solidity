@@ -2,23 +2,23 @@ pragma solidity ^0.4.24;
 import './Owned.sol';
 
 /**
-    @dev Provides support and utilities for contract management
-    Note that a managed contract must also have an owner
+  * @dev Provides support and utilities for contract management
+  * Note that a managed contract must also have an owner
 */
 contract Managed is Owned {
     address public manager;
     address public newManager;
 
     /**
-        @dev triggered when the manager is updated
-
-        @param _prevManager previous manager
-        @param _newManager  new manager
+      * @dev triggered when the manager is updated
+      * 
+      * @param _prevManager previous manager
+      * @param _newManager  new manager
     */
     event ManagerUpdate(address indexed _prevManager, address indexed _newManager);
 
     /**
-        @dev initializes a new Managed instance
+      * @dev initializes a new Managed instance
     */
     constructor() public {
         manager = msg.sender;
@@ -37,11 +37,11 @@ contract Managed is Owned {
     }
 
     /**
-        @dev allows transferring the contract management
-        the new manager still needs to accept the transfer
-        can only be called by the contract manager
-
-        @param _newManager    new contract manager
+      * @dev allows transferring the contract management
+      * the new manager still needs to accept the transfer
+      * can only be called by the contract manager
+      * 
+      * @param _newManager    new contract manager
     */
     function transferManagement(address _newManager) public ownerOrManagerOnly {
         require(_newManager != manager);
@@ -49,7 +49,7 @@ contract Managed is Owned {
     }
 
     /**
-        @dev used by a new manager to accept a management transfer
+      * @dev used by a new manager to accept a management transfer
     */
     function acceptManagement() public {
         require(msg.sender == newManager);

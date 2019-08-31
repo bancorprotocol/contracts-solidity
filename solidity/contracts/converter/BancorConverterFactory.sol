@@ -8,30 +8,30 @@ import '../utility/interfaces/IContractRegistry.sol';
 */
 contract BancorConverterFactory is IBancorConverterFactory {
     /**
-        @dev triggered when a new converter is created
-
-        @param _converter   new converter address
-        @param _owner       converter owner address
+      * @dev triggered when a new converter is created
+      * 
+      * @param _converter   new converter address
+      * @param _owner       converter owner address
     */
     event NewConverter(address indexed _converter, address indexed _owner);
 
     /**
-        @dev initializes a new BancorConverterFactory instance
+      * @dev initializes a new BancorConverterFactory instance
     */
     constructor() public {
     }
 
     /**
-        @dev creates a new converter with the given arguments and transfers
-        the ownership and management to the sender.
-
-        @param  _token              smart token governed by the converter
-        @param  _registry           address of a contract registry contract
-        @param  _maxConversionFee   maximum conversion fee, represented in ppm
-        @param  _connectorToken     optional, initial connector, allows defining the first connector at deployment time
-        @param  _connectorWeight    optional, weight for the initial connector
-
-        @return a new converter
+      * @dev creates a new converter with the given arguments and transfers
+      * the ownership and management to the sender.
+      * 
+      * @param  _token              smart token governed by the converter
+      * @param  _registry           address of a contract registry contract
+      * @param  _maxConversionFee   maximum conversion fee, represented in ppm
+      * @param  _connectorToken     optional, initial connector, allows defining the first connector at deployment time
+      * @param  _connectorWeight    optional, weight for the initial connector
+      * 
+      * @return a new converter
     */
     function createConverter(
         ISmartToken _token,

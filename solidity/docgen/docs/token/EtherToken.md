@@ -1,4 +1,5 @@
 Ether tokenization contract
+
 'Owned' is specified here for readability reasons
 
 # Functions:
@@ -21,10 +22,12 @@ deposit ether in the account
 # Function `withdraw(uint256 _amount)` {#EtherToken-withdraw-uint256-}
 withdraw ether from the account
 
+
 ## Parameters:
 - `_amount`:  amount of ether to withdraw
 # Function `withdrawTo(address _to, uint256 _amount)` {#EtherToken-withdrawTo-address-uint256-}
 withdraw ether from the account to a target account
+
 
 ## Parameters:
 - `_to`:      account to receive the ether
@@ -34,14 +37,17 @@ withdraw ether from the account to a target account
 send coins
 throws on any error rather then return a false flag to minimize user errors
 
+
 ## Parameters:
 - `_to`:      target address
 
 - `_value`:   transfer amount
 
+
 # Function `transferFrom(address _from, address _to, uint256 _value) → bool success` {#EtherToken-transferFrom-address-address-uint256-}
 an account/contract attempts to get the coins
 throws on any error rather then return a false flag to minimize user errors
+
 
 ## Parameters:
 - `_from`:    source address
@@ -50,16 +56,19 @@ throws on any error rather then return a false flag to minimize user errors
 
 - `_value`:   transfer amount
 
+
 # Function `fallback()` {#EtherToken-fallback--}
 deposit ether in the account
 
 # Event `Issuance(uint256 _amount)` {#EtherToken-Issuance-uint256-}
 triggered when the total supply is increased
 
+
 ## Parameters:
 - `_amount`:  amount that gets added to the supply
 # Event `Destruction(uint256 _amount)` {#EtherToken-Destruction-uint256-}
 triggered when the total supply is decreased
+
 
 ## Parameters:
 - `_amount`:  amount that gets removed from the supply

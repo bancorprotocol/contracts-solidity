@@ -19,8 +19,10 @@ No description
 # Function `calculatePurchaseReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _depositAmount) → uint256` {#BancorFormula-calculatePurchaseReturn-uint256-uint256-uint32-uint256-}
 given a token supply, connector balance, weight and a deposit amount (in the connector token),
 calculates the return for a given conversion (in the main token)
+
 Formula:
 Return = _supply * ((1 + _depositAmount / _connectorBalance) ^ (_connectorWeight / 1000000) - 1)
+
 
 ## Parameters:
 - `_supply`:              token total supply
@@ -31,11 +33,14 @@ Return = _supply * ((1 + _depositAmount / _connectorBalance) ^ (_connectorWeight
 
 - `_depositAmount`:       deposit amount, in connector token
 
+
 # Function `calculateSaleReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _sellAmount) → uint256` {#BancorFormula-calculateSaleReturn-uint256-uint256-uint32-uint256-}
 given a token supply, connector balance, weight and a sell amount (in the main token),
 calculates the return for a given conversion (in the connector token)
+
 Formula:
 Return = _connectorBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_connectorWeight / 1000000)))
+
 
 ## Parameters:
 - `_supply`:              token total supply
@@ -46,11 +51,14 @@ Return = _connectorBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_connector
 
 - `_sellAmount`:          sell amount, in the token itself
 
+
 # Function `calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount) → uint256` {#BancorFormula-calculateCrossConnectorReturn-uint256-uint32-uint256-uint32-uint256-}
 given two connector balances/weights and a sell amount (in the first connector token),
 calculates the return for a conversion from the first connector token to the second connector token (in the second connector token)
+
 Formula:
 Return = _toConnectorBalance * (1 - (_fromConnectorBalance / (_fromConnectorBalance + _amount)) ^ (_fromConnectorWeight / _toConnectorWeight))
+
 
 ## Parameters:
 - `_fromConnectorBalance`:    input connector balance
@@ -63,21 +71,23 @@ Return = _toConnectorBalance * (1 - (_fromConnectorBalance / (_fromConnectorBala
 
 - `_amount`:                  input connector amount
 
+
 # Function `power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) → uint256, uint8` {#BancorFormula-power-uint256-uint256-uint32-uint32-}
 General Description:
-Determine a value of precision.
-Calculate an integer approximation of (_baseN / _baseD) ^ (_expN / _expD) * 2 ^ precision.
-Return the result along with the precision used.
+    Determine a value of precision.
+    Calculate an integer approximation of (_baseN / _baseD) ^ (_expN / _expD) * 2 ^ precision.
+    Return the result along with the precision used.
+
 Detailed Description:
-Instead of calculating "base ^ exp", we calculate "e ^ (log(base) * exp)".
-The value of "log(base)" is represented with an integer slightly smaller than "log(base) * 2 ^ precision".
-The larger "precision" is, the more accurately this value represents the real value.
-However, the larger "precision" is, the more bits are required in order to store this value.
-And the exponentiation function, which takes "x" and calculates "e ^ x", is limited to a maximum exponent (maximum value of "x").
-This maximum exponent depends on the "precision" used, and it is given by "maxExpArray[precision] >> (MAX_PRECISION - precision)".
-Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
-This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
-This functions assumes that "_expN < 2 ^ 256 / log(MAX_NUM - 1)", otherwise the multiplication should be replaced with a "safeMul".
+    Instead of calculating "base ^ exp", we calculate "e ^ (log(base) * exp)".
+    The value of "log(base)" is represented with an integer slightly smaller than "log(base) * 2 ^ precision".
+    The larger "precision" is, the more accurately this value represents the real value.
+    However, the larger "precision" is, the more bits are required in order to store this value.
+    And the exponentiation function, which takes "x" and calculates "e ^ x", is limited to a maximum exponent (maximum value of "x").
+    This maximum exponent depends on the "precision" used, and it is given by "maxExpArray[precision] >> (MAX_PRECISION - precision)".
+    Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
+    This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
+    This functions assumes that "_expN < 2 ^ 256 / log(MAX_NUM - 1)", otherwise the multiplication should be replaced with a "safeMul".
 # Function `generalLog(uint256 x) → uint256` {#BancorFormula-generalLog-uint256-}
 computes log(x / FIXED_1) * FIXED_1.
 This functions assumes that "x >= FIXED_1", because the output would be negative otherwise.

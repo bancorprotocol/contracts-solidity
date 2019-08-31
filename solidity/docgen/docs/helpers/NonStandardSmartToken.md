@@ -16,6 +16,7 @@
 # Function `constructor(string _name, string _symbol, uint8 _decimals)` {#NonStandardSmartToken-constructor-string-string-uint8-}
 initializes a new NonStandardSmartToken instance
 
+
 ## Parameters:
 - `_name`:       token name
 
@@ -26,11 +27,13 @@ initializes a new NonStandardSmartToken instance
 disables/enables transfers
 can only be called by the contract owner
 
+
 ## Parameters:
 - `_disable`:    true to disable transfers, false to enable them
 # Function `issue(address _to, uint256 _amount)` {#NonStandardSmartToken-issue-address-uint256-}
 increases the token supply and sends the new tokens to an account
 can only be called by the contract owner
+
 
 ## Parameters:
 - `_to`:         account to receive the new amount
@@ -39,6 +42,7 @@ can only be called by the contract owner
 # Function `destroy(address _from, uint256 _amount)` {#NonStandardSmartToken-destroy-address-uint256-}
 removes tokens from an account and decreases the token supply
 can be called by the contract owner to destroy tokens from any account or by any holder to destroy tokens from his/her own account
+
 
 ## Parameters:
 - `_from`:       account to remove the amount from
@@ -49,6 +53,7 @@ send coins
 throws on any error rather then return a false flag to minimize user errors
 in addition to the standard checks, the function throws if transfers are disabled
 
+
 ## Parameters:
 - `_to`:      target address
 
@@ -57,6 +62,7 @@ in addition to the standard checks, the function throws if transfers are disable
 an account/contract attempts to get the coins
 throws on any error rather then return a false flag to minimize user errors
 in addition to the standard checks, the function throws if transfers are disabled
+
 
 ## Parameters:
 - `_from`:    source address

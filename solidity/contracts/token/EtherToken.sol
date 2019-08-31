@@ -6,29 +6,29 @@ import '../utility/TokenHolder.sol';
 import '../utility/SafeMath.sol';
 
 /**
-    @dev Ether tokenization contract
-
-    'Owned' is specified here for readability reasons
+  * @dev Ether tokenization contract
+  * 
+  * 'Owned' is specified here for readability reasons
 */
 contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     using SafeMath for uint256;
 
     /**
-        @dev triggered when the total supply is increased
-
-        @param _amount  amount that gets added to the supply
+      * @dev triggered when the total supply is increased
+      * 
+      * @param _amount  amount that gets added to the supply
     */
     event Issuance(uint256 _amount);
 
     /**
-        @dev triggered when the total supply is decreased
-
-        @param _amount  amount that gets removed from the supply
+      * @dev triggered when the total supply is decreased
+      * 
+      * @param _amount  amount that gets removed from the supply
     */
     event Destruction(uint256 _amount);
 
     /**
-        @dev initializes a new EtherToken instance
+      * @dev initializes a new EtherToken instance
     */
     constructor()
         public
@@ -36,7 +36,7 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     }
 
     /**
-        @dev deposit ether in the account
+      * @dev deposit ether in the account
     */
     function deposit() public payable {
         balanceOf[msg.sender] = balanceOf[msg.sender].add(msg.value); // add the value to the account balance
@@ -47,19 +47,19 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     }
 
     /**
-        @dev withdraw ether from the account
-
-        @param _amount  amount of ether to withdraw
+      * @dev withdraw ether from the account
+      * 
+      * @param _amount  amount of ether to withdraw
     */
     function withdraw(uint256 _amount) public {
         withdrawTo(msg.sender, _amount);
     }
 
     /**
-        @dev withdraw ether from the account to a target account
-
-        @param _to      account to receive the ether
-        @param _amount  amount of ether to withdraw
+      * @dev withdraw ether from the account to a target account
+      * 
+      * @param _to      account to receive the ether
+      * @param _amount  amount of ether to withdraw
     */
     function withdrawTo(address _to, uint256 _amount)
         public
@@ -76,13 +76,13 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     // ERC20 standard method overrides with some extra protection
 
     /**
-        @dev send coins
-        throws on any error rather then return a false flag to minimize user errors
-
-        @param _to      target address
-        @param _value   transfer amount
-
-        @return true if the transfer was successful, false if it wasn't
+      * @dev send coins
+      * throws on any error rather then return a false flag to minimize user errors
+      * 
+      * @param _to      target address
+      * @param _value   transfer amount
+      * 
+      * @return true if the transfer was successful, false if it wasn't
     */
     function transfer(address _to, uint256 _value)
         public
@@ -94,14 +94,14 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     }
 
     /**
-        @dev an account/contract attempts to get the coins
-        throws on any error rather then return a false flag to minimize user errors
-
-        @param _from    source address
-        @param _to      target address
-        @param _value   transfer amount
-
-        @return true if the transfer was successful, false if it wasn't
+      * @dev an account/contract attempts to get the coins
+      * throws on any error rather then return a false flag to minimize user errors
+      * 
+      * @param _from    source address
+      * @param _to      target address
+      * @param _value   transfer amount
+      * 
+      * @return true if the transfer was successful, false if it wasn't
     */
     function transferFrom(address _from, address _to, uint256 _value)
         public
@@ -113,7 +113,7 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     }
 
     /**
-        @dev deposit ether in the account
+      * @dev deposit ether in the account
     */
     function() public payable {
         deposit();
