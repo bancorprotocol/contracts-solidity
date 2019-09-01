@@ -18,13 +18,13 @@
     "docify": "node scripts/generate-docs.js"
   },
   "dependencies": {
-    "decimal.js": "^10.0.0",
+    "decimal.js": "^10.2.0",
     "ethereumjs-util": "^5.2.0",
     "ganache-cli": "6.5.1",
     "solidity-coverage": "0.6.4",
     "solidity-docgen": "0.3.0-beta.4",
     "truffle": "4.1.14",
-    "truffle-contract": "^3.0.7",
+    "truffle-contract": "^3.0.8",
     "truffle-flattener": "1.2.10",
     "web3": "1.2.1"
   }
