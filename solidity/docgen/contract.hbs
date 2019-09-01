@@ -15,6 +15,7 @@
 {{/if}}
 
 {{#ownFunctions}}
+
 # Function `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}` {#{{anchor~}} }
 {{#if natspec.devdoc}}{{natspec.devdoc}}{{else}}No description{{/if}}
 {{#if natspec.params}}
@@ -23,9 +24,11 @@
 - `{{param}}`: {{description}}
 {{/natspec.params}}
 {{/if}}
+
 {{/ownFunctions}}
 
 {{#ownEvents}}
+
 # Event `{{name}}({{args}})` {#{{anchor~}} }
 {{#if natspec.devdoc}}{{natspec.devdoc}}{{else}}No description{{/if}}
 {{#if natspec.params}}
@@ -34,4 +37,5 @@
 - `{{param}}`: {{description}}
 {{/natspec.params}}
 {{/if}}
+
 {{/ownEvents}}

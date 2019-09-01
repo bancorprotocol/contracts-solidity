@@ -23,12 +23,15 @@ Doing that will also remove the owner's ability to upgrade the controller.
 - [`setBancorX(address _bancorX)`](#SmartTokenController-setBancorX-address-)
 
 
+
 # Function `constructor(contract ISmartToken _token)` {#SmartTokenController-constructor-contract-ISmartToken-}
 initializes a new SmartTokenController instance
 
 
 ## Parameters:
 - `_token`:      smart token governed by the controller
+
+
 # Function `transferTokenOwnership(address _newOwner)` {#SmartTokenController-transferTokenOwnership-address-}
 allows transferring the token ownership
 the new owner needs to accept the transfer
@@ -37,9 +40,13 @@ can only be called by the contract owner
 
 ## Parameters:
 - `_newOwner`:    new token owner
+
+
 # Function `acceptTokenOwnership()` {#SmartTokenController-acceptTokenOwnership--}
 used by a new owner to accept a token ownership transfer
 can only be called by the contract owner
+
+
 # Function `disableTokenTransfers(bool _disable)` {#SmartTokenController-disableTokenTransfers-bool-}
 disables/enables token transfers
 can only be called by the contract owner
@@ -47,6 +54,8 @@ can only be called by the contract owner
 
 ## Parameters:
 - `_disable`:    true to disable transfers, false to enable them
+
+
 # Function `withdrawFromToken(contract IERC20Token _token, address _to, uint256 _amount)` {#SmartTokenController-withdrawFromToken-contract-IERC20Token-address-uint256-}
 withdraws tokens held by the controller and sends them to an account
 can only be called by the owner
@@ -58,6 +67,8 @@ can only be called by the owner
 - `_to`:      account to receive the new amount
 
 - `_amount`:  amount to withdraw
+
+
 # Function `claimTokens(address _from, uint256 _amount)` {#SmartTokenController-claimTokens-address-uint256-}
 allows the associated BancorX contract to claim tokens from any address (so that users
 dont have to first give allowance when calling BancorX)
@@ -67,9 +78,12 @@ dont have to first give allowance when calling BancorX)
 - `_from`:      address to claim the tokens from
 
 - `_amount`:    the amount of tokens to claim
+
+
 # Function `setBancorX(address _bancorX)` {#SmartTokenController-setBancorX-address-}
 allows the owner to set the associated BancorX contract
 
 ## Parameters:
 - `_bancorX`:    BancorX contract
+
 
