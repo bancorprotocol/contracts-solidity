@@ -6,11 +6,11 @@ import '../utility/SafeMath.sol';
 import '../token/interfaces/ISmartToken.sol';
 
 /**
-    @dev BancorPriceFloor
-
-    The bancor price floor contract is a simple contract that allows selling smart tokens for a constant ETH price
-
-    'Owned' is specified here for readability reasons
+  * @dev BancorPriceFloor
+  * 
+  * The bancor price floor contract is a simple contract that allows selling smart tokens for a constant ETH price
+  * 
+  * 'Owned' is specified here for readability reasons
 */
 contract BancorPriceFloor is Owned, TokenHolder {
     using SafeMath for uint256;
@@ -23,9 +23,9 @@ contract BancorPriceFloor is Owned, TokenHolder {
     ISmartToken public token; // smart token the contract allows selling
 
     /**
-        @dev initializes a new BancorPriceFloor instance
-
-        @param _token   smart token the contract allows selling
+      * @dev initializes a new BancorPriceFloor instance
+      * 
+      * @param _token   smart token the contract allows selling
     */
     constructor(ISmartToken _token)
         public
@@ -35,10 +35,10 @@ contract BancorPriceFloor is Owned, TokenHolder {
     }
 
     /**
-        @dev sells the smart token for ETH
-        note that the function will sell the full allowance amount
-
-        @return ETH sent in return
+      * @dev sells the smart token for ETH
+      * note that the function will sell the full allowance amount
+      * 
+      * @return ETH sent in return
     */
     function sell() public returns (uint256 amount) {
         uint256 allowance = token.allowance(msg.sender, this); // get the full allowance amount
@@ -49,16 +49,16 @@ contract BancorPriceFloor is Owned, TokenHolder {
     }
 
     /**
-        @dev withdraws ETH from the contract
-
-        @param _amount  amount of ETH to withdraw
+      * @dev withdraws ETH from the contract
+      * 
+      * @param _amount  amount of ETH to withdraw
     */
     function withdraw(uint256 _amount) public ownerOnly {
         msg.sender.transfer(_amount); // send the amount
     }
 
     /**
-        @dev deposits ETH in the contract
+      * @dev deposits ETH in the contract
     */
     function() public payable {
     }

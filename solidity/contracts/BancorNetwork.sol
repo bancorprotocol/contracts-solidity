@@ -17,14 +17,14 @@ import './token/interfaces/INonStandardERC20.sol';
 import './bancorx/interfaces/IBancorX.sol';
 
 /**
-    @dev The BancorNetwork contract is the main entry point for Bancor token conversions. It also allows for the conversion of any token in the Bancor Network to any other token in a single transaction by providing a conversion path. 
-
-    A note on Conversion Path: Conversion path is a data structure that is used when converting a token to another token in the Bancor Network when the conversion cannot necessarily be done by a single converter and might require multiple 'hops'. The path defines which converters should be used and what kind of conversion should be done in each step. 
-    
-    The path format doesn't include complex structure; instead, it is represented by a single array in which each 'hop' is represented by a 2-tuple - smart token & to token. In addition, the first element is always the source token. The smart token is only used as a pointer to a converter (since converter addresses are more likely to change as opposed to smart token addresses).
-
-    Format:
-    [source token, smart token, to token, smart token, to token...]
+  * @dev The BancorNetwork contract is the main entry point for Bancor token conversions. It also allows for the conversion of any token in the Bancor Network to any other token in a single transaction by providing a conversion path. 
+  * 
+  * A note on Conversion Path: Conversion path is a data structure that is used when converting a token to another token in the Bancor Network when the conversion cannot necessarily be done by a single converter and might require multiple 'hops'. The path defines which converters should be used and what kind of conversion should be done in each step. 
+  * 
+  * The path format doesn't include complex structure; instead, it is represented by a single array in which each 'hop' is represented by a 2-tuple - smart token & to token. In addition, the first element is always the source token. The smart token is only used as a pointer to a converter (since converter addresses are more likely to change as opposed to smart token addresses).
+  * 
+  * Format:
+  * [source token, smart token, to token, smart token, to token...]
 */
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     using SafeMath for uint256;
@@ -40,18 +40,18 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     mapping (bytes32 => bool) public conversionHashes;  // list of conversion hashes, to prevent re-use of the same hash
 
     /**
-        @dev initializes a new BancorNetwork instance
-
-        @param _registry    address of a contract registry contract
+      * @dev initializes a new BancorNetwork instance
+      * 
+      * @param _registry    address of a contract registry contract
     */
     constructor(IContractRegistry _registry) public validAddress(_registry) {
         registry = _registry;
     }
 
     /**
-        @dev allows the owner to update the maximum affiliate-fee
-
-        @param _maxAffiliateFee   maximum affiliate-fee
+      * @dev allows the owner to update the maximum affiliate-fee
+      * 
+      * @param _maxAffiliateFee   maximum affiliate-fee
     */
     function setMaxAffiliateFee(uint256 _maxAffiliateFee)
         public
@@ -62,9 +62,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev allows the owner to update the contract registry contract address
-
-        @param _registry   address of a contract registry contract
+      * @dev allows the owner to update the contract registry contract address
+      * 
+      * @param _registry   address of a contract registry contract
     */
     function setRegistry(IContractRegistry _registry)
         public
@@ -76,9 +76,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev allows the owner to update the signer address
-
-        @param _signerAddress    new signer address
+      * @dev allows the owner to update the signer address
+      * 
+      * @param _signerAddress    new signer address
     */
     function setSignerAddress(address _signerAddress)
         public
@@ -90,10 +90,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev allows the owner to register/unregister ether tokens
-
-        @param _token       ether token contract address
-        @param _register    true to register, false to unregister
+      * @dev allows the owner to register/unregister ether tokens
+      * 
+      * @param _token       ether token contract address
+      * @param _register    true to register, false to unregister
     */
     function registerEtherToken(IEtherToken _token, bool _register)
         public
@@ -105,11 +105,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev verifies that the signer address is trusted by recovering 
-        the address associated with the public key from elliptic 
-        curve signature, returns zero on error.
-        notice that the signature is valid only for one conversion
-        and expires after the give block.
+      * @dev verifies that the signer address is trusted by recovering 
+      * the address associated with the public key from elliptic 
+      * curve signature, returns zero on error.
+      * notice that the signature is valid only for one conversion
+      * and expires after the give block.
     */
     function verifyTrustedSender(IERC20Token[] _path, address _addr, uint256[] memory _signature) private {
         uint256 blockNumber = _signature[1];
@@ -132,46 +132,46 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev converts the token to any other token in the bancor network by following
-        a predefined conversion path and transfers the result tokens to a target account
-        note that the converter should already own the source tokens
-
-        @param _path                conversion path, see conversion path format above
-        @param _amount              amount to convert from (in the initial source token)
-        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _for                 account that will receive the conversion result
-        @param _affiliateAccount    affiliate account
-        @param _affiliateFee        affiliate fee in PPM
-
-        @return tokens issued in return
+      * @dev converts the token to any other token in the bancor network by following
+      * a predefined conversion path and transfers the result tokens to a target account
+      * note that the converter should already own the source tokens
+      * 
+      * @param _path                conversion path, see conversion path format above
+      * @param _amount              amount to convert from (in the initial source token)
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _for                 account that will receive the conversion result
+      * @param _affiliateAccount    affiliate account
+      * @param _affiliateFee        affiliate fee in PPM
+      * 
+      * @return tokens issued in return
     */
     function convertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
         return convertForPrioritized4(_path, _amount, _minReturn, _for, getSignature(0x0, 0x0, 0x0, 0x0, 0x0), _affiliateAccount, _affiliateFee);
     }
 
     /**
-        @dev converts the token to any other token in the bancor network
-        by following a predefined conversion path and transfers the result
-        tokens to a target account.
-        this version of the function also allows the verified signer
-        to bypass the universal gas price limit.
-        note that the converter should already own the source tokens
-
-        @param _path                conversion path, see conversion path format above
-        @param _amount              amount to convert from (in the initial source token)
-        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _for                 account that will receive the conversion result
-        @param _signature           an array of the following elements:
-                                    [0] uint256     custom value that was signed for prioritized conversion
-                                    [1] uint256     if the current block exceeded the given parameter - it is cancelled
-                                    [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-                                    [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-                                    [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
-                                    if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
-        @param _affiliateAccount    affiliate account
-        @param _affiliateFee        affiliate fee in PPM
-
-        @return tokens issued in return
+      * @dev converts the token to any other token in the bancor network
+      * by following a predefined conversion path and transfers the result
+      * tokens to a target account.
+      * this version of the function also allows the verified signer
+      * to bypass the universal gas price limit.
+      * note that the converter should already own the source tokens
+      * 
+      * @param _path                conversion path, see conversion path format above
+      * @param _amount              amount to convert from (in the initial source token)
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _for                 account that will receive the conversion result
+      * @param _signature           an array of the following elements:
+      *                             [0] uint256     custom value that was signed for prioritized conversion
+      *                             [1] uint256     if the current block exceeded the given parameter - it is cancelled
+      *                             [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+      *                             [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+      *                             [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+      *                             if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
+      * @param _affiliateAccount    affiliate account
+      * @param _affiliateFee        affiliate fee in PPM
+      * 
+      * @return tokens issued in return
     */
     function convertForPrioritized4(
         IERC20Token[] _path,
@@ -208,19 +208,19 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev converts any other token to BNT in the bancor network
-        by following a predefined conversion path and transfers the resulting
-        tokens to BancorX.
-        note that the network should already have been given allowance of the source token (if not ETH)
-
-        @param _path             conversion path, see conversion path format above
-        @param _amount           amount to convert from (in the initial source token)
-        @param _minReturn        if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _toBlockchain     blockchain BNT will be issued on
-        @param _to               address/account on _toBlockchain to send the BNT to
-        @param _conversionId     pre-determined unique (if non zero) id which refers to this transaction 
-
-        @return the amount of BNT received from this conversion
+      * @dev converts any other token to BNT in the bancor network
+      * by following a predefined conversion path and transfers the resulting
+      * tokens to BancorX.
+      * note that the network should already have been given allowance of the source token (if not ETH)
+      * 
+      * @param _path             conversion path, see conversion path format above
+      * @param _amount           amount to convert from (in the initial source token)
+      * @param _minReturn        if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _toBlockchain     blockchain BNT will be issued on
+      * @param _to               address/account on _toBlockchain to send the BNT to
+      * @param _conversionId     pre-determined unique (if non zero) id which refers to this transaction 
+      * 
+      * @return the amount of BNT received from this conversion
     */
     function xConvert(
         IERC20Token[] _path,
@@ -238,28 +238,28 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev converts any other token to BNT in the bancor network
-        by following a predefined conversion path and transfers the resulting
-        tokens to BancorX.
-        this version of the function also allows the verified signer
-        to bypass the universal gas price limit.
-        note that the network should already have been given allowance of the source token (if not ETH)
-
-        @param _path            conversion path, see conversion path format above
-        @param _amount          amount to convert from (in the initial source token)
-        @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _toBlockchain    blockchain BNT will be issued on
-        @param _to              address/account on _toBlockchain to send the BNT to
-        @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction 
-        @param _signature       an array of the following elements:
-                                [0] uint256     custom value that was signed for prioritized conversion; must be equal to _amount
-                                [1] uint256     if the current block exceeded the given parameter - it is cancelled
-                                [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-                                [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-                                [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
-                                if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
-
-        @return the amount of BNT received from this conversion
+      * @dev converts any other token to BNT in the bancor network
+      * by following a predefined conversion path and transfers the resulting
+      * tokens to BancorX.
+      * this version of the function also allows the verified signer
+      * to bypass the universal gas price limit.
+      * note that the network should already have been given allowance of the source token (if not ETH)
+      * 
+      * @param _path            conversion path, see conversion path format above
+      * @param _amount          amount to convert from (in the initial source token)
+      * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _toBlockchain    blockchain BNT will be issued on
+      * @param _to              address/account on _toBlockchain to send the BNT to
+      * @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction 
+      * @param _signature       an array of the following elements:
+      *                         [0] uint256     custom value that was signed for prioritized conversion; must be equal to _amount
+      *                         [1] uint256     if the current block exceeded the given parameter - it is cancelled
+      *                         [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+      *                         [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+      *                         [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+      *                         if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
+      * 
+      * @return the amount of BNT received from this conversion
     */
     function xConvertPrioritized2(
         IERC20Token[] _path,
@@ -296,15 +296,15 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev executes the actual conversion by following the conversion path
-
-        @param _path                conversion path, see conversion path format above
-        @param _amount              amount to convert from (in the initial source token)
-        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _affiliateAccount    affiliate account
-        @param _affiliateFee        affiliate fee in PPM
-
-        @return amount of tokens issued
+      * @dev executes the actual conversion by following the conversion path
+      * 
+      * @param _path                conversion path, see conversion path format above
+      * @param _amount              amount to convert from (in the initial source token)
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _affiliateAccount    affiliate account
+      * @param _affiliateFee        affiliate fee in PPM
+      * 
+      * @return amount of tokens issued
     */
     function convertByPath(
         IERC20Token[] _path,
@@ -373,14 +373,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev returns the expected return amount for converting a specific amount by following
-        a given conversion path.
-        notice that there is no support for circular paths.
-
-        @param _path        conversion path, see conversion path format above
-        @param _amount      amount to convert from (in the initial source token)
-
-        @return expected conversion return amount and conversion fee
+      * @dev returns the expected return amount for converting a specific amount by following
+      * a given conversion path.
+      * notice that there is no support for circular paths.
+      * 
+      * @param _path        conversion path, see conversion path format above
+      * @param _amount      amount to convert from (in the initial source token)
+      * 
+      * @return expected conversion return amount and conversion fee
     */
     function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
         IERC20Token fromToken;
@@ -447,18 +447,18 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev claims the caller's tokens, converts them to any other token in the bancor network
-        by following a predefined conversion path and transfers the result tokens to a target account
-        note that allowance must be set beforehand
-
-        @param _path                conversion path, see conversion path format above
-        @param _amount              amount to convert from (in the initial source token)
-        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _for                 account that will receive the conversion result
-        @param _affiliateAccount    affiliate account
-        @param _affiliateFee        affiliate fee in PPM
-
-        @return tokens issued in return
+      * @dev claims the caller's tokens, converts them to any other token in the bancor network
+      * by following a predefined conversion path and transfers the result tokens to a target account
+      * note that allowance must be set beforehand
+      * 
+      * @param _path                conversion path, see conversion path format above
+      * @param _amount              amount to convert from (in the initial source token)
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _for                 account that will receive the conversion result
+      * @param _affiliateAccount    affiliate account
+      * @param _affiliateFee        affiliate fee in PPM
+      * 
+      * @return tokens issued in return
     */
     function claimAndConvertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
         // we need to transfer the tokens from the caller to the converter before we follow
@@ -470,46 +470,46 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev converts the token to any other token in the bancor network by following
-        a predefined conversion path and transfers the result tokens back to the sender
-        note that the converter should already own the source tokens
-
-        @param _path                conversion path, see conversion path format above
-        @param _amount              amount to convert from (in the initial source token)
-        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _affiliateAccount    affiliate account
-        @param _affiliateFee        affiliate fee in PPM
-
-        @return tokens issued in return
+      * @dev converts the token to any other token in the bancor network by following
+      * a predefined conversion path and transfers the result tokens back to the sender
+      * note that the converter should already own the source tokens
+      * 
+      * @param _path                conversion path, see conversion path format above
+      * @param _amount              amount to convert from (in the initial source token)
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _affiliateAccount    affiliate account
+      * @param _affiliateFee        affiliate fee in PPM
+      * 
+      * @return tokens issued in return
     */
     function convert2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
         return convertFor2(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
     }
 
     /**
-        @dev claims the caller's tokens, converts them to any other token in the bancor network
-        by following a predefined conversion path and transfers the result tokens back to the sender
-        note that allowance must be set beforehand
-
-        @param _path                conversion path, see conversion path format above
-        @param _amount              amount to convert from (in the initial source token)
-        @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _affiliateAccount    affiliate account
-        @param _affiliateFee        affiliate fee in PPM
-
-        @return tokens issued in return
+      * @dev claims the caller's tokens, converts them to any other token in the bancor network
+      * by following a predefined conversion path and transfers the result tokens back to the sender
+      * note that allowance must be set beforehand
+      * 
+      * @param _path                conversion path, see conversion path format above
+      * @param _amount              amount to convert from (in the initial source token)
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _affiliateAccount    affiliate account
+      * @param _affiliateFee        affiliate fee in PPM
+      * 
+      * @return tokens issued in return
     */
     function claimAndConvert2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
         return claimAndConvertFor2(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
     }
 
     /**
-        @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
-        true on success but revert on failure instead
-
-        @param _token     the token to transfer
-        @param _to        the address to transfer the tokens to
-        @param _amount    the amount to transfer
+      * @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
+      * true on success but revert on failure instead
+      * 
+      * @param _token     the token to transfer
+      * @param _to        the address to transfer the tokens to
+      * @param _amount    the amount to transfer
     */
     function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
         IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
@@ -527,13 +527,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
-        true on success but revert on failure instead
-
-        @param _token     the token to transfer
-        @param _from      the address to transfer the tokens from
-        @param _to        the address to transfer the tokens to
-        @param _amount    the amount to transfer
+      * @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
+      * true on success but revert on failure instead
+      * 
+      * @param _token     the token to transfer
+      * @param _from      the address to transfer the tokens from
+      * @param _to        the address to transfer the tokens to
+      * @param _amount    the amount to transfer
     */
     function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
         IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
@@ -551,13 +551,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't.
-        Note that we use the non standard erc-20 interface in which `approve` has no return value so that
-        this function will work for both standard and non standard tokens
-
-        @param _token   token to check the allowance in
-        @param _spender approved address
-        @param _value   allowance amount
+      * @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't.
+      * Note that we use the non standard erc-20 interface in which `approve` has no return value so that
+      * this function will work for both standard and non standard tokens
+      * 
+      * @param _token   token to check the allowance in
+      * @param _spender approved address
+      * @param _value   allowance amount
     */
     function ensureAllowance(IERC20Token _token, address _spender, uint256 _value) private {
         // check if allowance for the given amount already exists
@@ -573,12 +573,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev returns the connector weight
-
-        @param _converter       converter contract address
-        @param _connector       connector's address to read from
-
-        @return connector's weight
+      * @dev returns the connector weight
+      * 
+      * @param _converter       converter contract address
+      * @param _connector       connector's address to read from
+      * 
+      * @return connector's weight
     */
     function getConnectorWeight(IBancorConverter _converter, IERC20Token _connector) 
         private
@@ -595,12 +595,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev returns true if connector sale is enabled
-
-        @param _converter       converter contract address
-        @param _connector       connector's address to read from
-
-        @return true if connector sale is enabled, otherwise - false
+      * @dev returns true if connector sale is enabled
+      * 
+      * @param _converter       converter contract address
+      * @param _connector       connector's address to read from
+      * 
+      * @return true if connector sale is enabled, otherwise - false
     */
     function getConnectorSaleEnabled(IBancorConverter _converter, IERC20Token _connector) 
         private
@@ -679,7 +679,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev deprecated, backward compatibility
+      * @dev deprecated, backward compatibility
     */
     function convert(
         IERC20Token[] _path,
@@ -691,7 +691,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev deprecated, backward compatibility
+      * @dev deprecated, backward compatibility
     */
     function claimAndConvert(
         IERC20Token[] _path,
@@ -703,7 +703,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev deprecated, backward compatibility
+      * @dev deprecated, backward compatibility
     */
     function convertFor(
         IERC20Token[] _path,
@@ -716,7 +716,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev deprecated, backward compatibility
+      * @dev deprecated, backward compatibility
     */
     function claimAndConvertFor(
         IERC20Token[] _path,
@@ -729,7 +729,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev deprecated, backward compatibility
+      * @dev deprecated, backward compatibility
     */
     function xConvertPrioritized(
         IERC20Token[] _path,
@@ -754,7 +754,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev deprecated, backward compatibility
+      * @dev deprecated, backward compatibility
     */
     function convertForPrioritized3(
         IERC20Token[] _path,
@@ -775,7 +775,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev deprecated, backward compatibility
+      * @dev deprecated, backward compatibility
     */
     function convertForPrioritized2(
         IERC20Token[] _path,
@@ -795,7 +795,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-        @dev deprecated, backward compatibility
+      * @dev deprecated, backward compatibility
     */
     function convertForPrioritized(
         IERC20Token[] _path,

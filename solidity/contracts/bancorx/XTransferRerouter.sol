@@ -13,17 +13,17 @@ contract XTransferRerouter is Owned {
     );
 
     /**
-        @dev initializes a new XTransferRerouter instance
-
-        @param _reroutingEnabled    intializes transactions routing to enabled/disabled   
+      * @dev initializes a new XTransferRerouter instance
+      * 
+      * @param _reroutingEnabled    intializes transactions routing to enabled/disabled   
      */
     constructor(bool _reroutingEnabled) public {
         reroutingEnabled = _reroutingEnabled;
     }
     /**
-        @dev allows the owner to disable/enable rerouting
-
-        @param _enable     true to enable, false to disable
+      * @dev allows the owner to disable/enable rerouting
+      * 
+      * @param _enable     true to enable, false to disable
      */
     function enableRerouting(bool _enable) public ownerOnly {
         reroutingEnabled = _enable;
@@ -36,11 +36,11 @@ contract XTransferRerouter is Owned {
     }
 
     /**
-        @dev    allows a user to reroute a transaction to a new blockchain/target address
-
-        @param _txId        the original transaction id
-        @param _blockchain  the new blockchain name
-        @param _to          the new target address/account
+      * @dev    allows a user to reroute a transaction to a new blockchain/target address
+      * 
+      * @param _txId        the original transaction id
+      * @param _blockchain  the new blockchain name
+      * @param _to          the new target address/account
      */
     function rerouteTx(
         uint256 _txId,

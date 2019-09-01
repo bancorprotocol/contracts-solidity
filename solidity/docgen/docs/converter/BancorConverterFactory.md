@@ -13,6 +13,7 @@ initializes a new BancorConverterFactory instance
 creates a new converter with the given arguments and transfers
 the ownership and management to the sender.
 
+
 ## Parameters:
 - `_token`:              smart token governed by the converter
 
@@ -25,8 +26,10 @@ the ownership and management to the sender.
 - `_connectorWeight`:    optional, weight for the initial connector
 
 
+
 # Event `NewConverter(address _converter, address _owner)` {#BancorConverterFactory-NewConverter-address-address-}
 triggered when a new converter is created
+
 
 ## Parameters:
 - `_converter`:   new converter address

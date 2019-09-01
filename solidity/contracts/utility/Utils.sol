@@ -1,11 +1,11 @@
 pragma solidity ^0.4.24;
 
 /**
-    @dev Utilities & Common Modifiers
+  * @dev Utilities & Common Modifiers
 */
 contract Utils {
     /**
-        constructor
+      * constructor
     */
     constructor() public {
     }
