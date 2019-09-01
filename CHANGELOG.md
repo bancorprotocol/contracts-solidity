@@ -1,3 +1,8 @@
+### 0.4.12 (2019-09-01)
+General:
+* Fixed line breaks in documentation
+
+
 ### 0.4.11 (2019-08-29)
 BancorNetwork:
 * Added support for affilate fee
