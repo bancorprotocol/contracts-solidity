@@ -32,6 +32,7 @@ can only be called by the contract owner
 
 ## Parameters:
 - `_disable`:    true to disable transfers, false to enable them
+
 # Function `issue(address _to, uint256 _amount)` {#SmartToken-issue-address-uint256-}
 increases the token supply and sends the new tokens to an account
 can only be called by the contract owner
