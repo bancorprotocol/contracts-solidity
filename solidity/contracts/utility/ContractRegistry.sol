@@ -5,15 +5,15 @@ import './interfaces/IContractRegistry.sol';
 import '../ContractIds.sol';
 
 /**
-    @dev Contract Registry
-
-    The contract registry keeps contract addresses by name.
-    The owner can update contract addresses so that a contract name always points to the latest version
-    of the given contract.
-    Other contracts can query the registry to get updated addresses instead of depending on specific
-    addresses.
-
-    Note that contract names are limited to 32 bytes UTF8 encoded ASCII strings to optimize gas costs
+  * @dev Contract Registry
+  * 
+  * The contract registry keeps contract addresses by name.
+  * The owner can update contract addresses so that a contract name always points to the latest version
+  * of the given contract.
+  * Other contracts can query the registry to get updated addresses instead of depending on specific
+  * addresses.
+  * 
+  * Note that contract names are limited to 32 bytes UTF8 encoded ASCII strings to optimize gas costs
 */
 contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     struct RegistryItem {
@@ -25,45 +25,45 @@ contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     string[] public contractNames;                      // list of all registered contract names
 
     /**
-        @dev triggered when an address pointed to by a contract name is modified
-
-        @param _contractName    contract name
-        @param _contractAddress new contract address
+      * @dev triggered when an address pointed to by a contract name is modified
+      * 
+      * @param _contractName    contract name
+      * @param _contractAddress new contract address
     */
     event AddressUpdate(bytes32 indexed _contractName, address _contractAddress);
 
     /**
-        @dev initializes a new ContractRegistry instance
+      * @dev initializes a new ContractRegistry instance
     */
     constructor() public {
         registerAddress(ContractIds.CONTRACT_REGISTRY, address(this));
     }
 
     /**
-        @dev returns the number of items in the registry
-
-        @return number of items
+      * @dev returns the number of items in the registry
+      * 
+      * @return number of items
     */
     function itemCount() public view returns (uint256) {
         return contractNames.length;
     }
 
     /**
-        @dev returns the address associated with the given contract name
-
-        @param _contractName    contract name
-
-        @return contract address
+      * @dev returns the address associated with the given contract name
+      * 
+      * @param _contractName    contract name
+      * 
+      * @return contract address
     */
     function addressOf(bytes32 _contractName) public view returns (address) {
         return items[_contractName].contractAddress;
     }
 
     /**
-        @dev registers a new address for the contract name in the registry
-
-        @param _contractName     contract name
-        @param _contractAddress  contract address
+      * @dev registers a new address for the contract name in the registry
+      * 
+      * @param _contractName     contract name
+      * @param _contractAddress  contract address
     */
     function registerAddress(bytes32 _contractName, address _contractAddress)
         public
@@ -87,9 +87,9 @@ contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     }
 
     /**
-        @dev removes an existing contract address from the registry
-
-        @param _contractName contract name
+      * @dev removes an existing contract address from the registry
+      * 
+      * @param _contractName contract name
     */
     function unregisterAddress(bytes32 _contractName) public ownerOnly {
         require(_contractName.length > 0); // validate input
@@ -120,10 +120,10 @@ contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     }
 
     /**
-        @dev utility, converts bytes32 to a string
-        note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
-
-        @return string representation of the given bytes32 argument
+      * @dev utility, converts bytes32 to a string
+      * note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
+      * 
+      * @return string representation of the given bytes32 argument
     */
     function bytes32ToString(bytes32 _bytes) private pure returns (string) {
         bytes memory byteArray = new bytes(32);
@@ -135,10 +135,10 @@ contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     }
 
     /**
-        @dev utility, converts string to bytes32
-        note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
-
-        @return string representation of the given bytes32 argument
+      * @dev utility, converts string to bytes32
+      * note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
+      * 
+      * @return string representation of the given bytes32 argument
     */
     function stringToBytes32(string memory _string) private pure returns (bytes32) {
         bytes32 result;
@@ -149,7 +149,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils, ContractIds {
     }
 
     /**
-        @dev deprecated, backward compatibility
+      * @dev deprecated, backward compatibility
     */
     function getAddress(bytes32 _contractName) public view returns (address) {
         return addressOf(_contractName);

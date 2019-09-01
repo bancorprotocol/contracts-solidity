@@ -4,11 +4,11 @@ import '../token/interfaces/ISmartToken.sol';
 import '../utility/SafeMath.sol';
 
 /**
-    @dev Crowdsale
-
-    The crowdsale version of the smart token controller, allows contributing ether in exchange for Bancor tokens
-    The price remains fixed for the entire duration of the crowdsale
-    Note that 20% of the contributions are the BNT token's ETH connector balance
+  * @dev Crowdsale
+  * 
+  * The crowdsale version of the smart token controller, allows contributing ether in exchange for Bancor tokens
+  * The price remains fixed for the entire duration of the crowdsale
+  * Note that 20% of the contributions are the BNT token's ETH connector balance
 */
 contract CrowdsaleController is SmartTokenController {
     using SafeMath for uint256;
@@ -34,12 +34,12 @@ contract CrowdsaleController is SmartTokenController {
     event Contribution(address indexed _contributor, uint256 _amount, uint256 _return);
 
     /**
-        @dev initializes a new CrowdsaleController instance
-
-        @param _token          smart token the crowdsale is for
-        @param _startTime      crowdsale start time
-        @param _beneficiary    address to receive all ether contributions
-        @param _btcs           bitcoin suisse address
+      * @dev initializes a new CrowdsaleController instance
+      * 
+      * @param _token          smart token the crowdsale is for
+      * @param _startTime      crowdsale start time
+      * @param _beneficiary    address to receive all ether contributions
+      * @param _btcs           bitcoin suisse address
     */
     constructor(ISmartToken _token, uint256 _startTime, address _beneficiary, address _btcs, bytes32 _realEtherCapHash)
         public
@@ -99,22 +99,22 @@ contract CrowdsaleController is SmartTokenController {
     }
 
     /**
-        @dev computes the real cap based on the given cap & key
-
-        @param _cap    cap
-        @param _key    key used to compute the cap hash
-
-        @return computed real cap hash
+      * @dev computes the real cap based on the given cap & key
+      * 
+      * @param _cap    cap
+      * @param _key    key used to compute the cap hash
+      * 
+      * @return computed real cap hash
     */
     function computeRealCap(uint256 _cap, uint256 _key) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(_cap, _key));
     }
 
     /**
-        @dev enables the real cap defined on deployment
-
-        @param _cap    predefined cap
-        @param _key    key used to compute the cap hash
+      * @dev enables the real cap defined on deployment
+      * 
+      * @param _cap    predefined cap
+      * @param _key    key used to compute the cap hash
     */
     function enableRealCap(uint256 _cap, uint256 _key)
         public
@@ -128,21 +128,21 @@ contract CrowdsaleController is SmartTokenController {
     }
 
     /**
-        @dev computes the number of tokens that should be issued for a given contribution
-
-        @param _contribution    contribution amount
-
-        @return computed number of tokens
+      * @dev computes the number of tokens that should be issued for a given contribution
+      * 
+      * @param _contribution    contribution amount
+      * 
+      * @return computed number of tokens
     */
     function computeReturn(uint256 _contribution) public pure returns (uint256) {
         return _contribution.mul(TOKEN_PRICE_D).div(TOKEN_PRICE_N);
     }
 
     /**
-        @dev ETH contribution
-        can only be called during the crowdsale
-
-        @return tokens issued in return
+      * @dev ETH contribution
+      * can only be called during the crowdsale
+      * 
+      * @return tokens issued in return
     */
     function contributeETH()
         public
@@ -154,10 +154,10 @@ contract CrowdsaleController is SmartTokenController {
     }
 
     /**
-        @dev Contribution through BTCs (Bitcoin Suisse only)
-        can only be called before the crowdsale started
-
-        @return tokens issued in return
+      * @dev Contribution through BTCs (Bitcoin Suisse only)
+      * can only be called before the crowdsale started
+      * 
+      * @return tokens issued in return
     */
     function contributeBTCs()
         public
@@ -171,10 +171,10 @@ contract CrowdsaleController is SmartTokenController {
     }
 
     /**
-        @dev handles contribution logic
-        note that the Contribution event is triggered using the sender as the contributor, regardless of the actual contributor
-
-        @return tokens issued in return
+      * @dev handles contribution logic
+      * note that the Contribution event is triggered using the sender as the contributor, regardless of the actual contributor
+      * 
+      * @return tokens issued in return
     */
     function processContribution() private
         active

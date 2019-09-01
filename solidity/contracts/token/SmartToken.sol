@@ -5,9 +5,9 @@ import '../utility/Owned.sol';
 import '../utility/TokenHolder.sol';
 
 /**
-    @dev Smart Token
-
-    'Owned' is specified here for readability reasons
+  * @dev Smart Token
+  * 
+  * 'Owned' is specified here for readability reasons
 */
 contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     using SafeMath for uint256;
@@ -18,33 +18,33 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
 
     /**
-        @dev triggered when a smart token is deployed
-        the _token address is defined for forward compatibility, in case the event is trigger by a factory
-
-        @param _token  new smart token address
+      * @dev triggered when a smart token is deployed
+      * the _token address is defined for forward compatibility, in case the event is trigger by a factory
+      * 
+      * @param _token  new smart token address
     */
     event NewSmartToken(address _token);
 
     /**
-        @dev triggered when the total supply is increased
-
-        @param _amount  amount that gets added to the supply
+      * @dev triggered when the total supply is increased
+      * 
+      * @param _amount  amount that gets added to the supply
     */
     event Issuance(uint256 _amount);
 
     /**
-        @dev triggered when the total supply is decreased
-
-        @param _amount  amount that gets removed from the supply
+      * @dev triggered when the total supply is decreased
+      * 
+      * @param _amount  amount that gets removed from the supply
     */
     event Destruction(uint256 _amount);
 
     /**
-        @dev initializes a new SmartToken instance
-
-        @param _name       token name
-        @param _symbol     token short symbol, minimum 1 character
-        @param _decimals   for display purposes only
+      * @dev initializes a new SmartToken instance
+      * 
+      * @param _name       token name
+      * @param _symbol     token short symbol, minimum 1 character
+      * @param _decimals   for display purposes only
     */
     constructor(string _name, string _symbol, uint8 _decimals)
         public
@@ -60,21 +60,21 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     }
 
     /**
-        @dev disables/enables transfers
-        can only be called by the contract owner
-
-        @param _disable    true to disable transfers, false to enable them
+      * @dev disables/enables transfers
+      * can only be called by the contract owner
+      * 
+      * @param _disable    true to disable transfers, false to enable them
     */
     function disableTransfers(bool _disable) public ownerOnly {
         transfersEnabled = !_disable;
     }
 
     /**
-        @dev increases the token supply and sends the new tokens to an account
-        can only be called by the contract owner
-
-        @param _to         account to receive the new amount
-        @param _amount     amount to increase the supply by
+      * @dev increases the token supply and sends the new tokens to an account
+      * can only be called by the contract owner
+      * 
+      * @param _to         account to receive the new amount
+      * @param _amount     amount to increase the supply by
     */
     function issue(address _to, uint256 _amount)
         public
@@ -90,11 +90,11 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     }
 
     /**
-        @dev removes tokens from an account and decreases the token supply
-        can be called by the contract owner to destroy tokens from any account or by any holder to destroy tokens from his/her own account
-
-        @param _from       account to remove the amount from
-        @param _amount     amount to decrease the supply by
+      * @dev removes tokens from an account and decreases the token supply
+      * can be called by the contract owner to destroy tokens from any account or by any holder to destroy tokens from his/her own account
+      * 
+      * @param _from       account to remove the amount from
+      * @param _amount     amount to decrease the supply by
     */
     function destroy(address _from, uint256 _amount) public {
         require(msg.sender == _from || msg.sender == owner); // validate input
@@ -109,14 +109,14 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     // ERC20 standard method overrides with some extra functionality
 
     /**
-        @dev send coins
-        throws on any error rather then return a false flag to minimize user errors
-        in addition to the standard checks, the function throws if transfers are disabled
-
-        @param _to      target address
-        @param _value   transfer amount
-
-        @return true if the transfer was successful, false if it wasn't
+      * @dev send coins
+      * throws on any error rather then return a false flag to minimize user errors
+      * in addition to the standard checks, the function throws if transfers are disabled
+      * 
+      * @param _to      target address
+      * @param _value   transfer amount
+      * 
+      * @return true if the transfer was successful, false if it wasn't
     */
     function transfer(address _to, uint256 _value) public transfersAllowed returns (bool success) {
         assert(super.transfer(_to, _value));
@@ -124,15 +124,15 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     }
 
     /**
-        @dev an account/contract attempts to get the coins
-        throws on any error rather then return a false flag to minimize user errors
-        in addition to the standard checks, the function throws if transfers are disabled
-
-        @param _from    source address
-        @param _to      target address
-        @param _value   transfer amount
-
-        @return true if the transfer was successful, false if it wasn't
+      * @dev an account/contract attempts to get the coins
+      * throws on any error rather then return a false flag to minimize user errors
+      * in addition to the standard checks, the function throws if transfers are disabled
+      * 
+      * @param _from    source address
+      * @param _to      target address
+      * @param _value   transfer amount
+      * 
+      * @return true if the transfer was successful, false if it wasn't
     */
     function transferFrom(address _from, address _to, uint256 _value) public transfersAllowed returns (bool success) {
         assert(super.transferFrom(_from, _to, _value));

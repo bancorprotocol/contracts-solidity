@@ -2,22 +2,22 @@ pragma solidity ^0.4.24;
 import './interfaces/IOwned.sol';
 
 /**
-    @dev Provides support and utilities for contract ownership
+  * @dev Provides support and utilities for contract ownership
 */
 contract Owned is IOwned {
     address public owner;
     address public newOwner;
 
     /**
-        @dev triggered when the owner is updated
-
-        @param _prevOwner previous owner
-        @param _newOwner  new owner
+      * @dev triggered when the owner is updated
+      * 
+      * @param _prevOwner previous owner
+      * @param _newOwner  new owner
     */
     event OwnerUpdate(address indexed _prevOwner, address indexed _newOwner);
 
     /**
-        @dev initializes a new Owned instance
+      * @dev initializes a new Owned instance
     */
     constructor() public {
         owner = msg.sender;
@@ -30,11 +30,11 @@ contract Owned is IOwned {
     }
 
     /**
-        @dev allows transferring the contract ownership
-        the new owner still needs to accept the transfer
-        can only be called by the contract owner
-
-        @param _newOwner    new contract owner
+      * @dev allows transferring the contract ownership
+      * the new owner still needs to accept the transfer
+      * can only be called by the contract owner
+      * 
+      * @param _newOwner    new contract owner
     */
     function transferOwnership(address _newOwner) public ownerOnly {
         require(_newOwner != owner);
@@ -42,7 +42,7 @@ contract Owned is IOwned {
     }
 
     /**
-        @dev used by a new owner to accept an ownership transfer
+      * @dev used by a new owner to accept an ownership transfer
     */
     function acceptOwnership() public {
         require(msg.sender == newOwner);
