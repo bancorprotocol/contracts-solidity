@@ -79,7 +79,7 @@ contract('BancorNetworkWithOldConverter', accounts => {
         await nonStandardTokenRegistry.setAddress(smartToken2.address, true);
 
         converter = await createOldConverter(smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000);
-        await converter.addReserve(smartToken3.address, 150000, false);
+        await converter.addConnector(smartToken3.address, 150000, false);
 
         await smartToken1.transfer(converter.address, 40000);
         await smartToken3.transfer(converter.address, 25000);
