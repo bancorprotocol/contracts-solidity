@@ -1029,4 +1029,53 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         Reserve storage reserve = reserves[_address];
         return(reserve.virtualBalance, reserve.ratio, reserve.isVirtualBalanceEnabled, reserve.isSaleEnabled, reserve.isSet);
     }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function connectorTokens(uint256 _index) public view returns (IERC20Token) {
+        return BancorConverter.reserveTokens[_index];
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function connectorTokenCount() public view returns (uint16) {
+        return reserveTokenCount();
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function addConnector(IERC20Token _token, uint32 _ratio, bool _enableVirtualBalance) public {
+        addReserve(_token, _ratio, _enableVirtualBalance);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function updateConnector(IERC20Token _reserveToken, uint32 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance) public {
+        updateReserve(_reserveToken, _ratio, _enableVirtualBalance, _virtualBalance);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function disableConnectorSale(IERC20Token _reserveToken, bool _disable) public {
+        disableReserveSale(_reserveToken, _disable);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function getConnectorBalance(IERC20Token _reserveToken) public view returns (uint256) {
+        getReserveBalance(_reserveToken);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function getCrossConnectorReturn(IERC20Token _fromReserveToken, IERC20Token _toReserveToken, uint256 _sellAmount) public view returns (uint256, uint256) {
+        return getCrossReserveReturn(_fromReserveToken, _toReserveToken, _sellAmount);
+    }
 }
