@@ -415,8 +415,8 @@ rather by providing the xTransferId which allows us to get the amount from Banco
 
 # Function `fund(uint256 _amount)` {#BancorConverter-fund-uint256-}
 buys the token with all reserve tokens using the same percentage
-i.e. if the caller increases the supply by 10%, it will cost an amount equal to
-10% of each reserve token balance
+for example, if the caller increases the supply by 10%,
+then it will cost an amount equal to 10% of each reserve token balance
 can only be called if the max total ratio is exactly 100% and while conversions are enabled
 
 
@@ -426,8 +426,8 @@ can only be called if the max total ratio is exactly 100% and while conversions 
 
 # Function `liquidate(uint256 _amount)` {#BancorConverter-liquidate-uint256-}
 sells the token for all reserve tokens using the same percentage
-i.e. if the holder sells 10% of the supply, they will receive 10% of each
-reserve token balance in return
+for example, if the holder sells 10% of the supply,
+then they will receive 10% of each reserve token balance in return
 can only be called if the max total ratio is exactly 100%
 note that the function can also be called if conversions are disabled
 
