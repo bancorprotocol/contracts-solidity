@@ -45,7 +45,7 @@ async function initConverter(accounts, activate, version = null, maxConversionFe
 
     let converter = await createConverter(tokenAddress, contractRegistry.address, maxConversionFee, reserveTokenAddress, 500000, version);
     let converterAddress = converter.address;
-    await converter.addReserve(reserveTokenAddress2, 150000, false);
+    await converter.addConnector(reserveTokenAddress2, 150000, false);
 
     await token.issue(accounts[0], 20000);
     await reserveToken.transfer(converterAddress, 5000);
@@ -293,7 +293,7 @@ contract('BancorConverterUpgrader', accounts => {
         let reserveToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
         let reserveTokenAddress2 = reserveToken2.address;
         let converter1 = await BancorConverter.new(token1.address, contractRegistry.address, 30000, reserveTokenAddress, 500000);
-        await converter1.addReserve(reserveTokenAddress2, 500000, false);
+        await converter1.addConnector(reserveTokenAddress2, 500000, false);
         await reserveToken.transfer(converter1.address, 5000);
         await reserveToken2.transfer(converter1.address, 8000);
         await token1.issue(accounts[0], 20000);
