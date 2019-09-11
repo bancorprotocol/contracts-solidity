@@ -16,7 +16,9 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function token() public view returns (ISmartToken) {}
     function maxConversionFee() public view returns (uint32) {}
     function conversionFee() public view returns (uint32) {}
+    function connectorTokenCount() public view returns (uint16);
     function reserveTokenCount() public view returns (uint16);
+    function connectorTokens(uint256 _index) public view returns (IERC20Token) { _index; }
     function reserveTokens(uint256 _index) public view returns (IERC20Token) { _index; }
     function setConversionWhitelist(IWhitelist _whitelist) public;
     function transferTokenOwnership(address _newOwner) public;
@@ -25,9 +27,8 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function transferManagement(address _newManager) public;
     function acceptManagement() public;
     function setConversionFee(uint32 _conversionFee) public;
-    function addReserve(IERC20Token _token, uint32 _ratio, bool _enableVirtualBalance) public;
-    function updateReserve(IERC20Token _reserveToken, uint32 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance) public;
-    function getReserveBalance(IERC20Token _reserveToken) public view returns (uint256);
+    function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance) public;
+    function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance) public;
 }
 
 /**
@@ -125,9 +126,9 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
         address prevOwner = converter.owner();
         acceptConverterOwnership(converter);
         IBancorConverterExtended newConverter = createConverter(converter);
-        copyReserves(converter, newConverter, formerVersions);
+        copyConnectors(converter, newConverter, formerVersions);
         copyConversionFee(converter, newConverter);
-        transferReservesBalances(converter, newConverter, formerVersions);                
+        transferConnectorsBalances(converter, newConverter, formerVersions);                
         ISmartToken token = converter.token();
 
         if (token.owner() == address(converter)) {
@@ -157,7 +158,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
 
     /**
       * @dev creates a new converter with same basic data as the original old converter
-      * the newly created converter will have no reserves at this step.
+      * the newly created converter will have no connectors at this step.
       * 
       * @param _oldConverter    old converter contract address
       * 
@@ -194,36 +195,36 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
     }
 
     /**
-      * @dev copies the reserves from the old converter to the new one.
-      * note that this will not work for an unlimited number of reserves due to block gas limit constraints.
+      * @dev copies the connectors from the old converter to the new one.
+      * note that this will not work for an unlimited number of connectors due to block gas limit constraints.
       * 
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
       * @param _isLegacyVersion true if the converter version is under 0.5
     */
-    function copyReserves(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter, bool _isLegacyVersion)
+    function copyConnectors(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter, bool _isLegacyVersion)
         private
     {
         uint256 virtualBalance;
-        uint32 ratio;
+        uint32 weight;
         bool isVirtualBalanceEnabled;
         bool isSaleEnabled;
         bool isSet;
-        uint16 reserveTokenCount = _isLegacyVersion ? _oldConverter.reserveTokenCount() : _oldConverter.reserveTokenCount();
+        uint16 connectorTokenCount = _isLegacyVersion ? _oldConverter.reserveTokenCount() : _oldConverter.connectorTokenCount();
 
-        for (uint16 i = 0; i < reserveTokenCount; i++) {
-            address reserveAddress = _isLegacyVersion ? _oldConverter.reserveTokens(i) : _oldConverter.reserveTokens(i);
-            (virtualBalance, ratio, isVirtualBalanceEnabled, isSaleEnabled, isSet) = readReserve(
+        for (uint16 i = 0; i < connectorTokenCount; i++) {
+            address connectorAddress = _isLegacyVersion ? _oldConverter.reserveTokens(i) : _oldConverter.connectorTokens(i);
+            (virtualBalance, weight, isVirtualBalanceEnabled, isSaleEnabled, isSet) = readConnector(
                 _oldConverter,
-                reserveAddress,
+                connectorAddress,
                 _isLegacyVersion
             );
 
-            IERC20Token reserveToken = IERC20Token(reserveAddress);
-            _newConverter.addReserve(reserveToken, ratio, isVirtualBalanceEnabled);
+            IERC20Token connectorToken = IERC20Token(connectorAddress);
+            _newConverter.addConnector(connectorToken, weight, isVirtualBalanceEnabled);
 
             if (isVirtualBalanceEnabled)
-                _newConverter.updateReserve(reserveToken, ratio, isVirtualBalanceEnabled, virtualBalance);
+                _newConverter.updateConnector(connectorToken, weight, isVirtualBalanceEnabled, virtualBalance);
         }
     }
 
@@ -239,41 +240,41 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
     }
 
     /**
-      * @dev transfers the balance of each reserve in the old converter to the new one.
+      * @dev transfers the balance of each connector in the old converter to the new one.
       * note that the function assumes that the new converter already has the exact same number of
-      * also, this will not work for an unlimited number of reserves due to block gas limit constraints.
+      * also, this will not work for an unlimited number of connectors due to block gas limit constraints.
       * 
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
       * @param _isLegacyVersion true if the converter version is under 0.5
     */
-    function transferReservesBalances(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter, bool _isLegacyVersion)
+    function transferConnectorsBalances(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter, bool _isLegacyVersion)
         private
     {
-        uint256 reserveBalance;
-        uint16 reserveTokenCount = _isLegacyVersion ? _oldConverter.reserveTokenCount() : _oldConverter.reserveTokenCount();
+        uint256 connectorBalance;
+        uint16 connectorTokenCount = _isLegacyVersion ? _oldConverter.reserveTokenCount() : _oldConverter.connectorTokenCount();
 
-        for (uint16 i = 0; i < reserveTokenCount; i++) {
-            address reserveAddress = _isLegacyVersion ? _oldConverter.reserveTokens(i) : _oldConverter.reserveTokens(i);
-            IERC20Token reserve = IERC20Token(reserveAddress);
-            reserveBalance = reserve.balanceOf(_oldConverter);
-            _oldConverter.withdrawTokens(reserve, address(_newConverter), reserveBalance);
+        for (uint16 i = 0; i < connectorTokenCount; i++) {
+            address connectorAddress = _isLegacyVersion ? _oldConverter.reserveTokens(i) : _oldConverter.connectorTokens(i);
+            IERC20Token connector = IERC20Token(connectorAddress);
+            connectorBalance = connector.balanceOf(_oldConverter);
+            _oldConverter.withdrawTokens(connector, address(_newConverter), connectorBalance);
         }
     }
 
     /**
-      * @dev returns the reserve settings
+      * @dev returns the connector settings
       * 
       * @param _converter       old converter contract address
-      * @param _address         reserve's address to read from
+      * @param _address         connector's address to read from
       * @param _isLegacyVersion true if the converter version is under 0.5
       * 
-      * @return reserve's settings
+      * @return connector's settings
     */
-    function readReserve(IBancorConverterExtended _converter, address _address, bool _isLegacyVersion)
+    function readConnector(IBancorConverterExtended _converter, address _address, bool _isLegacyVersion) 
         private
         view
-        returns(uint256 virtualBalance, uint32 ratio, bool isVirtualBalanceEnabled, bool isSaleEnabled, bool isSet)
+        returns(uint256 virtualBalance, uint32 weight, bool isVirtualBalanceEnabled, bool isSaleEnabled, bool isSet)
     {
         return _isLegacyVersion ? _converter.reserves(_address) : _converter.connectors(_address);
     }
