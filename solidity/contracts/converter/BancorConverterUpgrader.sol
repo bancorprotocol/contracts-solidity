@@ -275,6 +275,6 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
         view
         returns(uint256 virtualBalance, uint32 ratio, bool isVirtualBalanceEnabled, bool isSaleEnabled, bool isSet)
     {
-        return _isLegacyVersion ? _converter.reserves(_address) : _converter.reserves(_address);
+        return _isLegacyVersion ? _converter.reserves(_address) : _converter.connectors(_address);
     }
 }

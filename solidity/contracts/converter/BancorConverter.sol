@@ -1021,4 +1021,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function completeXConversion(IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) public returns (uint256) {
         return completeXConversion2(_path, _minReturn, _conversionId, getSignature(_conversionId, _block, _v, _r, _s));
     }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function connectors(address _address) public view returns (uint256, uint32, bool, bool, bool) {
+        Reserve storage reserve = reserves[_address];
+        return(reserve.virtualBalance, reserve.ratio, reserve.isVirtualBalanceEnabled, reserve.isSaleEnabled, reserve.isSet);
+    }
 }
