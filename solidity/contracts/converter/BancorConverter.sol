@@ -1069,7 +1069,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @dev deprecated, backward compatibility
     */
     function getConnectorBalance(IERC20Token _reserveToken) public view returns (uint256) {
-        getReserveBalance(_reserveToken);
+        return getReserveBalance(_reserveToken);
     }
 
     /**
