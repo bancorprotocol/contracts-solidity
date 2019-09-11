@@ -162,12 +162,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
-    // validates a token address - verifies that the address belongs to one of the convertible tokens
-    modifier validToken(IERC20Token _address) {
-        require(_address == token || connectors[_address].isSet);
-        _;
-    }
-
     // validates maximum conversion fee
     modifier validMaxConversionFee(uint32 _conversionFee) {
         require(_conversionFee >= 0 && _conversionFee <= MAX_CONVERSION_FEE);
