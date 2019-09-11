@@ -586,7 +586,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         returns(uint32)
     {
         uint32 ratio;
-        (, ratio, , , ) = _converter.reserves(_reserve);
+        (, ratio, , , ) = _converter.connectors(_reserve);
         return ratio;
     }
 
@@ -604,7 +604,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         returns(bool)
     {
         bool isSaleEnabled;
-        (, , , isSaleEnabled, ) = _converter.reserves(_reserve);
+        (, , , isSaleEnabled, ) = _converter.connectors(_reserve);
         return isSaleEnabled;
     }
 
