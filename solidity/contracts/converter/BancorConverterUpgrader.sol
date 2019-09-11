@@ -270,7 +270,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, Owned, ContractIds
       * 
       * @return reserve's settings
     */
-    function readReserve(IBancorConverterExtended _converter, address _address, bool _isLegacyVersion) 
+    function readReserve(IBancorConverterExtended _converter, address _address, bool _isLegacyVersion)
         private
         view
         returns(uint256 virtualBalance, uint32 ratio, bool isVirtualBalanceEnabled, bool isSaleEnabled, bool isSet)

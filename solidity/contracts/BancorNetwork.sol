@@ -580,7 +580,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * 
       * @return reserve's ratio
     */
-    function getReserveRatio(IBancorConverter _converter, IERC20Token _reserve) 
+    function getReserveRatio(IBancorConverter _converter, IERC20Token _reserve)
         private
         view
         returns(uint32)
@@ -598,7 +598,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * 
       * @return true if reserve sale is enabled, otherwise - false
     */
-    function getReserveSaleEnabled(IBancorConverter _converter, IERC20Token _reserve) 
+    function getReserveSaleEnabled(IBancorConverter _converter, IERC20Token _reserve)
         private
         view
         returns(bool)
