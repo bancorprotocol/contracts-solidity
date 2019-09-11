@@ -412,8 +412,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 require(getReserveSaleEnabled(converter, fromToken));
 
                 // calculate the amount & the conversion fee
-                balance = converter.getReserveBalance(fromToken);
-                ratio = getReserveRatio(converter, fromToken);
+                balance = converter.getConnectorBalance(fromToken);
+                (, ratio, , , ) = converter.connectors(fromToken);
                 amount = formula.calculatePurchaseReturn(supply, balance, ratio, amount);
                 fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
                 amount -= fee;
@@ -426,8 +426,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 supply = smartToken == prevSmartToken ? supply : smartToken.totalSupply();
 
                 // calculate the amount & the conversion fee
-                balance = converter.getReserveBalance(toToken);
-                ratio = getReserveRatio(converter, toToken);
+                balance = converter.getConnectorBalance(toToken);
+                (, ratio, , , ) = converter.connectors(toToken);
                 amount = formula.calculateSaleReturn(supply, balance, ratio, amount);
                 fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
                 amount -= fee;
@@ -570,24 +570,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         // approve the new allowance
         INonStandardERC20(_token).approve(_spender, _value);
-    }
-
-    /**
-      * @dev returns the reserve ratio
-      * 
-      * @param _converter       converter contract address
-      * @param _reserve         reserve's address to read from
-      * 
-      * @return reserve's ratio
-    */
-    function getReserveRatio(IBancorConverter _converter, IERC20Token _reserve)
-        private
-        view
-        returns(uint32)
-    {
-        uint32 ratio;
-        (, ratio, , , ) = _converter.connectors(_reserve);
-        return ratio;
     }
 
     /**
