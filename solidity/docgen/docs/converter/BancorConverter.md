@@ -2,7 +2,7 @@ Bancor Converter
 
 The Bancor converter allows for conversions between a Smart Token and other ERC20 tokens and between different ERC20 tokens and themselves. 
 
-The ERC20 connector balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on the actual connector balance.
+The ERC20 reserve balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on the actual reserve balance.
 
 This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract. 
 
@@ -17,14 +17,14 @@ Open issues:
     - gas price limit check can be skipped if the transaction comes from a trusted, whitelisted signer
 
 Other potential solutions might include a commit/reveal based schemes
-- Possibly add getters for the connector fields so that the client won't need to rely on the order in the struct
+- Possibly add getters for the reserve fields so that the client won't need to rely on the order in the struct
 
 # Functions:
-- [`constructor(contract ISmartToken _token, contract IContractRegistry _registry, uint32 _maxConversionFee, contract IERC20Token _connectorToken, uint32 _connectorWeight)`](#BancorConverter-constructor-contract-ISmartToken-contract-IContractRegistry-uint32-contract-IERC20Token-uint32-)
+- [`constructor(contract ISmartToken _token, contract IContractRegistry _registry, uint32 _maxConversionFee, contract IERC20Token _reserveToken, uint32 _reserveRatio)`](#BancorConverter-constructor-contract-ISmartToken-contract-IContractRegistry-uint32-contract-IERC20Token-uint32-)
 - [`updateRegistry()`](#BancorConverter-updateRegistry--)
 - [`restoreRegistry()`](#BancorConverter-restoreRegistry--)
 - [`disableRegistryUpdate(bool _disable)`](#BancorConverter-disableRegistryUpdate-bool-)
-- [`connectorTokenCount()`](#BancorConverter-connectorTokenCount--)
+- [`reserveTokenCount()`](#BancorConverter-reserveTokenCount--)
 - [`setConversionWhitelist(contract IWhitelist _whitelist)`](#BancorConverter-setConversionWhitelist-contract-IWhitelist-)
 - [`disableConversions(bool _disable)`](#BancorConverter-disableConversions-bool-)
 - [`transferTokenOwnership(address _newOwner)`](#BancorConverter-transferTokenOwnership-address-)
@@ -32,17 +32,17 @@ Other potential solutions might include a commit/reveal based schemes
 - [`getFinalAmount(uint256 _amount, uint8 _magnitude)`](#BancorConverter-getFinalAmount-uint256-uint8-)
 - [`withdrawTokens(contract IERC20Token _token, address _to, uint256 _amount)`](#BancorConverter-withdrawTokens-contract-IERC20Token-address-uint256-)
 - [`upgrade()`](#BancorConverter-upgrade--)
-- [`addConnector(contract IERC20Token _token, uint32 _weight, bool _enableVirtualBalance)`](#BancorConverter-addConnector-contract-IERC20Token-uint32-bool-)
-- [`updateConnector(contract IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance)`](#BancorConverter-updateConnector-contract-IERC20Token-uint32-bool-uint256-)
-- [`disableConnectorSale(contract IERC20Token _connectorToken, bool _disable)`](#BancorConverter-disableConnectorSale-contract-IERC20Token-bool-)
-- [`getConnectorBalance(contract IERC20Token _connectorToken)`](#BancorConverter-getConnectorBalance-contract-IERC20Token-)
+- [`addReserve(contract IERC20Token _token, uint32 _ratio, bool _enableVirtualBalance)`](#BancorConverter-addReserve-contract-IERC20Token-uint32-bool-)
+- [`updateReserve(contract IERC20Token _reserveToken, uint32 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)`](#BancorConverter-updateReserve-contract-IERC20Token-uint32-bool-uint256-)
+- [`disableReserveSale(contract IERC20Token _reserveToken, bool _disable)`](#BancorConverter-disableReserveSale-contract-IERC20Token-bool-)
+- [`getReserveBalance(contract IERC20Token _reserveToken)`](#BancorConverter-getReserveBalance-contract-IERC20Token-)
 - [`getReturn(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount)`](#BancorConverter-getReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
-- [`getPurchaseReturn(contract IERC20Token _connectorToken, uint256 _depositAmount)`](#BancorConverter-getPurchaseReturn-contract-IERC20Token-uint256-)
-- [`getSaleReturn(contract IERC20Token _connectorToken, uint256 _sellAmount)`](#BancorConverter-getSaleReturn-contract-IERC20Token-uint256-)
-- [`getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _sellAmount)`](#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
+- [`getPurchaseReturn(contract IERC20Token _reserveToken, uint256 _depositAmount)`](#BancorConverter-getPurchaseReturn-contract-IERC20Token-uint256-)
+- [`getSaleReturn(contract IERC20Token _reserveToken, uint256 _sellAmount)`](#BancorConverter-getSaleReturn-contract-IERC20Token-uint256-)
+- [`getCrossReserveReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _sellAmount)`](#BancorConverter-getCrossReserveReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
 - [`convertInternal(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#BancorConverter-convertInternal-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
-- [`buy(contract IERC20Token _connectorToken, uint256 _depositAmount, uint256 _minReturn)`](#BancorConverter-buy-contract-IERC20Token-uint256-uint256-)
-- [`sell(contract IERC20Token _connectorToken, uint256 _sellAmount, uint256 _minReturn)`](#BancorConverter-sell-contract-IERC20Token-uint256-uint256-)
+- [`buy(contract IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn)`](#BancorConverter-buy-contract-IERC20Token-uint256-uint256-)
+- [`sell(contract IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn)`](#BancorConverter-sell-contract-IERC20Token-uint256-uint256-)
 - [`convert2(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)`](#BancorConverter-convert2-contract-IERC20Token-contract-IERC20Token-uint256-uint256-address-uint256-)
 - [`quickConvert2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)`](#BancorConverter-quickConvert2-contract-IERC20Token---uint256-uint256-address-uint256-)
 - [`quickConvertPrioritized2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256[] _signature, address _affiliateAccount, uint256 _affiliateFee)`](#BancorConverter-quickConvertPrioritized2-contract-IERC20Token---uint256-uint256-uint256---address-uint256-)
@@ -57,12 +57,12 @@ Other potential solutions might include a commit/reveal based schemes
 
 # Events:
 - [`Conversion(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return, int256 _conversionFee)`](#BancorConverter-Conversion-address-address-address-uint256-uint256-int256-)
-- [`PriceDataUpdate(address _connectorToken, uint256 _tokenSupply, uint256 _connectorBalance, uint32 _connectorWeight)`](#BancorConverter-PriceDataUpdate-address-uint256-uint256-uint32-)
+- [`PriceDataUpdate(address _reserveToken, uint256 _tokenSupply, uint256 _reserveBalance, uint32 _reserveRatio)`](#BancorConverter-PriceDataUpdate-address-uint256-uint256-uint32-)
 - [`ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee)`](#BancorConverter-ConversionFeeUpdate-uint32-uint32-)
 - [`ConversionsEnable(bool _conversionsEnabled)`](#BancorConverter-ConversionsEnable-bool-)
 
 
-# Function `constructor(contract ISmartToken _token, contract IContractRegistry _registry, uint32 _maxConversionFee, contract IERC20Token _connectorToken, uint32 _connectorWeight)` {#BancorConverter-constructor-contract-ISmartToken-contract-IContractRegistry-uint32-contract-IERC20Token-uint32-}
+# Function `constructor(contract ISmartToken _token, contract IContractRegistry _registry, uint32 _maxConversionFee, contract IERC20Token _reserveToken, uint32 _reserveRatio)` {#BancorConverter-constructor-contract-ISmartToken-contract-IContractRegistry-uint32-contract-IERC20Token-uint32-}
 initializes a new BancorConverter instance
 
 
@@ -73,9 +73,9 @@ initializes a new BancorConverter instance
 
 - `_maxConversionFee`:   maximum conversion fee, represented in ppm
 
-- `_connectorToken`:     optional, initial connector, allows defining the first connector at deployment time
+- `_reserveToken`:       optional, initial reserve, allows defining the first reserve at deployment time
 
-- `_connectorWeight`:    optional, weight for the initial connector
+- `_reserveRatio`:       optional, ratio for the initial reserve
 
 
 # Function `updateRegistry()` {#BancorConverter-updateRegistry--}
@@ -97,8 +97,8 @@ can only be called by the manager or owner
 - `_disable`:    true to disable registry updates, false to re-enable them
 
 
-# Function `connectorTokenCount() → uint16` {#BancorConverter-connectorTokenCount--}
-returns the number of connector tokens defined
+# Function `reserveTokenCount() → uint16` {#BancorConverter-reserveTokenCount--}
+returns the number of reserve tokens defined
 
 
 
@@ -150,7 +150,7 @@ given a return amount, returns the amount minus the conversion fee
 ## Parameters:
 - `_amount`:      return amount
 
-- `_magnitude`:   1 for standard conversion, 2 for cross connector conversion
+- `_magnitude`:   1 for standard conversion, 2 for cross reserve conversion
 
 
 
@@ -158,7 +158,7 @@ given a return amount, returns the amount minus the conversion fee
 # Function `withdrawTokens(contract IERC20Token _token, address _to, uint256 _amount)` {#BancorConverter-withdrawTokens-contract-IERC20Token-address-uint256-}
 withdraws tokens held by the converter and sends them to an account
 can only be called by the owner
-note that connector tokens can only be withdrawn by the owner while the converter is inactive
+note that reserve tokens can only be withdrawn by the owner while the converter is inactive
 unless the owner is the converter upgrader contract
 
 
@@ -176,52 +176,52 @@ can only be called by the owner
 note that the owner needs to call acceptOwnership/acceptManagement on the new converter after the upgrade
 
 
-# Function `addConnector(contract IERC20Token _token, uint32 _weight, bool _enableVirtualBalance)` {#BancorConverter-addConnector-contract-IERC20Token-uint32-bool-}
-defines a new connector for the token
+# Function `addReserve(contract IERC20Token _token, uint32 _ratio, bool _enableVirtualBalance)` {#BancorConverter-addReserve-contract-IERC20Token-uint32-bool-}
+defines a new reserve for the token
 can only be called by the owner while the converter is inactive
 
 
 ## Parameters:
-- `_token`:                  address of the connector token
+- `_token`:                  address of the reserve token
 
-- `_weight`:                 constant connector weight, represented in ppm, 1-1000000
+- `_ratio`:                  constant reserve ratio, represented in ppm, 1-1000000
 
-- `_enableVirtualBalance`:   true to enable virtual balance for the connector, false to disable it
+- `_enableVirtualBalance`:   true to enable virtual balance for the reserve, false to disable it
 
 
-# Function `updateConnector(contract IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance)` {#BancorConverter-updateConnector-contract-IERC20Token-uint32-bool-uint256-}
-updates one of the token connectors
+# Function `updateReserve(contract IERC20Token _reserveToken, uint32 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)` {#BancorConverter-updateReserve-contract-IERC20Token-uint32-bool-uint256-}
+updates one of the token reserves
 can only be called by the owner
 
 
 ## Parameters:
-- `_connectorToken`:         address of the connector token
+- `_reserveToken`:           address of the reserve token
 
-- `_weight`:                 constant connector weight, represented in ppm, 1-1000000
+- `_ratio`:                  constant reserve ratio, represented in ppm, 1-1000000
 
-- `_enableVirtualBalance`:   true to enable virtual balance for the connector, false to disable it
+- `_enableVirtualBalance`:   true to enable virtual balance for the reserve, false to disable it
 
-- `_virtualBalance`:         new connector's virtual balance
+- `_virtualBalance`:         new reserve's virtual balance
 
 
-# Function `disableConnectorSale(contract IERC20Token _connectorToken, bool _disable)` {#BancorConverter-disableConnectorSale-contract-IERC20Token-bool-}
-disables converting from the given connector token in case the connector token got compromised
+# Function `disableReserveSale(contract IERC20Token _reserveToken, bool _disable)` {#BancorConverter-disableReserveSale-contract-IERC20Token-bool-}
+disables converting from the given reserve token in case the reserve token got compromised
 can only be called by the owner
 note that converting to the token is still enabled regardless of this flag and it cannot be disabled by the owner
 
 
 ## Parameters:
-- `_connectorToken`:  connector token contract address
+- `_reserveToken`:    reserve token contract address
 
 - `_disable`:         true to disable the token, false to re-enable it
 
 
-# Function `getConnectorBalance(contract IERC20Token _connectorToken) → uint256` {#BancorConverter-getConnectorBalance-contract-IERC20Token-}
-returns the connector's virtual balance if one is defined, otherwise returns the actual balance
+# Function `getReserveBalance(contract IERC20Token _reserveToken) → uint256` {#BancorConverter-getReserveBalance-contract-IERC20Token-}
+returns the reserve's virtual balance if one is defined, otherwise returns the actual balance
 
 
 ## Parameters:
-- `_connectorToken`:  connector token contract address
+- `_reserveToken`:    reserve token contract address
 
 
 
@@ -240,40 +240,40 @@ returns the expected return for converting a specific amount of _fromToken to _t
 
 
 
-# Function `getPurchaseReturn(contract IERC20Token _connectorToken, uint256 _depositAmount) → uint256, uint256` {#BancorConverter-getPurchaseReturn-contract-IERC20Token-uint256-}
-returns the expected return for buying the token for a connector token
+# Function `getPurchaseReturn(contract IERC20Token _reserveToken, uint256 _depositAmount) → uint256, uint256` {#BancorConverter-getPurchaseReturn-contract-IERC20Token-uint256-}
+returns the expected return for buying the token for a reserve token
 
 
 ## Parameters:
-- `_connectorToken`:  connector token contract address
+- `_reserveToken`:    reserve token contract address
 
-- `_depositAmount`:   amount to deposit (in the connector token)
-
-
+- `_depositAmount`:   amount to deposit (in the reserve token)
 
 
-# Function `getSaleReturn(contract IERC20Token _connectorToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getSaleReturn-contract-IERC20Token-uint256-}
-returns the expected return for selling the token for one of its connector tokens
+
+
+# Function `getSaleReturn(contract IERC20Token _reserveToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getSaleReturn-contract-IERC20Token-uint256-}
+returns the expected return for selling the token for one of its reserve tokens
 
 
 ## Parameters:
-- `_connectorToken`:  connector token contract address
+- `_reserveToken`:    reserve token contract address
 
 - `_sellAmount`:      amount to sell (in the smart token)
 
 
 
 
-# Function `getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
-returns the expected return for selling one of the connector tokens for another connector token
+# Function `getCrossReserveReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getCrossReserveReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
+returns the expected return for selling one of the reserve tokens for another reserve token
 
 
 ## Parameters:
-- `_fromConnectorToken`:  contract address of the connector token to convert from
+- `_fromReserveToken`:    contract address of the reserve token to convert from
 
-- `_toConnectorToken`:    contract address of the connector token to convert to
+- `_toReserveToken`:      contract address of the reserve token to convert to
 
-- `_sellAmount`:          amount to sell (in the from connector token)
+- `_sellAmount`:          amount to sell (in the from reserve token)
 
 
 
@@ -295,26 +295,26 @@ can only be called by the bancor network contract
 
 
 
-# Function `buy(contract IERC20Token _connectorToken, uint256 _depositAmount, uint256 _minReturn) → uint256` {#BancorConverter-buy-contract-IERC20Token-uint256-uint256-}
-buys the token by depositing one of its connector tokens
+# Function `buy(contract IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn) → uint256` {#BancorConverter-buy-contract-IERC20Token-uint256-uint256-}
+buys the token by depositing one of its reserve tokens
 
 
 ## Parameters:
-- `_connectorToken`:  connector token contract address
+- `_reserveToken`:    reserve token contract address
 
-- `_depositAmount`:   amount to deposit (in the connector token)
+- `_depositAmount`:   amount to deposit (in the reserve token)
 
 - `_minReturn`:       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
 
 
 
-# Function `sell(contract IERC20Token _connectorToken, uint256 _sellAmount, uint256 _minReturn) → uint256` {#BancorConverter-sell-contract-IERC20Token-uint256-uint256-}
-sells the token by withdrawing from one of its connector tokens
+# Function `sell(contract IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn) → uint256` {#BancorConverter-sell-contract-IERC20Token-uint256-uint256-}
+sells the token by withdrawing from one of its reserve tokens
 
 
 ## Parameters:
-- `_connectorToken`:  connector token contract address
+- `_reserveToken`:    reserve token contract address
 
 - `_sellAmount`:      amount to sell (in the smart token)
 
@@ -414,10 +414,10 @@ rather by providing the xTransferId which allows us to get the amount from Banco
 
 
 # Function `fund(uint256 _amount)` {#BancorConverter-fund-uint256-}
-buys the token with all connector tokens using the same percentage
+buys the token with all reserve tokens using the same percentage
 i.e. if the caller increases the supply by 10%, it will cost an amount equal to
-10% of each connector token balance
-can only be called if the max total weight is exactly 100% and while conversions are enabled
+10% of each reserve token balance
+can only be called if the max total ratio is exactly 100% and while conversions are enabled
 
 
 ## Parameters:
@@ -425,10 +425,10 @@ can only be called if the max total weight is exactly 100% and while conversions
 
 
 # Function `liquidate(uint256 _amount)` {#BancorConverter-liquidate-uint256-}
-sells the token for all connector tokens using the same percentage
+sells the token for all reserve tokens using the same percentage
 i.e. if the holder sells 10% of the supply, they will receive 10% of each
-connector token balance in return
-can only be called if the max total weight is exactly 100%
+reserve token balance in return
+can only be called if the max total ratio is exactly 100%
 note that the function can also be called if conversions are disabled
 
 
@@ -475,18 +475,18 @@ triggered when a conversion between two tokens occurs
 - `_conversionFee`:   conversion fee
 
 
-# Event `PriceDataUpdate(address _connectorToken, uint256 _tokenSupply, uint256 _connectorBalance, uint32 _connectorWeight)` {#BancorConverter-PriceDataUpdate-address-uint256-uint256-uint32-}
+# Event `PriceDataUpdate(address _reserveToken, uint256 _tokenSupply, uint256 _reserveBalance, uint32 _reserveRatio)` {#BancorConverter-PriceDataUpdate-address-uint256-uint256-uint32-}
 triggered after a conversion with new price data
 
 
 ## Parameters:
-- `_connectorToken`:     connector token
+- `_reserveToken`:       reserve token
 
 - `_tokenSupply`:        smart token supply
 
-- `_connectorBalance`:   connector balance
+- `_reserveBalance`:     reserve balance
 
-- `_connectorWeight`:    connector weight
+- `_reserveRatio`:       reserve ratio
 
 
 # Event `ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee)` {#BancorConverter-ConversionFeeUpdate-uint32-uint32-}

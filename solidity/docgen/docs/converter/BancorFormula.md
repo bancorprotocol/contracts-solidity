@@ -2,9 +2,9 @@
 
 # Functions:
 - [`constructor()`](#BancorFormula-constructor--)
-- [`calculatePurchaseReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _depositAmount)`](#BancorFormula-calculatePurchaseReturn-uint256-uint256-uint32-uint256-)
-- [`calculateSaleReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _sellAmount)`](#BancorFormula-calculateSaleReturn-uint256-uint256-uint32-uint256-)
-- [`calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount)`](#BancorFormula-calculateCrossConnectorReturn-uint256-uint32-uint256-uint32-uint256-)
+- [`calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _depositAmount)`](#BancorFormula-calculatePurchaseReturn-uint256-uint256-uint32-uint256-)
+- [`calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _sellAmount)`](#BancorFormula-calculateSaleReturn-uint256-uint256-uint32-uint256-)
+- [`calculateCrossReserveReturn(uint256 _fromReserveBalance, uint32 _fromReserveRatio, uint256 _toReserveBalance, uint32 _toReserveRatio, uint256 _amount)`](#BancorFormula-calculateCrossReserveReturn-uint256-uint32-uint256-uint32-uint256-)
 - [`power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD)`](#BancorFormula-power-uint256-uint256-uint32-uint32-)
 - [`generalLog(uint256 x)`](#BancorFormula-generalLog-uint256-)
 - [`floorLog2(uint256 _n)`](#BancorFormula-floorLog2-uint256-)
@@ -19,64 +19,64 @@
 No description
 
 
-# Function `calculatePurchaseReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _depositAmount) → uint256` {#BancorFormula-calculatePurchaseReturn-uint256-uint256-uint32-uint256-}
-given a token supply, connector balance, weight and a deposit amount (in the connector token),
+# Function `calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _depositAmount) → uint256` {#BancorFormula-calculatePurchaseReturn-uint256-uint256-uint32-uint256-}
+given a token supply, reserve balance, ratio and a deposit amount (in the reserve token),
 calculates the return for a given conversion (in the main token)
 
 Formula:
-Return = _supply * ((1 + _depositAmount / _connectorBalance) ^ (_connectorWeight / 1000000) - 1)
+Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 1000000) - 1)
 
 
 ## Parameters:
 - `_supply`:              token total supply
 
-- `_connectorBalance`:    total connector balance
+- `_reserveBalance`:      total reserve balance
 
-- `_connectorWeight`:     connector weight, represented in ppm, 1-1000000
+- `_reserveRatio`:        reserve ratio, represented in ppm, 1-1000000
 
-- `_depositAmount`:       deposit amount, in connector token
-
-
+- `_depositAmount`:       deposit amount, in reserve token
 
 
-# Function `calculateSaleReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _sellAmount) → uint256` {#BancorFormula-calculateSaleReturn-uint256-uint256-uint32-uint256-}
-given a token supply, connector balance, weight and a sell amount (in the main token),
-calculates the return for a given conversion (in the connector token)
+
+
+# Function `calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _sellAmount) → uint256` {#BancorFormula-calculateSaleReturn-uint256-uint256-uint32-uint256-}
+given a token supply, reserve balance, ratio and a sell amount (in the main token),
+calculates the return for a given conversion (in the reserve token)
 
 Formula:
-Return = _connectorBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_connectorWeight / 1000000)))
+Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 1000000)))
 
 
 ## Parameters:
 - `_supply`:              token total supply
 
-- `_connectorBalance`:    total connector
+- `_reserveBalance`:      total reserve
 
-- `_connectorWeight`:     constant connector Weight, represented in ppm, 1-1000000
+- `_reserveRatio`:        constant reserve Ratio, represented in ppm, 1-1000000
 
 - `_sellAmount`:          sell amount, in the token itself
 
 
 
 
-# Function `calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount) → uint256` {#BancorFormula-calculateCrossConnectorReturn-uint256-uint32-uint256-uint32-uint256-}
-given two connector balances/weights and a sell amount (in the first connector token),
-calculates the return for a conversion from the first connector token to the second connector token (in the second connector token)
+# Function `calculateCrossReserveReturn(uint256 _fromReserveBalance, uint32 _fromReserveRatio, uint256 _toReserveBalance, uint32 _toReserveRatio, uint256 _amount) → uint256` {#BancorFormula-calculateCrossReserveReturn-uint256-uint32-uint256-uint32-uint256-}
+given two reserve balances/ratios and a sell amount (in the first reserve token),
+calculates the return for a conversion from the first reserve token to the second reserve token (in the second reserve token)
 
 Formula:
-Return = _toConnectorBalance * (1 - (_fromConnectorBalance / (_fromConnectorBalance + _amount)) ^ (_fromConnectorWeight / _toConnectorWeight))
+Return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveRatio / _toReserveRatio))
 
 
 ## Parameters:
-- `_fromConnectorBalance`:    input connector balance
+- `_fromReserveBalance`:      input reserve balance
 
-- `_fromConnectorWeight`:     input connector weight, represented in ppm, 1-1000000
+- `_fromReserveRatio`:        input reserve ratio, represented in ppm, 1-1000000
 
-- `_toConnectorBalance`:      output connector balance
+- `_toReserveBalance`:        output reserve balance
 
-- `_toConnectorWeight`:       output connector weight, represented in ppm, 1-1000000
+- `_toReserveRatio`:          output reserve ratio, represented in ppm, 1-1000000
 
-- `_amount`:                  input connector amount
+- `_amount`:                  input reserve amount
 
 
 
