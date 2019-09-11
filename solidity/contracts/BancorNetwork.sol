@@ -585,12 +585,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         view
         returns(uint32)
     {
-        uint256 virtualBalance;
         uint32 ratio;
-        bool isVirtualBalanceEnabled;
-        bool isSaleEnabled;
-        bool isSet;
-        (virtualBalance, ratio, isVirtualBalanceEnabled, isSaleEnabled, isSet) = _converter.reserves(_reserve);
+        (, ratio, , , ) = _converter.reserves(_reserve);
         return ratio;
     }
 
@@ -607,12 +603,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         view
         returns(bool)
     {
-        uint256 virtualBalance;
-        uint32 ratio;
-        bool isVirtualBalanceEnabled;
         bool isSaleEnabled;
-        bool isSet;
-        (virtualBalance, ratio, isVirtualBalanceEnabled, isSaleEnabled, isSet) = _converter.reserves(_reserve);
+        (, , , isSaleEnabled, ) = _converter.reserves(_reserve);
         return isSaleEnabled;
     }
 
