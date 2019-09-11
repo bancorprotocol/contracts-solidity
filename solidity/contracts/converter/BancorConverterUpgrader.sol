@@ -17,8 +17,6 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function maxConversionFee() public view returns (uint32) {}
     function conversionFee() public view returns (uint32) {}
     function reserveTokenCount() public view returns (uint16);
-    function reserveTokenCount() public view returns (uint16);
-    function reserveTokens(uint256 _index) public view returns (IERC20Token) { _index; }
     function reserveTokens(uint256 _index) public view returns (IERC20Token) { _index; }
     function setConversionWhitelist(IWhitelist _whitelist) public;
     function transferTokenOwnership(address _newOwner) public;
@@ -30,14 +28,6 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function addReserve(IERC20Token _token, uint32 _ratio, bool _enableVirtualBalance) public;
     function updateReserve(IERC20Token _reserveToken, uint32 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance) public;
     function getReserveBalance(IERC20Token _reserveToken) public view returns (uint256);
-    function getReserveBalance(IERC20Token _reserveToken) public view returns (uint256);
-    function reserves(address _address) public view returns (
-        uint256 virtualBalance, 
-        uint32 ratio, 
-        bool isVirtualBalanceEnabled, 
-        bool isSaleEnabled, 
-        bool isSet
-    );
 }
 
 /**
