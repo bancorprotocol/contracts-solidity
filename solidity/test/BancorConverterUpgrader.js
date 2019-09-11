@@ -37,19 +37,19 @@ async function initConverter(accounts, activate, version = null, maxConversionFe
     token = await SmartToken.new('Token1', 'TKN1', 18);
     let tokenAddress = token.address;
 
-    let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-    let connectorTokenAddress = connectorToken.address;
+    let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+    let reserveTokenAddress = reserveToken.address;
 
-    let connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
-    let connectorTokenAddress2 = connectorToken2.address;
+    let reserveToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
+    let reserveTokenAddress2 = reserveToken2.address;
 
-    let converter = await createConverter(tokenAddress, contractRegistry.address, maxConversionFee, connectorTokenAddress, 500000, version);
+    let converter = await createConverter(tokenAddress, contractRegistry.address, maxConversionFee, reserveTokenAddress, 500000, version);
     let converterAddress = converter.address;
-    await converter.addConnector(connectorTokenAddress2, 150000, false);
+    await converter.addReserve(reserveTokenAddress2, 150000, false);
 
     await token.issue(accounts[0], 20000);
-    await connectorToken.transfer(converterAddress, 5000);
-    await connectorToken2.transfer(converterAddress, 8000);
+    await reserveToken.transfer(converterAddress, 5000);
+    await reserveToken2.transfer(converterAddress, 8000);
     await converter.setConversionFee(1000);
 
     if (activate) {
@@ -60,12 +60,12 @@ async function initConverter(accounts, activate, version = null, maxConversionFe
     return converter;
 }
 
-async function createConverter(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight, version) {
+async function createConverter(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, ratio, version) {
     let converter;
 
     // if no version is passed, create newest converter
     if (!version || version == "0.12") {
-        converter = await BancorConverter.new(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight);
+        converter = await BancorConverter.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, ratio);
     }
     else {
         let abi = converters[version]['abi'];
@@ -75,7 +75,7 @@ async function createConverter(tokenAddress, registryAddress, maxConversionFee, 
         converterContract.setProvider(web3.currentProvider);
         converterContract.defaults({ from: web3.eth.accounts[0], gas: block.gasLimit });
 
-        converter = await converterContract.new(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight);
+        converter = await converterContract.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, ratio);
     }
 
     return converter;
@@ -230,7 +230,7 @@ contract('BancorConverterUpgrader', accounts => {
         assert.equal(initialOwner, currentOwner);
     });
 
-    it('verifies upgrade of converter without connectors', async () => {
+    it('verifies upgrade of converter without reserves', async () => {
         let token1 = await SmartToken.new('Token1', 'TKN1', 18);
         let converter1 = await BancorConverter.new(token1.address, contractRegistry.address, 30000, '0x0', 0);
         await token1.issue(accounts[0], 20000);
@@ -239,75 +239,75 @@ contract('BancorConverterUpgrader', accounts => {
         let currentMaxConversionFee = await converter1.maxConversionFee.call();
         await converter1.upgrade();
         let newConverter = await getNewConverter();
-        let newConverterConnectorTokenCount = await newConverter.connectorTokenCount.call();
-        assert.equal(newConverterConnectorTokenCount.toFixed(), 0);
+        let newConverterReserveTokenCount = await newConverter.reserveTokenCount.call();
+        assert.equal(newConverterReserveTokenCount.toFixed(), 0);
         let newTokenOwner = await token1.owner.call();
         assert.equal(newTokenOwner, newConverter.address);
         let newMaxConversionFee = await newConverter.maxConversionFee.call();
         assert.equal(currentMaxConversionFee.toFixed(), newMaxConversionFee.toFixed());
     });
 
-    it('verifies that the connectors count after an upgrade is the same', async () => {
+    it('verifies that the reserves count after an upgrade is the same', async () => {
         for (let i = 0; i < versions.length; i++) {
             let converter = await initConverter(accounts, true, versions[i]);
-            let currentConverterConnectorTokenCount = await converter.connectorTokenCount.call();
+            let currentConverterReserveTokenCount = await converter.reserveTokenCount.call();
             let newConverter = await upgradeConverter(converter, versions[i]);
-            let newConverterConnectorTokenCount = await newConverter.connectorTokenCount.call();
-            assert.equal(currentConverterConnectorTokenCount.toFixed(), newConverterConnectorTokenCount.toFixed());            
+            let newConverterReserveTokenCount = await newConverter.reserveTokenCount.call();
+            assert.equal(currentConverterReserveTokenCount.toFixed(), newConverterReserveTokenCount.toFixed());            
         }
     });
 
-    it('verifies that the connector balances after upgrade is equal', async () => {
+    it('verifies that the reserve balances after upgrade is equal', async () => {
         for (let i = 0; i < versions.length; i++) {
             let converter = await initConverter(accounts, true, versions[i]);
-            let connector1 = await converter.connectorTokens.call(0);
-            let connector2 = await converter.connectorTokens.call(1);
-            let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
-            let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
+            let reserve1 = await converter.reserveTokens.call(0);
+            let reserve2 = await converter.reserveTokens.call(1);
+            let initialReserveBalance1 = await converter.getReserveBalance.call(reserve1);
+            let initialReserveBalance2 = await converter.getReserveBalance.call(reserve2);
             let newConverter = await upgradeConverter(converter, versions[i]);
-            let currentConnectorBalance1 = await newConverter.getConnectorBalance.call(connector1);
-            let currentConnectorBalance2 = await newConverter.getConnectorBalance.call(connector2);
-            assert.equal(initialConnectorBalance1.toFixed(), currentConnectorBalance1.toFixed());
-            assert.equal(initialConnectorBalance2.toFixed(), currentConnectorBalance2.toFixed());            
+            let currentReserveBalance1 = await newConverter.getReserveBalance.call(reserve1);
+            let currentReserveBalance2 = await newConverter.getReserveBalance.call(reserve2);
+            assert.equal(initialReserveBalance1.toFixed(), currentReserveBalance1.toFixed());
+            assert.equal(initialReserveBalance2.toFixed(), currentReserveBalance2.toFixed());            
         }
     });
 
     it('verifies that balances did not change if the process stopped due to gas limitation', async () => {
         let converter = await initConverter(accounts, true);
-        let connector1 = await converter.connectorTokens.call(0);
-        let connector2 = await converter.connectorTokens.call(1);
-        let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
-        let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
+        let reserve1 = await converter.reserveTokens.call(0);
+        let reserve2 = await converter.reserveTokens.call(1);
+        let initialReserveBalance1 = await converter.getReserveBalance.call(reserve1);
+        let initialReserveBalance2 = await converter.getReserveBalance.call(reserve2);
         
         await utils.catchRevert(converter.upgrade({ gas: 2000000 }));
-        let currentConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
-        let currentConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
-        assert.equal(initialConnectorBalance1.toFixed(), currentConnectorBalance1.toFixed());
-        assert.equal(initialConnectorBalance2.toFixed(), currentConnectorBalance2.toFixed());
+        let currentReserveBalance1 = await converter.getReserveBalance.call(reserve1);
+        let currentReserveBalance2 = await converter.getReserveBalance.call(reserve2);
+        assert.equal(initialReserveBalance1.toFixed(), currentReserveBalance1.toFixed());
+        assert.equal(initialReserveBalance2.toFixed(), currentReserveBalance2.toFixed());
     });
 
     it('verifies upgrade of a non active converter', async () => {
         let token1 = await SmartToken.new('Token1', 'TKN1', 18);
-        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
-        let connectorTokenAddress = connectorToken.address;
-        let connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
-        let connectorTokenAddress2 = connectorToken2.address;
-        let converter1 = await BancorConverter.new(token1.address, contractRegistry.address, 30000, connectorTokenAddress, 500000);
-        await converter1.addConnector(connectorTokenAddress2, 500000, false);
-        await connectorToken.transfer(converter1.address, 5000);
-        await connectorToken2.transfer(converter1.address, 8000);
+        let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let reserveTokenAddress = reserveToken.address;
+        let reserveToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
+        let reserveTokenAddress2 = reserveToken2.address;
+        let converter1 = await BancorConverter.new(token1.address, contractRegistry.address, 30000, reserveTokenAddress, 500000);
+        await converter1.addReserve(reserveTokenAddress2, 500000, false);
+        await reserveToken.transfer(converter1.address, 5000);
+        await reserveToken2.transfer(converter1.address, 8000);
         await token1.issue(accounts[0], 20000);
         let currentMaxConversionFee = await converter1.maxConversionFee.call();
         await converter1.upgrade();
         let newConverter = await getNewConverter();
-        let newConverterConnectorTokenCount = await newConverter.connectorTokenCount.call();
-        assert.equal(newConverterConnectorTokenCount.toFixed(), 2);
+        let newConverterReserveTokenCount = await newConverter.reserveTokenCount.call();
+        assert.equal(newConverterReserveTokenCount.toFixed(), 2);
         let newMaxConversionFee = await newConverter.maxConversionFee.call();
         assert.equal(currentMaxConversionFee.toFixed(), newMaxConversionFee.toFixed());
-        let currentConnectorBalance1 = await newConverter.getConnectorBalance.call(connectorToken.address);
-        let currentConnectorBalance2 = await newConverter.getConnectorBalance.call(connectorToken2.address);
-        assert.equal(currentConnectorBalance1.toFixed(), 5000);
-        assert.equal(currentConnectorBalance2.toFixed(), 8000);
+        let currentReserveBalance1 = await newConverter.getReserveBalance.call(reserveToken.address);
+        let currentReserveBalance2 = await newConverter.getReserveBalance.call(reserveToken2.address);
+        assert.equal(currentReserveBalance1.toFixed(), 5000);
+        assert.equal(currentReserveBalance2.toFixed(), 8000);
     });
 });
 

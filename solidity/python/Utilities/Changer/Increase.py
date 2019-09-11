@@ -4,17 +4,17 @@ from decimal import Decimal
 from decimal import getcontext
 
 
-MAX_WEIGHT = 1000000
+MAX_RATIO = 1000000
 
 
-def calculate(supply, balance, weight, change):
-    assert 0 < supply and 0 < balance and 0 < weight <= MAX_WEIGHT and 0 <= change
-    weight /= MAX_WEIGHT
+def calculate(supply, balance, ratio, change):
+    assert 0 < supply and 0 < balance and 0 < ratio <= MAX_RATIO and 0 <= change
+    ratio /= MAX_RATIO
     change /= 100
-    cur_amount = balance * ((1 + change) ** (1 / (1 - weight)) - 1)
-    new_amount = supply * ((1 + cur_amount / balance) ** weight - 1)
-    cur_price = balance / (supply * weight)
-    new_price = (balance + cur_amount) / ((supply + new_amount) * weight)
+    cur_amount = balance * ((1 + change) ** (1 / (1 - ratio)) - 1)
+    new_amount = supply * ((1 + cur_amount / balance) ** ratio - 1)
+    cur_price = balance / (supply * ratio)
+    new_price = (balance + cur_amount) / ((supply + new_amount) * ratio)
     print('At present:')
     print('- supply  = {:.10f}'.format(supply))
     print('- balance = {:.10f}'.format(balance))
@@ -28,7 +28,7 @@ def calculate(supply, balance, weight, change):
 
 if len(argv) == 5:
     getcontext().prec = 80
-    supply, balance, weight, change = [Decimal(arg) for arg in argv[1:]]
-    calculate(supply, balance, weight, change)
+    supply, balance, ratio, change = [Decimal(arg) for arg in argv[1:]]
+    calculate(supply, balance, ratio, change)
 else:
-    print('{} <supply> <balance> <weight> <desired price change>'.format(basename(__file__)))
+    print('{} <supply> <balance> <ratio> <desired price change>'.format(basename(__file__)))

@@ -116,12 +116,12 @@ contract('BancorNetwork', accounts => {
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000);
 
         converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000);
-        await converter2.addConnector(smartToken3.address, 150000, false);
+        await converter2.addReserve(smartToken3.address, 150000, false);
 
         converter3 = await BancorConverter.new(smartToken3.address, contractRegistry.address, 0, smartToken4.address, 350000);
 
         converter4 = await BancorConverter.new(smartToken4.address, contractRegistry.address, 0, etherToken.address, 150000);
-        await converter4.addConnector(erc20Token.address, 220000, false);
+        await converter4.addReserve(erc20Token.address, 220000, false);
 
         await etherToken.transfer(converter1.address, 50000);
         await smartToken1.transfer(converter2.address, 40000);
@@ -478,7 +478,7 @@ contract('BancorNetwork', accounts => {
         assert.equal(returnByPath, balanceAfterTransfer - balanceBeforeTransfer);
     });
 
-    it('verifies that getReturnByPath returns the correct amount for cross connector conversion', async () => {
+    it('verifies that getReturnByPath returns the correct amount for cross reserve conversion', async () => {
         await converter2.quickConvert([etherToken.address, smartToken1.address, smartToken1.address], 1000, 1, { from: accounts[1], value: 1000 });
         await smartToken1.approve(converter2.address, 100, { from: accounts[1] });
         let path = [smartToken1.address, smartToken2.address, smartToken3.address];
@@ -525,13 +525,13 @@ contract('BancorNetwork', accounts => {
         // console.log(`gas used for converting 3 -> 2 -> 1 -> eth: ${res.receipt.cumulativeGasUsed}`);
     });
 
-    it('verifies that getReturnByPath returns the same amount as getReturn when converting a connector to the smart token', async () => {
+    it('verifies that getReturnByPath returns the same amount as getReturn when converting a reserve to the smart token', async () => {
         let getReturn = (await converter2.getReturn.call(smartToken1.address, smartToken2.address, 100))[0];
         let returnByPath = (await bancorNetwork.getReturnByPath.call([smartToken1.address, smartToken2.address, smartToken2.address], 100))[0];
         assert.equal(getReturn.toNumber(), returnByPath.toNumber());
     });
 
-    it('verifies that getReturnByPath returns the same amount as getReturn when converting from a token to a connector', async () => {
+    it('verifies that getReturnByPath returns the same amount as getReturn when converting from a token to a reserve', async () => {
         let getReturn = (await converter2.getReturn.call(smartToken2.address, smartToken1.address, 100))[0];
         let returnByPath = (await bancorNetwork.getReturnByPath.call([smartToken2.address, smartToken2.address, smartToken1.address], 100))[0];
         assert.equal(getReturn.toNumber(), returnByPath.toNumber());
@@ -1117,7 +1117,7 @@ contract('BancorNetwork', accounts => {
         assert(newToken1Balance.lessThan(prevToken1Balance), "sold token balance isn't lower than previous balance");
     });
 
-    it('verifies that getReturnByPath returns the correct amount for cross connector conversion', async () => {
+    it('verifies that getReturnByPath returns the correct amount for cross reserve conversion', async () => {
         await converter2.quickConvert2([etherToken.address, smartToken1.address, smartToken1.address], 1000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 1000 });
         await smartToken1.approve(converter2.address, 100, { from: accounts[1] });
         let path = [smartToken1.address, smartToken2.address, smartToken3.address];

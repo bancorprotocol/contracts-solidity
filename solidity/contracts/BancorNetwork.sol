@@ -391,7 +391,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint256 fee;
         uint256 supply;
         uint256 balance;
-        uint32 weight;
+        uint32 ratio;
         ISmartToken prevSmartToken;
         IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
 
@@ -409,12 +409,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 supply = smartToken == prevSmartToken ? supply : smartToken.totalSupply();
 
                 // validate input
-                require(getConnectorSaleEnabled(converter, fromToken));
+                require(getReserveSaleEnabled(converter, fromToken));
 
                 // calculate the amount & the conversion fee
-                balance = converter.getConnectorBalance(fromToken);
-                weight = getConnectorWeight(converter, fromToken);
-                amount = formula.calculatePurchaseReturn(supply, balance, weight, amount);
+                balance = converter.getReserveBalance(fromToken);
+                ratio = getReserveRatio(converter, fromToken);
+                amount = formula.calculatePurchaseReturn(supply, balance, ratio, amount);
                 fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
                 amount -= fee;
 
@@ -426,16 +426,16 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 supply = smartToken == prevSmartToken ? supply : smartToken.totalSupply();
 
                 // calculate the amount & the conversion fee
-                balance = converter.getConnectorBalance(toToken);
-                weight = getConnectorWeight(converter, toToken);
-                amount = formula.calculateSaleReturn(supply, balance, weight, amount);
+                balance = converter.getReserveBalance(toToken);
+                ratio = getReserveRatio(converter, toToken);
+                amount = formula.calculateSaleReturn(supply, balance, ratio, amount);
                 fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
                 amount -= fee;
 
                 // update the smart token supply for the next iteration
                 supply = smartToken.totalSupply() - amount;
             }
-            else { // cross connector conversion
+            else { // cross reserve conversion
                 (amount, fee) = getReturn(converter, fromToken, toToken, amount);
             }
 
@@ -573,46 +573,46 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-      * @dev returns the connector weight
+      * @dev returns the reserve ratio
       * 
       * @param _converter       converter contract address
-      * @param _connector       connector's address to read from
+      * @param _reserve         reserve's address to read from
       * 
-      * @return connector's weight
+      * @return reserve's ratio
     */
-    function getConnectorWeight(IBancorConverter _converter, IERC20Token _connector) 
+    function getReserveRatio(IBancorConverter _converter, IERC20Token _reserve) 
         private
         view
         returns(uint32)
     {
         uint256 virtualBalance;
-        uint32 weight;
+        uint32 ratio;
         bool isVirtualBalanceEnabled;
         bool isSaleEnabled;
         bool isSet;
-        (virtualBalance, weight, isVirtualBalanceEnabled, isSaleEnabled, isSet) = _converter.connectors(_connector);
-        return weight;
+        (virtualBalance, ratio, isVirtualBalanceEnabled, isSaleEnabled, isSet) = _converter.reserves(_reserve);
+        return ratio;
     }
 
     /**
-      * @dev returns true if connector sale is enabled
+      * @dev returns true if reserve sale is enabled
       * 
       * @param _converter       converter contract address
-      * @param _connector       connector's address to read from
+      * @param _reserve         reserve's address to read from
       * 
-      * @return true if connector sale is enabled, otherwise - false
+      * @return true if reserve sale is enabled, otherwise - false
     */
-    function getConnectorSaleEnabled(IBancorConverter _converter, IERC20Token _connector) 
+    function getReserveSaleEnabled(IBancorConverter _converter, IERC20Token _reserve) 
         private
         view
         returns(bool)
     {
         uint256 virtualBalance;
-        uint32 weight;
+        uint32 ratio;
         bool isVirtualBalanceEnabled;
         bool isSaleEnabled;
         bool isSet;
-        (virtualBalance, weight, isVirtualBalanceEnabled, isSaleEnabled, isSet) = _converter.connectors(_connector);
+        (virtualBalance, ratio, isVirtualBalanceEnabled, isSaleEnabled, isSet) = _converter.reserves(_reserve);
         return isSaleEnabled;
     }
 

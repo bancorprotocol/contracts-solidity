@@ -8,7 +8,7 @@ import '../utility/SafeMath.sol';
   * 
   * The crowdsale version of the smart token controller, allows contributing ether in exchange for Bancor tokens
   * The price remains fixed for the entire duration of the crowdsale
-  * Note that 20% of the contributions are the BNT token's ETH connector balance
+  * Note that 20% of the contributions are the BNT token's ETH reserve balance
 */
 contract CrowdsaleController is SmartTokenController {
     using SafeMath for uint256;
