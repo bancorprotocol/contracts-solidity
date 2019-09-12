@@ -65,7 +65,7 @@ Other potential solutions might include a commit/reveal based schemes
 
 # Events:
 - [`Conversion(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return, int256 _conversionFee)`](#BancorConverter-Conversion-address-address-address-uint256-uint256-int256-)
-- [`PriceDataUpdate(address _reserveToken, uint256 _tokenSupply, uint256 _reserveBalance, uint32 _reserveRatio)`](#BancorConverter-PriceDataUpdate-address-uint256-uint256-uint32-)
+- [`PriceDataUpdate(address _connectorToken, uint256 _tokenSupply, uint256 _connectorBalance, uint32 _connectorWeight)`](#BancorConverter-PriceDataUpdate-address-uint256-uint256-uint32-)
 - [`ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee)`](#BancorConverter-ConversionFeeUpdate-uint32-uint32-)
 - [`ConversionsEnable(bool _conversionsEnabled)`](#BancorConverter-ConversionsEnable-bool-)
 
@@ -515,18 +515,18 @@ triggered when a conversion between two tokens occurs
 - `_conversionFee`:   conversion fee
 
 
-# Event `PriceDataUpdate(address _reserveToken, uint256 _tokenSupply, uint256 _reserveBalance, uint32 _reserveRatio)` {#BancorConverter-PriceDataUpdate-address-uint256-uint256-uint32-}
+# Event `PriceDataUpdate(address _connectorToken, uint256 _tokenSupply, uint256 _connectorBalance, uint32 _connectorWeight)` {#BancorConverter-PriceDataUpdate-address-uint256-uint256-uint32-}
 triggered after a conversion with new price data
 
 
 ## Parameters:
-- `_reserveToken`:       reserve token
+- `_connectorToken`:     reserve token
 
 - `_tokenSupply`:        smart token supply
 
-- `_reserveBalance`:     reserve balance
+- `_connectorBalance`:   reserve balance
 
-- `_reserveRatio`:       reserve ratio
+- `_connectorWeight`:    reserve ratio
 
 
 # Event `ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee)` {#BancorConverter-ConversionFeeUpdate-uint32-uint32-}

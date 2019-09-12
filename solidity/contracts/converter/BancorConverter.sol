@@ -94,16 +94,16 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev triggered after a conversion with new price data
       * 
-      * @param  _reserveToken       reserve token
+      * @param  _connectorToken     reserve token
       * @param  _tokenSupply        smart token supply
-      * @param  _reserveBalance     reserve balance
-      * @param  _reserveRatio       reserve ratio
+      * @param  _connectorBalance   reserve balance
+      * @param  _connectorWeight    reserve ratio
     */
     event PriceDataUpdate(
-        address indexed _reserveToken,
+        address indexed _connectorToken,
         uint256 _tokenSupply,
-        uint256 _reserveBalance,
-        uint32 _reserveRatio
+        uint256 _connectorBalance,
+        uint32 _connectorWeight
     );
 
     /**
