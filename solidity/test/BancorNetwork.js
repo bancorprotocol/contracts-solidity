@@ -537,9 +537,14 @@ contract('BancorNetwork', accounts => {
         assert.equal(getReturn.toNumber(), returnByPath.toNumber());
     });
 
-    it('should throw when attempting to get the return by path with invalid path', async () => {
+    it('should throw when attempting to call getReturnByPath on a path with fewer than 3 elements', async () => {
         let invalidPath = [etherToken.address, smartToken1.address];
-        await utils.catchInvalidOpcode(bancorNetwork.getReturnByPath.call(invalidPath, 1000));
+        await utils.catchRevert(bancorNetwork.getReturnByPath.call(invalidPath, 1000));
+    });
+
+    it('should throw when attempting to call getReturnByPath on a path with an odd number of elements', async () => {
+        let invalidPath = [etherToken.address, smartToken1.address, smartToken2.address, smartToken3.address];
+        await utils.catchRevert(bancorNetwork.getReturnByPath.call(invalidPath, 1000));
     });
 
     it('should throw when attempting to get the return by path with invalid long path', async () => {

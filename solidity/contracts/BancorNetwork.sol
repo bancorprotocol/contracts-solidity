@@ -383,30 +383,31 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * @return expected conversion return amount and conversion fee
     */
     function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
-        IERC20Token fromToken;
-        ISmartToken smartToken; 
-        IERC20Token toToken;
-        IBancorConverter converter;
         uint256 amount;
         uint256 fee;
         uint256 supply;
         uint256 balance;
         uint32 ratio;
-        ISmartToken prevSmartToken;
+        IBancorConverter converter;
         IBancorFormula formula = IBancorFormula(registry.getAddress(ContractIds.BANCOR_FORMULA));
 
         amount = _amount;
-        fromToken = _path[0];
+
+        // verify that the number of elements is larger than 2 and odd
+        require(_path.length > 2 && _path.length % 2 == 1);
 
         // iterate over the conversion path
-        for (uint256 i = 1; i < _path.length; i += 2) {
-            smartToken = ISmartToken(_path[i]);
-            toToken = _path[i + 1];
-            converter = IBancorConverter(smartToken.owner());
+        for (uint256 i = 2; i < _path.length; i += 2) {
+            IERC20Token fromToken = _path[i - 2];
+            IERC20Token smartToken = _path[i - 1];
+            IERC20Token toToken = _path[i];
 
             if (toToken == smartToken) { // buy the smart token
-                // check if the current smart token supply was changed in the previous iteration
-                supply = smartToken == prevSmartToken ? supply : smartToken.totalSupply();
+                // check if the current smart token has changed
+                if (i < 3 || smartToken != _path[i - 3]) {
+                    supply = smartToken.totalSupply();
+                    converter = IBancorConverter(ISmartToken(smartToken).owner());
+                }
 
                 // validate input
                 require(getReserveSaleEnabled(converter, fromToken));
@@ -419,11 +420,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 amount -= fee;
 
                 // update the smart token supply for the next iteration
-                supply = smartToken.totalSupply() + amount;
+                supply += amount;
             }
             else if (fromToken == smartToken) { // sell the smart token
-                // check if the current smart token supply was changed in the previous iteration
-                supply = smartToken == prevSmartToken ? supply : smartToken.totalSupply();
+                // check if the current smart token has changed
+                if (i < 3 || smartToken != _path[i - 3]) {
+                    supply = smartToken.totalSupply();
+                    converter = IBancorConverter(ISmartToken(smartToken).owner());
+                }
 
                 // calculate the amount & the conversion fee
                 balance = converter.getConnectorBalance(toToken);
@@ -433,14 +437,16 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
                 amount -= fee;
 
                 // update the smart token supply for the next iteration
-                supply = smartToken.totalSupply() - amount;
+                supply -= amount;
             }
             else { // cross reserve conversion
+                // check if the current smart token has changed
+                if (i < 3 || smartToken != _path[i - 3]) {
+                    converter = IBancorConverter(ISmartToken(smartToken).owner());
+                }
+
                 (amount, fee) = getReturn(converter, fromToken, toToken, amount);
             }
-
-            prevSmartToken = smartToken;
-            fromToken = toToken;
         }
 
         return (amount, fee);
