@@ -12,6 +12,7 @@
 - [`generalExp(uint256 _x, uint8 _precision)`](#BancorFormula-generalExp-uint256-uint8-)
 - [`optimalLog(uint256 x)`](#BancorFormula-optimalLog-uint256-)
 - [`optimalExp(uint256 x)`](#BancorFormula-optimalExp-uint256-)
+- [`calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount)`](#BancorFormula-calculateCrossConnectorReturn-uint256-uint32-uint256-uint32-uint256-)
 
 
 
@@ -144,5 +145,9 @@ Detailed description:
 - The exponentiation of r is calculated via Taylor series for e^x, where x = r
 - The exponentiation of the input is calculated by multiplying the intermediate results above
 - For example: e^5.521692859 = e^(4 + 1 + 0.5 + 0.021692859) = e^4 * e^1 * e^0.5 * e^0.021692859
+
+
+# Function `calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount) → uint256` {#BancorFormula-calculateCrossConnectorReturn-uint256-uint32-uint256-uint32-uint256-}
+deprecated, backward compatibility
 
 

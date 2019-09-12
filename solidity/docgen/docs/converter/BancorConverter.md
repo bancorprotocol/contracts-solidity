@@ -57,11 +57,11 @@ Other potential solutions might include a commit/reveal based schemes
 - [`connectors(address _address)`](#BancorConverter-connectors-address-)
 - [`connectorTokens(uint256 _index)`](#BancorConverter-connectorTokens-uint256-)
 - [`connectorTokenCount()`](#BancorConverter-connectorTokenCount--)
-- [`addConnector(contract IERC20Token _token, uint32 _ratio, bool _enableVirtualBalance)`](#BancorConverter-addConnector-contract-IERC20Token-uint32-bool-)
-- [`updateConnector(contract IERC20Token _reserveToken, uint32 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)`](#BancorConverter-updateConnector-contract-IERC20Token-uint32-bool-uint256-)
-- [`disableConnectorSale(contract IERC20Token _reserveToken, bool _disable)`](#BancorConverter-disableConnectorSale-contract-IERC20Token-bool-)
-- [`getConnectorBalance(contract IERC20Token _reserveToken)`](#BancorConverter-getConnectorBalance-contract-IERC20Token-)
-- [`getCrossConnectorReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _sellAmount)`](#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
+- [`addConnector(contract IERC20Token _token, uint32 _weight, bool _enableVirtualBalance)`](#BancorConverter-addConnector-contract-IERC20Token-uint32-bool-)
+- [`updateConnector(contract IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance)`](#BancorConverter-updateConnector-contract-IERC20Token-uint32-bool-uint256-)
+- [`disableConnectorSale(contract IERC20Token _connectorToken, bool _disable)`](#BancorConverter-disableConnectorSale-contract-IERC20Token-bool-)
+- [`getConnectorBalance(contract IERC20Token _connectorToken)`](#BancorConverter-getConnectorBalance-contract-IERC20Token-)
+- [`getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _sellAmount)`](#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
 
 # Events:
 - [`Conversion(address _fromToken, address _toToken, address _trader, uint256 _amount, uint256 _return, int256 _conversionFee)`](#BancorConverter-Conversion-address-address-address-uint256-uint256-int256-)
@@ -476,23 +476,23 @@ deprecated, backward compatibility
 deprecated, backward compatibility
 
 
-# Function `addConnector(contract IERC20Token _token, uint32 _ratio, bool _enableVirtualBalance)` {#BancorConverter-addConnector-contract-IERC20Token-uint32-bool-}
+# Function `addConnector(contract IERC20Token _token, uint32 _weight, bool _enableVirtualBalance)` {#BancorConverter-addConnector-contract-IERC20Token-uint32-bool-}
 deprecated, backward compatibility
 
 
-# Function `updateConnector(contract IERC20Token _reserveToken, uint32 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)` {#BancorConverter-updateConnector-contract-IERC20Token-uint32-bool-uint256-}
+# Function `updateConnector(contract IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance)` {#BancorConverter-updateConnector-contract-IERC20Token-uint32-bool-uint256-}
 deprecated, backward compatibility
 
 
-# Function `disableConnectorSale(contract IERC20Token _reserveToken, bool _disable)` {#BancorConverter-disableConnectorSale-contract-IERC20Token-bool-}
+# Function `disableConnectorSale(contract IERC20Token _connectorToken, bool _disable)` {#BancorConverter-disableConnectorSale-contract-IERC20Token-bool-}
 deprecated, backward compatibility
 
 
-# Function `getConnectorBalance(contract IERC20Token _reserveToken) → uint256` {#BancorConverter-getConnectorBalance-contract-IERC20Token-}
+# Function `getConnectorBalance(contract IERC20Token _connectorToken) → uint256` {#BancorConverter-getConnectorBalance-contract-IERC20Token-}
 deprecated, backward compatibility
 
 
-# Function `getCrossConnectorReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
+# Function `getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
 deprecated, backward compatibility
 
 

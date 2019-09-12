@@ -953,13 +953,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev deprecated, backward compatibility
-    */
-    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        return convertInternal(_fromToken, _toToken, _amount, _minReturn);
-    }
-
-    /**
       * @dev helper, dispatches the Conversion event
       * 
       * @param _fromToken       ERC20 token to convert from
@@ -992,6 +985,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         signature[3] = uint256(_r);
         signature[4] = uint256(_s);
         return signature;
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+        return convertInternal(_fromToken, _toToken, _amount, _minReturn);
     }
 
     /**
@@ -1047,35 +1047,35 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev deprecated, backward compatibility
     */
-    function addConnector(IERC20Token _token, uint32 _ratio, bool _enableVirtualBalance) public {
-        addReserve(_token, _ratio, _enableVirtualBalance);
+    function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance) public {
+        addReserve(_token, _weight, _enableVirtualBalance);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function updateConnector(IERC20Token _reserveToken, uint32 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance) public {
-        updateReserve(_reserveToken, _ratio, _enableVirtualBalance, _virtualBalance);
+    function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance) public {
+        updateReserve(_connectorToken, _weight, _enableVirtualBalance, _virtualBalance);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function disableConnectorSale(IERC20Token _reserveToken, bool _disable) public {
-        disableReserveSale(_reserveToken, _disable);
+    function disableConnectorSale(IERC20Token _connectorToken, bool _disable) public {
+        disableReserveSale(_connectorToken, _disable);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function getConnectorBalance(IERC20Token _reserveToken) public view returns (uint256) {
-        return getReserveBalance(_reserveToken);
+    function getConnectorBalance(IERC20Token _connectorToken) public view returns (uint256) {
+        return getReserveBalance(_connectorToken);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function getCrossConnectorReturn(IERC20Token _fromReserveToken, IERC20Token _toReserveToken, uint256 _sellAmount) public view returns (uint256, uint256) {
-        return getCrossReserveReturn(_fromReserveToken, _toReserveToken, _sellAmount);
+    function getCrossConnectorReturn(IERC20Token _fromConnectorToken, IERC20Token _toConnectorToken, uint256 _sellAmount) public view returns (uint256, uint256) {
+        return getCrossReserveReturn(_fromConnectorToken, _toConnectorToken, _sellAmount);
     }
 }

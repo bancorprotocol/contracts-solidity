@@ -529,4 +529,11 @@ contract BancorFormula is IBancorFormula, Utils {
 
         return res;
     }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount) public view returns (uint256) {
+        return calculateCrossReserveReturn(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount);
+    }
 }
