@@ -21,7 +21,7 @@
     "decimal.js": "^10.2.0",
     "ethereumjs-util": "^5.2.0",
     "ganache-cli": "6.5.1",
-    "solidity-coverage": "0.6.4",
+    "solidity-coverage": "0.6.7",
     "solidity-docgen": "0.3.0-beta.4",
     "truffle": "4.1.16",
     "truffle-contract": "^3.0.8",
