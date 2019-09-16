@@ -12,7 +12,7 @@ const input = JSON.parse(fs.readFileSync(INPUT_FILE, {encoding: "utf8"}));
 //  {
 //      "network"        : "api", // use "api" for mainnet or "api-<testnet>" for testnet
 //      "apiKey"         : "",    // generate this value at https://etherscan.io/myapikey
-//      "compilerVersion": "v0.4.24+commit.e67f0147",
+//      "compilerVersion": "v0.4.26+commit.4563c3fc",
 //      "optimization"   : {"used": 1, "runs": 200},
 //      "contracts"      : {
 //          "Contract1": {"addr": "0x0000000000000000000000000000000000000001", "args": "<abi-encoded constructor arguments>"},

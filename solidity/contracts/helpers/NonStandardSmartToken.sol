@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.26;
 import './NonStandardERC20Token.sol';
 import './interfaces/INonStandardSmartToken.sol';
 import '../utility/Owned.sol';

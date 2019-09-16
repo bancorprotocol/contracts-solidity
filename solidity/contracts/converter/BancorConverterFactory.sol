@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.26;
 import './BancorConverter.sol';
 import './interfaces/IBancorConverterFactory.sol';
 import '../utility/interfaces/IContractRegistry.sol';

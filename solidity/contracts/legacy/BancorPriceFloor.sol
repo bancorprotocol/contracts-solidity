@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.26;
 import '../utility/TokenHolder.sol';
 import '../utility/Owned.sol';
 import '../utility/Utils.sol';
