@@ -43,8 +43,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     using SafeMath for uint256;
 
     
-    uint32 private constant MAX_RATIO = 1000000;
-    uint64 private constant MAX_CONVERSION_FEE = 1000000;
+    uint32 private constant RATIO_RESOLUTION = 1000000;
+    uint64 private constant CONVERSION_FEE_RESOLUTION = 1000000;
 
     struct Reserve {
         uint256 virtualBalance;         // reserve virtual balance
@@ -164,7 +164,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     // validates maximum conversion fee
     modifier validMaxConversionFee(uint32 _conversionFee) {
-        require(_conversionFee >= 0 && _conversionFee <= MAX_CONVERSION_FEE);
+        require(_conversionFee >= 0 && _conversionFee <= CONVERSION_FEE_RESOLUTION);
         _;
     }
 
@@ -176,13 +176,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     // validates reserve ratio range
     modifier validReserveRatio(uint32 _ratio) {
-        require(_ratio > 0 && _ratio <= MAX_RATIO);
+        require(_ratio > 0 && _ratio <= RATIO_RESOLUTION);
         _;
     }
 
     // allows execution only when the total ratio is 100%
-    modifier maxTotalRatioOnly() {
-        require(totalReserveRatio == MAX_RATIO);
+    modifier fullTotalRatioOnly() {
+        require(totalReserveRatio == RATIO_RESOLUTION);
         _;
     }
 
@@ -325,7 +325,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @return return amount minus conversion fee
     */
     function getFinalAmount(uint256 _amount, uint8 _magnitude) public view returns (uint256) {
-        return _amount.mul((MAX_CONVERSION_FEE - conversionFee) ** _magnitude).div(MAX_CONVERSION_FEE ** _magnitude);
+        return _amount.mul((CONVERSION_FEE_RESOLUTION - conversionFee) ** _magnitude).div(CONVERSION_FEE_RESOLUTION ** _magnitude);
     }
 
     /**
@@ -376,7 +376,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         notThis(_token)
         validReserveRatio(_ratio)
     {
-        require(_token != token && !reserves[_token].isSet && totalReserveRatio + _ratio <= MAX_RATIO); // validate input
+        require(_token != token && !reserves[_token].isSet && totalReserveRatio + _ratio <= RATIO_RESOLUTION); // validate input
 
         reserves[_token].virtualBalance = 0;
         reserves[_token].ratio = _ratio;
@@ -403,7 +403,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         validReserveRatio(_ratio)
     {
         Reserve storage reserve = reserves[_reserveToken];
-        require(totalReserveRatio - reserve.ratio + _ratio <= MAX_RATIO); // validate input
+        require(totalReserveRatio - reserve.ratio + _ratio <= RATIO_RESOLUTION); // validate input
 
         totalReserveRatio = totalReserveRatio - reserve.ratio + _ratio;
         reserve.ratio = _ratio;
@@ -882,7 +882,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     function fund(uint256 _amount)
         public
-        maxTotalRatioOnly
+        fullTotalRatioOnly
         conversionsAllowed
     {
         uint256 supply = token.totalSupply();
@@ -922,7 +922,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * 
       * @param _amount  amount to liquidate (in the smart token)
     */
-    function liquidate(uint256 _amount) public maxTotalRatioOnly {
+    function liquidate(uint256 _amount) public fullTotalRatioOnly {
         uint256 supply = token.totalSupply();
 
         // destroy _amount from the caller's balance in the smart token
