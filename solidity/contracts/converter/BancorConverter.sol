@@ -168,12 +168,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
-    // validates conversion fee
-    modifier validConversionFee(uint32 _conversionFee) {
-        require(_conversionFee >= 0 && _conversionFee <= maxConversionFee);
-        _;
-    }
-
     // validates reserve ratio range
     modifier validReserveRatio(uint32 _ratio) {
         require(_ratio > 0 && _ratio <= RATIO_RESOLUTION);
@@ -310,8 +304,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function setConversionFee(uint32 _conversionFee)
         public
         ownerOrManagerOnly
-        validConversionFee(_conversionFee)
     {
+        require(_conversionFee >= 0 && _conversionFee <= maxConversionFee);
         emit ConversionFeeUpdate(conversionFee, _conversionFee);
         conversionFee = _conversionFee;
     }
