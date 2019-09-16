@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.26;
 import './Owned.sol';
 import './Utils.sol';
 import './interfaces/IContractRegistry.sol';

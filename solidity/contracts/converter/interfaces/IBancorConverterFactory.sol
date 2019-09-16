@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.26;
 import '../../token/interfaces/IERC20Token.sol';
 import '../../token/interfaces/ISmartToken.sol';
 import '../../utility/interfaces/IContractRegistry.sol';
@@ -11,8 +11,8 @@ contract IBancorConverterFactory {
         ISmartToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee,
-        IERC20Token _connectorToken,
-        uint32 _connectorWeight
+        IERC20Token _reserveToken,
+        uint32 _reserveRatio
     )
     public returns (address);
 }
