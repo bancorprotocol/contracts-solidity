@@ -7,7 +7,7 @@ contract BancorFormula is IBancorFormula, Utils {
     using SafeMath for uint256;
 
 
-    string public version = '0.3';
+    uint16 public version = 4;
 
     uint256 private constant ONE = 1;
     uint32 private constant MAX_RATIO = 1000000;
