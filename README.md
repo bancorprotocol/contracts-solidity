@@ -1,5 +1,5 @@
 ﻿
-# Bancor Protocol Contracts v0.4 (beta)
+# Bancor Protocol Contracts v0.5
 
 ## Overview
 
