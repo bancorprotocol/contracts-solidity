@@ -48,7 +48,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     struct Reserve {
         uint256 virtualBalance;         // reserve virtual balance
-        uint32 ratio;                    // reserve ratio, represented in ppm, 1-1000000
+        uint32 ratio;                   // reserve ratio, represented in ppm, 1-1000000
         bool isVirtualBalanceEnabled;   // true if virtual balance is enabled, false if not
         bool isSaleEnabled;             // is sale of the reserve token enabled, can be set by the owner
         bool isSet;                     // used to tell if the mapping element is defined
