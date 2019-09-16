@@ -6,11 +6,13 @@
 - [`quickConvert2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)`](#IBancorConverter-quickConvert2-contract-IERC20Token---uint256-uint256-address-uint256-)
 - [`conversionWhitelist()`](#IBancorConverter-conversionWhitelist--)
 - [`conversionFee()`](#IBancorConverter-conversionFee--)
-- [`connectors(address _address)`](#IBancorConverter-connectors-address-)
-- [`getConnectorBalance(contract IERC20Token _connectorToken)`](#IBancorConverter-getConnectorBalance-contract-IERC20Token-)
+- [`reserves(address _address)`](#IBancorConverter-reserves-address-)
+- [`getReserveBalance(contract IERC20Token _reserveToken)`](#IBancorConverter-getReserveBalance-contract-IERC20Token-)
 - [`change(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#IBancorConverter-change-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
 - [`convert(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#IBancorConverter-convert-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
 - [`quickConvert(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn)`](#IBancorConverter-quickConvert-contract-IERC20Token---uint256-uint256-)
+- [`connectors(address _address)`](#IBancorConverter-connectors-address-)
+- [`getConnectorBalance(contract IERC20Token _connectorToken)`](#IBancorConverter-getConnectorBalance-contract-IERC20Token-)
 
 
 
@@ -34,11 +36,11 @@ No description
 No description
 
 
-# Function `connectors(address _address) → uint256, uint32, bool, bool, bool` {#IBancorConverter-connectors-address-}
+# Function `reserves(address _address) → uint256, uint32, bool, bool, bool` {#IBancorConverter-reserves-address-}
 No description
 
 
-# Function `getConnectorBalance(contract IERC20Token _connectorToken) → uint256` {#IBancorConverter-getConnectorBalance-contract-IERC20Token-}
+# Function `getReserveBalance(contract IERC20Token _reserveToken) → uint256` {#IBancorConverter-getReserveBalance-contract-IERC20Token-}
 No description
 
 
@@ -51,6 +53,14 @@ No description
 
 
 # Function `quickConvert(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn) → uint256` {#IBancorConverter-quickConvert-contract-IERC20Token---uint256-uint256-}
+No description
+
+
+# Function `connectors(address _address) → uint256, uint32, bool, bool, bool` {#IBancorConverter-connectors-address-}
+No description
+
+
+# Function `getConnectorBalance(contract IERC20Token _connectorToken) → uint256` {#IBancorConverter-getConnectorBalance-contract-IERC20Token-}
 No description
 
 

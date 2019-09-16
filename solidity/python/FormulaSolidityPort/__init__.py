@@ -1,5 +1,5 @@
 ONE = 1;
-MAX_WEIGHT = 1000000;
+MAX_RATIO = 1000000;
 MIN_PRECISION = 32;
 MAX_PRECISION = 127;
 
@@ -157,53 +157,53 @@ def constructor():
     maxExpArray[127] = 0x00857ddf0117efa215952912839f6473e6;
 
 '''
-    @dev given a token supply, connector balance, weight and a deposit amount (in the connector token),
+    @dev given a token supply, reserve balance, ratio and a deposit amount (in the reserve token),
     calculates the return for a given conversion (in the main token)
 
     Formula:
-    Return = _supply * ((1 + _depositAmount / _connectorBalance) ^ (_connectorWeight / 1000000) - 1)
+    Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 1000000) - 1)
 
     @param _supply              token total supply
-    @param _connectorBalance    total connector balance
-    @param _connectorWeight     connector weight, represented in ppm, 1-1000000
-    @param _depositAmount       deposit amount, in connector token
+    @param _reserveBalance      total reserve balance
+    @param _reserveRatio        reserve ratio, represented in ppm, 1-1000000
+    @param _depositAmount       deposit amount, in reserve token
 
     @return purchase return amount
 '''
-def calculatePurchaseReturn(_supply, _connectorBalance, _connectorWeight, _depositAmount):
+def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmount):
     # validate input
-    assert(_supply > 0 and _connectorBalance > 0 and _connectorWeight > 0 and _connectorWeight <= MAX_WEIGHT);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= MAX_RATIO);
 
     # special case for 0 deposit amount
     if (_depositAmount == 0):
         return 0;
 
-    # special case if the weight = 100%
-    if (_connectorWeight == MAX_WEIGHT):
-        return safeMul(_supply, _depositAmount) // _connectorBalance;
+    # special case if the ratio = 100%
+    if (_reserveRatio == MAX_RATIO):
+        return safeMul(_supply, _depositAmount) // _reserveBalance;
 
-    baseN = safeAdd(_depositAmount, _connectorBalance);
-    (result, precision) = power(baseN, _connectorBalance, _connectorWeight, MAX_WEIGHT);
+    baseN = safeAdd(_depositAmount, _reserveBalance);
+    (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_RATIO);
     temp = safeMul(_supply, result) >> precision;
     return temp - _supply;
 
 '''
-    @dev given a token supply, connector balance, weight and a sell amount (in the main token),
-    calculates the return for a given conversion (in the connector token)
+    @dev given a token supply, reserve balance, ratio and a sell amount (in the main token),
+    calculates the return for a given conversion (in the reserve token)
 
     Formula:
-    Return = _connectorBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_connectorWeight / 1000000)))
+    Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 1000000)))
 
     @param _supply              token total supply
-    @param _connectorBalance    total connector
-    @param _connectorWeight     constant connector Weight, represented in ppm, 1-1000000
+    @param _reserveBalance    total reserve
+    @param _reserveRatio     constant reserve Ratio, represented in ppm, 1-1000000
     @param _sellAmount          sell amount, in the token itself
 
     @return sale return amount
 '''
-def calculateSaleReturn(_supply, _connectorBalance, _connectorWeight, _sellAmount):
+def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     # validate input
-    assert(_supply > 0 and _connectorBalance > 0 and _connectorWeight > 0 and _connectorWeight <= MAX_WEIGHT and _sellAmount <= _supply);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= MAX_RATIO and _sellAmount <= _supply);
 
     # special case for 0 sell amount
     if (_sellAmount == 0):
@@ -211,45 +211,45 @@ def calculateSaleReturn(_supply, _connectorBalance, _connectorWeight, _sellAmoun
 
     # special case for selling the entire supply
     if (_sellAmount == _supply):
-        return _connectorBalance;
+        return _reserveBalance;
 
-    # special case if the weight = 100%
-    if (_connectorWeight == MAX_WEIGHT):
-        return safeMul(_connectorBalance, _sellAmount) // _supply;
+    # special case if the ratio = 100%
+    if (_reserveRatio == MAX_RATIO):
+        return safeMul(_reserveBalance, _sellAmount) // _supply;
 
     baseD = _supply - _sellAmount;
-    (result, precision) = power(_supply, baseD, MAX_WEIGHT, _connectorWeight);
-    temp1 = safeMul(_connectorBalance, result);
-    temp2 = _connectorBalance << precision;
+    (result, precision) = power(_supply, baseD, MAX_RATIO, _reserveRatio);
+    temp1 = safeMul(_reserveBalance, result);
+    temp2 = _reserveBalance << precision;
     return (temp1 - temp2) // result;
 
 '''
-    @dev given two connector balances/weights and a sell amount (in the first connector token),
-    calculates the return for a conversion from the first connector token to the second connector token (in the second connector token)
+    @dev given two reserve balances/ratios and a sell amount (in the first reserve token),
+    calculates the return for a conversion from the first reserve token to the second reserve token (in the second reserve token)
 
     Formula:
-    Return = _toConnectorBalance * (1 - (_fromConnectorBalance / (_fromConnectorBalance + _amount)) ^ (_fromConnectorWeight / _toConnectorWeight))
+    Return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveRatio / _toReserveRatio))
 
-    @param _fromConnectorBalance    input connector balance
-    @param _fromConnectorWeight     input connector weight, represented in ppm, 1-1000000
-    @param _toConnectorBalance      output connector balance
-    @param _toConnectorWeight       output connector weight, represented in ppm, 1-1000000
-    @param _amount                  input connector amount
+    @param _fromReserveBalance      input reserve balance
+    @param _fromReserveRatio        input reserve ratio, represented in ppm, 1-1000000
+    @param _toReserveBalance        output reserve balance
+    @param _toReserveRatio          output reserve ratio, represented in ppm, 1-1000000
+    @param _amount                  input reserve amount
 
-    @return second connector amount
+    @return second reserve amount
 '''
-def calculateCrossConnectorReturn(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount):
+def calculateCrossReserveReturn(_fromReserveBalance, _fromReserveRatio, _toReserveBalance, _toReserveRatio, _amount):
     # validate input
-    assert(_fromConnectorBalance > 0 and _fromConnectorWeight > 0 and _fromConnectorWeight <= MAX_WEIGHT and _toConnectorBalance > 0 and _toConnectorWeight > 0 and _toConnectorWeight <= MAX_WEIGHT);
+    assert(_fromReserveBalance > 0 and _fromReserveRatio > 0 and _fromReserveRatio <= MAX_RATIO and _toReserveBalance > 0 and _toReserveRatio > 0 and _toReserveRatio <= MAX_RATIO);
 
-    # special case for equal weights
-    if (_fromConnectorWeight == _toConnectorWeight):
-        return safeMul(_toConnectorBalance, _amount) // safeAdd(_fromConnectorBalance, _amount);
+    # special case for equal ratios
+    if (_fromReserveRatio == _toReserveRatio):
+        return safeMul(_toReserveBalance, _amount) // safeAdd(_fromReserveBalance, _amount);
 
-    baseN = safeAdd(_fromConnectorBalance, _amount);
-    (result, precision) = power(baseN, _fromConnectorBalance, _fromConnectorWeight, _toConnectorWeight);
-    temp1 = safeMul(_toConnectorBalance, result);
-    temp2 = _toConnectorBalance << precision;
+    baseN = safeAdd(_fromReserveBalance, _amount);
+    (result, precision) = power(baseN, _fromReserveBalance, _fromReserveRatio, _toReserveRatio);
+    temp1 = safeMul(_toReserveBalance, result);
+    temp2 = _toReserveBalance << precision;
     return (temp1 - temp2) // result;
 
 '''

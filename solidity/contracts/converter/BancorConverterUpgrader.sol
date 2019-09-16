@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.26;
 import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorConverterUpgrader.sol';
 import './interfaces/IBancorConverterFactory.sol';
@@ -29,15 +29,6 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function setConversionFee(uint32 _conversionFee) public;
     function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance) public;
     function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance) public;
-    function getConnectorBalance(IERC20Token _connectorToken) public view returns (uint256);
-    function getReserveBalance(IERC20Token _reserveToken) public view returns (uint256);
-    function reserves(address _address) public view returns (
-        uint256 virtualBalance, 
-        uint32 weight, 
-        bool isVirtualBalanceEnabled, 
-        bool isSaleEnabled, 
-        bool isSet
-    );
 }
 
 /**

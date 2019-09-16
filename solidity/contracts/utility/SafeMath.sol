@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.26;
 
 /**
   * @dev Library for basic math operations with overflow/underflow protection
