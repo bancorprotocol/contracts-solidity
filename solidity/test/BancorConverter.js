@@ -158,8 +158,8 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(BancorConverter.new(tokenAddress, '0x0', 0, '0x0', 0));
     });
 
-    it('should throw when attempting to construct a converter with invalid max fee', async () => {
-        await utils.catchRevert(BancorConverter.new(tokenAddress, contractRegistry.address, 1000000000, '0x0', 0));
+    it('should throw when attempting to construct a converter with invalid conversion fee', async () => {
+        await utils.catchRevert(BancorConverter.new(tokenAddress, contractRegistry.address, 1000001, '0x0', 0));
     });
 
     it('verifies the first reserve when provided at construction time', async () => {
