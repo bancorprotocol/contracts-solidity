@@ -140,7 +140,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         public
         SmartTokenController(_token)
         validAddress(_registry)
-        validMaxConversionFee(_maxConversionFee)
+        validConversionFee(_maxConversionFee)
     {
         registry = _registry;
         prevRegistry = _registry;
@@ -162,13 +162,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
-    // validates maximum conversion fee
-    modifier validMaxConversionFee(uint32 _conversionFee) {
+    // validates conversion fee
+    modifier validConversionFee(uint32 _conversionFee) {
         require(_conversionFee >= 0 && _conversionFee <= CONVERSION_FEE_RESOLUTION);
         _;
     }
 
-    // validates reserve ratio range
+    // validates reserve ratio
     modifier validReserveRatio(uint32 _ratio) {
         require(_ratio > 0 && _ratio <= RATIO_RESOLUTION);
         _;
