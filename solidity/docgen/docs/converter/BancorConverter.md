@@ -41,8 +41,6 @@ Other potential solutions might include a commit/reveal based schemes
 - [`getSaleReturn(contract IERC20Token _reserveToken, uint256 _sellAmount)`](#BancorConverter-getSaleReturn-contract-IERC20Token-uint256-)
 - [`getCrossReserveReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _sellAmount)`](#BancorConverter-getCrossReserveReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
 - [`convertInternal(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#BancorConverter-convertInternal-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
-- [`buy(contract IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn)`](#BancorConverter-buy-contract-IERC20Token-uint256-uint256-)
-- [`sell(contract IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn)`](#BancorConverter-sell-contract-IERC20Token-uint256-uint256-)
 - [`convert2(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)`](#BancorConverter-convert2-contract-IERC20Token-contract-IERC20Token-uint256-uint256-address-uint256-)
 - [`quickConvert2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)`](#BancorConverter-quickConvert2-contract-IERC20Token---uint256-uint256-address-uint256-)
 - [`quickConvertPrioritized2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256[] _signature, address _affiliateAccount, uint256 _affiliateFee)`](#BancorConverter-quickConvertPrioritized2-contract-IERC20Token---uint256-uint256-uint256---address-uint256-)
@@ -303,30 +301,6 @@ can only be called by the bancor network contract
 
 
 
-# Function `buy(contract IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn) → uint256` {#BancorConverter-buy-contract-IERC20Token-uint256-uint256-}
-buys the token by depositing one of its reserve tokens
-
-
-## Parameters:
-- `_reserveToken`:    reserve token contract address
-
-- `_depositAmount`:   amount to deposit (in the reserve token)
-
-- `_minReturn`:       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-
-
-
-
-# Function `sell(contract IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn) → uint256` {#BancorConverter-sell-contract-IERC20Token-uint256-uint256-}
-sells the token by withdrawing from one of its reserve tokens
-
-
-## Parameters:
-- `_reserveToken`:    reserve token contract address
-
-- `_sellAmount`:      amount to sell (in the smart token)
-
-- `_minReturn`:       if the conversion results in an amount smaller the minimum return - it is cancelled, must be nonzero
 
 
 

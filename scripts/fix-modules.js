@@ -41,3 +41,7 @@ fix("./node_modules/solidity-coverage/lib/coverageMap.js", [
 fix("./node_modules/solidity-docgen/dist/compile.js", [
     {prev: "settings: compilerSettings", next: "settings: {...compilerSettings, optimizer: {enabled: true, runs: 200}}"}]
 );
+
+fix("./node_modules/solidity-docgen/dist/handlebars.js", [
+    {prev: "registerHelper('slug', slug)", next: "registerHelper({slug: slug, public_or_external: function(str) {return str == 'public' || str == 'external';}})"}]
+);
