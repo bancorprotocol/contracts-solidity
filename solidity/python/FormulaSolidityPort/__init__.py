@@ -195,8 +195,8 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
     Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 1000000)))
 
     @param _supply              token total supply
-    @param _reserveBalance    total reserve
-    @param _reserveRatio     constant reserve Ratio, represented in ppm, 1-1000000
+    @param _reserveBalance      total reserve
+    @param _reserveRatio        constant reserve Ratio, represented in ppm, 1-1000000
     @param _sellAmount          sell amount, in the token itself
 
     @return sale return amount
@@ -226,6 +226,7 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
 '''
     @dev given two reserve balances/ratios and a sell amount (in the first reserve token),
     calculates the return for a conversion from the first reserve token to the second reserve token (in the second reserve token)
+    note that prior to version 4, you should use 'calculateCrossConnectorReturn' instead
 
     Formula:
     Return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveRatio / _toReserveRatio))
@@ -479,6 +480,12 @@ def optimalExp(x):
     if ((x & 0x400000000000000000000000000000000) != 0): res = res * 0x0002bf84208204f5977f9a8cf01fdc307 // 0x0000003c6ab775dd0b95b4cbee7e65d11; # multiply by e^2^(+3)
 
     return res;
+
+'''
+    @dev deprecated, backward compatibility
+'''
+def calculateCrossConnectorReturn(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount):
+    return calculateCrossReserveReturn(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount);
 
 
 def safeAdd(x,y):
