@@ -105,7 +105,7 @@ can only be called by the manager or owner
 
 # Function `reserveTokenCount() → uint16` {#BancorConverter-reserveTokenCount--}
 returns the number of reserve tokens defined
-note that prior version 17, you should use 'connectorTokenCount' instead
+note that prior to version 17, you should use 'connectorTokenCount' instead
 
 
 
@@ -186,7 +186,7 @@ note that the owner needs to call acceptOwnership/acceptManagement on the new co
 # Function `addReserve(contract IERC20Token _token, uint32 _ratio, bool _enableVirtualBalance)` {#BancorConverter-addReserve-contract-IERC20Token-uint32-bool-}
 defines a new reserve for the token
 can only be called by the owner while the converter is inactive
-note that prior version 17, you should use 'addConnector' instead
+note that prior to version 17, you should use 'addConnector' instead
 
 
 ## Parameters:
@@ -200,7 +200,7 @@ note that prior version 17, you should use 'addConnector' instead
 # Function `updateReserve(contract IERC20Token _reserveToken, uint32 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)` {#BancorConverter-updateReserve-contract-IERC20Token-uint32-bool-uint256-}
 updates one of the token reserves
 can only be called by the owner
-note that prior version 17, you should use 'updateConnector' instead
+note that prior to version 17, you should use 'updateConnector' instead
 
 
 ## Parameters:
@@ -217,7 +217,7 @@ note that prior version 17, you should use 'updateConnector' instead
 disables converting from the given reserve token in case the reserve token got compromised
 can only be called by the owner
 note that converting to the token is still enabled regardless of this flag and it cannot be disabled by the owner
-note that prior version 17, you should use 'disableConnectorSale' instead
+note that prior to version 17, you should use 'disableConnectorSale' instead
 
 
 ## Parameters:
@@ -228,7 +228,7 @@ note that prior version 17, you should use 'disableConnectorSale' instead
 
 # Function `getReserveBalance(contract IERC20Token _reserveToken) → uint256` {#BancorConverter-getReserveBalance-contract-IERC20Token-}
 returns the reserve's virtual balance if one is defined, otherwise returns the actual balance
-note that prior version 17, you should use 'getConnectorBalance' instead
+note that prior to version 17, you should use 'getConnectorBalance' instead
 
 
 ## Parameters:
@@ -277,7 +277,7 @@ returns the expected return for selling the token for one of its reserve tokens
 
 # Function `getCrossReserveReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getCrossReserveReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
 returns the expected return for selling one of the reserve tokens for another reserve token
-note that prior version 17, you should use 'getCrossConnectorReturn' instead
+note that prior to version 17, you should use 'getCrossConnectorReturn' instead
 
 
 ## Parameters:
@@ -313,7 +313,7 @@ can only be called by the bancor network contract
 
 # Function `convert2(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorConverter-convert2-contract-IERC20Token-contract-IERC20Token-uint256-uint256-address-uint256-}
 converts a specific amount of _fromToken to _toToken
-note that prior version 16, you should use 'convert' instead
+note that prior to version 16, you should use 'convert' instead
 
 
 ## Parameters:
@@ -335,7 +335,7 @@ note that prior version 16, you should use 'convert' instead
 # Function `quickConvert2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorConverter-quickConvert2-contract-IERC20Token---uint256-uint256-address-uint256-}
 converts the token to any other token in the bancor network by following a predefined conversion path
 note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
-note that prior version 16, you should use 'quickConvert' instead
+note that prior to version 16, you should use 'quickConvert' instead
 
 
 ## Parameters:
@@ -355,7 +355,7 @@ note that prior version 16, you should use 'quickConvert' instead
 # Function `quickConvertPrioritized2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256[] _signature, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorConverter-quickConvertPrioritized2-contract-IERC20Token---uint256-uint256-uint256---address-uint256-}
 converts the token to any other token in the bancor network by following a predefined conversion path
 note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
-note that prior version 16, you should use 'quickConvertPrioritized' instead
+note that prior to version 16, you should use 'quickConvertPrioritized' instead
 
 
 ## Parameters:
@@ -384,7 +384,7 @@ note that prior version 16, you should use 'quickConvertPrioritized' instead
 allows a user to convert BNT that was sent from another blockchain into any other
 token on the BancorNetwork without specifying the amount of BNT to be converted, but
 rather by providing the xTransferId which allows us to get the amount from BancorX.
-note that prior version 16, you should use 'completeXConversion' instead
+note that prior to version 16, you should use 'completeXConversion' instead
 
 
 ## Parameters:

@@ -56,7 +56,7 @@ Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRati
 # Function `calculateCrossReserveReturn(uint256 _fromReserveBalance, uint32 _fromReserveRatio, uint256 _toReserveBalance, uint32 _toReserveRatio, uint256 _amount) → uint256` {#BancorFormula-calculateCrossReserveReturn-uint256-uint32-uint256-uint32-uint256-}
 given two reserve balances/ratios and a sell amount (in the first reserve token),
 calculates the return for a conversion from the first reserve token to the second reserve token (in the second reserve token)
-note that prior version 4, you should use 'calculateCrossConnectorReturn' instead
+note that prior to version 4, you should use 'calculateCrossConnectorReturn' instead
 
 Formula:
 Return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveRatio / _toReserveRatio))

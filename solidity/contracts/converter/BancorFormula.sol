@@ -244,7 +244,7 @@ contract BancorFormula is IBancorFormula, Utils {
     /**
       * @dev given two reserve balances/ratios and a sell amount (in the first reserve token),
       * calculates the return for a conversion from the first reserve token to the second reserve token (in the second reserve token)
-      * note that prior version 4, you should use 'calculateCrossConnectorReturn' instead
+      * note that prior to version 4, you should use 'calculateCrossConnectorReturn' instead
       * 
       * Formula:
       * Return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveRatio / _toReserveRatio))
