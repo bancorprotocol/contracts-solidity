@@ -1346,7 +1346,7 @@ contract('BancorConverter', accounts => {
 
     it('should have the registry point to itself after initialization', async () => {
         let contractRegistryId = await contractIds.CONTRACT_REGISTRY.call();
-        let registryAddress = await contractRegistry.getAddress.call(contractRegistryId)
+        let registryAddress = await contractRegistry.addressOf.call(contractRegistryId)
         assert.equal(registryAddress, contractRegistry.address)
     });
 
