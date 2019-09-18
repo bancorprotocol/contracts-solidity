@@ -64,8 +64,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     IContractRegistry public prevRegistry;              // address of previous registry as security mechanism
     IContractRegistry public registry;                  // contract registry contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
-    IERC20Token[] public reserveTokens;                 // ERC20 standard token addresses
-    mapping (address => Reserve) public reserves;       // reserve token addresses -> reserve data
+    IERC20Token[] public reserveTokens;                 // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
+    mapping (address => Reserve) public reserves;       // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
     uint32 private totalReserveRatio = 0;               // used to efficiently prevent increasing the total reserve ratio above 100%
     uint32 public maxConversionFee = 0;                 // maximum conversion fee for the lifetime of the contract,
                                                         // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
@@ -243,6 +243,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     /**
       * @dev returns the number of reserve tokens defined
+      * note that prior version 17, you should use 'connectorTokenCount' instead
       * 
       * @return number of reserve tokens
     */
@@ -357,6 +358,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev defines a new reserve for the token
       * can only be called by the owner while the converter is inactive
+      * note that prior version 17, you should use 'addConnector' instead
       * 
       * @param _token                  address of the reserve token
       * @param _ratio                  constant reserve ratio, represented in ppm, 1-1000000
@@ -384,6 +386,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev updates one of the token reserves
       * can only be called by the owner
+      * note that prior version 17, you should use 'updateConnector' instead
       * 
       * @param _reserveToken           address of the reserve token
       * @param _ratio                  constant reserve ratio, represented in ppm, 1-1000000
@@ -409,6 +412,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @dev disables converting from the given reserve token in case the reserve token got compromised
       * can only be called by the owner
       * note that converting to the token is still enabled regardless of this flag and it cannot be disabled by the owner
+      * note that prior version 17, you should use 'disableConnectorSale' instead
       * 
       * @param _reserveToken    reserve token contract address
       * @param _disable         true to disable the token, false to re-enable it
@@ -423,6 +427,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     /**
       * @dev returns the reserve's virtual balance if one is defined, otherwise returns the actual balance
+      * note that prior version 17, you should use 'getConnectorBalance' instead
       * 
       * @param _reserveToken    reserve token contract address
       * 
@@ -516,6 +521,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     /**
       * @dev returns the expected return for selling one of the reserve tokens for another reserve token
+      * note that prior version 17, you should use 'getCrossConnectorReturn' instead
       * 
       * @param _fromReserveToken    contract address of the reserve token to convert from
       * @param _toReserveToken      contract address of the reserve token to convert to
@@ -690,6 +696,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     /**
       * @dev converts a specific amount of _fromToken to _toToken
+      * note that prior version 16, you should use 'convert' instead
       * 
       * @param _fromToken           ERC20 token to convert from
       * @param _toToken             ERC20 token to convert to
@@ -709,6 +716,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev converts the token to any other token in the bancor network by following a predefined conversion path
       * note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
+      * note that prior version 16, you should use 'quickConvert' instead
       * 
       * @param _path                conversion path, see conversion path format in the BancorNetwork contract
       * @param _amount              amount to convert from (in the initial source token)
@@ -729,6 +737,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev converts the token to any other token in the bancor network by following a predefined conversion path
       * note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
+      * note that prior version 16, you should use 'quickConvertPrioritized' instead
       * 
       * @param _path                conversion path, see conversion path format in the BancorNetwork contract
       * @param _amount              amount to convert from (in the initial source token)
@@ -777,6 +786,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @dev allows a user to convert BNT that was sent from another blockchain into any other
       * token on the BancorNetwork without specifying the amount of BNT to be converted, but
       * rather by providing the xTransferId which allows us to get the amount from BancorX.
+      * note that prior version 16, you should use 'completeXConversion' instead
       * 
       * @param _path            conversion path, see conversion path format in the BancorNetwork contract
       * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
