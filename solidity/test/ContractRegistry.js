@@ -66,7 +66,7 @@ contract('ContractRegistry', accounts => {
         await contractRegistry.registerAddress(contractName1, accounts[1]);
         await contractRegistry.registerAddress(contractName2, accounts[2]);
         await contractRegistry.registerAddress(contractName3, accounts[3]);
-        
+
         let itemCount = await contractRegistry.itemCount.call();
         assert.equal(itemCount, 4);
         let name = await contractRegistry.contractNames.call(1);
@@ -87,7 +87,7 @@ contract('ContractRegistry', accounts => {
 
     it('verifies that a registry item can be unregistered and reregistered properly', async () => {
         let contractRegistry = await ContractRegistry.new();
-        
+
         await contractRegistry.registerAddress(contractName1, accounts[1]);
         await contractRegistry.registerAddress(contractName2, accounts[2]);
 
@@ -107,5 +107,16 @@ contract('ContractRegistry', accounts => {
 
         await contractRegistry.registerAddress(contractName1, accounts[1]);
         await utils.catchRevert(contractRegistry.unregisterAddress(contractName2));
+    });
+
+    it('verifies that deprecated function getAddress works correctly', async () => {
+        let contractRegistry = await ContractRegistry.new();
+        await contractRegistry.registerAddress(contractName1, accounts[1]);
+        await contractRegistry.registerAddress(contractName2, accounts[2]);
+        await contractRegistry.registerAddress(contractName3, accounts[3]);
+
+        assert.equal(await contractRegistry.getAddress.call(contractName1), await contractRegistry.addressOf.call(contractName1));
+        assert.equal(await contractRegistry.getAddress.call(contractName2), await contractRegistry.addressOf.call(contractName2));
+        assert.equal(await contractRegistry.getAddress.call(contractName3), await contractRegistry.addressOf.call(contractName3));
     });
 });
