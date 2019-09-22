@@ -880,7 +880,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @dev buys the token with all reserve tokens using the same percentage
       * for example, if the caller increases the supply by 10%,
       * then it will cost an amount equal to 10% of each reserve token balance
-      * can only be called if the max total ratio is exactly 100% and while conversions are enabled
+      * note that the function can be called only if the total ratio is 100% and conversions are enabled
       * 
       * @param _amount  amount to increase the supply by (in the smart token)
     */
@@ -921,8 +921,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @dev sells the token for all reserve tokens using the same percentage
       * for example, if the holder sells 10% of the supply,
       * then they will receive 10% of each reserve token balance in return
-      * can only be called if the max total ratio is exactly 100%
-      * note that the function can also be called if conversions are disabled
+      * note that the function can be called only if the total ratio is 100%
       * 
       * @param _amount  amount to liquidate (in the smart token)
     */
