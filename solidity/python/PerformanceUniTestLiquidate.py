@@ -10,9 +10,9 @@ MINIMUM_VALUE_BALANCE = 100
 MAXIMUM_VALUE_BALANCE = 10 ** 34
 SAMPLES_COUNT_BALANCE = 50
 
-MINIMUM_VALUE_WEIGHTS = 100000
-MAXIMUM_VALUE_WEIGHTS = 1900000
-SAMPLES_COUNT_WEIGHTS = 20
+MINIMUM_VALUE_RATIOS = 100000
+MAXIMUM_VALUE_RATIOS = 1900000
+SAMPLES_COUNT_RATIOS = 20
 
 MINIMUM_VALUE_AMOUNT = 1
 MAXIMUM_VALUE_AMOUNT = 10 ** 34
@@ -22,11 +22,11 @@ SAMPLES_COUNT_AMOUNT = 50
 def Main():
     rangeSupply = InputGenerator.UniformDistribution(MINIMUM_VALUE_SUPPLY, MAXIMUM_VALUE_SUPPLY, SAMPLES_COUNT_SUPPLY)
     rangeBalance = InputGenerator.UniformDistribution(MINIMUM_VALUE_BALANCE, MAXIMUM_VALUE_BALANCE, SAMPLES_COUNT_BALANCE)
-    rangeWeights = InputGenerator.UniformDistribution(MINIMUM_VALUE_WEIGHTS, MAXIMUM_VALUE_WEIGHTS, SAMPLES_COUNT_WEIGHTS)
+    rangeRatios = InputGenerator.UniformDistribution(MINIMUM_VALUE_RATIOS, MAXIMUM_VALUE_RATIOS, SAMPLES_COUNT_RATIOS)
     rangeAmount = InputGenerator.UniformDistribution(MINIMUM_VALUE_AMOUNT, MAXIMUM_VALUE_AMOUNT, SAMPLES_COUNT_AMOUNT)
 
     testNum = 0
-    numOfTests = len(rangeSupply) * len(rangeBalance) * len(rangeWeights) * len(rangeAmount)
+    numOfTests = len(rangeSupply) * len(rangeBalance) * len(rangeRatios) * len(rangeAmount)
 
     tester = Web3Wrapper.Contract('BancorFormula').tester()
     minGas = float('+inf')
@@ -36,12 +36,12 @@ def Main():
 
     for supply in rangeSupply:
         for balance in rangeBalance:
-            for weights in rangeWeights:
+            for ratios in rangeRatios:
                 for amount in rangeAmount:
                     testNum += 1
                     if amount <= supply:
                         try:
-                            gas = tester.calculateLiquidateReturn(supply, balance, weights, amount)
+                            gas = tester.calculateLiquidateReturn(supply, balance, ratios, amount)
                             minGas = min(minGas, gas)
                             maxGas = max(maxGas, gas)
                             totalGas += gas
