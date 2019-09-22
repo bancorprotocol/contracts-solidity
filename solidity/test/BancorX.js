@@ -61,8 +61,8 @@ async function initBancorX(accounts, isSmartToken) {
     // issue bnt
     await smartToken.issue(accounts[0], SUPPLY_AMOUNT)
 
-    // set virtual weight and bancorx address for bnt converter
-    await bancorConverter.updateConnector(etherToken.address, '100000', true, RESERVE_AMOUNT)
+    // set virtual ratio and bancorx address for bnt converter
+    await bancorConverter.updateReserve(etherToken.address, '100000', true, RESERVE_AMOUNT)
 
     if (isSmartToken) {
         await smartToken.transferOwnership(bancorConverter.address)

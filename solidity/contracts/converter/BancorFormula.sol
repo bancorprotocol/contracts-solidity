@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.26;
 import './interfaces/IBancorFormula.sol';
 import '../utility/SafeMath.sol';
 import '../utility/Utils.sol';
@@ -7,10 +7,10 @@ contract BancorFormula is IBancorFormula, Utils {
     using SafeMath for uint256;
 
 
-    string public version = '0.3';
+    uint16 public version = 4;
 
     uint256 private constant ONE = 1;
-    uint32 private constant MAX_WEIGHT = 1000000;
+    uint32 private constant MAX_RATIO = 1000000;
     uint8 private constant MIN_PRECISION = 32;
     uint8 private constant MAX_PRECISION = 127;
 
@@ -169,56 +169,56 @@ contract BancorFormula is IBancorFormula, Utils {
     }
 
     /**
-      * @dev given a token supply, connector balance, weight and a deposit amount (in the connector token),
+      * @dev given a token supply, reserve balance, ratio and a deposit amount (in the reserve token),
       * calculates the return for a given conversion (in the main token)
       * 
       * Formula:
-      * Return = _supply * ((1 + _depositAmount / _connectorBalance) ^ (_connectorWeight / 1000000) - 1)
+      * Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 1000000) - 1)
       * 
       * @param _supply              token total supply
-      * @param _connectorBalance    total connector balance
-      * @param _connectorWeight     connector weight, represented in ppm, 1-1000000
-      * @param _depositAmount       deposit amount, in connector token
+      * @param _reserveBalance      total reserve balance
+      * @param _reserveRatio        reserve ratio, represented in ppm, 1-1000000
+      * @param _depositAmount       deposit amount, in reserve token
       * 
       * @return purchase return amount
     */
-    function calculatePurchaseReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _depositAmount) public view returns (uint256) {
+    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _depositAmount) public view returns (uint256) {
         // validate input
-        require(_supply > 0 && _connectorBalance > 0 && _connectorWeight > 0 && _connectorWeight <= MAX_WEIGHT);
+        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= MAX_RATIO);
 
         // special case for 0 deposit amount
         if (_depositAmount == 0)
             return 0;
 
-        // special case if the weight = 100%
-        if (_connectorWeight == MAX_WEIGHT)
-            return _supply.mul(_depositAmount) / _connectorBalance;
+        // special case if the ratio = 100%
+        if (_reserveRatio == MAX_RATIO)
+            return _supply.mul(_depositAmount) / _reserveBalance;
 
         uint256 result;
         uint8 precision;
-        uint256 baseN = _depositAmount.add(_connectorBalance);
-        (result, precision) = power(baseN, _connectorBalance, _connectorWeight, MAX_WEIGHT);
+        uint256 baseN = _depositAmount.add(_reserveBalance);
+        (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_RATIO);
         uint256 temp = _supply.mul(result) >> precision;
         return temp - _supply;
     }
 
     /**
-      * @dev given a token supply, connector balance, weight and a sell amount (in the main token),
-      * calculates the return for a given conversion (in the connector token)
+      * @dev given a token supply, reserve balance, ratio and a sell amount (in the main token),
+      * calculates the return for a given conversion (in the reserve token)
       * 
       * Formula:
-      * Return = _connectorBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_connectorWeight / 1000000)))
+      * Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 1000000)))
       * 
       * @param _supply              token total supply
-      * @param _connectorBalance    total connector
-      * @param _connectorWeight     constant connector Weight, represented in ppm, 1-1000000
+      * @param _reserveBalance      total reserve
+      * @param _reserveRatio        constant reserve Ratio, represented in ppm, 1-1000000
       * @param _sellAmount          sell amount, in the token itself
       * 
       * @return sale return amount
     */
-    function calculateSaleReturn(uint256 _supply, uint256 _connectorBalance, uint32 _connectorWeight, uint256 _sellAmount) public view returns (uint256) {
+    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _sellAmount) public view returns (uint256) {
         // validate input
-        require(_supply > 0 && _connectorBalance > 0 && _connectorWeight > 0 && _connectorWeight <= MAX_WEIGHT && _sellAmount <= _supply);
+        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 0 && _reserveRatio <= MAX_RATIO && _sellAmount <= _supply);
 
         // special case for 0 sell amount
         if (_sellAmount == 0)
@@ -226,119 +226,120 @@ contract BancorFormula is IBancorFormula, Utils {
 
         // special case for selling the entire supply
         if (_sellAmount == _supply)
-            return _connectorBalance;
+            return _reserveBalance;
 
-        // special case if the weight = 100%
-        if (_connectorWeight == MAX_WEIGHT)
-            return _connectorBalance.mul(_sellAmount) / _supply;
+        // special case if the ratio = 100%
+        if (_reserveRatio == MAX_RATIO)
+            return _reserveBalance.mul(_sellAmount) / _supply;
 
         uint256 result;
         uint8 precision;
         uint256 baseD = _supply - _sellAmount;
-        (result, precision) = power(_supply, baseD, MAX_WEIGHT, _connectorWeight);
-        uint256 temp1 = _connectorBalance.mul(result);
-        uint256 temp2 = _connectorBalance << precision;
+        (result, precision) = power(_supply, baseD, MAX_RATIO, _reserveRatio);
+        uint256 temp1 = _reserveBalance.mul(result);
+        uint256 temp2 = _reserveBalance << precision;
         return (temp1 - temp2) / result;
     }
 
     /**
-      * @dev given two connector balances/weights and a sell amount (in the first connector token),
-      * calculates the return for a conversion from the first connector token to the second connector token (in the second connector token)
+      * @dev given two reserve balances/ratios and a sell amount (in the first reserve token),
+      * calculates the return for a conversion from the first reserve token to the second reserve token (in the second reserve token)
+      * note that prior to version 4, you should use 'calculateCrossConnectorReturn' instead
       * 
       * Formula:
-      * Return = _toConnectorBalance * (1 - (_fromConnectorBalance / (_fromConnectorBalance + _amount)) ^ (_fromConnectorWeight / _toConnectorWeight))
+      * Return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveRatio / _toReserveRatio))
       * 
-      * @param _fromConnectorBalance    input connector balance
-      * @param _fromConnectorWeight     input connector weight, represented in ppm, 1-1000000
-      * @param _toConnectorBalance      output connector balance
-      * @param _toConnectorWeight       output connector weight, represented in ppm, 1-1000000
-      * @param _amount                  input connector amount
+      * @param _fromReserveBalance      input reserve balance
+      * @param _fromReserveRatio        input reserve ratio, represented in ppm, 1-1000000
+      * @param _toReserveBalance        output reserve balance
+      * @param _toReserveRatio          output reserve ratio, represented in ppm, 1-1000000
+      * @param _amount                  input reserve amount
       * 
-      * @return second connector amount
+      * @return second reserve amount
     */
-    function calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount) public view returns (uint256) {
+    function calculateCrossReserveReturn(uint256 _fromReserveBalance, uint32 _fromReserveRatio, uint256 _toReserveBalance, uint32 _toReserveRatio, uint256 _amount) public view returns (uint256) {
         // validate input
-        require(_fromConnectorBalance > 0 && _fromConnectorWeight > 0 && _fromConnectorWeight <= MAX_WEIGHT && _toConnectorBalance > 0 && _toConnectorWeight > 0 && _toConnectorWeight <= MAX_WEIGHT);
+        require(_fromReserveBalance > 0 && _fromReserveRatio > 0 && _fromReserveRatio <= MAX_RATIO && _toReserveBalance > 0 && _toReserveRatio > 0 && _toReserveRatio <= MAX_RATIO);
 
-        // special case for equal weights
-        if (_fromConnectorWeight == _toConnectorWeight)
-            return _toConnectorBalance.mul(_amount) / _fromConnectorBalance.add(_amount);
+        // special case for equal ratios
+        if (_fromReserveRatio == _toReserveRatio)
+            return _toReserveBalance.mul(_amount) / _fromReserveBalance.add(_amount);
 
         uint256 result;
         uint8 precision;
-        uint256 baseN = _fromConnectorBalance.add(_amount);
-        (result, precision) = power(baseN, _fromConnectorBalance, _fromConnectorWeight, _toConnectorWeight);
-        uint256 temp1 = _toConnectorBalance.mul(result);
-        uint256 temp2 = _toConnectorBalance << precision;
+        uint256 baseN = _fromReserveBalance.add(_amount);
+        (result, precision) = power(baseN, _fromReserveBalance, _fromReserveRatio, _toReserveRatio);
+        uint256 temp1 = _toReserveBalance.mul(result);
+        uint256 temp2 = _toReserveBalance << precision;
         return (temp1 - temp2) / result;
     }
 
     /**
-      * @dev given a relay token supply, connector balance, total weight and an amount of relay tokens,
-      * calculates the amount of connector tokens required for purchasing the given amount of relay tokens
+      * @dev given a relay token supply, reserve balance, total ratio and an amount of relay tokens,
+      * calculates the amount of reserve tokens required for purchasing the given amount of relay tokens
       * 
       * Formula:
-      * Return = _connectorBalance * (((_supply + _amount) / _supply) ^ (MAX_WEIGHT / _totalWeight) - 1)
+      * Return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_RATIO / _totalRatio) - 1)
       * 
       * @param _supply              relay token supply
-      * @param _connectorBalance    connector token balance
-      * @param _totalWeight         total weight, represented in ppm, 2-2000000
+      * @param _reserveBalance      reserve token balance
+      * @param _totalRatio          total ratio, represented in ppm, 2-2000000
       * @param _amount              amount of relay tokens
       * 
-      * @return amount of connector tokens
+      * @return amount of reserve tokens
     */
-    function calculateFundReturn(uint256 _supply, uint256 _connectorBalance, uint32 _totalWeight, uint256 _amount) public view returns (uint256) {
+    function calculateFundReturn(uint256 _supply, uint256 _reserveBalance, uint32 _totalRatio, uint256 _amount) public view returns (uint256) {
         // validate input
-        require(_supply > 0 && _connectorBalance > 0 && _totalWeight > 1 && _totalWeight <= MAX_WEIGHT * 2);
+        require(_supply > 0 && _reserveBalance > 0 && _totalRatio > 1 && _totalRatio <= MAX_RATIO * 2);
 
         // special case for 0 amount
         if (_amount == 0)
             return 0;
 
-        // special case if the total weight = 100%
-        if (_totalWeight == MAX_WEIGHT)
-            return (_amount.mul(_connectorBalance) - 1) / _supply + 1;
+        // special case if the total ratio = 100%
+        if (_totalRatio == MAX_RATIO)
+            return (_amount.mul(_reserveBalance) - 1) / _supply + 1;
 
         uint256 result;
         uint8 precision;
         uint256 baseN = _supply.add(_amount);
-        (result, precision) = power(baseN, _supply, MAX_WEIGHT, _totalWeight);
-        uint256 temp = ((_connectorBalance.mul(result) - 1) >> precision) + 1;
-        return temp - _connectorBalance;
+        (result, precision) = power(baseN, _supply, MAX_RATIO, _totalRatio);
+        uint256 temp = ((_reserveBalance.mul(result) - 1) >> precision) + 1;
+        return temp - _reserveBalance;
     }
 
     /**
-      * @dev given a relay token supply, connector balance, total weight and an amount of relay tokens,
-      * calculates the amount of connector tokens received for selling the given amount of relay tokens
+      * @dev given a relay token supply, reserve balance, total ratio and an amount of relay tokens,
+      * calculates the amount of reserve tokens received for selling the given amount of relay tokens
       * 
       * Formula:
-      * Return = _connectorBalance * ((_supply / (_supply - _amount)) ^ (MAX_WEIGHT / _totalWeight) - 1)
+      * Return = _reserveBalance * ((_supply / (_supply - _amount)) ^ (MAX_RATIO / _totalRatio) - 1)
       * 
       * @param _supply              relay token supply
-      * @param _connectorBalance    connector token balance
-      * @param _totalWeight         total weight, represented in ppm, 2-2000000
+      * @param _reserveBalance      reserve token balance
+      * @param _totalRatio          total ratio, represented in ppm, 2-2000000
       * @param _amount              amount of relay tokens
       * 
-      * @return amount of connector tokens
+      * @return amount of reserve tokens
     */
-    function calculateLiquidateReturn(uint256 _supply, uint256 _connectorBalance, uint32 _totalWeight, uint256 _amount) public view returns (uint256) {
+    function calculateLiquidateReturn(uint256 _supply, uint256 _reserveBalance, uint32 _totalRatio, uint256 _amount) public view returns (uint256) {
         // validate input
-        require(_supply > 0 && _connectorBalance > 0 && _totalWeight > 1 && _totalWeight <= MAX_WEIGHT * 2 && _amount <= _supply);
+        require(_supply > 0 && _reserveBalance > 0 && _totalRatio > 1 && _totalRatio <= MAX_RATIO * 2 && _amount <= _supply);
 
         // special case for 0 amount
         if (_amount == 0)
             return 0;
 
-        // special case if the total weight = 100%
-        if (_totalWeight == MAX_WEIGHT)
-            return _amount.mul(_connectorBalance) / _supply;
+        // special case if the total ratio = 100%
+        if (_totalRatio == MAX_RATIO)
+            return _amount.mul(_reserveBalance) / _supply;
 
         uint256 result;
         uint8 precision;
         uint256 baseD = _supply - _amount;
-        (result, precision) = power(_supply, baseD, MAX_WEIGHT, _totalWeight);
-        uint256 temp = _connectorBalance.mul(result) >> precision;
-        return temp - _connectorBalance;
+        (result, precision) = power(_supply, baseD, MAX_RATIO, _totalRatio);
+        uint256 temp = _reserveBalance.mul(result) >> precision;
+        return temp - _reserveBalance;
     }
 
     /**
@@ -596,5 +597,12 @@ contract BancorFormula is IBancorFormula, Utils {
         if ((x & 0x400000000000000000000000000000000) != 0) res = res * 0x0002bf84208204f5977f9a8cf01fdc307 / 0x0000003c6ab775dd0b95b4cbee7e65d11; // multiply by e^2^(+3)
 
         return res;
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount) public view returns (uint256) {
+        return calculateCrossReserveReturn(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount);
     }
 }
