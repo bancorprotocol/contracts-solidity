@@ -118,20 +118,6 @@ Return = _reserveBalance * ((_supply / (_supply - _amount)) ^ (MAX_RATIO / _tota
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Function `calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount) → uint256` {#BancorFormula-calculateCrossConnectorReturn-uint256-uint32-uint256-uint32-uint256-}
 deprecated, backward compatibility
 

@@ -185,8 +185,6 @@ note that the network should already have been given allowance of the source tok
 
 
 
-
-
 # Function `getReturnByPath(contract IERC20Token[] _path, uint256 _amount) → uint256, uint256` {#BancorNetwork-getReturnByPath-contract-IERC20Token---uint256-}
 returns the expected return amount for converting a specific amount by following
 a given conversion path.
