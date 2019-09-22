@@ -307,10 +307,6 @@ can only be called by the bancor network contract
 
 
 
-
-
-
-
 # Function `convert2(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorConverter-convert2-contract-IERC20Token-contract-IERC20Token-uint256-uint256-address-uint256-}
 converts a specific amount of _fromToken to _toToken
 note that prior to version 16, you should use 'convert' instead
