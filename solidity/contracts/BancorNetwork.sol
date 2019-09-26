@@ -162,12 +162,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _for                 account that will receive the conversion result
       * @param _signature           an array of the following elements:
-      *                             [0] uint256     custom value that was signed for prioritized conversion
-      *                             [1] uint256     if the current block exceeded the given parameter - it is cancelled
-      *                             [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-      *                             [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-      *                             [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
-      *                             if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
+      * [0] uint256     custom value that was signed for prioritized conversion
+      * [1] uint256     if the current block exceeded the given parameter - it is cancelled
+      * [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+      * [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+      * [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+      * if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
       * 
@@ -252,12 +252,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * @param _to              address/account on _toBlockchain to send the BNT to
       * @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction 
       * @param _signature       an array of the following elements:
-      *                         [0] uint256     custom value that was signed for prioritized conversion; must be equal to _amount
-      *                         [1] uint256     if the current block exceeded the given parameter - it is cancelled
-      *                         [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-      *                         [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-      *                         [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
-      *                         if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
+      * [0] uint256     custom value that was signed for prioritized conversion; must be equal to _amount
+      * [1] uint256     if the current block exceeded the given parameter - it is cancelled
+      * [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+      * [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+      * [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+      * if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
       * 
       * @return the amount of BNT received from this conversion
     */
