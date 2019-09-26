@@ -142,15 +142,15 @@ note that the converter should already own the source tokens
 
 - `_signature`:           an array of the following elements:
 
-                            uint256     custom value that was signed for prioritized conversion
+                            [0] uint256     custom value that was signed for prioritized conversion
 
-                            uint256     if the current block exceeded the given parameter - it is cancelled
+                            [1] uint256     if the current block exceeded the given parameter - it is cancelled
 
-                            uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+                            [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
 
-                            bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+                            [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
 
-                            bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+                            [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
 
                             if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
 
@@ -212,15 +212,15 @@ note that the network should already have been given allowance of the source tok
 
 - `_signature`:       an array of the following elements:
 
-                        uint256     custom value that was signed for prioritized conversion; must be equal to _amount
+                        [0] uint256     custom value that was signed for prioritized conversion; must be equal to _amount
 
-                        uint256     if the current block exceeded the given parameter - it is cancelled
+                        [1] uint256     if the current block exceeded the given parameter - it is cancelled
 
-                        uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+                        [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
 
-                        bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+                        [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
 
-                        bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+                        [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
 
                         if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
 
