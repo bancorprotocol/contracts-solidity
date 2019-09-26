@@ -44,7 +44,7 @@ function fix(pathName) {
             fix(pathName + "/" + fileName);
     }
     else if (pathName.endsWith(".md")) {
-        fs.writeFileSync(pathName, fs.readFileSync(pathName, {encoding: "utf8"}).split("\r").join("").split("\n").filter(line => line.trim().length > 0).join("\n\n") + "\n", {encoding: "utf8"});
+        fs.writeFileSync(pathName, fs.readFileSync(pathName, {encoding: "utf8"}).split("\r").join("").split("\n").filter(line => line.trim().length > 0).join("\n\n") + "\n");
     }
 }
 
