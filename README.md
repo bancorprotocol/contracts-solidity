@@ -185,9 +185,9 @@ To run the test:
 ## Collaborators
 
 * **[Yudi Levi](https://github.com/yudilevi)**
+* **[Barak Manos](https://github.com/barakman)**
 * **[Ilana Pinhas](https://github.com/ilanapi)**
 * **[David Benchimol](https://github.com/davidbancor)**
-* **[Barak Manos](https://github.com/barakman)**
 * **[Or Dadosh](https://github.com/ordd)**
 * **[Martin Holst Swende](https://github.com/holiman)**
 
