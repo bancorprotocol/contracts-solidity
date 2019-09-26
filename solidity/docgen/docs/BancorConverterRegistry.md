@@ -20,10 +20,15 @@ Note that converter addresses for each token are returned in ascending order (fr
 - [`ConverterAddition(address _token, address _address)`](#BancorConverterRegistry-ConverterAddition-address-address-)
 - [`ConverterRemoval(address _token, address _address)`](#BancorConverterRegistry-ConverterRemoval-address-address-)
 
+
 # Function `constructor()` {#BancorConverterRegistry-constructor--}
 initializes a new BancorConverterRegistry instance
+
+
 # Function `tokenCount() → uint256` {#BancorConverterRegistry-tokenCount--}
 returns the number of tokens in the registry
+
+
 
 
 # Function `converterCount(address _token) → uint256` {#BancorConverterRegistry-converterCount-address-}
@@ -33,6 +38,8 @@ or 0 if the token isn't registered
 
 ## Parameters:
 - `_token`:   token address
+
+
 
 
 # Function `converterAddress(address _token, uint32 _index) → address` {#BancorConverterRegistry-converterAddress-address-uint32-}
@@ -46,6 +53,8 @@ or zero address if no such converter exists
 - `_index`:   converter index
 
 
+
+
 # Function `tokenAddress(address _converter) → address` {#BancorConverterRegistry-tokenAddress-address-}
 returns the token address associated with the given converter
 or zero address if no such converter exists
@@ -53,6 +62,8 @@ or zero address if no such converter exists
 
 ## Parameters:
 - `_converter`:   converter address
+
+
 
 
 # Function `registerConverter(address _token, address _converter)` {#BancorConverterRegistry-registerConverter-address-address-}
@@ -64,6 +75,8 @@ throws if the converter is already registered
 - `_token`:       token address
 
 - `_converter`:   converter address
+
+
 # Function `unregisterConverter(address _token, uint32 _index)` {#BancorConverterRegistry-unregisterConverter-address-uint32-}
 removes an existing converter from the registry
 note that the function doesn't scale and might be needed to be called
@@ -75,6 +88,8 @@ multiple times when removing an older converter from a large converter list
 
 - `_index`:   converter index
 
+
+
 # Event `ConverterAddition(address _token, address _address)` {#BancorConverterRegistry-ConverterAddition-address-address-}
 triggered when a converter is added to the registry
 
@@ -83,6 +98,8 @@ triggered when a converter is added to the registry
 - `_token`:   token
 
 - `_address`: converter
+
+
 # Event `ConverterRemoval(address _token, address _address)` {#BancorConverterRegistry-ConverterRemoval-address-address-}
 triggered when a converter is removed from the registry
 
@@ -91,3 +108,4 @@ triggered when a converter is removed from the registry
 - `_token`:   token
 
 - `_address`: converter
+
