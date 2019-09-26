@@ -1,0 +1,9 @@
+{
+      "network"        : "api",
+      "apiKey"         : "V6W6Q9CHBMFMYDUHEBQ5RKG3AGTHR3MW28",
+      "compilerVersion": "v0.4.26+commit.4563c3fc",
+      "optimization"   : {"used": 1, "runs": 200},
+      "contracts"      : {
+          "Utils": {"addr": "0x2C7B0F0527828357B2DaA898Da3021955640aDfC", "args": ""}
+      }
+  }
