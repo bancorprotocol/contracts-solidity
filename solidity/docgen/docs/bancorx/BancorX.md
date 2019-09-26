@@ -126,7 +126,9 @@ allows the owner enable/disable the reportTransaction method
 
 # Function `disableRegistryUpdate(bool _disable)` {#BancorX-disableRegistryUpdate-bool-}
 disables the registry update functionality
+
 this is a safety mechanism in case of a emergency
+
 can only be called by the manager or owner
 
 
@@ -140,12 +142,15 @@ sets the contract registry to whichever address the current registry is pointing
 
 # Function `restoreRegistry()` {#BancorX-restoreRegistry--}
 security mechanism allowing the converter owner to revert to the previous registry,
+
 to be used in emergency scenario
 
 
 # Function `upgrade(address[] _reporters)` {#BancorX-upgrade-address---}
 upgrades the contract to the latest version
+
 can only be called by the owner
+
 note that the owner needs to call acceptOwnership on the new contract after the upgrade
 
 
