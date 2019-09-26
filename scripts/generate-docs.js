@@ -38,6 +38,16 @@ function scan(pathName, indentation) {
     }
 }
 
+function fix(pathName) {
+    if (fs.lstatSync(pathName).isDirectory()) {
+        for (const fileName of fs.readdirSync(pathName))
+            fix(pathName + "/" + fileName);
+    }
+    else if (pathName.endsWith(".md")) {
+        fs.writeFileSync(pathName, fs.readFileSync(pathName, {encoding: "utf8"}).split("\r").join("").split("\n").filter(line => line.trim().length > 0).join("\n\n") + "\n", {encoding: "utf8"});
+    }
+}
+
 fs.writeFileSync (SUMMARY_FILE, "# Summary\n");
 fs.writeFileSync (".gitbook.yaml", "root: ./\n");
 fs.appendFileSync(".gitbook.yaml", "structure:\n");
@@ -59,3 +69,5 @@ const args = [
 const result = spawnSync("node", args, {stdio: ["inherit", "inherit", "pipe"]});
 if (result.stderr.length > 0)
     throw new Error(result.stderr);
+
+fix(OUTPUT_DIR);
