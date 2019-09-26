@@ -1,3 +1,10 @@
+### 0.5.0 (2019-09-25)
+General:
+* Terminology changes (Connector -> Reserve, Weight -> Ratio)
+* Compiler upgraded to 0.4.26
+* Truffle upgraded to 4.1.16
+
+
 ### 0.4.12 (2019-09-01)
 General:
 * Fixed line breaks in documentation

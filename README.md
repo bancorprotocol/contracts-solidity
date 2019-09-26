@@ -1,5 +1,5 @@
 ﻿
-# Bancor Protocol Contracts v0.4 (beta)
+# Bancor Protocol Contracts v0.5 (beta)
 
 ## Overview
 
@@ -43,7 +43,7 @@ Bancor is a work in progress. Make sure you understand the risks before using it
 # The Bancor Standards
 
 Bancor protocol is implemented using multiple contracts. The main contracts are SmartToken and BancorConverter.
-BancorConverter is responsible for converting between a token and its connectors.
+BancorConverter is responsible for converting between a token and its reserves.
 SmartToken represents a converter aware ERC-20 compliant token.
 
 # The Smart Token Standard
@@ -129,27 +129,27 @@ The most important here is `convert`.
 
 ### Methods
 
-**connectorTokenCount**
+**reserveTokenCount**
 ```solidity
-function connectorTokenCount() public constant returns (uint16 count)
+function reserveTokenCount() public constant returns (uint16 count)
 ```
-Gets the number of connector tokens defined for the token.
+Gets the number of reserve tokens defined for the token.
 <br>
 <br>
 <br>
-**connectorTokens**
+**reserveTokens**
 ```solidity
-function connectorTokens() public constant returns (address[] connectorTokens)
+function reserveTokens() public constant returns (address[] reserveTokens)
 ```
-Gets an array of the connector token contract addresses.
+Gets an array of the reserve token contract addresses.
 <br>
 <br>
 <br>
-**connectors**
+**reserves**
 ```solidity
-function connectors(address _connectorToken) public constant
+function reserves(address _reserveToken) public constant
 ```
-Gets the connector token details.
+Gets the reserve token details.
 <br>
 <br>
 <br>
@@ -185,9 +185,9 @@ To run the test:
 ## Collaborators
 
 * **[Yudi Levi](https://github.com/yudilevi)**
+* **[Barak Manos](https://github.com/barakman)**
 * **[Ilana Pinhas](https://github.com/ilanapi)**
 * **[David Benchimol](https://github.com/davidbancor)**
-* **[Barak Manos](https://github.com/barakman)**
 * **[Or Dadosh](https://github.com/ordd)**
 * **[Martin Holst Swende](https://github.com/holiman)**
 

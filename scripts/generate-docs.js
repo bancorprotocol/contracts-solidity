@@ -48,10 +48,11 @@ scan(INPUT_DIR, "");
 
 const args = [
     NODE_DIR + "/solidity-docgen/dist/cli.js",
-    "--input="       + INPUT_DIR,
-    "--output="      + OUTPUT_DIR,
-    "--templates="   + CONFIG_DIR,
-    "--solc-module=" + NODE_DIR + "/truffle/node_modules/solc",
+    "--input="         + INPUT_DIR,
+    "--output="        + OUTPUT_DIR,
+    "--templates="     + CONFIG_DIR,
+    "--solc-module="   + NODE_DIR + "/truffle/node_modules/solc",
+    "--solc-settings=" + JSON.stringify({optimizer: {enabled: true, runs: 200}}),
     "--contract-pages"
 ];
 

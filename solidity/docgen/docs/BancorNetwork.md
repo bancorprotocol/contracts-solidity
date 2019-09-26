@@ -17,7 +17,6 @@ Format:
 - [`convertForPrioritized4(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256[] _signature, address _affiliateAccount, uint256 _affiliateFee)`](#BancorNetwork-convertForPrioritized4-contract-IERC20Token---uint256-uint256-address-uint256---address-uint256-)
 - [`xConvert(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, bytes32 _toBlockchain, bytes32 _to, uint256 _conversionId)`](#BancorNetwork-xConvert-contract-IERC20Token---uint256-uint256-bytes32-bytes32-uint256-)
 - [`xConvertPrioritized2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, bytes32 _toBlockchain, bytes32 _to, uint256 _conversionId, uint256[] _signature)`](#BancorNetwork-xConvertPrioritized2-contract-IERC20Token---uint256-uint256-bytes32-bytes32-uint256-uint256---)
-- [`getReturn(address _dest, address _fromToken, address _toToken, uint256 _amount)`](#BancorNetwork-getReturn-address-address-address-uint256-)
 - [`getReturnByPath(contract IERC20Token[] _path, uint256 _amount)`](#BancorNetwork-getReturnByPath-contract-IERC20Token---uint256-)
 - [`claimAndConvertFor2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee)`](#BancorNetwork-claimAndConvertFor2-contract-IERC20Token---uint256-uint256-address-address-uint256-)
 - [`convert2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)`](#BancorNetwork-convert2-contract-IERC20Token---uint256-uint256-address-uint256-)
@@ -184,10 +183,6 @@ note that the network should already have been given allowance of the source tok
                         if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
 
 
-
-
-# Function `getReturn(address _dest, address _fromToken, address _toToken, uint256 _amount) → uint256, uint256` {#BancorNetwork-getReturn-address-address-address-uint256-}
-No description
 
 
 # Function `getReturnByPath(contract IERC20Token[] _path, uint256 _amount) → uint256, uint256` {#BancorNetwork-getReturnByPath-contract-IERC20Token---uint256-}

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.26;
 import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorConverterUpgrader.sol';
 import './interfaces/IBancorFormula.sol';
@@ -22,7 +22,7 @@ import '../bancorx/interfaces/IBancorX.sol';
   * 
   * The Bancor converter allows for conversions between a Smart Token and other ERC20 tokens and between different ERC20 tokens and themselves. 
   * 
-  * The ERC20 connector balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on the actual connector balance.
+  * The ERC20 reserve balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on the actual reserve balance.
   * 
   * This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract. 
   * 
@@ -37,36 +37,36 @@ import '../bancorx/interfaces/IBancorX.sol';
   *     - gas price limit check can be skipped if the transaction comes from a trusted, whitelisted signer
   * 
   * Other potential solutions might include a commit/reveal based schemes
-  * - Possibly add getters for the connector fields so that the client won't need to rely on the order in the struct
+  * - Possibly add getters for the reserve fields so that the client won't need to rely on the order in the struct
 */
 contract BancorConverter is IBancorConverter, SmartTokenController, Managed, ContractIds, FeatureIds {
     using SafeMath for uint256;
 
     
-    uint32 private constant MAX_WEIGHT = 1000000;
-    uint64 private constant MAX_CONVERSION_FEE = 1000000;
+    uint32 private constant RATIO_RESOLUTION = 1000000;
+    uint64 private constant CONVERSION_FEE_RESOLUTION = 1000000;
 
-    struct Connector {
-        uint256 virtualBalance;         // connector virtual balance
-        uint32 weight;                  // connector weight, represented in ppm, 1-1000000
+    struct Reserve {
+        uint256 virtualBalance;         // reserve virtual balance
+        uint32 ratio;                   // reserve ratio, represented in ppm, 1-1000000
         bool isVirtualBalanceEnabled;   // true if virtual balance is enabled, false if not
-        bool isSaleEnabled;             // is sale of the connector token enabled, can be set by the owner
+        bool isSaleEnabled;             // is sale of the reserve token enabled, can be set by the owner
         bool isSet;                     // used to tell if the mapping element is defined
     }
 
     /**
       * @dev version number
     */
-    uint16 public version = 16;
+    uint16 public version = 17;
     string public converterType = 'bancor';
 
     bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
     IContractRegistry public prevRegistry;              // address of previous registry as security mechanism
     IContractRegistry public registry;                  // contract registry contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
-    IERC20Token[] public connectorTokens;               // ERC20 standard token addresses
-    mapping (address => Connector) public connectors;   // connector token addresses -> connector data
-    uint32 private totalConnectorWeight = 0;            // used to efficiently prevent increasing the total connector weight above 100%
+    IERC20Token[] public reserveTokens;                 // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
+    mapping (address => Reserve) public reserves;       // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
+    uint32 private totalReserveRatio = 0;               // used to efficiently prevent increasing the total reserve ratio above 100%
     uint32 public maxConversionFee = 0;                 // maximum conversion fee for the lifetime of the contract,
                                                         // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public conversionFee = 0;                    // current conversion fee, represented in ppm, 0...maxConversionFee
@@ -94,10 +94,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev triggered after a conversion with new price data
       * 
-      * @param  _connectorToken     connector token
+      * @param  _connectorToken     reserve token
       * @param  _tokenSupply        smart token supply
-      * @param  _connectorBalance   connector balance
-      * @param  _connectorWeight    connector weight
+      * @param  _connectorBalance   reserve balance
+      * @param  _connectorWeight    reserve ratio
     */
     event PriceDataUpdate(
         address indexed _connectorToken,
@@ -127,20 +127,20 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @param  _token              smart token governed by the converter
       * @param  _registry           address of a contract registry contract
       * @param  _maxConversionFee   maximum conversion fee, represented in ppm
-      * @param  _connectorToken     optional, initial connector, allows defining the first connector at deployment time
-      * @param  _connectorWeight    optional, weight for the initial connector
+      * @param  _reserveToken       optional, initial reserve, allows defining the first reserve at deployment time
+      * @param  _reserveRatio       optional, ratio for the initial reserve
     */
     constructor(
         ISmartToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee,
-        IERC20Token _connectorToken,
-        uint32 _connectorWeight
+        IERC20Token _reserveToken,
+        uint32 _reserveRatio
     )
         public
         SmartTokenController(_token)
         validAddress(_registry)
-        validMaxConversionFee(_maxConversionFee)
+        validConversionFee(_maxConversionFee)
     {
         registry = _registry;
         prevRegistry = _registry;
@@ -152,43 +152,31 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         maxConversionFee = _maxConversionFee;
 
-        if (_connectorToken != address(0))
-            addConnector(_connectorToken, _connectorWeight, false);
+        if (_reserveToken != address(0))
+            addReserve(_reserveToken, _reserveRatio, false);
     }
 
-    // validates a connector token address - verifies that the address belongs to one of the connector tokens
-    modifier validConnector(IERC20Token _address) {
-        require(connectors[_address].isSet);
-        _;
-    }
-
-    // validates a token address - verifies that the address belongs to one of the convertible tokens
-    modifier validToken(IERC20Token _address) {
-        require(_address == token || connectors[_address].isSet);
-        _;
-    }
-
-    // validates maximum conversion fee
-    modifier validMaxConversionFee(uint32 _conversionFee) {
-        require(_conversionFee >= 0 && _conversionFee <= MAX_CONVERSION_FEE);
+    // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
+    modifier validReserve(IERC20Token _address) {
+        require(reserves[_address].isSet);
         _;
     }
 
     // validates conversion fee
     modifier validConversionFee(uint32 _conversionFee) {
-        require(_conversionFee >= 0 && _conversionFee <= maxConversionFee);
+        require(_conversionFee >= 0 && _conversionFee <= CONVERSION_FEE_RESOLUTION);
         _;
     }
 
-    // validates connector weight range
-    modifier validConnectorWeight(uint32 _weight) {
-        require(_weight > 0 && _weight <= MAX_WEIGHT);
+    // validates reserve ratio
+    modifier validReserveRatio(uint32 _ratio) {
+        require(_ratio > 0 && _ratio <= RATIO_RESOLUTION);
         _;
     }
 
-    // allows execution only when the total weight is 100%
-    modifier maxTotalWeightOnly() {
-        require(totalConnectorWeight == MAX_WEIGHT);
+    // allows execution only when the total ratio is 100%
+    modifier fullTotalRatioOnly() {
+        require(totalReserveRatio == RATIO_RESOLUTION);
         _;
     }
 
@@ -254,12 +242,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev returns the number of connector tokens defined
+      * @dev returns the number of reserve tokens defined
+      * note that prior to version 17, you should use 'connectorTokenCount' instead
       * 
-      * @return number of connector tokens
+      * @return number of reserve tokens
     */
-    function connectorTokenCount() public view returns (uint16) {
-        return uint16(connectorTokens.length);
+    function reserveTokenCount() public view returns (uint16) {
+        return uint16(reserveTokens.length);
     }
 
     /**
@@ -316,8 +305,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function setConversionFee(uint32 _conversionFee)
         public
         ownerOrManagerOnly
-        validConversionFee(_conversionFee)
     {
+        require(_conversionFee >= 0 && _conversionFee <= maxConversionFee);
         emit ConversionFeeUpdate(conversionFee, _conversionFee);
         conversionFee = _conversionFee;
     }
@@ -326,18 +315,18 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @dev given a return amount, returns the amount minus the conversion fee
       * 
       * @param _amount      return amount
-      * @param _magnitude   1 for standard conversion, 2 for cross connector conversion
+      * @param _magnitude   1 for standard conversion, 2 for cross reserve conversion
       * 
       * @return return amount minus conversion fee
     */
     function getFinalAmount(uint256 _amount, uint8 _magnitude) public view returns (uint256) {
-        return _amount.mul((MAX_CONVERSION_FEE - conversionFee) ** _magnitude).div(MAX_CONVERSION_FEE ** _magnitude);
+        return _amount.mul((CONVERSION_FEE_RESOLUTION - conversionFee) ** _magnitude).div(CONVERSION_FEE_RESOLUTION ** _magnitude);
     }
 
     /**
       * @dev withdraws tokens held by the converter and sends them to an account
       * can only be called by the owner
-      * note that connector tokens can only be withdrawn by the owner while the converter is inactive
+      * note that reserve tokens can only be withdrawn by the owner while the converter is inactive
       * unless the owner is the converter upgrader contract
       * 
       * @param _token   ERC20 token contract address
@@ -347,9 +336,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public {
         address converterUpgrader = registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER);
 
-        // if the token is not a connector token, allow withdrawal
+        // if the token is not a reserve token, allow withdrawal
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
-        require(!connectors[_token].isSet || token.owner() != address(this) || owner == converterUpgrader);
+        require(!reserves[_token].isSet || token.owner() != address(this) || owner == converterUpgrader);
         super.withdrawTokens(_token, _to, _amount);
     }
 
@@ -367,87 +356,91 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev defines a new connector for the token
+      * @dev defines a new reserve for the token
       * can only be called by the owner while the converter is inactive
+      * note that prior to version 17, you should use 'addConnector' instead
       * 
-      * @param _token                  address of the connector token
-      * @param _weight                 constant connector weight, represented in ppm, 1-1000000
-      * @param _enableVirtualBalance   true to enable virtual balance for the connector, false to disable it
+      * @param _token                  address of the reserve token
+      * @param _ratio                  constant reserve ratio, represented in ppm, 1-1000000
+      * @param _enableVirtualBalance   true to enable virtual balance for the reserve, false to disable it
     */
-    function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance)
+    function addReserve(IERC20Token _token, uint32 _ratio, bool _enableVirtualBalance)
         public
         ownerOnly
         inactive
         validAddress(_token)
         notThis(_token)
-        validConnectorWeight(_weight)
+        validReserveRatio(_ratio)
     {
-        require(_token != token && !connectors[_token].isSet && totalConnectorWeight + _weight <= MAX_WEIGHT); // validate input
+        require(_token != token && !reserves[_token].isSet && totalReserveRatio + _ratio <= RATIO_RESOLUTION); // validate input
 
-        connectors[_token].virtualBalance = 0;
-        connectors[_token].weight = _weight;
-        connectors[_token].isVirtualBalanceEnabled = _enableVirtualBalance;
-        connectors[_token].isSaleEnabled = true;
-        connectors[_token].isSet = true;
-        connectorTokens.push(_token);
-        totalConnectorWeight += _weight;
+        reserves[_token].virtualBalance = 0;
+        reserves[_token].ratio = _ratio;
+        reserves[_token].isVirtualBalanceEnabled = _enableVirtualBalance;
+        reserves[_token].isSaleEnabled = true;
+        reserves[_token].isSet = true;
+        reserveTokens.push(_token);
+        totalReserveRatio += _ratio;
     }
 
     /**
-      * @dev updates one of the token connectors
+      * @dev updates one of the token reserves
       * can only be called by the owner
+      * note that prior to version 17, you should use 'updateConnector' instead
       * 
-      * @param _connectorToken         address of the connector token
-      * @param _weight                 constant connector weight, represented in ppm, 1-1000000
-      * @param _enableVirtualBalance   true to enable virtual balance for the connector, false to disable it
-      * @param _virtualBalance         new connector's virtual balance
+      * @param _reserveToken           address of the reserve token
+      * @param _ratio                  constant reserve ratio, represented in ppm, 1-1000000
+      * @param _enableVirtualBalance   true to enable virtual balance for the reserve, false to disable it
+      * @param _virtualBalance         new reserve's virtual balance
     */
-    function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance)
+    function updateReserve(IERC20Token _reserveToken, uint32 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)
         public
         ownerOnly
-        validConnector(_connectorToken)
-        validConnectorWeight(_weight)
+        validReserve(_reserveToken)
+        validReserveRatio(_ratio)
     {
-        Connector storage connector = connectors[_connectorToken];
-        require(totalConnectorWeight - connector.weight + _weight <= MAX_WEIGHT); // validate input
+        Reserve storage reserve = reserves[_reserveToken];
+        require(totalReserveRatio - reserve.ratio + _ratio <= RATIO_RESOLUTION); // validate input
 
-        totalConnectorWeight = totalConnectorWeight - connector.weight + _weight;
-        connector.weight = _weight;
-        connector.isVirtualBalanceEnabled = _enableVirtualBalance;
-        connector.virtualBalance = _virtualBalance;
+        totalReserveRatio = totalReserveRatio - reserve.ratio + _ratio;
+        reserve.ratio = _ratio;
+        reserve.isVirtualBalanceEnabled = _enableVirtualBalance;
+        reserve.virtualBalance = _virtualBalance;
     }
 
     /**
-      * @dev disables converting from the given connector token in case the connector token got compromised
+      * @dev disables converting from the given reserve token in case the reserve token got compromised
       * can only be called by the owner
       * note that converting to the token is still enabled regardless of this flag and it cannot be disabled by the owner
+      * note that prior to version 17, you should use 'disableConnectorSale' instead
       * 
-      * @param _connectorToken  connector token contract address
+      * @param _reserveToken    reserve token contract address
       * @param _disable         true to disable the token, false to re-enable it
     */
-    function disableConnectorSale(IERC20Token _connectorToken, bool _disable)
+    function disableReserveSale(IERC20Token _reserveToken, bool _disable)
         public
         ownerOnly
-        validConnector(_connectorToken)
+        validReserve(_reserveToken)
     {
-        connectors[_connectorToken].isSaleEnabled = !_disable;
+        reserves[_reserveToken].isSaleEnabled = !_disable;
     }
 
     /**
-      * @dev returns the connector's virtual balance if one is defined, otherwise returns the actual balance
+      * @dev returns the reserve's virtual balance if one is defined, otherwise returns the actual balance
+      * note that prior to version 17, you should use 'getConnectorBalance' instead
       * 
-      * @param _connectorToken  connector token contract address
+      * @param _reserveToken    reserve token contract address
       * 
-      * @return connector balance
+      * @return reserve balance
     */
-    function getConnectorBalance(IERC20Token _connectorToken)
+    function getReserveBalance(IERC20Token _reserveToken)
         public
         view
-        validConnector(_connectorToken)
+        validReserve(_reserveToken)
         returns (uint256)
     {
-        Connector storage connector = connectors[_connectorToken];
-        return connector.isVirtualBalanceEnabled ? connector.virtualBalance : _connectorToken.balanceOf(this);
+        Reserve storage reserve = reserves[_reserveToken];
+        return reserve.isVirtualBalanceEnabled ? reserve.virtualBalance : _reserveToken.balanceOf(this);
     }
 
     /**
@@ -462,38 +455,38 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256, uint256) {
         require(_fromToken != _toToken); // validate input
 
-        // conversion between the token and one of its connectors
+        // conversion between the token and one of its reserves
         if (_toToken == token)
             return getPurchaseReturn(_fromToken, _amount);
         else if (_fromToken == token)
             return getSaleReturn(_toToken, _amount);
 
-        // conversion between 2 connectors
-        return getCrossConnectorReturn(_fromToken, _toToken, _amount);
+        // conversion between 2 reserves
+        return getCrossReserveReturn(_fromToken, _toToken, _amount);
     }
 
     /**
-      * @dev returns the expected return for buying the token for a connector token
+      * @dev returns the expected return for buying the token for a reserve token
       * 
-      * @param _connectorToken  connector token contract address
-      * @param _depositAmount   amount to deposit (in the connector token)
+      * @param _reserveToken    reserve token contract address
+      * @param _depositAmount   amount to deposit (in the reserve token)
       * 
       * @return expected purchase return amount and conversion fee
     */
-    function getPurchaseReturn(IERC20Token _connectorToken, uint256 _depositAmount)
+    function getPurchaseReturn(IERC20Token _reserveToken, uint256 _depositAmount)
         public
         view
         active
-        validConnector(_connectorToken)
+        validReserve(_reserveToken)
         returns (uint256, uint256)
     {
-        Connector storage connector = connectors[_connectorToken];
-        require(connector.isSaleEnabled); // validate input
+        Reserve storage reserve = reserves[_reserveToken];
+        require(reserve.isSaleEnabled); // validate input
 
         uint256 tokenSupply = token.totalSupply();
-        uint256 connectorBalance = getConnectorBalance(_connectorToken);
+        uint256 reserveBalance = getReserveBalance(_reserveToken);
         IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
-        uint256 amount = formula.calculatePurchaseReturn(tokenSupply, connectorBalance, connector.weight, _depositAmount);
+        uint256 amount = formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
         uint256 finalAmount = getFinalAmount(amount, 1);
 
         // return the amount minus the conversion fee and the conversion fee
@@ -501,25 +494,25 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev returns the expected return for selling the token for one of its connector tokens
+      * @dev returns the expected return for selling the token for one of its reserve tokens
       * 
-      * @param _connectorToken  connector token contract address
+      * @param _reserveToken    reserve token contract address
       * @param _sellAmount      amount to sell (in the smart token)
       * 
       * @return expected sale return amount and conversion fee
     */
-    function getSaleReturn(IERC20Token _connectorToken, uint256 _sellAmount)
+    function getSaleReturn(IERC20Token _reserveToken, uint256 _sellAmount)
         public
         view
         active
-        validConnector(_connectorToken)
+        validReserve(_reserveToken)
         returns (uint256, uint256)
     {
-        Connector storage connector = connectors[_connectorToken];
+        Reserve storage reserve = reserves[_reserveToken];
         uint256 tokenSupply = token.totalSupply();
-        uint256 connectorBalance = getConnectorBalance(_connectorToken);
+        uint256 reserveBalance = getReserveBalance(_reserveToken);
         IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
-        uint256 amount = formula.calculateSaleReturn(tokenSupply, connectorBalance, connector.weight, _sellAmount);
+        uint256 amount = formula.calculateSaleReturn(tokenSupply, reserveBalance, reserve.ratio, _sellAmount);
         uint256 finalAmount = getFinalAmount(amount, 1);
 
         // return the amount minus the conversion fee and the conversion fee
@@ -527,37 +520,38 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev returns the expected return for selling one of the connector tokens for another connector token
+      * @dev returns the expected return for selling one of the reserve tokens for another reserve token
+      * note that prior to version 17, you should use 'getCrossConnectorReturn' instead
       * 
-      * @param _fromConnectorToken  contract address of the connector token to convert from
-      * @param _toConnectorToken    contract address of the connector token to convert to
-      * @param _sellAmount          amount to sell (in the from connector token)
+      * @param _fromReserveToken    contract address of the reserve token to convert from
+      * @param _toReserveToken      contract address of the reserve token to convert to
+      * @param _sellAmount          amount to sell (in the from reserve token)
       * 
-      * @return expected sale return amount and conversion fee (in the to connector token)
+      * @return expected sale return amount and conversion fee (in the to reserve token)
     */
-    function getCrossConnectorReturn(IERC20Token _fromConnectorToken, IERC20Token _toConnectorToken, uint256 _sellAmount)
+    function getCrossReserveReturn(IERC20Token _fromReserveToken, IERC20Token _toReserveToken, uint256 _sellAmount)
         public
         view
         active
-        validConnector(_fromConnectorToken)
-        validConnector(_toConnectorToken)
+        validReserve(_fromReserveToken)
+        validReserve(_toReserveToken)
         returns (uint256, uint256)
     {
-        Connector storage fromConnector = connectors[_fromConnectorToken];
-        Connector storage toConnector = connectors[_toConnectorToken];
-        require(fromConnector.isSaleEnabled); // validate input
+        Reserve storage fromReserve = reserves[_fromReserveToken];
+        Reserve storage toReserve = reserves[_toReserveToken];
+        require(fromReserve.isSaleEnabled); // validate input
 
         IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
-        uint256 amount = formula.calculateCrossConnectorReturn(
-            getConnectorBalance(_fromConnectorToken), 
-            fromConnector.weight, 
-            getConnectorBalance(_toConnectorToken), 
-            toConnector.weight, 
+        uint256 amount = formula.calculateCrossReserveReturn(
+            getReserveBalance(_fromReserveToken), 
+            fromReserve.ratio, 
+            getReserveBalance(_toReserveToken), 
+            toReserve.ratio, 
             _sellAmount);
         uint256 finalAmount = getFinalAmount(amount, 2);
 
         // return the amount minus the conversion fee and the conversion fee
-        // the fee is higher (magnitude = 2) since cross connector conversion equals 2 conversions (from / to the smart token)
+        // the fee is higher (magnitude = 2) since cross reserve conversion equals 2 conversions (from / to the smart token)
         return (finalAmount, amount - finalAmount);
     }
 
@@ -581,7 +575,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     {
         require(_fromToken != _toToken); // validate input
 
-        // conversion between the token and one of its connectors
+        // conversion between the token and one of its reserves
         if (_toToken == token)
             return buy(_fromToken, _amount, _minReturn);
         else if (_fromToken == token)
@@ -590,118 +584,119 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 amount;
         uint256 feeAmount;
 
-        // conversion between 2 connectors
-        (amount, feeAmount) = getCrossConnectorReturn(_fromToken, _toToken, _amount);
+        // conversion between 2 reserves
+        (amount, feeAmount) = getCrossReserveReturn(_fromToken, _toToken, _amount);
         // ensure the trade gives something in return and meets the minimum requested amount
         require(amount != 0 && amount >= _minReturn);
 
         // update the source token virtual balance if relevant
-        Connector storage fromConnector = connectors[_fromToken];
-        if (fromConnector.isVirtualBalanceEnabled)
-            fromConnector.virtualBalance = fromConnector.virtualBalance.add(_amount);
+        Reserve storage fromReserve = reserves[_fromToken];
+        if (fromReserve.isVirtualBalanceEnabled)
+            fromReserve.virtualBalance = fromReserve.virtualBalance.add(_amount);
 
         // update the target token virtual balance if relevant
-        Connector storage toConnector = connectors[_toToken];
-        if (toConnector.isVirtualBalanceEnabled)
-            toConnector.virtualBalance = toConnector.virtualBalance.sub(amount);
+        Reserve storage toReserve = reserves[_toToken];
+        if (toReserve.isVirtualBalanceEnabled)
+            toReserve.virtualBalance = toReserve.virtualBalance.sub(amount);
 
-        // ensure that the trade won't deplete the connector balance
-        uint256 toConnectorBalance = getConnectorBalance(_toToken);
-        assert(amount < toConnectorBalance);
+        // ensure that the trade won't deplete the reserve balance
+        uint256 toReserveBalance = getReserveBalance(_toToken);
+        assert(amount < toReserveBalance);
 
-        // transfer funds from the caller in the from connector token
+        // transfer funds from the caller in the from reserve token
         ensureTransferFrom(_fromToken, msg.sender, this, _amount);
-        // transfer funds to the caller in the to connector token
-        // the transfer might fail if the actual connector balance is smaller than the virtual balance
+        // transfer funds to the caller in the to reserve token
+        // the transfer might fail if the actual reserve balance is smaller than the virtual balance
         ensureTransfer(_toToken, msg.sender, amount);
 
         // dispatch the conversion event
-        // the fee is higher (magnitude = 2) since cross connector conversion equals 2 conversions (from / to the smart token)
+        // the fee is higher (magnitude = 2) since cross reserve conversion equals 2 conversions (from / to the smart token)
         dispatchConversionEvent(_fromToken, _toToken, _amount, amount, feeAmount);
 
-        // dispatch price data updates for the smart token / both connectors
-        emit PriceDataUpdate(_fromToken, token.totalSupply(), getConnectorBalance(_fromToken), fromConnector.weight);
-        emit PriceDataUpdate(_toToken, token.totalSupply(), getConnectorBalance(_toToken), toConnector.weight);
+        // dispatch price data updates for the smart token / both reserves
+        emit PriceDataUpdate(_fromToken, token.totalSupply(), getReserveBalance(_fromToken), fromReserve.ratio);
+        emit PriceDataUpdate(_toToken, token.totalSupply(), getReserveBalance(_toToken), toReserve.ratio);
         return amount;
     }
 
     /**
-      * @dev buys the token by depositing one of its connector tokens
+      * @dev buys the token by depositing one of its reserve tokens
       * 
-      * @param _connectorToken  connector token contract address
-      * @param _depositAmount   amount to deposit (in the connector token)
+      * @param _reserveToken    reserve token contract address
+      * @param _depositAmount   amount to deposit (in the reserve token)
       * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * 
       * @return buy return amount
     */
-    function buy(IERC20Token _connectorToken, uint256 _depositAmount, uint256 _minReturn) internal returns (uint256) {
+    function buy(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn) internal returns (uint256) {
         uint256 amount;
         uint256 feeAmount;
-        (amount, feeAmount) = getPurchaseReturn(_connectorToken, _depositAmount);
+        (amount, feeAmount) = getPurchaseReturn(_reserveToken, _depositAmount);
         // ensure the trade gives something in return and meets the minimum requested amount
         require(amount != 0 && amount >= _minReturn);
 
         // update virtual balance if relevant
-        Connector storage connector = connectors[_connectorToken];
-        if (connector.isVirtualBalanceEnabled)
-            connector.virtualBalance = connector.virtualBalance.add(_depositAmount);
+        Reserve storage reserve = reserves[_reserveToken];
+        if (reserve.isVirtualBalanceEnabled)
+            reserve.virtualBalance = reserve.virtualBalance.add(_depositAmount);
 
-        // transfer funds from the caller in the connector token
-        ensureTransferFrom(_connectorToken, msg.sender, this, _depositAmount);
+        // transfer funds from the caller in the reserve token
+        ensureTransferFrom(_reserveToken, msg.sender, this, _depositAmount);
         // issue new funds to the caller in the smart token
         token.issue(msg.sender, amount);
 
         // dispatch the conversion event
-        dispatchConversionEvent(_connectorToken, token, _depositAmount, amount, feeAmount);
+        dispatchConversionEvent(_reserveToken, token, _depositAmount, amount, feeAmount);
 
-        // dispatch price data update for the smart token/connector
-        emit PriceDataUpdate(_connectorToken, token.totalSupply(), getConnectorBalance(_connectorToken), connector.weight);
+        // dispatch price data update for the smart token/reserve
+        emit PriceDataUpdate(_reserveToken, token.totalSupply(), getReserveBalance(_reserveToken), reserve.ratio);
         return amount;
     }
 
     /**
-      * @dev sells the token by withdrawing from one of its connector tokens
+      * @dev sells the token by withdrawing from one of its reserve tokens
       * 
-      * @param _connectorToken  connector token contract address
+      * @param _reserveToken    reserve token contract address
       * @param _sellAmount      amount to sell (in the smart token)
       * @param _minReturn       if the conversion results in an amount smaller the minimum return - it is cancelled, must be nonzero
       * 
       * @return sell return amount
     */
-    function sell(IERC20Token _connectorToken, uint256 _sellAmount, uint256 _minReturn) internal returns (uint256) {
+    function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn) internal returns (uint256) {
         require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
         uint256 amount;
         uint256 feeAmount;
-        (amount, feeAmount) = getSaleReturn(_connectorToken, _sellAmount);
+        (amount, feeAmount) = getSaleReturn(_reserveToken, _sellAmount);
         // ensure the trade gives something in return and meets the minimum requested amount
         require(amount != 0 && amount >= _minReturn);
 
-        // ensure that the trade will only deplete the connector balance if the total supply is depleted as well
+        // ensure that the trade will only deplete the reserve balance if the total supply is depleted as well
         uint256 tokenSupply = token.totalSupply();
-        uint256 connectorBalance = getConnectorBalance(_connectorToken);
-        assert(amount < connectorBalance || (amount == connectorBalance && _sellAmount == tokenSupply));
+        uint256 reserveBalance = getReserveBalance(_reserveToken);
+        assert(amount < reserveBalance || (amount == reserveBalance && _sellAmount == tokenSupply));
 
         // update virtual balance if relevant
-        Connector storage connector = connectors[_connectorToken];
-        if (connector.isVirtualBalanceEnabled)
-            connector.virtualBalance = connector.virtualBalance.sub(amount);
+        Reserve storage reserve = reserves[_reserveToken];
+        if (reserve.isVirtualBalanceEnabled)
+            reserve.virtualBalance = reserve.virtualBalance.sub(amount);
 
         // destroy _sellAmount from the caller's balance in the smart token
         token.destroy(msg.sender, _sellAmount);
-        // transfer funds to the caller in the connector token
-        // the transfer might fail if the actual connector balance is smaller than the virtual balance
-        ensureTransfer(_connectorToken, msg.sender, amount);
+        // transfer funds to the caller in the reserve token
+        // the transfer might fail if the actual reserve balance is smaller than the virtual balance
+        ensureTransfer(_reserveToken, msg.sender, amount);
 
         // dispatch the conversion event
-        dispatchConversionEvent(token, _connectorToken, _sellAmount, amount, feeAmount);
+        dispatchConversionEvent(token, _reserveToken, _sellAmount, amount, feeAmount);
 
-        // dispatch price data update for the smart token/connector
-        emit PriceDataUpdate(_connectorToken, token.totalSupply(), getConnectorBalance(_connectorToken), connector.weight);
+        // dispatch price data update for the smart token/reserve
+        emit PriceDataUpdate(_reserveToken, token.totalSupply(), getReserveBalance(_reserveToken), reserve.ratio);
         return amount;
     }
 
     /**
       * @dev converts a specific amount of _fromToken to _toToken
+      * note that prior to version 16, you should use 'convert' instead
       * 
       * @param _fromToken           ERC20 token to convert from
       * @param _toToken             ERC20 token to convert to
@@ -721,6 +716,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev converts the token to any other token in the bancor network by following a predefined conversion path
       * note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
+      * note that prior to version 16, you should use 'quickConvert' instead
       * 
       * @param _path                conversion path, see conversion path format in the BancorNetwork contract
       * @param _amount              amount to convert from (in the initial source token)
@@ -741,6 +737,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev converts the token to any other token in the bancor network by following a predefined conversion path
       * note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
+      * note that prior to version 16, you should use 'quickConvertPrioritized' instead
       * 
       * @param _path                conversion path, see conversion path format in the BancorNetwork contract
       * @param _amount              amount to convert from (in the initial source token)
@@ -789,6 +786,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @dev allows a user to convert BNT that was sent from another blockchain into any other
       * token on the BancorNetwork without specifying the amount of BNT to be converted, but
       * rather by providing the xTransferId which allows us to get the amount from BancorX.
+      * note that prior to version 16, you should use 'completeXConversion' instead
       * 
       * @param _path            conversion path, see conversion path format in the BancorNetwork contract
       * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
@@ -879,40 +877,40 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev buys the token with all connector tokens using the same percentage
-      * i.e. if the caller increases the supply by 10%, it will cost an amount equal to
-      * 10% of each connector token balance
-      * can only be called if the max total weight is exactly 100% and while conversions are enabled
+      * @dev buys the token with all reserve tokens using the same percentage
+      * for example, if the caller increases the supply by 10%,
+      * then it will cost an amount equal to 10% of each reserve token balance
+      * note that the function can be called only if the total ratio is 100% and conversions are enabled
       * 
       * @param _amount  amount to increase the supply by (in the smart token)
     */
     function fund(uint256 _amount)
         public
-        maxTotalWeightOnly
+        fullTotalRatioOnly
         conversionsAllowed
     {
         uint256 supply = token.totalSupply();
 
-        // iterate through the connector tokens and transfer a percentage equal to the ratio between _amount
-        // and the total supply in each connector from the caller to the converter
-        IERC20Token connectorToken;
-        uint256 connectorBalance;
-        uint256 connectorAmount;
-        for (uint16 i = 0; i < connectorTokens.length; i++) {
-            connectorToken = connectorTokens[i];
-            connectorBalance = getConnectorBalance(connectorToken);
-            connectorAmount = _amount.mul(connectorBalance).sub(1).div(supply).add(1);
+        // iterate through the reserve tokens and transfer a percentage equal to the ratio between _amount
+        // and the total supply in each reserve from the caller to the converter
+        IERC20Token reserveToken;
+        uint256 reserveBalance;
+        uint256 reserveAmount;
+        for (uint16 i = 0; i < reserveTokens.length; i++) {
+            reserveToken = reserveTokens[i];
+            reserveBalance = getReserveBalance(reserveToken);
+            reserveAmount = _amount.mul(reserveBalance).sub(1).div(supply).add(1);
 
             // update virtual balance if relevant
-            Connector storage connector = connectors[connectorToken];
-            if (connector.isVirtualBalanceEnabled)
-                connector.virtualBalance = connector.virtualBalance.add(connectorAmount);
+            Reserve storage reserve = reserves[reserveToken];
+            if (reserve.isVirtualBalanceEnabled)
+                reserve.virtualBalance = reserve.virtualBalance.add(reserveAmount);
 
-            // transfer funds from the caller in the connector token
-            ensureTransferFrom(connectorToken, msg.sender, this, connectorAmount);
+            // transfer funds from the caller in the reserve token
+            ensureTransferFrom(reserveToken, msg.sender, this, reserveAmount);
 
-            // dispatch price data update for the smart token/connector
-            emit PriceDataUpdate(connectorToken, supply + _amount, connectorBalance + connectorAmount, connector.weight);
+            // dispatch price data update for the smart token/reserve
+            emit PriceDataUpdate(reserveToken, supply + _amount, reserveBalance + reserveAmount, reserve.ratio);
         }
 
         // issue new funds to the caller in the smart token
@@ -920,49 +918,41 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev sells the token for all connector tokens using the same percentage
-      * i.e. if the holder sells 10% of the supply, they will receive 10% of each
-      * connector token balance in return
-      * can only be called if the max total weight is exactly 100%
-      * note that the function can also be called if conversions are disabled
+      * @dev sells the token for all reserve tokens using the same percentage
+      * for example, if the holder sells 10% of the supply,
+      * then they will receive 10% of each reserve token balance in return
+      * note that the function can be called only if the total ratio is 100%
       * 
       * @param _amount  amount to liquidate (in the smart token)
     */
-    function liquidate(uint256 _amount) public maxTotalWeightOnly {
+    function liquidate(uint256 _amount) public fullTotalRatioOnly {
         uint256 supply = token.totalSupply();
 
         // destroy _amount from the caller's balance in the smart token
         token.destroy(msg.sender, _amount);
 
-        // iterate through the connector tokens and send a percentage equal to the ratio between _amount
-        // and the total supply from each connector balance to the caller
-        IERC20Token connectorToken;
-        uint256 connectorBalance;
-        uint256 connectorAmount;
-        for (uint16 i = 0; i < connectorTokens.length; i++) {
-            connectorToken = connectorTokens[i];
-            connectorBalance = getConnectorBalance(connectorToken);
-            connectorAmount = _amount.mul(connectorBalance).div(supply);
+        // iterate through the reserve tokens and send a percentage equal to the ratio between _amount
+        // and the total supply from each reserve balance to the caller
+        IERC20Token reserveToken;
+        uint256 reserveBalance;
+        uint256 reserveAmount;
+        for (uint16 i = 0; i < reserveTokens.length; i++) {
+            reserveToken = reserveTokens[i];
+            reserveBalance = getReserveBalance(reserveToken);
+            reserveAmount = _amount.mul(reserveBalance).div(supply);
 
             // update virtual balance if relevant
-            Connector storage connector = connectors[connectorToken];
-            if (connector.isVirtualBalanceEnabled)
-                connector.virtualBalance = connector.virtualBalance.sub(connectorAmount);
+            Reserve storage reserve = reserves[reserveToken];
+            if (reserve.isVirtualBalanceEnabled)
+                reserve.virtualBalance = reserve.virtualBalance.sub(reserveAmount);
 
-            // transfer funds to the caller in the connector token
-            // the transfer might fail if the actual connector balance is smaller than the virtual balance
-            ensureTransfer(connectorToken, msg.sender, connectorAmount);
+            // transfer funds to the caller in the reserve token
+            // the transfer might fail if the actual reserve balance is smaller than the virtual balance
+            ensureTransfer(reserveToken, msg.sender, reserveAmount);
 
-            // dispatch price data update for the smart token/connector
-            emit PriceDataUpdate(connectorToken, supply - _amount, connectorBalance - connectorAmount, connector.weight);
+            // dispatch price data update for the smart token/reserve
+            emit PriceDataUpdate(reserveToken, supply - _amount, reserveBalance - reserveAmount, reserve.ratio);
         }
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        return convertInternal(_fromToken, _toToken, _amount, _minReturn);
     }
 
     /**
@@ -1003,6 +993,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev deprecated, backward compatibility
     */
+    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+        return convertInternal(_fromToken, _toToken, _amount, _minReturn);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
     function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
         return convert2(_fromToken, _toToken, _amount, _minReturn, address(0), 0);
     }
@@ -1026,5 +1023,62 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     function completeXConversion(IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) public returns (uint256) {
         return completeXConversion2(_path, _minReturn, _conversionId, getSignature(_conversionId, _block, _v, _r, _s));
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function connectors(address _address) public view returns (uint256, uint32, bool, bool, bool) {
+        Reserve storage reserve = reserves[_address];
+        return(reserve.virtualBalance, reserve.ratio, reserve.isVirtualBalanceEnabled, reserve.isSaleEnabled, reserve.isSet);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function connectorTokens(uint256 _index) public view returns (IERC20Token) {
+        return BancorConverter.reserveTokens[_index];
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function connectorTokenCount() public view returns (uint16) {
+        return reserveTokenCount();
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance) public {
+        addReserve(_token, _weight, _enableVirtualBalance);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance) public {
+        updateReserve(_connectorToken, _weight, _enableVirtualBalance, _virtualBalance);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function disableConnectorSale(IERC20Token _connectorToken, bool _disable) public {
+        disableReserveSale(_connectorToken, _disable);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function getConnectorBalance(IERC20Token _connectorToken) public view returns (uint256) {
+        return getReserveBalance(_connectorToken);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function getCrossConnectorReturn(IERC20Token _fromConnectorToken, IERC20Token _toConnectorToken, uint256 _sellAmount) public view returns (uint256, uint256) {
+        return getCrossReserveReturn(_fromConnectorToken, _toConnectorToken, _sellAmount);
     }
 }

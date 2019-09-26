@@ -3,7 +3,9 @@
 {{#if ownFunctions}}
 # Functions:
 {{#ownFunctions}}
+{{#if (or (eq visibility "public") (eq visibility "external"))}}
 - [`{{name}}({{args}})`](#{{anchor}})
+{{/if}}
 {{/ownFunctions}}
 {{/if}}
 
@@ -15,6 +17,7 @@
 {{/if}}
 
 {{#ownFunctions}}
+{{#if (or (eq visibility "public") (eq visibility "external"))}}
 
 # Function `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}` {#{{anchor~}} }
 {{#if natspec.devdoc}}{{natspec.devdoc}}{{else}}No description{{/if}}
@@ -25,6 +28,7 @@
 {{/natspec.params}}
 {{/if}}
 
+{{/if}}
 {{/ownFunctions}}
 
 {{#ownEvents}}

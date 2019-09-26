@@ -23,7 +23,7 @@ contract('BancorFormula', () => {
         let expD  = MAX_EXPONENT;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
-        it(`${test}:`, async () => {
+        it(`${test}`, async () => {
             await formula.powerTest(baseN, baseD, expN, expD);
         });
     }
@@ -35,7 +35,7 @@ contract('BancorFormula', () => {
         let expD  = MAX_EXPONENT * percent / 100;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
-        it(`${test}:`, async () => {
+        it(`${test}`, async () => {
             await formula.powerTest(baseN, baseD, expN, expD);
         });
     }
@@ -47,7 +47,7 @@ contract('BancorFormula', () => {
         let expD  = MAX_EXPONENT;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
-        it(`${test}:`, async () => {
+        it(`${test}`, async () => {
             if (percent < 64)
                 await formula.powerTest(baseN, baseD, expN, expD);
             else
@@ -62,7 +62,7 @@ contract('BancorFormula', () => {
         let expD  = MAX_EXPONENT * percent / 100;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
-        it(`${test}:`, async () => {
+        it(`${test}`, async () => {
             await catchRevert(formula.powerTest(baseN, baseD, expN, expD));
         });
     }
@@ -76,9 +76,9 @@ contract('BancorFormula', () => {
     for (let index = 0; index < values.length; index++) {
         let test = `Function generalLog(0x${values[index].toString(16)})`;
 
-        it(`${test}:`, async () => {
+        it(`${test}`, async () => {
             let retVal = await formula.generalLogTest(values[index]);
-            assert(retVal.times(MAX_EXPONENT).lessThan(ILLEGAL_VAL), `${test}: output is too large`);
+            assert(retVal.times(MAX_EXPONENT).lessThan(ILLEGAL_VAL), `output is too large`);
         });
     }
 
@@ -97,13 +97,13 @@ contract('BancorFormula', () => {
             let output = tuples[index]['output'];
             let test   = `Function findPositionInMaxExpArray(0x${input.toString(16)})`;
 
-            it(`${test}:`, async () => {
+            it(`${test}`, async () => {
                 if (precision == constants.MIN_PRECISION && output.lessThan(web3.toBigNumber(precision))) {
                     await catchRevert(formula.findPositionInMaxExpArrayTest(input));
                 }
                 else {
                     let retVal = await formula.findPositionInMaxExpArrayTest(input);
-                    assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
+                    assert(retVal.equals(output), `output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
                 }
             });
         }
@@ -116,14 +116,14 @@ contract('BancorFormula', () => {
         let test1  = `Function generalExp(0x${maxExp.toString(16)}, ${precision})`;
         let test2  = `Function generalExp(0x${errExp.toString(16)}, ${precision})`;
 
-        it(`${test1}:`, async () => {
+        it(`${test1}`, async () => {
             let retVal = await formula.generalExpTest(maxExp, precision);
-            assert(retVal.equals(maxVal), `${test1}: output is wrong`);
+            assert(retVal.equals(maxVal), `output is wrong`);
         });
 
-        it(`${test2}:`, async () => {
+        it(`${test2}`, async () => {
             let retVal = await formula.generalExpTest(errExp, precision);
-            assert(retVal.lessThan(maxVal), `${test2}:  output indicates that maxExpArray[${precision}] is wrong`);
+            assert(retVal.lessThan(maxVal), `output indicates that maxExpArray[${precision}] is wrong`);
         });
     }
 
@@ -132,9 +132,9 @@ contract('BancorFormula', () => {
         let minVal = web3.toBigNumber(2).toPower(precision);
         let test   = `Function generalExp(0x${minExp.toString(16)}, ${precision})`;
 
-        it(`${test}:`, async () => {
+        it(`${test}`, async () => {
             let retVal = await formula.generalExpTest(minExp, precision);
-            assert(retVal.greaterThanOrEqualTo(minVal), `${test}: output is too small`);
+            assert(retVal.greaterThanOrEqualTo(minVal), `output is too small`);
         });
     }
 
@@ -150,9 +150,9 @@ contract('BancorFormula', () => {
             let output = tuples[index]['output'];
             let test   = `Function floorLog2(0x${input.toString(16)})`;
 
-            it(`${test}:`, async () => {
+            it(`${test}`, async () => {
                 let retVal = await formula.floorLog2Test(input);
-                assert(retVal.equals(output), `${test}: output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
+                assert(retVal.equals(output), `output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
             });
         }
     }
