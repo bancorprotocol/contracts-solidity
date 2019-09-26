@@ -10,7 +10,6 @@
 - [`Transfer(address _from, address _to, uint256 _value)`](#NonStandardERC20Token-Transfer-address-address-uint256-)
 - [`Approval(address _owner, address _spender, uint256 _value)`](#NonStandardERC20Token-Approval-address-address-uint256-)
 
-
 # Function `constructor(string _name, string _symbol, uint8 _decimals)` {#NonStandardERC20Token-constructor-string-string-uint8-}
 initializes a new NonStandardERC20Token instance
 
@@ -21,8 +20,6 @@ initializes a new NonStandardERC20Token instance
 - `_symbol`:      token symbol
 
 - `_decimals`:    decimal points, for display purposes
-
-
 # Function `transfer(address _to, uint256 _value)` {#NonStandardERC20Token-transfer-address-uint256-}
 send coins
 throws on any error rather then return a false flag to minimize user errors
@@ -32,8 +29,6 @@ throws on any error rather then return a false flag to minimize user errors
 - `_to`:      target address
 
 - `_value`:   transfer amount
-
-
 
 
 # Function `transferFrom(address _from, address _to, uint256 _value)` {#NonStandardERC20Token-transferFrom-address-address-uint256-}
@@ -47,8 +42,6 @@ throws on any error rather then return a false flag to minimize user errors
 - `_to`:      target address
 
 - `_value`:   transfer amount
-
-
 
 
 # Function `approve(address _spender, uint256 _value)` {#NonStandardERC20Token-approve-address-uint256-}
@@ -67,12 +60,7 @@ in 2 separate transactions - once to change the allowance to 0 and secondly to c
 
 
 
-
-
 # Event `Transfer(address _from, address _to, uint256 _value)` {#NonStandardERC20Token-Transfer-address-address-uint256-}
 No description
-
-
 # Event `Approval(address _owner, address _spender, uint256 _value)` {#NonStandardERC20Token-Approval-address-address-uint256-}
 No description
-

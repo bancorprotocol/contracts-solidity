@@ -4,8 +4,6 @@ Utilities & Common Modifiers
 - [`constructor()`](#Utils-constructor--)
 
 
-
 # Function `constructor()` {#Utils-constructor--}
 No description
-
 

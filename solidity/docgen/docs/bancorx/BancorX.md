@@ -35,7 +35,6 @@ callers are required to report a transfer before tokens are released to the targ
 - [`TxReport(address _reporter, bytes32 _fromBlockchain, uint256 _txId, address _to, uint256 _amount, uint256 _xTransferId)`](#BancorX-TxReport-address-bytes32-uint256-address-uint256-uint256-)
 - [`XTransferComplete(address _to, uint256 _id)`](#BancorX-XTransferComplete-address-uint256-)
 
-
 # Function `constructor(uint256 _maxLockLimit, uint256 _maxReleaseLimit, uint256 _minLimit, uint256 _limitIncPerBlock, uint256 _minRequiredReports, address _registry, contract IERC20Token _token, bool _isSmartToken)` {#BancorX-constructor-uint256-uint256-uint256-uint256-uint256-address-contract-IERC20Token-bool-}
 initializes a new BancorX instance
 
@@ -56,48 +55,36 @@ initializes a new BancorX instance
 - `_token`:                 erc20 token or smart token
 
 - `_isSmartToken`:          false - erc20 token; true - smart token
-
-
 # Function `setMaxLockLimit(uint256 _maxLockLimit)` {#BancorX-setMaxLockLimit-uint256-}
 setter
 
 
 ## Parameters:
 - `_maxLockLimit`:    new maxLockLimit
-
-
 # Function `setMaxReleaseLimit(uint256 _maxReleaseLimit)` {#BancorX-setMaxReleaseLimit-uint256-}
 setter
 
 
 ## Parameters:
 - `_maxReleaseLimit`:    new maxReleaseLimit
-
-
 # Function `setMinLimit(uint256 _minLimit)` {#BancorX-setMinLimit-uint256-}
 setter
 
 
 ## Parameters:
 - `_minLimit`:    new minLimit
-
-
 # Function `setLimitIncPerBlock(uint256 _limitIncPerBlock)` {#BancorX-setLimitIncPerBlock-uint256-}
 setter
 
 
 ## Parameters:
 - `_limitIncPerBlock`:    new limitIncPerBlock
-
-
 # Function `setMinRequiredReports(uint256 _minRequiredReports)` {#BancorX-setMinRequiredReports-uint256-}
 setter
 
 
 ## Parameters:
 - `_minRequiredReports`:    new minRequiredReports
-
-
 # Function `setReporter(address _reporter, bool _active)` {#BancorX-setReporter-address-bool-}
 allows the owner to set/remove reporters
 
@@ -106,24 +93,18 @@ allows the owner to set/remove reporters
 - `_reporter`:    reporter whos status is to be set
 
 - `_active`:      true if the reporter is approved, false otherwise
-
-
 # Function `enableXTransfers(bool _enable)` {#BancorX-enableXTransfers-bool-}
 allows the owner enable/disable the xTransfer method
 
 
 ## Parameters:
 - `_enable`:     true to enable, false to disable
-
-
 # Function `enableReporting(bool _enable)` {#BancorX-enableReporting-bool-}
 allows the owner enable/disable the reportTransaction method
 
 
 ## Parameters:
 - `_enable`:     true to enable, false to disable
-
-
 # Function `disableRegistryUpdate(bool _disable)` {#BancorX-disableRegistryUpdate-bool-}
 disables the registry update functionality
 this is a safety mechanism in case of a emergency
@@ -132,17 +113,11 @@ can only be called by the manager or owner
 
 ## Parameters:
 - `_disable`:    true to disable registry updates, false to re-enable them
-
-
 # Function `updateRegistry()` {#BancorX-updateRegistry--}
 sets the contract registry to whichever address the current registry is pointing to
-
-
 # Function `restoreRegistry()` {#BancorX-restoreRegistry--}
 security mechanism allowing the converter owner to revert to the previous registry,
 to be used in emergency scenario
-
-
 # Function `upgrade(address[] _reporters)` {#BancorX-upgrade-address---}
 upgrades the contract to the latest version
 can only be called by the owner
@@ -151,8 +126,6 @@ note that the owner needs to call acceptOwnership on the new contract after the 
 
 ## Parameters:
 - `_reporters`:    new list of reporters
-
-
 # Function `xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount)` {#BancorX-xTransfer-bytes32-bytes32-uint256-}
 claims tokens from msg.sender to be converted to tokens on another blockchain
 
@@ -163,8 +136,6 @@ claims tokens from msg.sender to be converted to tokens on another blockchain
 - `_to`:              address to send the tokens to
 
 - `_amount`:          the amount of tokens to transfer
-
-
 # Function `xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount, uint256 _id)` {#BancorX-xTransfer-bytes32-bytes32-uint256-uint256-}
 claims tokens from msg.sender to be converted to tokens on another blockchain
 
@@ -177,8 +148,6 @@ claims tokens from msg.sender to be converted to tokens on another blockchain
 - `_amount`:          the amount of tokens to transfer
 
 - `_id`:              pre-determined unique (if non zero) id which refers to this transaction 
-
-
 # Function `reportTx(bytes32 _fromBlockchain, uint256 _txId, address _to, uint256 _amount, uint256 _xTransferId)` {#BancorX-reportTx-bytes32-uint256-address-uint256-uint256-}
 allows reporter to report transaction which occured on another blockchain
 
@@ -193,8 +162,6 @@ allows reporter to report transaction which occured on another blockchain
 - `_amount`:          amount of tokens destroyed on another blockchain
 
 - `_xTransferId`:     unique (if non zero) pre-determined id (unlike _txId which is determined after the transactions been mined)
-
-
 # Function `getXTransferAmount(uint256 _xTransferId, address _for) → uint256` {#BancorX-getXTransferAmount-uint256-address-}
 gets x transfer amount by xTransferId (not txId)
 
@@ -205,18 +172,12 @@ gets x transfer amount by xTransferId (not txId)
 - `_for`:            address corresponding to xTransferId
 
 
-
-
 # Function `getCurrentLockLimit() → uint256` {#BancorX-getCurrentLockLimit--}
 method for calculating current lock limit
 
 
-
-
 # Function `getCurrentReleaseLimit() → uint256` {#BancorX-getCurrentReleaseLimit--}
 method for calculating current release limit
-
-
 
 
 
@@ -228,8 +189,6 @@ triggered when tokens are locked in smart contract
 - `_from`:    wallet address that the tokens are locked from
 
 - `_amount`:  amount locked
-
-
 # Event `TokensRelease(address _to, uint256 _amount)` {#BancorX-TokensRelease-address-uint256-}
 triggered when tokens are released by the smart contract
 
@@ -238,8 +197,6 @@ triggered when tokens are released by the smart contract
 - `_to`:      wallet address that the tokens are released to
 
 - `_amount`:  amount released
-
-
 # Event `XTransfer(address _from, bytes32 _toBlockchain, bytes32 _to, uint256 _amount, uint256 _id)` {#BancorX-XTransfer-address-bytes32-bytes32-uint256-uint256-}
 triggered when xTransfer is successfully called
 
@@ -254,8 +211,6 @@ triggered when xTransfer is successfully called
 - `_amount`:          transfer amount
 
 - `_id`:              xtransfer id
-
-
 # Event `TxReport(address _reporter, bytes32 _fromBlockchain, uint256 _txId, address _to, uint256 _amount, uint256 _xTransferId)` {#BancorX-TxReport-address-bytes32-uint256-address-uint256-uint256-}
 triggered when report is successfully submitted
 
@@ -272,8 +227,6 @@ triggered when report is successfully submitted
 - `_amount`:          transfer amount
 
 - `_xTransferId`:     xtransfer id
-
-
 # Event `XTransferComplete(address _to, uint256 _id)` {#BancorX-XTransferComplete-address-uint256-}
 triggered when final report is successfully submitted
 
@@ -282,4 +235,3 @@ triggered when final report is successfully submitted
 - `_to`:  target wallet
 
 - `_id`:  xtransfer id
-

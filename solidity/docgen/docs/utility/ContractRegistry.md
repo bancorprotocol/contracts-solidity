@@ -19,15 +19,10 @@ Note that contract names are limited to 32 bytes UTF8 encoded ASCII strings to o
 # Events:
 - [`AddressUpdate(bytes32 _contractName, address _contractAddress)`](#ContractRegistry-AddressUpdate-bytes32-address-)
 
-
 # Function `constructor()` {#ContractRegistry-constructor--}
 initializes a new ContractRegistry instance
-
-
 # Function `itemCount() → uint256` {#ContractRegistry-itemCount--}
 returns the number of items in the registry
-
-
 
 
 # Function `addressOf(bytes32 _contractName) → address` {#ContractRegistry-addressOf-bytes32-}
@@ -38,8 +33,6 @@ returns the address associated with the given contract name
 - `_contractName`:    contract name
 
 
-
-
 # Function `registerAddress(bytes32 _contractName, address _contractAddress)` {#ContractRegistry-registerAddress-bytes32-address-}
 registers a new address for the contract name in the registry
 
@@ -48,20 +41,14 @@ registers a new address for the contract name in the registry
 - `_contractName`:     contract name
 
 - `_contractAddress`:  contract address
-
-
 # Function `unregisterAddress(bytes32 _contractName)` {#ContractRegistry-unregisterAddress-bytes32-}
 removes an existing contract address from the registry
 
 
 ## Parameters:
 - `_contractName`: contract name
-
-
 # Function `getAddress(bytes32 _contractName) → address` {#ContractRegistry-getAddress-bytes32-}
 deprecated, backward compatibility
-
-
 
 # Event `AddressUpdate(bytes32 _contractName, address _contractAddress)` {#ContractRegistry-AddressUpdate-bytes32-address-}
 triggered when an address pointed to by a contract name is modified
@@ -71,4 +58,3 @@ triggered when an address pointed to by a contract name is modified
 - `_contractName`:    contract name
 
 - `_contractAddress`: new contract address
-
