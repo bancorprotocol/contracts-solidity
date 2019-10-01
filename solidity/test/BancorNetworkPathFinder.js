@@ -1,6 +1,7 @@
 /* global artifacts, contract, before, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
+const utils = require('./helpers/Utils');
 const EtherToken = artifacts.require('EtherToken');
 const SmartToken = artifacts.require('SmartToken');
 const ContractIds = artifacts.require('ContractIds');
@@ -88,7 +89,10 @@ contract('BancorNetworkPathFinder', accounts => {
         await converterRegistry2.registerConverter(smartToken5.address, converter5.address);
         await converterRegistry2.registerConverter(smartToken6.address, converter6.address);
         await converterRegistry3.registerConverter(smartToken7.address, converter7.address);
+    });
 
+    it("should abort with an error if the anchor-token is not updated", async () => {
+        await utils.catchInvalidOpcode(pathFinder.get(smartToken1.address, smartToken2.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]));
         await contractRegistry.registerAddress(await contractIds.BNT_TOKEN(), smartToken1.address);
         await pathFinder.updateAnchorToken();
     });
