@@ -20,18 +20,15 @@ let contractRegistry;
 let contractFeatures;
 let converterUpgrader;
 
-// the tests will be ran for each of these converter versions
-const versions = ["0.12","0.11", "0.10", "0.9"]
-
-const contractsPath = path.resolve(__dirname, './bin');
-
 const converters = {
     "0.9": { filename: 'bancor_converter_v9' },
     "0.10": { filename: 'bancor_converter_v10' },
     "0.11": { filename: 'bancor_converter_v11' }
 };
 
-loadDataFiles(contractsPath, converters);
+const versions = Object.keys(converters);
+
+loadDataFiles(path.resolve(__dirname, './bin'), converters);
 
 async function initConverter(accounts, activate, version = null, maxConversionFee = 30000) {
     token = await SmartToken.new('Token1', 'TKN1', 18);
@@ -64,7 +61,7 @@ async function createConverter(tokenAddress, registryAddress, maxConversionFee, 
     let converter;
 
     // if no version is passed, create newest converter
-    if (!version || version == "0.12") {
+    if (!version) {
         converter = await BancorConverter.new(tokenAddress, registryAddress, maxConversionFee, connectorTokenAddress, weight);
     }
     else {
@@ -85,7 +82,7 @@ async function upgradeConverter(converter, version = null) {
     let newConverter;
 
     // for the latest version, we just call upgrade on the converter
-    if (version == "0.11" || version == "0.12" || !version) {
+    if (!version) {
         await converter.upgrade();
         newConverter = await getNewConverter();
     }
