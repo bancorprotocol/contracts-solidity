@@ -125,12 +125,6 @@ function getShortestPath(sourcePath, targetPath) {
     return path;
 }
 
-async function getTokenCount(converter, methodName) {
-    if (methodName in converter)
-        return Number(await converter[methodName]());
-    return 0;
-}
-
 async function getPath(token, anchorToken, registries) {
     if (isEqual(token, anchorToken))
         return [token];
@@ -140,19 +134,10 @@ async function getPath(token, anchorToken, registries) {
         if (converterCount > 0) {
             const address = await registry.converterAddress(token, converterCount - 1);
             const converter = BancorConverter.at(address);
-            const connectorTokenCount = await getTokenCount(converter, "connectorTokenCount");
+            const connectorTokenCount = await converter.connectorTokenCount();
             for (let i = 0; i < connectorTokenCount; i++) {
                 const connectorToken = await converter.connectorTokens(i);
                 const path = await getPath(connectorToken, anchorToken, registries);
-                if (path.length > 0) {
-                    const midToken = await converter.token();
-                    return isEqual(token, midToken) ? [token, ...path] : [token, midToken, ...path];
-                }
-            }
-            const reserveTokenCount = await getTokenCount(converter, "reserveTokenCount");
-            for (let i = 0; i < reserveTokenCount; i++) {
-                const reserveToken = await converter.reserveTokens(i);
-                const path = await getPath(reserveToken, anchorToken, registries);
                 if (path.length > 0) {
                     const midToken = await converter.token();
                     return isEqual(token, midToken) ? [token, ...path] : [token, midToken, ...path];
