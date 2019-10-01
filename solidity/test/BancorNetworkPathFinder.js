@@ -106,24 +106,10 @@ contract('BancorNetworkPathFinder', accounts => {
     }
 });
 
-function isEqual(token1, token2) {
-    return token1.toLowerCase() == token2.toLowerCase();
-}
-
-function getShortestPath(sourcePath, targetPath) {
-    let i = sourcePath.length - 1;
-    let j = targetPath.length - 1;
-    while (i >= 0 && j >= 0 && String(sourcePath[i]) === String(targetPath[j])) {
-        i--;
-        j--;
-    }
-
-    const path = [];
-    for (let n = 0; n <= i + 1; n++)
-        path.push(sourcePath[n]);
-    for (let n = j; n >= 0; n--)
-        path.push(targetPath[n]);
-    return path;
+async function get(sourceToken, targetToken, anchorToken, registries) {
+    const sourcePath = await getPath(sourceToken, anchorToken, registries);
+    const targetPath = await getPath(targetToken, anchorToken, registries);
+    return getShortestPath(sourcePath, targetPath);
 }
 
 async function getPath(token, anchorToken, registries) {
@@ -150,8 +136,22 @@ async function getPath(token, anchorToken, registries) {
     return [];
 }
 
-async function get(sourceToken, targetToken, anchorToken, registries) {
-    const sourcePath = await getPath(sourceToken, anchorToken, registries);
-    const targetPath = await getPath(targetToken, anchorToken, registries);
-    return getShortestPath(sourcePath, targetPath);
+function getShortestPath(sourcePath, targetPath) {
+    let i = sourcePath.length - 1;
+    let j = targetPath.length - 1;
+    while (i >= 0 && j >= 0 && String(sourcePath[i]) === String(targetPath[j])) {
+        i--;
+        j--;
+    }
+
+    const path = [];
+    for (let n = 0; n <= i + 1; n++)
+        path.push(sourcePath[n]);
+    for (let n = j; n >= 0; n--)
+        path.push(targetPath[n]);
+    return path;
+}
+
+function isEqual(token1, token2) {
+    return token1.toLowerCase() == token2.toLowerCase();
 }
