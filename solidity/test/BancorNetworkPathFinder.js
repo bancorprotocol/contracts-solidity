@@ -153,5 +153,5 @@ function getShortestPath(sourcePath, targetPath) {
 }
 
 function isEqual(token1, token2) {
-    return token1.toLowerCase() == token2.toLowerCase();
+    return token1.toLowerCase() === token2.toLowerCase();
 }
