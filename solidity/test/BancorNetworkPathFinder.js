@@ -100,6 +100,7 @@ contract('BancorNetworkPathFinder', accounts => {
                 const targetToken = eval(`smartToken${j}.address`);
                 const expected = await get(sourceToken, targetToken, smartToken1.address, [converterRegistry1, converterRegistry2, converterRegistry3]);
                 const actual = await pathFinder.get(sourceToken, targetToken, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
+                assert.equal(actual.join(", "), expected.join(", "));
             });
         }
     }
