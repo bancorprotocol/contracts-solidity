@@ -2,6 +2,7 @@
 * contracts
   * [BancorConverterRegistry](docs/BancorConverterRegistry.md)
   * [BancorNetwork](docs/BancorNetwork.md)
+  * [BancorNetworkPathFinder](docs/BancorNetworkPathFinder.md)
   * bancorx
     * [BancorX](docs/bancorx/BancorX.md)
   * converter
