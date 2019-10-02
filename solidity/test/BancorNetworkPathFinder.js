@@ -106,7 +106,7 @@ contract('BancorNetworkPathFinder', accounts => {
                 const targetToken = eval(`smartToken${j}.address`);
                 const expected = await PathFinderWeb3v0.get(web3, sourceToken, targetToken, smartToken1.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
                 const actual   = await pathFinder      .get(      sourceToken, targetToken                     , [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
-                assert.equal(actual.join(', '), expected.join(', '));
+                assert.equal(actual.join(', ').toLowerCase(), expected.join(', ').toLowerCase());
             });
         }
     }

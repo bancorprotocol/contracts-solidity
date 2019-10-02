@@ -49,7 +49,7 @@ async function getPath(web3, token, anchor, registries) {
 function getShortestPath(sourcePath, targetPath) {
     let i = sourcePath.length - 1;
     let j = targetPath.length - 1;
-    while (i >= 0 && j >= 0 && String(sourcePath[i]) === String(targetPath[j])) {
+    while (i >= 0 && j >= 0 && isEqual(sourcePath[i], targetPath[j])) {
         i--;
         j--;
     }
