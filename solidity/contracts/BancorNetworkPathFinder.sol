@@ -35,17 +35,16 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
             uint256 converterCount = _converterRegistries[n].converterCount(_token);
             if (converterCount > 0) {
                 BancorConverter converter = BancorConverter(_converterRegistries[n].converterAddress(_token, uint32(converterCount - 1)));
-                for (uint256 i = 0; i < converter.connectorTokenCount(); i++) {
+                uint256 connectorTokenCount = converter.connectorTokenCount();
+                for (uint256 i = 0; i < connectorTokenCount; i++) {
                     address connectorToken = converter.connectorTokens(i);
                     address[] memory path = getPath(connectorToken, _converterRegistries);
                     if (path.length > 0) {
-                        address token = converter.token();
-                        uint256 newItems = _token == token ? 1 : 2;
-                        address[] memory newPath = new address[](newItems + path.length);
+                        address[] memory newPath = new address[](2 + path.length);
                         newPath[0] = _token;
-                        newPath[1] = token;
+                        newPath[1] = converter.token();
                         for (uint256 k = 0; k < path.length; k++)
-                            newPath[newItems + k] = path[k];
+                            newPath[2 + k] = path[k];
                         return newPath;
                     }
                 }
