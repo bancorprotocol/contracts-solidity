@@ -2,6 +2,8 @@
 /* eslint-disable prefer-reflect */
 
 const utils = require('./helpers/Utils');
+const PathFinderWeb3v0 = require('./helpers/PathFinderWeb3v0');
+
 const EtherToken = artifacts.require('EtherToken');
 const SmartToken = artifacts.require('SmartToken');
 const ContractIds = artifacts.require('ContractIds');
@@ -102,60 +104,10 @@ contract('BancorNetworkPathFinder', accounts => {
             it(`from smartToken${i} to smartToken${j}`, async () => {
                 const sourceToken = eval(`smartToken${i}.address`);
                 const targetToken = eval(`smartToken${j}.address`);
-                const expected = await get(sourceToken, targetToken, smartToken1.address, [converterRegistry1, converterRegistry2, converterRegistry3]);
-                const actual = await pathFinder.get(sourceToken, targetToken, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
+                const expected = await PathFinderWeb3v0.get(web3, sourceToken, targetToken, smartToken1.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
+                const actual   = await pathFinder      .get(      sourceToken, targetToken                     , [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
                 assert.equal(actual.join(', '), expected.join(', '));
             });
         }
     }
 });
-
-async function get(sourceToken, targetToken, anchorToken, registries) {
-    const sourcePath = await getPath(sourceToken, anchorToken, registries);
-    const targetPath = await getPath(targetToken, anchorToken, registries);
-    return getShortestPath(sourcePath, targetPath);
-}
-
-async function getPath(token, anchorToken, registries) {
-    if (isEqual(token, anchorToken))
-        return [token];
-
-    for (const registry of registries) {
-        const converterCount = await registry.converterCount(token);
-        if (converterCount > 0) {
-            const address = await registry.converterAddress(token, converterCount - 1);
-            const converter = BancorConverter.at(address);
-            const connectorTokenCount = await converter.connectorTokenCount();
-            for (let i = 0; i < connectorTokenCount; i++) {
-                const connectorToken = await converter.connectorTokens(i);
-                const path = await getPath(connectorToken, anchorToken, registries);
-                if (path.length > 0) {
-                    const midToken = await converter.token();
-                    return isEqual(token, midToken) ? [token, ...path] : [token, midToken, ...path];
-                }
-            }
-        }
-    }
-
-    return [];
-}
-
-function getShortestPath(sourcePath, targetPath) {
-    let i = sourcePath.length - 1;
-    let j = targetPath.length - 1;
-    while (i >= 0 && j >= 0 && String(sourcePath[i]) === String(targetPath[j])) {
-        i--;
-        j--;
-    }
-
-    const path = [];
-    for (let n = 0; n <= i + 1; n++)
-        path.push(sourcePath[n]);
-    for (let n = j; n >= 0; n--)
-        path.push(targetPath[n]);
-    return path;
-}
-
-function isEqual(token1, token2) {
-    return token1.toLowerCase() === token2.toLowerCase();
-}
