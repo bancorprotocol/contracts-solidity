@@ -91,7 +91,7 @@ contract('BancorNetworkPathFinder', accounts => {
         await converterRegistry3.registerConverter(smartToken7.address, converter7.address);
     });
 
-    it("should abort with an error if the anchor-token is not updated", async () => {
+    it('should abort with an error if the anchor-token is not updated', async () => {
         await utils.catchInvalidOpcode(pathFinder.get(smartToken1.address, smartToken2.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]));
         await contractRegistry.registerAddress(await contractIds.BNT_TOKEN(), smartToken1.address);
         await pathFinder.updateAnchorToken();
@@ -104,7 +104,7 @@ contract('BancorNetworkPathFinder', accounts => {
                 const targetToken = eval(`smartToken${j}.address`);
                 const expected = await get(sourceToken, targetToken, smartToken1.address, [converterRegistry1, converterRegistry2, converterRegistry3]);
                 const actual = await pathFinder.get(sourceToken, targetToken, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
-                assert.equal(actual.join(", "), expected.join(", "));
+                assert.equal(actual.join(', '), expected.join(', '));
             });
         }
     }
