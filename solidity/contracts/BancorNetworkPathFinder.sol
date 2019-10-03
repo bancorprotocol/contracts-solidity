@@ -20,6 +20,7 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
     */
     constructor(IContractRegistry _contractRegistry) public validAddress(_contractRegistry) {
         contractRegistry = _contractRegistry;
+        anchorToken = contractRegistry.addressOf(BNT_TOKEN);
     }
 
     /**
@@ -28,7 +29,9 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
       * Note that this function needs to be called only when the BNT token has been redeployed
     */
     function updateAnchorToken() external {
-        anchorToken = contractRegistry.addressOf(BNT_TOKEN);
+        address bntToken = contractRegistry.addressOf(BNT_TOKEN);
+        require(anchorToken != bntToken);
+        anchorToken = bntToken;
     }
 
     /**
