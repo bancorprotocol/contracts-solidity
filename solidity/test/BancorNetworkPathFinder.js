@@ -94,8 +94,8 @@ contract('BancorNetworkPathFinder', accounts => {
     });
 
     it('should abort with an error if the anchor-token is not updated', async () => {
-        await utils.catchInvalidOpcode(pathFinder.get(smartToken1.address, smartToken2.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]));
         await contractRegistry.registerAddress(await contractIds.BNT_TOKEN(), smartToken1.address);
+        await utils.catchInvalidOpcode(pathFinder.get(smartToken2.address, smartToken3.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]));
         await pathFinder.updateAnchorToken();
     });
 
