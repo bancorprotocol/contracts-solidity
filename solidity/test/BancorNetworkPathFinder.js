@@ -82,7 +82,7 @@ contract('BancorNetworkPathFinder', accounts => {
         await converter4.addReserve(smartToken1.address, 500000, false);
         await converter5.addReserve(smartToken1.address, 500000, false);
         await converter6.addReserve(smartToken1.address, 500000, false);
-        await converter7.addReserve(smartToken1.address, 500000, false);
+        await converter7.addReserve(smartToken2.address, 500000, false);
 
         await converterRegistry1.registerConverter(smartToken1.address, converter1.address);
         await converterRegistry1.registerConverter(smartToken2.address, converter2.address);
