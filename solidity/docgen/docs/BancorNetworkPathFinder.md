@@ -20,9 +20,9 @@ initializes a new BancorNetworkPathFinder instance
 
 # Function `updateAnchorToken()` {#BancorNetworkPathFinder-updateAnchorToken--}
 
-updates the anchor token to point to the most recent BNT token deployed.
+updates the anchor token to point to the most recent BNT token deployed
 
-Note that this function needs to be called only when the BNT token has been redeployed.
+Note that this function needs to be called only when the BNT token has been redeployed
 
 # Function `get(address _sourceToken, address _targetToken, contract BancorConverterRegistry[] _converterRegistries) → address[]` {#BancorNetworkPathFinder-get-address-address-contract-BancorConverterRegistry---}
 

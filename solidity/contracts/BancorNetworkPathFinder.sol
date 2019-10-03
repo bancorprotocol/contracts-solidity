@@ -23,9 +23,9 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
     }
 
     /**
-      * @dev updates the anchor token to point to the most recent BNT token deployed.
+      * @dev updates the anchor token to point to the most recent BNT token deployed
       * 
-      * Note that this function needs to be called only when the BNT token has been redeployed.
+      * Note that this function needs to be called only when the BNT token has been redeployed
     */
     function updateAnchorToken() external {
         anchorToken = contractRegistry.addressOf(BNT_TOKEN);
