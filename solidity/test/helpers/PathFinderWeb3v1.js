@@ -2,9 +2,8 @@ module.exports = {get};
 
 const fs = require("fs");
 
-const ARTIFACTS_DIR = __dirname + "/../../build/";
-const CONVERTER_ABI = JSON.parse(fs.readFileSync(ARTIFACTS_DIR + "BancorConverter.abi"        , {encoding: "utf8"}));
-const REGISTRY_ABI  = JSON.parse(fs.readFileSync(ARTIFACTS_DIR + "BancorConverterRegistry.abi", {encoding: "utf8"}));
+const CONVERTER_ABI = JSON.parse(fs.readFileSync(__dirname + "/../../build/BancorConverter.abi"        , {encoding: "utf8"}));
+const REGISTRY_ABI  = JSON.parse(fs.readFileSync(__dirname + "/../../build/BancorConverterRegistry.abi", {encoding: "utf8"}));
 
 async function get(web3, sourceToken, targetToken, anchorToken, registryList) {
     const registries = registryList.map(x => new web3.eth.Contract(REGISTRY_ABI, x));
