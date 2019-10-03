@@ -2,7 +2,7 @@
 /* eslint-disable prefer-reflect */
 
 const utils = require('./helpers/Utils');
-const PathFinderWeb3v0 = require('./helpers/PathFinderWeb3v0');
+const PathFinderTruffle = require('./helpers/PathFinderTruffle');
 
 const EtherToken = artifacts.require('EtherToken');
 const SmartToken = artifacts.require('SmartToken');
@@ -94,8 +94,8 @@ contract('BancorNetworkPathFinder', accounts => {
     });
 
     it('should abort with an error if the anchor-token is not updated', async () => {
-        await utils.catchInvalidOpcode(pathFinder.get(smartToken1.address, smartToken2.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]));
         await contractRegistry.registerAddress(await contractIds.BNT_TOKEN(), smartToken1.address);
+        await utils.catchInvalidOpcode(pathFinder.get(smartToken2.address, smartToken3.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]));
         await pathFinder.updateAnchorToken();
     });
 
@@ -104,8 +104,8 @@ contract('BancorNetworkPathFinder', accounts => {
             it(`from smartToken${i} to smartToken${j}`, async () => {
                 const sourceToken = eval(`smartToken${i}.address`);
                 const targetToken = eval(`smartToken${j}.address`);
-                const expected = await PathFinderWeb3v0.get(web3, sourceToken, targetToken, smartToken1.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
-                const actual   = await pathFinder      .get(      sourceToken, targetToken                     , [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
+                const expected = await PathFinderTruffle.get(sourceToken, targetToken, smartToken1.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
+                const actual   = await pathFinder       .get(sourceToken, targetToken                     , [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
                 assert.equal(actual.join(', ').toLowerCase(), expected.join(', ').toLowerCase());
             });
         }
