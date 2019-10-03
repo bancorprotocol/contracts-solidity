@@ -5,18 +5,42 @@ import './BancorConverterRegistry.sol';
 import './converter/BancorConverter.sol';
 import './utility/interfaces/IContractRegistry.sol';
 
+/**
+  * @dev The BancorNetworkPathFinder contract allows for retrieving the conversion path between any pair of tokens in the Bancor Network.
+  * This conversion path can then be used in various functions on the BancorNetwork contract (see this contract for more details on conversion paths).
+*/
 contract BancorNetworkPathFinder is ContractIds, Utils {
     IContractRegistry public contractRegistry;
     address public anchorToken;
 
+    /**
+      * @dev initializes a new BancorNetworkPathFinder instance
+      * 
+      * @param _contractRegistry    address of a contract registry contract
+    */
     constructor(IContractRegistry _contractRegistry) public validAddress(_contractRegistry) {
         contractRegistry = _contractRegistry;
-    }
-
-    function updateAnchorToken() external {
         anchorToken = contractRegistry.addressOf(BNT_TOKEN);
     }
 
+    /**
+      * @dev updates the anchor token to point to the most recent BNT token deployed
+      * 
+      * Note that this function needs to be called only when the BNT token has been redeployed
+    */
+    function updateAnchorToken() external {
+        address bntToken = contractRegistry.addressOf(BNT_TOKEN);
+        require(anchorToken != bntToken);
+        anchorToken = bntToken;
+    }
+
+    /**
+      * @dev retrieves the conversion path between a given pair of tokens in the Bancor Network
+      * 
+      * @param _sourceToken         address of the source token
+      * @param _targetToken         address of the target token
+      * @param _converterRegistries array of converter registries depicting some part of the network
+    */
     function get(address _sourceToken, address _targetToken, BancorConverterRegistry[] memory _converterRegistries) public view returns (address[] memory) {
         assert(anchorToken == contractRegistry.addressOf(BNT_TOKEN));
         address[] memory sourcePath = getPath(_sourceToken, _converterRegistries);
@@ -24,6 +48,12 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
         return getShortestPath(sourcePath, targetPath);
     }
 
+    /**
+      * @dev retrieves the conversion path between a given token and the anchor token
+      * 
+      * @param _token               address of the token
+      * @param _converterRegistries array of converter registries depicting some part of the network
+    */
     function getPath(address _token, BancorConverterRegistry[] memory _converterRegistries) private view returns (address[] memory) {
         if (_token == anchorToken) {
             address[] memory initialPath = new address[](1);
@@ -54,6 +84,12 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
         return new address[](0);
     }
 
+    /**
+      * @dev merges two paths with a common suffix into one
+      * 
+      * @param _sourcePath  address of the source path
+      * @param _targetPath  address of the target path
+    */
     function getShortestPath(address[] memory _sourcePath, address[] memory _targetPath) private pure returns (address[] memory) {
         uint256 i = _sourcePath.length;
         uint256 j = _targetPath.length;
