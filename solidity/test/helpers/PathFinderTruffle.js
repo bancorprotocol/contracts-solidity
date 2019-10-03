@@ -24,9 +24,11 @@ async function getPath(token, anchor, registries) {
             const reserveTokenCount = await converter.reserveTokenCount();
             for (let i = 0; i < reserveTokenCount; i++) {
                 const reserveToken = await converter.reserveTokens(i);
-                const path = await getPath(reserveToken, anchor, registries);
-                if (path.length > 0)
-                    return [token, await converter.token(), ...path];
+                if (reserveToken != token) {
+                    const path = await getPath(reserveToken, anchor, registries);
+                    if (path.length > 0)
+                        return [token, await converter.token(), ...path];
+                }
             }
         }
     }
