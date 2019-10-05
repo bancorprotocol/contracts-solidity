@@ -64,7 +64,7 @@ Other potential solutions might include a commit/reveal based schemes
 
 - [`getSaleReturn(contract IERC20Token _reserveToken, uint256 _sellAmount)`](#BancorConverter-getSaleReturn-contract-IERC20Token-uint256-)
 
-- [`getCrossReserveReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _sellAmount)`](#BancorConverter-getCrossReserveReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
+- [`getCrossReserveReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _amount)`](#BancorConverter-getCrossReserveReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
 
 - [`convertInternal(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#BancorConverter-convertInternal-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
 
@@ -104,7 +104,7 @@ Other potential solutions might include a commit/reveal based schemes
 
 - [`getConnectorBalance(contract IERC20Token _connectorToken)`](#BancorConverter-getConnectorBalance-contract-IERC20Token-)
 
-- [`getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _sellAmount)`](#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
+- [`getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _amount)`](#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
 
 # Events:
 
@@ -318,51 +318,57 @@ note that prior to version 17, you should use 'getConnectorBalance' instead
 
 # Function `getReturn(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount) → uint256, uint256` {#BancorConverter-getReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
 
-returns the expected return for converting a specific amount of _fromToken to _toToken
+calculates the expected return of converting a given amount of tokens
 
 ## Parameters:
 
-- `_fromToken`:  ERC20 token to convert from
+- `_fromToken`:  contract address of the token to convert from
 
-- `_toToken`:    ERC20 token to convert to
+- `_toToken`:    contract address of the token to convert to
 
-- `_amount`:     amount to convert, in fromToken
+- `_amount`:     amount of tokens received from the user
 
 ## Return Values:
 
-- expected conversion return amount and conversion fee
+- amount of tokens that the user will receive
+
+- amount of tokens that the user will pay as fee
 
 # Function `getPurchaseReturn(contract IERC20Token _reserveToken, uint256 _depositAmount) → uint256, uint256` {#BancorConverter-getPurchaseReturn-contract-IERC20Token-uint256-}
 
-returns the expected return for buying the token for a reserve token
+calculates the expected return of buying with a given amount of tokens
 
 ## Parameters:
 
-- `_reserveToken`:    reserve token contract address
+- `_reserveToken`:    contract address of the reserve token
 
-- `_depositAmount`:   amount to deposit (in the reserve token)
+- `_depositAmount`:   amount of reserve-tokens received from the user
 
 ## Return Values:
 
-- expected purchase return amount and conversion fee
+- amount of supply-tokens that the user will receive
+
+- amount of supply-tokens that the user will pay as fee
 
 # Function `getSaleReturn(contract IERC20Token _reserveToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getSaleReturn-contract-IERC20Token-uint256-}
 
-returns the expected return for selling the token for one of its reserve tokens
+calculates the expected return of selling a given amount of tokens
 
 ## Parameters:
 
-- `_reserveToken`:    reserve token contract address
+- `_reserveToken`:    contract address of the reserve token
 
-- `_sellAmount`:      amount to sell (in the smart token)
+- `_sellAmount`:      amount of supply-tokens received from the user
 
 ## Return Values:
 
-- expected sale return amount and conversion fee
+- amount of reserve-tokens that the user will receive
 
-# Function `getCrossReserveReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getCrossReserveReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
+- amount of reserve-tokens that the user will pay as fee
 
-returns the expected return for selling one of the reserve tokens for another reserve token
+# Function `getCrossReserveReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _amount) → uint256, uint256` {#BancorConverter-getCrossReserveReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
+
+calculates the expected return of converting a given amount from one reserve to another
 
 note that prior to version 17, you should use 'getCrossConnectorReturn' instead
 
@@ -372,11 +378,13 @@ note that prior to version 17, you should use 'getCrossConnectorReturn' instead
 
 - `_toReserveToken`:      contract address of the reserve token to convert to
 
-- `_sellAmount`:          amount to sell (in the from reserve token)
+- `_amount`:              amount of tokens received from the user
 
 ## Return Values:
 
-- expected sale return amount and conversion fee (in the to reserve token)
+- amount of tokens that the user will receive
+
+- amount of tokens that the user will pay as fee
 
 # Function `convertInternal(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn) → uint256` {#BancorConverter-convertInternal-contract-IERC20Token-contract-IERC20Token-uint256-uint256-}
 
@@ -596,7 +604,7 @@ deprecated, backward compatibility
 
 deprecated, backward compatibility
 
-# Function `getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
+# Function `getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _amount) → uint256, uint256` {#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
 
 deprecated, backward compatibility
 

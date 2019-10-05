@@ -252,21 +252,21 @@ if the array is empty (length == 0), then the gas-price limit is verified instea
 
 # Function `getReturnByPath(contract IERC20Token[] _path, uint256 _amount) → uint256, uint256` {#BancorNetwork-getReturnByPath-contract-IERC20Token---uint256-}
 
-returns the expected return amount for converting a specific amount by following
+calculates the expected return of converting a given amount on a given path
 
-a given conversion path.
-
-notice that there is no support for circular paths.
+note that there is no support for circular paths
 
 ## Parameters:
 
-- `_path`:        conversion path, see conversion path format above
+- `_path`:        conversion path (see conversion path format above)
 
-- `_amount`:      amount to convert from (in the initial source token)
+- `_amount`:      amount of _path[0] tokens received from the user
 
 ## Return Values:
 
-- expected conversion return amount and conversion fee
+- amount of _path[_path.length - 1] tokens that the user will receive
+
+- amount of _path[_path.length - 1] tokens that the user will pay as fee
 
 # Function `claimAndConvertFor2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorNetwork-claimAndConvertFor2-contract-IERC20Token---uint256-uint256-address-address-uint256-}
 

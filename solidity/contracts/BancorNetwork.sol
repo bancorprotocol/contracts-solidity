@@ -378,14 +378,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-      * @dev returns the expected return amount for converting a specific amount by following
-      * a given conversion path.
-      * notice that there is no support for circular paths.
+      * @dev calculates the expected return of converting a given amount on a given path
+      * note that there is no support for circular paths
       * 
-      * @param _path        conversion path, see conversion path format above
-      * @param _amount      amount to convert from (in the initial source token)
+      * @param _path        conversion path (see conversion path format above)
+      * @param _amount      amount of _path[0] tokens received from the user
       * 
-      * @return expected conversion return amount and conversion fee
+      * @return amount of _path[_path.length - 1] tokens that the user will receive
+      * @return amount of _path[_path.length - 1] tokens that the user will pay as fee
     */
     function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
         uint256 amount;
