@@ -13,6 +13,9 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
     IContractRegistry public contractRegistry;
     address public anchorToken;
 
+    bytes4 private constant CONNECTOR_TOKEN_COUNT = bytes4(uint256(keccak256("connectorTokenCount()") >> (256 - 4 * 8)));
+    bytes4 private constant RESERVE_TOKEN_COUNT   = bytes4(uint256(keccak256("reserveTokenCount()"  ) >> (256 - 4 * 8)));
+
     /**
       * @dev initializes a new BancorNetworkPathFinder instance
       * 
@@ -97,9 +100,6 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
 
         return new address[](0);
     }
-
-    bytes4 private constant CONNECTOR_TOKEN_COUNT = bytes4(uint256(keccak256("connectorTokenCount()") >> (256 - 4 * 8)));
-    bytes4 private constant RESERVE_TOKEN_COUNT   = bytes4(uint256(keccak256("reserveTokenCount()"  ) >> (256 - 4 * 8)));
 
     /**
       * @dev invokes a function which takes no input arguments and returns a 'uint256' value
