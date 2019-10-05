@@ -28,6 +28,10 @@ sells the smart token for ETH
 
 note that the function will sell the full allowance amount
 
+## Return Values:
+
+- ETH sent in return
+
 # Function `withdraw(uint256 _amount)` {#BancorPriceFloor-withdraw-uint256-}
 
 withdraws ETH from the contract

@@ -30,6 +30,10 @@ the ownership and management to the sender.
 
 - `_reserveRatio`:       optional, ratio for the initial reserve
 
+## Return Values:
+
+- a new converter
+
 # Event `NewConverter(address _converter, address _owner)` {#BancorConverterFactory-NewConverter-address-address-}
 
 triggered when a new converter is created

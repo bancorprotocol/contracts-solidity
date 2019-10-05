@@ -40,6 +40,10 @@ throws on any error rather then return a false flag to minimize user errors
 
 - `_value`:   transfer amount
 
+## Return Values:
+
+- true if the transfer was successful, false if it wasn't
+
 # Function `transferFrom(address _from, address _to, uint256 _value) → bool success` {#ERC20Token-transferFrom-address-address-uint256-}
 
 an account/contract attempts to get the coins
@@ -53,6 +57,10 @@ throws on any error rather then return a false flag to minimize user errors
 - `_to`:      target address
 
 - `_value`:   transfer amount
+
+## Return Values:
+
+- true if the transfer was successful, false if it wasn't
 
 # Function `approve(address _spender, uint256 _value) → bool success` {#ERC20Token-approve-address-uint256-}
 
@@ -71,6 +79,10 @@ in 2 separate transactions - once to change the allowance to 0 and secondly to c
 - `_spender`: approved address
 
 - `_value`:   allowance amount
+
+## Return Values:
+
+- true if the approval was successful, false if it wasn't
 
 # Event `Transfer(address _from, address _to, uint256 _value)` {#ERC20Token-Transfer-address-address-uint256-}
 

@@ -48,6 +48,10 @@ returns true if a given contract supports the given feature(s), false if not
 
 - `_features`:    feature(s) to check for
 
+## Return Values:
+
+- true if the contract supports the feature(s), false if not
+
 # Function `enableFeatures(uint256 _features, bool _enable)` {#ContractFeatures-enableFeatures-uint256-bool-}
 
 allows a contract to enable/disable certain feature(s)

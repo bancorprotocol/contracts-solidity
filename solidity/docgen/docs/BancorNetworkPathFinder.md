@@ -35,3 +35,7 @@ retrieves the conversion path between a given pair of tokens in the Bancor Netwo
 - `_targetToken`:         address of the target token
 
 - `_converterRegistries`: array of converter registries depicting some part of the network
+
+## Return Values:
+
+- path from the source token to the target token

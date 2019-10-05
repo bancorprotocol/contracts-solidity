@@ -50,6 +50,10 @@ computes the real cap based on the given cap & key
 
 - `_key`:    key used to compute the cap hash
 
+## Return Values:
+
+- computed real cap hash
+
 # Function `enableRealCap(uint256 _cap, uint256 _key)` {#CrowdsaleController-enableRealCap-uint256-uint256-}
 
 enables the real cap defined on deployment
@@ -68,17 +72,29 @@ computes the number of tokens that should be issued for a given contribution
 
 - `_contribution`:    contribution amount
 
+## Return Values:
+
+- computed number of tokens
+
 # Function `contributeETH() → uint256 amount` {#CrowdsaleController-contributeETH--}
 
 ETH contribution
 
 can only be called during the crowdsale
 
+## Return Values:
+
+- tokens issued in return
+
 # Function `contributeBTCs() → uint256 amount` {#CrowdsaleController-contributeBTCs--}
 
 Contribution through BTCs (Bitcoin Suisse only)
 
 can only be called before the crowdsale started
+
+## Return Values:
+
+- tokens issued in return
 
 # Function `fallback()` {#CrowdsaleController-fallback--}
 

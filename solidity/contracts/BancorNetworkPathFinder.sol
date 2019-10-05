@@ -13,6 +13,9 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
     IContractRegistry public contractRegistry;
     address public anchorToken;
 
+    bytes4 private constant CONNECTOR_TOKEN_COUNT = bytes4(uint256(keccak256("connectorTokenCount()") >> (256 - 4 * 8)));
+    bytes4 private constant RESERVE_TOKEN_COUNT   = bytes4(uint256(keccak256("reserveTokenCount()"  ) >> (256 - 4 * 8)));
+
     /**
       * @dev initializes a new BancorNetworkPathFinder instance
       * 
@@ -40,6 +43,8 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
       * @param _sourceToken         address of the source token
       * @param _targetToken         address of the target token
       * @param _converterRegistries array of converter registries depicting some part of the network
+      * 
+      * @return path from the source token to the target token
     */
     function get(address _sourceToken, address _targetToken, BancorConverterRegistry[] memory _converterRegistries) public view returns (address[] memory) {
         assert(anchorToken == contractRegistry.addressOf(BNT_TOKEN));
@@ -53,6 +58,8 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
       * 
       * @param _token               address of the token
       * @param _converterRegistries array of converter registries depicting some part of the network
+      * 
+      * @return path from the input token to the anchor token
     */
     function getPath(address _token, BancorConverterRegistry[] memory _converterRegistries) private view returns (address[] memory) {
         if (_token == anchorToken) {
@@ -61,23 +68,31 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
             return initialPath;
         }
 
+        uint256 tokenCount;
+        uint256 i;
+        address token;
+        address[] memory path;
+
         for (uint256 n = 0; n < _converterRegistries.length; n++) {
             uint256 converterCount = _converterRegistries[n].converterCount(_token);
             if (converterCount > 0) {
                 BancorConverter converter = BancorConverter(_converterRegistries[n].converterAddress(_token, uint32(converterCount - 1)));
-                uint256 connectorTokenCount = converter.connectorTokenCount();
-                for (uint256 i = 0; i < connectorTokenCount; i++) {
-                    address connectorToken = converter.connectorTokens(i);
-                    if (connectorToken != _token) {
-                        address[] memory path = getPath(connectorToken, _converterRegistries);
-                        if (path.length > 0) {
-                            address[] memory newPath = new address[](2 + path.length);
-                            newPath[0] = _token;
-                            newPath[1] = converter.token();
-                            for (uint256 k = 0; k < path.length; k++)
-                                newPath[2 + k] = path[k];
-                            return newPath;
-                        }
+                tokenCount = getTokenCount(converter, CONNECTOR_TOKEN_COUNT);
+                for (i = 0; i < tokenCount; i++) {
+                    token = converter.connectorTokens(i);
+                    if (token != _token) {
+                        path = getPath(token, _converterRegistries);
+                        if (path.length > 0)
+                            return getNewPath(path, _token, converter);
+                    }
+                }
+                tokenCount = getTokenCount(converter, RESERVE_TOKEN_COUNT);
+                for (i = 0; i < tokenCount; i++) {
+                    token = converter.reserveTokens(i);
+                    if (token != _token) {
+                        path = getPath(token, _converterRegistries);
+                        if (path.length > 0)
+                            return getNewPath(path, _token, converter);
                     }
                 }
             }
@@ -87,10 +102,55 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
     }
 
     /**
+      * @dev invokes a function which takes no input arguments and returns a 'uint256' value
+      * 
+      * @param _dest            address of the contract which implements the function
+      * @param _funcSelector    first 4 bytes in the hash of the function signature
+      * 
+      * @return value returned from calling the input function on the input contract
+    */
+    function getTokenCount(address _dest, bytes4 _funcSelector) private view returns (uint256) {
+        uint256[1] memory ret;
+        bytes memory data = abi.encodeWithSelector(_funcSelector);
+
+        assembly {
+            pop(staticcall(
+                gas,           // gas remaining
+                _dest,         // destination address
+                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
+                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
+                ret,           // output buffer
+                32             // output length
+            ))
+        }
+
+        return ret[0];
+    }
+
+    /**
+      * @dev prepends two tokens to the beginning of a given path
+      * 
+      * @param _token       address of the first token
+      * @param _converter   converter of the second token
+      * 
+      * @return extended path
+    */
+    function getNewPath(address[] memory _path, address _token, BancorConverter _converter) private view returns (address[] memory) {
+        address[] memory newPath = new address[](2 + _path.length);
+        newPath[0] = _token;
+        newPath[1] = _converter.token();
+        for (uint256 k = 0; k < _path.length; k++)
+            newPath[2 + k] = _path[k];
+        return newPath;
+    }
+
+    /**
       * @dev merges two paths with a common suffix into one
       * 
       * @param _sourcePath  address of the source path
       * @param _targetPath  address of the target path
+      * 
+      * @return merged path
     */
     function getShortestPath(address[] memory _sourcePath, address[] memory _targetPath) private pure returns (address[] memory) {
         uint256 i = _sourcePath.length;
