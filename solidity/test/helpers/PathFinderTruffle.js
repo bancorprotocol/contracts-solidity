@@ -66,13 +66,10 @@ function isEqual(token1, token2) {
 }
 
 async function getTokenCount(converter, methodName) {
-    while (true) {
-        try {
-            return await converter[methodName]();
-        }
-        catch (error) {
-            if (!error.message.startsWith("Invalid JSON RPC response"))
-                return 0;
-        }
+    try {
+        return await converter[methodName]();
+    }
+    catch (error) {
+        return 0;
     }
 }
