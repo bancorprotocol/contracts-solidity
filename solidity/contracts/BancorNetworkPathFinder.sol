@@ -128,7 +128,7 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
     }
 
     /**
-      * @dev prepends two tokens to the beginning of a given conversion path
+      * @dev prepends two tokens to the beginning of a given path
       * 
       * @param _token       address of the first token
       * @param _converter   converter of the second token
