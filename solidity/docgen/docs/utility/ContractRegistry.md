@@ -38,6 +38,10 @@ initializes a new ContractRegistry instance
 
 returns the number of items in the registry
 
+## Return Values:
+
+- number of items
+
 # Function `addressOf(bytes32 _contractName) → address` {#ContractRegistry-addressOf-bytes32-}
 
 returns the address associated with the given contract name
@@ -45,6 +49,10 @@ returns the address associated with the given contract name
 ## Parameters:
 
 - `_contractName`:    contract name
+
+## Return Values:
+
+- contract address
 
 # Function `registerAddress(bytes32 _contractName, address _contractAddress)` {#ContractRegistry-registerAddress-bytes32-address-}
 

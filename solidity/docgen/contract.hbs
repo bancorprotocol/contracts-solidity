@@ -27,6 +27,12 @@
 - `{{param}}`: {{description}}
 {{/natspec.params}}
 {{/if}}
+{{#if natspec.returns}}
+## Return Values:
+{{#natspec.returns}}
+- {{param}} {{description}}
+{{/natspec.returns}}
+{{/if}}
 
 {{/if}}
 {{/ownFunctions}}

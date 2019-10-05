@@ -126,6 +126,10 @@ note that the converter should already own the source tokens
 
 - `_affiliateFee`:        affiliate fee in PPM
 
+## Return Values:
+
+- tokens issued in return
+
 # Function `convertForPrioritized4(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256[] _signature, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorNetwork-convertForPrioritized4-contract-IERC20Token---uint256-uint256-address-uint256---address-uint256-}
 
 converts the token to any other token in the bancor network
@@ -168,6 +172,10 @@ if the array is empty (length == 0), then the gas-price limit is verified instea
 
 - `_affiliateFee`:        affiliate fee in PPM
 
+## Return Values:
+
+- tokens issued in return
+
 # Function `xConvert(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, bytes32 _toBlockchain, bytes32 _to, uint256 _conversionId) → uint256` {#BancorNetwork-xConvert-contract-IERC20Token---uint256-uint256-bytes32-bytes32-uint256-}
 
 converts any other token to BNT in the bancor network
@@ -191,6 +199,10 @@ note that the network should already have been given allowance of the source tok
 - `_to`:               address/account on _toBlockchain to send the BNT to
 
 - `_conversionId`:     pre-determined unique (if non zero) id which refers to this transaction 
+
+## Return Values:
+
+- the amount of BNT received from this conversion
 
 # Function `xConvertPrioritized2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, bytes32 _toBlockchain, bytes32 _to, uint256 _conversionId, uint256[] _signature) → uint256` {#BancorNetwork-xConvertPrioritized2-contract-IERC20Token---uint256-uint256-bytes32-bytes32-uint256-uint256---}
 
@@ -234,6 +246,10 @@ note that the network should already have been given allowance of the source tok
 
 if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
 
+## Return Values:
+
+- the amount of BNT received from this conversion
+
 # Function `getReturnByPath(contract IERC20Token[] _path, uint256 _amount) → uint256, uint256` {#BancorNetwork-getReturnByPath-contract-IERC20Token---uint256-}
 
 returns the expected return amount for converting a specific amount by following
@@ -247,6 +263,10 @@ notice that there is no support for circular paths.
 - `_path`:        conversion path, see conversion path format above
 
 - `_amount`:      amount to convert from (in the initial source token)
+
+## Return Values:
+
+- expected conversion return amount and conversion fee
 
 # Function `claimAndConvertFor2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorNetwork-claimAndConvertFor2-contract-IERC20Token---uint256-uint256-address-address-uint256-}
 
@@ -270,6 +290,10 @@ note that allowance must be set beforehand
 
 - `_affiliateFee`:        affiliate fee in PPM
 
+## Return Values:
+
+- tokens issued in return
+
 # Function `convert2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorNetwork-convert2-contract-IERC20Token---uint256-uint256-address-uint256-}
 
 converts the token to any other token in the bancor network by following
@@ -290,6 +314,10 @@ note that the converter should already own the source tokens
 
 - `_affiliateFee`:        affiliate fee in PPM
 
+## Return Values:
+
+- tokens issued in return
+
 # Function `claimAndConvert2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorNetwork-claimAndConvert2-contract-IERC20Token---uint256-uint256-address-uint256-}
 
 claims the caller's tokens, converts them to any other token in the bancor network
@@ -309,6 +337,10 @@ note that allowance must be set beforehand
 - `_affiliateAccount`:    affiliate account
 
 - `_affiliateFee`:        affiliate fee in PPM
+
+## Return Values:
+
+- tokens issued in return
 
 # Function `convert(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn) → uint256` {#BancorNetwork-convert-contract-IERC20Token---uint256-uint256-}
 

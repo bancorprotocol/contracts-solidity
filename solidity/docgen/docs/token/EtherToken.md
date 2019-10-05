@@ -62,6 +62,10 @@ throws on any error rather then return a false flag to minimize user errors
 
 - `_value`:   transfer amount
 
+## Return Values:
+
+- true if the transfer was successful, false if it wasn't
+
 # Function `transferFrom(address _from, address _to, uint256 _value) → bool success` {#EtherToken-transferFrom-address-address-uint256-}
 
 an account/contract attempts to get the coins
@@ -75,6 +79,10 @@ throws on any error rather then return a false flag to minimize user errors
 - `_to`:      target address
 
 - `_value`:   transfer amount
+
+## Return Values:
+
+- true if the transfer was successful, false if it wasn't
 
 # Function `fallback()` {#EtherToken-fallback--}
 
