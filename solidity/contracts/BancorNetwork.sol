@@ -110,11 +110,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-      * @dev verifies that the signer address is trusted by recovering 
-      * the address associated with the public key from elliptic 
-      * curve signature, returns zero on error.
-      * notice that the signature is valid only for one conversion
-      * and expires after the give block.
+      * @dev verifies that the signer address is the one associated with the public key from a given elliptic curve signature
+      * note that the signature is valid only for one conversion, and that it expires after the give block
     */
     function verifyTrustedSender(IERC20Token[] _path, address _addr, uint256[] memory _signature) private {
         uint256 blockNumber = _signature[1];
