@@ -21,7 +21,16 @@ async function getPath(token, anchor, registries) {
         if (converterCount > 0) {
             const address = await registry.converterAddress(token, converterCount - 1);
             const converter = BancorConverter.at(address);
-            const reserveTokenCount = await converter.reserveTokenCount();
+            const connectorTokenCount = await getTokenCount(converter, "connectorTokenCount");
+            for (let i = 0; i < connectorTokenCount; i++) {
+                const connectorToken = await converter.connectorTokens(i);
+                if (connectorToken != token) {
+                    const path = await getPath(connectorToken, anchor, registries);
+                    if (path.length > 0)
+                        return [token, await converter.token(), ...path];
+                }
+            }
+            const reserveTokenCount = await getTokenCount(converter, "reserveTokenCount");
             for (let i = 0; i < reserveTokenCount; i++) {
                 const reserveToken = await converter.reserveTokens(i);
                 if (reserveToken != token) {
@@ -54,4 +63,13 @@ function getShortestPath(sourcePath, targetPath) {
 
 function isEqual(token1, token2) {
     return token1.toLowerCase() === token2.toLowerCase();
+}
+
+async function getTokenCount(converter, funcName) {
+    try {
+        return await converter[funcName]();
+    }
+    catch (error) {
+        return 0;
+    }
 }

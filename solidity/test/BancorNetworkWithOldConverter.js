@@ -1,8 +1,8 @@
 /* global artifacts, contract, before, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
-const fs = require("fs");
-const truffleContract = require("truffle-contract");
+const fs = require('fs');
+const truffleContract = require('truffle-contract');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const TestBancorNetwork = artifacts.require('TestBancorNetwork');
@@ -23,10 +23,10 @@ let converter;
 let bancorNetwork;
 
 async function createOldConverter(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, ratio) {
-    const abi = fs.readFileSync(__dirname + "/bin/bancor_converter_v9.abi");
-    const bin = fs.readFileSync(__dirname + "/bin/bancor_converter_v9.bin");
-    const converterContract = truffleContract({abi: JSON.parse(abi), unlinked_binary: "0x" + bin});
-    const block = await web3.eth.getBlock("latest");
+    const abi = fs.readFileSync(__dirname + '/bin/bancor_converter_v9.abi');
+    const bin = fs.readFileSync(__dirname + '/bin/bancor_converter_v9.bin');
+    const converterContract = truffleContract({abi: JSON.parse(abi), unlinked_binary: '0x' + bin});
+    const block = await web3.eth.getBlock('latest');
     converterContract.setProvider(web3.currentProvider);
     converterContract.defaults({from: web3.eth.accounts[0], gas: block.gasLimit});
     return await converterContract.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, ratio);
