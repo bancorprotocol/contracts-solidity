@@ -65,9 +65,9 @@ function isEqual(token1, token2) {
     return token1.toLowerCase() === token2.toLowerCase();
 }
 
-async function getTokenCount(converter, methodName) {
+async function getTokenCount(converter, funcName) {
     try {
-        return await converter[methodName]();
+        return await converter[funcName]();
     }
     catch (error) {
         return 0;

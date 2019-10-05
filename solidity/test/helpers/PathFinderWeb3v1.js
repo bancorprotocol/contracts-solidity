@@ -77,10 +77,10 @@ async function rpc(transaction) {
     }
 }
 
-async function getTokenCount(converter, methodName) {
+async function getTokenCount(converter, funcName) {
     while (true) {
         try {
-            return await converter.methods[methodName]().call();
+            return await converter.methods[funcName]().call();
         }
         catch (error) {
             if (!error.message.startsWith("Invalid JSON RPC response"))
