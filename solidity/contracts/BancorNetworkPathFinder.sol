@@ -40,6 +40,8 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
       * @param _sourceToken         address of the source token
       * @param _targetToken         address of the target token
       * @param _converterRegistries array of converter registries depicting some part of the network
+      * 
+      * @return path from the source token to the target token
     */
     function get(address _sourceToken, address _targetToken, BancorConverterRegistry[] memory _converterRegistries) public view returns (address[] memory) {
         assert(anchorToken == contractRegistry.addressOf(BNT_TOKEN));
@@ -53,6 +55,8 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
       * 
       * @param _token               address of the token
       * @param _converterRegistries array of converter registries depicting some part of the network
+      * 
+      * @return path from the input token to the anchor token
     */
     function getPath(address _token, BancorConverterRegistry[] memory _converterRegistries) private view returns (address[] memory) {
         if (_token == anchorToken) {
@@ -97,6 +101,14 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
     bytes4 private constant CONNECTOR_TOKEN_COUNT = bytes4(uint256(keccak256("connectorTokenCount()") >> (256 - 4 * 8)));
     bytes4 private constant RESERVE_TOKEN_COUNT   = bytes4(uint256(keccak256("reserveTokenCount()"  ) >> (256 - 4 * 8)));
 
+    /**
+      * @dev invokes a function which takes no input arguments and returns a 'uint256' value
+      * 
+      * @param _dest            address of the contract which implements the function
+      * @param _funcSelector    first 4 bytes in the hash of the function signature
+      * 
+      * @return value returned from calling the input function on the input contract
+    */
     function getTokenCount(address _dest, bytes4 _funcSelector) private view returns (uint256) {
         uint256[1] memory ret;
         bytes memory data = abi.encodeWithSelector(_funcSelector);
@@ -115,6 +127,14 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
         return ret[0];
     }
 
+    /**
+      * @dev prepends two tokens to the beginning of a given conversion path
+      * 
+      * @param _token       address of the first token
+      * @param _converter   converter of the second token
+      * 
+      * @return extended path
+    */
     function getNewPath(address[] memory _path, address _token, BancorConverter _converter) private view returns (address[] memory) {
         address[] memory newPath = new address[](2 + _path.length);
         newPath[0] = _token;
@@ -129,6 +149,8 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
       * 
       * @param _sourcePath  address of the source path
       * @param _targetPath  address of the target path
+      * 
+      * @return merged path
     */
     function getShortestPath(address[] memory _sourcePath, address[] memory _targetPath) private pure returns (address[] memory) {
         uint256 i = _sourcePath.length;
