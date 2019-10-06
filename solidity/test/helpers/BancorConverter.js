@@ -14,3 +14,12 @@ module.exports.new = async function(tokenAddress, registryAddress, maxConversion
     }
     return await BancorConverter.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, ratio);
 }
+
+module.exports.at = function(address, version) {
+    if (version) {
+        const abi = fs.readFileSync(__dirname + `/../bin/bancor_converter_v${version}.abi`);
+        const bancorConverter = truffleContract({abi: JSON.parse(abi)});
+        return bancorConverter.at(address);
+    }
+    return BancorConverter.at(address);
+}
