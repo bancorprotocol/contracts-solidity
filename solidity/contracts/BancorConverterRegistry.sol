@@ -13,10 +13,16 @@ import './utility/Utils.sol';
   * 
 */
 contract BancorConverterRegistry is Owned, Utils {
-    mapping (address => uint256) private tokensToIndexes;       // token address -> token index
     mapping (address => address[]) private tokensToConverters;  // token address -> converter addresses
     mapping (address => address) private convertersToTokens;    // converter address -> token address
     address[] public tokens;                                    // list of all token addresses
+
+    struct TokenInfo {
+        bool valid;
+        uint256 index;
+    }
+
+    mapping(address => TokenInfo) public tokenTable;
 
     /**
       * @dev triggered when a converter is added to the registry
@@ -120,8 +126,10 @@ contract BancorConverterRegistry is Owned, Utils {
         require(convertersToTokens[_converter] == address(0));
 
         // add the token to the list of tokens if needed
-        if (tokensToIndexes[_token] == 0) {
-            tokensToIndexes[_token] = tokens.push(_token);
+        TokenInfo storage tokenInfo = tokenTable[_token];
+        if (tokenInfo.valid == false) {
+            tokenInfo.valid = true;
+            tokenInfo.index = tokens.push(_token) - 1;
         }
 
         tokensToConverters[_token].push(_converter);
@@ -158,9 +166,14 @@ contract BancorConverterRegistry is Owned, Utils {
 
         // remove the token from the list of tokens if needed
         if (tokensToConverters[_token].length == 0) {
-            tokens[tokensToIndexes[_token] - 1] = tokens[tokens.length - 1];
-            tokensToIndexes[_token] = 0;
+            TokenInfo storage tokenInfo = tokenTable[_token];
+            assert(tokens.length > tokenInfo.index);
+            assert(_token == tokens[tokenInfo.index]);
+            address lastToken = tokens[tokens.length - 1];
+            tokenTable[lastToken].index = tokenInfo.index;
+            tokens[tokenInfo.index] = lastToken;
             tokens.length--;
+            delete tokenTable[_token];
         }
 
         // removes the converter from the converters -> tokens list

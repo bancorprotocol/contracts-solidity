@@ -202,4 +202,29 @@ contract('BancorConverterRegistry', accounts => {
         let converter = await converterRegistry.latestConverterAddress.call(accounts[1]);
         assert.equal(converter, accounts[3]);
     });
+
+    it('delete first token until all tokens deleted', async function() {
+        let converterRegistry = await BancorConverterRegistry.new();
+        await deleteAllOneByOne(converterRegistry, +1);
+    });
+
+    it('delete last token until all tokens deleted', async function() {
+        let converterRegistry = await BancorConverterRegistry.new();
+        await deleteAllOneByOne(converterRegistry, -1);
+    });
+
+    async function deleteAllOneByOne(converterRegistry, direction) {
+        console.log(`adding ${accounts.length} tokens...`);
+        for (const account of accounts)
+            await converterRegistry.registerConverter(account, account);
+        for (let tokens = accounts.slice(); tokens.length > 0; tokens.length--) {
+            const bgnIndex = (tokens.length - 1) * (1 - direction) / 2;
+            const endIndex = (tokens.length - 1) * (1 + direction) / 2;
+            const token = await converterRegistry.tokens(bgnIndex);
+            await converterRegistry.unregisterConverter(token, 0);
+            assert.equal(token, tokens[bgnIndex]);
+            tokens[bgnIndex] = tokens[endIndex];
+            console.log(`token ${bgnIndex} deleted`);
+        }
+    };
 });
