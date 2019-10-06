@@ -17,27 +17,24 @@ async function getPath(web3, token, anchor, registries) {
         return [token];
 
     for (const registry of registries) {
-        const converterCount = await rpc(registry.converterCount(token));
-        if (converterCount > 0) {
-            const address = await rpc(registry.converterAddress(token, converterCount - 1));
-            const converter = web3.eth.contract(CONVERTER_ABI).at(address);
-            const connectorTokenCount = await getTokenCount(converter, "connectorTokenCount");
-            for (let i = 0; i < connectorTokenCount; i++) {
-                const connectorToken = await rpc(converter.connectorTokens(i));
-                if (connectorToken != token) {
-                    const path = await getPath(web3, connectorToken, anchor, registries);
-                    if (path.length > 0)
-                        return [token, await rpc(converter.token()), ...path];
-                }
+        const address = await rpc(registry.latestConverterAddress(token));
+        const converter = web3.eth.contract(CONVERTER_ABI).at(address);
+        const connectorTokenCount = await getTokenCount(converter, "connectorTokenCount");
+        for (let i = 0; i < connectorTokenCount; i++) {
+            const connectorToken = await rpc(converter.connectorTokens(i));
+            if (connectorToken != token) {
+                const path = await getPath(web3, connectorToken, anchor, registries);
+                if (path.length > 0)
+                    return [token, await rpc(converter.token()), ...path];
             }
-            const reserveTokenCount = await getTokenCount(converter, "reserveTokenCount");
-            for (let i = 0; i < reserveTokenCount; i++) {
-                const reserveToken = await rpc(converter.reserveTokens(i));
-                if (reserveToken != token) {
-                    const path = await getPath(web3, reserveToken, anchor, registries);
-                    if (path.length > 0)
-                        return [token, await rpc(converter.token()), ...path];
-                }
+        }
+        const reserveTokenCount = await getTokenCount(converter, "reserveTokenCount");
+        for (let i = 0; i < reserveTokenCount; i++) {
+            const reserveToken = await rpc(converter.reserveTokens(i));
+            if (reserveToken != token) {
+                const path = await getPath(web3, reserveToken, anchor, registries);
+                if (path.length > 0)
+                    return [token, await rpc(converter.token()), ...path];
             }
         }
     }

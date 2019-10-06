@@ -16,6 +16,8 @@ Note that converter addresses for each token are returned in ascending order (fr
 
 - [`converterAddress(address _token, uint32 _index)`](#BancorConverterRegistry-converterAddress-address-uint32-)
 
+- [`latestConverterAddress(address _token)`](#BancorConverterRegistry-latestConverterAddress-address-)
+
 - [`tokenAddress(address _converter)`](#BancorConverterRegistry-tokenAddress-address-)
 
 - [`registerConverter(address _token, address _converter)`](#BancorConverterRegistry-registerConverter-address-address-)
@@ -69,6 +71,20 @@ or zero address if no such converter exists
 ## Return Values:
 
 - converter address
+
+# Function `latestConverterAddress(address _token) → address` {#BancorConverterRegistry-latestConverterAddress-address-}
+
+returns the latest converter address associated with the given token
+
+or zero address if no such converter exists
+
+## Parameters:
+
+- `_token`:   token address
+
+## Return Values:
+
+- latest converter address
 
 # Function `tokenAddress(address _converter) → address` {#BancorConverterRegistry-tokenAddress-address-}
 

@@ -13,7 +13,7 @@ import './utility/Utils.sol';
   * 
 */
 contract BancorConverterRegistry is Owned, Utils {
-    mapping (address => bool) private tokensRegistered;         // token address -> registered or not
+    mapping (address => uint256) private tokensToIndexes;       // token address -> token index
     mapping (address => address[]) private tokensToConverters;  // token address -> converter addresses
     mapping (address => address) private convertersToTokens;    // converter address -> token address
     address[] public tokens;                                    // list of all token addresses
@@ -71,10 +71,25 @@ contract BancorConverterRegistry is Owned, Utils {
       * @return converter address
     */
     function converterAddress(address _token, uint32 _index) public view returns (address) {
-        if (_index >= tokensToConverters[_token].length)
-            return address(0);
+        if (tokensToConverters[_token].length > _index)
+            return tokensToConverters[_token][_index];
 
-        return tokensToConverters[_token][_index];
+        return address(0);
+    }
+
+    /**
+      * @dev returns the latest converter address associated with the given token
+      * or zero address if no such converter exists
+      * 
+      * @param _token   token address
+      * 
+      * @return latest converter address
+    */
+    function latestConverterAddress(address _token) public view returns (address) {
+        if (tokensToConverters[_token].length > 0)
+            return tokensToConverters[_token][tokensToConverters[_token].length - 1];
+
+        return address(0);
     }
 
     /**
@@ -104,10 +119,9 @@ contract BancorConverterRegistry is Owned, Utils {
     {
         require(convertersToTokens[_converter] == address(0));
 
-        // add the token to the list of tokens
-        if (!tokensRegistered[_token]) {
-            tokens.push(_token);
-            tokensRegistered[_token] = true;
+        // add the token to the list of tokens if needed
+        if (tokensToIndexes[_token] == 0) {
+            tokensToIndexes[_token] = tokens.push(_token);
         }
 
         tokensToConverters[_token].push(_converter);
@@ -141,7 +155,14 @@ contract BancorConverterRegistry is Owned, Utils {
 
         // decrease the number of converters defined for the token by 1
         tokensToConverters[_token].length--;
-        
+
+        // remove the token from the list of tokens if needed
+        if (tokensToConverters[_token].length == 0) {
+            tokens[tokensToIndexes[_token] - 1] = tokens[tokens.length - 1];
+            tokensToIndexes[_token] = 0;
+            tokens.length--;
+        }
+
         // removes the converter from the converters -> tokens list
         delete convertersToTokens[converter];
 

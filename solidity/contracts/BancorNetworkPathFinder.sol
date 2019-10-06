@@ -74,26 +74,23 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
         address[] memory path;
 
         for (uint256 n = 0; n < _converterRegistries.length; n++) {
-            uint256 converterCount = _converterRegistries[n].converterCount(_token);
-            if (converterCount > 0) {
-                BancorConverter converter = BancorConverter(_converterRegistries[n].converterAddress(_token, uint32(converterCount - 1)));
-                tokenCount = getTokenCount(converter, CONNECTOR_TOKEN_COUNT);
-                for (i = 0; i < tokenCount; i++) {
-                    token = converter.connectorTokens(i);
-                    if (token != _token) {
-                        path = getPath(token, _converterRegistries);
-                        if (path.length > 0)
-                            return getNewPath(path, _token, converter);
-                    }
+            BancorConverter converter = BancorConverter(_converterRegistries[n].latestConverterAddress(_token));
+            tokenCount = getTokenCount(converter, CONNECTOR_TOKEN_COUNT);
+            for (i = 0; i < tokenCount; i++) {
+                token = converter.connectorTokens(i);
+                if (token != _token) {
+                    path = getPath(token, _converterRegistries);
+                    if (path.length > 0)
+                        return getNewPath(path, _token, converter);
                 }
-                tokenCount = getTokenCount(converter, RESERVE_TOKEN_COUNT);
-                for (i = 0; i < tokenCount; i++) {
-                    token = converter.reserveTokens(i);
-                    if (token != _token) {
-                        path = getPath(token, _converterRegistries);
-                        if (path.length > 0)
-                            return getNewPath(path, _token, converter);
-                    }
+            }
+            tokenCount = getTokenCount(converter, RESERVE_TOKEN_COUNT);
+            for (i = 0; i < tokenCount; i++) {
+                token = converter.reserveTokens(i);
+                if (token != _token) {
+                    path = getPath(token, _converterRegistries);
+                    if (path.length > 0)
+                        return getNewPath(path, _token, converter);
                 }
             }
         }
