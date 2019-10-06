@@ -1,38 +1,25 @@
 /* global artifacts, contract, before, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
-const fs = require('fs');
-const truffleContract = require('truffle-contract');
-
 const utils = require('./helpers/Utils');
+const BancorConverter = require('./helpers/BancorConverter');
 const PathFinderTruffle = require('./helpers/PathFinderTruffle');
 
 const EtherToken = artifacts.require('EtherToken');
 const SmartToken = artifacts.require('SmartToken');
 const ContractIds = artifacts.require('ContractIds');
-const BancorConverter = artifacts.require('BancorConverter');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
 
-async function createOldConverter(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, ratio) {
-    const abi = fs.readFileSync(__dirname + '/bin/bancor_converter_v4.abi');
-    const bin = fs.readFileSync(__dirname + '/bin/bancor_converter_v4.bin');
-    const converterContract = truffleContract({abi: JSON.parse(abi), unlinked_binary: '0x' + bin});
-    const block = await web3.eth.getBlock('latest');
-    converterContract.setProvider(web3.currentProvider);
-    converterContract.defaults({from: web3.eth.accounts[0], gas: block.gasLimit});
-    return await converterContract.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, ratio);
-}
-
 const tests = [
-    {desc: 'old converter test', func: createOldConverter},
-    {desc: 'new converter test', func: BancorConverter.new},
+    {title: 'old converter test', version: 4},
+    {title: 'new converter test', version: null},
 ];
 
 contract('BancorNetworkPathFinder', accounts => {
     for (const test of tests) {
-        describe(test.desc, () => {
+        describe(test.title, () => {
             let pathFinder;
             let converter1;
             let converter2;
@@ -85,13 +72,13 @@ contract('BancorNetworkPathFinder', accounts => {
                 smartTokenE = await SmartToken.new('TokenE', 'TKNE', 18);
                 smartTokenF = await SmartToken.new('TokenF', 'TKNF', 18);
 
-                converter1 = await test.func(smartToken1.address, contractRegistry.address, 0, etherToken .address, 500000);
-                converter2 = await test.func(smartToken2.address, contractRegistry.address, 0, smartToken4.address, 500000);
-                converter3 = await test.func(smartToken3.address, contractRegistry.address, 0, smartToken6.address, 500000);
-                converter4 = await test.func(smartToken4.address, contractRegistry.address, 0, smartToken8.address, 500000);
-                converter5 = await test.func(smartToken5.address, contractRegistry.address, 0, smartTokenA.address, 500000);
-                converter6 = await test.func(smartToken6.address, contractRegistry.address, 0, smartTokenC.address, 500000);
-                converter7 = await test.func(smartToken7.address, contractRegistry.address, 0, smartTokenE.address, 500000);
+                converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken .address, 500000, test.version);
+                converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken4.address, 500000, test.version);
+                converter3 = await BancorConverter.new(smartToken3.address, contractRegistry.address, 0, smartToken6.address, 500000, test.version);
+                converter4 = await BancorConverter.new(smartToken4.address, contractRegistry.address, 0, smartToken8.address, 500000, test.version);
+                converter5 = await BancorConverter.new(smartToken5.address, contractRegistry.address, 0, smartTokenA.address, 500000, test.version);
+                converter6 = await BancorConverter.new(smartToken6.address, contractRegistry.address, 0, smartTokenC.address, 500000, test.version);
+                converter7 = await BancorConverter.new(smartToken7.address, contractRegistry.address, 0, smartTokenE.address, 500000, test.version);
 
                 converterRegistry1 = await BancorConverterRegistry.new();
                 converterRegistry2 = await BancorConverterRegistry.new();
