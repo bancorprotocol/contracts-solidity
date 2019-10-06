@@ -1,10 +1,10 @@
 /* global artifacts, contract, before, it, assert */
 /* eslint-disable prefer-reflect */
 
-const fs = require('fs');
-const path = require('path');
-const ContractIds = artifacts.require('ContractIds');
+const utils = require('./helpers/Utils');
 const BancorConverter = require('./helpers/BancorConverter');
+
+const ContractIds = artifacts.require('ContractIds');
 const SmartToken = artifacts.require('SmartToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
@@ -12,15 +12,13 @@ const TestERC20Token = artifacts.require('TestERC20Token');
 const Whitelist = artifacts.require('Whitelist');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
-const utils = require('./helpers/Utils');
-const truffleContract = require('truffle-contract');
+
+const versions = [9, 10, 11];
 
 let token;
 let contractRegistry;
 let contractFeatures;
 let converterUpgrader;
-
-const versions = [9, 10, 11];
 
 async function initConverter(accounts, activate, version = null, maxConversionFee = 30000) {
     token = await SmartToken.new('Token1', 'TKN1', 18);

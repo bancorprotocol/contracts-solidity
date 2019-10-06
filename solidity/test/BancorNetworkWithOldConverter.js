@@ -1,8 +1,6 @@
 /* global artifacts, contract, before, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
-const OLD_CONVERTER_VERSION = 9;
-
 const BancorConverter = require('./helpers/BancorConverter');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
@@ -14,6 +12,8 @@ const BancorFormula = artifacts.require('BancorFormula');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
+
+const OLD_CONVERTER_VERSION = 9;
 
 let smartToken1;
 let smartToken2;
