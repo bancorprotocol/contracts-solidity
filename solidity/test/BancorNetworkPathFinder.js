@@ -13,13 +13,13 @@ const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
 
 const tests = [
-    {desc: 'old converter test', version: 4},
-    {desc: 'new converter test', version: null},
+    {title: 'old converter test', version: 4},
+    {title: 'new converter test', version: null},
 ];
 
 contract('BancorNetworkPathFinder', accounts => {
     for (const test of tests) {
-        describe(test.desc, () => {
+        describe(test.title, () => {
             let pathFinder;
             let converter1;
             let converter2;
