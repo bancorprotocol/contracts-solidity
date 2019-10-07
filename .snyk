@@ -1,0 +1,10 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.13.5
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-HTTPSPROXYAGENT-469131:
+    - solidity-coverage > solidity-parser-antlr > npm-check-updates > pacote > make-fetch-happen > https-proxy-agent:
+        patched: '2019-10-07T09:36:39.451Z'
+    - solidity-coverage > solidity-parser-antlr > npm-check-updates > pacote > npm-registry-fetch > make-fetch-happen > https-proxy-agent:
+        patched: '2019-10-07T09:36:39.451Z'
