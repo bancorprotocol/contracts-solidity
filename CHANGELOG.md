@@ -1,3 +1,18 @@
+### 0.5.2 (2019-10-07)
+BancorConverterRegistry
+* Added events when adding/removing tokens
+* Removing the last converter of a token will now also remove the token from the list of tokens
+
+
+### 0.5.1 (2019-10-07)
+General:
+* Added the BancorNetworkPathFinder contract
+
+BancorConverterFactory
+* Added utility function `latestConverterAddress` to return the latest converter for a given token
+* Removing the last converter for a token will now also remove the token from the list of tokens
+
+
 ### 0.5.0 (2019-09-25)
 General:
 * Terminology changes (Connector -> Reserve, Weight -> Ratio)

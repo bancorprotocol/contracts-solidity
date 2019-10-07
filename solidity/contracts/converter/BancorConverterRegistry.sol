@@ -1,7 +1,7 @@
 pragma solidity 0.4.26;
-import './IBancorConverterRegistry.sol';
-import './utility/Owned.sol';
-import './utility/Utils.sol';
+import './interfaces/IBancorConverterRegistry.sol';
+import '../utility/Owned.sol';
+import '../utility/Utils.sol';
 
 /**
   * @dev Bancor Converter Registry
@@ -24,6 +24,20 @@ contract BancorConverterRegistry is IBancorConverterRegistry, Owned, Utils {
     }
 
     mapping(address => TokenInfo) public tokenTable;
+
+    /**
+      * @dev triggered when a token is added to the registry
+      * 
+      * @param _token   token
+    */
+    event TokenAddition(address indexed _token);
+
+    /**
+      * @dev triggered when a token is removed from the registry
+      * 
+      * @param _token   token
+    */
+    event TokenRemoval(address indexed _token);
 
     /**
       * @dev triggered when a converter is added to the registry
@@ -131,6 +145,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, Owned, Utils {
         if (tokenInfo.valid == false) {
             tokenInfo.valid = true;
             tokenInfo.index = tokens.push(_token) - 1;
+            emit TokenAddition(_token);
         }
 
         tokensToConverters[_token].push(_converter);
@@ -175,9 +190,10 @@ contract BancorConverterRegistry is IBancorConverterRegistry, Owned, Utils {
             tokens[tokenInfo.index] = lastToken;
             tokens.length--;
             delete tokenTable[_token];
+            emit TokenRemoval(_token);
         }
 
-        // removes the converter from the converters -> tokens list
+        // remove the converter from the converters -> tokens list
         delete convertersToTokens[converter];
 
         // dispatch the converter removal event
