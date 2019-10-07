@@ -3,6 +3,7 @@
   * [BancorConverterRegistry](docs/BancorConverterRegistry.md)
   * [BancorNetwork](docs/BancorNetwork.md)
   * [BancorNetworkPathFinder](docs/BancorNetworkPathFinder.md)
+  * [IBancorConverterRegistry](docs/IBancorConverterRegistry.md)
   * bancorx
     * [BancorX](docs/bancorx/BancorX.md)
   * converter
