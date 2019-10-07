@@ -1,9 +1,10 @@
 pragma solidity 0.4.26;
 import './ContractIds.sol';
 import './utility/Utils.sol';
-import './BancorConverterRegistry.sol';
-import './converter/BancorConverter.sol';
 import './utility/interfaces/IContractRegistry.sol';
+import './IBancorConverterRegistry.sol';
+import './converter/interfaces/IBancorConverter.sol';
+import './token/interfaces/ISmartTokenController.sol';
 
 /**
   * @dev The BancorNetworkPathFinder contract allows for retrieving the conversion path between any pair of tokens in the Bancor Network.
@@ -46,7 +47,7 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
       * 
       * @return path from the source token to the target token
     */
-    function get(address _sourceToken, address _targetToken, BancorConverterRegistry[] memory _converterRegistries) public view returns (address[] memory) {
+    function get(address _sourceToken, address _targetToken, IBancorConverterRegistry[] memory _converterRegistries) public view returns (address[] memory) {
         assert(anchorToken == contractRegistry.addressOf(BNT_TOKEN));
         address[] memory sourcePath = getPath(_sourceToken, _converterRegistries);
         address[] memory targetPath = getPath(_targetToken, _converterRegistries);
@@ -61,7 +62,7 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
       * 
       * @return path from the input token to the anchor token
     */
-    function getPath(address _token, BancorConverterRegistry[] memory _converterRegistries) private view returns (address[] memory) {
+    function getPath(address _token, IBancorConverterRegistry[] memory _converterRegistries) private view returns (address[] memory) {
         if (_token == anchorToken) {
             address[] memory initialPath = new address[](1);
             initialPath[0] = _token;
@@ -74,7 +75,7 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
         address[] memory path;
 
         for (uint256 n = 0; n < _converterRegistries.length; n++) {
-            BancorConverter converter = BancorConverter(_converterRegistries[n].latestConverterAddress(_token));
+            IBancorConverter converter = IBancorConverter(_converterRegistries[n].latestConverterAddress(_token));
             tokenCount = getTokenCount(converter, CONNECTOR_TOKEN_COUNT);
             for (i = 0; i < tokenCount; i++) {
                 token = converter.connectorTokens(i);
@@ -132,10 +133,10 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
       * 
       * @return extended path
     */
-    function getNewPath(address[] memory _path, address _token, BancorConverter _converter) private view returns (address[] memory) {
+    function getNewPath(address[] memory _path, address _token, IBancorConverter _converter) private view returns (address[] memory) {
         address[] memory newPath = new address[](2 + _path.length);
         newPath[0] = _token;
-        newPath[1] = _converter.token();
+        newPath[1] = ISmartTokenController(_converter).token();
         for (uint256 k = 0; k < _path.length; k++)
             newPath[2 + k] = _path[k];
         return newPath;

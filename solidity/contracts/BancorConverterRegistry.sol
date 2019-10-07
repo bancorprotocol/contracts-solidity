@@ -1,4 +1,5 @@
 pragma solidity 0.4.26;
+import './IBancorConverterRegistry.sol';
 import './utility/Owned.sol';
 import './utility/Utils.sol';
 
@@ -12,7 +13,7 @@ import './utility/Utils.sol';
   * Note that converter addresses for each token are returned in ascending order (from oldest to newest).
   * 
 */
-contract BancorConverterRegistry is Owned, Utils {
+contract BancorConverterRegistry is IBancorConverterRegistry, Owned, Utils {
     mapping (address => address[]) private tokensToConverters;  // token address -> converter addresses
     mapping (address => address) private convertersToTokens;    // converter address -> token address
     address[] public tokens;                                    // list of all token addresses
