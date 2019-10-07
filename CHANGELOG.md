@@ -1,3 +1,9 @@
+### 0.5.2 (2019-10-07)
+BancorConverterRegistry
+* Added events when adding/removing tokens
+* Removing the last converter of a token will now also remove the token from the list of tokens
+
+
 ### 0.5.1 (2019-10-07)
 General:
 * Added the BancorNetworkPathFinder contract
