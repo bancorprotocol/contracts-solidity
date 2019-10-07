@@ -48,15 +48,15 @@ async function getTransactionReceipt(web3) {
     }
 }
 
-async function send(web3, transaction, privateKey) {
+async function send(web3, transaction, account) {
     while (true) {
         try {
             const options = {
                 data    : transaction.encodeABI(),
-                gas     : (await web3.eth.getBlock("latest")).gasLimit,
+                gas     : await transaction.estimateGas({from: account.address}),
                 gasPrice: await getGasPrice(web3)
             };
-            const signed  = await web3.eth.accounts.signTransaction(options, privateKey);
+            const signed  = await web3.eth.accounts.signTransaction(options, account.privateKey);
             const receipt = await web3.eth.sendSignedTransaction(signed.rawTransaction);
             return receipt;
         }
@@ -71,13 +71,14 @@ async function send(web3, transaction, privateKey) {
 
 async function run() {
     const web3        = new Web3(NODE_ADDRESS);
+    const account     = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
     const name        = "solidity/build/" + CONTRACT_NAME;
     const abi         = fs.readFileSync(name + ".abi");
     const bin         = fs.readFileSync(name + ".bin");
     const contract    = new web3.eth.Contract(JSON.parse(abi));
     const options     = {data: "0x" + bin, arguments: CONTRACT_ARGS};
     const transaction = contract.deploy(options);
-    const receipt     = await send(web3, transaction, PRIVATE_KEY);
+    const receipt     = await send(web3, transaction, account);
     const addr        = receipt.contractAddress;
     const args        = transaction.encodeABI().slice(options.data.length);
     console.log(`"${CONTRACT_NAME}": {"addr": "${addr}", "args": "${args}"}`);
