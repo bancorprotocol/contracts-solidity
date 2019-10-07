@@ -3,6 +3,8 @@ solc="docker run -v $HOME/workspace/contracts/solidity:/solidity ethereum/solc:0
 CONTRACTS_PATH=/solidity/contracts
 OUTPUT_PATH=/solidity/build
 $solc --optimize --optimize-runs 200 --abi --bin --allow-paths $CONTRACTS_PATH, -o $OUTPUT_PATH --overwrite $CONTRACTS_PATH/BancorNetwork.sol
+$solc --optimize --optimize-runs 200 --abi --bin --allow-paths $CONTRACTS_PATH, -o $OUTPUT_PATH --overwrite $CONTRACTS_PATH/BancorNetworkPathFinder.sol
+$solc --optimize --optimize-runs 200 --abi --bin --allow-paths $CONTRACTS_PATH, -o $OUTPUT_PATH --overwrite $CONTRACTS_PATH/BancorConverterRegistry.sol
 $solc --optimize --optimize-runs 200 --abi --bin --allow-paths $CONTRACTS_PATH, -o $OUTPUT_PATH --overwrite $CONTRACTS_PATH/bancorx/BancorX.sol
 $solc --optimize --optimize-runs 200 --abi --bin --allow-paths $CONTRACTS_PATH, -o $OUTPUT_PATH --overwrite $CONTRACTS_PATH/bancorx/XTransferRerouter.sol
 $solc --optimize --optimize-runs 200 --abi --bin --allow-paths $CONTRACTS_PATH, -o $OUTPUT_PATH --overwrite $CONTRACTS_PATH/converter/BancorConverter.sol
