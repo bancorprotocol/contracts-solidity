@@ -150,18 +150,22 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
       * @return merged path
     */
     function getShortestPath(address[] memory _sourcePath, address[] memory _targetPath) private pure returns (address[] memory) {
-        uint256 i = _sourcePath.length;
-        uint256 j = _targetPath.length;
-        while (i > 0 && j > 0 && _sourcePath[i - 1] == _targetPath[j - 1]) {
-            i--;
-            j--;
+        if (_sourcePath.length > 0 && _targetPath.length > 0) {
+            uint256 i = _sourcePath.length;
+            uint256 j = _targetPath.length;
+            while (i > 0 && j > 0 && _sourcePath[i - 1] == _targetPath[j - 1]) {
+                i--;
+                j--;
+            }
+
+            address[] memory path = new address[](i + j + 1);
+            for (uint256 m = 0; m <= i; m++)
+                path[m] = _sourcePath[m];
+            for (uint256 n = j; n > 0; n--)
+                path[path.length - n] = _targetPath[n - 1];
+            return path;
         }
 
-        address[] memory path = new address[](i + j + 1);
-        for (uint256 m = 0; m <= i; m++)
-            path[m] = _sourcePath[m];
-        for (uint256 n = j; n > 0; n--)
-            path[path.length - n] = _targetPath[n - 1];
-        return path;
+        return new address[](0);
     }
 }
