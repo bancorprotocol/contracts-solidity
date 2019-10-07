@@ -1,4 +1,5 @@
 pragma solidity 0.4.26;
+import './IBancorConverterRegistry.sol';
 import './utility/Owned.sol';
 import './utility/Utils.sol';
 
@@ -12,11 +13,17 @@ import './utility/Utils.sol';
   * Note that converter addresses for each token are returned in ascending order (from oldest to newest).
   * 
 */
-contract BancorConverterRegistry is Owned, Utils {
-    mapping (address => bool) private tokensRegistered;         // token address -> registered or not
+contract BancorConverterRegistry is IBancorConverterRegistry, Owned, Utils {
     mapping (address => address[]) private tokensToConverters;  // token address -> converter addresses
     mapping (address => address) private convertersToTokens;    // converter address -> token address
     address[] public tokens;                                    // list of all token addresses
+
+    struct TokenInfo {
+        bool valid;
+        uint256 index;
+    }
+
+    mapping(address => TokenInfo) public tokenTable;
 
     /**
       * @dev triggered when a converter is added to the registry
@@ -71,10 +78,25 @@ contract BancorConverterRegistry is Owned, Utils {
       * @return converter address
     */
     function converterAddress(address _token, uint32 _index) public view returns (address) {
-        if (_index >= tokensToConverters[_token].length)
-            return address(0);
+        if (tokensToConverters[_token].length > _index)
+            return tokensToConverters[_token][_index];
 
-        return tokensToConverters[_token][_index];
+        return address(0);
+    }
+
+    /**
+      * @dev returns the latest converter address associated with the given token
+      * or zero address if no such converter exists
+      * 
+      * @param _token   token address
+      * 
+      * @return latest converter address
+    */
+    function latestConverterAddress(address _token) public view returns (address) {
+        if (tokensToConverters[_token].length > 0)
+            return tokensToConverters[_token][tokensToConverters[_token].length - 1];
+
+        return address(0);
     }
 
     /**
@@ -104,10 +126,11 @@ contract BancorConverterRegistry is Owned, Utils {
     {
         require(convertersToTokens[_converter] == address(0));
 
-        // add the token to the list of tokens
-        if (!tokensRegistered[_token]) {
-            tokens.push(_token);
-            tokensRegistered[_token] = true;
+        // add the token to the list of tokens if needed
+        TokenInfo storage tokenInfo = tokenTable[_token];
+        if (tokenInfo.valid == false) {
+            tokenInfo.valid = true;
+            tokenInfo.index = tokens.push(_token) - 1;
         }
 
         tokensToConverters[_token].push(_converter);
@@ -141,7 +164,19 @@ contract BancorConverterRegistry is Owned, Utils {
 
         // decrease the number of converters defined for the token by 1
         tokensToConverters[_token].length--;
-        
+
+        // remove the token from the list of tokens if needed
+        if (tokensToConverters[_token].length == 0) {
+            TokenInfo storage tokenInfo = tokenTable[_token];
+            assert(tokens.length > tokenInfo.index);
+            assert(_token == tokens[tokenInfo.index]);
+            address lastToken = tokens[tokens.length - 1];
+            tokenTable[lastToken].index = tokenInfo.index;
+            tokens[tokenInfo.index] = lastToken;
+            tokens.length--;
+            delete tokenTable[_token];
+        }
+
         // removes the converter from the converters -> tokens list
         delete convertersToTokens[converter];
 

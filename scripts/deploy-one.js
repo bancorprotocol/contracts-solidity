@@ -53,7 +53,7 @@ async function send(web3, transaction, privateKey) {
         try {
             const options = {
                 data    : transaction.encodeABI(),
-                gas     : await transaction.estimateGas(),
+                gas     : (await web3.eth.getBlock("latest")).gasLimit,
                 gasPrice: await getGasPrice(web3)
             };
             const signed  = await web3.eth.accounts.signTransaction(options, privateKey);

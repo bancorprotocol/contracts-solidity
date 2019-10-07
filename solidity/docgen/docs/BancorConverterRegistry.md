@@ -16,6 +16,8 @@ Note that converter addresses for each token are returned in ascending order (fr
 
 - [`converterAddress(address _token, uint32 _index)`](#BancorConverterRegistry-converterAddress-address-uint32-)
 
+- [`latestConverterAddress(address _token)`](#BancorConverterRegistry-latestConverterAddress-address-)
+
 - [`tokenAddress(address _converter)`](#BancorConverterRegistry-tokenAddress-address-)
 
 - [`registerConverter(address _token, address _converter)`](#BancorConverterRegistry-registerConverter-address-address-)
@@ -36,6 +38,10 @@ initializes a new BancorConverterRegistry instance
 
 returns the number of tokens in the registry
 
+## Return Values:
+
+- number of tokens
+
 # Function `converterCount(address _token) → uint256` {#BancorConverterRegistry-converterCount-address-}
 
 returns the number of converters associated with the given token
@@ -45,6 +51,10 @@ or 0 if the token isn't registered
 ## Parameters:
 
 - `_token`:   token address
+
+## Return Values:
+
+- number of converters
 
 # Function `converterAddress(address _token, uint32 _index) → address` {#BancorConverterRegistry-converterAddress-address-uint32-}
 
@@ -58,6 +68,24 @@ or zero address if no such converter exists
 
 - `_index`:   converter index
 
+## Return Values:
+
+- converter address
+
+# Function `latestConverterAddress(address _token) → address` {#BancorConverterRegistry-latestConverterAddress-address-}
+
+returns the latest converter address associated with the given token
+
+or zero address if no such converter exists
+
+## Parameters:
+
+- `_token`:   token address
+
+## Return Values:
+
+- latest converter address
+
 # Function `tokenAddress(address _converter) → address` {#BancorConverterRegistry-tokenAddress-address-}
 
 returns the token address associated with the given converter
@@ -67,6 +95,10 @@ or zero address if no such converter exists
 ## Parameters:
 
 - `_converter`:   converter address
+
+## Return Values:
+
+- token address
 
 # Function `registerConverter(address _token, address _converter)` {#BancorConverterRegistry-registerConverter-address-address-}
 

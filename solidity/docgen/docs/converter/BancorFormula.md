@@ -34,6 +34,10 @@ Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 10
 
 - `_depositAmount`:       deposit amount, in reserve token
 
+## Return Values:
+
+- purchase return amount
+
 # Function `calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _sellAmount) → uint256` {#BancorFormula-calculateSaleReturn-uint256-uint256-uint32-uint256-}
 
 given a token supply, reserve balance, ratio and a sell amount (in the main token),
@@ -53,6 +57,10 @@ Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRati
 - `_reserveRatio`:        constant reserve Ratio, represented in ppm, 1-1000000
 
 - `_sellAmount`:          sell amount, in the token itself
+
+## Return Values:
+
+- sale return amount
 
 # Function `calculateCrossReserveReturn(uint256 _fromReserveBalance, uint32 _fromReserveRatio, uint256 _toReserveBalance, uint32 _toReserveRatio, uint256 _amount) → uint256` {#BancorFormula-calculateCrossReserveReturn-uint256-uint32-uint256-uint32-uint256-}
 
@@ -77,6 +85,10 @@ Return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + 
 - `_toReserveRatio`:          output reserve ratio, represented in ppm, 1-1000000
 
 - `_amount`:                  input reserve amount
+
+## Return Values:
+
+- second reserve amount
 
 # Function `calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount) → uint256` {#BancorFormula-calculateCrossConnectorReturn-uint256-uint32-uint256-uint32-uint256-}
 

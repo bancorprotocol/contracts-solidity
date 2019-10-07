@@ -17,11 +17,16 @@ import './token/interfaces/INonStandardERC20.sol';
 import './bancorx/interfaces/IBancorX.sol';
 
 /**
-  * @dev The BancorNetwork contract is the main entry point for Bancor token conversions. It also allows for the conversion of any token in the Bancor Network to any other token in a single transaction by providing a conversion path. 
+  * @dev The BancorNetwork contract is the main entry point for Bancor token conversions.
+  * It also allows for the conversion of any token in the Bancor Network to any other token in a single transaction by providing a conversion path.
   * 
-  * A note on Conversion Path: Conversion path is a data structure that is used when converting a token to another token in the Bancor Network when the conversion cannot necessarily be done by a single converter and might require multiple 'hops'. The path defines which converters should be used and what kind of conversion should be done in each step. 
+  * A note on Conversion Path: Conversion path is a data structure that is used when converting a token to another token in the Bancor Network,
+  * when the conversion cannot necessarily be done by a single converter and might require multiple 'hops'.
+  * The path defines which converters should be used and what kind of conversion should be done in each step.
   * 
-  * The path format doesn't include complex structure; instead, it is represented by a single array in which each 'hop' is represented by a 2-tuple - smart token & to token. In addition, the first element is always the source token. The smart token is only used as a pointer to a converter (since converter addresses are more likely to change as opposed to smart token addresses).
+  * The path format doesn't include complex structure; instead, it is represented by a single array in which each 'hop' is represented by a 2-tuple - smart token & to token.
+  * In addition, the first element is always the source token.
+  * The smart token is only used as a pointer to a converter (since converter addresses are more likely to change as opposed to smart token addresses).
   * 
   * Format:
   * [source token, smart token, to token, smart token, to token...]
@@ -105,11 +110,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-      * @dev verifies that the signer address is trusted by recovering 
-      * the address associated with the public key from elliptic 
-      * curve signature, returns zero on error.
-      * notice that the signature is valid only for one conversion
-      * and expires after the give block.
+      * @dev verifies that the signer address is the one associated with the public key from a given elliptic curve signature
+      * note that the signature is valid only for one conversion, and that it expires after the give block
     */
     function verifyTrustedSender(IERC20Token[] _path, address _addr, uint256[] memory _signature) private {
         uint256 blockNumber = _signature[1];
@@ -162,11 +164,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _for                 account that will receive the conversion result
       * @param _signature           an array of the following elements:
-      *     [0] uint256     custom value that was signed for prioritized conversion
-      *     [1] uint256     if the current block exceeded the given parameter - it is cancelled
-      *     [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-      *     [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-      *     [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+      *     [0] uint256             custom value that was signed for prioritized conversion
+      *     [1] uint256             if the current block exceeded the given parameter - it is cancelled
+      *     [2] uint8               (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+      *     [3] bytes32             (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+      *     [4] bytes32             (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
       * if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
@@ -252,11 +254,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * @param _to              address/account on _toBlockchain to send the BNT to
       * @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction 
       * @param _signature       an array of the following elements:
-      *     [0] uint256     custom value that was signed for prioritized conversion; must be equal to _amount
-      *     [1] uint256     if the current block exceeded the given parameter - it is cancelled
-      *     [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-      *     [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-      *     [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+      *     [0] uint256         custom value that was signed for prioritized conversion; must be equal to _amount
+      *     [1] uint256         if the current block exceeded the given parameter - it is cancelled
+      *     [2] uint8           (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+      *     [3] bytes32         (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+      *     [4] bytes32         (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
       * if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
       * 
       * @return the amount of BNT received from this conversion
@@ -373,14 +375,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     /**
-      * @dev returns the expected return amount for converting a specific amount by following
-      * a given conversion path.
-      * notice that there is no support for circular paths.
+      * @dev calculates the expected return of converting a given amount on a given path
+      * note that there is no support for circular paths
       * 
-      * @param _path        conversion path, see conversion path format above
-      * @param _amount      amount to convert from (in the initial source token)
+      * @param _path        conversion path (see conversion path format above)
+      * @param _amount      amount of _path[0] tokens received from the user
       * 
-      * @return expected conversion return amount and conversion fee
+      * @return amount of _path[_path.length - 1] tokens that the user will receive
+      * @return amount of _path[_path.length - 1] tokens that the user will pay as fee
     */
     function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
         uint256 amount;

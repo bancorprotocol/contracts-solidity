@@ -32,6 +32,10 @@ returns true if a given address is whitelisted, false if not
 
 - `_address`: address to check
 
+## Return Values:
+
+- true if the address is whitelisted, false if not
+
 # Function `addAddress(address _address)` {#Whitelist-addAddress-address-}
 
 adds a given address to the whitelist

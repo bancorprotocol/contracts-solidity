@@ -236,13 +236,25 @@ gets x transfer amount by xTransferId (not txId)
 
 - `_for`:            address corresponding to xTransferId
 
+## Return Values:
+
+- amount that was sent in xTransfer corresponding to _xTransferId
+
 # Function `getCurrentLockLimit() → uint256` {#BancorX-getCurrentLockLimit--}
 
 method for calculating current lock limit
 
+## Return Values:
+
+- the current maximum limit of tokens that can be locked
+
 # Function `getCurrentReleaseLimit() → uint256` {#BancorX-getCurrentReleaseLimit--}
 
 method for calculating current release limit
+
+## Return Values:
+
+- the current maximum limit of tokens that can be released
 
 # Event `TokensLock(address _from, uint256 _amount)` {#BancorX-TokensLock-address-uint256-}
 

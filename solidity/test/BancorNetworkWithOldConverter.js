@@ -1,8 +1,7 @@
 /* global artifacts, contract, before, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
-const fs = require("fs");
-const truffleContract = require("truffle-contract");
+const BancorConverter = require('./helpers/BancorConverter');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const TestBancorNetwork = artifacts.require('TestBancorNetwork');
@@ -14,6 +13,8 @@ const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
 
+const OLD_CONVERTER_VERSION = 9;
+
 let smartToken1;
 let smartToken2;
 let smartToken3;
@@ -21,16 +22,6 @@ let contractRegistry;
 let contractIds;
 let converter;
 let bancorNetwork;
-
-async function createOldConverter(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, ratio) {
-    const abi = fs.readFileSync(__dirname + "/bin/bancor_converter_v9.abi");
-    const bin = fs.readFileSync(__dirname + "/bin/bancor_converter_v9.bin");
-    const converterContract = truffleContract({abi: JSON.parse(abi), unlinked_binary: "0x" + bin});
-    const block = await web3.eth.getBlock("latest");
-    converterContract.setProvider(web3.currentProvider);
-    converterContract.defaults({from: web3.eth.accounts[0], gas: block.gasLimit});
-    return await converterContract.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, ratio);
-}
 
 /*
 Token network structure:
@@ -78,7 +69,7 @@ contract('BancorNetworkWithOldConverter', accounts => {
 
         await nonStandardTokenRegistry.setAddress(smartToken2.address, true);
 
-        converter = await createOldConverter(smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000);
+        converter = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000, OLD_CONVERTER_VERSION);
         await converter.addConnector(smartToken3.address, 150000, false);
 
         await smartToken1.transfer(converter.address, 40000);

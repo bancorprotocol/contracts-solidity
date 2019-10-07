@@ -444,13 +444,14 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev returns the expected return for converting a specific amount of _fromToken to _toToken
+      * @dev calculates the expected return of converting a given amount of tokens
       * 
-      * @param _fromToken  ERC20 token to convert from
-      * @param _toToken    ERC20 token to convert to
-      * @param _amount     amount to convert, in fromToken
+      * @param _fromToken  contract address of the token to convert from
+      * @param _toToken    contract address of the token to convert to
+      * @param _amount     amount of tokens received from the user
       * 
-      * @return expected conversion return amount and conversion fee
+      * @return amount of tokens that the user will receive
+      * @return amount of tokens that the user will pay as fee
     */
     function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256, uint256) {
         require(_fromToken != _toToken); // validate input
@@ -466,12 +467,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev returns the expected return for buying the token for a reserve token
+      * @dev calculates the expected return of buying with a given amount of tokens
       * 
-      * @param _reserveToken    reserve token contract address
-      * @param _depositAmount   amount to deposit (in the reserve token)
+      * @param _reserveToken    contract address of the reserve token
+      * @param _depositAmount   amount of reserve-tokens received from the user
       * 
-      * @return expected purchase return amount and conversion fee
+      * @return amount of supply-tokens that the user will receive
+      * @return amount of supply-tokens that the user will pay as fee
     */
     function getPurchaseReturn(IERC20Token _reserveToken, uint256 _depositAmount)
         public
@@ -494,12 +496,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev returns the expected return for selling the token for one of its reserve tokens
+      * @dev calculates the expected return of selling a given amount of tokens
       * 
-      * @param _reserveToken    reserve token contract address
-      * @param _sellAmount      amount to sell (in the smart token)
+      * @param _reserveToken    contract address of the reserve token
+      * @param _sellAmount      amount of supply-tokens received from the user
       * 
-      * @return expected sale return amount and conversion fee
+      * @return amount of reserve-tokens that the user will receive
+      * @return amount of reserve-tokens that the user will pay as fee
     */
     function getSaleReturn(IERC20Token _reserveToken, uint256 _sellAmount)
         public
@@ -520,16 +523,17 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev returns the expected return for selling one of the reserve tokens for another reserve token
+      * @dev calculates the expected return of converting a given amount from one reserve to another
       * note that prior to version 17, you should use 'getCrossConnectorReturn' instead
       * 
       * @param _fromReserveToken    contract address of the reserve token to convert from
       * @param _toReserveToken      contract address of the reserve token to convert to
-      * @param _sellAmount          amount to sell (in the from reserve token)
+      * @param _amount              amount of tokens received from the user
       * 
-      * @return expected sale return amount and conversion fee (in the to reserve token)
+      * @return amount of tokens that the user will receive
+      * @return amount of tokens that the user will pay as fee
     */
-    function getCrossReserveReturn(IERC20Token _fromReserveToken, IERC20Token _toReserveToken, uint256 _sellAmount)
+    function getCrossReserveReturn(IERC20Token _fromReserveToken, IERC20Token _toReserveToken, uint256 _amount)
         public
         view
         active
@@ -547,7 +551,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
             fromReserve.ratio, 
             getReserveBalance(_toReserveToken), 
             toReserve.ratio, 
-            _sellAmount);
+            _amount);
         uint256 finalAmount = getFinalAmount(amount, 2);
 
         // return the amount minus the conversion fee and the conversion fee
@@ -743,11 +747,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @param _amount              amount to convert from (in the initial source token)
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _signature           an array of the following elements:
-      *     [0] uint256     custom value that was signed for prioritized conversion; must be equal to _amount
-      *     [1] uint256     if the current block exceeded the given parameter - it is cancelled
-      *     [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-      *     [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-      *     [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+      *     [0] uint256             custom value that was signed for prioritized conversion; must be equal to _amount
+      *     [1] uint256             if the current block exceeded the given parameter - it is cancelled
+      *     [2] uint8               (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+      *     [3] bytes32             (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+      *     [4] bytes32             (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
       * if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
@@ -792,11 +796,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction 
       * @param _signature       an array of the following elements:
-      *     [0] uint256     custom value that was signed for prioritized conversion; must be equal to _conversionId
-      *     [1] uint256     if the current block exceeded the given parameter - it is cancelled
-      *     [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-      *     [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-      *     [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+      *     [0] uint256         custom value that was signed for prioritized conversion; must be equal to _conversionId
+      *     [1] uint256         if the current block exceeded the given parameter - it is cancelled
+      *     [2] uint8           (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+      *     [3] bytes32         (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+      *     [4] bytes32         (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
       * if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
       * 
       * @return tokens issued in return
@@ -1078,7 +1082,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev deprecated, backward compatibility
     */
-    function getCrossConnectorReturn(IERC20Token _fromConnectorToken, IERC20Token _toConnectorToken, uint256 _sellAmount) public view returns (uint256, uint256) {
-        return getCrossReserveReturn(_fromConnectorToken, _toConnectorToken, _sellAmount);
+    function getCrossConnectorReturn(IERC20Token _fromConnectorToken, IERC20Token _toConnectorToken, uint256 _amount) public view returns (uint256, uint256) {
+        return getCrossReserveReturn(_fromConnectorToken, _toConnectorToken, _amount);
     }
 }

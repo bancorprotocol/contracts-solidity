@@ -64,7 +64,7 @@ Other potential solutions might include a commit/reveal based schemes
 
 - [`getSaleReturn(contract IERC20Token _reserveToken, uint256 _sellAmount)`](#BancorConverter-getSaleReturn-contract-IERC20Token-uint256-)
 
-- [`getCrossReserveReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _sellAmount)`](#BancorConverter-getCrossReserveReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
+- [`getCrossReserveReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _amount)`](#BancorConverter-getCrossReserveReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
 
 - [`convertInternal(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#BancorConverter-convertInternal-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
 
@@ -104,7 +104,7 @@ Other potential solutions might include a commit/reveal based schemes
 
 - [`getConnectorBalance(contract IERC20Token _connectorToken)`](#BancorConverter-getConnectorBalance-contract-IERC20Token-)
 
-- [`getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _sellAmount)`](#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
+- [`getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _amount)`](#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-)
 
 # Events:
 
@@ -159,6 +159,10 @@ can only be called by the manager or owner
 returns the number of reserve tokens defined
 
 note that prior to version 17, you should use 'connectorTokenCount' instead
+
+## Return Values:
+
+- number of reserve tokens
 
 # Function `setConversionWhitelist(contract IWhitelist _whitelist)` {#BancorConverter-setConversionWhitelist-contract-IWhitelist-}
 
@@ -217,6 +221,10 @@ given a return amount, returns the amount minus the conversion fee
 - `_amount`:      return amount
 
 - `_magnitude`:   1 for standard conversion, 2 for cross reserve conversion
+
+## Return Values:
+
+- return amount minus conversion fee
 
 # Function `withdrawTokens(contract IERC20Token _token, address _to, uint256 _amount)` {#BancorConverter-withdrawTokens-contract-IERC20Token-address-uint256-}
 
@@ -304,41 +312,63 @@ note that prior to version 17, you should use 'getConnectorBalance' instead
 
 - `_reserveToken`:    reserve token contract address
 
+## Return Values:
+
+- reserve balance
+
 # Function `getReturn(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount) → uint256, uint256` {#BancorConverter-getReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
 
-returns the expected return for converting a specific amount of _fromToken to _toToken
+calculates the expected return of converting a given amount of tokens
 
 ## Parameters:
 
-- `_fromToken`:  ERC20 token to convert from
+- `_fromToken`:  contract address of the token to convert from
 
-- `_toToken`:    ERC20 token to convert to
+- `_toToken`:    contract address of the token to convert to
 
-- `_amount`:     amount to convert, in fromToken
+- `_amount`:     amount of tokens received from the user
+
+## Return Values:
+
+- amount of tokens that the user will receive
+
+- amount of tokens that the user will pay as fee
 
 # Function `getPurchaseReturn(contract IERC20Token _reserveToken, uint256 _depositAmount) → uint256, uint256` {#BancorConverter-getPurchaseReturn-contract-IERC20Token-uint256-}
 
-returns the expected return for buying the token for a reserve token
+calculates the expected return of buying with a given amount of tokens
 
 ## Parameters:
 
-- `_reserveToken`:    reserve token contract address
+- `_reserveToken`:    contract address of the reserve token
 
-- `_depositAmount`:   amount to deposit (in the reserve token)
+- `_depositAmount`:   amount of reserve-tokens received from the user
+
+## Return Values:
+
+- amount of supply-tokens that the user will receive
+
+- amount of supply-tokens that the user will pay as fee
 
 # Function `getSaleReturn(contract IERC20Token _reserveToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getSaleReturn-contract-IERC20Token-uint256-}
 
-returns the expected return for selling the token for one of its reserve tokens
+calculates the expected return of selling a given amount of tokens
 
 ## Parameters:
 
-- `_reserveToken`:    reserve token contract address
+- `_reserveToken`:    contract address of the reserve token
 
-- `_sellAmount`:      amount to sell (in the smart token)
+- `_sellAmount`:      amount of supply-tokens received from the user
 
-# Function `getCrossReserveReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getCrossReserveReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
+## Return Values:
 
-returns the expected return for selling one of the reserve tokens for another reserve token
+- amount of reserve-tokens that the user will receive
+
+- amount of reserve-tokens that the user will pay as fee
+
+# Function `getCrossReserveReturn(contract IERC20Token _fromReserveToken, contract IERC20Token _toReserveToken, uint256 _amount) → uint256, uint256` {#BancorConverter-getCrossReserveReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
+
+calculates the expected return of converting a given amount from one reserve to another
 
 note that prior to version 17, you should use 'getCrossConnectorReturn' instead
 
@@ -348,7 +378,13 @@ note that prior to version 17, you should use 'getCrossConnectorReturn' instead
 
 - `_toReserveToken`:      contract address of the reserve token to convert to
 
-- `_sellAmount`:          amount to sell (in the from reserve token)
+- `_amount`:              amount of tokens received from the user
+
+## Return Values:
+
+- amount of tokens that the user will receive
+
+- amount of tokens that the user will pay as fee
 
 # Function `convertInternal(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn) → uint256` {#BancorConverter-convertInternal-contract-IERC20Token-contract-IERC20Token-uint256-uint256-}
 
@@ -365,6 +401,10 @@ can only be called by the bancor network contract
 - `_amount`:     amount to convert, in fromToken
 
 - `_minReturn`:  if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+
+## Return Values:
+
+- conversion return amount
 
 # Function `convert2(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorConverter-convert2-contract-IERC20Token-contract-IERC20Token-uint256-uint256-address-uint256-}
 
@@ -386,6 +426,10 @@ note that prior to version 16, you should use 'convert' instead
 
 - `_affiliateFee`:        affiliate fee in PPM
 
+## Return Values:
+
+- conversion return amount
+
 # Function `quickConvert2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorConverter-quickConvert2-contract-IERC20Token---uint256-uint256-address-uint256-}
 
 converts the token to any other token in the bancor network by following a predefined conversion path
@@ -406,6 +450,10 @@ note that prior to version 16, you should use 'quickConvert' instead
 
 - `_affiliateFee`:        affiliate fee in PPM
 
+## Return Values:
+
+- tokens issued in return
+
 # Function `quickConvertPrioritized2(contract IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256[] _signature, address _affiliateAccount, uint256 _affiliateFee) → uint256` {#BancorConverter-quickConvertPrioritized2-contract-IERC20Token---uint256-uint256-uint256---address-uint256-}
 
 converts the token to any other token in the bancor network by following a predefined conversion path
@@ -424,21 +472,25 @@ note that prior to version 16, you should use 'quickConvertPrioritized' instead
 
 - `_signature`:           an array of the following elements:
 
-    [0] uint256     custom value that was signed for prioritized conversion; must be equal to _amount
+    [0] uint256             custom value that was signed for prioritized conversion; must be equal to _amount
 
-    [1] uint256     if the current block exceeded the given parameter - it is cancelled
+    [1] uint256             if the current block exceeded the given parameter - it is cancelled
 
-    [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+    [2] uint8               (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
 
-    [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+    [3] bytes32             (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
 
-    [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+    [4] bytes32             (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
 
 if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
 
 - `_affiliateAccount`:    affiliate account
 
 - `_affiliateFee`:        affiliate fee in PPM
+
+## Return Values:
+
+- tokens issued in return
 
 # Function `completeXConversion2(contract IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256[] _signature) → uint256` {#BancorConverter-completeXConversion2-contract-IERC20Token---uint256-uint256-uint256---}
 
@@ -460,17 +512,21 @@ note that prior to version 16, you should use 'completeXConversion' instead
 
 - `_signature`:       an array of the following elements:
 
-    [0] uint256     custom value that was signed for prioritized conversion; must be equal to _conversionId
+    [0] uint256         custom value that was signed for prioritized conversion; must be equal to _conversionId
 
-    [1] uint256     if the current block exceeded the given parameter - it is cancelled
+    [1] uint256         if the current block exceeded the given parameter - it is cancelled
 
-    [2] uint8       (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+    [2] uint8           (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
 
-    [3] bytes32     (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+    [3] bytes32         (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
 
-    [4] bytes32     (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+    [4] bytes32         (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
 
 if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
+
+## Return Values:
+
+- tokens issued in return
 
 # Function `fund(uint256 _amount)` {#BancorConverter-fund-uint256-}
 
@@ -548,7 +604,7 @@ deprecated, backward compatibility
 
 deprecated, backward compatibility
 
-# Function `getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _sellAmount) → uint256, uint256` {#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
+# Function `getCrossConnectorReturn(contract IERC20Token _fromConnectorToken, contract IERC20Token _toConnectorToken, uint256 _amount) → uint256, uint256` {#BancorConverter-getCrossConnectorReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
 
 deprecated, backward compatibility
 
