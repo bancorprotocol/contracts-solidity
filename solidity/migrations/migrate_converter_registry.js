@@ -2,9 +2,9 @@ const fs   = require("fs");
 const Web3 = require("web3");
 
 const NODE_ADDRESS = process.argv[2];
-const OLD_REG_ADDR = process.argv[3];
-const NEW_REG_ADDR = process.argv[4];
-const PRIVATE_KEY  = process.argv[5];
+const PRIVATE_KEY  = process.argv[3];
+const OLD_REG_ADDR = process.argv[4];
+const NEW_REG_ADDR = process.argv[5];
 
 async function scan() {
     return await new Promise(function(resolve, reject) {
@@ -48,16 +48,17 @@ async function getTransactionReceipt(web3) {
     }
 }
 
-async function send(web3, destAddr, gasPrice, transaction) {
+async function send(web3, transaction, privateKey, destAddr, gasPrice) {
+    const address = web3.eth.accounts.privateKeyToAccount(privateKey).address;
     while (true) {
         try {
             const options = {
                 to      : destAddr,
                 data    : transaction.encodeABI(),
-                gas     : (await web3.eth.getBlock("latest")).gasLimit,
+                gas     : await transaction.estimateGas({from: address}),
                 gasPrice: gasPrice ? gasPrice : await getGasPrice(web3)
             };
-            const signed  = await web3.eth.accounts.signTransaction(options, PRIVATE_KEY);
+            const signed  = await web3.eth.accounts.signTransaction(options, privateKey);
             const receipt = await web3.eth.sendSignedTransaction(signed.rawTransaction);
             return receipt;
         }
@@ -100,13 +101,13 @@ async function run() {
         const newConverterCount = Number(await rpc(newRegistry.methods.converterCount(token)));
         for (let j = newConverterCount; j < oldConverterCount; j++) {
             const converter = await rpc(oldRegistry.methods.converterAddress(token, j));
-            const receipt = await send(web3, destAddr, gasPrice, newRegistry.methods.registerConverter(token, converter));
+            const receipt = await send(web3, newRegistry.methods.registerConverter(token, converter), PRIVATE_KEY, destAddr, gasPrice);
             console.log(`token ${i} out of ${oldTokenCount}, converter ${j} out of ${oldConverterCount}: gas = ${receipt.gasUsed}`);
         }
     }
 
     const owner = await rpc(oldRegistry.methods.owner());
-    const receipt = await send(web3, destAddr, gasPrice, newRegistry.methods.transferOwnership(owner));
+    const receipt = await send(web3, newRegistry.methods.transferOwnership(owner), PRIVATE_KEY, destAddr, gasPrice);
     console.log(`ownership transferred to ${owner}: gas = ${receipt.gasUsed}`);
 
     if (web3.currentProvider.constructor.name == "WebsocketProvider")

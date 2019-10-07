@@ -49,11 +49,12 @@ async function getTransactionReceipt(web3) {
 }
 
 async function send(web3, transaction, privateKey) {
+    const address = web3.eth.accounts.privateKeyToAccount(privateKey).address;
     while (true) {
         try {
             const options = {
                 data    : transaction.encodeABI(),
-                gas     : (await web3.eth.getBlock("latest")).gasLimit,
+                gas     : await transaction.estimateGas({from: address}),
                 gasPrice: await getGasPrice(web3)
             };
             const signed  = await web3.eth.accounts.signTransaction(options, privateKey);
