@@ -108,6 +108,9 @@ async function run() {
     const owner = await rpc(oldRegistry.methods.owner());
     const receipt = await send(web3, destAddr, gasPrice, newRegistry.methods.transferOwnership(owner));
     console.log(`ownership transferred to ${owner}: gas = ${receipt.gasUsed}`);
+
+    if (web3.currentProvider.constructor.name == "WebsocketProvider")
+        web3.currentProvider.connection.close();
 }
 
 run();
