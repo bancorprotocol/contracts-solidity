@@ -92,6 +92,7 @@ async function run() {
 
     const destAddr = newRegistry.options.address;
     const gasPrice = await getGasPrice(web3);
+    const execute = transaction => send(web3, transaction, account, destAddr, gasPrice);
 
     const oldTokenCount = Number(await rpc(oldRegistry.methods.tokenCount()));
     const newTokenCount = Number(await rpc(newRegistry.methods.tokenCount()));
@@ -101,13 +102,13 @@ async function run() {
         const newConverterCount = Number(await rpc(newRegistry.methods.converterCount(token)));
         for (let j = newConverterCount; j < oldConverterCount; j++) {
             const converter = await rpc(oldRegistry.methods.converterAddress(token, j));
-            const receipt = await send(web3, newRegistry.methods.registerConverter(token, converter), account, destAddr, gasPrice);
+            const receipt = await execute(newRegistry.methods.registerConverter(token, converter));
             console.log(`token ${i} out of ${oldTokenCount}, converter ${j} out of ${oldConverterCount}: gas = ${receipt.gasUsed}`);
         }
     }
 
     const owner = await rpc(oldRegistry.methods.owner());
-    const receipt = await send(web3, newRegistry.methods.transferOwnership(owner), account, destAddr, gasPrice);
+    const receipt = await execute(newRegistry.methods.transferOwnership(owner));
     console.log(`ownership transferred to ${owner}: gas = ${receipt.gasUsed}`);
 
     if (web3.currentProvider.constructor.name == "WebsocketProvider")
