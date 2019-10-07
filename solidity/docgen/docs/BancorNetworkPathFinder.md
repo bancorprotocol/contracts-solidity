@@ -8,7 +8,7 @@ This conversion path can then be used in various functions on the BancorNetwork 
 
 - [`updateAnchorToken()`](#BancorNetworkPathFinder-updateAnchorToken--)
 
-- [`get(address _sourceToken, address _targetToken, contract BancorConverterRegistry[] _converterRegistries)`](#BancorNetworkPathFinder-get-address-address-contract-BancorConverterRegistry---)
+- [`get(address _sourceToken, address _targetToken, contract IBancorConverterRegistry[] _converterRegistries)`](#BancorNetworkPathFinder-get-address-address-contract-IBancorConverterRegistry---)
 
 # Function `constructor(contract IContractRegistry _contractRegistry)` {#BancorNetworkPathFinder-constructor-contract-IContractRegistry-}
 
@@ -24,7 +24,7 @@ updates the anchor token to point to the most recent BNT token deployed
 
 Note that this function needs to be called only when the BNT token has been redeployed
 
-# Function `get(address _sourceToken, address _targetToken, contract BancorConverterRegistry[] _converterRegistries) → address[]` {#BancorNetworkPathFinder-get-address-address-contract-BancorConverterRegistry---}
+# Function `get(address _sourceToken, address _targetToken, contract IBancorConverterRegistry[] _converterRegistries) → address[]` {#BancorNetworkPathFinder-get-address-address-contract-IBancorConverterRegistry---}
 
 retrieves the conversion path between a given pair of tokens in the Bancor Network
 
