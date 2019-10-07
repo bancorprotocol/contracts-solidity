@@ -26,6 +26,10 @@ Note that converter addresses for each token are returned in ascending order (fr
 
 # Events:
 
+- [`TokenAddition(address _token)`](#BancorConverterRegistry-TokenAddition-address-)
+
+- [`TokenRemoval(address _token)`](#BancorConverterRegistry-TokenRemoval-address-)
+
 - [`ConverterAddition(address _token, address _address)`](#BancorConverterRegistry-ConverterAddition-address-address-)
 
 - [`ConverterRemoval(address _token, address _address)`](#BancorConverterRegistry-ConverterRemoval-address-address-)
@@ -125,6 +129,22 @@ multiple times when removing an older converter from a large converter list
 - `_token`:   token address
 
 - `_index`:   converter index
+
+# Event `TokenAddition(address _token)` {#BancorConverterRegistry-TokenAddition-address-}
+
+triggered when a token is added to the registry
+
+## Parameters:
+
+- `_token`:   token
+
+# Event `TokenRemoval(address _token)` {#BancorConverterRegistry-TokenRemoval-address-}
+
+triggered when a token is removed from the registry
+
+## Parameters:
+
+- `_token`:   token
 
 # Event `ConverterAddition(address _token, address _address)` {#BancorConverterRegistry-ConverterAddition-address-address-}
 

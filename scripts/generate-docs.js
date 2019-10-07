@@ -16,7 +16,8 @@ const SKIP_LIST = [
     INPUT_DIR + "/utility/interfaces",
     INPUT_DIR + "/ContractIds.sol",
     INPUT_DIR + "/FeatureIds.sol",
-    INPUT_DIR + "/IBancorNetwork.sol"
+    INPUT_DIR + "/IBancorConverterRegistry.sol",
+    INPUT_DIR + "/IBancorNetwork.sol",
 ];
 
 const fs        = require("fs");

@@ -14,6 +14,8 @@
 
 - [`getReserveBalance(contract IERC20Token _reserveToken)`](#IBancorConverter-getReserveBalance-contract-IERC20Token-)
 
+- [`reserveTokens(uint256 _index)`](#IBancorConverter-reserveTokens-uint256-)
+
 - [`change(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#IBancorConverter-change-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
 
 - [`convert(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn)`](#IBancorConverter-convert-contract-IERC20Token-contract-IERC20Token-uint256-uint256-)
@@ -23,6 +25,8 @@
 - [`connectors(address _address)`](#IBancorConverter-connectors-address-)
 
 - [`getConnectorBalance(contract IERC20Token _connectorToken)`](#IBancorConverter-getConnectorBalance-contract-IERC20Token-)
+
+- [`connectorTokens(uint256 _index)`](#IBancorConverter-connectorTokens-uint256-)
 
 # Function `getReturn(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount) → uint256, uint256` {#IBancorConverter-getReturn-contract-IERC20Token-contract-IERC20Token-uint256-}
 
@@ -52,6 +56,10 @@ No description
 
 No description
 
+# Function `reserveTokens(uint256 _index) → contract IERC20Token` {#IBancorConverter-reserveTokens-uint256-}
+
+No description
+
 # Function `change(contract IERC20Token _fromToken, contract IERC20Token _toToken, uint256 _amount, uint256 _minReturn) → uint256` {#IBancorConverter-change-contract-IERC20Token-contract-IERC20Token-uint256-uint256-}
 
 No description
@@ -69,5 +77,9 @@ No description
 No description
 
 # Function `getConnectorBalance(contract IERC20Token _connectorToken) → uint256` {#IBancorConverter-getConnectorBalance-contract-IERC20Token-}
+
+No description
+
+# Function `connectorTokens(uint256 _index) → contract IERC20Token` {#IBancorConverter-connectorTokens-uint256-}
 
 No description
