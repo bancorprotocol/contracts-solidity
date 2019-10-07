@@ -43,19 +43,23 @@ async function getPath(token, anchor, registries) {
 }
 
 function getShortestPath(sourcePath, targetPath) {
-    let i = sourcePath.length - 1;
-    let j = targetPath.length - 1;
-    while (i >= 0 && j >= 0 && isEqual(sourcePath[i], targetPath[j])) {
-        i--;
-        j--;
+    if (sourcePath.length > 0 && targetPath.length > 0) {
+        let i = sourcePath.length - 1;
+        let j = targetPath.length - 1;
+        while (i >= 0 && j >= 0 && isEqual(sourcePath[i], targetPath[j])) {
+            i--;
+            j--;
+        }
+
+        const path = [];
+        for (let n = 0; n <= i + 1; n++)
+            path.push(sourcePath[n]);
+        for (let n = j; n >= 0; n--)
+            path.push(targetPath[n]);
+        return path;
     }
 
-    const path = [];
-    for (let n = 0; n <= i + 1; n++)
-        path.push(sourcePath[n]);
-    for (let n = j; n >= 0; n--)
-        path.push(targetPath[n]);
-    return path;
+    return [];
 }
 
 function isEqual(token1, token2) {
