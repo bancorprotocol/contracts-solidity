@@ -1,6 +1,5 @@
 # Summary
 * contracts
-  * [BancorConverterRegistry](docs/BancorConverterRegistry.md)
   * [BancorNetwork](docs/BancorNetwork.md)
   * [BancorNetworkPathFinder](docs/BancorNetworkPathFinder.md)
   * bancorx
@@ -8,6 +7,7 @@
   * converter
     * [BancorConverter](docs/converter/BancorConverter.md)
     * [BancorConverterFactory](docs/converter/BancorConverterFactory.md)
+    * [BancorConverterRegistry](docs/converter/BancorConverterRegistry.md)
     * [BancorConverterUpgrader](docs/converter/BancorConverterUpgrader.md)
     * [BancorFormula](docs/converter/BancorFormula.md)
     * [BancorGasPriceLimit](docs/converter/BancorGasPriceLimit.md)

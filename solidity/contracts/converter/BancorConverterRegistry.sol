@@ -1,7 +1,7 @@
 pragma solidity 0.4.26;
-import './IBancorConverterRegistry.sol';
-import './utility/Owned.sol';
-import './utility/Utils.sol';
+import './interfaces/IBancorConverterRegistry.sol';
+import '../utility/Owned.sol';
+import '../utility/Utils.sol';
 
 /**
   * @dev Bancor Converter Registry

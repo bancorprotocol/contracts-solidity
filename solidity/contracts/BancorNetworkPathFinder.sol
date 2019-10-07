@@ -2,7 +2,7 @@ pragma solidity 0.4.26;
 import './ContractIds.sol';
 import './utility/Utils.sol';
 import './utility/interfaces/IContractRegistry.sol';
-import './IBancorConverterRegistry.sol';
+import './converter/interfaces/IBancorConverterRegistry.sol';
 import './converter/interfaces/IBancorConverter.sol';
 import './token/interfaces/ISmartTokenController.sol';
 
