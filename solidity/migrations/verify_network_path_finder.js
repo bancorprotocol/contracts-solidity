@@ -13,16 +13,16 @@ const REGISTRY_ABI = JSON.parse(fs.readFileSync(__dirname + "/../build/BancorCon
 async function run() {
     const web3 = new Web3(NODE_ADDRESS);
     const finder = new web3.eth.Contract(FINDER_ABI, PATH_FINDER);
-    const anchorToken = await rpc(finder.methods.anchorToken().call());
+    const anchorToken = await rpc(finder.methods.anchorToken());
     const registries = REGISTRY_LIST.map(x => new web3.eth.Contract(REGISTRY_ABI, x));
     for (const registry of registries) {
-        const tokenCount = await rpc(registry.methods.tokenCount().call());
+        const tokenCount = await rpc(registry.methods.tokenCount());
         for (let i = 0; i < tokenCount; i++) {
-            const sourceToken = await rpc(registry.methods.tokens(i).call());
+            const sourceToken = await rpc(registry.methods.tokens(i));
             for (let j = i + 1; j < tokenCount; j++) {
-                const targetToken = await rpc(registry.methods.tokens(j).call());
+                const targetToken = await rpc(registry.methods.tokens(j));
                 const expected = await Finder.get(web3, sourceToken, targetToken, anchorToken, REGISTRY_LIST);
-                const actual = await rpc(finder.methods.get(sourceToken, targetToken, REGISTRY_LIST).call());
+                const actual = await rpc(finder.methods.get(sourceToken, targetToken, REGISTRY_LIST));
                 assert.equal(actual.join(', ').toLowerCase(), expected.join(', ').toLowerCase());
                 console.log(`path from ${i} to ${j} (out of ${tokenCount}): ${actual}`);
             }
@@ -33,7 +33,7 @@ async function run() {
 async function rpc(func) {
     while (true) {
         try {
-            return await func;
+            return await func.call();
         }
         catch (error) {
             if (!error.message.startsWith("Invalid JSON RPC response"))
