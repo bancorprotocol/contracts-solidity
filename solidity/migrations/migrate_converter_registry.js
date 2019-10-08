@@ -86,7 +86,7 @@ async function rpc(transaction) {
 
 async function run() {
     const web3 = new Web3(NODE_ADDRESS);
-    const abi = JSON.parse(fs.readFileSync("solidity/build/BancorConverterRegistry.abi", {encoding: "utf8"}));
+    const abi = JSON.parse(fs.readFileSync(__dirname + "/../build/BancorConverterRegistry.abi", {encoding: "utf8"}));
 
     const account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
     const oldRegistry = new web3.eth.Contract(abi, OLD_REG_ADDR);
