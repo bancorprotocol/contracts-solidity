@@ -6,6 +6,8 @@ const PRIVATE_KEY  = process.argv[3];
 const OLD_REG_ADDR = process.argv[4];
 const NEW_REG_ADDR = process.argv[5];
 
+const ZERO_ADDRESS = "0x".padEnd(42, "0");
+
 async function scan() {
     return await new Promise(function(resolve, reject) {
         process.stdin.resume();
@@ -94,22 +96,40 @@ async function run() {
     const gasPrice = await getGasPrice(web3);
     const execute = transaction => send(web3, transaction, account, destAddr, gasPrice);
 
-    const oldTokenCount = Number(await rpc(oldRegistry.methods.tokenCount()));
-    const newTokenCount = Number(await rpc(newRegistry.methods.tokenCount()));
-    for (let i = Math.max(newTokenCount - 1, 0); i < oldTokenCount; i++) {
+    const tokenCount = await rpc(oldRegistry.methods.tokenCount());
+    for (let i = 0; i < tokenCount; i++) {
         const token = await rpc(oldRegistry.methods.tokens(i));
-        const oldConverterCount = Number(await rpc(oldRegistry.methods.converterCount(token)));
-        const newConverterCount = Number(await rpc(newRegistry.methods.converterCount(token)));
-        for (let j = newConverterCount; j < oldConverterCount; j++) {
+        const converterCount = await rpc(oldRegistry.methods.converterCount(token));
+        for (let j = 0; j < converterCount; j++) {
             const converter = await rpc(oldRegistry.methods.converterAddress(token, j));
-            const receipt = await execute(newRegistry.methods.registerConverter(token, converter));
-            console.log(`token ${i} out of ${oldTokenCount}, converter ${j} out of ${oldConverterCount}: gas = ${receipt.gasUsed}`);
+            switch (await rpc(newRegistry.methods.converterAddress(token, j))) {
+            case ZERO_ADDRESS:
+                const receipt = await execute(newRegistry.methods.registerConverter(token, converter));
+                console.log(`token ${i} out of ${tokenCount}, converter ${j} out of ${converterCount}: gas = ${receipt.gasUsed}`);
+                break;
+            case converter:
+                console.log(`token ${i} out of ${tokenCount}, converter ${j} out of ${converterCount}: completed successfully`);
+                break;
+            default:
+                console.log(`token ${i} out of ${tokenCount}, converter ${j} out of ${converterCount}: an error has occurred`);
+                break;
+            }
         }
     }
 
     const owner = await rpc(oldRegistry.methods.owner());
-    const receipt = await execute(newRegistry.methods.transferOwnership(owner));
-    console.log(`ownership transferred to ${owner}: gas = ${receipt.gasUsed}`);
+    switch (await rpc(newRegistry.methods.newOwner())) {
+    case ZERO_ADDRESS:
+        const receipt = await execute(newRegistry.methods.transferOwnership(owner));
+        console.log(`ownership-transfer to ${owner}: gas = ${receipt.gasUsed}`);
+        break;
+    case owner:
+        console.log(`ownership-transfer to ${owner}: completed successfully`);
+        break;
+    default:
+        console.log(`ownership-transfer to ${owner}: an error has occurred`);
+        break;
+    }
 
     if (web3.currentProvider.constructor.name == "WebsocketProvider")
         web3.currentProvider.connection.close();

@@ -110,6 +110,22 @@ contract('BancorNetworkPathFinder', accounts => {
                 await utils.catchRevert(pathFinder.updateAnchorToken());
             });
 
+            it('should return an empty path if the source-token has no path to the anchor-token', async () => {
+                const sourceToken = utils.zeroAddress;
+                const targetToken = smartToken1.address;
+                const expected = await PathFinderTruffle.get(sourceToken, targetToken, smartToken1.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
+                const actual   = await pathFinder       .get(sourceToken, targetToken                     , [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
+                assert.equal(actual + expected, []);
+            });
+
+            it('should return an empty path if the target-token has no path to the anchor-token', async () => {
+                const sourceToken = smartToken1.address;
+                const targetToken = utils.zeroAddress;
+                const expected = await PathFinderTruffle.get(sourceToken, targetToken, smartToken1.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
+                const actual   = await pathFinder       .get(sourceToken, targetToken                     , [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
+                assert.equal(actual + expected, []);
+            });
+
             for (let i = 1; i <= 7; i++) {
                 for (let j = 1; j <= 7; j++) {
                     it(`from smartToken${i} to smartToken${j}`, async () => {
