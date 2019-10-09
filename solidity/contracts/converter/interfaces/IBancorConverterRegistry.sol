@@ -1,7 +1,7 @@
 pragma solidity 0.4.26;
 
 contract IBancorConverterRegistry {
-    function tokens(uint256 _index) public view returns (address) { _index; }
+    function tokens(uint256 _index) public view returns (address) {_index; this;}
     function tokenCount() public view returns (uint256);
     function converterCount(address _token) public view returns (uint256);
     function converterAddress(address _token, uint32 _index) public view returns (address);

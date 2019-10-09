@@ -6,5 +6,5 @@ import './ISmartToken.sol';
 */
 contract ISmartTokenController {
     function claimTokens(address _from, uint256 _amount) public;
-    function token() public view returns (ISmartToken) {}
+    function token() public view returns (ISmartToken) {this;}
 }
