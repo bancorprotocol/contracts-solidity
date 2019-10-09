@@ -13,13 +13,13 @@ import '../FeatureIds.sol';
     Bancor converter dedicated interface
 */
 contract IBancorConverterExtended is IBancorConverter, IOwned {
-    function token() public view returns (ISmartToken) {}
-    function maxConversionFee() public view returns (uint32) {}
-    function conversionFee() public view returns (uint32) {}
+    function token() public view returns (ISmartToken) {this;}
+    function maxConversionFee() public view returns (uint32) {this;}
+    function conversionFee() public view returns (uint32) {this;}
     function connectorTokenCount() public view returns (uint16);
     function reserveTokenCount() public view returns (uint16);
-    function connectorTokens(uint256 _index) public view returns (IERC20Token) { _index; }
-    function reserveTokens(uint256 _index) public view returns (IERC20Token) { _index; }
+    function connectorTokens(uint256 _index) public view returns (IERC20Token) {_index; this;}
+    function reserveTokens(uint256 _index) public view returns (IERC20Token) {_index; this;}
     function setConversionWhitelist(IWhitelist _whitelist) public;
     function transferTokenOwnership(address _newOwner) public;
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public;
