@@ -4,7 +4,7 @@ import '../utility/Utils.sol';
 import '../utility/SafeMath.sol';
 
 /**
-  * ERC20 Standard Token implementation
+  * ERC20 Non-Standard Token implementation
 */
 contract NonStandardERC20Token is INonStandardERC20, Utils {
     using SafeMath for uint256;
