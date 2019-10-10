@@ -118,13 +118,13 @@ async function run() {
     switch (await rpc(newRegistry.methods.newOwner())) {
     case ZERO_ADDRESS:
         const receipt = await send(web3, account, gasPrice, newRegistry.methods.transferOwnership(owner));
-        console.log(`ownership-transfer to ${owner}: gas = ${receipt.gasUsed}`);
+        console.log(`ownership-transfer from ${account.address} to ${owner}: gas = ${receipt.gasUsed}`);
         break;
     case owner:
-        console.log(`ownership-transfer to ${owner}: completed successfully`);
+        console.log(`ownership-transfer from ${account.address} to ${owner}: completed successfully`);
         break;
     default:
-        console.log(`ownership-transfer to ${owner}: an error has occurred`);
+        console.log(`ownership-transfer from ${account.address} to ${owner}: an error has occurred`);
         break;
     }
 
