@@ -57,7 +57,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev version number
     */
-    uint16 public version = 17;
+    uint16 public version = 18;
     string public converterType = 'bancor';
 
     bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
@@ -176,7 +176,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     // allows execution only when conversions aren't disabled
     modifier conversionsAllowed {
-        assert(conversionsEnabled);
+        require(conversionsEnabled);
         _;
     }
 
@@ -191,6 +191,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     modifier converterUpgraderOnly {
         address converterUpgrader = registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER);
         require(owner == converterUpgrader);
+        _;
+    }
+
+    // allows execution only if the token's total-supply is greater than zero
+    modifier totalSupplyGreaterThanZeroOnly {
+        require(token.totalSupply() > 0);
         _;
     }
 
@@ -294,6 +300,19 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         converterUpgraderOnly
     {
         super.transferTokenOwnership(_newOwner);
+    }
+
+    /**
+      * @dev used by a new owner to accept a token ownership transfer
+      * can only be called by the contract owner
+      * note that token ownership can only be accepted if the token's total-supply is greater than zero
+    */
+    function acceptTokenOwnership()
+        public
+        ownerOnly
+        totalSupplyGreaterThanZeroOnly
+    {
+        super.acceptTokenOwnership();
     }
 
     /**
