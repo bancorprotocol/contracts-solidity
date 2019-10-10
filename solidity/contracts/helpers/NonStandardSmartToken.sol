@@ -1,6 +1,5 @@
 pragma solidity 0.4.26;
 import './NonStandardERC20Token.sol';
-import './interfaces/INonStandardSmartToken.sol';
 import '../utility/Owned.sol';
 
 /*
@@ -8,7 +7,7 @@ import '../utility/Owned.sol';
 
     'Owned' is specified here for readability reasons
 */
-contract NonStandardSmartToken is INonStandardSmartToken, Owned, NonStandardERC20Token {
+contract NonStandardSmartToken is Owned, NonStandardERC20Token {
     using SafeMath for uint256;
 
 
