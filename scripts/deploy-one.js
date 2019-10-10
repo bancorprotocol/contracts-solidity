@@ -48,7 +48,7 @@ async function getTransactionReceipt(web3) {
     }
 }
 
-async function send(web3, transaction, account) {
+async function send(web3, account, transaction) {
     while (true) {
         try {
             const options = {
@@ -78,7 +78,7 @@ async function run() {
     const contract    = new web3.eth.Contract(JSON.parse(abi));
     const options     = {data: "0x" + bin, arguments: CONTRACT_ARGS};
     const transaction = contract.deploy(options);
-    const receipt     = await send(web3, transaction, account);
+    const receipt     = await send(web3, account, transaction);
     const addr        = receipt.contractAddress;
     const args        = transaction.encodeABI().slice(options.data.length);
     console.log(`"${CONTRACT_NAME}": {"addr": "${addr}", "args": "${args}"}`);
