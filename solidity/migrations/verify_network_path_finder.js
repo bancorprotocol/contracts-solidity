@@ -10,11 +10,24 @@ const REGISTRY_LIST = process.argv.slice(4);
 const FINDER_ABI   = JSON.parse(fs.readFileSync(__dirname + "/../build/BancorNetworkPathFinder.abi"));
 const REGISTRY_ABI = JSON.parse(fs.readFileSync(__dirname + "/../build/BancorConverterRegistry.abi"));
 
+async function rpc(func) {
+    while (true) {
+        try {
+            return await func.call();
+        }
+        catch (error) {
+            if (!error.message.startsWith("Invalid JSON RPC response"))
+                return null;
+        }
+    }
+}
+
 async function run() {
     const web3 = new Web3(NODE_ADDRESS);
     const finder = new web3.eth.Contract(FINDER_ABI, PATH_FINDER);
     const anchorToken = await rpc(finder.methods.anchorToken());
     const registries = REGISTRY_LIST.map(x => new web3.eth.Contract(REGISTRY_ABI, x));
+
     for (const registry of registries) {
         const tokenCount = await rpc(registry.methods.tokenCount());
         for (let i = 0; i < tokenCount; i++) {
@@ -28,18 +41,9 @@ async function run() {
             }
         }
     }
-}
 
-async function rpc(func) {
-    while (true) {
-        try {
-            return await func.call();
-        }
-        catch (error) {
-            if (!error.message.startsWith("Invalid JSON RPC response"))
-                return null;
-        }
-    }
+    if (web3.currentProvider.constructor.name == "WebsocketProvider")
+        web3.currentProvider.connection.close();
 }
 
 run();
