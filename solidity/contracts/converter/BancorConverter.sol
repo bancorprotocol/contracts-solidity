@@ -182,7 +182,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     // allows execution only when conversions aren't disabled
     modifier conversionsAllowed {
-        assert(conversionsEnabled);
+        require(conversionsEnabled);
         _;
     }
 

@@ -1103,7 +1103,7 @@ contract('BancorConverter', accounts => {
         let conversionsEnabled = await converter.conversionsEnabled.call();
         assert.equal(conversionsEnabled, false);
 
-        await utils.catchInvalidOpcode(converter.fund(100));
+        await utils.catchRevert(converter.fund(100));
     });
 
     it('should throw when attempting to fund the converter when the total reserve ratio is not equal to 100%', async () => {
