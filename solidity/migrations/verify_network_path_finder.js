@@ -28,6 +28,9 @@ async function run() {
             }
         }
     }
+
+    if (web3.currentProvider.constructor.name == "WebsocketProvider")
+        web3.currentProvider.connection.close();
 }
 
 async function rpc(func) {
