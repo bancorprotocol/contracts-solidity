@@ -200,6 +200,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
+    // allows execution only if the token's total-supply is larger than zero
+    modifier totalSupplyValidOnly {
+        require(token.totalSupply() > 0);
+        _;
+    }
+
     /**
       * @dev sets the contract registry to whichever address the current registry is pointing to
      */
@@ -294,6 +300,19 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         converterUpgraderOnly
     {
         super.transferTokenOwnership(_newOwner);
+    }
+
+    /**
+      * @dev used by a new owner to accept a token ownership transfer
+      * can only be called by the contract owner
+      * note that token ownership can only be accepted if the token's total-supply is larger than zero
+    */
+    function acceptTokenOwnership()
+        public
+        ownerOnly
+        totalSupplyValidOnly
+    {
+        super.acceptTokenOwnership();
     }
 
     /**

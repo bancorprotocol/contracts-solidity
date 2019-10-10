@@ -322,9 +322,18 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.addReserve(reserveToken.address, ratio10Percent, false, { from: accounts[1] }));
     });
 
+    it('should throw when attempting to accept token ownership when its total supply is zero', async () => {
+        let token = await SmartToken.new('Token1', 'TKN1', 2);
+        let converter = await BancorConverter.new(token.address, contractRegistry.address, 0, '0x0', 0);
+        await token.transferOwnership(converter.address);
+
+        await utils.catchRevert(converter.acceptTokenOwnership());
+    });
+
     it('should throw when attempting to add a reserve when the converter is active', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         let converter = await BancorConverter.new(token.address, contractRegistry.address, 0, '0x0', 0);
+        await token.issue(accounts[0], 20000);
         await token.transferOwnership(converter.address);
         await converter.acceptTokenOwnership();
 
