@@ -50,11 +50,11 @@ async function getTransactionReceipt(web3) {
     }
 }
 
-async function send(web3, transaction, account, destAddr, gasPrice) {
+async function send(web3, transaction, account, gasPrice) {
     while (true) {
         try {
             const options = {
-                to      : destAddr,
+                to      : transaction._parent._address,
                 data    : transaction.encodeABI(),
                 gas     : await transaction.estimateGas({from: account.address}),
                 gasPrice: gasPrice ? gasPrice : await getGasPrice(web3)
@@ -92,9 +92,8 @@ async function run() {
     const oldRegistry = new web3.eth.Contract(abi, OLD_REG_ADDR);
     const newRegistry = new web3.eth.Contract(abi, NEW_REG_ADDR);
 
-    const destAddr = newRegistry.options.address;
     const gasPrice = await getGasPrice(web3);
-    const execute = transaction => send(web3, transaction, account, destAddr, gasPrice);
+    const execute = transaction => send(web3, transaction, account, gasPrice);
 
     const tokenCount = await rpc(oldRegistry.methods.tokenCount());
     for (let i = 0; i < tokenCount; i++) {
