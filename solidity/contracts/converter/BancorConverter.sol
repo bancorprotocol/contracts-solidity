@@ -57,7 +57,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev version number
     */
-    uint16 public version = 17;
+    uint16 public version = 18;
     string public converterType = 'bancor';
 
     bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
