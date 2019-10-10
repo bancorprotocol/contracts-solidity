@@ -194,7 +194,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
-    // allows execution only if the token's total-supply is greater than zero
+    // allows execution only if the total-supply of the token is greater than zero
     modifier totalSupplyGreaterThanZeroOnly {
         require(token.totalSupply() > 0);
         _;
@@ -305,7 +305,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev used by a new owner to accept a token ownership transfer
       * can only be called by the contract owner
-      * note that token ownership can only be accepted if the token's total-supply is greater than zero
+      * note that token ownership can only be accepted if its total-supply is greater than zero
     */
     function acceptTokenOwnership()
         public
