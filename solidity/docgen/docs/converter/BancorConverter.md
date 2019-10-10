@@ -42,6 +42,8 @@ Other potential solutions might include a commit/reveal based schemes
 
 - [`transferTokenOwnership(address _newOwner)`](#BancorConverter-transferTokenOwnership-address-)
 
+- [`acceptTokenOwnership()`](#BancorConverter-acceptTokenOwnership--)
+
 - [`setConversionFee(uint32 _conversionFee)`](#BancorConverter-setConversionFee-uint32-)
 
 - [`getFinalAmount(uint256 _amount, uint8 _magnitude)`](#BancorConverter-getFinalAmount-uint256-uint8-)
@@ -201,6 +203,14 @@ note that token ownership can only be transferred while the owner is the convert
 ## Parameters:
 
 - `_newOwner`:    new token owner
+
+# Function `acceptTokenOwnership()` {#BancorConverter-acceptTokenOwnership--}
+
+used by a new owner to accept a token ownership transfer
+
+can only be called by the contract owner
+
+note that token ownership can only be accepted if its total-supply is greater than zero
 
 # Function `setConversionFee(uint32 _conversionFee)` {#BancorConverter-setConversionFee-uint32-}
 
