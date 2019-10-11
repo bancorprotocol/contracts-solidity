@@ -89,7 +89,7 @@ async function rpc(func) {
         }
         catch (error) {
             if (!error.message.startsWith("Invalid JSON RPC response"))
-                return null;
+                throw error;
         }
     }
 }
