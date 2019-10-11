@@ -3,7 +3,6 @@
 
 const utils = require('./helpers/Utils');
 const BancorConverter = require('./helpers/BancorConverter');
-const PathFinderTruffle = require('./helpers/PathFinderTruffle');
 
 const EtherToken = artifacts.require('EtherToken');
 const SmartToken = artifacts.require('SmartToken');
@@ -11,6 +10,75 @@ const ContractIds = artifacts.require('ContractIds');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
+
+async function get(sourceToken, targetToken, anchorToken, registryList) {
+    const sourcePath = await getPath(sourceToken, anchorToken, registryList);
+    const targetPath = await getPath(targetToken, anchorToken, registryList);
+    return getShortestPath(sourcePath, targetPath);
+}
+
+async function getPath(token, anchorToken, registryList) {
+    if (isEqual(token, anchorToken))
+        return [token];
+
+    for (const registry of registryList) {
+        const address = await registry.latestConverterAddress(token);
+        const converter = BancorConverter.at(address);
+        const connectorTokenCount = await getTokenCount(converter, "connectorTokenCount");
+        for (let i = 0; i < connectorTokenCount; i++) {
+            const connectorToken = await converter.connectorTokens(i);
+            if (connectorToken != token) {
+                const path = await getPath(connectorToken, anchorToken, registryList);
+                if (path.length > 0)
+                    return [token, await converter.token(), ...path];
+            }
+        }
+        const reserveTokenCount = await getTokenCount(converter, "reserveTokenCount");
+        for (let i = 0; i < reserveTokenCount; i++) {
+            const reserveToken = await converter.reserveTokens(i);
+            if (reserveToken != token) {
+                const path = await getPath(reserveToken, anchorToken, registryList);
+                if (path.length > 0)
+                    return [token, await converter.token(), ...path];
+            }
+        }
+    }
+
+    return [];
+}
+
+async function getTokenCount(converter, funcName) {
+    try {
+        return await converter[funcName]();
+    }
+    catch (error) {
+        return 0;
+    }
+}
+
+function getShortestPath(sourcePath, targetPath) {
+    if (sourcePath.length > 0 && targetPath.length > 0) {
+        let i = sourcePath.length - 1;
+        let j = targetPath.length - 1;
+        while (i >= 0 && j >= 0 && isEqual(sourcePath[i], targetPath[j])) {
+            i--;
+            j--;
+        }
+
+        const path = [];
+        for (let n = 0; n <= i + 1; n++)
+            path.push(sourcePath[n]);
+        for (let n = j; n >= 0; n--)
+            path.push(targetPath[n]);
+        return path;
+    }
+
+    return [];
+}
+
+function isEqual(token1, token2) {
+    return token1.toLowerCase() === token2.toLowerCase();
+}
 
 const tests = [
     {title: 'old converter test', version: 4},
@@ -113,16 +181,16 @@ contract('BancorNetworkPathFinder', accounts => {
             it('should return an empty path if the source-token has no path to the anchor-token', async () => {
                 const sourceToken = utils.zeroAddress;
                 const targetToken = smartToken1.address;
-                const expected = await PathFinderTruffle.get(sourceToken, targetToken, smartToken1.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
-                const actual   = await pathFinder       .get(sourceToken, targetToken                     , [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
+                const expected = await get(sourceToken, targetToken, smartToken1.address, [converterRegistry1, converterRegistry2, converterRegistry3]);
+                const actual = await pathFinder.get(sourceToken, targetToken, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
                 assert.equal(actual + expected, []);
             });
 
             it('should return an empty path if the target-token has no path to the anchor-token', async () => {
                 const sourceToken = smartToken1.address;
                 const targetToken = utils.zeroAddress;
-                const expected = await PathFinderTruffle.get(sourceToken, targetToken, smartToken1.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
-                const actual   = await pathFinder       .get(sourceToken, targetToken                     , [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
+                const expected = await get(sourceToken, targetToken, smartToken1.address, [converterRegistry1, converterRegistry2, converterRegistry3]);
+                const actual = await pathFinder.get(sourceToken, targetToken, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
                 assert.equal(actual + expected, []);
             });
 
@@ -131,8 +199,8 @@ contract('BancorNetworkPathFinder', accounts => {
                     it(`from smartToken${i} to smartToken${j}`, async () => {
                         const sourceToken = eval(`smartToken${i}.address`);
                         const targetToken = eval(`smartToken${j}.address`);
-                        const expected = await PathFinderTruffle.get(sourceToken, targetToken, smartToken1.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
-                        const actual   = await pathFinder       .get(sourceToken, targetToken                     , [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
+                        const expected = await get(sourceToken, targetToken, smartToken1.address, [converterRegistry1, converterRegistry2, converterRegistry3]);
+                        const actual = await pathFinder.get(sourceToken, targetToken, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
                         assert.equal(actual.join(', ').toLowerCase(), expected.join(', ').toLowerCase());
                     });
                 }
