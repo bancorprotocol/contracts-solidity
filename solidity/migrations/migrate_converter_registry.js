@@ -72,14 +72,14 @@ async function send(web3, account, gasPrice, transaction) {
     }
 }
 
-async function rpc(transaction) {
+async function rpc(func) {
     while (true) {
         try {
-            return await transaction.call();
+            return await func.call();
         }
         catch (error) {
             if (!error.message.startsWith("Invalid JSON RPC response"))
-                console.log(error.message);
+                throw error;
         }
     }
 }
