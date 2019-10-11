@@ -9,10 +9,10 @@ const fs        = require("fs");
 const path      = require("path");
 const spawnSync = require("child_process").spawnSync;
 
-const excludeList  = split(EXCLUDE_FILE).map(line => INPUT_DIR + "/" + line);
+const excludeList  = lines(EXCLUDE_FILE).map(line => INPUT_DIR + "/" + line);
 const relativePath = path.relative(path.dirname(SUMMARY_FILE), OUTPUT_DIR);
 
-function split(pathName) {
+function lines(pathName) {
     return fs.readFileSync(pathName, {encoding: "utf8"}).split("\r").join("").split("\n");
 }
 
@@ -37,7 +37,7 @@ function fix(pathName) {
             fix(pathName + "/" + fileName);
     }
     else if (pathName.endsWith(".md")) {
-        fs.writeFileSync(pathName, split(pathName).filter(line => line.trim().length > 0).join("\n\n") + "\n");
+        fs.writeFileSync(pathName, lines(pathName).filter(line => line.trim().length > 0).join("\n\n") + "\n");
     }
 }
 
