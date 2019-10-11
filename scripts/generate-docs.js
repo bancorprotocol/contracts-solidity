@@ -2,14 +2,14 @@ const NODE_DIR     = "node_modules";
 const INPUT_DIR    = "solidity/contracts";
 const CONFIG_DIR   = "solidity/docgen";
 const OUTPUT_DIR   = "solidity/docgen/docs";
-const IGNORE_FILE  = "solidity/docgen/ignore.txt";
+const EXCLUDE_FILE = "solidity/docgen/exclude.txt";
 const SUMMARY_FILE = "solidity/docgen/SUMMARY.md";
 
 const fs        = require("fs");
 const path      = require("path");
 const spawnSync = require("child_process").spawnSync;
 
-const ignoreList   = split(IGNORE_FILE).map(line => INPUT_DIR + "/" + line);
+const excludeList  = split(EXCLUDE_FILE).map(line => INPUT_DIR + "/" + line);
 const relativePath = path.relative(path.dirname(SUMMARY_FILE), OUTPUT_DIR);
 
 function split(pathName) {
@@ -17,7 +17,7 @@ function split(pathName) {
 }
 
 function scan(pathName, indentation) {
-    if (!ignoreList.includes(pathName)) {
+    if (!excludeList.includes(pathName)) {
         if (fs.lstatSync(pathName).isDirectory()) {
             fs.appendFileSync(SUMMARY_FILE, indentation + "* " + path.basename(pathName) + "\n");
             for (const fileName of fs.readdirSync(pathName))
