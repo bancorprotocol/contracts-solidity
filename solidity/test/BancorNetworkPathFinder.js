@@ -11,24 +11,24 @@ const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
 
-async function get(sourceToken, targetToken, anchorToken, registries) {
-    const sourcePath = await getPath(sourceToken, anchorToken, registries);
-    const targetPath = await getPath(targetToken, anchorToken, registries);
+async function get(sourceToken, targetToken, anchorToken, registryList) {
+    const sourcePath = await getPath(sourceToken, anchorToken, registryList);
+    const targetPath = await getPath(targetToken, anchorToken, registryList);
     return getShortestPath(sourcePath, targetPath);
 }
 
-async function getPath(token, anchor, registries) {
-    if (isEqual(token, anchor))
+async function getPath(token, anchorToken, registryList) {
+    if (isEqual(token, anchorToken))
         return [token];
 
-    for (const registry of registries) {
+    for (const registry of registryList) {
         const address = await registry.latestConverterAddress(token);
         const converter = BancorConverter.at(address);
         const connectorTokenCount = await getTokenCount(converter, "connectorTokenCount");
         for (let i = 0; i < connectorTokenCount; i++) {
             const connectorToken = await converter.connectorTokens(i);
             if (connectorToken != token) {
-                const path = await getPath(connectorToken, anchor, registries);
+                const path = await getPath(connectorToken, anchorToken, registryList);
                 if (path.length > 0)
                     return [token, await converter.token(), ...path];
             }
@@ -37,7 +37,7 @@ async function getPath(token, anchor, registries) {
         for (let i = 0; i < reserveTokenCount; i++) {
             const reserveToken = await converter.reserveTokens(i);
             if (reserveToken != token) {
-                const path = await getPath(reserveToken, anchor, registries);
+                const path = await getPath(reserveToken, anchorToken, registryList);
                 if (path.length > 0)
                     return [token, await converter.token(), ...path];
             }

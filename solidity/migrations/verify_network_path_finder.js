@@ -10,24 +10,24 @@ const FINDER_ABI    = JSON.parse(fs.readFileSync(__dirname + "/../build/BancorNe
 const REGISTRY_ABI  = JSON.parse(fs.readFileSync(__dirname + "/../build/BancorConverterRegistry.abi"));
 const CONVERTER_ABI = JSON.parse(fs.readFileSync(__dirname + "/../build/BancorConverter.abi"        ));
 
-async function get(web3, sourceToken, targetToken, anchorToken, registries) {
-    const sourcePath = await getPath(web3, sourceToken, anchorToken, registries);
-    const targetPath = await getPath(web3, targetToken, anchorToken, registries);
+async function get(web3, sourceToken, targetToken, anchorToken, registryList) {
+    const sourcePath = await getPath(web3, sourceToken, anchorToken, registryList);
+    const targetPath = await getPath(web3, targetToken, anchorToken, registryList);
     return getShortestPath(sourcePath, targetPath);
 }
 
-async function getPath(web3, token, anchor, registries) {
-    if (isEqual(token, anchor))
+async function getPath(web3, token, anchorToken, registryList) {
+    if (isEqual(token, anchorToken))
         return [token];
 
-    for (const registry of registries) {
+    for (const registry of registryList) {
         const address = await rpc(registry.methods.latestConverterAddress(token));
         const converter = new web3.eth.Contract(CONVERTER_ABI, address);
         const connectorTokenCount = await getTokenCount(converter, "connectorTokenCount");
         for (let i = 0; i < connectorTokenCount; i++) {
             const connectorToken = await rpc(converter.methods.connectorTokens(i));
             if (connectorToken != token) {
-                const path = await getPath(web3, connectorToken, anchor, registries);
+                const path = await getPath(web3, connectorToken, anchorToken, registryList);
                 if (path.length > 0)
                     return [token, await rpc(converter.methods.token()), ...path];
             }
@@ -36,7 +36,7 @@ async function getPath(web3, token, anchor, registries) {
         for (let i = 0; i < reserveTokenCount; i++) {
             const reserveToken = await rpc(converter.methods.reserveTokens(i));
             if (reserveToken != token) {
-                const path = await getPath(web3, reserveToken, anchor, registries);
+                const path = await getPath(web3, reserveToken, anchorToken, registryList);
                 if (path.length > 0)
                     return [token, await rpc(converter.methods.token()), ...path];
             }
@@ -98,15 +98,15 @@ async function run() {
     const web3 = new Web3(NODE_ADDRESS);
     const finder = new web3.eth.Contract(FINDER_ABI, PATH_FINDER);
     const anchorToken = await rpc(finder.methods.anchorToken());
-    const registries = REGISTRY_LIST.map(x => new web3.eth.Contract(REGISTRY_ABI, x));
+    const registryList = REGISTRY_LIST.map(x => new web3.eth.Contract(REGISTRY_ABI, x));
 
-    for (const registry of registries) {
+    for (const registry of registryList) {
         const tokenCount = await rpc(registry.methods.tokenCount());
         for (let i = 0; i < tokenCount; i++) {
             const sourceToken = await rpc(registry.methods.tokens(i));
             for (let j = i + 1; j < tokenCount; j++) {
                 const targetToken = await rpc(registry.methods.tokens(j));
-                const expected = await get(web3, sourceToken, targetToken, anchorToken, registries);
+                const expected = await get(web3, sourceToken, targetToken, anchorToken, registryList);
                 const actual = await rpc(finder.methods.get(sourceToken, targetToken, REGISTRY_LIST));
                 assert.equal(actual.join(', ').toLowerCase(), expected.join(', ').toLowerCase());
                 console.log(`path from ${i} to ${j} (out of ${tokenCount}): ${actual}`);
