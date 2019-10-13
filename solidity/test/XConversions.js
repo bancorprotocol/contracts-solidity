@@ -1,6 +1,9 @@
 /* global artifacts, contract, before, it, assert */
 /* eslint-disable prefer-reflect */
 
+const sign = require('./helpers/Sign');
+const utils = require('./helpers/Utils');
+
 const BancorConverter = artifacts.require('BancorConverter');
 const BancorX = artifacts.require('BancorX');
 const SmartToken = artifacts.require('SmartToken');
@@ -12,10 +15,6 @@ const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const TestERC20Token = artifacts.require('TestERC20Token');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
-
-const sign = require('./helpers/Sign');
-
-const utils = require('./helpers/Utils');
 
 const MAX_LOCK_LIMIT = '1000000000000000000000' // 1000 bnt
 const MAX_RELEASE_LIMIT = '1000000000000000000000' // 1000 bnt

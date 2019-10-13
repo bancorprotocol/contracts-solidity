@@ -1,6 +1,9 @@
 /* global artifacts, contract, before, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
+const sign = require('./helpers/Sign');
+const utils = require('./helpers/Utils');
+
 const Whitelist = artifacts.require('Whitelist');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
@@ -14,8 +17,6 @@ const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const EtherToken = artifacts.require('EtherToken');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
-const utils = require('./helpers/Utils');
-const sign = require('./helpers/Sign');
 
 let etherToken;
 let smartToken1;
