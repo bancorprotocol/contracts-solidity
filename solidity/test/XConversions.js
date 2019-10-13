@@ -1,6 +1,9 @@
 /* global artifacts, contract, before, it, assert */
 /* eslint-disable prefer-reflect */
 
+const sign = require('./helpers/Sign');
+const utils = require('./helpers/Utils');
+
 const BancorConverter = artifacts.require('BancorConverter');
 const BancorX = artifacts.require('BancorX');
 const SmartToken = artifacts.require('SmartToken');
@@ -12,11 +15,6 @@ const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const TestERC20Token = artifacts.require('TestERC20Token');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
-
-const web3Utils = require('web3-utils')
-const ethUtil = require('ethereumjs-util');
-
-const utils = require('./helpers/Utils');
 
 const MAX_LOCK_LIMIT = '1000000000000000000000' // 1000 bnt
 const MAX_RELEASE_LIMIT = '1000000000000000000000' // 1000 bnt
@@ -50,7 +48,7 @@ contract("XConversions", accounts => {
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = ethBntPath
         const amount = web3.toWei('1')
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -98,7 +96,7 @@ contract("XConversions", accounts => {
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = ethBntPath
         const amount = web3.toWei('1')
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -146,7 +144,7 @@ contract("XConversions", accounts => {
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = ethBntPath
         const amount = web3.toWei('1')
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -176,7 +174,7 @@ contract("XConversions", accounts => {
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = ethBntPath
         const amount = web3.toWei('1')
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -218,7 +216,7 @@ contract("XConversions", accounts => {
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = ethBntPath
         const amount = web3.toWei('1')
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -260,7 +258,7 @@ contract("XConversions", accounts => {
         const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
         const path = ethBntPath
         const amount = web3.toWei('1')
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -288,7 +286,7 @@ contract("XConversions", accounts => {
         const path = ethBntPath
         const amount = web3.toWei('1')
         const customVal = amount + '1'
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -407,7 +405,7 @@ contract("XConversions", accounts => {
         const amount = web3.toWei('10') // releasing 10 BNT
         const path = bntErc20Path
 
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -456,7 +454,7 @@ contract("XConversions", accounts => {
         const amount = web3.toWei('10') // releasing 10 BNT
         const path = bntErc20Path
 
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -490,7 +488,7 @@ contract("XConversions", accounts => {
         const amount = web3.toWei('10') // releasing 10 BNT
         const path = bntErc20Path
 
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -546,7 +544,7 @@ contract("XConversions", accounts => {
         const amount = web3.toWei('10') // releasing 10 BNT
         const path = bntErc20Path
 
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -589,7 +587,7 @@ contract("XConversions", accounts => {
         const amount = web3.toWei('10') // releasing 10 BNT
         const path = bntErc20Path
 
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -620,7 +618,7 @@ contract("XConversions", accounts => {
         const amount = web3.toWei('10') // releasing 10 BNT
         const path = bntErc20Path
 
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -651,7 +649,7 @@ contract("XConversions", accounts => {
         const amount = web3.toWei('10') // releasing 10 BNT
         const path = bntErc20Path
 
-        const { v, r, s } = signConversionDetails(
+        const { v, r, s } = sign(
             maximumBlock,
             gasPrice,
             accounts[5],
@@ -683,22 +681,6 @@ async function reportAndRelease(to, amount, txId, blockchainType, xTransferId = 
             xTransferId,
             { from: eval(`reporter${i}`) }
         )
-    }
-}
-
-function signConversionDetails(block, gasPrice, originSender, finalSender, customVal, path, signerAddress) {
-    let soliditySha3 = web3Utils.soliditySha3(block, gasPrice, originSender, finalSender, customVal, {'type': 'address', 'value': path});
-    return sign(soliditySha3, signerAddress)
-}
-
-function sign(msgToSign, signerAddress) {
-    try {
-        const sig = web3.eth.sign(signerAddress, ethUtil.bufferToHex(msgToSign));
-        const { v, r, s } = ethUtil.fromRpcSig(sig);
-        return { v: v, r: ethUtil.bufferToHex(r), s: ethUtil.bufferToHex(s) };
-    }
-    catch (err) {
-        return err;
     }
 }
 

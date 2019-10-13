@@ -1,6 +1,9 @@
 /* global artifacts, contract, before, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
+const sign = require('./helpers/Sign');
+const utils = require('./helpers/Utils');
+
 const Whitelist = artifacts.require('Whitelist');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
@@ -14,9 +17,6 @@ const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const EtherToken = artifacts.require('EtherToken');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
-const utils = require('./helpers/Utils');
-const ethUtil = require('ethereumjs-util');
-const web3Utils = require('web3-utils');
 
 let etherToken;
 let smartToken1;
@@ -35,17 +35,6 @@ let smartToken1BuyPath;
 let smartToken2BuyPath;
 let smartToken1SellPath;
 let smartToken2SellPath;
-
-function sign(msgToSign, signerAddress) {
-    try {
-        const sig = web3.eth.sign(signerAddress, ethUtil.bufferToHex(msgToSign));
-        const { v, r, s } = ethUtil.fromRpcSig(sig);
-        return { v: v, r: ethUtil.bufferToHex(r), s: ethUtil.bufferToHex(s) };
-    }
-    catch (err) {
-        return err;
-    }
-}
 
 /*
 Token network structure:
@@ -561,8 +550,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
@@ -581,8 +569,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, untrustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, untrustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -592,8 +579,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': wrongPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, wrongPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -602,8 +588,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 200, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -613,8 +598,7 @@ contract('BancorNetwork', accounts => {
         let wrongBlockNumber = maximumBlock + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -624,8 +608,7 @@ contract('BancorNetwork', accounts => {
         let wrongBlockNumber = maximumBlock - 1;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -634,8 +617,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -644,8 +626,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 100, 1, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -656,8 +637,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await bancorNetwork.convertForPrioritized2(smartToken1BuyPath, 100, 1, accounts[1], maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
@@ -676,8 +656,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, untrustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, untrustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized2(smartToken1BuyPath, 100, 1, accounts[1], maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -687,8 +666,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': wrongPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, wrongPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized2(smartToken1BuyPath, 100, 1, accounts[1], maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -697,8 +675,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized2(smartToken1BuyPath, 200, 1, accounts[1], maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -708,8 +685,7 @@ contract('BancorNetwork', accounts => {
         let wrongBlockNumber = maximumBlock + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized2(smartToken1BuyPath, 100, 1, accounts[1], wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -719,8 +695,7 @@ contract('BancorNetwork', accounts => {
         let wrongBlockNumber = maximumBlock - 1;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized2(smartToken1BuyPath, 100, 1, accounts[1], wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -729,8 +704,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized2(smartToken1BuyPath, 100, 1, accounts[1], maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -739,8 +713,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized2(smartToken1BuyPath, 100, 1, accounts[1], maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -751,8 +724,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
@@ -771,8 +743,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, untrustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, untrustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -782,8 +753,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': wrongPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, wrongPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -792,8 +762,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 200, 1, accounts[1], 200, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -803,8 +772,7 @@ contract('BancorNetwork', accounts => {
         let wrongBlockNumber = maximumBlock + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -814,8 +782,7 @@ contract('BancorNetwork', accounts => {
         let wrongBlockNumber = maximumBlock - 1;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, wrongBlockNumber, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -824,8 +791,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -834,8 +800,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized3(smartToken1BuyPath, 100, 1, accounts[1], 100, maximumBlock, result.v, result.r, result.s, { from: accounts[1], value: 100 }));
     });
@@ -1175,8 +1140,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
@@ -1195,8 +1159,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [101, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1205,8 +1168,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, untrustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, untrustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1216,8 +1178,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': wrongPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, wrongPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1226,8 +1187,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 200, 1, [200, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1237,8 +1197,7 @@ contract('BancorNetwork', accounts => {
         let wrongBlockNumber = maximumBlock + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, wrongBlockNumber, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1248,8 +1207,7 @@ contract('BancorNetwork', accounts => {
         let wrongBlockNumber = maximumBlock - 1;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, wrongBlockNumber, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1258,8 +1216,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1268,8 +1225,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], converter1.address, 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(converter1.quickConvertPrioritized2(smartToken1BuyPath, 100, 1, [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1280,8 +1236,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 });
         let newBalance = await smartToken1.balanceOf.call(accounts[1]);
@@ -1300,8 +1255,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, untrustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, untrustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1311,8 +1265,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': wrongPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, wrongPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1321,8 +1274,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 200, 1, accounts[1], [200, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1332,8 +1284,7 @@ contract('BancorNetwork', accounts => {
         let wrongBlockNumber = maximumBlock + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, wrongBlockNumber, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1343,8 +1294,7 @@ contract('BancorNetwork', accounts => {
         let wrongBlockNumber = maximumBlock - 1;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, wrongBlockNumber, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1353,8 +1303,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
@@ -1363,8 +1312,7 @@ contract('BancorNetwork', accounts => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
 
-        let soliditySha3 = web3Utils.soliditySha3(maximumBlock, gasPrice, accounts[1], accounts[1], 100, {'type': 'address', 'value': smartToken1BuyPath});
-        let result = sign(soliditySha3, trustedAddress);
+        let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized4(smartToken1BuyPath, 100, 1, accounts[1], [100, maximumBlock, result.v, result.r, result.s], utils.zeroAddress, 0, { from: accounts[1], value: 100 }));
     });
