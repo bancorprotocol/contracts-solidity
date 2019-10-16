@@ -104,8 +104,8 @@ async function run() {
                 const targetToken = await rpc(registry.methods.tokens(j));
                 const expected = await get(web3, sourceToken, targetToken, anchorToken, registryList);
                 const actual = await rpc(finder.methods.get(sourceToken, targetToken, REGISTRY_LIST));
-                assert.equal(`${actual}`, `${expected}`);
                 console.log(`path from ${i} to ${j} (out of ${tokenCount}): ${actual}`);
+                assert.equal(`${actual}`, `${expected}`);
             }
         }
     }
