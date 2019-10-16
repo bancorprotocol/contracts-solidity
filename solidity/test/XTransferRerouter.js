@@ -38,11 +38,7 @@ contract('XTransferRerouter', async () => {
             web3.fromAscii('EOS'),
             { from: accounts[1] }
         )
-        let event = false
-        tx.logs.forEach(log => {
-            if (log.event === 'TxReroute')
-                event = true
-        })
+        let event = tx.logs.some(log => log.event == 'TxReroute')
         assert(event, 'TxReroute event was not emitted')
     })
 
@@ -60,14 +56,13 @@ contract('XTransferRerouter', async () => {
         txRouter = await XTransferRerouter.new(false, {
             from: accounts[0]
         })
-        let reroutingEnabled = await txRouter.reroutingEnabled.call()
-        assert(!reroutingEnabled)
+        let reroutingEnabledBefore = await txRouter.reroutingEnabled.call()
         await txRouter.enableRerouting(
             true,
             { from: accounts[0] }
         )
-        reroutingEnabled = await txRouter.reroutingEnabled.call()
-        assert(reroutingEnabled === true, 'reroutingEnabled didn\'t get updated properly!')
+        let reroutingEnabledAfter = await txRouter.reroutingEnabled.call()
+        assert(!reroutingEnabledBefore && reroutingEnabledAfter, 'reroutingEnabled didn\'t get updated properly!')
     })
 })
 

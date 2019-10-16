@@ -18,7 +18,7 @@ async function get(sourceToken, targetToken, anchorToken, registryList) {
 }
 
 async function getPath(token, anchorToken, registryList) {
-    if (isEqual(token, anchorToken))
+    if (token == anchorToken)
         return [token];
 
     for (const registry of registryList) {
@@ -60,7 +60,7 @@ function getShortestPath(sourcePath, targetPath) {
     if (sourcePath.length > 0 && targetPath.length > 0) {
         let i = sourcePath.length - 1;
         let j = targetPath.length - 1;
-        while (i >= 0 && j >= 0 && isEqual(sourcePath[i], targetPath[j])) {
+        while (i >= 0 && j >= 0 && sourcePath[i] == targetPath[j]) {
             i--;
             j--;
         }
@@ -74,10 +74,6 @@ function getShortestPath(sourcePath, targetPath) {
     }
 
     return [];
-}
-
-function isEqual(token1, token2) {
-    return token1.toLowerCase() === token2.toLowerCase();
 }
 
 const tests = [
@@ -201,7 +197,7 @@ contract('BancorNetworkPathFinder', accounts => {
                         const targetToken = eval(`smartToken${j}.address`);
                         const expected = await get(sourceToken, targetToken, smartToken1.address, [converterRegistry1, converterRegistry2, converterRegistry3]);
                         const actual = await pathFinder.get(sourceToken, targetToken, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]);
-                        assert.equal(actual.join(', ').toLowerCase(), expected.join(', ').toLowerCase());
+                        assert.equal(`${actual}`, `${expected}`);
                     });
                 }
             }
