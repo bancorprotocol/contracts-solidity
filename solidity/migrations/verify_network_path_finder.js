@@ -17,7 +17,7 @@ async function get(web3, sourceToken, targetToken, anchorToken, registryList) {
 }
 
 async function getPath(web3, token, anchorToken, registryList) {
-    if (isEqual(token, anchorToken))
+    if (token == anchorToken)
         return [token];
 
     for (const registry of registryList) {
@@ -62,7 +62,7 @@ function getShortestPath(sourcePath, targetPath) {
     if (sourcePath.length > 0 && targetPath.length > 0) {
         let i = sourcePath.length - 1;
         let j = targetPath.length - 1;
-        while (i >= 0 && j >= 0 && isEqual(sourcePath[i], targetPath[j])) {
+        while (i >= 0 && j >= 0 && sourcePath[i] == targetPath[j]) {
             i--;
             j--;
         }
@@ -76,10 +76,6 @@ function getShortestPath(sourcePath, targetPath) {
     }
 
     return [];
-}
-
-function isEqual(token1, token2) {
-    return token1.toLowerCase() === token2.toLowerCase();
 }
 
 async function rpc(func) {
@@ -108,7 +104,7 @@ async function run() {
                 const targetToken = await rpc(registry.methods.tokens(j));
                 const expected = await get(web3, sourceToken, targetToken, anchorToken, registryList);
                 const actual = await rpc(finder.methods.get(sourceToken, targetToken, REGISTRY_LIST));
-                assert.equal(actual.join(', ').toLowerCase(), expected.join(', ').toLowerCase());
+                assert.equal(`${actual}`, `${expected}`);
                 console.log(`path from ${i} to ${j} (out of ${tokenCount}): ${actual}`);
             }
         }

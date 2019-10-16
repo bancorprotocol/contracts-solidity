@@ -182,7 +182,7 @@ contract('BancorX', async accounts => {
                 let amount = TEST_AMOUNT
                 let result = await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount)
                 assert.equal(result.logs[0].args._amount, amount.toFixed())
-                assert.equal(result.logs[0].args._from.toLowerCase(), accounts[0].toLowerCase())
+                assert.equal(result.logs[0].args._from, accounts[0])
             })
 
             it('should properly calculate the current lock limit after a single transaction', async () => {
