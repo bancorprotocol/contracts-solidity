@@ -23,7 +23,7 @@
     "solidity-coverage": "0.6.7",
     "solidity-docgen": "0.3.4",
     "truffle": "4.1.16",
-    "truffle-contract": "^3.0.8",
+    "truffle-contract": "3.0.8",
     "truffle-flattener": "1.2.10",
     "web3": "1.2.1"
   }
