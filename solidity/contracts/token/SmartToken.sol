@@ -48,7 +48,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     */
     constructor(string _name, string _symbol, uint8 _decimals)
         public
-        ERC20Token(_name, _symbol, _decimals)
+        ERC20Token(_name, _symbol, _decimals, 0)
     {
         emit NewSmartToken(address(this));
     }
