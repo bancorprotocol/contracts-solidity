@@ -1,8 +1,8 @@
 /* global artifacts, contract, it, before, assert, web3 */
 /* eslint-disable prefer-reflect, no-loop-func */
 
-let constants = require('./helpers/FormulaConstants.js');
-let catchRevert = require('./helpers/Utils.js').catchRevert;
+let constants = require('./helpers/FormulaConstants');
+let catchRevert = require('./helpers/Utils').catchRevert;
 let TestBancorFormula = artifacts.require('./helpers/TestBancorFormula');
 
 contract('BancorFormula', () => {
