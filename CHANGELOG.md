@@ -1,3 +1,11 @@
+### 0.5.3 (2019-10-22)
+BancorConverter:
+* Added a protection against activation with no token supply
+
+General:
+* Cleaned up all compilation warnings
+
+
 ### 0.5.2 (2019-10-07)
 BancorConverterRegistry
 * Added events when adding/removing tokens
