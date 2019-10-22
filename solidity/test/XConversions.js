@@ -13,7 +13,7 @@ const BancorNetwork = artifacts.require('BancorNetwork');
 const BancorFormula = artifacts.require('BancorFormula');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
 const ContractFeatures = artifacts.require('ContractFeatures');
-const TestERC20Token = artifacts.require('TestERC20Token');
+const ERC20Token = artifacts.require('ERC20Token');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 
 const MAX_LOCK_LIMIT = '1000000000000000000000' // 1000 bnt
@@ -750,7 +750,7 @@ const initBancorNetwork = async accounts => {
     // creating second converter
     const relayToken = await SmartToken.new('Relay Token', 'RLY', 18)
 
-    erc20Token = await TestERC20Token.new('Test Token', 'TST', web3.toWei('100'))
+    erc20Token = await ERC20Token.new('Test Token', 'TST', 0, web3.toWei('100'))
     erc20TokenConverter = await BancorConverter.new(
         relayToken.address,
         contractRegistry.address,

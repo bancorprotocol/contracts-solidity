@@ -32,7 +32,7 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     */
     constructor()
         public
-        ERC20Token('Ether Token', 'ETH', 18) {
+        ERC20Token('Ether Token', 'ETH', 18, 0) {
     }
 
     /**
