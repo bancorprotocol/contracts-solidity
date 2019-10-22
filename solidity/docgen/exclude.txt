@@ -1,0 +1,11 @@
+bancorx/interfaces
+bancorx/XTransferRerouter.sol
+converter/interfaces
+crowdsale
+helpers
+legacy
+token/interfaces
+utility/interfaces
+ContractIds.sol
+FeatureIds.sol
+IBancorNetwork.sol

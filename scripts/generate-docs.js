@@ -2,38 +2,31 @@ const NODE_DIR     = "node_modules";
 const INPUT_DIR    = "solidity/contracts";
 const CONFIG_DIR   = "solidity/docgen";
 const OUTPUT_DIR   = "solidity/docgen/docs";
+const EXCLUDE_FILE = "solidity/docgen/exclude.txt";
 const SUMMARY_FILE = "solidity/docgen/SUMMARY.md";
-
-// Skip any file or folder whose name is in the list below
-const SKIP_LIST = [
-    INPUT_DIR + "/bancorx/interfaces",
-    INPUT_DIR + "/bancorx/XTransferRerouter.sol",
-    INPUT_DIR + "/converter/interfaces",
-    INPUT_DIR + "/crowdsale",
-    INPUT_DIR + "/helpers",
-    INPUT_DIR + "/legacy",
-    INPUT_DIR + "/token/interfaces",
-    INPUT_DIR + "/utility/interfaces",
-    INPUT_DIR + "/ContractIds.sol",
-    INPUT_DIR + "/FeatureIds.sol",
-    INPUT_DIR + "/IBancorNetwork.sol",
-];
 
 const fs        = require("fs");
 const path      = require("path");
 const spawnSync = require("child_process").spawnSync;
 
+const excludeList  = lines(EXCLUDE_FILE).map(line => INPUT_DIR + "/" + line);
 const relativePath = path.relative(path.dirname(SUMMARY_FILE), OUTPUT_DIR);
 
+function lines(pathName) {
+    return fs.readFileSync(pathName, {encoding: "utf8"}).split("\r").join("").split("\n");
+}
+
 function scan(pathName, indentation) {
-    if (!SKIP_LIST.includes(pathName)) {
+    if (!excludeList.includes(pathName)) {
         if (fs.lstatSync(pathName).isDirectory()) {
             fs.appendFileSync(SUMMARY_FILE, indentation + "* " + path.basename(pathName) + "\n");
             for (const fileName of fs.readdirSync(pathName))
                 scan(pathName + "/" + fileName, indentation + "  ");
         }
         else if (pathName.endsWith(".sol")) {
-            fs.appendFileSync(SUMMARY_FILE, indentation + "* [" + path.basename(pathName).slice(0, -4) + "](" + relativePath + pathName.slice(INPUT_DIR.length, -4) + ".md)\n");
+            const text = path.basename(pathName).slice(0, -4);
+            const link = pathName.slice(INPUT_DIR.length, -4);
+            fs.appendFileSync(SUMMARY_FILE, indentation + "* [" + text + "](" + relativePath + link + ".md)\n");
         }
     }
 }
@@ -44,7 +37,7 @@ function fix(pathName) {
             fix(pathName + "/" + fileName);
     }
     else if (pathName.endsWith(".md")) {
-        fs.writeFileSync(pathName, fs.readFileSync(pathName, {encoding: "utf8"}).split("\r").join("").split("\n").filter(line => line.trim().length > 0).join("\n\n") + "\n");
+        fs.writeFileSync(pathName, lines(pathName).filter(line => line.trim().length > 0).join("\n\n") + "\n");
     }
 }
 
