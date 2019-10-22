@@ -8,7 +8,6 @@ const EtherToken = artifacts.require('EtherToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 
 const utils = require('./helpers/Utils');
-const miningUtils = require('./helpers/MiningUtils');
 
 const MAX_LOCK_LIMIT    = web3.toBigNumber('1000000000000000000000') // 1000 tokens
 const MAX_RELEASE_LIMIT = web3.toBigNumber('1000000000000000000000') // 1000 tokens
@@ -193,12 +192,12 @@ contract('BancorX', async accounts => {
 
                 for (let i = 0; i <= numOfTests; i++) {
                     assertEqual(await bancorX.getCurrentLockLimit.call(), MAX_LOCK_LIMIT.minus(amount).plus(MIN_LIMIT.times(i)))
-                    await miningUtils.mineBlock(web3.currentProvider)
+                    web3.currentProvider.send({method: 'evm_mine'});
                 }
 
                 for (let i = 0; i < 3; i++) {
                     assertEqual(await bancorX.getCurrentLockLimit.call(), MAX_LOCK_LIMIT)
-                    await miningUtils.mineBlock(web3.currentProvider)
+                    web3.currentProvider.send({method: 'evm_mine'});
                 }
             })
 
