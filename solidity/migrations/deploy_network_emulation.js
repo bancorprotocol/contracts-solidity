@@ -133,6 +133,7 @@ async function run() {
     const bancorNetwork           = await web3Func(deploy, "BancorNetwork"          , "BancorNetwork"          , [contractRegistry._address]);
     const bancorNetworkPathFinder = await web3Func(deploy, "BancorNetworkPathFinder", "BancorNetworkPathFinder", [contractRegistry._address]);
     const bancorConverterRegistry = await web3Func(deploy, "BancorConverterRegistry", "BancorConverterRegistry", []);
+    const bancorGasPriceLimit     = await web3Func(deploy, "BancorGasPriceLimit"    , "BancorGasPriceLimit"    , [priceLimitParams.value]);
     const etherToken              = await web3Func(deploy, "EtherToken"             , "EtherToken"             , []);
     const smartToken1             = await web3Func(deploy, "SmartToken1"            , "SmartToken"             , [smartToken1Params.name, smartToken1Params.symbol, smartToken1Params.decimals]);
     const smartToken2             = await web3Func(deploy, "SmartToken2"            , "SmartToken"             , [smartToken2Params.name, smartToken2Params.symbol, smartToken2Params.decimals]);
@@ -144,7 +145,6 @@ async function run() {
     const bancorConverter2        = await web3Func(deploy, "BancorConverter2"       , "BancorConverter"        , [smartToken2._address, contractRegistry._address, converter2Params.fee, smartToken1._address, converter2Params.ratio1]);
     const bancorConverter3        = await web3Func(deploy, "BancorConverter3"       , "BancorConverter"        , [smartToken3._address, contractRegistry._address, converter3Params.fee, smartToken1._address, converter3Params.ratio1]);
     const bancorConverter4        = await web3Func(deploy, "BancorConverter4"       , "BancorConverter"        , [smartToken4._address, contractRegistry._address, converter4Params.fee, smartToken1._address, converter4Params.ratio1]);
-    const bancorGasPriceLimit     = await web3Func(deploy, "BancorGasPriceLimit"    , "BancorGasPriceLimit"    , [priceLimitParams.value]);
 
     await web3Func(send, etherToken.methods.deposit(), etherTokenParams.supply);
     await web3Func(send, smartToken1.methods.issue(account.address, smartToken1Params.supply));
@@ -157,12 +157,12 @@ async function run() {
     await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractFeatures"       ), contractFeatures       ._address));
     await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"          ), bancorFormula          ._address));
     await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetwork"          ), bancorNetwork          ._address));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorGasPriceLimit"    ), bancorGasPriceLimit    ._address));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"               ), smartToken1            ._address));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTConverter"           ), bancorConverter1       ._address));
     await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetworkPathFinder"), bancorNetworkPathFinder._address));
     await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistry"), bancorConverterRegistry._address));
+    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorGasPriceLimit"    ), bancorGasPriceLimit    ._address));
     await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("EtherToken"             ), etherToken             ._address));
+    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"               ), smartToken1            ._address));
+    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTConverter"           ), bancorConverter1       ._address));
     await web3Func(send, bancorConverterRegistry.methods.registerConverter(smartToken1._address, bancorConverter1._address));
     await web3Func(send, bancorConverterRegistry.methods.registerConverter(smartToken2._address, bancorConverter2._address));
     await web3Func(send, bancorConverterRegistry.methods.registerConverter(smartToken3._address, bancorConverter3._address));
