@@ -82,23 +82,23 @@ async function send(web3, account, gasPrice, transaction, value = 0) {
     }
 }
 
-async function deploy(web3, account, gasPrice, contractName, contractType, contractArgs) {
-    if (get()[contractName] == undefined) {
-        const abi = fs.readFileSync(ARTIFACTS_DIR + contractType + ".abi", {encoding: "utf8"});
-        const bin = fs.readFileSync(ARTIFACTS_DIR + contractType + ".bin", {encoding: "utf8"});
+async function deploy(web3, account, gasPrice, contractId, contractName, contractArgs) {
+    if (get()[contractId] == undefined) {
+        const abi = fs.readFileSync(ARTIFACTS_DIR + contractName + ".abi", {encoding: "utf8"});
+        const bin = fs.readFileSync(ARTIFACTS_DIR + contractName + ".bin", {encoding: "utf8"});
         const contract = new web3.eth.Contract(JSON.parse(abi));
         const options = {data: "0x" + bin, arguments: contractArgs};
         const transaction = contract.deploy(options);
         const receipt = await send(web3, account, gasPrice, transaction);
         const args = transaction.encodeABI().slice(options.data.length);
-        console.log(`${contractName} deployed at ${receipt.contractAddress}`);
-        set({[contractName]: {type: contractType, addr: receipt.contractAddress, args: args}});
+        console.log(`${contractId} deployed at ${receipt.contractAddress}`);
+        set({[contractId]: {name: contractName, addr: receipt.contractAddress, args: args}});
     }
-    return deployed(web3, contractType, get()[contractName].addr);
+    return deployed(web3, contractName, get()[contractId].addr);
 }
 
-function deployed(web3, contractType, contractAddr) {
-    const abi = fs.readFileSync(ARTIFACTS_DIR + contractType + ".abi", {encoding: "utf8"});
+function deployed(web3, contractName, contractAddr) {
+    const abi = fs.readFileSync(ARTIFACTS_DIR + contractName + ".abi", {encoding: "utf8"});
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 }
 
