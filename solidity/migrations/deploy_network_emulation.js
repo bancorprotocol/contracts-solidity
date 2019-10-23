@@ -59,7 +59,7 @@ async function getTransactionReceipt(web3) {
     }
 }
 
-async function send(web3, account, gasPrice, transaction, value = 0, retry = true) {
+async function send(web3, account, gasPrice, transaction, value = 0) {
     while (true) {
         try {
             const options = {
@@ -75,14 +75,9 @@ async function send(web3, account, gasPrice, transaction, value = 0, retry = tru
         }
         catch (error) {
             console.log(error.message);
-            if (retry) {
-                const receipt = await getTransactionReceipt(web3);
-                if (receipt)
-                    return receipt;
-            }
-            else {
-                return {};
-            }
+            const receipt = await getTransactionReceipt(web3);
+            if (receipt)
+                return receipt;
         }
     }
 }
