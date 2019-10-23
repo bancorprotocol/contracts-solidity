@@ -146,41 +146,52 @@ async function run() {
     const bancorConverter3        = await web3Func(deploy, "BancorConverter3"       , "BancorConverter"        , [smartToken3._address, contractRegistry._address, converter3Params.fee, smartToken1._address, converter3Params.ratio1]);
     const bancorConverter4        = await web3Func(deploy, "BancorConverter4"       , "BancorConverter"        , [smartToken4._address, contractRegistry._address, converter4Params.fee, smartToken1._address, converter4Params.ratio1]);
 
-    await web3Func(send, etherToken.methods.deposit(), etherTokenParams.supply);
-    await web3Func(send, smartToken1.methods.issue(account.address, smartToken1Params.supply));
-    await web3Func(send, smartToken2.methods.issue(account.address, smartToken2Params.supply));
-    await web3Func(send, smartToken3.methods.issue(account.address, smartToken3Params.supply));
-    await web3Func(send, smartToken4.methods.issue(account.address, smartToken4Params.supply));
-    await web3Func(send, bancorConverter3.methods.addReserve(erc20TokenA._address, converter3Params.ratio2, converter3Params.virtual));
-    await web3Func(send, bancorConverter4.methods.addReserve(erc20TokenB._address, converter4Params.ratio2, converter4Params.virtual));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractRegistry"       ), contractRegistry       ._address));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractFeatures"       ), contractFeatures       ._address));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"          ), bancorFormula          ._address));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetwork"          ), bancorNetwork          ._address));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetworkPathFinder"), bancorNetworkPathFinder._address));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistry"), bancorConverterRegistry._address));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorGasPriceLimit"    ), bancorGasPriceLimit    ._address));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("EtherToken"             ), etherToken             ._address));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"               ), smartToken1            ._address));
-    await web3Func(send, contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTConverter"           ), bancorConverter1       ._address));
-    await web3Func(send, bancorConverterRegistry.methods.registerConverter(smartToken1._address, bancorConverter1._address));
-    await web3Func(send, bancorConverterRegistry.methods.registerConverter(smartToken2._address, bancorConverter2._address));
-    await web3Func(send, bancorConverterRegistry.methods.registerConverter(smartToken3._address, bancorConverter3._address));
-    await web3Func(send, bancorConverterRegistry.methods.registerConverter(smartToken4._address, bancorConverter4._address));
-    await web3Func(send, etherToken .methods.transfer(bancorConverter1._address, converter1Params.reserve1));
-    await web3Func(send, smartToken1.methods.transfer(bancorConverter2._address, converter2Params.reserve1));
-    await web3Func(send, smartToken1.methods.transfer(bancorConverter3._address, converter3Params.reserve1));
-    await web3Func(send, smartToken1.methods.transfer(bancorConverter4._address, converter4Params.reserve1));
-    await web3Func(send, erc20TokenA.methods.transfer(bancorConverter3._address, converter3Params.reserve2));
-    await web3Func(send, erc20TokenB.methods.transfer(bancorConverter4._address, converter4Params.reserve2));
-    await web3Func(send, smartToken1.methods.transferOwnership(bancorConverter1._address));
-    await web3Func(send, smartToken2.methods.transferOwnership(bancorConverter2._address));
-    await web3Func(send, smartToken3.methods.transferOwnership(bancorConverter3._address));
-    await web3Func(send, smartToken4.methods.transferOwnership(bancorConverter4._address));
-    await web3Func(send, bancorConverter1.methods.acceptTokenOwnership());
-    await web3Func(send, bancorConverter2.methods.acceptTokenOwnership());
-    await web3Func(send, bancorConverter3.methods.acceptTokenOwnership());
-    await web3Func(send, bancorConverter4.methods.acceptTokenOwnership());
+    let phase = 0;
+    if (get().phase == undefined)
+        set({phase});
+    const execute = async(transaction, ...args) => {
+        if (get().phase == phase++) {
+            await web3Func(send, transaction, ...args);
+            console.log(`phase ${phase} executed`);
+            set({phase});
+        }
+    };
+
+    await execute(etherToken.methods.deposit(), etherTokenParams.supply);
+    await execute(smartToken1.methods.issue(account.address, smartToken1Params.supply));
+    await execute(smartToken2.methods.issue(account.address, smartToken2Params.supply));
+    await execute(smartToken3.methods.issue(account.address, smartToken3Params.supply));
+    await execute(smartToken4.methods.issue(account.address, smartToken4Params.supply));
+    await execute(bancorConverter3.methods.addReserve(erc20TokenA._address, converter3Params.ratio2, converter3Params.virtual));
+    await execute(bancorConverter4.methods.addReserve(erc20TokenB._address, converter4Params.ratio2, converter4Params.virtual));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractRegistry"       ), contractRegistry       ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractFeatures"       ), contractFeatures       ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"          ), bancorFormula          ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetwork"          ), bancorNetwork          ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetworkPathFinder"), bancorNetworkPathFinder._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistry"), bancorConverterRegistry._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorGasPriceLimit"    ), bancorGasPriceLimit    ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("EtherToken"             ), etherToken             ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"               ), smartToken1            ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTConverter"           ), bancorConverter1       ._address));
+    await execute(bancorConverterRegistry.methods.registerConverter(smartToken1._address, bancorConverter1._address));
+    await execute(bancorConverterRegistry.methods.registerConverter(smartToken2._address, bancorConverter2._address));
+    await execute(bancorConverterRegistry.methods.registerConverter(smartToken3._address, bancorConverter3._address));
+    await execute(bancorConverterRegistry.methods.registerConverter(smartToken4._address, bancorConverter4._address));
+    await execute(etherToken .methods.transfer(bancorConverter1._address, converter1Params.reserve1));
+    await execute(smartToken1.methods.transfer(bancorConverter2._address, converter2Params.reserve1));
+    await execute(smartToken1.methods.transfer(bancorConverter3._address, converter3Params.reserve1));
+    await execute(smartToken1.methods.transfer(bancorConverter4._address, converter4Params.reserve1));
+    await execute(erc20TokenA.methods.transfer(bancorConverter3._address, converter3Params.reserve2));
+    await execute(erc20TokenB.methods.transfer(bancorConverter4._address, converter4Params.reserve2));
+    await execute(smartToken1.methods.transferOwnership(bancorConverter1._address));
+    await execute(smartToken2.methods.transferOwnership(bancorConverter2._address));
+    await execute(smartToken3.methods.transferOwnership(bancorConverter3._address));
+    await execute(smartToken4.methods.transferOwnership(bancorConverter4._address));
+    await execute(bancorConverter1.methods.acceptTokenOwnership());
+    await execute(bancorConverter2.methods.acceptTokenOwnership());
+    await execute(bancorConverter3.methods.acceptTokenOwnership());
+    await execute(bancorConverter4.methods.acceptTokenOwnership());
 
     if (web3.currentProvider.constructor.name == "WebsocketProvider")
         web3.currentProvider.connection.close();
