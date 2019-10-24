@@ -173,8 +173,8 @@ async function run() {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTConverter"            ), bancorConverter1        ._address));
     await execute(bancorConverterRegistry.methods.registerConverter(smartToken1._address, bancorConverter1._address));
     await execute(bancorConverterRegistry.methods.registerConverter(smartToken2._address, bancorConverter2._address));
-    await execute(bancorConverterRegistry.methods.registerConverter(smartToken3._address, bancorConverter3._address));
-    await execute(bancorConverterRegistry.methods.registerConverter(smartToken4._address, bancorConverter4._address));
+    await execute(bancorConverterRegistry.methods.registerConverter(erc20TokenA._address, bancorConverter3._address));
+    await execute(bancorConverterRegistry.methods.registerConverter(erc20TokenB._address, bancorConverter4._address));
     await execute(etherToken .methods.transfer(bancorConverter1._address, converter1Params.reserve1));
     await execute(smartToken1.methods.transfer(bancorConverter2._address, converter2Params.reserve1));
     await execute(smartToken1.methods.transfer(bancorConverter3._address, converter3Params.reserve1));
