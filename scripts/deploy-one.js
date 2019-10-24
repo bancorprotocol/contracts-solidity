@@ -80,9 +80,11 @@ async function run() {
     const transaction = contract.deploy(options);
     const receipt     = await send(web3, account, transaction);
     console.log(JSON.stringify({
-        name: CONTRACT_NAME,
-        addr: receipt.contractAddress,
-        args: transaction.encodeABI().slice(options.data.length)
+        [CONTRACT_NAME]: {
+            name: CONTRACT_NAME,
+            addr: receipt.contractAddress,
+            args: transaction.encodeABI().slice(options.data.length)
+        }
     }));
     if (web3.currentProvider.constructor.name == "WebsocketProvider")
         web3.currentProvider.connection.close();
