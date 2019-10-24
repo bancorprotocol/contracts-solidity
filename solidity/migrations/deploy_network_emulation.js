@@ -187,6 +187,7 @@ async function run() {
     await execute(bancorConverter2.methods.acceptTokenOwnership());
     await execute(bancorConverter3.methods.acceptTokenOwnership());
     await execute(bancorConverter4.methods.acceptTokenOwnership());
+    await execute(bancorNetworkPathFinder.methods.updateAnchorToken());
 
     if (web3.currentProvider.constructor.name == "WebsocketProvider")
         web3.currentProvider.connection.close();
