@@ -100,7 +100,7 @@ async function run() {
         const tokenCount = await rpc(registry.methods.tokenCount());
         for (let i = 0; i < tokenCount; i++) {
             const sourceToken = await rpc(registry.methods.tokens(i));
-            for (let j = i + 1; j < tokenCount; j++) {
+            for (let j = 0; j < tokenCount; j++) {
                 const targetToken = await rpc(registry.methods.tokens(j));
                 const expected = await get(web3, sourceToken, targetToken, anchorToken, registryList);
                 const actual = await rpc(finder.methods.get(sourceToken, targetToken, REGISTRY_LIST));
