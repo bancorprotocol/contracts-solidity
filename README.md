@@ -172,15 +172,43 @@ event Conversion(address indexed _fromToken, address indexed _toToken, address i
 Triggered when a conversion between one of the convertible tokens takes place.
 
 ## Testing
-Tests are included and are run using truffle & ganache
 
 ### Prerequisites
 * node v10.16.0
 * npm v6.9.0
+* python v3.7.3
+* web3.py v4.9.2
 
-To run the test:
-- Use `npm install` in order to install all required packages.
-- Use `npm test 1` in order to run truffle-test or `npm test 2` in order to run solidity-coverage.
+### Verification
+* Verifying all the contracts:
+  * `npm test 1` (quick testing)
+  * `npm test 2` (full coverage)
+* Verifying the accuracy of the BancorFormula contract:
+  * `python ./solidity/python/RandomTestCross.py`
+  * `python ./solidity/python/RandomTestPower.py`
+  * `python ./solidity/python/RandomTestPurchase.py`
+  * `python ./solidity/python/RandomTestSale.py`
+  * `python ./solidity/python/RandomTestTradeCPS.py`
+  * `python ./solidity/python/RandomTestTradePS.py`
+  * `python ./solidity/python/RandomTestTradePSC.py`
+  * `python ./solidity/python/RandomTestTradeSP.py`
+  * `python ./solidity/python/RandomTestVerifyCross.py`
+* Verifying the correctness of the BancorFormula contract:
+  * `python ./solidity/python/RunGanache.py`
+  * `python ./solidity/python/EmulationExpTestCross.py`
+  * `python ./solidity/python/EmulationExpTestPurchase.py`
+  * `python ./solidity/python/EmulationExpTestSale.py`
+  * `python ./solidity/python/EmulationUniTestCross.py`
+  * `python ./solidity/python/EmulationUniTestPurchase.py`
+  * `python ./solidity/python/EmulationUniTestSale.py`
+* Verifying the performance of the BancorFormula contract:
+  * `python ./solidity/python/RunGanache.py`
+  * `python ./solidity/python/PerformanceExpTestCross.py`
+  * `python ./solidity/python/PerformanceExpTestPurchase.py`
+  * `python ./solidity/python/PerformanceExpTestSale.py`
+  * `python ./solidity/python/PerformanceUniTestCross.py`
+  * `python ./solidity/python/PerformanceUniTestPurchase.py`
+  * `python ./solidity/python/PerformanceUniTestSale.py`
 
 ## Collaborators
 
