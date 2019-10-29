@@ -234,29 +234,29 @@ Triggered when a conversion between one of the convertible tokens takes place.
 ### Deploy Network Emulation
 
 ```
-    node ./solidity/migrations/deploy_network_emulation.js
-        Configuration file name
-        Ethereum node address
-        Account private key
+node ./solidity/migrations/deploy_network_emulation.js
+    Configuration file name
+    Ethereum node address
+    Account private key
 ```
 
 ### Migrate Converter Registry
 
 ```
-    node ./solidity/migrations/migrate_converter_registry.js
-        Ethereum node address
-        Account private key
-        Old BancorConverterRegistry contract address
-        New BancorConverterRegistry contract address
+node ./solidity/migrations/migrate_converter_registry.js
+    Ethereum node address
+    Account private key
+    Old BancorConverterRegistry contract address
+    New BancorConverterRegistry contract address
 ```
 
 ### Verify Network Path Finder
 
 ```
-    node ./solidity/migrations/verify_network_path_finder.js
-        Ethereum node address
-        BancorNetworkPathFinder contract address
-        BancorConverterRegistry contract addresses
+node ./solidity/migrations/verify_network_path_finder.js
+    Ethereum node address
+    BancorNetworkPathFinder contract address
+    BancorConverterRegistry contract addresses
 ```
 
 #### Deploy Network Emulation / Configuration File Example
