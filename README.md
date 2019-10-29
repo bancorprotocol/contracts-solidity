@@ -174,10 +174,10 @@ Triggered when a conversion between one of the convertible tokens takes place.
 ## Testing
 
 ### Prerequisites
-* node v10.16.0
-* npm v6.9.0
-* python v3.7.3
-* web3.py v4.9.2
+* node 10.16.0
+* npm 6.9.0
+* python 3.7.3
+* web3.py 4.9.2
 
 ### Verification
 * Verifying all the contracts:
