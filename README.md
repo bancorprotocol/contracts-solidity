@@ -181,6 +181,10 @@ Triggered when a conversion between one of the convertible tokens takes place.
 * python 3.7.3
 * web3.py 4.9.2
 
+### Installation
+
+* `npm install`
+
 ### Verification
 
 * Verifying all the contracts:
@@ -213,8 +217,6 @@ Triggered when a conversion between one of the convertible tokens takes place.
   * `python ./solidity/python/PerformanceUniTestPurchase.py`
   * `python ./solidity/python/PerformanceUniTestSale.py`
 
-## Operational
-
 ### Deploy Network Emulation
 
 ```
@@ -241,6 +243,81 @@ Triggered when a conversion between one of the convertible tokens takes place.
         Ethereum node address
         BancorNetworkPathFinder contract address
         BancorConverterRegistry contract addresses
+```
+
+#### Deploy Network Emulation / Configuration File Example
+
+```
+{
+    "etherTokenParams": {
+        "supply": "13000000000000000"
+    },
+    "smartToken1Params": {
+        "name": "Bancor Network Token",
+        "symbol": "BNT",
+        "decimals": 18,
+        "supply": "68000000000000000000"
+    },
+    "smartToken2Params": {
+        "name": "Smart Token Of Chayot",
+        "symbol": "STC",
+        "decimals": 18,
+        "supply": "1000000000000000000"
+    },
+    "smartToken3Params": {
+        "name": "XXX Smart Token Relay",
+        "symbol": "XXXBNT",
+        "decimals": 18,
+        "supply": "200000000000000000"
+    },
+    "smartToken4Params": {
+        "name": "YYY Smart Token Relay",
+        "symbol": "YYYBNT",
+        "decimals": 18,
+        "supply": "8300000000000000000"
+    },
+    "erc20TokenAParams": {
+        "name": "XXX ERC20 Token",
+        "symbol": "XXX",
+        "decimals": 18,
+        "supply": "1500000000000000000000"
+    },
+    "erc20TokenBParams": {
+        "name": "YYY ERC20 Token",
+        "symbol": "YYY",
+        "decimals": 18,
+        "supply": "1000000000000000000000"
+    },
+    "converter1Params": {
+        "fee": 0,
+        "ratio1": 100000,
+        "reserve1": "13000000000000000"
+    },
+    "converter2Params": {
+        "fee": 0,
+        "ratio1": 500000,
+        "reserve1": "300000000000000000"
+    },
+    "converter3Params": {
+        "fee": 1000,
+        "ratio1": 500000,
+        "reserve1": "400000000000000000",
+        "ratio2": 500000,
+        "reserve2": "520000000000000000",
+        "virtual": false
+    },
+    "converter4Params": {
+        "fee": 1000,
+        "ratio1": 500000,
+        "reserve1": "250000000000000000",
+        "ratio2": 500000,
+        "reserve2": "1300000000000000000",
+        "virtual": false
+    },
+    "priceLimitParams": {
+        "value": "6000000000"
+    }
+}
 ```
 
 ## Collaborators
