@@ -88,6 +88,7 @@ Disables transfer/transferFrom functionality.
 <br>
 <br>
 <br>
+
 ### Events
 
 **NewSmartToken**
@@ -174,12 +175,14 @@ Triggered when a conversion between one of the convertible tokens takes place.
 ## Testing
 
 ### Prerequisites
+
 * node 10.16.0
 * npm 6.9.0
 * python 3.7.3
 * web3.py 4.9.2
 
 ### Verification
+
 * Verifying all the contracts:
   * `npm test 1` (quick testing)
   * `npm test 2` (full coverage)
@@ -210,6 +213,36 @@ Triggered when a conversion between one of the convertible tokens takes place.
   * `python ./solidity/python/PerformanceUniTestPurchase.py`
   * `python ./solidity/python/PerformanceUniTestSale.py`
 
+## Operational
+
+### Deploy Network Emulation
+
+```
+    node ./solidity/migrations/deploy_network_emulation.js
+        Configuration file name
+        Ethereum node address
+        Account private key
+```
+
+### Migrate Converter Registry
+
+```
+    node ./solidity/migrations/migrate_converter_registry.js
+        Ethereum node address
+        Account private key
+        Old BancorConverterRegistry contract address
+        New BancorConverterRegistry contract address
+```
+
+### Verify Network Path Finder
+
+```
+    node ./solidity/migrations/verify_network_path_finder.js
+        Ethereum node address
+        BancorNetworkPathFinder contract address
+        BancorConverterRegistry contract addresses
+```
+
 ## Collaborators
 
 * **[Yudi Levi](https://github.com/yudilevi)**
@@ -218,7 +251,6 @@ Triggered when a conversion between one of the convertible tokens takes place.
 * **[David Benchimol](https://github.com/davidbancor)**
 * **[Or Dadosh](https://github.com/ordd)**
 * **[Martin Holst Swende](https://github.com/holiman)**
-
 
 ## License
 
