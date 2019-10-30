@@ -245,8 +245,19 @@ node ./solidity/migrations/verify_network_path_finder.js
     BancorConverterRegistry contract addresses
 ```
 
-#### Deploy Network Emulation / Configuration File Example
+#### Deploy Network Emulation / Notes
 
+This process can also be executed via `truffle deploy` or `truffle migrate` provided with the same input parameters:
+```
+truffle deploy
+    Configuration file name
+    Ethereum node address
+    Account private key
+```
+
+The configuration file is updated during the process, in order to allow resuming a prematurely-terminated execution.
+
+Here is an example of the initial configuration file which should be provided to the process:
 ```
 {
     "etherTokenParams": {
