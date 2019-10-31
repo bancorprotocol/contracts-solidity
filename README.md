@@ -219,7 +219,7 @@ Triggered when a conversion between one of the convertible tokens takes place.
 
 ### Deploy Network Emulation
 
-```
+```bash
 node ./solidity/migrations/deploy_network_emulation.js
     Configuration file name
     Ethereum node address
@@ -228,7 +228,7 @@ node ./solidity/migrations/deploy_network_emulation.js
 
 ### Migrate Converter Registry
 
-```
+```bash
 node ./solidity/migrations/migrate_converter_registry.js
     Ethereum node address
     Account private key
@@ -238,7 +238,7 @@ node ./solidity/migrations/migrate_converter_registry.js
 
 ### Verify Network Path Finder
 
-```
+```bash
 node ./solidity/migrations/verify_network_path_finder.js
     Ethereum node address
     BancorNetworkPathFinder contract address
@@ -248,7 +248,7 @@ node ./solidity/migrations/verify_network_path_finder.js
 #### Deploy Network Emulation / Notes
 
 This process can also be executed via `truffle deploy` or `truffle migrate` provided with the same input parameters:
-```
+```bash
 truffle deploy
     Configuration file name
     Ethereum node address
@@ -258,7 +258,7 @@ truffle deploy
 The configuration file is updated during the process, in order to allow resuming a prematurely-terminated execution.
 
 Here is an example of the initial configuration file which should be provided to the process:
-```
+```json
 {
     "etherTokenParams": {
         "supply": "13000000000000000"
