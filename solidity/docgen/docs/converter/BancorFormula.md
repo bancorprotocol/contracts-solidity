@@ -1,7 +1,5 @@
 # Functions:
 
-- [`constructor()`](#BancorFormula-constructor--)
-
 - [`calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _depositAmount)`](#BancorFormula-calculatePurchaseReturn-uint256-uint256-uint32-uint256-)
 
 - [`calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _sellAmount)`](#BancorFormula-calculateSaleReturn-uint256-uint256-uint32-uint256-)
@@ -9,10 +7,6 @@
 - [`calculateCrossReserveReturn(uint256 _fromReserveBalance, uint32 _fromReserveRatio, uint256 _toReserveBalance, uint32 _toReserveRatio, uint256 _amount)`](#BancorFormula-calculateCrossReserveReturn-uint256-uint32-uint256-uint32-uint256-)
 
 - [`calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount)`](#BancorFormula-calculateCrossConnectorReturn-uint256-uint32-uint256-uint32-uint256-)
-
-# Function `constructor()` {#BancorFormula-constructor--}
-
-No description
 
 # Function `calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _depositAmount) → uint256` {#BancorFormula-calculatePurchaseReturn-uint256-uint256-uint32-uint256-}
 
