@@ -4,7 +4,7 @@ from os.path import dirname
 from json import loads
 
 
-web3 = Web3(HTTPProvider('http://127.0.0.1:8545',request_kwargs={'timeout':60}))
+web3 = Web3(HTTPProvider('http://127.0.0.1:7545',request_kwargs={'timeout':60}))
 
 
 transaction = {

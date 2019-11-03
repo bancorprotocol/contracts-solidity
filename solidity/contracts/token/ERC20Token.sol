@@ -10,11 +10,10 @@ contract ERC20Token is IERC20Token, Utils {
     using SafeMath for uint256;
 
 
-    string public standard = 'Token 0.1';
-    string public name = '';
-    string public symbol = '';
-    uint8 public decimals = 0;
-    uint256 public totalSupply = 0;
+    string public name;
+    string public symbol;
+    uint8 public decimals;
+    uint256 public totalSupply;
     mapping (address => uint256) public balanceOf;
     mapping (address => mapping (address => uint256)) public allowance;
 
@@ -42,13 +41,16 @@ contract ERC20Token is IERC20Token, Utils {
       * @param _name        token name
       * @param _symbol      token symbol
       * @param _decimals    decimal points, for display purposes
+      * @param _totalSupply total supply of token units
     */
-    constructor(string _name, string _symbol, uint8 _decimals) public {
+    constructor(string _name, string _symbol, uint8 _decimals, uint256 _totalSupply) public {
         require(bytes(_name).length > 0 && bytes(_symbol).length > 0); // validate input
 
         name = _name;
         symbol = _symbol;
         decimals = _decimals;
+        totalSupply = _totalSupply;
+        balanceOf[msg.sender] = _totalSupply;
     }
 
     /**

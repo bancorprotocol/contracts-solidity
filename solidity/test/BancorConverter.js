@@ -11,7 +11,7 @@ const BancorFormula = artifacts.require('BancorFormula');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
-const TestERC20Token = artifacts.require('TestERC20Token');
+const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
@@ -107,9 +107,9 @@ contract('BancorConverter', accounts => {
         let token = await SmartToken.new('Token1', 'TKN1', 2); 
         tokenAddress = token.address;
         
-        reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 1000000000);
+        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
         reserveToken2 = await TestNonStandardERC20Token.new('ERC Token 2', 'ERC2', 2000000000);
-        reserveToken3 = await TestERC20Token.new('ERC Token 3', 'ERC2', 1500000000);
+        reserveToken3 = await ERC20Token.new('ERC Token 3', 'ERC2', 0, 1500000000);
 
         await nonStandardTokenRegistry.setAddress(reserveToken2.address, true);
     });
@@ -497,7 +497,7 @@ contract('BancorConverter', accounts => {
 
     it('verifies that the correct reserve balance is returned regardless of whether virtual balance is set or not', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        let reserveToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
         await converter.addReserve(reserveToken.address, ratio10Percent, false);
         let reserveBalance;
         reserveBalance = await converter.getReserveBalance.call(reserveToken.address);
@@ -560,7 +560,7 @@ contract('BancorConverter', accounts => {
     it('verifies that the owner can withdraw a non reserve token from the converter while the converter is not active', async () => {
         let converter = await initConverter(accounts, false);
 
-        let token = await TestERC20Token.new('ERC Token 3', 'ERC3', 100000);
+        let token = await ERC20Token.new('ERC Token 3', 'ERC3', 0, 100000);
         await token.transfer(converter.address, 100);
         let balance = await token.balanceOf.call(converter.address);
         assert.equal(balance, 100);
@@ -581,7 +581,7 @@ contract('BancorConverter', accounts => {
     it('verifies that the owner can withdraw a non reserve token from the converter while the converter is active', async () => {
         let converter = await initConverter(accounts, true);
 
-        let token = await TestERC20Token.new('ERC Token 3', 'ERC3', 100000);
+        let token = await ERC20Token.new('ERC Token 3', 'ERC3', 0, 100000);
         await token.transfer(converter.address, 100);
         let balance = await token.balanceOf.call(converter.address);
         assert.equal(balance, 100);
@@ -600,7 +600,7 @@ contract('BancorConverter', accounts => {
     it('should throw when a non owner attempts to withdraw a non reserve token while the converter is not active', async () => {
         let converter = await initConverter(accounts, false);
 
-        let token = await TestERC20Token.new('ERC Token 3', 'ERC3', 100000);
+        let token = await ERC20Token.new('ERC Token 3', 'ERC3', 0, 100000);
         await token.transfer(converter.address, 100);
         let balance = await token.balanceOf.call(converter.address);
         assert.equal(balance, 100);

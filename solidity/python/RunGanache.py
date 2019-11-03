@@ -1,7 +1,7 @@
 from sys import path
 from subprocess import run
 
-port     = 8545
+port     = 7545
 gasPrice = 1
 gasLimit = 2**53-1
 privKey  = 1

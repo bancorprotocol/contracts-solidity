@@ -2,7 +2,7 @@ ERC20 Standard Token implementation
 
 # Functions:
 
-- [`constructor(string _name, string _symbol, uint8 _decimals)`](#ERC20Token-constructor-string-string-uint8-)
+- [`constructor(string _name, string _symbol, uint8 _decimals, uint256 _totalSupply)`](#ERC20Token-constructor-string-string-uint8-uint256-)
 
 - [`transfer(address _to, uint256 _value)`](#ERC20Token-transfer-address-uint256-)
 
@@ -16,7 +16,7 @@ ERC20 Standard Token implementation
 
 - [`Approval(address _owner, address _spender, uint256 _value)`](#ERC20Token-Approval-address-address-uint256-)
 
-# Function `constructor(string _name, string _symbol, uint8 _decimals)` {#ERC20Token-constructor-string-string-uint8-}
+# Function `constructor(string _name, string _symbol, uint8 _decimals, uint256 _totalSupply)` {#ERC20Token-constructor-string-string-uint8-uint256-}
 
 initializes a new ERC20Token instance
 
@@ -27,6 +27,8 @@ initializes a new ERC20Token instance
 - `_symbol`:      token symbol
 
 - `_decimals`:    decimal points, for display purposes
+
+- `_totalSupply`: total supply of token units
 
 # Function `transfer(address _to, uint256 _value) → bool success` {#ERC20Token-transfer-address-uint256-}
 
