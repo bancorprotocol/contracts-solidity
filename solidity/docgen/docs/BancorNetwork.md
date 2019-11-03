@@ -110,7 +110,7 @@ converts the token to any other token in the bancor network by following
 
 a predefined conversion path and transfers the result tokens to a target account
 
-note that the converter should already own the source tokens
+note that the network should already own the source tokens
 
 ## Parameters:
 
@@ -142,7 +142,7 @@ this version of the function also allows the verified signer
 
 to bypass the universal gas price limit.
 
-note that the converter should already own the source tokens
+note that the network should already own the source tokens
 
 ## Parameters:
 
@@ -300,7 +300,7 @@ converts the token to any other token in the bancor network by following
 
 a predefined conversion path and transfers the result tokens back to the sender
 
-note that the converter should already own the source tokens
+note that the network should already own the source tokens
 
 ## Parameters:
 
