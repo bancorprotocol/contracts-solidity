@@ -136,7 +136,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     /**
       * @dev converts the token to any other token in the bancor network by following
       * a predefined conversion path and transfers the result tokens to a target account
-      * note that the converter should already own the source tokens
+      * note that the network should already own the source tokens
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from (in the initial source token)
@@ -157,7 +157,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * tokens to a target account.
       * this version of the function also allows the verified signer
       * to bypass the universal gas price limit.
-      * note that the converter should already own the source tokens
+      * note that the network should already own the source tokens
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from (in the initial source token)
@@ -469,7 +469,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * @return tokens issued in return
     */
     function claimAndConvertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
-        // we need to transfer the tokens from the caller to the converter before we follow
+        // we need to transfer the tokens from the caller to the network before we follow
         // the conversion path, to allow it to execute the conversion on behalf of the caller
         // note: we assume we already have allowance
         IERC20Token fromToken = _path[0];
@@ -480,7 +480,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     /**
       * @dev converts the token to any other token in the bancor network by following
       * a predefined conversion path and transfers the result tokens back to the sender
-      * note that the converter should already own the source tokens
+      * note that the network should already own the source tokens
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from (in the initial source token)

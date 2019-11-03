@@ -1,5 +1,7 @@
 # Functions:
 
+- [`constructor()`](#TestBancorFormula-constructor--)
+
 - [`powerTest(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD)`](#TestBancorFormula-powerTest-uint256-uint256-uint32-uint32-)
 
 - [`generalLogTest(uint256 x)`](#TestBancorFormula-generalLogTest-uint256-)
@@ -13,6 +15,10 @@
 - [`optimalLogTest(uint256 x)`](#TestBancorFormula-optimalLogTest-uint256-)
 
 - [`optimalExpTest(uint256 x)`](#TestBancorFormula-optimalExpTest-uint256-)
+
+# Function `constructor()` {#TestBancorFormula-constructor--}
+
+No description
 
 # Function `powerTest(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) → uint256, uint8` {#TestBancorFormula-powerTest-uint256-uint256-uint32-uint32-}
 
