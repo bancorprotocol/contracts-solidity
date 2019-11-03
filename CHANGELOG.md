@@ -1,9 +1,18 @@
-### 0.5.3 (2019-10-22)
-BancorConverter:
-* Added a protection against activation with no token supply
+### 0.5.4 (2019-11-03)
+General:
+* Added a testnet/private chain deployment script/migration
+* Updated the readme file with more tutorials on the various scripts
 
+ERC20Token:
+* Cleaned up construction, added the total supply as a constructor arg
+
+
+### 0.5.3 (2019-10-22)
 General:
 * Cleaned up all compilation warnings
+
+BancorConverter:
+* Added a protection against activation with no token supply
 
 
 ### 0.5.2 (2019-10-07)

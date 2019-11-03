@@ -2,7 +2,7 @@
 /* eslint-disable prefer-reflect */
 
 const TokenHolder = artifacts.require('TokenHolder');
-const TestERC20Token = artifacts.require('TestERC20Token');
+const ERC20Token = artifacts.require('ERC20Token');
 const utils = require('./helpers/Utils');
 
 let holderAddress;
@@ -13,7 +13,7 @@ let erc20TokenAddress;
 async function initHolder() {
     let holder = await TokenHolder.new();
     holderAddress = holder.address;
-    erc20Token = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+    erc20Token = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
     erc20TokenAddress = erc20Token.address;
     await erc20Token.transfer(holderAddress, 1000);
     return holder;

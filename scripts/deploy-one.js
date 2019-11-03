@@ -72,16 +72,20 @@ async function send(web3, account, transaction) {
 async function run() {
     const web3        = new Web3(NODE_ADDRESS);
     const account     = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
-    const name        = "solidity/build/" + CONTRACT_NAME;
-    const abi         = fs.readFileSync(name + ".abi");
-    const bin         = fs.readFileSync(name + ".bin");
+    const path        = "solidity/build/" + CONTRACT_NAME;
+    const abi         = fs.readFileSync(path + ".abi", {encoding: "utf8"});
+    const bin         = fs.readFileSync(path + ".bin", {encoding: "utf8"});
     const contract    = new web3.eth.Contract(JSON.parse(abi));
     const options     = {data: "0x" + bin, arguments: CONTRACT_ARGS};
     const transaction = contract.deploy(options);
     const receipt     = await send(web3, account, transaction);
-    const addr        = receipt.contractAddress;
-    const args        = transaction.encodeABI().slice(options.data.length);
-    console.log(`"${CONTRACT_NAME}": {"addr": "${addr}", "args": "${args}"}`);
+    console.log(JSON.stringify({
+        [CONTRACT_NAME]: {
+            name: CONTRACT_NAME,
+            addr: receipt.contractAddress,
+            args: transaction.encodeABI().slice(options.data.length)
+        }
+    }));
     if (web3.currentProvider.constructor.name == "WebsocketProvider")
         web3.currentProvider.connection.close();
 }

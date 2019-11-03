@@ -3,7 +3,7 @@
 
 const SmartToken = artifacts.require('SmartToken');
 const SmartTokenController = artifacts.require('SmartTokenController');
-const TestERC20Token = artifacts.require('TestERC20Token');
+const ERC20Token = artifacts.require('ERC20Token');
 const utils = require('./helpers/Utils');
 
 let token;
@@ -117,7 +117,7 @@ contract('SmartTokenController', accounts => {
 
     it('verifies that the owner can withdraw other tokens from the token', async () => {
         let controller = await initController(accounts, true);
-        let ercToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
         const prevBalance = await ercToken.balanceOf.call(accounts[0]);
         await ercToken.transfer(token.address, 100);
         await controller.withdrawFromToken(ercToken.address, accounts[0], 100);
@@ -127,7 +127,7 @@ contract('SmartTokenController', accounts => {
 
     it('should throw when the owner attempts to withdraw other tokens from the token while the controller is not active', async () => {
         let controller = await initController(accounts, false);
-        let ercToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
         await ercToken.transfer(token.address, 100);
 
         await utils.catchRevert(controller.withdrawFromToken(ercToken.address, accounts[0], 100));
@@ -135,7 +135,7 @@ contract('SmartTokenController', accounts => {
 
     it('should throw when a non owner attempts to withdraw other tokens from the token', async () => {
         let controller = await initController(accounts, true);
-        let ercToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
         await ercToken.transfer(token.address, 100);
 
         await utils.catchRevert(controller.withdrawFromToken(ercToken.address, accounts[0], 100, { from: accounts[1] }));

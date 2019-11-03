@@ -88,6 +88,7 @@ Disables transfer/transferFrom functionality.
 <br>
 <br>
 <br>
+
 ### Events
 
 **NewSmartToken**
@@ -172,15 +173,163 @@ event Conversion(address indexed _fromToken, address indexed _toToken, address i
 Triggered when a conversion between one of the convertible tokens takes place.
 
 ## Testing
-Tests are included and are run using truffle & ganache
 
 ### Prerequisites
-* node v10.16.0
-* npm v6.9.0
 
-To run the test:
-- Use `npm install` in order to install all required packages.
-- Use `npm test 1` in order to run truffle-test or `npm test 2` in order to run solidity-coverage.
+* node 10.16.0
+* npm 6.9.0
+* python 3.7.3
+* web3.py 4.9.2
+
+### Installation
+
+* `npm install`
+
+### Verification
+
+* Verifying all the contracts:
+  * `npm test 1` (quick testing)
+  * `npm test 2` (full coverage)
+* Verifying the accuracy of the BancorFormula contract:
+  * `python ./solidity/python/RandomTestCross.py`
+  * `python ./solidity/python/RandomTestPower.py`
+  * `python ./solidity/python/RandomTestPurchase.py`
+  * `python ./solidity/python/RandomTestSale.py`
+  * `python ./solidity/python/RandomTestTradeCPS.py`
+  * `python ./solidity/python/RandomTestTradePS.py`
+  * `python ./solidity/python/RandomTestTradePSC.py`
+  * `python ./solidity/python/RandomTestTradeSP.py`
+  * `python ./solidity/python/RandomTestVerifyCross.py`
+* Verifying the correctness of the BancorFormula contract:
+  * `python ./solidity/python/RunGanache.py`
+  * `python ./solidity/python/EmulationExpTestCross.py`
+  * `python ./solidity/python/EmulationExpTestPurchase.py`
+  * `python ./solidity/python/EmulationExpTestSale.py`
+  * `python ./solidity/python/EmulationUniTestCross.py`
+  * `python ./solidity/python/EmulationUniTestPurchase.py`
+  * `python ./solidity/python/EmulationUniTestSale.py`
+* Verifying the performance of the BancorFormula contract:
+  * `python ./solidity/python/RunGanache.py`
+  * `python ./solidity/python/PerformanceExpTestCross.py`
+  * `python ./solidity/python/PerformanceExpTestPurchase.py`
+  * `python ./solidity/python/PerformanceExpTestSale.py`
+  * `python ./solidity/python/PerformanceUniTestCross.py`
+  * `python ./solidity/python/PerformanceUniTestPurchase.py`
+  * `python ./solidity/python/PerformanceUniTestSale.py`
+
+### Deploy Network Emulation
+
+```bash
+node ./solidity/migrations/deploy_network_emulation.js
+    Configuration file name
+    Ethereum node address
+    Account private key
+```
+
+### Migrate Converter Registry
+
+```bash
+node ./solidity/migrations/migrate_converter_registry.js
+    Ethereum node address
+    Account private key
+    Old BancorConverterRegistry contract address
+    New BancorConverterRegistry contract address
+```
+
+### Verify Network Path Finder
+
+```bash
+node ./solidity/migrations/verify_network_path_finder.js
+    Ethereum node address
+    BancorNetworkPathFinder contract address
+    BancorConverterRegistry contract addresses
+```
+
+#### Deploy Network Emulation / Notes
+
+This process can also be executed via `truffle deploy` or `truffle migrate` provided with the same input parameters:
+```bash
+truffle deploy
+    Configuration file name
+    Ethereum node address
+    Account private key
+```
+
+The configuration file is updated during the process, in order to allow resuming a prematurely-terminated execution.
+
+Here is an example of the initial configuration file which should be provided to the process:
+```json
+{
+    "etherTokenParams": {
+        "supply": "13000000000000000"
+    },
+    "smartToken1Params": {
+        "name": "Bancor Network Token",
+        "symbol": "BNT",
+        "decimals": 18,
+        "supply": "68000000000000000000"
+    },
+    "smartToken2Params": {
+        "name": "Smart Token Of Chayot",
+        "symbol": "STC",
+        "decimals": 18,
+        "supply": "1000000000000000000"
+    },
+    "smartToken3Params": {
+        "name": "XXX Smart Token Relay",
+        "symbol": "XXXBNT",
+        "decimals": 18,
+        "supply": "200000000000000000"
+    },
+    "smartToken4Params": {
+        "name": "YYY Smart Token Relay",
+        "symbol": "YYYBNT",
+        "decimals": 18,
+        "supply": "8300000000000000000"
+    },
+    "erc20TokenAParams": {
+        "name": "XXX ERC20 Token",
+        "symbol": "XXX",
+        "decimals": 18,
+        "supply": "1500000000000000000000"
+    },
+    "erc20TokenBParams": {
+        "name": "YYY ERC20 Token",
+        "symbol": "YYY",
+        "decimals": 18,
+        "supply": "1000000000000000000000"
+    },
+    "converter1Params": {
+        "fee": 0,
+        "ratio1": 100000,
+        "reserve1": "13000000000000000"
+    },
+    "converter2Params": {
+        "fee": 0,
+        "ratio1": 500000,
+        "reserve1": "300000000000000000"
+    },
+    "converter3Params": {
+        "fee": 1000,
+        "ratio1": 500000,
+        "reserve1": "400000000000000000",
+        "ratio2": 500000,
+        "reserve2": "520000000000000000",
+        "virtual": false
+    },
+    "converter4Params": {
+        "fee": 1000,
+        "ratio1": 500000,
+        "reserve1": "250000000000000000",
+        "ratio2": 500000,
+        "reserve2": "1300000000000000000",
+        "virtual": false
+    },
+    "priceLimitParams": {
+        "value": "6000000000"
+    }
+}
+```
 
 ## Collaborators
 
@@ -190,7 +339,6 @@ To run the test:
 * **[David Benchimol](https://github.com/davidbancor)**
 * **[Or Dadosh](https://github.com/ordd)**
 * **[Martin Holst Swende](https://github.com/holiman)**
-
 
 ## License
 

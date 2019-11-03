@@ -8,7 +8,7 @@ const ContractIds = artifacts.require('ContractIds');
 const SmartToken = artifacts.require('SmartToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
-const TestERC20Token = artifacts.require('TestERC20Token');
+const ERC20Token = artifacts.require('ERC20Token');
 const Whitelist = artifacts.require('Whitelist');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
@@ -24,10 +24,10 @@ async function initConverter(accounts, activate, version = null, maxConversionFe
     token = await SmartToken.new('Token1', 'TKN1', 18);
     let tokenAddress = token.address;
 
-    let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+    let connectorToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
     let connectorTokenAddress = connectorToken.address;
 
-    let connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
+    let connectorToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, 200000);
     let connectorTokenAddress2 = connectorToken2.address;
 
     let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, maxConversionFee, connectorTokenAddress, 500000, version);
@@ -254,9 +254,9 @@ contract('BancorConverterUpgrader', accounts => {
 
     it('verifies upgrade of a non active converter', async () => {
         let token1 = await SmartToken.new('Token1', 'TKN1', 18);
-        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let connectorToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
         let connectorTokenAddress = connectorToken.address;
-        let connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
+        let connectorToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, 200000);
         let connectorTokenAddress2 = connectorToken2.address;
         let converter1 = await BancorConverter.new(token1.address, contractRegistry.address, 30000, connectorTokenAddress, 500000);
         await converter1.addConnector(connectorTokenAddress2, 500000, false);
