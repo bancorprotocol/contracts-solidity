@@ -673,242 +673,242 @@ contract("XConversions", accounts => {
 
     for (const percent of [0.5, 1.0, 1.5, 2.0, 3.0]) {
         const affiliateFee = Math.floor(1000000 * percent / 100);
-    describe(`advanced testing with affiliate-fee = ${percent}%:`, () => {
-        before(async () => {
-            await initBancorNetwork(accounts)
+        describe(`advanced testing with affiliate-fee = ${percent}%:`, () => {
+            before(async () => {
+                await initBancorNetwork(accounts)
+            })
+
+            it("should be able to xConvertPrioritized3 from eth with a valid signature", async () => {
+                const maximumBlock = web3.eth.blockNumber + 100
+                const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+                const path = ethBntPath
+                const amount = web3.toWei('1')
+                const { v, r, s } = sign(
+                    maximumBlock,
+                    gasPrice,
+                    accounts[5],
+                    accounts[5],
+                    amount,
+                    path,
+                    signerAddress
+                )
+
+                const retAmount = await bancorNetwork.xConvertPrioritized3.call(
+                    path,                         
+                    amount,               
+                    '1',                                
+                    EOS_BLOCKCHAIN,                     
+                    eosAddress,                         
+                    '0',                                
+                    [amount, maximumBlock, v, r, s],
+                    affiliateAddress, affiliateFee,
+                    { from: accounts[5], value: amount }
+                )
+
+                const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
+                const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
+
+                const res = await bancorNetwork.xConvertPrioritized3(
+                    path,                                               
+                    amount,                                     
+                    '1',                                                      
+                    EOS_BLOCKCHAIN,                                           
+                    eosAddress,                                               
+                    '0',                                                      
+                    [amount, maximumBlock, v, r, s],
+                    affiliateAddress, affiliateFee,
+                    { from: accounts[5], value: amount }
+                )
+
+                assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
+
+                const minExpectedFee = retAmount.mul(percent / 100);
+                const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
+                assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
+            })
+
+            it("should be able to xConvertPrioritized3 from eth without a valid signature", async () => {
+                const maximumBlock = web3.eth.blockNumber + 100
+                const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+                const path = ethBntPath
+                const amount = web3.toWei('1')
+                const { v, r, s } = sign(
+                    maximumBlock,
+                    gasPrice,
+                    accounts[5],
+                    accounts[5],
+                    amount,
+                    path,
+                    signerAddress
+                )
+
+                const retAmount = await bancorNetwork.xConvertPrioritized3.call(
+                    path,                         
+                    amount,               
+                    '1',                                
+                    EOS_BLOCKCHAIN,                     
+                    eosAddress,                         
+                    '0',                                
+                    [amount, maximumBlock, v, r, s],
+                    affiliateAddress, affiliateFee,
+                    { from: accounts[5], value: amount }
+                )
+
+                const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
+                const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
+
+                const res = await bancorNetwork.xConvertPrioritized3(
+                    path,                                               
+                    amount,                                     
+                    '1',                                                      
+                    EOS_BLOCKCHAIN,                                           
+                    eosAddress,                                               
+                    '0',                                                      
+                    [],
+                    affiliateAddress, affiliateFee,
+                    { from: accounts[5], value: amount }
+                )
+
+                assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
+
+                const minExpectedFee = retAmount.mul(percent / 100);
+                const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
+                assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
+            })
+
+            it("shouldn't be able to xConvertPrioritized3 from eth with an invalid signature", async () => {
+                const maximumBlock = web3.eth.blockNumber + 100
+                const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+                const path = ethBntPath
+                const amount = web3.toWei('1')
+                const { v, r, s } = sign(
+                    maximumBlock,
+                    gasPrice,
+                    accounts[5],
+                    accounts[5],
+                    amount,
+                    path,
+                    nonSignerAddress
+                )
+
+                await utils.catchRevert(bancorNetwork.xConvertPrioritized3(
+                    path,                                               
+                    amount,                                     
+                    '1',                                                      
+                    EOS_BLOCKCHAIN,                                           
+                    eosAddress,                                               
+                    '0',                                                      
+                    [amount, maximumBlock, v, r, s],
+                    affiliateAddress, affiliateFee,
+                    { from: accounts[5], value: amount }
+                ))
+            })
+
+            it("shouldn't be able to xConvertPrioritized3 from eth with a valid signature but custom value different than amount", async () => {
+                const maximumBlock = web3.eth.blockNumber + 100
+                const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+                const path = ethBntPath
+                const amount = web3.toWei('1')
+                const customVal = amount + '1'
+                const { v, r, s } = sign(
+                    maximumBlock,
+                    gasPrice,
+                    accounts[5],
+                    accounts[5],
+                    amount,
+                    path,
+                    signerAddress
+                )
+
+                await utils.catchRevert(bancorNetwork.xConvertPrioritized3(
+                    path,                                               
+                    amount,                                     
+                    '1',                                                      
+                    EOS_BLOCKCHAIN,                                           
+                    eosAddress,                                               
+                    '0',                                                      
+                    [customVal, maximumBlock, v, r, s],
+                    affiliateAddress, affiliateFee,
+                    { from: accounts[5], value: amount }
+                ))
+            })
+
+            it("should be able to xConvert2 from eth", async () => {
+                const path = ethBntPath
+                const amount = web3.toWei('1')
+
+                const retAmount = await bancorNetwork.xConvert2.call(
+                    path,                         
+                    amount,               
+                    '1',                                
+                    EOS_BLOCKCHAIN,                     
+                    eosAddress,                         
+                    '0',                                
+                    affiliateAddress, affiliateFee,
+                    { from: accounts[5], value: amount }
+                )
+
+                const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
+                const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
+
+                const res = await bancorNetwork.xConvert2(
+                    path,                                               
+                    amount,                                     
+                    '1',                                                      
+                    EOS_BLOCKCHAIN,                                           
+                    eosAddress,                                               
+                    '0',                                                      
+                    affiliateAddress, affiliateFee,
+                    { from: accounts[5], value: amount }
+                )
+
+                assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
+
+                const minExpectedFee = retAmount.mul(percent / 100);
+                const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
+                assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
+            })
+
+            it("should be able to xConvert2 from an ERC20", async () => {
+                const maximumBlock = web3.eth.blockNumber + 100
+                const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+                const path = erc20TokenBntPath
+                const amount = web3.toWei('1')
+
+                await erc20Token.approve(bancorNetwork.address, amount, { from: accounts[5] })
+
+                const retAmount = await bancorNetwork.xConvert2.call(
+                    path,                         
+                    amount,               
+                    '1',                                
+                    EOS_BLOCKCHAIN,                     
+                    eosAddress,                         
+                    '0',                                
+                    affiliateAddress, affiliateFee,
+                    { from: accounts[5] }
+                )
+
+                const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
+                const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
+
+                const res = await bancorNetwork.xConvert2(
+                    path,                                               
+                    amount,                                     
+                    '1',                                                      
+                    EOS_BLOCKCHAIN,                                           
+                    eosAddress,                                               
+                    '0',                                                      
+                    affiliateAddress, affiliateFee,
+                    { from: accounts[5] }
+                )
+
+                assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
+
+                const minExpectedFee = retAmount.mul(percent / 100);
+                const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
+                assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
+            })
         })
-
-        it("should be able to xConvertPrioritized3 from eth with a valid signature", async () => {
-            const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
-            const path = ethBntPath
-            const amount = web3.toWei('1')
-            const { v, r, s } = sign(
-                maximumBlock,
-                gasPrice,
-                accounts[5],
-                accounts[5],
-                amount,
-                path,
-                signerAddress
-            )
-
-            const retAmount = await bancorNetwork.xConvertPrioritized3.call(
-                path,                         
-                amount,               
-                '1',                                
-                EOS_BLOCKCHAIN,                     
-                eosAddress,                         
-                '0',                                
-                [amount, maximumBlock, v, r, s],
-                affiliateAddress, affiliateFee,
-                { from: accounts[5], value: amount }
-            )
-
-            const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
-            const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
-
-            const res = await bancorNetwork.xConvertPrioritized3(
-                path,                                               
-                amount,                                     
-                '1',                                                      
-                EOS_BLOCKCHAIN,                                           
-                eosAddress,                                               
-                '0',                                                      
-                [amount, maximumBlock, v, r, s],
-                affiliateAddress, affiliateFee,
-                { from: accounts[5], value: amount }
-            )
-
-            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
-
-            const minExpectedFee = retAmount.mul(percent / 100);
-            const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
-            assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
-        })
-
-        it("should be able to xConvertPrioritized3 from eth without a valid signature", async () => {
-            const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
-            const path = ethBntPath
-            const amount = web3.toWei('1')
-            const { v, r, s } = sign(
-                maximumBlock,
-                gasPrice,
-                accounts[5],
-                accounts[5],
-                amount,
-                path,
-                signerAddress
-            )
-
-            const retAmount = await bancorNetwork.xConvertPrioritized3.call(
-                path,                         
-                amount,               
-                '1',                                
-                EOS_BLOCKCHAIN,                     
-                eosAddress,                         
-                '0',                                
-                [amount, maximumBlock, v, r, s],
-                affiliateAddress, affiliateFee,
-                { from: accounts[5], value: amount }
-            )
-
-            const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
-            const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
-
-            const res = await bancorNetwork.xConvertPrioritized3(
-                path,                                               
-                amount,                                     
-                '1',                                                      
-                EOS_BLOCKCHAIN,                                           
-                eosAddress,                                               
-                '0',                                                      
-                [],
-                affiliateAddress, affiliateFee,
-                { from: accounts[5], value: amount }
-            )
-
-            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
-
-            const minExpectedFee = retAmount.mul(percent / 100);
-            const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
-            assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
-        })
-
-        it("shouldn't be able to xConvertPrioritized3 from eth with an invalid signature", async () => {
-            const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
-            const path = ethBntPath
-            const amount = web3.toWei('1')
-            const { v, r, s } = sign(
-                maximumBlock,
-                gasPrice,
-                accounts[5],
-                accounts[5],
-                amount,
-                path,
-                nonSignerAddress
-            )
-
-            await utils.catchRevert(bancorNetwork.xConvertPrioritized3(
-                path,                                               
-                amount,                                     
-                '1',                                                      
-                EOS_BLOCKCHAIN,                                           
-                eosAddress,                                               
-                '0',                                                      
-                [amount, maximumBlock, v, r, s],
-                affiliateAddress, affiliateFee,
-                { from: accounts[5], value: amount }
-            ))
-        })
-
-        it("shouldn't be able to xConvertPrioritized3 from eth with a valid signature but custom value different than amount", async () => {
-            const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
-            const path = ethBntPath
-            const amount = web3.toWei('1')
-            const customVal = amount + '1'
-            const { v, r, s } = sign(
-                maximumBlock,
-                gasPrice,
-                accounts[5],
-                accounts[5],
-                amount,
-                path,
-                signerAddress
-            )
-
-            await utils.catchRevert(bancorNetwork.xConvertPrioritized3(
-                path,                                               
-                amount,                                     
-                '1',                                                      
-                EOS_BLOCKCHAIN,                                           
-                eosAddress,                                               
-                '0',                                                      
-                [customVal, maximumBlock, v, r, s],
-                affiliateAddress, affiliateFee,
-                { from: accounts[5], value: amount }
-            ))
-        })
-
-        it("should be able to xConvert2 from eth", async () => {
-            const path = ethBntPath
-            const amount = web3.toWei('1')
-
-            const retAmount = await bancorNetwork.xConvert2.call(
-                path,                         
-                amount,               
-                '1',                                
-                EOS_BLOCKCHAIN,                     
-                eosAddress,                         
-                '0',                                
-                affiliateAddress, affiliateFee,
-                { from: accounts[5], value: amount }
-            )
-
-            const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
-            const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
-
-            const res = await bancorNetwork.xConvert2(
-                path,                                               
-                amount,                                     
-                '1',                                                      
-                EOS_BLOCKCHAIN,                                           
-                eosAddress,                                               
-                '0',                                                      
-                affiliateAddress, affiliateFee,
-                { from: accounts[5], value: amount }
-            )
-
-            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
-
-            const minExpectedFee = retAmount.mul(percent / 100);
-            const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
-            assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
-        })
-
-        it("should be able to xConvert2 from an ERC20", async () => {
-            const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
-            const path = erc20TokenBntPath
-            const amount = web3.toWei('1')
-
-            await erc20Token.approve(bancorNetwork.address, amount, { from: accounts[5] })
-
-            const retAmount = await bancorNetwork.xConvert2.call(
-                path,                         
-                amount,               
-                '1',                                
-                EOS_BLOCKCHAIN,                     
-                eosAddress,                         
-                '0',                                
-                affiliateAddress, affiliateFee,
-                { from: accounts[5] }
-            )
-
-            const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
-            const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
-
-            const res = await bancorNetwork.xConvert2(
-                path,                                               
-                amount,                                     
-                '1',                                                      
-                EOS_BLOCKCHAIN,                                           
-                eosAddress,                                               
-                '0',                                                      
-                affiliateAddress, affiliateFee,
-                { from: accounts[5] }
-            )
-
-            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
-
-            const minExpectedFee = retAmount.mul(percent / 100);
-            const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
-            assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
-        })
-    })
     }
 })
 
