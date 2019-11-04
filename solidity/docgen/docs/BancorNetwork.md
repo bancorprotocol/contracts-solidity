@@ -192,17 +192,17 @@ note that the network should already have been given allowance of the source tok
 
 ## Parameters:
 
-- `_path`:             conversion path, see conversion path format above
+- `_path`:                conversion path, see conversion path format above
 
-- `_amount`:           amount to convert from (in the initial source token)
+- `_amount`:              amount to convert from (in the initial source token)
 
-- `_minReturn`:        if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+- `_minReturn`:           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
-- `_toBlockchain`:     blockchain BNT will be issued on
+- `_toBlockchain`:        blockchain BNT will be issued on
 
-- `_to`:               address/account on _toBlockchain to send the BNT to
+- `_to`:                  address/account on _toBlockchain to send the BNT to
 
-- `_conversionId`:     pre-determined unique (if non zero) id which refers to this transaction 
+- `_conversionId`:        pre-determined unique (if non zero) id which refers to this transaction 
 
 - `_affiliateAccount`:    affiliate account
 
@@ -228,29 +228,29 @@ note that the network should already have been given allowance of the source tok
 
 ## Parameters:
 
-- `_path`:            conversion path, see conversion path format above
+- `_path`:                conversion path, see conversion path format above
 
-- `_amount`:          amount to convert from (in the initial source token)
+- `_amount`:              amount to convert from (in the initial source token)
 
-- `_minReturn`:       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+- `_minReturn`:           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
-- `_toBlockchain`:    blockchain BNT will be issued on
+- `_toBlockchain`:        blockchain BNT will be issued on
 
-- `_to`:              address/account on _toBlockchain to send the BNT to
+- `_to`:                  address/account on _toBlockchain to send the BNT to
 
-- `_conversionId`:    pre-determined unique (if non zero) id which refers to this transaction 
+- `_conversionId`:        pre-determined unique (if non zero) id which refers to this transaction 
 
-- `_signature`:       an array of the following elements:
+- `_signature`:           an array of the following elements:
 
-    [0] uint256         custom value that was signed for prioritized conversion; must be equal to _amount
+    [0] uint256             custom value that was signed for prioritized conversion; must be equal to _amount
 
-    [1] uint256         if the current block exceeded the given parameter - it is cancelled
+    [1] uint256             if the current block exceeded the given parameter - it is cancelled
 
-    [2] uint8           (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
+    [2] uint8               (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
 
-    [3] bytes32         (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
+    [3] bytes32             (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
 
-    [4] bytes32         (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
+    [4] bytes32             (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
 
 if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
 
