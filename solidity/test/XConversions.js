@@ -23,6 +23,7 @@ const LIM_INC_PER_BLOCK = '1000000000000000000' // 1 bnt
 const MIN_REQUIRED_REPORTS = '3'
 const BNT_AMOUNT = '77492920201018469141404133'
 const BNT_RESERVE_AMOUNT = '45688650129186275318509'
+const AFFILIATE_FEE = '10000' // 1 percent
 
 const ZERO_BYTES32 = '0x'.padEnd(66, '0');
 
@@ -35,10 +36,10 @@ let bancorX, bancorNetwork, bntConverter, bntToken, etherToken, erc20Token, erc2
 // paths
 let ethBntPath, bntEthPath, erc20TokenBntPath, bntErc20Path
 
-let reporter1, reporter2, reporter3, signerAddress, nonSignerAddress
+let reporter1, reporter2, reporter3, signerAddress, nonSignerAddress, affiliateAddress
 
 contract("XConversions", accounts => {
-    describe("Old API:", () => {
+    describe("basic testing:", () => {
         before(async () => {
             await initBancorNetwork(accounts)
         })
@@ -671,7 +672,7 @@ contract("XConversions", accounts => {
         })
     })
 
-    describe("New API:", () => {
+    describe("affiliate-fee testing:", () => {
         before(async () => {
             await initBancorNetwork(accounts)
         })
@@ -699,7 +700,7 @@ contract("XConversions", accounts => {
                 eosAddress,                         
                 '0',                                
                 [amount, maximumBlock, v, r, s],
-                utils.zeroAddress, 0,
+                affiliateAddress, AFFILIATE_FEE,
                 { from: accounts[5], value: amount }
             )
 
@@ -713,7 +714,7 @@ contract("XConversions", accounts => {
                 eosAddress,                                               
                 '0',                                                      
                 [amount, maximumBlock, v, r, s],
-                utils.zeroAddress, 0,
+                affiliateAddress, AFFILIATE_FEE,
                 { from: accounts[5], value: amount }
             )
 
@@ -743,7 +744,7 @@ contract("XConversions", accounts => {
                 eosAddress,                         
                 '0',                                
                 [amount, maximumBlock, v, r, s],
-                utils.zeroAddress, 0,
+                affiliateAddress, AFFILIATE_FEE,
                 { from: accounts[5], value: amount }
             )
 
@@ -757,7 +758,7 @@ contract("XConversions", accounts => {
                 eosAddress,                                               
                 '0',                                                      
                 [],
-                utils.zeroAddress, 0,
+                affiliateAddress, AFFILIATE_FEE,
                 { from: accounts[5], value: amount }
             )
 
@@ -787,7 +788,7 @@ contract("XConversions", accounts => {
                 eosAddress,                                               
                 '0',                                                      
                 [amount, maximumBlock, v, r, s],
-                utils.zeroAddress, 0,
+                affiliateAddress, AFFILIATE_FEE,
                 { from: accounts[5], value: amount }
             ))
         })
@@ -816,7 +817,7 @@ contract("XConversions", accounts => {
                 eosAddress,                                               
                 '0',                                                      
                 [customVal, maximumBlock, v, r, s],
-                utils.zeroAddress, 0,
+                affiliateAddress, AFFILIATE_FEE,
                 { from: accounts[5], value: amount }
             ))
         })
@@ -832,7 +833,7 @@ contract("XConversions", accounts => {
                 EOS_BLOCKCHAIN,                     
                 eosAddress,                         
                 '0',                                
-                utils.zeroAddress, 0,
+                affiliateAddress, AFFILIATE_FEE,
                 { from: accounts[5], value: amount }
             )
 
@@ -845,7 +846,7 @@ contract("XConversions", accounts => {
                 EOS_BLOCKCHAIN,                                           
                 eosAddress,                                               
                 '0',                                                      
-                utils.zeroAddress, 0,
+                affiliateAddress, AFFILIATE_FEE,
                 { from: accounts[5], value: amount }
             )
 
@@ -867,7 +868,7 @@ contract("XConversions", accounts => {
                 EOS_BLOCKCHAIN,                     
                 eosAddress,                         
                 '0',                                
-                utils.zeroAddress, 0,
+                affiliateAddress, AFFILIATE_FEE,
                 { from: accounts[5] }
             )
 
@@ -880,7 +881,7 @@ contract("XConversions", accounts => {
                 EOS_BLOCKCHAIN,                                           
                 eosAddress,                                               
                 '0',                                                      
-                utils.zeroAddress, 0,
+                affiliateAddress, AFFILIATE_FEE,
                 { from: accounts[5] }
             )
 
@@ -904,11 +905,12 @@ async function reportAndRelease(to, amount, txId, blockchainType, xTransferId = 
 }
 
 const initBancorNetwork = async accounts => {
-    signerAddress = accounts[4]
-    nonSignerAddress = accounts[5]
     reporter1 = accounts[1]
     reporter2 = accounts[2]
     reporter3 = accounts[3]
+    signerAddress = accounts[4]
+    nonSignerAddress = accounts[5]
+    affiliateAddress = accounts[6]
 
     const gasPriceLimit = await BancorGasPriceLimit.new("30000000000"); // 30 gwei
     const formula = await BancorFormula.new();
