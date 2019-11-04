@@ -23,7 +23,6 @@ const LIM_INC_PER_BLOCK = '1000000000000000000' // 1 bnt
 const MIN_REQUIRED_REPORTS = '3'
 const BNT_AMOUNT = '77492920201018469141404133'
 const BNT_RESERVE_AMOUNT = '45688650129186275318509'
-const AFFILIATE_FEE = '10000' // 1 percent
 
 const ZERO_BYTES32 = '0x'.padEnd(66, '0');
 
@@ -672,7 +671,9 @@ contract("XConversions", accounts => {
         })
     })
 
-    describe("affiliate-fee testing:", () => {
+    for (const percent of [0.5, 1.0, 1.5, 2.0, 3.0]) {
+        const affiliateFee = Math.floor(1000000 * percent / 100);
+    describe(`advanced testing with affiliate-fee = ${percent}%:`, () => {
         before(async () => {
             await initBancorNetwork(accounts)
         })
@@ -700,11 +701,12 @@ contract("XConversions", accounts => {
                 eosAddress,                         
                 '0',                                
                 [amount, maximumBlock, v, r, s],
-                affiliateAddress, AFFILIATE_FEE,
+                affiliateAddress, affiliateFee,
                 { from: accounts[5], value: amount }
             )
 
-            const prevBalance = await bntToken.balanceOf(bancorX.address)
+            const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
+            const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
 
             const res = await bancorNetwork.xConvertPrioritized3(
                 path,                                               
@@ -714,11 +716,15 @@ contract("XConversions", accounts => {
                 eosAddress,                                               
                 '0',                                                      
                 [amount, maximumBlock, v, r, s],
-                affiliateAddress, AFFILIATE_FEE,
+                affiliateAddress, affiliateFee,
                 { from: accounts[5], value: amount }
             )
 
-            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
+            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
+
+            const minExpectedFee = retAmount.mul(percent / 100);
+            const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
+            assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
         })
 
         it("should be able to xConvertPrioritized3 from eth without a valid signature", async () => {
@@ -744,11 +750,12 @@ contract("XConversions", accounts => {
                 eosAddress,                         
                 '0',                                
                 [amount, maximumBlock, v, r, s],
-                affiliateAddress, AFFILIATE_FEE,
+                affiliateAddress, affiliateFee,
                 { from: accounts[5], value: amount }
             )
 
-            const prevBalance = await bntToken.balanceOf(bancorX.address)
+            const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
+            const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
 
             const res = await bancorNetwork.xConvertPrioritized3(
                 path,                                               
@@ -758,11 +765,15 @@ contract("XConversions", accounts => {
                 eosAddress,                                               
                 '0',                                                      
                 [],
-                affiliateAddress, AFFILIATE_FEE,
+                affiliateAddress, affiliateFee,
                 { from: accounts[5], value: amount }
             )
 
-            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
+            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
+
+            const minExpectedFee = retAmount.mul(percent / 100);
+            const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
+            assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
         })
 
         it("shouldn't be able to xConvertPrioritized3 from eth with an invalid signature", async () => {
@@ -788,7 +799,7 @@ contract("XConversions", accounts => {
                 eosAddress,                                               
                 '0',                                                      
                 [amount, maximumBlock, v, r, s],
-                affiliateAddress, AFFILIATE_FEE,
+                affiliateAddress, affiliateFee,
                 { from: accounts[5], value: amount }
             ))
         })
@@ -817,7 +828,7 @@ contract("XConversions", accounts => {
                 eosAddress,                                               
                 '0',                                                      
                 [customVal, maximumBlock, v, r, s],
-                affiliateAddress, AFFILIATE_FEE,
+                affiliateAddress, affiliateFee,
                 { from: accounts[5], value: amount }
             ))
         })
@@ -833,11 +844,12 @@ contract("XConversions", accounts => {
                 EOS_BLOCKCHAIN,                     
                 eosAddress,                         
                 '0',                                
-                affiliateAddress, AFFILIATE_FEE,
+                affiliateAddress, affiliateFee,
                 { from: accounts[5], value: amount }
             )
 
-            const prevBalance = await bntToken.balanceOf(bancorX.address)
+            const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
+            const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
 
             const res = await bancorNetwork.xConvert2(
                 path,                                               
@@ -846,11 +858,15 @@ contract("XConversions", accounts => {
                 EOS_BLOCKCHAIN,                                           
                 eosAddress,                                               
                 '0',                                                      
-                affiliateAddress, AFFILIATE_FEE,
+                affiliateAddress, affiliateFee,
                 { from: accounts[5], value: amount }
             )
 
-            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
+            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
+
+            const minExpectedFee = retAmount.mul(percent / 100);
+            const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
+            assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
         })
 
         it("should be able to xConvert2 from an ERC20", async () => {
@@ -868,11 +884,12 @@ contract("XConversions", accounts => {
                 EOS_BLOCKCHAIN,                     
                 eosAddress,                         
                 '0',                                
-                affiliateAddress, AFFILIATE_FEE,
+                affiliateAddress, affiliateFee,
                 { from: accounts[5] }
             )
 
-            const prevBalance = await bntToken.balanceOf(bancorX.address)
+            const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
+            const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
 
             const res = await bancorNetwork.xConvert2(
                 path,                                               
@@ -881,14 +898,18 @@ contract("XConversions", accounts => {
                 EOS_BLOCKCHAIN,                                           
                 eosAddress,                                               
                 '0',                                                      
-                affiliateAddress, AFFILIATE_FEE,
+                affiliateAddress, affiliateFee,
                 { from: accounts[5] }
             )
 
-            // console.log(res.receipt.gasUsed)
-            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
+            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
+
+            const minExpectedFee = retAmount.mul(percent / 100);
+            const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
+            assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
         })
     })
+    }
 })
 
 async function reportAndRelease(to, amount, txId, blockchainType, xTransferId = 0) {
