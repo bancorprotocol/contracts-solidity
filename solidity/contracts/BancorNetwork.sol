@@ -221,22 +221,26 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * @param _toBlockchain     blockchain BNT will be issued on
       * @param _to               address/account on _toBlockchain to send the BNT to
       * @param _conversionId     pre-determined unique (if non zero) id which refers to this transaction 
+      * @param _affiliateAccount    affiliate account
+      * @param _affiliateFee        affiliate fee in PPM
       * 
       * @return the amount of BNT received from this conversion
     */
-    function xConvert(
+    function xConvert2(
         IERC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
         bytes32 _toBlockchain,
         bytes32 _to,
-        uint256 _conversionId
+        uint256 _conversionId,
+        address _affiliateAccount,
+        uint256 _affiliateFee
     )
         public
         payable
         returns (uint256)
     {
-        return xConvertPrioritized2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, getSignature(0x0, 0x0, 0x0, 0x0, 0x0));
+        return xConvertPrioritized3(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, getSignature(0x0, 0x0, 0x0, 0x0, 0x0), _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -260,17 +264,21 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       *     [3] bytes32         (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
       *     [4] bytes32         (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
       * if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
+      * @param _affiliateAccount    affiliate account
+      * @param _affiliateFee        affiliate fee in PPM
       * 
       * @return the amount of BNT received from this conversion
     */
-    function xConvertPrioritized2(
+    function xConvertPrioritized3(
         IERC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
         bytes32 _toBlockchain,
         bytes32 _to,
         uint256 _conversionId,
-        uint256[] memory _signature
+        uint256[] memory _signature,
+        address _affiliateAccount,
+        uint256 _affiliateFee
     )
         public
         payable
@@ -289,7 +297,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         handleValue(_path[0], _amount, true);
 
         // convert and get the resulting amount
-        uint256 amount = convertByPath(_path, _amount, _minReturn, address(0), 0);
+        uint256 amount = convertByPath(_path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
 
         // transfer the resulting amount to BancorX
         IBancorX(registry.addressOf(ContractIds.BANCOR_X)).xTransfer(_toBlockchain, _to, amount, _conversionId);
@@ -713,6 +721,43 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     /**
       * @dev deprecated, backward compatibility
     */
+    function xConvert(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        bytes32 _toBlockchain,
+        bytes32 _to,
+        uint256 _conversionId
+    )
+        public
+        payable
+        returns (uint256)
+    {
+        return xConvert2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, address(0), 0);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function xConvertPrioritized2(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        bytes32 _toBlockchain,
+        bytes32 _to,
+        uint256 _conversionId,
+        uint256[] memory _signature
+    )
+        public
+        payable
+        returns (uint256)
+    {
+        return xConvertPrioritized3(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, _signature, address(0), 0);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
     function xConvertPrioritized(
         IERC20Token[] _path,
         uint256 _amount,
@@ -731,8 +776,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     {
         // workaround the 'stack too deep' compilation error
         uint256[] memory signature = getSignature(_amount, _block, _v, _r, _s);
-        return xConvertPrioritized2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, signature);
-        // return xConvertPrioritized2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, getSignature(_amount, _block, _v, _r, _s));
+        return xConvertPrioritized3(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, signature, address(0), 0);
+        // return xConvertPrioritized3(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, getSignature(_amount, _block, _v, _r, _s), address(0), 0);
     }
 
     /**
