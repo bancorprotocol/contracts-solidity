@@ -721,10 +721,7 @@ contract("XConversions", accounts => {
                 )
 
                 assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
-
-                const minExpectedFee = retAmount.mul(percent / 100);
-                const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
-                assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
+                assert.equal((await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate).toString(10), expectedFee(retAmount, percent).toString(10))
             })
 
             it("should be able to xConvertPrioritized3 from eth without a valid signature", async () => {
@@ -770,10 +767,7 @@ contract("XConversions", accounts => {
                 )
 
                 assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
-
-                const minExpectedFee = retAmount.mul(percent / 100);
-                const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
-                assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
+                assert.equal((await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate).toString(10), expectedFee(retAmount, percent).toString(10))
             })
 
             it("shouldn't be able to xConvertPrioritized3 from eth with an invalid signature", async () => {
@@ -863,10 +857,7 @@ contract("XConversions", accounts => {
                 )
 
                 assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
-
-                const minExpectedFee = retAmount.mul(percent / 100);
-                const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
-                assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
+                assert.equal((await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate).toString(10), expectedFee(retAmount, percent).toString(10))
             })
 
             it("should be able to xConvert2 from an ERC20", async () => {
@@ -903,10 +894,7 @@ contract("XConversions", accounts => {
                 )
 
                 assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
-
-                const minExpectedFee = retAmount.mul(percent / 100);
-                const actualFee = (await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate);
-                assert(actualFee.greaterThanOrEqualTo(minExpectedFee), `actualFee ${actualFee} smaller than minExpectedFee ${minExpectedFee}`)
+                assert.equal((await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate).toString(10), expectedFee(retAmount, percent).toString(10))
             })
         })
     }
@@ -1021,4 +1009,15 @@ function getId() {
     if (this.id == undefined)
         this.id = 0
     return ++this.id
+}
+
+const Decimal = require("decimal.js")
+Decimal.set({precision: 100, rounding: Decimal.ROUND_DOWN})
+
+function expectedFee(amount, percent) {
+    let fee = Decimal(amount.toFixed())
+    const ratio = Decimal(percent).div(100)
+    for (let n = 0; n < 4; n++)
+        fee = fee.mul(ratio.pow(2 ** n).plus(1))
+    return web3.toBigNumber(fee.mul(ratio).truncated())
 }
