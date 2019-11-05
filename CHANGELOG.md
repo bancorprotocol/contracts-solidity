@@ -1,4 +1,4 @@
-### 0.5.4 (2019-11-03)
+### 0.5.5 (2019-11-05)
 BancorNetwork:
 * Added affiliate fee support in xConvert & xConvertPrioritized
 
