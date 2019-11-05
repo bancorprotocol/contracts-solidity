@@ -28,8 +28,6 @@ Doing that will also remove the owner's ability to upgrade the controller.
 
 - [`acceptTokenOwnership()`](#SmartTokenController-acceptTokenOwnership--)
 
-- [`disableTokenTransfers(bool _disable)`](#SmartTokenController-disableTokenTransfers-bool-)
-
 - [`withdrawFromToken(contract IERC20Token _token, address _to, uint256 _amount)`](#SmartTokenController-withdrawFromToken-contract-IERC20Token-address-uint256-)
 
 - [`claimTokens(address _from, uint256 _amount)`](#SmartTokenController-claimTokens-address-uint256-)
@@ -61,16 +59,6 @@ can only be called by the contract owner
 used by a new owner to accept a token ownership transfer
 
 can only be called by the contract owner
-
-# Function `disableTokenTransfers(bool _disable)` {#SmartTokenController-disableTokenTransfers-bool-}
-
-disables/enables token transfers
-
-can only be called by the contract owner
-
-## Parameters:
-
-- `_disable`:    true to disable transfers, false to enable them
 
 # Function `withdrawFromToken(contract IERC20Token _token, address _to, uint256 _amount)` {#SmartTokenController-withdrawFromToken-contract-IERC20Token-address-uint256-}
 
