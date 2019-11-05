@@ -91,30 +91,6 @@ contract('SmartTokenController', accounts => {
         await utils.catchRevert(controller.transferTokenOwnership(controller2.address, { from: accounts[1] }));
     });
 
-    it('verifies that the owner can disable / re-enable token transfers', async () => {
-        let controller = await initController(accounts, true);
-
-        await controller.disableTokenTransfers(true);
-        let transfersEnabled = await token.transfersEnabled.call();
-        assert.equal(transfersEnabled, false);
-
-        await controller.disableTokenTransfers(false);
-        transfersEnabled = await token.transfersEnabled.call();
-        assert.equal(transfersEnabled, true);
-    });
-
-    it('should throw when the owner attempts to disable token transfers while the controller is not active', async () => {
-        let controller = await initController(accounts, false);
-
-        await utils.catchRevert(controller.disableTokenTransfers(true));
-    });
-
-    it('should throw when a non owner attempts to disable token transfers', async () => {
-        let controller = await initController(accounts, true);
-
-        await utils.catchRevert(controller.disableTokenTransfers(true, { from: accounts[1] }));
-    });
-
     it('verifies that the owner can withdraw other tokens from the token', async () => {
         let controller = await initController(accounts, true);
         let ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);

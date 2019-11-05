@@ -1,3 +1,11 @@
+### 0.5.5 (2019-11-05)
+BancorNetwork:
+* Added affiliate fee support in xConvert & xConvertPrioritized
+
+SmartTokenController:
+* Removed the disableTokenTransfers function
+
+
 ### 0.5.4 (2019-11-03)
 General:
 * Added a testnet/private chain deployment script/migration
