@@ -20,9 +20,8 @@ const MIN_REQ_REPORTS   = web3.toBigNumber('3')
 const TRANSACTION_ID    = web3.toBigNumber('12345678')
 const X_TRANSFER_ID     = web3.toBigNumber('87654321')
 
-// this is just gibberish bytes32
-const eosAddress = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c000000000000000000000000'
-const EOS_BLOCKCHAIN = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c000000000000000000000000'
+const EOS_ADDRESS    = web3.fromAscii('just a string 1')
+const EOS_BLOCKCHAIN = web3.fromAscii('just a string 2')
 
 function assertEqual(x, y) {
     assert.equal(x.toFixed(), y.toFixed())
@@ -39,9 +38,6 @@ async function initBancorX(accounts, isSmartToken) {
         etherToken.address,
         '100000'
     )
-
-    await contractRegistry.registerAddress(web3.fromAscii('BNTConverter'), bancorConverter.address)
-    await contractRegistry.registerAddress(web3.fromAscii('BNTToken'), smartToken.address)
 
     const bancorX = await BancorX.new(
         MAX_LOCK_LIMIT,
@@ -145,13 +141,13 @@ contract('BancorX', async accounts => {
             it('should not be able to lock below the min limit', async () => {
                 let bancorX = await initBancorX(accounts, isSmartToken)
                 let amount = MIN_LIMIT.minus(1)
-                await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount))
+                await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount))
             })
 
             it('should not be able to lock above the max limit', async () => {
                 let bancorX = await initBancorX(accounts, isSmartToken)
                 let amount = MAX_LOCK_LIMIT.plus(1)
-                await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount))
+                await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount))
             })
 
             it('should not be able to release below the min limit', async () => {
@@ -179,7 +175,7 @@ contract('BancorX', async accounts => {
             it('should emit an event when successfuly locking tokens', async () => {
                 let bancorX = await initBancorX(accounts, isSmartToken)
                 let amount = TEST_AMOUNT
-                let result = await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount)
+                let result = await bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount)
                 assert.equal(result.logs[0].args._amount, amount.toFixed())
                 assert.equal(result.logs[0].args._from, accounts[0])
             })
@@ -188,7 +184,7 @@ contract('BancorX', async accounts => {
                 let bancorX = await initBancorX(accounts, isSmartToken)
                 let numOfTests = 10;
                 let amount = LIM_INC_PER_BLOCK.times(numOfTests)
-                await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, amount)
+                await bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount)
 
                 for (let i = 0; i <= numOfTests; i++) {
                     assertEqual(await bancorX.getCurrentLockLimit.call(), MAX_LOCK_LIMIT.minus(amount).plus(MIN_LIMIT.times(i)))
@@ -231,7 +227,7 @@ contract('BancorX', async accounts => {
             it('should not allow xTransfers when disabled', async () => {
                 let bancorX = await initBancorX(accounts, isSmartToken)
                 await bancorX.enableXTransfers(false)
-                await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, TEST_AMOUNT))
+                await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, TEST_AMOUNT))
             })
 
             it('Gas Test', async () => {
@@ -239,7 +235,7 @@ contract('BancorX', async accounts => {
                 await bancorX.setReporter(accounts[1], true)
                 await bancorX.setReporter(accounts[2], true)
                 await bancorX.setReporter(accounts[3], true)
-                let result0 = await bancorX.xTransfer(EOS_BLOCKCHAIN, eosAddress, TEST_AMOUNT)
+                let result0 = await bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, TEST_AMOUNT)
                 let result1 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
                 let result2 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[2]})
                 let result3 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[3]})
