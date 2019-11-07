@@ -21,7 +21,7 @@
     "decimal.js": "^10.2.0",
     "ganache-cli": "6.7.0",
     "solidity-coverage": "0.6.7",
-    "solidity-docgen": "0.3.9",
+    "solidity-docgen": "0.3.11",
     "truffle": "4.1.16",
     "truffle-contract": "3.0.8",
     "truffle-flattener": "1.2.10",
