@@ -1,4 +1,0 @@
-root: ./
-structure:
-  readme: README.md
-  summary: solidity/docgen/SUMMARY.md
