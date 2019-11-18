@@ -972,8 +972,7 @@ const initBancorNetwork = async accounts => {
     await bntToken.issue(accounts[0], BNT_AMOUNT)
     await bntToken.transferOwnership(bntConverter.address)
 
-    // set virtual ratio and bancorx address for bnt converter, and accept token ownership
-    await bntConverter.updateReserve(etherToken.address, '100000', true, BNT_RESERVE_AMOUNT)
+    // set bancorx address for bnt converter, and accept token ownership
     await bntConverter.acceptTokenOwnership()
     await bntConverter.setBancorX(bancorX.address)
 
@@ -994,7 +993,7 @@ const initBancorNetwork = async accounts => {
     await erc20Token.transfer(accounts[5], web3.toWei('50'))
     await bntToken.transfer(erc20TokenConverter.address, web3.toWei('100'))
 
-    await erc20TokenConverter.addReserve(erc20Token.address, '500000', false)
+    await erc20TokenConverter.addReserve(erc20Token.address, '500000')
     await relayToken.transferOwnership(erc20TokenConverter.address)
     await erc20TokenConverter.acceptTokenOwnership()
 
