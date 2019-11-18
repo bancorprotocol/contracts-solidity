@@ -1,3 +1,9 @@
+### 0.5.6 (2019-11-18)
+BancorConverter:
+* Updated the virtual balances mechanism - it now scales all reserve balances by the same factor
+and is only relevant to cross reserve conversions
+
+
 ### 0.5.5 (2019-11-05)
 BancorNetwork:
 * Added affiliate fee support in xConvert & xConvertPrioritized
