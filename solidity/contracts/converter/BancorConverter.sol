@@ -121,6 +121,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     event ConversionsEnable(bool _conversionsEnabled);
 
     /**
+      * @dev triggered when virtual balances are enabled/disabled
+      * 
+      * @param  _enabled true if virtual balances are enabled, false if not
+    */
+    event VirtualBalancesEnable(bool _enabled);
+
+    /**
       * @dev initializes a new BancorConverter instance
       * 
       * @param  _token              smart token governed by the converter
@@ -448,6 +455,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
             reserve.isVirtualBalanceEnabled = enable;
             reserve.virtualBalance = enable ? reserveToken.balanceOf(this).mul(_scaleFactor).div(100) : 0;
         }
+
+        emit VirtualBalancesEnable(enable);
     }
 
     /**
