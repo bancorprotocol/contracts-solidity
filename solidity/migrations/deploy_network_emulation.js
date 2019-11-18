@@ -158,8 +158,8 @@ async function run() {
     await execute(smartToken2.methods.issue(account.address, smartToken2Params.supply));
     await execute(smartToken3.methods.issue(account.address, smartToken3Params.supply));
     await execute(smartToken4.methods.issue(account.address, smartToken4Params.supply));
-    await execute(bancorConverter3.methods.addReserve(erc20TokenA._address, converter3Params.ratio2, converter3Params.virtual));
-    await execute(bancorConverter4.methods.addReserve(erc20TokenB._address, converter4Params.ratio2, converter4Params.virtual));
+    await execute(bancorConverter3.methods.addReserve(erc20TokenA._address, converter3Params.ratio2));
+    await execute(bancorConverter4.methods.addReserve(erc20TokenB._address, converter4Params.ratio2));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractRegistry"        ), contractRegistry        ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractFeatures"        ), contractFeatures        ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("NonStandardTokenRegistry"), nonStandardTokenRegistry._address));

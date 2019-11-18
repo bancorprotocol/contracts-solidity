@@ -105,12 +105,12 @@ contract('BancorNetwork', accounts => {
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000);
 
         converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000);
-        await converter2.addReserve(smartToken3.address, 150000, false);
+        await converter2.addReserve(smartToken3.address, 150000);
 
         converter3 = await BancorConverter.new(smartToken3.address, contractRegistry.address, 0, smartToken4.address, 350000);
 
         converter4 = await BancorConverter.new(smartToken4.address, contractRegistry.address, 0, etherToken.address, 150000);
-        await converter4.addReserve(erc20Token.address, 220000, false);
+        await converter4.addReserve(erc20Token.address, 220000);
 
         await etherToken.transfer(converter1.address, 50000);
         await smartToken1.transfer(converter2.address, 40000);
