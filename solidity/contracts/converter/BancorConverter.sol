@@ -652,7 +652,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // transfer funds from the caller in the from reserve token
         ensureTransferFrom(_fromToken, msg.sender, this, _amount);
         // transfer funds to the caller in the to reserve token
-        // the transfer might fail if virtual balance is set
+        // the transfer might fail if virtual balance is enabled
         ensureTransfer(_toToken, msg.sender, amount);
 
         // dispatch the conversion event
