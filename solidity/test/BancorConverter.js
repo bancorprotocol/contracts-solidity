@@ -429,6 +429,87 @@ contract('BancorConverter', accounts => {
         await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
     });
 
+    it('verifies that the owner can enable / disable virtual balances', async () => {
+        let converter = await initConverter(accounts, true);
+        let reserveTokenAddress = await converter.reserveTokens(0);
+        let prevReserveBalance = await converter.getReserveBalance(reserveTokenAddress);
+
+        await converter.enableVirtualBalances(200);
+
+        let reserveBalance = await converter.getReserveBalance(reserveTokenAddress);
+        assert.equal(reserveBalance.toNumber(), prevReserveBalance.mul(2).toNumber());
+
+        await converter.enableVirtualBalances(100);
+
+        reserveBalance = await converter.getReserveBalance(reserveTokenAddress);
+        assert.equal(reserveBalance.toNumber(), prevReserveBalance.toNumber());
+    });
+
+    it('should throw when a non owner attempts enable virtual balances', async () => {
+        let converter = await initConverter(accounts, true);
+        await utils.catchRevert(converter.enableVirtualBalances(200, { from: accounts[1] }));
+    });
+
+    it('should throw when the owner attempts to enable virtual balances while the converter is inactive', async () => {
+        let converter = await initConverter(accounts, false);
+        await utils.catchRevert(converter.enableVirtualBalances(200));
+    });
+
+    it('should throw when the owner attempts to enable virtual balances with a factor smaller than 100', async () => {
+        let converter = await initConverter(accounts, true);
+        await utils.catchRevert(converter.enableVirtualBalances(99));
+    });
+
+    it('should throw when the owner attempts to enable virtual balances with a factor larger than 1000', async () => {
+        let converter = await initConverter(accounts, true);
+        await utils.catchRevert(converter.enableVirtualBalances(1001));
+    });
+
+    it('verifies that all reserve balances are updated by the same scale when virtual balances are enabled', async () => {
+        let converter = await initConverter(accounts, true);
+        let reserveToken1Address = await converter.reserveTokens(0);
+        let reserveToken2Address = await converter.reserveTokens(1);
+        let prevReserve1Balance = await converter.getReserveBalance(reserveToken1Address);
+        let prevReserve2Balance = await converter.getReserveBalance(reserveToken2Address);
+
+        await converter.enableVirtualBalances(200);
+
+        let reserve1Balance = await converter.getReserveBalance(reserveToken1Address);
+        let reserve2Balance = await converter.getReserveBalance(reserveToken2Address);
+        assert.equal(reserve1Balance.toNumber(), prevReserve1Balance.mul(2).toNumber());
+        assert.equal(reserve2Balance.toNumber(), prevReserve2Balance.mul(2).toNumber());
+    });
+
+    it('verifies virtual balances do not affect getPurchaseReturn result', async () => {
+        let converter = await initConverter(accounts, true);
+        let purchaseReturnAmount = (await converter.getPurchaseReturn.call(reserveToken.address, 500))[0];
+
+        await converter.enableVirtualBalances(400);
+        let purchaseReturnWithVBAmount = (await converter.getPurchaseReturn.call(reserveToken.address, 500))[0];
+
+        assert.equal(purchaseReturnAmount.toNumber(), purchaseReturnWithVBAmount.toNumber());
+    });
+
+    it('verifies virtual balances do not affect getSaleReturn result', async () => {
+        let converter = await initConverter(accounts, true);
+        let saleReturnAmount = (await converter.getSaleReturn.call(reserveToken.address, 500))[0];
+
+        await converter.enableVirtualBalances(400);
+        let saleReturnWithVBAmount = (await converter.getSaleReturn.call(reserveToken.address, 500))[0];
+
+        assert.equal(saleReturnAmount.toNumber(), saleReturnWithVBAmount.toNumber());
+    });
+
+    it('verifies virtual balances do affect getCrossReserveReturn result', async () => {
+        let converter = await initConverter(accounts, true);
+        let crossReturnAmount = (await converter.getCrossReserveReturn.call(reserveToken.address, reserveToken2.address, 500))[0];
+
+        await converter.enableVirtualBalances(400);
+        let crossReturnWithVBAmount = (await converter.getCrossReserveReturn.call(reserveToken.address, reserveToken2.address, 500))[0];
+
+        assert.notEqual(crossReturnAmount.toNumber(), crossReturnWithVBAmount.toNumber());
+    });
+
     it('verifies that the owner can disable / re-enable conversions', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
 
@@ -500,10 +581,10 @@ contract('BancorConverter', accounts => {
 
         let reserveBalance;
         prevReserveBalance = await converter.getReserveBalance.call(reserveTokenAddress);
-        await converter.enableVirtualBalance(500);
+        await converter.enableVirtualBalances(500);
         reserveBalance = await converter.getReserveBalance.call(reserveTokenAddress);
         assert.equal(reserveBalance.toNumber(), prevReserveBalance.mul(5).toNumber());
-        await converter.enableVirtualBalance(100);
+        await converter.enableVirtualBalances(100);
         reserveBalance = await converter.getReserveBalance.call(reserveTokenAddress);
         assert.equal(reserveBalance.toNumber(), prevReserveBalance.toNumber());
     });
@@ -978,7 +1059,7 @@ contract('BancorConverter', accounts => {
         await token.transferOwnership(converter.address);
         await converter.acceptTokenOwnership();
 
-        await converter.enableVirtualBalance(150);
+        await converter.enableVirtualBalances(150);
 
         let supply = await token.totalSupply.call();
         let percentage = 100 / (supply / 60);
@@ -1174,7 +1255,7 @@ contract('BancorConverter', accounts => {
         await token.transferOwnership(converter.address);
         await converter.acceptTokenOwnership();
 
-        await converter.enableVirtualBalance(150);
+        await converter.enableVirtualBalances(150);
 
         let supply = await token.totalSupply.call();
         let percentage = 100 / (supply / 60);

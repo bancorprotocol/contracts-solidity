@@ -24,7 +24,7 @@ import '../bancorx/interfaces/IBancorX.sol';
   * 
   * The ERC20 reserve balance can be virtual, meaning that conversions between reserve tokens are based on the virtual balance instead of relying on the actual reserve balance.
   * 
-  * This provides different financial tools (for example, lower slippage in conversions).
+  * This mechanism opens the possibility to create different financial tools (for example, lower slippage in conversions).
   * 
   * The converter is upgradable (just like any SmartTokenController) and all upgrades are opt-in. 
   * 
@@ -430,7 +430,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * 
       * @param _scaleFactor  percentage, 100-1000 (100 = no virtual balance, 1000 = virtual balance = actual balance * 10)
     */
-    function enableVirtualBalance(uint16 _scaleFactor)
+    function enableVirtualBalances(uint16 _scaleFactor)
         public
         ownerOnly
         active
