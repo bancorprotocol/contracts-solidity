@@ -21,8 +21,8 @@ const MAX_RELEASE_LIMIT = '1000000000000000000000' // 1000 bnt
 const MIN_LIMIT = '1000000000000000000' // 1 bnt
 const LIM_INC_PER_BLOCK = '1000000000000000000' // 1 bnt
 const MIN_REQUIRED_REPORTS = '3'
-const BNT_AMOUNT = '77492920201018469141404133'
-const BNT_RESERVE_AMOUNT = '45688650129186275318509'
+const BNT_AMOUNT = '920201018469141404133'
+const BNT_RESERVE_AMOUNT = '650129186275318509'
 
 const ZERO_BYTES32 = '0x'.padEnd(66, '0');
 
@@ -936,6 +936,9 @@ const initBancorNetwork = async accounts => {
         etherToken.address,
         '100000'
     )
+
+    await etherToken.deposit({ value: BNT_RESERVE_AMOUNT });
+    await etherToken.transfer(bntConverter.address, BNT_RESERVE_AMOUNT);
 
     bancorNetwork = await BancorNetwork.new(contractRegistry.address);
     await bancorNetwork.setSignerAddress(signerAddress);
