@@ -20,7 +20,6 @@ contract ContractIds {
 
     // BNT core
     bytes32 public constant BNT_TOKEN = "BNTToken";
-    bytes32 public constant BNT_CONVERTER = "BNTConverter";
 
     // BancorX
     bytes32 public constant BANCOR_X = "BancorX";

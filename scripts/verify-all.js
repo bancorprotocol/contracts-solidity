@@ -70,7 +70,7 @@ function post(contractId, sourceCode) {
                 console.log(contractId + ": " + error);
             }
             else {
-                body = JSON.parse(body);
+                body = parse(body);
                 if (body.status == "1")
                     get(contractId, body.result);
                 else
@@ -89,7 +89,7 @@ function get(contractId, guid) {
                 console.log(contractId + ": " + error);
             }
             else {
-                body = JSON.parse(body);
+                body = parse(body);
                 if (body.result == "Pending in queue")
                     get(contractId, guid);
                 else
@@ -97,6 +97,15 @@ function get(contractId, guid) {
             }
         }
     );
+}
+
+function parse(str) {
+    try {
+        return JSON.parse(str);
+    }
+    catch (error) {
+        return {};
+    }
 }
 
 run();

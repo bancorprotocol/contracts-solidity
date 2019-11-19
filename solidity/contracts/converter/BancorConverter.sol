@@ -22,9 +22,9 @@ import '../bancorx/interfaces/IBancorX.sol';
   * 
   * The Bancor converter allows for conversions between a Smart Token and other ERC20 tokens and between different ERC20 tokens and themselves. 
   * 
-  * The ERC20 reserve balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on the actual reserve balance.
+  * The ERC20 reserve balance can be virtual, meaning that conversions between reserve tokens are based on the virtual balance instead of relying on the actual reserve balance.
   * 
-  * This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract. 
+  * This mechanism opens the possibility to create different financial tools (for example, lower slippage in conversions).
   * 
   * The converter is upgradable (just like any SmartTokenController) and all upgrades are opt-in. 
   * 
@@ -42,7 +42,6 @@ import '../bancorx/interfaces/IBancorX.sol';
 contract BancorConverter is IBancorConverter, SmartTokenController, Managed, ContractIds, FeatureIds {
     using SafeMath for uint256;
 
-    
     uint32 private constant RATIO_RESOLUTION = 1000000;
     uint64 private constant CONVERSION_FEE_RESOLUTION = 1000000;
 
@@ -57,7 +56,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev version number
     */
-    uint16 public version = 19;
+    uint16 public version = 20;
     string public converterType = 'bancor';
 
     bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
@@ -122,6 +121,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     event ConversionsEnable(bool _conversionsEnabled);
 
     /**
+      * @dev triggered when virtual balances are enabled/disabled
+      * 
+      * @param  _enabled true if virtual balances are enabled, false if not
+    */
+    event VirtualBalancesEnable(bool _enabled);
+
+    /**
       * @dev initializes a new BancorConverter instance
       * 
       * @param  _token              smart token governed by the converter
@@ -153,7 +159,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         maxConversionFee = _maxConversionFee;
 
         if (_reserveToken != address(0))
-            addReserve(_reserveToken, _reserveRatio, false);
+            addReserve(_reserveToken, _reserveRatio);
     }
 
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
@@ -190,7 +196,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     // allows execution by the converter upgrader contract only
     modifier converterUpgraderOnly {
         address converterUpgrader = registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER);
-        require(owner == converterUpgrader);
+        require(msg.sender == converterUpgrader);
         _;
     }
 
@@ -381,9 +387,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * 
       * @param _token                  address of the reserve token
       * @param _ratio                  constant reserve ratio, represented in ppm, 1-1000000
-      * @param _enableVirtualBalance   true to enable virtual balance for the reserve, false to disable it
     */
-    function addReserve(IERC20Token _token, uint32 _ratio, bool _enableVirtualBalance)
+    function addReserve(IERC20Token _token, uint32 _ratio)
         public
         ownerOnly
         inactive
@@ -393,9 +398,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     {
         require(_token != token && !reserves[_token].isSet && totalReserveRatio + _ratio <= RATIO_RESOLUTION); // validate input
 
-        reserves[_token].virtualBalance = 0;
         reserves[_token].ratio = _ratio;
-        reserves[_token].isVirtualBalanceEnabled = _enableVirtualBalance;
+        reserves[_token].isVirtualBalanceEnabled = false;
+        reserves[_token].virtualBalance = 0;
         reserves[_token].isSaleEnabled = true;
         reserves[_token].isSet = true;
         reserveTokens.push(_token);
@@ -403,28 +408,55 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev updates one of the token reserves
-      * can only be called by the owner
+      * @dev updates a reserve's virtual balance
+      * only used during an upgrade process
+      * can only be called by the contract owner while the owner is the converter upgrader contract
       * note that prior to version 17, you should use 'updateConnector' instead
       * 
-      * @param _reserveToken           address of the reserve token
-      * @param _ratio                  constant reserve ratio, represented in ppm, 1-1000000
-      * @param _enableVirtualBalance   true to enable virtual balance for the reserve, false to disable it
-      * @param _virtualBalance         new reserve's virtual balance
+      * @param _reserveToken    address of the reserve token
+      * @param _virtualBalance  new reserve virtual balance, or 0 to disable virtual balance
     */
-    function updateReserve(IERC20Token _reserveToken, uint32 _ratio, bool _enableVirtualBalance, uint256 _virtualBalance)
+    function updateReserveVirtualBalance(IERC20Token _reserveToken, uint256 _virtualBalance)
         public
         ownerOnly
+        converterUpgraderOnly
         validReserve(_reserveToken)
-        validReserveRatio(_ratio)
     {
         Reserve storage reserve = reserves[_reserveToken];
-        require(totalReserveRatio - reserve.ratio + _ratio <= RATIO_RESOLUTION); // validate input
-
-        totalReserveRatio = totalReserveRatio - reserve.ratio + _ratio;
-        reserve.ratio = _ratio;
-        reserve.isVirtualBalanceEnabled = _enableVirtualBalance;
+        reserve.isVirtualBalanceEnabled = _virtualBalance != 0;
         reserve.virtualBalance = _virtualBalance;
+    }
+
+    /**
+      * @dev enables virtual balance for the reserves
+      * virtual balance only affects conversions between reserve tokens
+      * virtual balance of all reserves can only scale by the same factor, to keep the ratio between them the same
+      * note that the balance is determined during the execution of this function and set statically -
+      * meaning that it's not calculated dynamically based on the factor after each conversion
+      * can only be called by the contract owner while the converter is active
+      * 
+      * @param _scaleFactor  percentage, 100-1000 (100 = no virtual balance, 1000 = virtual balance = actual balance * 10)
+    */
+    function enableVirtualBalances(uint16 _scaleFactor)
+        public
+        ownerOnly
+        active
+    {
+        // validate input
+        require(_scaleFactor >= 100 && _scaleFactor <= 1000);
+        bool enable = _scaleFactor != 100;
+
+        // iterate through the reserves and scale their balance by the ratio provided,
+        // or disable virtual balance altogether if a factor of 100% is passed in
+        IERC20Token reserveToken;
+        for (uint16 i = 0; i < reserveTokens.length; i++) {
+            reserveToken = reserveTokens[i];
+            Reserve storage reserve = reserves[reserveToken];
+            reserve.isVirtualBalanceEnabled = enable;
+            reserve.virtualBalance = enable ? reserveToken.balanceOf(this).mul(_scaleFactor).div(100) : 0;
+        }
+
+        emit VirtualBalancesEnable(enable);
     }
 
     /**
@@ -505,7 +537,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         require(reserve.isSaleEnabled); // validate input
 
         uint256 tokenSupply = token.totalSupply();
-        uint256 reserveBalance = getReserveBalance(_reserveToken);
+        uint256 reserveBalance = _reserveToken.balanceOf(this);
         IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
         uint256 amount = formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
         uint256 finalAmount = getFinalAmount(amount, 1);
@@ -532,7 +564,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     {
         Reserve storage reserve = reserves[_reserveToken];
         uint256 tokenSupply = token.totalSupply();
-        uint256 reserveBalance = getReserveBalance(_reserveToken);
+        uint256 reserveBalance = _reserveToken.balanceOf(this);
         IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
         uint256 amount = formula.calculateSaleReturn(tokenSupply, reserveBalance, reserve.ratio, _sellAmount);
         uint256 finalAmount = getFinalAmount(amount, 1);
@@ -629,7 +661,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // transfer funds from the caller in the from reserve token
         ensureTransferFrom(_fromToken, msg.sender, this, _amount);
         // transfer funds to the caller in the to reserve token
-        // the transfer might fail if the actual reserve balance is smaller than the virtual balance
+        // the transfer might fail if virtual balance is enabled
         ensureTransfer(_toToken, msg.sender, amount);
 
         // dispatch the conversion event
@@ -637,8 +669,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         dispatchConversionEvent(_fromToken, _toToken, _amount, amount, feeAmount);
 
         // dispatch price data updates for the smart token / both reserves
-        emit PriceDataUpdate(_fromToken, token.totalSupply(), getReserveBalance(_fromToken), fromReserve.ratio);
-        emit PriceDataUpdate(_toToken, token.totalSupply(), getReserveBalance(_toToken), toReserve.ratio);
+        emit PriceDataUpdate(_fromToken, token.totalSupply(), _fromToken.balanceOf(this), fromReserve.ratio);
+        emit PriceDataUpdate(_toToken, token.totalSupply(), _toToken.balanceOf(this), toReserve.ratio);
         return amount;
     }
 
@@ -672,7 +704,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         dispatchConversionEvent(_reserveToken, token, _depositAmount, amount, feeAmount);
 
         // dispatch price data update for the smart token/reserve
-        emit PriceDataUpdate(_reserveToken, token.totalSupply(), getReserveBalance(_reserveToken), reserve.ratio);
+        emit PriceDataUpdate(_reserveToken, token.totalSupply(), _reserveToken.balanceOf(this), reserve.ratio);
         return amount;
     }
 
@@ -695,7 +727,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         // ensure that the trade will only deplete the reserve balance if the total supply is depleted as well
         uint256 tokenSupply = token.totalSupply();
-        uint256 reserveBalance = getReserveBalance(_reserveToken);
+        uint256 reserveBalance = _reserveToken.balanceOf(this);
         assert(amount < reserveBalance || (amount == reserveBalance && _sellAmount == tokenSupply));
 
         // update virtual balance if relevant
@@ -706,14 +738,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // destroy _sellAmount from the caller's balance in the smart token
         token.destroy(msg.sender, _sellAmount);
         // transfer funds to the caller in the reserve token
-        // the transfer might fail if the actual reserve balance is smaller than the virtual balance
         ensureTransfer(_reserveToken, msg.sender, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(token, _reserveToken, _sellAmount, amount, feeAmount);
 
         // dispatch price data update for the smart token/reserve
-        emit PriceDataUpdate(_reserveToken, token.totalSupply(), getReserveBalance(_reserveToken), reserve.ratio);
+        emit PriceDataUpdate(_reserveToken, token.totalSupply(), _reserveToken.balanceOf(this), reserve.ratio);
         return amount;
     }
 
@@ -922,7 +953,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 reserveAmount;
         for (uint16 i = 0; i < reserveTokens.length; i++) {
             reserveToken = reserveTokens[i];
-            reserveBalance = getReserveBalance(reserveToken);
+            reserveBalance = reserveToken.balanceOf(this);
             reserveAmount = formula.calculateFundReturn(supply, reserveBalance, totalReserveRatio, _amount);
 
             // update virtual balance if relevant
@@ -966,7 +997,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint256 reserveAmount;
         for (uint16 i = 0; i < reserveTokens.length; i++) {
             reserveToken = reserveTokens[i];
-            reserveBalance = getReserveBalance(reserveToken);
+            reserveBalance = reserveToken.balanceOf(this);
             reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _amount);
 
             // update virtual balance if relevant
@@ -975,7 +1006,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
                 reserve.virtualBalance = reserve.virtualBalance.sub(reserveAmount);
 
             // transfer funds to the caller in the reserve token
-            // the transfer might fail if the actual reserve balance is smaller than the virtual balance
             ensureTransfer(reserveToken, msg.sender, reserveAmount);
 
             // dispatch price data update for the smart token/reserve
@@ -1078,15 +1108,15 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev deprecated, backward compatibility
     */
-    function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance) public {
-        addReserve(_token, _weight, _enableVirtualBalance);
+    function addConnector(IERC20Token _token, uint32 _weight, bool /*_enableVirtualBalance*/) public {
+        addReserve(_token, _weight);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance) public {
-        updateReserve(_connectorToken, _weight, _enableVirtualBalance, _virtualBalance);
+    function updateConnector(IERC20Token _connectorToken, uint32 /*_weight*/, bool /*_enableVirtualBalance*/, uint256 _virtualBalance) public {
+        updateReserveVirtualBalance(_connectorToken, _virtualBalance);
     }
 
     /**
