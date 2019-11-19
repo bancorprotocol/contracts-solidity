@@ -148,22 +148,13 @@ contract('BancorNetworkPathFinder', accounts => {
                 converterRegistry2 = await BancorConverterRegistry.new();
                 converterRegistry3 = await BancorConverterRegistry.new();
 
-                if (test.version == 4) {
-                    await converter2.addReserve(smartToken1.address, 500000, false);
-                    await converter3.addReserve(smartToken1.address, 500000, false);
-                    await converter4.addReserve(smartToken1.address, 500000, false);
-                    await converter5.addReserve(smartToken1.address, 500000, false);
-                    await converter6.addReserve(smartToken1.address, 500000, false);
-                    await converter7.addReserve(smartToken2.address, 500000, false);
-                }
-                else {
-                    await converter2.addReserve(smartToken1.address, 500000);
-                    await converter3.addReserve(smartToken1.address, 500000);
-                    await converter4.addReserve(smartToken1.address, 500000);
-                    await converter5.addReserve(smartToken1.address, 500000);
-                    await converter6.addReserve(smartToken1.address, 500000);
-                    await converter7.addReserve(smartToken2.address, 500000);
-                }
+                const enableVirtualBalance = test.version ? false : undefined;
+                await converter2.addReserve(smartToken1.address, 500000, enableVirtualBalance);
+                await converter3.addReserve(smartToken1.address, 500000, enableVirtualBalance);
+                await converter4.addReserve(smartToken1.address, 500000, enableVirtualBalance);
+                await converter5.addReserve(smartToken1.address, 500000, enableVirtualBalance);
+                await converter6.addReserve(smartToken1.address, 500000, enableVirtualBalance);
+                await converter7.addReserve(smartToken2.address, 500000, enableVirtualBalance);
 
                 await converterRegistry1.registerConverter(smartToken1.address, converter1.address);
                 await converterRegistry1.registerConverter(smartToken2.address, converter2.address);
