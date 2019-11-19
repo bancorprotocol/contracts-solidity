@@ -276,25 +276,25 @@ Here is an example of the initial configuration file which should be provided to
         "supply": "1000000000000000000"
     },
     "smartToken3Params": {
-        "name": "XXX Smart Token Relay",
+            "name": "XXX/BNT Relay Token",
         "symbol": "XXXBNT",
         "decimals": 18,
         "supply": "200000000000000000"
     },
     "smartToken4Params": {
-        "name": "YYY Smart Token Relay",
+            "name": "YYY/BNT Relay Token",
         "symbol": "YYYBNT",
         "decimals": 18,
         "supply": "8300000000000000000"
     },
     "erc20TokenAParams": {
-        "name": "XXX ERC20 Token",
+            "name": "XXX Standard Token",
         "symbol": "XXX",
         "decimals": 18,
         "supply": "1500000000000000000000"
     },
     "erc20TokenBParams": {
-        "name": "YYY ERC20 Token",
+            "name": "YYY Standard Token",
         "symbol": "YYY",
         "decimals": 18,
         "supply": "1000000000000000000000"
