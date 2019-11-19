@@ -314,16 +314,14 @@ Here is an example of the initial configuration file which should be provided to
         "ratio1": 500000,
         "reserve1": "400000000000000000",
         "ratio2": 500000,
-        "reserve2": "520000000000000000",
-        "virtual": false
+        "reserve2": "520000000000000000"
     },
     "converter4Params": {
         "fee": 1000,
         "ratio1": 500000,
         "reserve1": "250000000000000000",
         "ratio2": 500000,
-        "reserve2": "1300000000000000000",
-        "virtual": false
+        "reserve2": "1300000000000000000"
     },
     "priceLimitParams": {
         "value": "6000000000"
