@@ -662,7 +662,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         ensureTransferFrom(_fromToken, msg.sender, this, _amount);
         // transfer funds to the caller in the to reserve token
         // the transfer might fail if virtual balance is enabled
-        ensureTransfer(_toToken, msg.sender, amount);
+        ensureTransferFrom(_toToken, this, msg.sender, amount);
 
         // dispatch the conversion event
         // the fee is higher (magnitude = 2) since cross reserve conversion equals 2 conversions (from / to the smart token)
@@ -738,7 +738,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // destroy _sellAmount from the caller's balance in the smart token
         token.destroy(msg.sender, _sellAmount);
         // transfer funds to the caller in the reserve token
-        ensureTransfer(_reserveToken, msg.sender, amount);
+        ensureTransferFrom(_reserveToken, this, msg.sender, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(token, _reserveToken, _sellAmount, amount, feeAmount);
@@ -888,45 +888,28 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * true on success but revert on failure instead
       * 
       * @param _token     the token to transfer
-      * @param _to        the address to transfer the tokens to
-      * @param _amount    the amount to transfer
-    */
-    function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
-        IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
-
-        if (addressList.listedAddresses(_token)) {
-            uint256 prevBalance = _token.balanceOf(_to);
-            // we have to cast the token contract in an interface which has no return value
-            INonStandardERC20(_token).transfer(_to, _amount);
-            uint256 postBalance = _token.balanceOf(_to);
-            assert(postBalance > prevBalance);
-        } else {
-            // if the token isn't whitelisted, we assert on transfer
-            assert(_token.transfer(_to, _amount));
-        }
-    }
-
-    /**
-      * @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
-      * true on success but revert on failure instead
-      * 
-      * @param _token     the token to transfer
       * @param _from      the address to transfer the tokens from
       * @param _to        the address to transfer the tokens to
       * @param _amount    the amount to transfer
     */
     function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
         IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
-
+        bool transferFromThis = _from == address(this);
         if (addressList.listedAddresses(_token)) {
             uint256 prevBalance = _token.balanceOf(_to);
             // we have to cast the token contract in an interface which has no return value
-            INonStandardERC20(_token).transferFrom(_from, _to, _amount);
+            if (transferFromThis)
+                INonStandardERC20(_token).transfer(_to, _amount);
+            else
+                INonStandardERC20(_token).transferFrom(_from, _to, _amount);
             uint256 postBalance = _token.balanceOf(_to);
             assert(postBalance > prevBalance);
         } else {
             // if the token is standard, we assert on transfer
-            assert(_token.transferFrom(_from, _to, _amount));
+            if (transferFromThis)
+                assert(_token.transfer(_to, _amount));
+            else
+                assert(_token.transferFrom(_from, _to, _amount));
         }
     }
 
@@ -1001,7 +984,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
                 reserve.virtualBalance = reserve.virtualBalance.sub(reserveAmount);
 
             // transfer funds to the caller in the reserve token
-            ensureTransfer(reserveToken, msg.sender, reserveAmount);
+            ensureTransferFrom(reserveToken, this, msg.sender, reserveAmount);
 
             // dispatch price data update for the smart token/reserve
             emit PriceDataUpdate(reserveToken, supply - _amount, reserveBalance - reserveAmount, reserve.ratio);
