@@ -180,12 +180,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
-    // allows execution only when the total ratio is 100%
-    modifier fullTotalRatioOnly() {
-        require(totalReserveRatio == RATIO_RESOLUTION);
-        _;
-    }
-
     // allows execution only when conversions aren't disabled
     modifier conversionsAllowed {
         require(conversionsEnabled);
@@ -209,6 +203,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     // allows execution only if the total-supply of the token is greater than zero
     modifier totalSupplyGreaterThanZeroOnly {
         require(token.totalSupply() > 0);
+        _;
+    }
+
+    // allows execution only on a multiple-reserve converter
+    modifier multipleReservesOnly {
+        require(reserveTokens.length > 1);
         _;
     }
 
@@ -917,16 +917,17 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @dev buys the token with all reserve tokens using the same percentage
       * for example, if the caller increases the supply by 10%,
       * then it will cost an amount equal to 10% of each reserve token balance
-      * note that the function can be called only if the total ratio is 100% and conversions are enabled
+      * note that the function can be called only when conversions are enabled
       * 
       * @param _amount  amount to increase the supply by (in the smart token)
     */
     function fund(uint256 _amount)
         public
-        fullTotalRatioOnly
         conversionsAllowed
+        multipleReservesOnly
     {
         uint256 supply = token.totalSupply();
+        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
 
         // iterate through the reserve tokens and transfer a percentage equal to the ratio between _amount
         // and the total supply in each reserve from the caller to the converter
@@ -936,7 +937,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < reserveTokens.length; i++) {
             reserveToken = reserveTokens[i];
             reserveBalance = reserveToken.balanceOf(this);
-            reserveAmount = _amount.mul(reserveBalance).sub(1).div(supply).add(1);
+            reserveAmount = formula.calculateFundReturn(supply, reserveBalance, totalReserveRatio, _amount);
 
             // update virtual balance if relevant
             Reserve storage reserve = reserves[reserveToken];
@@ -958,12 +959,16 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @dev sells the token for all reserve tokens using the same percentage
       * for example, if the holder sells 10% of the supply,
       * then they will receive 10% of each reserve token balance in return
-      * note that the function can be called only if the total ratio is 100%
+      * note that the function can be called also when conversions are disabled
       * 
       * @param _amount  amount to liquidate (in the smart token)
     */
-    function liquidate(uint256 _amount) public fullTotalRatioOnly {
+    function liquidate(uint256 _amount)
+        public
+        multipleReservesOnly
+    {
         uint256 supply = token.totalSupply();
+        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
 
         // destroy _amount from the caller's balance in the smart token
         token.destroy(msg.sender, _amount);
@@ -976,7 +981,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < reserveTokens.length; i++) {
             reserveToken = reserveTokens[i];
             reserveBalance = reserveToken.balanceOf(this);
-            reserveAmount = _amount.mul(reserveBalance).div(supply);
+            reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _amount);
 
             // update virtual balance if relevant
             Reserve storage reserve = reserves[reserveToken];

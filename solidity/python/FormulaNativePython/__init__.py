@@ -17,5 +17,13 @@ def calculateCrossReserveReturn(balance1, ratio1, balance2, ratio2, amount):
     return Decimal(balance2)*(1-(Decimal(balance1)/Decimal(balance1+amount))**(Decimal(ratio1)/Decimal(ratio2)))
 
 
+def calculateFundReturn(supply, balance, ratios, amount):
+    return Decimal(balance)*((Decimal(supply+amount)/Decimal(supply))**(1000000/Decimal(ratios))-1)
+
+
+def calculateLiquidateReturn(supply, balance, ratios, amount):
+    return Decimal(balance)*((Decimal(supply)/Decimal(supply-amount))**(1000000/Decimal(ratios))-1)
+
+
 def power(baseN, baseD, expN, expD, precision):
     return (Decimal(baseN)/Decimal(baseD))**(Decimal(expN)/Decimal(expD))*2**precision

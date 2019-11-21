@@ -254,6 +254,68 @@ def calculateCrossReserveReturn(_fromReserveBalance, _fromReserveRatio, _toReser
     return (temp1 - temp2) // result;
 
 '''
+    @dev given a relay token supply, reserve balance, total ratio and an amount of relay tokens,
+    calculates the amount of reserve tokens required for purchasing the given amount of relay tokens
+
+    Formula:
+    Return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_RATIO / _totalRatio) - 1)
+
+    @param _supply              relay token supply
+    @param _reserveBalance      reserve token balance
+    @param _totalRatio          total ratio, represented in ppm, 2-2000000
+    @param _amount              amount of relay tokens
+
+    @return amount of reserve tokens
+'''
+def calculateFundReturn(_supply, _reserveBalance, _totalRatio, _amount):
+    # validate input
+    assert(_supply > 0 and _reserveBalance > 0 and _totalRatio > 1 and _totalRatio <= MAX_RATIO * 2);
+
+    # special case for 0 amount
+    if (_amount == 0):
+        return 0;
+
+    # special case if the total ratio = 100%
+    if (_totalRatio == MAX_RATIO):
+        return (safeMul(_amount, _reserveBalance) - 1) // _supply + 1;
+
+    baseN = safeAdd(_supply, _amount);
+    (result, precision) = power(baseN, _supply, MAX_RATIO, _totalRatio);
+    temp = ((safeMul(_reserveBalance, result) - 1) >> precision) + 1;
+    return temp - _reserveBalance;
+
+'''
+    @dev given a relay token supply, reserve balance, total ratio and an amount of relay tokens,
+    calculates the amount of reserve tokens received for selling the given amount of relay tokens
+
+    Formula:
+    Return = _reserveBalance * ((_supply / (_supply - _amount)) ^ (MAX_RATIO / _totalRatio) - 1)
+
+    @param _supply              relay token supply
+    @param _reserveBalance      reserve token balance
+    @param _totalRatio          total ratio, represented in ppm, 2-2000000
+    @param _amount              amount of relay tokens
+
+    @return amount of reserve tokens
+'''
+def calculateLiquidateReturn(_supply, _reserveBalance, _totalRatio, _amount):
+    # validate input
+    assert(_supply > 0 and _reserveBalance > 0 and _totalRatio > 1 and _totalRatio <= MAX_RATIO * 2 and _amount <= _supply);
+
+    # special case for 0 amount
+    if (_amount == 0):
+        return 0;
+
+    # special case if the total ratio = 100%
+    if (_totalRatio == MAX_RATIO):
+        return safeMul(_amount, _reserveBalance) // _supply;
+
+    baseD = _supply - _amount;
+    (result, precision) = power(_supply, baseD, MAX_RATIO, _totalRatio);
+    temp = safeMul(_reserveBalance, result) >> precision;
+    return temp - _reserveBalance;
+
+'''
     @dev General Description:
         Determine a value of precision.
         Calculate an integer approximation of (_baseN / _baseD) ^ (_expN / _expD) * 2 ^ precision.

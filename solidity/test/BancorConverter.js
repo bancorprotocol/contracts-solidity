@@ -1002,6 +1002,18 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.convert(tokenAddress, reserveToken.address, 30000, 1));
     });
 
+    it('should throw when attempting to execute fund on a single-reserve converter', async () => {
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, reserveToken.address, 1000000);
+
+        await utils.catchRevert(converter.fund(1));
+    });
+
+    it('should throw when attempting to execute liquidate on a single-reserve converter', async () => {
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, reserveToken.address, 1000000);
+
+        await utils.catchRevert(converter.liquidate(1));
+    });
+
     it('verifies that getReturn returns the same amount as getCrossReserveReturn when converting between 2 reserves', async () => {
         let converter = await initConverter(accounts, true);
         let returnAmount = (await converter.getReturn.call(reserveToken.address, reserveToken2.address, 500))[0];
@@ -1031,24 +1043,26 @@ contract('BancorConverter', accounts => {
         assert.equal(returnAmount.toNumber(), returnAmount2);
     });
 
-    it('verifies that fund executes when the total reserve ratio equals 100%', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addReserve(reserveToken3.address, 600000);
+    for (const percent of [50, 75, 100]) {
+        it(`verifies that fund executes when the total reserve ratio equals ${percent}%`, async () => {
+            let converter = await initConverter(accounts, false);
+            await converter.addReserve(reserveToken3.address, (percent - 40) * 10000);
 
-        await reserveToken3.transfer(converter.address, 6000);
+            await reserveToken3.transfer(converter.address, 6000);
 
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
+            await token.transferOwnership(converter.address);
+            await converter.acceptTokenOwnership();
 
-        let prevBalance = await token.balanceOf.call(accounts[0]);
-        await reserveToken.approve(converter.address, 100000);
-        await reserveToken2.approve(converter.address, 100000);
-        await reserveToken3.approve(converter.address, 100000);
-        await converter.fund(100);
-        let balance = await token.balanceOf.call(accounts[0]);
+            let prevBalance = await token.balanceOf.call(accounts[0]);
+            await reserveToken.approve(converter.address, 100000);
+            await reserveToken2.approve(converter.address, 100000);
+            await reserveToken3.approve(converter.address, 100000);
+            await converter.fund(100);
+            let balance = await token.balanceOf.call(accounts[0]);
 
-        assert.equal(balance.toNumber(), prevBalance.toNumber() + 100);
-    });
+            assert.equal(balance.toNumber(), prevBalance.toNumber() + 100);
+        });
+    }
 
     it('verifies that fund updates the virtual balance correctly', async () => {
         let converter = await initConverter(accounts, false);
@@ -1185,22 +1199,6 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.fund(100));
     });
 
-    it('should throw when attempting to fund the converter when the total reserve ratio is not equal to 100%', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addReserve(reserveToken3.address, 500000);
-
-        await reserveToken3.transfer(converter.address, 6000);
-
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
-
-        await reserveToken.approve(converter.address, 100000);
-        await reserveToken2.approve(converter.address, 100000);
-        await reserveToken3.approve(converter.address, 100000);
-
-        await utils.catchRevert(converter.fund(100));
-    });
-
     it('should throw when attempting to fund the converter with insufficient funds', async () => {
         let converter = await initConverter(accounts, false);
         await converter.addReserve(reserveToken3.address, 600000);
@@ -1230,21 +1228,23 @@ contract('BancorConverter', accounts => {
         
     });
 
-    it('verifies that liquidate executes when the total reserve ratio equals 100%', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addReserve(reserveToken3.address, 600000);
+    for (const percent of [50, 75, 100]) {
+        it(`verifies that liquidate executes when the total reserve ratio equals ${percent}%`, async () => {
+            let converter = await initConverter(accounts, false);
+            await converter.addReserve(reserveToken3.address, (percent - 40) * 10000);
 
-        await reserveToken3.transfer(converter.address, 6000);
+            await reserveToken3.transfer(converter.address, 6000);
 
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
+            await token.transferOwnership(converter.address);
+            await converter.acceptTokenOwnership();
 
-        let prevSupply = await token.totalSupply.call();
-        await converter.liquidate(100);
-        let supply = await token.totalSupply();
+            let prevSupply = await token.totalSupply.call();
+            await converter.liquidate(100);
+            let supply = await token.totalSupply();
 
-        assert.equal(prevSupply - 100, supply);
-    });
+            assert.equal(prevSupply - 100, supply);
+        });
+    }
 
     it('verifies that liquidate updates the virtual balance correctly', async () => {
         let converter = await initConverter(accounts, false);
@@ -1390,18 +1390,6 @@ contract('BancorConverter', accounts => {
         let supply = await token.totalSupply();
 
         assert.equal(prevSupply - 100, supply);
-    });
-
-    it('should throw when attempting to liquidate when the total reserve ratio is not equal to 100%', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addReserve(reserveToken3.address, 500000);
-
-        await reserveToken3.transfer(converter.address, 6000);
-
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
-
-        await utils.catchRevert(converter.liquidate(100));
     });
 
     it('should throw when attempting to liquidate with insufficient funds', async () => {
