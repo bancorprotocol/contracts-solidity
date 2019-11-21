@@ -3,7 +3,6 @@ const Web3 = require("web3");
 
 const NODE_ADDRESS  = process.argv[2];
 const CONTRACT_ADDR = process.argv[3];
-const VERSION_TYPES = process.argv.slice(4);
 
 async function getVersion(contract) {
     while (true) {
@@ -22,7 +21,7 @@ function toString(type, data) {
         const list = [];
         for (let i = 2; i < data.length; i += 2) {
             const num = Number("0x" + data.slice(i, i + 2));
-            if (32 <= num && num <= 127)
+            if (32 <= num && num <= 126)
                 list.push(num);
             else
                 break;
@@ -35,11 +34,15 @@ function toString(type, data) {
 async function run() {
     const web3 = new Web3(NODE_ADDRESS);
 
-    for (const VERSION_TYPE of VERSION_TYPES) {
-        const abi = [{"constant":true,"inputs":[],"name":"version","outputs":[{"name":"","type":VERSION_TYPE}],"payable":false,"stateMutability":"view","type":"function"}];
+    for (const type of ["string", "bytes32", "uint16"]) {
+        const abi = [{"constant":true,"inputs":[],"name":"version","outputs":[{"name":"","type":type}],"payable":false,"stateMutability":"view","type":"function"}];
         const contract = new web3.eth.Contract(abi , CONTRACT_ADDR);
         const version = await getVersion(contract);
-        console.log(VERSION_TYPE + "version: " + toString(VERSION_TYPE, version));
+        const string = toString(type, version);
+        if (string) {
+            console.log(type + "version: " + string);
+            break;
+        }
     }
 
     if (web3.currentProvider.constructor.name == "WebsocketProvider")
