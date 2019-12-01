@@ -267,7 +267,7 @@ def calculateCrossReserveReturn(_fromReserveBalance, _fromReserveRatio, _toReser
 
     @return amount of reserve tokens
 '''
-def calculateFundReturn(_supply, _reserveBalance, _totalRatio, _amount):
+def calculateFundCost(_supply, _reserveBalance, _totalRatio, _amount):
     # validate input
     assert(_supply > 0 and _reserveBalance > 0 and _totalRatio > 1 and _totalRatio <= MAX_RATIO * 2);
 

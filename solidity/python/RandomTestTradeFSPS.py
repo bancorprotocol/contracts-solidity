@@ -9,8 +9,8 @@ getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits f
 
 
 def formulaTest(supply, balance1, ratio1, balance2, ratio2, amount0):
-    amount1 = FormulaSolidityPort.calculateFundReturn(supply, balance1, ratio1 + ratio2, amount0)
-    amount2 = FormulaSolidityPort.calculateFundReturn(supply, balance2, ratio1 + ratio2, amount0)
+    amount1 = FormulaSolidityPort.calculateFundCost(supply, balance1, ratio1 + ratio2, amount0)
+    amount2 = FormulaSolidityPort.calculateFundCost(supply, balance2, ratio1 + ratio2, amount0)
     amount3 = FormulaSolidityPort.calculateSaleReturn(supply + amount0, balance1 + amount1, ratio1, amount0)
     amount4 = FormulaSolidityPort.calculatePurchaseReturn(supply, balance1 + amount1 - amount3, ratio1, amount3 - amount1)
     amount5 = FormulaSolidityPort.calculateSaleReturn(supply + amount4, balance2 + amount2, ratio2, amount4)
