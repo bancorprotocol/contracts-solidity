@@ -23,7 +23,6 @@ const gasPriceBadHigh = 22000000001;
 let token;
 let tokenAddress;
 let contractRegistry;
-let contractIds;
 let contractFeatures;
 let reserveToken;
 let reserveToken2;

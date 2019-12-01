@@ -24,7 +24,6 @@ let smartToken3;
 let smartToken4;
 let erc20Token;
 let contractRegistry;
-let contractIds;
 let converter1;
 let converter2;
 let converter3;
