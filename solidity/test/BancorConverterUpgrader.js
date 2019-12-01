@@ -4,7 +4,6 @@
 const utils = require('./helpers/Utils');
 const BancorConverter = require('./helpers/BancorConverter');
 
-const ContractIds = artifacts.require('ContractIds');
 const SmartToken = artifacts.require('SmartToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
@@ -83,18 +82,17 @@ async function getNewConverter() {
 contract('BancorConverterUpgrader', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
-        let contractIds = await ContractIds.new();
 
         contractFeatures = await ContractFeatures.new();
-        let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
+        let contractFeaturesId = web3.fromAscii('ContractFeatures');
         await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
 
         let converterFactory = await BancorConverterFactory.new();
-        let converterFactoryId = await contractIds.BANCOR_CONVERTER_FACTORY.call();
+        let converterFactoryId = web3.fromAscii('BancorConverterFactory');
         await contractRegistry.registerAddress(converterFactoryId, converterFactory.address);
 
         converterUpgrader = await BancorConverterUpgrader.new(contractRegistry.address);
-        let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
+        let bancorConverterUpgraderId = web3.fromAscii('BancorConverterUpgrader');
         await contractRegistry.registerAddress(bancorConverterUpgraderId, converterUpgrader.address);
     });
 

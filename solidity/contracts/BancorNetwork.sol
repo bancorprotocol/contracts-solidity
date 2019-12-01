@@ -1,13 +1,12 @@
 pragma solidity 0.4.26;
 import './IBancorNetwork.sol';
-import './ContractIds.sol';
 import './FeatureIds.sol';
 import './converter/interfaces/IBancorConverter.sol';
 import './converter/interfaces/IBancorFormula.sol';
 import './converter/interfaces/IBancorGasPriceLimit.sol';
 import './utility/TokenHolder.sol';
 import './utility/SafeMath.sol';
-import './utility/interfaces/IContractRegistry.sol';
+import './utility/ContractRegistryClient.sol';
 import './utility/interfaces/IContractFeatures.sol';
 import './utility/interfaces/IWhitelist.sol';
 import './utility/interfaces/IAddressList.sol';
@@ -31,7 +30,7 @@ import './bancorx/interfaces/IBancorX.sol';
   * Format:
   * [source token, smart token, to token, smart token, to token...]
 */
-contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
+contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, FeatureIds {
     using SafeMath for uint256;
 
     uint256 private constant CONVERSION_FEE_RESOLUTION = 1000000;
@@ -39,7 +38,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
     uint256 public maxAffiliateFee = 30000;     // maximum affiliate-fee
     address public signerAddress = 0x0;         // verified address that allows conversions with higher gas price
-    IContractRegistry public registry;          // contract registry contract address
 
     mapping (address => bool) public etherTokens;       // list of all supported ether tokens
     mapping (bytes32 => bool) public conversionHashes;  // list of conversion hashes, to prevent re-use of the same hash
@@ -49,8 +47,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * 
       * @param _registry    address of a contract registry contract
     */
-    constructor(IContractRegistry _registry) public validAddress(_registry) {
-        registry = _registry;
+    constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
     }
 
     /**
@@ -75,8 +72,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         public
         ownerOnly
         validAddress(_registry)
-        notThis(_registry)
     {
+        prevRegistry = registry;
         registry = _registry;
     }
 
@@ -291,7 +288,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         verifyConversionParams(_path, msg.sender, this, _signature);
 
         // verify that the destination token is BNT
-        require(_path[_path.length - 1] == registry.addressOf(ContractIds.BNT_TOKEN));
+        require(_path[_path.length - 1] == addressOf(BNT_TOKEN));
 
         // handle msg.value
         handleValue(_path[0], _amount, true);
@@ -300,7 +297,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint256 amount = convertByPath(_path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
 
         // transfer the resulting amount to BancorX
-        IBancorX(registry.addressOf(ContractIds.BANCOR_X)).xTransfer(_toBlockchain, _to, amount, _conversionId);
+        IBancorX(addressOf(BANCOR_X)).xTransfer(_toBlockchain, _to, amount, _conversionId);
 
         return amount;
     }
@@ -333,7 +330,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         }
         else {
             require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee);
-            bntToken = registry.addressOf(ContractIds.BNT_TOKEN);
+            bntToken = addressOf(BNT_TOKEN);
         }
 
         // iterate over the conversion path
@@ -399,7 +396,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         uint256 balance;
         uint32 ratio;
         IBancorConverter converter;
-        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
 
         amount = _amount;
 
@@ -528,7 +525,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * @param _amount    the amount to transfer
     */
     function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
-        IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
+        IAddressList addressList = IAddressList(addressOf(NON_STANDARD_TOKEN_REGISTRY));
 
         if (addressList.listedAddresses(_token)) {
             uint256 prevBalance = _token.balanceOf(_to);
@@ -552,7 +549,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
       * @param _amount    the amount to transfer
     */
     function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
-        IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
+        IAddressList addressList = IAddressList(addressOf(NON_STANDARD_TOKEN_REGISTRY));
 
         if (addressList.listedAddresses(_token)) {
             uint256 prevBalance = _token.balanceOf(_to);
@@ -636,12 +633,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
 
         // verify that the account which should receive the conversion result is whitelisted
-        IContractFeatures features = IContractFeatures(registry.addressOf(ContractIds.CONTRACT_FEATURES));
+        IContractFeatures features = IContractFeatures(addressOf(CONTRACT_FEATURES));
         for (uint256 i = 1; i < _path.length; i += 2) {
             IBancorConverter converter = IBancorConverter(ISmartToken(_path[i]).owner());
             if (features.isSupported(converter, FeatureIds.CONVERTER_CONVERSION_WHITELIST)) {
                 IWhitelist whitelist = converter.conversionWhitelist();
-                require (whitelist == address(0) || whitelist.isWhitelisted(_receiver));
+                require(whitelist == address(0) || whitelist.isWhitelisted(_receiver));
             }
         }
 
@@ -651,7 +648,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         }
         else {
             // verify gas price limit
-            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(registry.addressOf(ContractIds.BANCOR_GAS_PRICE_LIMIT));
+            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(addressOf(BANCOR_GAS_PRICE_LIMIT));
             gasPriceLimit.validateGasPrice(tx.gasprice);
         }
     }
