@@ -288,7 +288,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * 
       * @return amount of reserve tokens
     */
-    function calculateFundReturn(uint256 _supply, uint256 _reserveBalance, uint32 _totalRatio, uint256 _amount) public view returns (uint256) {
+    function calculateFundCost(uint256 _supply, uint256 _reserveBalance, uint32 _totalRatio, uint256 _amount) public view returns (uint256) {
         // validate input
         require(_supply > 0 && _reserveBalance > 0 && _totalRatio > 1 && _totalRatio <= MAX_RATIO * 2);
 

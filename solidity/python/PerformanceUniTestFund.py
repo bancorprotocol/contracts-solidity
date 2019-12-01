@@ -41,7 +41,7 @@ def Main():
                     testNum += 1
                     if True:
                         try:
-                            gas = tester.calculateFundReturn(supply, balance, ratios, amount)
+                            gas = tester.calculateFundCost(supply, balance, ratios, amount)
                             minGas = min(minGas, gas)
                             maxGas = max(maxGas, gas)
                             totalGas += gas

@@ -5,8 +5,8 @@ import FormulaNativePython
 
 
 def formulaTest(supply, balance, ratios, amount):
-    resultSolidityPort = FormulaSolidityPort.calculateFundReturn(supply, balance, ratios, amount)
-    resultNativePython = FormulaNativePython.calculateFundReturn(supply, balance, ratios, amount)
+    resultSolidityPort = FormulaSolidityPort.calculateFundCost(supply, balance, ratios, amount)
+    resultNativePython = FormulaNativePython.calculateFundCost(supply, balance, ratios, amount)
     if resultNativePython > resultSolidityPort:
         error = ['Implementation Error:']
         error.append('supply             = {}'.format(supply))

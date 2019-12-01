@@ -937,7 +937,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < reserveTokens.length; i++) {
             reserveToken = reserveTokens[i];
             reserveBalance = reserveToken.balanceOf(this);
-            reserveAmount = formula.calculateFundReturn(supply, reserveBalance, totalReserveRatio, _amount);
+            reserveAmount = formula.calculateFundCost(supply, reserveBalance, totalReserveRatio, _amount);
 
             // update virtual balance if relevant
             Reserve storage reserve = reserves[reserveToken];
