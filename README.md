@@ -192,7 +192,7 @@ Triggered when a conversion between one of the convertible tokens takes place.
   * `npm test 2` (full coverage)
 * [Verifying the BancorFormula contract](./solidity/python/README.md)
 
-## [Operational](./solidity/migrations/README.md)
+### [Operational](./solidity/migrations/README.md)
 
 ## Collaborators
 
