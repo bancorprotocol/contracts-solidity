@@ -4,14 +4,12 @@ import './Utils.sol';
 import './interfaces/IContractRegistry.sol';
 
 /**
-  * @dev Id definitions for bancor contracts
-  * 
-  * Can be used in conjunction with the contract registry to get contract addresses
+  * @dev Base contract for ContractRegistry clients.
 */
 contract ContractRegistryClient is Owned, Utils {
-    IContractRegistry public registry;      // contract registry
-    IContractRegistry public prevRegistry;  // address of previous registry as security mechanism
-    bool public allowRegistryUpdate = true; // allows the owner to prevent/allow the registry to be updated
+    IContractRegistry public registry;      // address of the current contract-registry
+    IContractRegistry public prevRegistry;  // address of the previous contract-registry
+    bool public allowRegistryUpdate = true; // allow/prevent changing the contract-registry
 
     constructor(IContractRegistry _registry) internal validAddress(_registry) {
         registry = IContractRegistry(_registry);
@@ -19,51 +17,56 @@ contract ContractRegistryClient is Owned, Utils {
     }
 
     /**
-      * @dev returns whether or not the caller is authorized to change the registry
+      * @dev returns whether or not the caller is authorized to change the contract-registry
      */
     function callerIsAuthorized() internal view returns (bool) {
         return msg.sender == owner;
     }
 
     /**
-      * @dev sets the contract registry to whichever address the current registry is pointing to
+      * @dev sets the contract-registry to the address of the contract-registry in the contract-registry
      */
     function updateRegistry() public {
-        // require that updating is allowed or that the caller is authorized
+        // verify that either updating is allowed or the caller is authorized
         require(allowRegistryUpdate || callerIsAuthorized());
 
-        // get the address of whichever registry the current registry is pointing to
+        // get the address of the contract-registry in the contract-registry
         address newRegistry = addressOf(CONTRACT_REGISTRY);
 
-        // if the new registry hasn't changed or is the zero address, revert
+        // verify that the new contract-registry is different and not zero
         require(newRegistry != address(registry) && newRegistry != address(0));
 
-        // set the previous registry as current registry and current registry as newRegistry
+        // set the previous contract-registry as current contract-registry
         prevRegistry = registry;
+
+        // set the current contract-registry as the new contract-registry
         registry = IContractRegistry(newRegistry);
     }
 
     /**
-      * @dev security mechanism allowing the converter owner to revert to the previous registry
+      * @dev security mechanism allowing to revert to the previous contract-registry
     */
     function restoreRegistry() public {
-        // require that restoring is allowed or that the caller is authorized
+        // verify that either restoring is allowed or the caller is authorized
         require(allowRegistryUpdate || callerIsAuthorized());
 
-        // set the registry as previous registry
+        // set the current contract-registry as the previous contract-registry
         registry = prevRegistry;
 
-        // after a previous registry is restored, only the owner can allow future updates
+        // ensure that only an authorized caller can perform future changes
         allowRegistryUpdate = false;
     }
 
     /**
-      * @dev disables the registry update functionality
+      * @dev allow/prevent changing the contract-registry
       * 
-      * @param _disable    true to disable registry updates, false to re-enable them
+      * @param _disable    true to disable changes, false to enable changes
     */
     function disableRegistryUpdate(bool _disable) public ownerOnly {
+        // verify that the caller is authorized
         require(callerIsAuthorized());
+
+        // allow/prevent changing the contract-registry
         allowRegistryUpdate = !_disable;
     }
 
@@ -88,22 +91,15 @@ contract ContractRegistryClient is Owned, Utils {
         _;
     }
 
-    // generic
     bytes32 internal constant CONTRACT_FEATURES = "ContractFeatures";
     bytes32 internal constant CONTRACT_REGISTRY = "ContractRegistry";
     bytes32 internal constant NON_STANDARD_TOKEN_REGISTRY = "NonStandardTokenRegistry";
-
-    // bancor logic
     bytes32 internal constant BANCOR_NETWORK = "BancorNetwork";
     bytes32 internal constant BANCOR_FORMULA = "BancorFormula";
     bytes32 internal constant BANCOR_GAS_PRICE_LIMIT = "BancorGasPriceLimit";
     bytes32 internal constant BANCOR_CONVERTER_UPGRADER = "BancorConverterUpgrader";
     bytes32 internal constant BANCOR_CONVERTER_FACTORY = "BancorConverterFactory";
-
-    // BNT core
     bytes32 internal constant BNT_TOKEN = "BNTToken";
-
-    // BancorX
     bytes32 internal constant BANCOR_X = "BancorX";
     bytes32 internal constant BANCOR_X_UPGRADER = "BancorXUpgrader";
 }
