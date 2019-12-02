@@ -65,6 +65,8 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
 
     /**
       * @dev initializes a new BancorConverterUpgrader instance
+      * 
+      * @param _registry    address of a contract registry contract
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
     }

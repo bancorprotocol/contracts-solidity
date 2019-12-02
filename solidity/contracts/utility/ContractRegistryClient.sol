@@ -4,13 +4,18 @@ import './Utils.sol';
 import './interfaces/IContractRegistry.sol';
 
 /**
-  * @dev Base contract for ContractRegistry clients.
+  * @dev Base contract for ContractRegistry clients
 */
 contract ContractRegistryClient is Owned, Utils {
     IContractRegistry public registry;      // address of the current contract-registry
     IContractRegistry public prevRegistry;  // address of the previous contract-registry
     bool public allowRegistryUpdate = true; // allow/prevent changing the contract-registry
 
+    /**
+      * @dev initializes a new ContractRegistryClient instance
+      * 
+      * @param  _registry   address of a contract-registry contract
+    */
     constructor(IContractRegistry _registry) internal validAddress(_registry) {
         registry = IContractRegistry(_registry);
         prevRegistry = IContractRegistry(_registry);
@@ -44,7 +49,7 @@ contract ContractRegistryClient is Owned, Utils {
     }
 
     /**
-      * @dev security mechanism allowing to revert to the previous contract-registry
+      * @dev reverts back to the previous contract-registry
     */
     function restoreRegistry() public {
         // verify that either restoring is allowed or the caller is authorized
@@ -58,7 +63,7 @@ contract ContractRegistryClient is Owned, Utils {
     }
 
     /**
-      * @dev allow/prevent changing the contract-registry
+      * @dev allows/prevents changing the contract-registry
       * 
       * @param _disable    true to disable changes, false to enable changes
     */
