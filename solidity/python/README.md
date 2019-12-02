@@ -2,7 +2,7 @@
 
 ### [Prerequisites](../../README.md#prerequisites)
 
-### [Installation](../../README.md#prerequisites)
+### [Installation](../../README.md#installation)
 
 ### Verifying accuracy:
 
