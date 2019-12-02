@@ -23,6 +23,14 @@ node migrate_converter_registry.js
     New BancorConverterRegistry contract address
 ```
 
+### Retrieve Contract Version
+
+```bash
+node migrate_converter_registry.js
+    Ethereum node address
+    Designated contract address
+```
+
 ### Verify Network Path Finder
 
 ```bash
@@ -32,7 +40,7 @@ node verify_network_path_finder.js
     BancorConverterRegistry contract addresses
 ```
 
-#### Deploy Network Emulation / Notes
+### Deploy Network Emulation / Notes
 
 This process can also be executed via `truffle deploy` or `truffle migrate` provided with the same input parameters:
 ```bash
