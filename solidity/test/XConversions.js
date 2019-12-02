@@ -16,6 +16,15 @@ const ContractFeatures = artifacts.require('ContractFeatures');
 const ERC20Token = artifacts.require('ERC20Token');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 
+const bntConverterId = web3.fromAscii('BNTConverter');
+const bntTokenId = web3.fromAscii('BNTToken');
+const bancorGasPriceLimitId = web3.fromAscii('BancorGasPriceLimit');
+const bancorFormulaId = web3.fromAscii('BancorFormula');
+const bancorNetworkId = web3.fromAscii('BancorNetwork');
+const contractFeaturesId = web3.fromAscii('ContractFeatures');
+const nonStandardTokenRegistryId = web3.fromAscii('NonStandardTokenRegistry');
+const bancorXId = web3.fromAscii('BancorX');
+
 const MAX_LOCK_LIMIT = '1000000000000000000000' // 1000 bnt
 const MAX_RELEASE_LIMIT = '1000000000000000000000' // 1000 bnt
 const MIN_LIMIT = '1000000000000000000' // 1 bnt
@@ -937,22 +946,6 @@ const initBancorNetwork = async accounts => {
         '100000'
     )
 
-    await etherToken.deposit({ value: BNT_RESERVE_AMOUNT });
-    await etherToken.transfer(bntConverter.address, BNT_RESERVE_AMOUNT);
-
-    bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-    await bancorNetwork.setSignerAddress(signerAddress);
-    await bancorNetwork.registerEtherToken(etherToken.address, true);
-
-    await contractRegistry.registerAddress(web3.fromAscii('BNTConverter'), bntConverter.address)
-    await contractRegistry.registerAddress(web3.fromAscii('BNTToken'), bntToken.address)
-    await contractRegistry.registerAddress(web3.fromAscii('BancorGasPriceLimit'), gasPriceLimit.address)
-    await contractRegistry.registerAddress(web3.fromAscii('BancorFormula'), bancorFormula.address)
-    await contractRegistry.registerAddress(web3.fromAscii('BancorNetwork'), bancorNetwork.address)
-    await contractRegistry.registerAddress(web3.fromAscii('ContractFeatures'), contractFeatures.address)
-    await contractRegistry.registerAddress(web3.fromAscii('NonStandardTokenRegistry'), tokenWhitelist.address)
-
-
     bancorX = await BancorX.new(
         MAX_LOCK_LIMIT,
         MAX_RELEASE_LIMIT,
@@ -968,8 +961,21 @@ const initBancorNetwork = async accounts => {
     await bancorX.setReporter(reporter2, true)
     await bancorX.setReporter(reporter3, true)
 
-    // register BancorX address
-    await contractRegistry.registerAddress(web3.fromAscii('BancorX'), bancorX.address)
+    await etherToken.deposit({ value: BNT_RESERVE_AMOUNT });
+    await etherToken.transfer(bntConverter.address, BNT_RESERVE_AMOUNT);
+
+    bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+    await bancorNetwork.setSignerAddress(signerAddress);
+    await bancorNetwork.registerEtherToken(etherToken.address, true);
+
+    await contractRegistry.registerAddress(bntConverterId, bntConverter.address)
+    await contractRegistry.registerAddress(bntTokenId, bntToken.address)
+    await contractRegistry.registerAddress(bancorGasPriceLimitId, gasPriceLimit.address)
+    await contractRegistry.registerAddress(bancorFormulaId, bancorFormula.address)
+    await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address)
+    await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address)
+    await contractRegistry.registerAddress(nonStandardTokenRegistryId, tokenWhitelist.address)
+    await contractRegistry.registerAddress(bancorXId, bancorX.address)
 
     // issue bnt and transfer ownership to converter
     await bntToken.issue(accounts[0], BNT_AMOUNT)
