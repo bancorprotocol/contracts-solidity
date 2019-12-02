@@ -190,46 +190,7 @@ Triggered when a conversion between one of the convertible tokens takes place.
 * Verifying all the contracts:
   * `npm test 1` (quick testing)
   * `npm test 2` (full coverage)
-* Verifying the accuracy of the BancorFormula contract:
-  * `python ./solidity/python/RandomTestCross.py`
-  * `python ./solidity/python/RandomTestFund.py`
-  * `python ./solidity/python/RandomTestLiquidate.py`
-  * `python ./solidity/python/RandomTestPower.py`
-  * `python ./solidity/python/RandomTestPurchase.py`
-  * `python ./solidity/python/RandomTestSale.py`
-  * `python ./solidity/python/RandomTestTradeCPS.py`
-  * `python ./solidity/python/RandomTestTradeFSC.py`
-  * `python ./solidity/python/RandomTestTradeFSPS.py`
-  * `python ./solidity/python/RandomTestTradeLPP.py`
-  * `python ./solidity/python/RandomTestTradePS.py`
-  * `python ./solidity/python/RandomTestTradePSC.py`
-  * `python ./solidity/python/RandomTestTradeSP.py`
-  * `python ./solidity/python/RandomTestVerifyCross.py`
-  * `python ./solidity/python/RandomTestVerifyFund.py`
-* Verifying the correctness of the BancorFormula contract:
-  * `python ./solidity/python/RunGanache.py`
-  * `python ./solidity/python/EmulationExpTestCross.py`
-  * `python ./solidity/python/EmulationExpTestFund.py`
-  * `python ./solidity/python/EmulationExpTestLiquidate.py`
-  * `python ./solidity/python/EmulationExpTestPurchase.py`
-  * `python ./solidity/python/EmulationExpTestSale.py`
-  * `python ./solidity/python/EmulationUniTestCross.py`
-  * `python ./solidity/python/EmulationUniTestFund.py`
-  * `python ./solidity/python/EmulationUniTestLiquidate.py`
-  * `python ./solidity/python/EmulationUniTestPurchase.py`
-  * `python ./solidity/python/EmulationUniTestSale.py`
-* Verifying the performance of the BancorFormula contract:
-  * `python ./solidity/python/RunGanache.py`
-  * `python ./solidity/python/PerformanceExpTestCross.py`
-  * `python ./solidity/python/PerformanceExpTestFund.py`
-  * `python ./solidity/python/PerformanceExpTestLiquidate.py`
-  * `python ./solidity/python/PerformanceExpTestPurchase.py`
-  * `python ./solidity/python/PerformanceExpTestSale.py`
-  * `python ./solidity/python/PerformanceUniTestCross.py`
-  * `python ./solidity/python/PerformanceUniTestFund.py`
-  * `python ./solidity/python/PerformanceUniTestLiquidate.py`
-  * `python ./solidity/python/PerformanceUniTestPurchase.py`
-  * `python ./solidity/python/PerformanceUniTestSale.py`
+* [Verifying the BancorFormula contract](./solidity/python/README.md)
 
 ### Deploy Network Emulation
 
