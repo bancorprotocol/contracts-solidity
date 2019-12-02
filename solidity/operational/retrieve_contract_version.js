@@ -39,7 +39,7 @@ async function run() {
         const version = await rpc(contract.methods.version());
         const string = parse(type, version);
         if (string) {
-            console.log(type + "version: " + string);
+            console.log(type + " version: " + string);
             break;
         }
     }
