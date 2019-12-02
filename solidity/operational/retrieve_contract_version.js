@@ -1,4 +1,3 @@
-const fs   = require("fs");
 const Web3 = require("web3");
 
 const NODE_ADDRESS  = process.argv[2];
