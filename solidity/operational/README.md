@@ -4,25 +4,6 @@
 
 ### [Installation](../../README.md#installation)
 
-### Deploy Network Emulation
-
-```bash
-node deploy_network_emulation.js
-    Configuration file name
-    Ethereum node address
-    Account private key
-```
-
-### Migrate Converter Registry
-
-```bash
-node migrate_converter_registry.js
-    Ethereum node address
-    Account private key
-    Old BancorConverterRegistry contract address
-    New BancorConverterRegistry contract address
-```
-
 ### Retrieve Contract Version
 
 ```bash
@@ -40,7 +21,26 @@ node verify_network_path_finder.js
     BancorConverterRegistry contract addresses
 ```
 
-### Deploy Network Emulation / Notes
+### Migrate Converter Registry
+
+```bash
+node migrate_converter_registry.js
+    Ethereum node address
+    Account private key
+    Old BancorConverterRegistry contract address
+    New BancorConverterRegistry contract address
+```
+
+### Deploy Network Emulation
+
+```bash
+node deploy_network_emulation.js
+    Configuration file name
+    Ethereum node address
+    Account private key
+```
+
+---
 
 This process can also be executed via `truffle deploy` or `truffle migrate` provided with the same input parameters:
 ```bash
@@ -49,6 +49,8 @@ truffle deploy
     Ethereum node address
     Account private key
 ```
+
+---
 
 The configuration file is updated during the process, in order to allow resuming a prematurely-terminated execution.
 
