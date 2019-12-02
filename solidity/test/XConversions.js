@@ -922,7 +922,7 @@ const initBancorNetwork = async accounts => {
     affiliateAddress = accounts[6]
 
     const gasPriceLimit = await BancorGasPriceLimit.new("30000000000"); // 30 gwei
-    const formula = await BancorFormula.new();
+    const bancorFormula = await BancorFormula.new();
     const contractRegistry = await ContractRegistry.new()
     const contractFeatures = await ContractFeatures.new()
     const tokenWhitelist = await NonStandardTokenRegistry.new()
@@ -947,7 +947,7 @@ const initBancorNetwork = async accounts => {
     await contractRegistry.registerAddress(web3.fromAscii('BNTConverter'), bntConverter.address)
     await contractRegistry.registerAddress(web3.fromAscii('BNTToken'), bntToken.address)
     await contractRegistry.registerAddress(web3.fromAscii('BancorGasPriceLimit'), gasPriceLimit.address)
-    await contractRegistry.registerAddress(web3.fromAscii('BancorFormula'), formula.address)
+    await contractRegistry.registerAddress(web3.fromAscii('BancorFormula'), bancorFormula.address)
     await contractRegistry.registerAddress(web3.fromAscii('BancorNetwork'), bancorNetwork.address)
     await contractRegistry.registerAddress(web3.fromAscii('ContractFeatures'), contractFeatures.address)
     await contractRegistry.registerAddress(web3.fromAscii('NonStandardTokenRegistry'), tokenWhitelist.address)

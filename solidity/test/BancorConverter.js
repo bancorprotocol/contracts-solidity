@@ -16,6 +16,15 @@ const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 const utils = require('./helpers/Utils');
 
+const contractFeaturesId = web3.fromAscii('ContractFeatures');
+const gasPriceLimitId = web3.fromAscii('BancorGasPriceLimit');
+const bancorFormulaId = web3.fromAscii('BancorFormula');
+const nonStandardTokenRegistryId = web3.fromAscii('NonStandardTokenRegistry');
+const bancorNetworkId = web3.fromAscii('BancorNetwork');
+const bancorConverterFactoryId = web3.fromAscii('BancorConverterFactory');
+const bancorConverterUpgraderId = web3.fromAscii('BancorConverterUpgrader');
+const contractRegistryId = web3.fromAscii('ContractRegistry');
+
 const ratio10Percent = 100000;
 const gasPrice = 22000000000;
 const gasPriceBadHigh = 22000000001;
@@ -73,32 +82,25 @@ contract('BancorConverter', accounts => {
         contractRegistry = await ContractRegistry.new();
 
         contractFeatures = await ContractFeatures.new();
-        let contractFeaturesId = web3.fromAscii('ContractFeatures');
         await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
 
         let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
-        let gasPriceLimitId = web3.fromAscii('BancorGasPriceLimit');
         await contractRegistry.registerAddress(gasPriceLimitId, gasPriceLimit.address);
 
-        let formula = await BancorFormula.new();
-        let formulaId = web3.fromAscii('BancorFormula');
-        await contractRegistry.registerAddress(formulaId, formula.address);
+        let bancorFormula = await BancorFormula.new();
+        await contractRegistry.registerAddress(bancorFormulaId, bancorFormula.address);
 
         let nonStandardTokenRegistry = await NonStandardTokenRegistry.new();
-        let nonStandardTokenRegistryId = web3.fromAscii('NonStandardTokenRegistry');
         await contractRegistry.registerAddress(nonStandardTokenRegistryId, nonStandardTokenRegistry.address);
 
         let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-        let bancorNetworkId = web3.fromAscii('BancorNetwork');
         await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[3]);
 
         let factory = await BancorConverterFactory.new();
-        let bancorConverterFactoryId = web3.fromAscii('BancorConverterFactory');
         await contractRegistry.registerAddress(bancorConverterFactoryId, factory.address);
 
         upgrader = await BancorConverterUpgrader.new(contractRegistry.address);
-        let bancorConverterUpgraderId = web3.fromAscii('BancorConverterUpgrader');
         await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
 
         let token = await SmartToken.new('Token1', 'TKN1', 2); 
@@ -387,7 +389,6 @@ contract('BancorConverter', accounts => {
         let reserve = await converter.reserves.call(reserveToken.address);
         verifyReserve(reserve, true, true, ratio10Percent, false, 0);
 
-        let bancorConverterUpgraderId = web3.fromAscii('BancorConverterUpgrader');
         await contractRegistry.registerAddress(bancorConverterUpgraderId, accounts[0]);
 
         await converter.updateReserveVirtualBalance(reserveToken.address, 50);
@@ -418,7 +419,6 @@ contract('BancorConverter', accounts => {
         let reserve = await converter.reserves.call(reserveToken.address);
         verifyReserve(reserve, true, true, ratio10Percent, false, 0);
 
-        let bancorConverterUpgraderId = web3.fromAscii('BancorConverterUpgrader');
         await contractRegistry.registerAddress(bancorConverterUpgraderId, accounts[0]);
 
         await utils.catchRevert(converter.updateReserveVirtualBalance(reserveToken2.address, 0));
@@ -596,7 +596,6 @@ contract('BancorConverter', accounts => {
     it('verifies that the owner can transfer the token ownership if the owner is the upgrader contract', async () => {
         let converter = await initConverter(accounts, true);
 
-        let bancorConverterUpgraderId = web3.fromAscii('BancorConverterUpgrader');
         await contractRegistry.registerAddress(bancorConverterUpgraderId, accounts[0]);
 
         await converter.transferTokenOwnership(accounts[1]);
@@ -623,7 +622,6 @@ contract('BancorConverter', accounts => {
 
     it('should throw when a the upgrader contract attempts to transfer the token ownership while the upgrader is not the owner', async () => {
         let converter = await initConverter(accounts, true);
-        let bancorConverterUpgraderId = web3.fromAscii('BancorConverterUpgrader');
         await contractRegistry.registerAddress(bancorConverterUpgraderId, accounts[2]);
 
         await utils.catchRevert(converter.transferTokenOwnership(accounts[1], { from: accounts[2] }));
@@ -1406,7 +1404,6 @@ contract('BancorConverter', accounts => {
     });
 
     it('should have the registry point to zero after initialization', async () => {
-        let contractRegistryId = web3.fromAscii('ContractRegistry');
         let registryAddress = await contractRegistry.addressOf.call(contractRegistryId)
         assert.equal(registryAddress, utils.zeroAddress)
     });
@@ -1418,14 +1415,12 @@ contract('BancorConverter', accounts => {
     });
 
     it('should throw when attempting to register the registry to the zero address', async () => {
-        let contractRegistryId = web3.fromAscii('ContractRegistry');
 
         await utils.catchRevert(contractRegistry.registerAddress(contractRegistryId, utils.zeroAddress))
     });
 
     it('should allow anyone to update the registry address', async () => {
         let converter = await initConverter(accounts, false);
-        let contractRegistryId = web3.fromAscii('ContractRegistry');
         let newRegistry = await ContractRegistry.new()
 
         await contractRegistry.registerAddress(contractRegistryId, newRegistry.address)
@@ -1440,7 +1435,6 @@ contract('BancorConverter', accounts => {
 
     it('should allow the owner to restore the previous registry and disable updates', async () => {
         let converter = await initConverter(accounts, false);
-        let contractRegistryId = web3.fromAscii('ContractRegistry');
         let newRegistry = await ContractRegistry.new()
 
         await contractRegistry.registerAddress(contractRegistryId, newRegistry.address)

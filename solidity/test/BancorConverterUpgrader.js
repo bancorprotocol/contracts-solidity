@@ -12,6 +12,10 @@ const Whitelist = artifacts.require('Whitelist');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
+const contractFeaturesId = web3.fromAscii('ContractFeatures');
+const converterFactoryId = web3.fromAscii('BancorConverterFactory');
+const bancorConverterUpgraderId = web3.fromAscii('BancorConverterUpgrader');
+
 const versions = [9, 10, 11];
 
 let token;
@@ -84,15 +88,12 @@ contract('BancorConverterUpgrader', accounts => {
         contractRegistry = await ContractRegistry.new();
 
         contractFeatures = await ContractFeatures.new();
-        let contractFeaturesId = web3.fromAscii('ContractFeatures');
         await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
 
         let converterFactory = await BancorConverterFactory.new();
-        let converterFactoryId = web3.fromAscii('BancorConverterFactory');
         await contractRegistry.registerAddress(converterFactoryId, converterFactory.address);
 
         converterUpgrader = await BancorConverterUpgrader.new(contractRegistry.address);
-        let bancorConverterUpgraderId = web3.fromAscii('BancorConverterUpgrader');
         await contractRegistry.registerAddress(bancorConverterUpgraderId, converterUpgrader.address);
     });
 
