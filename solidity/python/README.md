@@ -1,9 +1,8 @@
 ## BancorFormula Contract Verification
 
-### Prerequisites
+### [Prerequisites](../../README.md#prerequisites)
 
-* python 3.7.3
-* web3.py 4.9.2
+### [Installation](../../README.md#prerequisites)
 
 ### Verifying accuracy:
 

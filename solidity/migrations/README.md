@@ -1,5 +1,9 @@
 ## Operational Scripts
 
+### [Prerequisites](../../README.md#prerequisites)
+
+### [Installation](../../README.md#prerequisites)
+
 ### Deploy Network Emulation
 
 ```bash
