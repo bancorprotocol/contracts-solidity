@@ -7,7 +7,7 @@
 ### Retrieve Contract Version
 
 ```bash
-node migrate_converter_registry.js
+node retrieve_contract_version.js
     Ethereum node address
     Designated contract address
 ```
@@ -40,8 +40,6 @@ node deploy_network_emulation.js
     Account private key
 ```
 
----
-
 This process can also be executed via `truffle deploy` or `truffle migrate` provided with the same input parameters:
 ```bash
 truffle deploy
@@ -49,8 +47,6 @@ truffle deploy
     Ethereum node address
     Account private key
 ```
-
----
 
 The configuration file is updated during the process, in order to allow resuming a prematurely-terminated execution.
 
