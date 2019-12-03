@@ -58,13 +58,10 @@ contract ContractRegistryClient is Owned, Utils {
     */
     function restoreRegistry() public {
         // verify that this function is permitted
-        require(!onlyAdmin || isAdmin());
+        require(isAdmin());
 
         // set the current contract-registry as the previous contract-registry
         registry = prevRegistry;
-
-        // ensure that only an administrator can change the contract-registry from now on
-        onlyAdmin = true;
     }
 
     /**
