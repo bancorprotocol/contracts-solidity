@@ -67,7 +67,7 @@ contract ContractRegistryClient is Owned, Utils {
       * 
       * @param _disable    true to disable changes, false to enable changes
     */
-    function disableRegistryUpdate(bool _disable) public ownerOnly {
+    function disableRegistryUpdate(bool _disable) public {
         // verify that the caller is authorized
         require(callerIsAuthorized());
 
