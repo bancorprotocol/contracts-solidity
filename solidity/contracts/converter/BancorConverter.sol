@@ -191,17 +191,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev returns an indication of whether or not a caller is an administrator
-      * 
-      * @param caller   the caller
-      * 
-      * @return an indication of whether or not the caller is an administrator
-     */
-    function isAdministrator(address caller) internal view returns (bool) {
-        return caller == owner || caller == manager;
-    }
-
-    /**
       * @dev returns the number of reserve tokens defined
       * note that prior to version 17, you should use 'connectorTokenCount' instead
       * 
@@ -829,6 +818,17 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         token.issue(bancorNetwork, amount);
 
         return bancorNetwork.convertForPrioritized4(_path, amount, _minReturn, msg.sender, _signature, address(0), 0);
+    }
+
+    /**
+      * @dev returns an indication of whether or not a caller is an administrator
+      * 
+      * @param caller   the caller
+      * 
+      * @return an indication of whether or not the caller is an administrator
+     */
+    function isAdministrator(address caller) internal view returns (bool) {
+        return caller == owner || caller == manager;
     }
 
     /**
