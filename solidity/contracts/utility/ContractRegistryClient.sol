@@ -34,13 +34,6 @@ contract ContractRegistryClient is Owned, Utils {
     }
 
     /**
-      * @dev returns whether or not the caller is an administrator
-     */
-    function isAdmin() internal view returns (bool) {
-        return msg.sender == owner;
-    }
-
-    /**
       * @dev updates to the new contract-registry
      */
     function updateRegistry() public {
@@ -85,6 +78,13 @@ contract ContractRegistryClient is Owned, Utils {
 
         // change the value of the 'onlyAdmin' restriction
         onlyAdmin = _onlyAdmin;
+    }
+
+    /**
+      * @dev returns whether or not the caller is an administrator
+     */
+    function isAdmin() internal view returns (bool) {
+        return msg.sender == owner;
     }
 
     /**
