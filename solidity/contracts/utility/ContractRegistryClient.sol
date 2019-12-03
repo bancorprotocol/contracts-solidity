@@ -45,13 +45,13 @@ contract ContractRegistryClient is Owned, Utils {
     }
 
     /**
-      * @dev sets the contract-registry to the address of the contract-registry in the contract-registry
+      * @dev updates to the new contract-registry
      */
     function updateRegistry() public {
         // verify that this function is permitted
         require(!onlyAdmin || isAdmin(msg.sender));
 
-        // get the address of the contract-registry in the contract-registry
+        // get the new contract-registry
         address newRegistry = addressOf(CONTRACT_REGISTRY);
 
         // verify that the new contract-registry is different and not zero
@@ -65,7 +65,7 @@ contract ContractRegistryClient is Owned, Utils {
     }
 
     /**
-      * @dev reverts back to the previous contract-registry
+      * @dev restores the previous contract-registry
     */
     function restoreRegistry() public {
         // verify that this function is permitted
