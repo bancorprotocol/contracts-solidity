@@ -13,10 +13,6 @@ const Whitelist = artifacts.require('Whitelist');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
-const contractFeaturesId = web3.fromAscii(ContractRegistryClient.CONTRACT_FEATURES);
-const converterFactoryId = web3.fromAscii(ContractRegistryClient.BANCOR_CONVERTER_FACTORY);
-const bancorConverterUpgraderId = web3.fromAscii(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER);
-
 const versions = [9, 10, 11];
 
 let token;
@@ -89,13 +85,13 @@ contract('BancorConverterUpgrader', accounts => {
         contractRegistry = await ContractRegistry.new();
 
         contractFeatures = await ContractFeatures.new();
-        await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
 
         let converterFactory = await BancorConverterFactory.new();
-        await contractRegistry.registerAddress(converterFactoryId, converterFactory.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY, converterFactory.address);
 
         converterUpgrader = await BancorConverterUpgrader.new(contractRegistry.address);
-        await contractRegistry.registerAddress(bancorConverterUpgraderId, converterUpgrader.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, converterUpgrader.address);
     });
 
     it('verifies that the ownership of the converter is returned to the original owner after upgrade', async () => {

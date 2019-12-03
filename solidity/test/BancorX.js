@@ -24,8 +24,6 @@ const X_TRANSFER_ID     = web3.toBigNumber('87654321')
 const EOS_ADDRESS    = web3.fromAscii('just a string 1')
 const EOS_BLOCKCHAIN = web3.fromAscii('just a string 2')
 
-const bancorXId = web3.fromAscii(ContractRegistryClient.BANCOR_X);
-
 function assertEqual(x, y) {
     assert.equal(x.toFixed(), y.toFixed())
 }
@@ -54,7 +52,7 @@ async function initBancorX(accounts, isSmartToken) {
     )
 
     // register BancorX address
-    await contractRegistry.registerAddress(bancorXId, bancorX.address)
+    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_X, bancorX.address)
 
     // issue bnt
     await smartToken.issue(accounts[0], SUPPLY_AMOUNT)

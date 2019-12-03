@@ -14,12 +14,6 @@ const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
 
-const contractFeaturesId = web3.fromAscii(ContractRegistryClient.CONTRACT_FEATURES);
-const gasPriceLimitId = web3.fromAscii(ContractRegistryClient.BANCOR_GAS_PRICE_LIMIT);
-const bancorFormulaId = web3.fromAscii(ContractRegistryClient.BANCOR_FORMULA);
-const nonStandardTokenRegistryId = web3.fromAscii(ContractRegistryClient.NON_STANDARD_TOKEN_REGISTRY);
-const bancorNetworkId = web3.fromAscii(ContractRegistryClient.BANCOR_NETWORK);
-
 const OLD_CONVERTER_VERSION = 9;
 
 let smartToken1;
@@ -43,19 +37,19 @@ contract('BancorNetworkWithOldConverter', accounts => {
         contractRegistry = await ContractRegistry.new();
 
         let contractFeatures = await ContractFeatures.new();
-        await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
 
         let gasPriceLimit = await BancorGasPriceLimit.new(BancorGasPriceLimit.class_defaults.gasPrice);
-        await contractRegistry.registerAddress(gasPriceLimitId, gasPriceLimit.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_GAS_PRICE_LIMIT, gasPriceLimit.address);
 
         let bancorFormula = await BancorFormula.new();
-        await contractRegistry.registerAddress(bancorFormulaId, bancorFormula.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
 
         let nonStandardTokenRegistry = await NonStandardTokenRegistry.new();
-        await contractRegistry.registerAddress(nonStandardTokenRegistryId, nonStandardTokenRegistry.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.NON_STANDARD_TOKEN_REGISTRY, nonStandardTokenRegistry.address);
 
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-        await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[3]);
 
         smartToken1 = await SmartToken.new('Token1', 'TKN1', 2);
