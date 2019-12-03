@@ -1434,7 +1434,7 @@ contract('BancorConverter', accounts => {
         await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, newRegistry.address)
         await converter.updateRegistry({ from: accounts[1] })
 
-        await converter.setAdminOnly(true, { from: accounts[0] })
+        await converter.restrictRegistryUpdate(true, { from: accounts[0] })
         await converter.restoreRegistry({ from: accounts[0] })
 
         assert.equal(await converter.registry.call(), contractRegistry.address)

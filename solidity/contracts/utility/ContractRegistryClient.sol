@@ -21,7 +21,7 @@ contract ContractRegistryClient is Owned, Utils {
 
     IContractRegistry public registry;      // address of the current contract-registry
     IContractRegistry public prevRegistry;  // address of the previous contract-registry
-    bool public onlyAdmin;                  // only an administrator can change the contract-registry
+    bool public adminOnly;                  // only an administrator can update the contract-registry
 
     /**
       * @dev verifies that the caller is mapped to the given contract name
@@ -48,7 +48,7 @@ contract ContractRegistryClient is Owned, Utils {
      */
     function updateRegistry() public {
         // verify that this function is permitted
-        require(!onlyAdmin || isAdmin());
+        require(!adminOnly || isAdmin());
 
         // get the new contract-registry
         address newRegistry = addressOf(CONTRACT_REGISTRY);
@@ -56,10 +56,10 @@ contract ContractRegistryClient is Owned, Utils {
         // verify that the new contract-registry is different and not zero
         require(newRegistry != address(registry) && newRegistry != address(0));
 
-        // set the previous contract-registry as current contract-registry
+        // update the previous contract-registry
         prevRegistry = registry;
 
-        // set the current contract-registry as the new contract-registry
+        // update the current contract-registry
         registry = IContractRegistry(newRegistry);
     }
 
@@ -70,21 +70,21 @@ contract ContractRegistryClient is Owned, Utils {
         // verify that this function is permitted
         require(isAdmin());
 
-        // set the current contract-registry as the previous contract-registry
+        // restore the previous contract-registry
         registry = prevRegistry;
     }
 
     /**
-      * @dev changes the value of the 'onlyAdmin' restriction
+      * @dev restricts the permission to update the contract-registry
       * 
-      * @param _onlyAdmin    the new value of the 'onlyAdmin' restriction
+      * @param _adminOnly    indicates whether or not permission is restricted to administrator only
     */
-    function setAdminOnly(bool _onlyAdmin) public {
+    function restrictRegistryUpdate(bool _adminOnly) public {
         // verify that this function is permitted
-        require(onlyAdmin != _onlyAdmin && isAdmin());
+        require(adminOnly != _adminOnly && isAdmin());
 
-        // change the value of the 'onlyAdmin' restriction
-        onlyAdmin = _onlyAdmin;
+        // change the permission to update the contract-registry
+        adminOnly = _adminOnly;
     }
 
     /**
