@@ -191,10 +191,14 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev returns whether or not this transaction is executed by an administrator
+      * @dev returns an indication of whether or not a caller is an administrator
+      * 
+      * @param caller   the caller
+      * 
+      * @return an indication of whether or not the caller is an administrator
      */
-    function isAdministrator() internal view returns (bool) {
-        return msg.sender == owner || msg.sender == manager;
+    function isAdministrator(address caller) internal view returns (bool) {
+        return caller == owner || caller == manager;
     }
 
     /**
