@@ -21,7 +21,7 @@ contract ContractRegistryClient is Owned, Utils {
 
     IContractRegistry public registry;      // address of the current contract-registry
     IContractRegistry public prevRegistry;  // address of the previous contract-registry
-    bool public allowRegistryUpdate = true; // allow/prevent changing the contract-registry
+    bool public onlyAdministrator;          // only an administrator can change the contract-registry
 
     /**
       * @dev initializes a new ContractRegistryClient instance
@@ -34,9 +34,9 @@ contract ContractRegistryClient is Owned, Utils {
     }
 
     /**
-      * @dev returns whether or not the caller is authorized to change the contract-registry
+      * @dev returns whether or not this transaction is executed by an administrator
      */
-    function callerIsAuthorized() internal view returns (bool) {
+    function isAdministrator() internal view returns (bool) {
         return msg.sender == owner;
     }
 
@@ -44,8 +44,8 @@ contract ContractRegistryClient is Owned, Utils {
       * @dev sets the contract-registry to the address of the contract-registry in the contract-registry
      */
     function updateRegistry() public {
-        // verify that either updating is allowed or the caller is authorized
-        require(allowRegistryUpdate || callerIsAuthorized());
+        // verify that this function is permitted
+        require(!onlyAdministrator || isAdministrator());
 
         // get the address of the contract-registry in the contract-registry
         address newRegistry = addressOf(CONTRACT_REGISTRY);
@@ -64,27 +64,27 @@ contract ContractRegistryClient is Owned, Utils {
       * @dev reverts back to the previous contract-registry
     */
     function restoreRegistry() public {
-        // verify that either restoring is allowed or the caller is authorized
-        require(allowRegistryUpdate || callerIsAuthorized());
+        // verify that this function is permitted
+        require(!onlyAdministrator || isAdministrator());
 
         // set the current contract-registry as the previous contract-registry
         registry = prevRegistry;
 
-        // ensure that only an authorized caller can perform future changes
-        allowRegistryUpdate = false;
+        // ensure that only an administrator can change the contract-registry from now on
+        onlyAdministrator = true;
     }
 
     /**
-      * @dev allows/prevents changing the contract-registry
+      * @dev changes the value of the 'onlyAdministrator' restriction
       * 
-      * @param _disable    true to disable changes, false to enable changes
+      * @param _onlyAdministrator    the new value of the 'onlyAdministrator' restriction
     */
-    function disableRegistryUpdate(bool _disable) public {
-        // verify that the caller is authorized
-        require(callerIsAuthorized());
+    function setAdministratorOnly(bool _onlyAdministrator) public {
+        // verify that this function is permitted
+        require(onlyAdministrator != _onlyAdministrator && isAdministrator());
 
-        // allow/prevent changing the contract-registry
-        allowRegistryUpdate = !_disable;
+        // change the value of the 'onlyAdministrator' restriction
+        onlyAdministrator = _onlyAdministrator;
     }
 
     /**

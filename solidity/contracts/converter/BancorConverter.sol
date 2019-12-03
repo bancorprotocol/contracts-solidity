@@ -191,9 +191,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev returns whether or not the caller is authorized to change the registry
+      * @dev returns whether or not this transaction is executed by an administrator
      */
-    function callerIsAuthorized() internal view returns (bool) {
+    function isAdministrator() internal view returns (bool) {
         return msg.sender == owner || msg.sender == manager;
     }
 
