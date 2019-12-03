@@ -69,7 +69,7 @@ contract ContractRegistryClient is Owned, Utils {
       * 
       * @param _onlyAdmin    the new value of the 'onlyAdmin' restriction
     */
-    function setAdministratorOnly(bool _onlyAdmin) public {
+    function setAdminOnly(bool _onlyAdmin) public {
         // verify that this function is permitted
         require(onlyAdmin != _onlyAdmin && isAdmin());
 
