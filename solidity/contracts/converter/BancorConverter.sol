@@ -821,14 +821,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev returns an indication of whether or not a caller is an administrator
-      * 
-      * @param caller   the caller
-      * 
-      * @return an indication of whether or not the caller is an administrator
+      * @dev returns whether or not the caller is an administrator
      */
-    function isAdmin(address caller) internal view returns (bool) {
-        return caller == owner || caller == manager;
+    function isAdmin() internal view returns (bool) {
+        return msg.sender == owner || msg.sender == manager;
     }
 
     /**

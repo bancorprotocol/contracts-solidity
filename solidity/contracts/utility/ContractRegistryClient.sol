@@ -34,14 +34,10 @@ contract ContractRegistryClient is Owned, Utils {
     }
 
     /**
-      * @dev returns an indication of whether or not a caller is an administrator
-      * 
-      * @param caller   the caller
-      * 
-      * @return an indication of whether or not the caller is an administrator
+      * @dev returns whether or not the caller is an administrator
      */
-    function isAdmin(address caller) internal view returns (bool) {
-        return caller == owner;
+    function isAdmin() internal view returns (bool) {
+        return msg.sender == owner;
     }
 
     /**
@@ -49,7 +45,7 @@ contract ContractRegistryClient is Owned, Utils {
      */
     function updateRegistry() public {
         // verify that this function is permitted
-        require(!onlyAdmin || isAdmin(msg.sender));
+        require(!onlyAdmin || isAdmin());
 
         // get the new contract-registry
         address newRegistry = addressOf(CONTRACT_REGISTRY);
@@ -69,7 +65,7 @@ contract ContractRegistryClient is Owned, Utils {
     */
     function restoreRegistry() public {
         // verify that this function is permitted
-        require(!onlyAdmin || isAdmin(msg.sender));
+        require(!onlyAdmin || isAdmin());
 
         // set the current contract-registry as the previous contract-registry
         registry = prevRegistry;
@@ -85,7 +81,7 @@ contract ContractRegistryClient is Owned, Utils {
     */
     function setAdministratorOnly(bool _onlyAdmin) public {
         // verify that this function is permitted
-        require(onlyAdmin != _onlyAdmin && isAdmin(msg.sender));
+        require(onlyAdmin != _onlyAdmin && isAdmin());
 
         // change the value of the 'onlyAdmin' restriction
         onlyAdmin = _onlyAdmin;
