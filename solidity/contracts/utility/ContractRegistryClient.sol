@@ -24,6 +24,16 @@ contract ContractRegistryClient is Owned, Utils {
     bool public onlyAdmin;                  // only an administrator can change the contract-registry
 
     /**
+      * @dev verifies that the caller is mapped to the given contract name
+      * 
+      * @param _contractName    contract name
+    */
+    modifier only(bytes32 _contractName) {
+        require(msg.sender == addressOf(_contractName));
+        _;
+    }
+
+    /**
       * @dev initializes a new ContractRegistryClient instance
       * 
       * @param  _registry   address of a contract-registry contract
@@ -93,15 +103,5 @@ contract ContractRegistryClient is Owned, Utils {
     */
     function addressOf(bytes32 _contractName) internal view returns (address) {
         return registry.addressOf(_contractName);
-    }
-
-    /**
-      * @dev verifies that the caller is mapped to the given contract name
-      * 
-      * @param _contractName    contract name
-    */
-    modifier only(bytes32 _contractName) {
-        require(msg.sender == addressOf(_contractName));
-        _;
     }
 }
