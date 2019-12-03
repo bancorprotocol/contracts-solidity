@@ -72,20 +72,6 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
     }
 
     /**
-      * @dev allows the owner to update the contract registry contract address
-      * 
-      * @param _registry   address of a contract registry contract
-    */
-    function setRegistry(IContractRegistry _registry)
-        public
-        ownerOnly
-        validAddress(_registry)
-    {
-        prevRegistry = registry;
-        registry = _registry;
-    }
-
-    /**
       * @dev upgrades an old converter to the latest version
       * will throw if ownership wasn't transferred to the upgrader before calling this function.
       * ownership of the new converter will be transferred back to the original owner.

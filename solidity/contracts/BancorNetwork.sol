@@ -64,20 +64,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     }
 
     /**
-      * @dev allows the owner to update the contract registry contract address
-      * 
-      * @param _registry   address of a contract registry contract
-    */
-    function setRegistry(IContractRegistry _registry)
-        public
-        ownerOnly
-        validAddress(_registry)
-    {
-        prevRegistry = registry;
-        registry = _registry;
-    }
-
-    /**
       * @dev allows the owner to update the signer address
       * 
       * @param _signerAddress    new signer address
