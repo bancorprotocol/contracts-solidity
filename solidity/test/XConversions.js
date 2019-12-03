@@ -3,6 +3,7 @@
 
 const sign = require('./helpers/Sign');
 const utils = require('./helpers/Utils');
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const BancorConverter = artifacts.require('BancorConverter');
 const BancorX = artifacts.require('BancorX');
@@ -16,14 +17,13 @@ const ContractFeatures = artifacts.require('ContractFeatures');
 const ERC20Token = artifacts.require('ERC20Token');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 
-const bntConverterId = web3.fromAscii('BNTConverter');
-const bntTokenId = web3.fromAscii('BNTToken');
-const bancorGasPriceLimitId = web3.fromAscii('BancorGasPriceLimit');
-const bancorFormulaId = web3.fromAscii('BancorFormula');
-const bancorNetworkId = web3.fromAscii('BancorNetwork');
-const contractFeaturesId = web3.fromAscii('ContractFeatures');
-const nonStandardTokenRegistryId = web3.fromAscii('NonStandardTokenRegistry');
-const bancorXId = web3.fromAscii('BancorX');
+const bntTokenId = web3.fromAscii(ContractRegistryClient.BNT_TOKEN);
+const bancorGasPriceLimitId = web3.fromAscii(ContractRegistryClient.BANCOR_GAS_PRICE_LIMIT);
+const bancorFormulaId = web3.fromAscii(ContractRegistryClient.BANCOR_FORMULA);
+const bancorNetworkId = web3.fromAscii(ContractRegistryClient.BANCOR_NETWORK);
+const contractFeaturesId = web3.fromAscii(ContractRegistryClient.CONTRACT_FEATURES);
+const nonStandardTokenRegistryId = web3.fromAscii(ContractRegistryClient.NON_STANDARD_TOKEN_REGISTRY);
+const bancorXId = web3.fromAscii(ContractRegistryClient.BANCOR_X);
 
 const MAX_LOCK_LIMIT = '1000000000000000000000' // 1000 bnt
 const MAX_RELEASE_LIMIT = '1000000000000000000000' // 1000 bnt
@@ -968,7 +968,6 @@ const initBancorNetwork = async accounts => {
     await bancorNetwork.setSignerAddress(signerAddress);
     await bancorNetwork.registerEtherToken(etherToken.address, true);
 
-    await contractRegistry.registerAddress(bntConverterId, bntConverter.address)
     await contractRegistry.registerAddress(bntTokenId, bntToken.address)
     await contractRegistry.registerAddress(bancorGasPriceLimitId, gasPriceLimit.address)
     await contractRegistry.registerAddress(bancorFormulaId, bancorFormula.address)

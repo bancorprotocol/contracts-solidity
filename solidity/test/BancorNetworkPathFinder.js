@@ -3,6 +3,7 @@
 
 const utils = require('./helpers/Utils');
 const BancorConverter = require('./helpers/BancorConverter');
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const EtherToken = artifacts.require('EtherToken');
 const SmartToken = artifacts.require('SmartToken');
@@ -163,7 +164,7 @@ contract('BancorNetworkPathFinder', accounts => {
             });
 
             it('should abort with an error if the anchor-token is not yet updated', async () => {
-                await contractRegistry.registerAddress(web3.fromAscii('BNTToken'), smartToken1.address);
+                await contractRegistry.registerAddress(web3.fromAscii(ContractRegistryClient.BNT_TOKEN), smartToken1.address);
                 await utils.catchInvalidOpcode(pathFinder.get(smartToken2.address, smartToken3.address, [converterRegistry1.address, converterRegistry2.address, converterRegistry3.address]));
             });
 

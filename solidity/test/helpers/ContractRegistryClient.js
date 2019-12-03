@@ -1,0 +1,11 @@
+module.exports.CONTRACT_FEATURES = "ContractFeatures";
+module.exports.CONTRACT_REGISTRY = "ContractRegistry";
+module.exports.NON_STANDARD_TOKEN_REGISTRY = "NonStandardTokenRegistry";
+module.exports.BANCOR_NETWORK = "BancorNetwork";
+module.exports.BANCOR_FORMULA = "BancorFormula";
+module.exports.BANCOR_GAS_PRICE_LIMIT = "BancorGasPriceLimit";
+module.exports.BANCOR_CONVERTER_UPGRADER = "BancorConverterUpgrader";
+module.exports.BANCOR_CONVERTER_FACTORY = "BancorConverterFactory";
+module.exports.BNT_TOKEN = "BNTToken";
+module.exports.BANCOR_X = "BancorX";
+module.exports.BANCOR_X_UPGRADER = "BancorXUpgrader";

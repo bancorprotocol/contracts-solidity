@@ -1,13 +1,14 @@
 /* global artifacts, contract, before, it, assert */
 /* eslint-disable prefer-reflect */
 
+const utils = require('./helpers/Utils');
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
+
 const BancorConverter = artifacts.require('BancorConverter');
 const BancorX = artifacts.require('BancorX');
 const SmartToken = artifacts.require('SmartToken');
 const EtherToken = artifacts.require('EtherToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
-
-const utils = require('./helpers/Utils');
 
 const MAX_LOCK_LIMIT    = web3.toBigNumber('1000000000000000000000') // 1000 tokens
 const MAX_RELEASE_LIMIT = web3.toBigNumber('1000000000000000000000') // 1000 tokens
@@ -22,6 +23,8 @@ const X_TRANSFER_ID     = web3.toBigNumber('87654321')
 
 const EOS_ADDRESS    = web3.fromAscii('just a string 1')
 const EOS_BLOCKCHAIN = web3.fromAscii('just a string 2')
+
+const bancorXId = web3.fromAscii(ContractRegistryClient.BANCOR_X);
 
 function assertEqual(x, y) {
     assert.equal(x.toFixed(), y.toFixed())
@@ -51,7 +54,7 @@ async function initBancorX(accounts, isSmartToken) {
     )
 
     // register BancorX address
-    await contractRegistry.registerAddress(web3.fromAscii('BancorX'), bancorX.address)
+    await contractRegistry.registerAddress(bancorXId, bancorX.address)
 
     // issue bnt
     await smartToken.issue(accounts[0], SUPPLY_AMOUNT)

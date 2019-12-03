@@ -3,6 +3,7 @@
 
 const sign = require('./helpers/Sign');
 const utils = require('./helpers/Utils');
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const Whitelist = artifacts.require('Whitelist');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
@@ -17,12 +18,12 @@ const ContractFeatures = artifacts.require('ContractFeatures');
 const EtherToken = artifacts.require('EtherToken');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 
-const contractFeaturesId = web3.fromAscii('ContractFeatures');
-const gasPriceLimitId = web3.fromAscii('BancorGasPriceLimit');
-const bancorFormulaId = web3.fromAscii('BancorFormula');
-const nonStandardTokenRegistryId = web3.fromAscii('NonStandardTokenRegistry');
-const bancorNetworkId = web3.fromAscii('BancorNetwork');
-const bntTokenId = web3.fromAscii('BNTToken');
+const contractFeaturesId = web3.fromAscii(ContractRegistryClient.CONTRACT_FEATURES);
+const gasPriceLimitId = web3.fromAscii(ContractRegistryClient.BANCOR_GAS_PRICE_LIMIT);
+const bancorFormulaId = web3.fromAscii(ContractRegistryClient.BANCOR_FORMULA);
+const nonStandardTokenRegistryId = web3.fromAscii(ContractRegistryClient.NON_STANDARD_TOKEN_REGISTRY);
+const bancorNetworkId = web3.fromAscii(ContractRegistryClient.BANCOR_NETWORK);
+const bntTokenId = web3.fromAscii(ContractRegistryClient.BNT_TOKEN);
 
 let etherToken;
 let smartToken1;

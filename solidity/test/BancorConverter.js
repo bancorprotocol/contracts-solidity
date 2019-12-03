@@ -2,6 +2,10 @@
 /* eslint-disable prefer-reflect */
 
 const fs = require('fs');
+
+const utils = require('./helpers/Utils');
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
+
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const BancorConverter = artifacts.require('BancorConverter');
@@ -14,16 +18,15 @@ const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
-const utils = require('./helpers/Utils');
 
-const contractFeaturesId = web3.fromAscii('ContractFeatures');
-const gasPriceLimitId = web3.fromAscii('BancorGasPriceLimit');
-const bancorFormulaId = web3.fromAscii('BancorFormula');
-const nonStandardTokenRegistryId = web3.fromAscii('NonStandardTokenRegistry');
-const bancorNetworkId = web3.fromAscii('BancorNetwork');
-const bancorConverterFactoryId = web3.fromAscii('BancorConverterFactory');
-const bancorConverterUpgraderId = web3.fromAscii('BancorConverterUpgrader');
-const contractRegistryId = web3.fromAscii('ContractRegistry');
+const contractFeaturesId = web3.fromAscii(ContractRegistryClient.CONTRACT_FEATURES);
+const gasPriceLimitId = web3.fromAscii(ContractRegistryClient.BANCOR_GAS_PRICE_LIMIT);
+const bancorFormulaId = web3.fromAscii(ContractRegistryClient.BANCOR_FORMULA);
+const nonStandardTokenRegistryId = web3.fromAscii(ContractRegistryClient.NON_STANDARD_TOKEN_REGISTRY);
+const bancorNetworkId = web3.fromAscii(ContractRegistryClient.BANCOR_NETWORK);
+const bancorConverterFactoryId = web3.fromAscii(ContractRegistryClient.BANCOR_CONVERTER_FACTORY);
+const bancorConverterUpgraderId = web3.fromAscii(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER);
+const contractRegistryId = web3.fromAscii(ContractRegistryClient.CONTRACT_REGISTRY);
 
 const ratio10Percent = 100000;
 const gasPrice = 22000000000;

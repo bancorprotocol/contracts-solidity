@@ -3,6 +3,7 @@
 
 const utils = require('./helpers/Utils');
 const BancorConverter = require('./helpers/BancorConverter');
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const SmartToken = artifacts.require('SmartToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
@@ -12,9 +13,9 @@ const Whitelist = artifacts.require('Whitelist');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
-const contractFeaturesId = web3.fromAscii('ContractFeatures');
-const converterFactoryId = web3.fromAscii('BancorConverterFactory');
-const bancorConverterUpgraderId = web3.fromAscii('BancorConverterUpgrader');
+const contractFeaturesId = web3.fromAscii(ContractRegistryClient.CONTRACT_FEATURES);
+const converterFactoryId = web3.fromAscii(ContractRegistryClient.BANCOR_CONVERTER_FACTORY);
+const bancorConverterUpgraderId = web3.fromAscii(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER);
 
 const versions = [9, 10, 11];
 
