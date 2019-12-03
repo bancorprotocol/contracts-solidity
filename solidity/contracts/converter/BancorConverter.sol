@@ -827,7 +827,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * 
       * @return an indication of whether or not the caller is an administrator
      */
-    function isAdministrator(address caller) internal view returns (bool) {
+    function isAdmin(address caller) internal view returns (bool) {
         return caller == owner || caller == manager;
     }
 

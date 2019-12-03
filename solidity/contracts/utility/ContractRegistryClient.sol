@@ -21,7 +21,7 @@ contract ContractRegistryClient is Owned, Utils {
 
     IContractRegistry public registry;      // address of the current contract-registry
     IContractRegistry public prevRegistry;  // address of the previous contract-registry
-    bool public onlyAdministrator;          // only an administrator can change the contract-registry
+    bool public onlyAdmin;                  // only an administrator can change the contract-registry
 
     /**
       * @dev initializes a new ContractRegistryClient instance
@@ -40,7 +40,7 @@ contract ContractRegistryClient is Owned, Utils {
       * 
       * @return an indication of whether or not the caller is an administrator
      */
-    function isAdministrator(address caller) internal view returns (bool) {
+    function isAdmin(address caller) internal view returns (bool) {
         return caller == owner;
     }
 
@@ -49,7 +49,7 @@ contract ContractRegistryClient is Owned, Utils {
      */
     function updateRegistry() public {
         // verify that this function is permitted
-        require(!onlyAdministrator || isAdministrator(msg.sender));
+        require(!onlyAdmin || isAdmin(msg.sender));
 
         // get the address of the contract-registry in the contract-registry
         address newRegistry = addressOf(CONTRACT_REGISTRY);
@@ -69,26 +69,26 @@ contract ContractRegistryClient is Owned, Utils {
     */
     function restoreRegistry() public {
         // verify that this function is permitted
-        require(!onlyAdministrator || isAdministrator(msg.sender));
+        require(!onlyAdmin || isAdmin(msg.sender));
 
         // set the current contract-registry as the previous contract-registry
         registry = prevRegistry;
 
         // ensure that only an administrator can change the contract-registry from now on
-        onlyAdministrator = true;
+        onlyAdmin = true;
     }
 
     /**
-      * @dev changes the value of the 'onlyAdministrator' restriction
+      * @dev changes the value of the 'onlyAdmin' restriction
       * 
-      * @param _onlyAdministrator    the new value of the 'onlyAdministrator' restriction
+      * @param _onlyAdmin    the new value of the 'onlyAdmin' restriction
     */
-    function setAdministratorOnly(bool _onlyAdministrator) public {
+    function setAdministratorOnly(bool _onlyAdmin) public {
         // verify that this function is permitted
-        require(onlyAdministrator != _onlyAdministrator && isAdministrator(msg.sender));
+        require(onlyAdmin != _onlyAdmin && isAdmin(msg.sender));
 
-        // change the value of the 'onlyAdministrator' restriction
-        onlyAdministrator = _onlyAdministrator;
+        // change the value of the 'onlyAdmin' restriction
+        onlyAdmin = _onlyAdmin;
     }
 
     /**
