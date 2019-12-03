@@ -7,6 +7,18 @@ import './interfaces/IContractRegistry.sol';
   * @dev Base contract for ContractRegistry clients
 */
 contract ContractRegistryClient is Owned, Utils {
+    bytes32 internal constant CONTRACT_FEATURES = "ContractFeatures";
+    bytes32 internal constant CONTRACT_REGISTRY = "ContractRegistry";
+    bytes32 internal constant NON_STANDARD_TOKEN_REGISTRY = "NonStandardTokenRegistry";
+    bytes32 internal constant BANCOR_NETWORK = "BancorNetwork";
+    bytes32 internal constant BANCOR_FORMULA = "BancorFormula";
+    bytes32 internal constant BANCOR_GAS_PRICE_LIMIT = "BancorGasPriceLimit";
+    bytes32 internal constant BANCOR_CONVERTER_UPGRADER = "BancorConverterUpgrader";
+    bytes32 internal constant BANCOR_CONVERTER_FACTORY = "BancorConverterFactory";
+    bytes32 internal constant BNT_TOKEN = "BNTToken";
+    bytes32 internal constant BANCOR_X = "BancorX";
+    bytes32 internal constant BANCOR_X_UPGRADER = "BancorXUpgrader";
+
     IContractRegistry public registry;      // address of the current contract-registry
     IContractRegistry public prevRegistry;  // address of the previous contract-registry
     bool public allowRegistryUpdate = true; // allow/prevent changing the contract-registry
@@ -95,16 +107,4 @@ contract ContractRegistryClient is Owned, Utils {
         require(msg.sender == addressOf(_contractName));
         _;
     }
-
-    bytes32 internal constant CONTRACT_FEATURES = "ContractFeatures";
-    bytes32 internal constant CONTRACT_REGISTRY = "ContractRegistry";
-    bytes32 internal constant NON_STANDARD_TOKEN_REGISTRY = "NonStandardTokenRegistry";
-    bytes32 internal constant BANCOR_NETWORK = "BancorNetwork";
-    bytes32 internal constant BANCOR_FORMULA = "BancorFormula";
-    bytes32 internal constant BANCOR_GAS_PRICE_LIMIT = "BancorGasPriceLimit";
-    bytes32 internal constant BANCOR_CONVERTER_UPGRADER = "BancorConverterUpgrader";
-    bytes32 internal constant BANCOR_CONVERTER_FACTORY = "BancorConverterFactory";
-    bytes32 internal constant BNT_TOKEN = "BNTToken";
-    bytes32 internal constant BANCOR_X = "BancorX";
-    bytes32 internal constant BANCOR_X_UPGRADER = "BancorXUpgrader";
 }
