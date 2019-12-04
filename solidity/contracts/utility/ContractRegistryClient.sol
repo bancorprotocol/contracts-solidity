@@ -56,6 +56,9 @@ contract ContractRegistryClient is Owned, Utils {
         // verify that the new contract-registry is different and not zero
         require(newRegistry != address(registry) && newRegistry != address(0));
 
+        // verify that the new contract-registry is pointing to a non-zero contract-registry
+        require(IContractRegistry(newRegistry).addressOf(CONTRACT_REGISTRY) != address(0));
+
         // save a backup of the current contract-registry before replacing it
         prevRegistry = registry;
 
