@@ -1,7 +1,5 @@
 pragma solidity 0.4.26;
-import './ContractIds.sol';
-import './utility/Utils.sol';
-import './utility/interfaces/IContractRegistry.sol';
+import './utility/ContractRegistryClient.sol';
 import './converter/interfaces/IBancorConverterRegistry.sol';
 import './converter/interfaces/IBancorConverter.sol';
 import './token/interfaces/ISmartTokenController.sol';
@@ -10,8 +8,7 @@ import './token/interfaces/ISmartTokenController.sol';
   * @dev The BancorNetworkPathFinder contract allows for retrieving the conversion path between any pair of tokens in the Bancor Network.
   * This conversion path can then be used in various functions on the BancorNetwork contract (see this contract for more details on conversion paths).
 */
-contract BancorNetworkPathFinder is ContractIds, Utils {
-    IContractRegistry public contractRegistry;
+contract BancorNetworkPathFinder is ContractRegistryClient {
     address public anchorToken;
 
     bytes4 private constant CONNECTOR_TOKEN_COUNT = bytes4(uint256(keccak256("connectorTokenCount()") >> (256 - 4 * 8)));
@@ -20,11 +17,10 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
     /**
       * @dev initializes a new BancorNetworkPathFinder instance
       * 
-      * @param _contractRegistry    address of a contract registry contract
+      * @param _registry    address of a contract registry contract
     */
-    constructor(IContractRegistry _contractRegistry) public validAddress(_contractRegistry) {
-        contractRegistry = _contractRegistry;
-        anchorToken = contractRegistry.addressOf(BNT_TOKEN);
+    constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
+        anchorToken = addressOf(BNT_TOKEN);
     }
 
     /**
@@ -33,7 +29,7 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
       * Note that this function needs to be called only when the BNT token has been redeployed
     */
     function updateAnchorToken() external {
-        address bntToken = contractRegistry.addressOf(BNT_TOKEN);
+        address bntToken = addressOf(BNT_TOKEN);
         require(anchorToken != bntToken);
         anchorToken = bntToken;
     }
@@ -48,7 +44,7 @@ contract BancorNetworkPathFinder is ContractIds, Utils {
       * @return path from the source token to the target token
     */
     function get(address _sourceToken, address _targetToken, IBancorConverterRegistry[] memory _converterRegistries) public view returns (address[] memory) {
-        assert(anchorToken == contractRegistry.addressOf(BNT_TOKEN));
+        assert(anchorToken == addressOf(BNT_TOKEN));
         address[] memory sourcePath = getPath(_sourceToken, _converterRegistries);
         address[] memory targetPath = getPath(_targetToken, _converterRegistries);
         return getShortestPath(sourcePath, targetPath);

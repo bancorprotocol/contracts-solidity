@@ -3,6 +3,7 @@
 
 const sign = require('./helpers/Sign');
 const utils = require('./helpers/Utils');
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const BancorConverter = artifacts.require('BancorConverter');
 const BancorX = artifacts.require('BancorX');
@@ -922,7 +923,7 @@ const initBancorNetwork = async accounts => {
     affiliateAddress = accounts[6]
 
     const gasPriceLimit = await BancorGasPriceLimit.new("30000000000"); // 30 gwei
-    const formula = await BancorFormula.new();
+    const bancorFormula = await BancorFormula.new();
     const contractRegistry = await ContractRegistry.new()
     const contractFeatures = await ContractFeatures.new()
     const tokenWhitelist = await NonStandardTokenRegistry.new()
@@ -936,22 +937,6 @@ const initBancorNetwork = async accounts => {
         etherToken.address,
         '100000'
     )
-
-    await etherToken.deposit({ value: BNT_RESERVE_AMOUNT });
-    await etherToken.transfer(bntConverter.address, BNT_RESERVE_AMOUNT);
-
-    bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-    await bancorNetwork.setSignerAddress(signerAddress);
-    await bancorNetwork.registerEtherToken(etherToken.address, true);
-
-    await contractRegistry.registerAddress(web3.fromAscii('BNTConverter'), bntConverter.address)
-    await contractRegistry.registerAddress(web3.fromAscii('BNTToken'), bntToken.address)
-    await contractRegistry.registerAddress(web3.fromAscii('BancorGasPriceLimit'), gasPriceLimit.address)
-    await contractRegistry.registerAddress(web3.fromAscii('BancorFormula'), formula.address)
-    await contractRegistry.registerAddress(web3.fromAscii('BancorNetwork'), bancorNetwork.address)
-    await contractRegistry.registerAddress(web3.fromAscii('ContractFeatures'), contractFeatures.address)
-    await contractRegistry.registerAddress(web3.fromAscii('NonStandardTokenRegistry'), tokenWhitelist.address)
-
 
     bancorX = await BancorX.new(
         MAX_LOCK_LIMIT,
@@ -968,8 +953,20 @@ const initBancorNetwork = async accounts => {
     await bancorX.setReporter(reporter2, true)
     await bancorX.setReporter(reporter3, true)
 
-    // register BancorX address
-    await contractRegistry.registerAddress(web3.fromAscii('BancorX'), bancorX.address)
+    await etherToken.deposit({ value: BNT_RESERVE_AMOUNT });
+    await etherToken.transfer(bntConverter.address, BNT_RESERVE_AMOUNT);
+
+    bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+    await bancorNetwork.setSignerAddress(signerAddress);
+    await bancorNetwork.registerEtherToken(etherToken.address, true);
+
+    await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, bntToken.address)
+    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_GAS_PRICE_LIMIT, gasPriceLimit.address)
+    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address)
+    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address)
+    await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address)
+    await contractRegistry.registerAddress(ContractRegistryClient.NON_STANDARD_TOKEN_REGISTRY, tokenWhitelist.address)
+    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_X, bancorX.address)
 
     // issue bnt and transfer ownership to converter
     await bntToken.issue(accounts[0], BNT_AMOUNT)

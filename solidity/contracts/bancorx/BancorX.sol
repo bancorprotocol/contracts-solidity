@@ -2,10 +2,8 @@ pragma solidity 0.4.26;
 
 import './interfaces/IBancorXUpgrader.sol';
 import './interfaces/IBancorX.sol';
-import '../ContractIds.sol';
 import '../token/interfaces/ISmartTokenController.sol';
-import '../utility/interfaces/IContractRegistry.sol';
-import '../utility/Owned.sol';
+import '../utility/ContractRegistryClient.sol';
 import '../utility/SafeMath.sol';
 import '../utility/TokenHolder.sol';
 import '../token/interfaces/ISmartToken.sol';
@@ -20,7 +18,7 @@ import '../token/interfaces/ISmartToken.sol';
   * Reporting cross chain transfers works similar to standard multisig contracts, meaning that multiple
   * callers are required to report a transfer before tokens are released to the target account.
 */
-contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
+contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
     using SafeMath for uint256;
 
     // represents a transaction on another blockchain where tokens were destroyed/locked
@@ -44,15 +42,11 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     uint256 public prevReleaseBlockNumber;  // the block number of the last release transaction
     uint256 public minRequiredReports;      // minimum number of required reports to release tokens
     
-    IContractRegistry public registry;      // contract registry
-    IContractRegistry public prevRegistry;  // address of previous registry as security mechanism
-
     IERC20Token public token;               // erc20 token or smart token
     bool public isSmartToken;               // false - erc20 token; true - smart token
 
     bool public xTransfersEnabled = true;   // true if x transfers are enabled, false if not
     bool public reportingEnabled = true;    // true if reporting is enabled, false if not
-    bool public allowRegistryUpdate = true; // allows the owner to prevent/allow the registry to be updated
 
     // txId -> Transaction
     mapping (uint256 => Transaction) public transactions;
@@ -153,10 +147,10 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         uint256 _minLimit,
         uint256 _limitIncPerBlock,
         uint256 _minRequiredReports,
-        address _registry,
+        IContractRegistry _registry,
         IERC20Token _token,
         bool _isSmartToken
-    )
+    )   ContractRegistryClient(_registry)
         public
     {
         // the maximum limits, minimum limit, and limit increase per block
@@ -171,9 +165,6 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
         prevReleaseLimit = _maxReleaseLimit;
         prevLockBlockNumber = block.number;
         prevReleaseBlockNumber = block.number;
-
-        registry = IContractRegistry(_registry);
-        prevRegistry = IContractRegistry(_registry);
 
         token = _token;
         isSmartToken = _isSmartToken;
@@ -271,47 +262,6 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
     }
 
     /**
-      * @dev disables the registry update functionality
-      * this is a safety mechanism in case of a emergency
-      * can only be called by the manager or owner
-      * 
-      * @param _disable    true to disable registry updates, false to re-enable them
-    */
-    function disableRegistryUpdate(bool _disable) public ownerOnly {
-        allowRegistryUpdate = !_disable;
-    }
-
-    /**
-      * @dev sets the contract registry to whichever address the current registry is pointing to
-     */
-    function updateRegistry() public {
-        // require that upgrading is allowed or that the caller is the owner
-        require(allowRegistryUpdate || msg.sender == owner);
-
-        // get the address of whichever registry the current registry is pointing to
-        address newRegistry = registry.addressOf(ContractIds.CONTRACT_REGISTRY);
-
-        // if the new registry hasn't changed or is the zero address, revert
-        require(newRegistry != address(registry) && newRegistry != address(0));
-
-        // set the previous registry as current registry and current registry as newRegistry
-        prevRegistry = registry;
-        registry = IContractRegistry(newRegistry);
-    }
-
-    /**
-      * @dev security mechanism allowing the converter owner to revert to the previous registry,
-      * to be used in emergency scenario
-    */
-    function restoreRegistry() public ownerOnly {
-        // set the registry as previous registry
-        registry = prevRegistry;
-
-        // after a previous registry is restored, only the owner can allow future updates
-        allowRegistryUpdate = false;
-    }
-
-    /**
       * @dev upgrades the contract to the latest version
       * can only be called by the owner
       * note that the owner needs to call acceptOwnership on the new contract after the upgrade
@@ -319,7 +269,7 @@ contract BancorX is IBancorX, Owned, TokenHolder, ContractIds {
       * @param _reporters    new list of reporters
     */
     function upgrade(address[] _reporters) public ownerOnly {
-        IBancorXUpgrader bancorXUpgrader = IBancorXUpgrader(registry.addressOf(ContractIds.BANCOR_X_UPGRADER));
+        IBancorXUpgrader bancorXUpgrader = IBancorXUpgrader(addressOf(BANCOR_X_UPGRADER));
 
         transferOwnership(bancorXUpgrader);
         bancorXUpgrader.upgrade(version, _reporters);
