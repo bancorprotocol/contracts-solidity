@@ -4,10 +4,11 @@
 const XTransferRerouter = artifacts.require('XTransferRerouter');
 const utils = require('./helpers/Utils');
 
+const EOS_ADDRESS    = web3.fromAscii('just a string 1')
+const EOS_BLOCKCHAIN = web3.fromAscii('just a string 2')
 
 let txRouter
 let accounts
-const eosAddress = web3.fromAscii('some.account')
 
 contract('XTransferRerouter', async () => {
     // get contracts deployed during migration (truffle migrates contracts before tests)
@@ -22,8 +23,8 @@ contract('XTransferRerouter', async () => {
         })
         await utils.catchRevert(txRouter.rerouteTx(
             123,
-            eosAddress,
-            web3.fromAscii('EOS'),
+            EOS_ADDRESS,
+            EOS_BLOCKCHAIN,
             { from: accounts[1] }
         ))
         
@@ -34,8 +35,8 @@ contract('XTransferRerouter', async () => {
         })
         const tx = await txRouter.rerouteTx(
             123,
-            eosAddress,
-            web3.fromAscii('EOS'),
+            EOS_ADDRESS,
+            EOS_BLOCKCHAIN,
             { from: accounts[1] }
         )
         let event = tx.logs.some(log => log.event == 'TxReroute')

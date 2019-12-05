@@ -3,8 +3,8 @@
 
 const utils = require('./helpers/Utils');
 const BancorConverter = require('./helpers/BancorConverter');
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
-const ContractIds = artifacts.require('ContractIds');
 const SmartToken = artifacts.require('SmartToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
@@ -83,19 +83,15 @@ async function getNewConverter() {
 contract('BancorConverterUpgrader', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
-        let contractIds = await ContractIds.new();
 
         contractFeatures = await ContractFeatures.new();
-        let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
-        await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
 
         let converterFactory = await BancorConverterFactory.new();
-        let converterFactoryId = await contractIds.BANCOR_CONVERTER_FACTORY.call();
-        await contractRegistry.registerAddress(converterFactoryId, converterFactory.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY, converterFactory.address);
 
         converterUpgrader = await BancorConverterUpgrader.new(contractRegistry.address);
-        let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
-        await contractRegistry.registerAddress(bancorConverterUpgraderId, converterUpgrader.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, converterUpgrader.address);
     });
 
     it('verifies that the ownership of the converter is returned to the original owner after upgrade', async () => {
