@@ -1,7 +1,8 @@
 pragma solidity 0.4.26;
 import '../utility/ContractRegistryClient.sol';
+import './interfaces/IBancorConverterRegistryData.sol';
 
-contract BancorConverterRegistryData is ContractRegistryClient {
+contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRegistryClient {
     struct Item {
         bool valid;
         uint index;
@@ -69,7 +70,7 @@ contract BancorConverterRegistryData is ContractRegistryClient {
       * 
       * @param _liquidityPool liquidity pool
     */
-    function addLiquidityPool(address _liquidityPool) public only(BANCOR_CONVERTER_REGISTRY) {
+    function addLiquidityPool(address _liquidityPool) external only(BANCOR_CONVERTER_REGISTRY) {
         Item storage item = liquidityPools.table[_liquidityPool];
 
         require(item.valid == false);
@@ -85,7 +86,7 @@ contract BancorConverterRegistryData is ContractRegistryClient {
       * 
       * @param _liquidityPool liquidity pool
     */
-    function removeLiquidityPool(address _liquidityPool) public only(BANCOR_CONVERTER_REGISTRY) {
+    function removeLiquidityPool(address _liquidityPool) external only(BANCOR_CONVERTER_REGISTRY) {
         Item storage item = liquidityPools.table[_liquidityPool];
 
         require(item.valid == true);
@@ -105,7 +106,7 @@ contract BancorConverterRegistryData is ContractRegistryClient {
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
-    function addConvertibleToken(address _convertibleToken, address _smartToken) only(BANCOR_CONVERTER_REGISTRY) public {
+    function addConvertibleToken(address _convertibleToken, address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
         List storage list = convertibleTokens.table[_convertibleToken];
         Item storage item = list.table[_smartToken];
 
@@ -125,7 +126,7 @@ contract BancorConverterRegistryData is ContractRegistryClient {
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
-    function removeConvertibleToken(address _convertibleToken, address _smartToken) only(BANCOR_CONVERTER_REGISTRY) public {
+    function removeConvertibleToken(address _convertibleToken, address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
         List storage list = convertibleTokens.table[_convertibleToken];
         Item storage item = list.table[_smartToken];
 
@@ -148,39 +149,39 @@ contract BancorConverterRegistryData is ContractRegistryClient {
         emit ConvertibleTokenRemoved(_convertibleToken, _smartToken);
     }
 
-    function getLiquidityPoolCount() public view returns (uint) {
+    function getLiquidityPoolCount() external view returns (uint) {
         return liquidityPools.array.length;
     }
 
-    function getLiquidityPoolArray() public view returns (address[]) {
+    function getLiquidityPoolArray() external view returns (address[]) {
         return liquidityPools.array;
     }
 
-    function getLiquidityPool(uint _index) public view returns (address) {
+    function getLiquidityPool(uint _index) external view returns (address) {
         return liquidityPools.array[_index];
     }
 
-    function getConvertibleTokenCount() public view returns (uint) {
+    function getConvertibleTokenCount() external view returns (uint) {
         return convertibleTokens.array.length;
     }
 
-    function getConvertibleTokenArray() public view returns (address[]) {
+    function getConvertibleTokenArray() external view returns (address[]) {
         return convertibleTokens.array;
     }
 
-    function getConvertibleToken(uint _index) public view returns (address) {
+    function getConvertibleToken(uint _index) external view returns (address) {
         return convertibleTokens.array[_index];
     }
 
-    function getSmartTokenCount(address _convertibleToken) public view returns (uint) {
+    function getSmartTokenCount(address _convertibleToken) external view returns (uint) {
         return convertibleTokens.table[_convertibleToken].array.length;
     }
 
-    function getSmartTokenArray(address _convertibleToken) public view returns (address[]) {
+    function getSmartTokenArray(address _convertibleToken) external view returns (address[]) {
         return convertibleTokens.table[_convertibleToken].array;
     }
 
-    function getSmartToken(address _convertibleToken, uint _index) public view returns (address) {
+    function getSmartToken(address _convertibleToken, uint _index) external view returns (address) {
         return convertibleTokens.table[_convertibleToken].array[_index];
     }
 }
