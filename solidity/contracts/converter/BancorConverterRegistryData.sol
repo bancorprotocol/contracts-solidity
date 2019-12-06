@@ -1,6 +1,7 @@
 pragma solidity 0.4.26;
+import '../utility/ContractRegistryClient.sol';
 
-contract BancorConverterRegistryData {
+contract BancorConverterRegistryData is ContractRegistryClient {
     struct Item {
         bool valid;
         uint index;
@@ -56,11 +57,19 @@ contract BancorConverterRegistryData {
     event ConvertibleTokenRemoved(address indexed _convertibleToken, address indexed _smartToken);
 
     /**
+      * @dev initialize a new BancorConverterRegistryData instance
+      * 
+      * @param _registry address of a contract registry contract
+    */
+    constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
+    }
+
+    /**
       * @dev add a liquidity pool
       * 
       * @param _liquidityPool liquidity pool
     */
-    function addLiquidityPool(address _liquidityPool) public {
+    function addLiquidityPool(address _liquidityPool) public only(BANCOR_CONVERTER_REGISTRY) {
         Item storage item = liquidityPools.table[_liquidityPool];
 
         require(item.valid == false);
@@ -76,7 +85,7 @@ contract BancorConverterRegistryData {
       * 
       * @param _liquidityPool liquidity pool
     */
-    function removeLiquidityPool(address _liquidityPool) public {
+    function removeLiquidityPool(address _liquidityPool) public only(BANCOR_CONVERTER_REGISTRY) {
         Item storage item = liquidityPools.table[_liquidityPool];
 
         require(item.valid == true);
@@ -96,7 +105,7 @@ contract BancorConverterRegistryData {
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
-    function addConvertibleToken(address _convertibleToken, address _smartToken) public {
+    function addConvertibleToken(address _convertibleToken, address _smartToken) only(BANCOR_CONVERTER_REGISTRY) public {
         List storage list = convertibleTokens.table[_convertibleToken];
         Item storage item = list.table[_smartToken];
 
@@ -116,7 +125,7 @@ contract BancorConverterRegistryData {
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
-    function removeConvertibleToken(address _convertibleToken, address _smartToken) public {
+    function removeConvertibleToken(address _convertibleToken, address _smartToken) only(BANCOR_CONVERTER_REGISTRY) public {
         List storage list = convertibleTokens.table[_convertibleToken];
         Item storage item = list.table[_smartToken];
 

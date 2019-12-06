@@ -1,14 +1,19 @@
-contract("BancorConverterRegistryData", function(accounts) {
-    let registry;
+const utils = require("./helpers/Utils");
+const ContractRegistryClient = require("./helpers/ContractRegistryClient");
 
-    const utils = require("./helpers/Utils");
+contract("BancorConverterRegistryData", function(accounts) {
+    let contractRegistry
+    let registry;
 
     const keyAccounts = accounts.slice(0, 4);
     const valAccounts = accounts.slice(4, 8);
     const currentState = {convertibleTokenArray: [], smartTokenTable: []};
 
     before(async function() {
-        registry = await artifacts.require("BancorConverterRegistryData").new();
+        contractRegistry = await artifacts.require("ContractRegistry").new();
+        registry = await artifacts.require("BancorConverterRegistryData").new(contractRegistry.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY, accounts[0]);
+
     });
 
     describe("liquidity pools basic verification:", function() {
