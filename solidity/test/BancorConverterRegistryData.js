@@ -3,7 +3,7 @@ const ContractRegistryClient = require("./helpers/ContractRegistryClient");
 
 contract("BancorConverterRegistryData", function(accounts) {
     let contractRegistry
-    let registry;
+    let converterRegistry;
 
     const keyAccounts = accounts.slice(0, 4);
     const valAccounts = accounts.slice(4, 8);
@@ -11,26 +11,26 @@ contract("BancorConverterRegistryData", function(accounts) {
 
     before(async function() {
         contractRegistry = await artifacts.require("ContractRegistry").new();
-        registry = await artifacts.require("BancorConverterRegistryData").new(contractRegistry.address);
+        converterRegistry = await artifacts.require("BancorConverterRegistryData").new(contractRegistry.address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY, accounts[0]);
 
     });
 
     describe("liquidity pools basic verification:", function() {
         it("function addLiquidityPool should complete successfully if pool does not exists", async function() {
-            await test(accounts[0], registry.addLiquidityPool, "LiquidityPoolAdded");
+            await test(accounts[0], converterRegistry.addLiquidityPool, "LiquidityPoolAdded");
         });
 
         it("function addLiquidityPool should abort with an error if pool already exists", async function() {
-            await utils.catchRevert(registry.addLiquidityPool(accounts[0]));
+            await utils.catchRevert(converterRegistry.addLiquidityPool(accounts[0]));
         });
 
         it("function removeLiquidityPool should complete successfully if pool already exists", async function() {
-            await test(accounts[0], registry.removeLiquidityPool, "LiquidityPoolRemoved");
+            await test(accounts[0], converterRegistry.removeLiquidityPool, "LiquidityPoolRemoved");
         });
 
         it("function removeLiquidityPool should abort with an error if pool does not exist", async function() {
-            await utils.catchRevert(registry.removeLiquidityPool(accounts[0]));
+            await utils.catchRevert(converterRegistry.removeLiquidityPool(accounts[0]));
         });
 
         async function test(liquidityPool, func, eventName) {
@@ -44,19 +44,19 @@ contract("BancorConverterRegistryData", function(accounts) {
 
     describe("convertible tokens basic verification:", function() {
         it("function addConvertibleToken should complete successfully if token does not exists", async function() {
-            await test(keyAccounts[0], valAccounts[0], registry.addConvertibleToken, "ConvertibleTokenAdded");
+            await test(keyAccounts[0], valAccounts[0], converterRegistry.addConvertibleToken, "ConvertibleTokenAdded");
         });
 
         it("function addConvertibleToken should abort with an error if token already exists", async function() {
-            await utils.catchRevert(registry.addConvertibleToken(keyAccounts[0], valAccounts[0]));
+            await utils.catchRevert(converterRegistry.addConvertibleToken(keyAccounts[0], valAccounts[0]));
         });
 
         it("function removeConvertibleToken should complete successfully if token already exists", async function() {
-            await test(keyAccounts[0], valAccounts[0], registry.removeConvertibleToken, "ConvertibleTokenRemoved");
+            await test(keyAccounts[0], valAccounts[0], converterRegistry.removeConvertibleToken, "ConvertibleTokenRemoved");
         });
 
         it("function removeConvertibleToken should abort with an error if token does not exist", async function() {
-            await utils.catchRevert(registry.removeConvertibleToken(keyAccounts[0], valAccounts[0]));
+            await utils.catchRevert(converterRegistry.removeConvertibleToken(keyAccounts[0], valAccounts[0]));
         });
 
         async function test(convertibleToken, smartToken, func, eventName) {
@@ -80,12 +80,12 @@ contract("BancorConverterRegistryData", function(accounts) {
         async function removeAllOneByOne(direction) {
             console.log(`adding ${accounts.length} pools...`);
             for (const account of accounts)
-                await registry.addLiquidityPool(account);
+                await converterRegistry.addLiquidityPool(account);
             for (let pools = accounts.slice(); pools.length > 0; pools.length--) {
                 const bgnIndex = (pools.length - 1) * (1 - direction) / 2;
                 const endIndex = (pools.length - 1) * (1 + direction) / 2;
-                const pool = await registry.getLiquidityPool(bgnIndex);
-                await registry.removeLiquidityPool(pool);
+                const pool = await converterRegistry.getLiquidityPool(bgnIndex);
+                await converterRegistry.removeLiquidityPool(pool);
                 assert.equal(pool, pools[bgnIndex]);
                 pools[bgnIndex] = pools[endIndex];
                 console.log(`pool ${bgnIndex} removed`);
@@ -121,8 +121,8 @@ contract("BancorConverterRegistryData", function(accounts) {
 
         async function test(convertibleToken, smartToken, func) {
             const response = await func(convertibleToken, smartToken);
-            const convertibleTokenArray = await registry.getConvertibleTokenArray();
-            const smartTokenTable = await Promise.all(convertibleTokenArray.map(convertibleToken => registry.getSmartTokenArray(convertibleToken)));
+            const convertibleTokenArray = await converterRegistry.getConvertibleTokenArray();
+            const smartTokenTable = await Promise.all(convertibleTokenArray.map(convertibleToken => converterRegistry.getSmartTokenArray(convertibleToken)));
             assert.equal(stringify({convertibleTokenArray: convertibleTokenArray, smartTokenTable: smartTokenTable}), stringify(currentState));
         }
 
@@ -135,7 +135,7 @@ contract("BancorConverterRegistryData", function(accounts) {
             else {
                 currentState.smartTokenTable[index].push(smartToken);
             }
-            return await registry.addConvertibleToken(convertibleToken, smartToken);
+            return await converterRegistry.addConvertibleToken(convertibleToken, smartToken);
         }
 
         async function remove(convertibleToken, smartToken) {
@@ -147,7 +147,7 @@ contract("BancorConverterRegistryData", function(accounts) {
             else {
                 swapLast(currentState.smartTokenTable[index], smartToken);
             }
-            return await registry.removeConvertibleToken(convertibleToken, smartToken);
+            return await converterRegistry.removeConvertibleToken(convertibleToken, smartToken);
         }
 
         function swapLast(array, item) {
