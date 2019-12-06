@@ -1,106 +1,177 @@
 pragma solidity 0.4.26;
 
 contract BancorConverterRegistryData {
-    struct SmartTokenInfo {
+    struct Item {
         bool valid;
         uint index;
     }
 
-    struct ERC20TokenInfo {
+    struct List {
         uint index;
-        address[] smartTokenArray;
-        mapping(address => SmartTokenInfo) smartTokenTable;
+        address[] array;
+        mapping(address => Item) table;
     }
 
-    address[] erc20TokenArray;
-    mapping(address => ERC20TokenInfo) erc20TokenTable;
+    struct Items {
+        address[] array;
+        mapping(address => Item) table;
+    }
+
+    struct Lists {
+        address[] array;
+        mapping(address => List) table;
+    }
+
+    Items liquidityPools;
+    Lists convertibleTokens;
 
     /**
-      * @dev emitted when a mapping is added to the registry
+      * @dev emitted when a liquidity pool is added
       * 
-      * @param _erc20Token the address of a ERC20Token contract instance
-      * @param _smartToken the address of a SmartToken contract instance
+      * @param _liquidityPool liquidity pool
     */
-    event Added(address indexed _erc20Token, address indexed _smartToken);
+    event LiquidityPoolAdded(address indexed _liquidityPool);
 
     /**
-      * @dev emitted when a mapping is removed from the registry
+      * @dev emitted when a liquidity pool is removed
       * 
-      * @param _erc20Token the address of a ERC20Token contract instance
-      * @param _smartToken the address of a SmartToken contract instance
+      * @param _liquidityPool liquidity pool
     */
-    event Removed(address indexed _erc20Token, address indexed _smartToken);
+    event LiquidityPoolRemoved(address indexed _liquidityPool);
 
     /**
-      * @dev add a mapping to the registry
+      * @dev emitted when a convertible token is added
       * 
-      * @param _erc20Token the address of a ERC20Token contract instance
-      * @param _smartToken the address of a SmartToken contract instance
+      * @param _convertibleToken convertible token
+      * @param _smartToken associated smart token
     */
-    function add(address _erc20Token, address _smartToken) public {
-        ERC20TokenInfo storage erc20TokenInfo = erc20TokenTable[_erc20Token];
-        SmartTokenInfo storage smartTokenInfo = erc20TokenInfo.smartTokenTable[_smartToken];
+    event ConvertibleTokenAdded(address indexed _convertibleToken, address indexed _smartToken);
 
-        require(smartTokenInfo.valid == false);
+    /**
+      * @dev emitted when a convertible token is removed
+      * 
+      * @param _convertibleToken convertible token
+      * @param _smartToken associated smart token
+    */
+    event ConvertibleTokenRemoved(address indexed _convertibleToken, address indexed _smartToken);
 
-        if (erc20TokenInfo.smartTokenArray.length == 0)
-            erc20TokenInfo.index = erc20TokenArray.push(_erc20Token) - 1;
-        smartTokenInfo.index = erc20TokenInfo.smartTokenArray.push(_smartToken) - 1;
-        smartTokenInfo.valid = true;
+    /**
+      * @dev add a liquidity pool
+      * 
+      * @param _liquidityPool liquidity pool
+    */
+    function addLiquidityPool(address _liquidityPool) public {
+        Item storage item = liquidityPools.table[_liquidityPool];
 
-        emit Added(_erc20Token, _smartToken);
+        require(item.valid == false);
+
+        item.index = liquidityPools.array.push(_liquidityPool) - 1;
+        item.valid = true;
+
+        emit LiquidityPoolAdded(_liquidityPool);
     }
 
     /**
-      * @dev remove a mapping from the registry
+      * @dev remove a liquidity pool
       * 
-      * @param _erc20Token the address of a ERC20Token contract instance
-      * @param _smartToken the address of a SmartToken contract instance
+      * @param _liquidityPool liquidity pool
     */
-    function remove(address _erc20Token, address _smartToken) public {
-        ERC20TokenInfo storage erc20TokenInfo = erc20TokenTable[_erc20Token];
-        SmartTokenInfo storage smartTokenInfo = erc20TokenInfo.smartTokenTable[_smartToken];
+    function removeLiquidityPool(address _liquidityPool) public {
+        Item storage item = liquidityPools.table[_liquidityPool];
 
-        require(smartTokenInfo.valid == true);
+        require(item.valid == true);
 
-        address lastSmartToken = erc20TokenInfo.smartTokenArray[erc20TokenInfo.smartTokenArray.length - 1];
-        erc20TokenInfo.smartTokenTable[lastSmartToken].index = smartTokenInfo.index;
-        erc20TokenInfo.smartTokenArray[smartTokenInfo.index] = lastSmartToken;
-        erc20TokenInfo.smartTokenArray.length--;
-        delete erc20TokenInfo.smartTokenTable[_smartToken];
+        address lastLiquidityPool = liquidityPools.array[liquidityPools.array.length - 1];
+        liquidityPools.table[lastLiquidityPool].index = item.index;
+        liquidityPools.array[item.index] = lastLiquidityPool;
+        liquidityPools.array.length--;
+        delete liquidityPools.table[_liquidityPool];
 
-        if (erc20TokenInfo.smartTokenArray.length == 0) {
-            address lastERC20Token = erc20TokenArray[erc20TokenArray.length - 1];
-            erc20TokenTable[lastERC20Token].index = erc20TokenInfo.index;
-            erc20TokenArray[erc20TokenInfo.index] = lastERC20Token;
-            erc20TokenArray.length--;
-            delete erc20TokenTable[_erc20Token];
+        emit LiquidityPoolRemoved(_liquidityPool);
+    }
+
+    /**
+      * @dev add a convertible token
+      * 
+      * @param _convertibleToken convertible token
+      * @param _smartToken associated smart token
+    */
+    function addConvertibleToken(address _convertibleToken, address _smartToken) public {
+        List storage list = convertibleTokens.table[_convertibleToken];
+        Item storage item = list.table[_smartToken];
+
+        require(item.valid == false);
+
+        if (list.array.length == 0)
+            list.index = convertibleTokens.array.push(_convertibleToken) - 1;
+        item.index = list.array.push(_smartToken) - 1;
+        item.valid = true;
+
+        emit ConvertibleTokenAdded(_convertibleToken, _smartToken);
+    }
+
+    /**
+      * @dev remove a convertible token
+      * 
+      * @param _convertibleToken convertible token
+      * @param _smartToken associated smart token
+    */
+    function removeConvertibleToken(address _convertibleToken, address _smartToken) public {
+        List storage list = convertibleTokens.table[_convertibleToken];
+        Item storage item = list.table[_smartToken];
+
+        require(item.valid == true);
+
+        address lastSmartToken = list.array[list.array.length - 1];
+        list.table[lastSmartToken].index = item.index;
+        list.array[item.index] = lastSmartToken;
+        list.array.length--;
+        delete list.table[_smartToken];
+
+        if (list.array.length == 0) {
+            address lastConvertibleToken = convertibleTokens.array[convertibleTokens.array.length - 1];
+            convertibleTokens.table[lastConvertibleToken].index = list.index;
+            convertibleTokens.array[list.index] = lastConvertibleToken;
+            convertibleTokens.array.length--;
+            delete convertibleTokens.table[_convertibleToken];
         }
 
-        emit Removed(_erc20Token, _smartToken);
+        emit ConvertibleTokenRemoved(_convertibleToken, _smartToken);
     }
 
-    function getERC20TokenCount() public view returns (uint) {
-        return erc20TokenArray.length;
+    function getLiquidityPoolCount() public view returns (uint) {
+        return liquidityPools.array.length;
     }
 
-    function getERC20TokenArray() public view returns (address[]) {
-        return erc20TokenArray;
+    function getLiquidityPoolArray() public view returns (address[]) {
+        return liquidityPools.array;
     }
 
-    function getERC20Token(uint _index) public view returns (address) {
-        return erc20TokenArray[_index];
+    function getLiquidityPool(uint _index) public view returns (address) {
+        return liquidityPools.array[_index];
     }
 
-    function getSmartTokenCount(address _erc20Token) public view returns (uint) {
-        return erc20TokenTable[_erc20Token].smartTokenArray.length;
+    function getConvertibleTokenCount() public view returns (uint) {
+        return convertibleTokens.array.length;
     }
 
-    function getSmartTokenArray(address _erc20Token) public view returns (address[]) {
-        return erc20TokenTable[_erc20Token].smartTokenArray;
+    function getConvertibleTokenArray() public view returns (address[]) {
+        return convertibleTokens.array;
     }
 
-    function getSmartToken(address _erc20Token, uint _index) public view returns (address) {
-        return erc20TokenTable[_erc20Token].smartTokenArray[_index];
+    function getConvertibleToken(uint _index) public view returns (address) {
+        return convertibleTokens.array[_index];
+    }
+
+    function getSmartTokenCount(address _convertibleToken) public view returns (uint) {
+        return convertibleTokens.table[_convertibleToken].array.length;
+    }
+
+    function getSmartTokenArray(address _convertibleToken) public view returns (address[]) {
+        return convertibleTokens.table[_convertibleToken].array;
+    }
+
+    function getSmartToken(address _convertibleToken, uint _index) public view returns (address) {
+        return convertibleTokens.table[_convertibleToken].array[_index];
     }
 }
