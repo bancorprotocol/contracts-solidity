@@ -16,6 +16,24 @@ contract("BancorConverterRegistryData", function(accounts) {
 
     });
 
+    describe("security assertion:", function() {
+        it("function addLiquidityPool should abort with an error if called without permission", async function() {
+            await utils.catchRevert(converterRegistry.addLiquidityPool(accounts[0], {from: accounts[1]}));
+        });
+
+        it("function removeLiquidityPool should abort with an error if called without permission", async function() {
+            await utils.catchRevert(converterRegistry.removeLiquidityPool(accounts[0], {from: accounts[1]}));
+        });
+
+        it("function addConvertibleToken should abort with an error if called without permission", async function() {
+            await utils.catchRevert(converterRegistry.addConvertibleToken(accounts[0], accounts[0], {from: accounts[1]}));
+        });
+
+        it("function removeConvertibleToken should abort with an error if called without permission", async function() {
+            await utils.catchRevert(converterRegistry.removeConvertibleToken(accounts[0], accounts[0], {from: accounts[1]}));
+        });
+    });
+
     describe("liquidity pools basic verification:", function() {
         it("function addLiquidityPool should complete successfully if pool does not exists", async function() {
             await test(accounts[0], converterRegistry.addLiquidityPool, "LiquidityPoolAdded");
