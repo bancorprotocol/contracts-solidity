@@ -12,7 +12,7 @@ contract("BancorConverterRegistryData", function(accounts) {
     before(async function() {
         contractRegistry = await artifacts.require("ContractRegistry").new();
         converterRegistry = await artifacts.require("BancorConverterRegistryData").new(contractRegistry.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY, accounts[0]);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_LOGIC, accounts[0]);
     });
 
     describe("security assertion:", function() {
