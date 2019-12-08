@@ -1,7 +1,7 @@
-const utils = require("./helpers/Utils");
-const ContractRegistryClient = require("./helpers/ContractRegistryClient");
+const utils = require('./helpers/Utils');
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
-contract("BancorConverterRegistryData", function(accounts) {
+contract('BancorConverterRegistryData', function(accounts) {
     let contractRegistry
     let converterRegistry;
 
@@ -10,82 +10,82 @@ contract("BancorConverterRegistryData", function(accounts) {
     const currentState = {convertibleTokenArray: [], smartTokenTable: []};
 
     before(async function() {
-        contractRegistry = await artifacts.require("ContractRegistry").new();
-        converterRegistry = await artifacts.require("BancorConverterRegistryData").new(contractRegistry.address);
+        contractRegistry = await artifacts.require('ContractRegistry').new();
+        converterRegistry = await artifacts.require('BancorConverterRegistryData').new(contractRegistry.address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_LOGIC, accounts[0]);
     });
 
-    describe("security assertion:", function() {
-        it("function addLiquidityPool should abort with an error if called without permission", async function() {
+    describe('security assertion:', function() {
+        it('function addLiquidityPool should abort with an error if called without permission', async function() {
             await utils.catchRevert(converterRegistry.addLiquidityPool(accounts[0], {from: accounts[1]}));
         });
 
-        it("function removeLiquidityPool should abort with an error if called without permission", async function() {
+        it('function removeLiquidityPool should abort with an error if called without permission', async function() {
             await utils.catchRevert(converterRegistry.removeLiquidityPool(accounts[0], {from: accounts[1]}));
         });
 
-        it("function addConvertibleToken should abort with an error if called without permission", async function() {
+        it('function addConvertibleToken should abort with an error if called without permission', async function() {
             await utils.catchRevert(converterRegistry.addConvertibleToken(accounts[0], accounts[0], {from: accounts[1]}));
         });
 
-        it("function removeConvertibleToken should abort with an error if called without permission", async function() {
+        it('function removeConvertibleToken should abort with an error if called without permission', async function() {
             await utils.catchRevert(converterRegistry.removeConvertibleToken(accounts[0], accounts[0], {from: accounts[1]}));
         });
     });
 
-    describe("liquidity pools basic verification:", function() {
-        it("function addLiquidityPool should complete successfully if pool does not exists", async function() {
-            await test(accounts[0], converterRegistry.addLiquidityPool, "LiquidityPoolAdded");
+    describe('liquidity pools basic verification:', function() {
+        it('function addLiquidityPool should complete successfully if pool does not exists', async function() {
+            await test(accounts[0], converterRegistry.addLiquidityPool, 'LiquidityPoolAdded');
         });
 
-        it("function addLiquidityPool should abort with an error if pool already exists", async function() {
+        it('function addLiquidityPool should abort with an error if pool already exists', async function() {
             await utils.catchRevert(converterRegistry.addLiquidityPool(accounts[0]));
         });
 
-        it("function removeLiquidityPool should complete successfully if pool already exists", async function() {
-            await test(accounts[0], converterRegistry.removeLiquidityPool, "LiquidityPoolRemoved");
+        it('function removeLiquidityPool should complete successfully if pool already exists', async function() {
+            await test(accounts[0], converterRegistry.removeLiquidityPool, 'LiquidityPoolRemoved');
         });
 
-        it("function removeLiquidityPool should abort with an error if pool does not exist", async function() {
+        it('function removeLiquidityPool should abort with an error if pool does not exist', async function() {
             await utils.catchRevert(converterRegistry.removeLiquidityPool(accounts[0]));
         });
 
         async function test(liquidityPool, func, eventName) {
             const response = await func(liquidityPool);
             const log      = response.logs[0];
-            const expected = eventName + "(" +           liquidityPool + ")";
-            const actual   = log.event + "(" + log.args._liquidityPool + ")";
+            const expected = eventName + '(' +           liquidityPool + ')';
+            const actual   = log.event + '(' + log.args._liquidityPool + ')';
             assert.equal(actual, expected);
         }
     });
 
-    describe("convertible tokens basic verification:", function() {
-        it("function addConvertibleToken should complete successfully if token does not exists", async function() {
-            await test(keyAccounts[0], valAccounts[0], converterRegistry.addConvertibleToken, "ConvertibleTokenAdded");
+    describe('convertible tokens basic verification:', function() {
+        it('function addConvertibleToken should complete successfully if token does not exists', async function() {
+            await test(keyAccounts[0], valAccounts[0], converterRegistry.addConvertibleToken, 'ConvertibleTokenAdded');
         });
 
-        it("function addConvertibleToken should abort with an error if token already exists", async function() {
+        it('function addConvertibleToken should abort with an error if token already exists', async function() {
             await utils.catchRevert(converterRegistry.addConvertibleToken(keyAccounts[0], valAccounts[0]));
         });
 
-        it("function removeConvertibleToken should complete successfully if token already exists", async function() {
-            await test(keyAccounts[0], valAccounts[0], converterRegistry.removeConvertibleToken, "ConvertibleTokenRemoved");
+        it('function removeConvertibleToken should complete successfully if token already exists', async function() {
+            await test(keyAccounts[0], valAccounts[0], converterRegistry.removeConvertibleToken, 'ConvertibleTokenRemoved');
         });
 
-        it("function removeConvertibleToken should abort with an error if token does not exist", async function() {
+        it('function removeConvertibleToken should abort with an error if token does not exist', async function() {
             await utils.catchRevert(converterRegistry.removeConvertibleToken(keyAccounts[0], valAccounts[0]));
         });
 
         async function test(convertibleToken, smartToken, func, eventName) {
             const response = await func(convertibleToken, smartToken);
             const log      = response.logs[0];
-            const expected = eventName + "(" +           convertibleToken + "," +           smartToken + ")";
-            const actual   = log.event + "(" + log.args._convertibleToken + "," + log.args._smartToken + ")";
+            const expected = eventName + '(' +           convertibleToken + ',' +           smartToken + ')';
+            const actual   = log.event + '(' + log.args._convertibleToken + ',' + log.args._smartToken + ')';
             assert.equal(actual, expected);
         }
     });
 
-    describe("liquidity pools advanced verification:", function() {
+    describe('liquidity pools advanced verification:', function() {
         it('remove first pool until all pools removed', async function() {
             await removeAllOneByOne(+1);
         });
@@ -110,7 +110,7 @@ contract("BancorConverterRegistryData", function(accounts) {
         };
     });
 
-    describe("convertible tokens advanced verification:", function() {
+    describe('convertible tokens advanced verification:', function() {
         for (const reverseKeys of [false, true]) {
             for (const reverseVals of [false, true]) {
                 for (const addTuples of [rows, cols]) {
