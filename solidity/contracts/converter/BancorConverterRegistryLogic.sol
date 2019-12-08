@@ -42,6 +42,8 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
         uint connectorTokenCount = _bancorConverter.connectorTokenCount();
         if (connectorTokenCount > 1)
             bancorConverterRegistryData.addLiquidityPool(token);
+        else
+            bancorConverterRegistryData.addConvertibleToken(token, token);
         for (uint i = 0; i < connectorTokenCount; i++)
             bancorConverterRegistryData.addConvertibleToken(_bancorConverter.connectorTokens(i), token);
         emit BancorConverterAdded(_bancorConverter);
@@ -60,6 +62,8 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
         uint connectorTokenCount = _bancorConverter.connectorTokenCount();
         if (connectorTokenCount > 1)
             bancorConverterRegistryData.removeLiquidityPool(token);
+        else
+            bancorConverterRegistryData.removeConvertibleToken(token, token);
         for (uint i = 0; i < connectorTokenCount; i++)
             bancorConverterRegistryData.removeConvertibleToken(_bancorConverter.connectorTokens(i), token);
         emit BancorConverterRemoved(_bancorConverter);
