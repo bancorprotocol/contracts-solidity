@@ -1,9 +1,9 @@
 pragma solidity 0.4.26;
+import '../utility/ContractRegistryClient.sol';
 import './interfaces/IBancorConverterRegistryLogic.sol';
 import './interfaces/IBancorConverterRegistryData.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/ISmartTokenController.sol';
-import '../utility/ContractRegistryClient.sol';
 
 contract BancorConverterRegistryLogic is IBancorConverterRegistryLogic, ContractRegistryClient {
     /**
