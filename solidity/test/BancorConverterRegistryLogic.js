@@ -124,13 +124,13 @@ contract('BancorConverterRegistryLogic', function(accounts) {
 
 async function test(func, converter, postfix) {
     const response = await func(converter.address);
-    const token = await converter.token();
-    const connectorTokenCount = await converter.connectorTokenCount();
+    const token    = await converter.token();
+    const count    = await converter.connectorTokenCount();
     const log      = response.logs[0];
     const expected = `SmartToken${postfix}(${token})`;
     const actual   = `${log.event}(${log.args._smartToken})`;
     assert.equal(actual, expected);
-    if (connectorTokenCount.toString() > 1) {
+    if (count.greaterThan(1)) {
         const log      = response.logs[1];
         const expected = `LiquidityPool${postfix}(${token})`;
         const actual   = `${log.event}(${log.args._liquidityPool})`;
@@ -142,7 +142,7 @@ async function test(func, converter, postfix) {
         const actual   = `${log.event}(${log.args._convertibleToken},${log.args._smartToken})`;
         assert.equal(actual, expected);
     }
-    for (let i = 0; i < connectorTokenCount.toString(); i++) {
+    for (let i = 0; count.greaterThan(i); i++) {
         const connectorToken = await converter.connectorTokens(i);
         const log      = response.logs[2 + i];
         const expected = `ConvertibleToken${postfix}(${connectorToken},${token})`;
