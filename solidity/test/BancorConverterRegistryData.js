@@ -35,7 +35,7 @@ contract('BancorConverterRegistryData', function(accounts) {
 
     describe('liquidity pools basic verification:', function() {
         it('function addLiquidityPool should complete successfully if pool does not exists', async function() {
-            await test(accounts[0], converterRegistry.addLiquidityPool, 'LiquidityPoolAdded');
+            await converterRegistry.addLiquidityPool(accounts[0]);
         });
 
         it('function addLiquidityPool should abort with an error if pool already exists', async function() {
@@ -43,25 +43,17 @@ contract('BancorConverterRegistryData', function(accounts) {
         });
 
         it('function removeLiquidityPool should complete successfully if pool already exists', async function() {
-            await test(accounts[0], converterRegistry.removeLiquidityPool, 'LiquidityPoolRemoved');
+            await converterRegistry.removeLiquidityPool(accounts[0]);
         });
 
         it('function removeLiquidityPool should abort with an error if pool does not exist', async function() {
             await utils.catchRevert(converterRegistry.removeLiquidityPool(accounts[0]));
         });
-
-        async function test(liquidityPool, func, eventName) {
-            const response = await func(liquidityPool);
-            const log      = response.logs[0];
-            const expected = eventName + '(' +           liquidityPool + ')';
-            const actual   = log.event + '(' + log.args._liquidityPool + ')';
-            assert.equal(actual, expected);
-        }
     });
 
     describe('convertible tokens basic verification:', function() {
         it('function addConvertibleToken should complete successfully if token does not exists', async function() {
-            await test(keyAccounts[0], valAccounts[0], converterRegistry.addConvertibleToken, 'ConvertibleTokenAdded');
+            await converterRegistry.addConvertibleToken(keyAccounts[0], valAccounts[0]);
         });
 
         it('function addConvertibleToken should abort with an error if token already exists', async function() {
@@ -69,20 +61,12 @@ contract('BancorConverterRegistryData', function(accounts) {
         });
 
         it('function removeConvertibleToken should complete successfully if token already exists', async function() {
-            await test(keyAccounts[0], valAccounts[0], converterRegistry.removeConvertibleToken, 'ConvertibleTokenRemoved');
+            await converterRegistry.removeConvertibleToken(keyAccounts[0], valAccounts[0]);
         });
 
         it('function removeConvertibleToken should abort with an error if token does not exist', async function() {
             await utils.catchRevert(converterRegistry.removeConvertibleToken(keyAccounts[0], valAccounts[0]));
         });
-
-        async function test(convertibleToken, smartToken, func, eventName) {
-            const response = await func(convertibleToken, smartToken);
-            const log      = response.logs[0];
-            const expected = eventName + '(' +           convertibleToken + ',' +           smartToken + ')';
-            const actual   = log.event + '(' + log.args._convertibleToken + ',' + log.args._smartToken + ')';
-            assert.equal(actual, expected);
-        }
     });
 
     describe('liquidity pools advanced verification:', function() {

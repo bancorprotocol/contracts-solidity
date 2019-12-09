@@ -28,36 +28,6 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
     Lists convertibleTokens;
 
     /**
-      * @dev emitted when a liquidity pool is added
-      * 
-      * @param _liquidityPool liquidity pool
-    */
-    event LiquidityPoolAdded(address indexed _liquidityPool);
-
-    /**
-      * @dev emitted when a liquidity pool is removed
-      * 
-      * @param _liquidityPool liquidity pool
-    */
-    event LiquidityPoolRemoved(address indexed _liquidityPool);
-
-    /**
-      * @dev emitted when a convertible token is added
-      * 
-      * @param _convertibleToken convertible token
-      * @param _smartToken associated smart token
-    */
-    event ConvertibleTokenAdded(address indexed _convertibleToken, address indexed _smartToken);
-
-    /**
-      * @dev emitted when a convertible token is removed
-      * 
-      * @param _convertibleToken convertible token
-      * @param _smartToken associated smart token
-    */
-    event ConvertibleTokenRemoved(address indexed _convertibleToken, address indexed _smartToken);
-
-    /**
       * @dev initialize a new BancorConverterRegistryData instance
       * 
       * @param _registry address of a contract registry contract
@@ -77,8 +47,6 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
         item.index = liquidityPools.array.push(_liquidityPool) - 1;
         item.valid = true;
-
-        emit LiquidityPoolAdded(_liquidityPool);
     }
 
     /**
@@ -96,8 +64,6 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
         liquidityPools.array[item.index] = lastLiquidityPool;
         liquidityPools.array.length--;
         delete liquidityPools.table[_liquidityPool];
-
-        emit LiquidityPoolRemoved(_liquidityPool);
     }
 
     /**
@@ -116,8 +82,6 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
             list.index = convertibleTokens.array.push(_convertibleToken) - 1;
         item.index = list.array.push(_smartToken) - 1;
         item.valid = true;
-
-        emit ConvertibleTokenAdded(_convertibleToken, _smartToken);
     }
 
     /**
@@ -145,8 +109,6 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
             convertibleTokens.array.length--;
             delete convertibleTokens.table[_convertibleToken];
         }
-
-        emit ConvertibleTokenRemoved(_convertibleToken, _smartToken);
     }
 
     function getLiquidityPoolCount() external view returns (uint) {

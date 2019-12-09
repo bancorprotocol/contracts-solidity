@@ -8,18 +8,34 @@ import '../token/interfaces/ISmartTokenController.sol';
 
 contract BancorConverterRegistryLogic is ContractRegistryClient {
     /**
-      * @dev emitted when a Bancor Converter is added
+      * @dev emitted when a liquidity pool is added
       * 
-      * @param _bancorConverter Bancor Converter
+      * @param _liquidityPool liquidity pool
     */
-    event BancorConverterAdded(IBancorConverter indexed _bancorConverter);
+    event LiquidityPoolAdded(address indexed _liquidityPool);
 
     /**
-      * @dev emitted when a Bancor Converter is removed
+      * @dev emitted when a liquidity pool is removed
       * 
-      * @param _bancorConverter Bancor Converter
+      * @param _liquidityPool liquidity pool
     */
-    event BancorConverterRemoved(IBancorConverter indexed _bancorConverter);
+    event LiquidityPoolRemoved(address indexed _liquidityPool);
+
+    /**
+      * @dev emitted when a convertible token is added
+      * 
+      * @param _convertibleToken convertible token
+      * @param _smartToken associated smart token
+    */
+    event ConvertibleTokenAdded(address indexed _convertibleToken, address indexed _smartToken);
+
+    /**
+      * @dev emitted when a convertible token is removed
+      * 
+      * @param _convertibleToken convertible token
+      * @param _smartToken associated smart token
+    */
+    event ConvertibleTokenRemoved(address indexed _convertibleToken, address indexed _smartToken);
 
     /**
       * @dev initialize a new BancorConverterRegistryLogic instance
@@ -40,12 +56,11 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
         require(isOperative(token, _bancorConverter));
         uint connectorTokenCount = _bancorConverter.connectorTokenCount();
         if (connectorTokenCount > 1)
-            bancorConverterRegistryData.addLiquidityPool(token);
+            addLiquidityPool(bancorConverterRegistryData, token);
         else
-            bancorConverterRegistryData.addConvertibleToken(token, token);
+            addConvertibleToken(bancorConverterRegistryData, token, token);
         for (uint i = 0; i < connectorTokenCount; i++)
-            bancorConverterRegistryData.addConvertibleToken(_bancorConverter.connectorTokens(i), token);
-        emit BancorConverterAdded(_bancorConverter);
+            addConvertibleToken(bancorConverterRegistryData, _bancorConverter.connectorTokens(i), token);
     }
 
     /**
@@ -59,12 +74,11 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
         require(msg.sender == owner || !isOperative(token, _bancorConverter));
         uint connectorTokenCount = _bancorConverter.connectorTokenCount();
         if (connectorTokenCount > 1)
-            bancorConverterRegistryData.removeLiquidityPool(token);
+            removeLiquidityPool(bancorConverterRegistryData, token);
         else
-            bancorConverterRegistryData.removeConvertibleToken(token, token);
+            removeConvertibleToken(bancorConverterRegistryData, token, token);
         for (uint i = 0; i < connectorTokenCount; i++)
-            bancorConverterRegistryData.removeConvertibleToken(_bancorConverter.connectorTokens(i), token);
-        emit BancorConverterRemoved(_bancorConverter);
+            removeConvertibleToken(bancorConverterRegistryData, _bancorConverter.connectorTokens(i), token);
     }
 
     /**
@@ -76,5 +90,25 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
     */
     function isOperative(ISmartToken _smartToken, IBancorConverter _bancorConverter) internal view returns (bool) {
         return _smartToken.totalSupply() > 0 && _smartToken.owner() == address(_bancorConverter);
+    }
+
+    function addLiquidityPool(IBancorConverterRegistryData _bancorConverterRegistryData, address _liquidityPool) internal {
+        _bancorConverterRegistryData.addLiquidityPool(_liquidityPool);
+        emit LiquidityPoolAdded(_liquidityPool);
+    }
+
+    function removeLiquidityPool(IBancorConverterRegistryData _bancorConverterRegistryData, address _liquidityPool) internal {
+        _bancorConverterRegistryData.removeLiquidityPool(_liquidityPool);
+        emit LiquidityPoolRemoved(_liquidityPool);
+    }
+
+    function addConvertibleToken(IBancorConverterRegistryData _bancorConverterRegistryData, address _convertibleToken, address _smartToken) internal {
+        _bancorConverterRegistryData.addConvertibleToken(_convertibleToken, _smartToken);
+        emit ConvertibleTokenAdded(_convertibleToken, _smartToken);
+    }
+
+    function removeConvertibleToken(IBancorConverterRegistryData _bancorConverterRegistryData, address _convertibleToken, address _smartToken) internal {
+        _bancorConverterRegistryData.removeConvertibleToken(_convertibleToken, _smartToken);
+        emit ConvertibleTokenRemoved(_convertibleToken, _smartToken);
     }
 }
