@@ -100,8 +100,8 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
         return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokenCount();
     }
 
-    function getSmartTokenArray() external view returns (address[]) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokenArray();
+    function getSmartTokens() external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokens();
     }
 
     function getSmartToken(uint _index) external view returns (address) {
@@ -112,8 +112,8 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
         return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPoolCount();
     }
 
-    function getLiquidityPoolArray() external view returns (address[]) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPoolArray();
+    function getLiquidityPools() external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPools();
     }
 
     function getLiquidityPool(uint _index) external view returns (address) {
@@ -124,8 +124,8 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
         return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenCount();
     }
 
-    function getConvertibleTokenArray() external view returns (address[]) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenArray();
+    function getConvertibleTokens() external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokens();
     }
 
     function getConvertibleToken(uint _index) external view returns (address) {
@@ -136,8 +136,8 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
         return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokenCount(_convertibleToken);
     }
 
-    function getConvertibleTokenSmartTokenArray(address _convertibleToken) external view returns (address[]) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokenArray(_convertibleToken);
+    function getConvertibleTokenSmartTokens(address _convertibleToken) external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokens(_convertibleToken);
     }
 
     function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address) {

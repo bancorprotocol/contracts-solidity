@@ -7,7 +7,7 @@ contract('BancorConverterRegistryData', function(accounts) {
 
     const keyAccounts = accounts.slice(0, 4);
     const valAccounts = accounts.slice(4, 8);
-    const currentState = {convertibleTokenArray: [], smartTokenTable: []};
+    const currentState = {convertibleTokens: [], smartTokens: []};
 
     before(async function() {
         contractRegistry = await artifacts.require('ContractRegistry').new();
@@ -173,31 +173,31 @@ contract('BancorConverterRegistryData', function(accounts) {
 
         async function test(convertibleToken, smartToken, func) {
             const response = await func(convertibleToken, smartToken);
-            const convertibleTokenArray = await converterRegistry.getConvertibleTokenArray();
-            const smartTokenTable = await Promise.all(convertibleTokenArray.map(convertibleToken => converterRegistry.getConvertibleTokenSmartTokenArray(convertibleToken)));
-            assert.equal(stringify({convertibleTokenArray: convertibleTokenArray, smartTokenTable: smartTokenTable}), stringify(currentState));
+            const convertibleTokens = await converterRegistry.getConvertibleTokens();
+            const smartTokens = await Promise.all(convertibleTokens.map(convertibleToken => converterRegistry.getConvertibleTokenSmartTokens(convertibleToken)));
+            assert.equal(stringify({convertibleTokens: convertibleTokens, smartTokens: smartTokens}), stringify(currentState));
         }
 
         async function add(convertibleToken, smartToken) {
-            const index = currentState.convertibleTokenArray.indexOf(convertibleToken);
+            const index = currentState.convertibleTokens.indexOf(convertibleToken);
             if (index == -1) {
-                currentState.convertibleTokenArray.push(convertibleToken);
-                currentState.smartTokenTable.push([smartToken]);
+                currentState.convertibleTokens.push(convertibleToken);
+                currentState.smartTokens.push([smartToken]);
             }
             else {
-                currentState.smartTokenTable[index].push(smartToken);
+                currentState.smartTokens[index].push(smartToken);
             }
             return await converterRegistry.addConvertibleToken(convertibleToken, smartToken);
         }
 
         async function remove(convertibleToken, smartToken) {
-            const index = currentState.convertibleTokenArray.indexOf(convertibleToken);
-            if (currentState.smartTokenTable[index].length == 1) {
-                currentState.smartTokenTable.splice(index, 1);
-                swapLast(currentState.convertibleTokenArray, convertibleToken);
+            const index = currentState.convertibleTokens.indexOf(convertibleToken);
+            if (currentState.smartTokens[index].length == 1) {
+                currentState.smartTokens.splice(index, 1);
+                swapLast(currentState.convertibleTokens, convertibleToken);
             }
             else {
-                swapLast(currentState.smartTokenTable[index], smartToken);
+                swapLast(currentState.smartTokens[index], smartToken);
             }
             return await converterRegistry.removeConvertibleToken(convertibleToken, smartToken);
         }

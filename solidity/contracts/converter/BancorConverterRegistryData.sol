@@ -147,7 +147,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
         return smartTokens.array.length;
     }
 
-    function getSmartTokenArray() external view returns (address[]) {
+    function getSmartTokens() external view returns (address[]) {
         return smartTokens.array;
     }
 
@@ -159,7 +159,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
         return liquidityPools.array.length;
     }
 
-    function getLiquidityPoolArray() external view returns (address[]) {
+    function getLiquidityPools() external view returns (address[]) {
         return liquidityPools.array;
     }
 
@@ -171,7 +171,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
         return convertibleTokens.array.length;
     }
 
-    function getConvertibleTokenArray() external view returns (address[]) {
+    function getConvertibleTokens() external view returns (address[]) {
         return convertibleTokens.array;
     }
 
@@ -183,7 +183,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
         return convertibleTokens.table[_convertibleToken].array.length;
     }
 
-    function getConvertibleTokenSmartTokenArray(address _convertibleToken) external view returns (address[]) {
+    function getConvertibleTokenSmartTokens(address _convertibleToken) external view returns (address[]) {
         return convertibleTokens.table[_convertibleToken].array;
     }
 

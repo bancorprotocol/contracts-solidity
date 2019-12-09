@@ -8,15 +8,15 @@ interface IBancorConverterRegistryData {
     function addConvertibleToken(address _convertibleToken, address _smartToken) external;
     function removeConvertibleToken(address _convertibleToken, address _smartToken) external;
     function getSmartTokenCount() external view returns (uint);
-    function getSmartTokenArray() external view returns (address[]);
+    function getSmartTokens() external view returns (address[]);
     function getSmartToken(uint _index) external view returns (address);
     function getLiquidityPoolCount() external view returns (uint);
-    function getLiquidityPoolArray() external view returns (address[]);
+    function getLiquidityPools() external view returns (address[]);
     function getLiquidityPool(uint _index) external view returns (address);
     function getConvertibleTokenCount() external view returns (uint);
-    function getConvertibleTokenArray() external view returns (address[]);
+    function getConvertibleTokens() external view returns (address[]);
     function getConvertibleToken(uint _index) external view returns (address);
     function getConvertibleTokenSmartTokenCount(address _convertibleToken) external view returns (uint);
-    function getConvertibleTokenSmartTokenArray(address _convertibleToken) external view returns (address[]);
+    function getConvertibleTokenSmartTokens(address _convertibleToken) external view returns (address[]);
     function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address);
 }
