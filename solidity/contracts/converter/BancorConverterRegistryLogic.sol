@@ -1,11 +1,11 @@
 pragma solidity 0.4.26;
-import './interfaces/IBancorConverter.sol';
+import './interfaces/IBancorConverterRegistryLogic.sol';
 import './interfaces/IBancorConverterRegistryData.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/ISmartTokenController.sol';
 import '../utility/ContractRegistryClient.sol';
 
-contract BancorConverterRegistryLogic is ContractRegistryClient {
+contract BancorConverterRegistryLogic is IBancorConverterRegistryLogic, ContractRegistryClient {
     /**
       * @dev emitted when a smart token is added
       * 
