@@ -24,6 +24,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
         mapping(address => List) table;
     }
 
+    Items smartTokens;
     Items liquidityPools;
     Lists convertibleTokens;
 
@@ -33,6 +34,37 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * @param _registry address of a contract registry contract
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
+    }
+
+    /**
+      * @dev add a smart token
+      * 
+      * @param _smartToken smart token
+    */
+    function addSmartToken(address _smartToken) external only(BANCOR_CONVERTER_REGISTRY_LOGIC) {
+        Item storage item = smartTokens.table[_smartToken];
+
+        require(item.valid == false);
+
+        item.index = smartTokens.array.push(_smartToken) - 1;
+        item.valid = true;
+    }
+
+    /**
+      * @dev remove a smart token
+      * 
+      * @param _smartToken smart token
+    */
+    function removeSmartToken(address _smartToken) external only(BANCOR_CONVERTER_REGISTRY_LOGIC) {
+        Item storage item = smartTokens.table[_smartToken];
+
+        require(item.valid == true);
+
+        address lastSmartToken = smartTokens.array[smartTokens.array.length - 1];
+        smartTokens.table[lastSmartToken].index = item.index;
+        smartTokens.array[item.index] = lastSmartToken;
+        smartTokens.array.length--;
+        delete smartTokens.table[_smartToken];
     }
 
     /**
@@ -111,6 +143,18 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
         }
     }
 
+    function getSmartTokenCount() external view returns (uint) {
+        return smartTokens.array.length;
+    }
+
+    function getSmartTokenArray() external view returns (address[]) {
+        return smartTokens.array;
+    }
+
+    function getSmartToken(uint _index) external view returns (address) {
+        return smartTokens.array[_index];
+    }
+
     function getLiquidityPoolCount() external view returns (uint) {
         return liquidityPools.array.length;
     }
@@ -135,15 +179,15 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
         return convertibleTokens.array[_index];
     }
 
-    function getSmartTokenCount(address _convertibleToken) external view returns (uint) {
+    function getConvertibleTokenSmartTokenCount(address _convertibleToken) external view returns (uint) {
         return convertibleTokens.table[_convertibleToken].array.length;
     }
 
-    function getSmartTokenArray(address _convertibleToken) external view returns (address[]) {
+    function getConvertibleTokenSmartTokenArray(address _convertibleToken) external view returns (address[]) {
         return convertibleTokens.table[_convertibleToken].array;
     }
 
-    function getSmartToken(address _convertibleToken, uint _index) external view returns (address) {
+    function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address) {
         return convertibleTokens.table[_convertibleToken].array[_index];
     }
 }

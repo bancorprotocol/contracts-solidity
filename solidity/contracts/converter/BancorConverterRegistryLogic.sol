@@ -7,6 +7,20 @@ import '../utility/ContractRegistryClient.sol';
 
 contract BancorConverterRegistryLogic is ContractRegistryClient {
     /**
+      * @dev emitted when a smart token is added
+      * 
+      * @param _smartToken smart token
+    */
+    event SmartTokenAdded(address indexed _smartToken);
+
+    /**
+      * @dev emitted when a smart token is removed
+      * 
+      * @param _smartToken smart token
+    */
+    event SmartTokenRemoved(address indexed _smartToken);
+
+    /**
       * @dev emitted when a liquidity pool is added
       * 
       * @param _liquidityPool liquidity pool
@@ -54,6 +68,7 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
         ISmartToken token = ISmartTokenController(_converter).token();
         require(isValid(token, _converter));
         uint connectorTokenCount = _converter.connectorTokenCount();
+        addSmartToken(converterRegistryData, token);
         if (connectorTokenCount > 1)
             addLiquidityPool(converterRegistryData, token);
         else
@@ -72,12 +87,25 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
         ISmartToken token = ISmartTokenController(_converter).token();
         require(msg.sender == owner || !isValid(token, _converter));
         uint connectorTokenCount = _converter.connectorTokenCount();
+        removeSmartToken(converterRegistryData, token);
         if (connectorTokenCount > 1)
             removeLiquidityPool(converterRegistryData, token);
         else
             removeConvertibleToken(converterRegistryData, token, token);
         for (uint i = 0; i < connectorTokenCount; i++)
             removeConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
+    }
+
+    function getSmartTokenCount() external view returns (uint) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokenCount();
+    }
+
+    function getSmartTokenArray() external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokenArray();
+    }
+
+    function getSmartToken(uint _index) external view returns (address) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartToken(_index);
     }
 
     function getLiquidityPoolCount() external view returns (uint) {
@@ -104,16 +132,16 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
         return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleToken(_index);
     }
 
-    function getSmartTokenCount(address _convertibleToken) external view returns (uint) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokenCount(_convertibleToken);
+    function getConvertibleTokenSmartTokenCount(address _convertibleToken) external view returns (uint) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokenCount(_convertibleToken);
     }
 
-    function getSmartTokenArray(address _convertibleToken) external view returns (address[]) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokenArray(_convertibleToken);
+    function getConvertibleTokenSmartTokenArray(address _convertibleToken) external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokenArray(_convertibleToken);
     }
 
-    function getSmartToken(address _convertibleToken, uint _index) external view returns (address) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartToken(_convertibleToken, _index);
+    function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartToken(_convertibleToken, _index);
     }
 
     /**
@@ -125,6 +153,26 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
     */
     function isValid(ISmartToken _smartToken, IBancorConverter _converter) internal view returns (bool) {
         return _smartToken.totalSupply() > 0 && _smartToken.owner() == address(_converter);
+    }
+
+    /**
+      * @dev add a smart token
+      * 
+      * @param _smartToken smart token
+    */
+    function addSmartToken(IBancorConverterRegistryData _converterRegistryData, address _smartToken) internal {
+        _converterRegistryData.addSmartToken(_smartToken);
+        emit SmartTokenAdded(_smartToken);
+    }
+
+    /**
+      * @dev remove a smart token
+      * 
+      * @param _smartToken smart token
+    */
+    function removeSmartToken(IBancorConverterRegistryData _converterRegistryData, address _smartToken) internal {
+        _converterRegistryData.removeSmartToken(_smartToken);
+        emit SmartTokenRemoved(_smartToken);
     }
 
     /**
