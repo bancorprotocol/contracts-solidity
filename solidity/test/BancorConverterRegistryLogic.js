@@ -102,23 +102,23 @@ contract('BancorConverterRegistryLogic', function(accounts) {
     });
 
     it('function addBancorConverter', async function() {
-        await test(converterRegistryLogic.addBancorConverter, converter1, 'Added');
-        await test(converterRegistryLogic.addBancorConverter, converter2, 'Added');
-        await test(converterRegistryLogic.addBancorConverter, converter3, 'Added');
-        await test(converterRegistryLogic.addBancorConverter, converter4, 'Added');
-        await test(converterRegistryLogic.addBancorConverter, converter5, 'Added');
-        await test(converterRegistryLogic.addBancorConverter, converter6, 'Added');
-        await test(converterRegistryLogic.addBancorConverter, converter7, 'Added');
+        await test(converterRegistryLogic.addConverter, converter1, 'Added');
+        await test(converterRegistryLogic.addConverter, converter2, 'Added');
+        await test(converterRegistryLogic.addConverter, converter3, 'Added');
+        await test(converterRegistryLogic.addConverter, converter4, 'Added');
+        await test(converterRegistryLogic.addConverter, converter5, 'Added');
+        await test(converterRegistryLogic.addConverter, converter6, 'Added');
+        await test(converterRegistryLogic.addConverter, converter7, 'Added');
     });
 
     it('function removeBancorConverter', async function() {
-        await test(converterRegistryLogic.removeBancorConverter, converter1, 'Removed');
-        await test(converterRegistryLogic.removeBancorConverter, converter2, 'Removed');
-        await test(converterRegistryLogic.removeBancorConverter, converter3, 'Removed');
-        await test(converterRegistryLogic.removeBancorConverter, converter4, 'Removed');
-        await test(converterRegistryLogic.removeBancorConverter, converter5, 'Removed');
-        await test(converterRegistryLogic.removeBancorConverter, converter6, 'Removed');
-        await test(converterRegistryLogic.removeBancorConverter, converter7, 'Removed');
+        await test(converterRegistryLogic.removeConverter, converter1, 'Removed');
+        await test(converterRegistryLogic.removeConverter, converter2, 'Removed');
+        await test(converterRegistryLogic.removeConverter, converter3, 'Removed');
+        await test(converterRegistryLogic.removeConverter, converter4, 'Removed');
+        await test(converterRegistryLogic.removeConverter, converter5, 'Removed');
+        await test(converterRegistryLogic.removeConverter, converter6, 'Removed');
+        await test(converterRegistryLogic.removeConverter, converter7, 'Removed');
     });
 });
 

@@ -46,69 +46,69 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
     }
 
     /**
-      * @dev add a Bancor Converter
+      * @dev add a converter
       * 
-      * @param _bancorConverter Bancor Converter
+      * @param _converter converter
     */
-    function addBancorConverter(IBancorConverter _bancorConverter) external {
-        IBancorConverterRegistryData bancorConverterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
-        ISmartToken token = ISmartTokenController(_bancorConverter).token();
-        require(isOperative(token, _bancorConverter));
-        uint connectorTokenCount = _bancorConverter.connectorTokenCount();
+    function addConverter(IBancorConverter _converter) external {
+        IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
+        ISmartToken token = ISmartTokenController(_converter).token();
+        require(isValid(token, _converter));
+        uint connectorTokenCount = _converter.connectorTokenCount();
         if (connectorTokenCount > 1)
-            addLiquidityPool(bancorConverterRegistryData, token);
+            addLiquidityPool(converterRegistryData, token);
         else
-            addConvertibleToken(bancorConverterRegistryData, token, token);
+            addConvertibleToken(converterRegistryData, token, token);
         for (uint i = 0; i < connectorTokenCount; i++)
-            addConvertibleToken(bancorConverterRegistryData, _bancorConverter.connectorTokens(i), token);
+            addConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
     }
 
     /**
-      * @dev remove a Bancor Converter
+      * @dev remove a converter
       * 
-      * @param _bancorConverter Bancor Converter
+      * @param _converter converter
     */
-    function removeBancorConverter(IBancorConverter _bancorConverter) external {
-        IBancorConverterRegistryData bancorConverterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
-        ISmartToken token = ISmartTokenController(_bancorConverter).token();
-        require(msg.sender == owner || !isOperative(token, _bancorConverter));
-        uint connectorTokenCount = _bancorConverter.connectorTokenCount();
+    function removeConverter(IBancorConverter _converter) external {
+        IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
+        ISmartToken token = ISmartTokenController(_converter).token();
+        require(msg.sender == owner || !isValid(token, _converter));
+        uint connectorTokenCount = _converter.connectorTokenCount();
         if (connectorTokenCount > 1)
-            removeLiquidityPool(bancorConverterRegistryData, token);
+            removeLiquidityPool(converterRegistryData, token);
         else
-            removeConvertibleToken(bancorConverterRegistryData, token, token);
+            removeConvertibleToken(converterRegistryData, token, token);
         for (uint i = 0; i < connectorTokenCount; i++)
-            removeConvertibleToken(bancorConverterRegistryData, _bancorConverter.connectorTokens(i), token);
+            removeConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
     }
 
     /**
       * @dev check whether or not a given token is operative in a given converter
       * 
-      * @param _smartToken Smart Token
-      * @param _bancorConverter Bancor Converter
+      * @param _smartToken smart token
+      * @param _converter converter
       * @return whether or not the given token is operative in the given converter
     */
-    function isOperative(ISmartToken _smartToken, IBancorConverter _bancorConverter) internal view returns (bool) {
-        return _smartToken.totalSupply() > 0 && _smartToken.owner() == address(_bancorConverter);
+    function isValid(ISmartToken _smartToken, IBancorConverter _converter) internal view returns (bool) {
+        return _smartToken.totalSupply() > 0 && _smartToken.owner() == address(_converter);
     }
 
-    function addLiquidityPool(IBancorConverterRegistryData _bancorConverterRegistryData, address _liquidityPool) internal {
-        _bancorConverterRegistryData.addLiquidityPool(_liquidityPool);
+    function addLiquidityPool(IBancorConverterRegistryData _converterRegistryData, address _liquidityPool) internal {
+        _converterRegistryData.addLiquidityPool(_liquidityPool);
         emit LiquidityPoolAdded(_liquidityPool);
     }
 
-    function removeLiquidityPool(IBancorConverterRegistryData _bancorConverterRegistryData, address _liquidityPool) internal {
-        _bancorConverterRegistryData.removeLiquidityPool(_liquidityPool);
+    function removeLiquidityPool(IBancorConverterRegistryData _converterRegistryData, address _liquidityPool) internal {
+        _converterRegistryData.removeLiquidityPool(_liquidityPool);
         emit LiquidityPoolRemoved(_liquidityPool);
     }
 
-    function addConvertibleToken(IBancorConverterRegistryData _bancorConverterRegistryData, address _convertibleToken, address _smartToken) internal {
-        _bancorConverterRegistryData.addConvertibleToken(_convertibleToken, _smartToken);
+    function addConvertibleToken(IBancorConverterRegistryData _converterRegistryData, address _convertibleToken, address _smartToken) internal {
+        _converterRegistryData.addConvertibleToken(_convertibleToken, _smartToken);
         emit ConvertibleTokenAdded(_convertibleToken, _smartToken);
     }
 
-    function removeConvertibleToken(IBancorConverterRegistryData _bancorConverterRegistryData, address _convertibleToken, address _smartToken) internal {
-        _bancorConverterRegistryData.removeConvertibleToken(_convertibleToken, _smartToken);
+    function removeConvertibleToken(IBancorConverterRegistryData _converterRegistryData, address _convertibleToken, address _smartToken) internal {
+        _converterRegistryData.removeConvertibleToken(_convertibleToken, _smartToken);
         emit ConvertibleTokenRemoved(_convertibleToken, _smartToken);
     }
 }
