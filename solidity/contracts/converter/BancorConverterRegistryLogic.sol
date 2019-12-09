@@ -1,10 +1,9 @@
 pragma solidity 0.4.26;
-import '../utility/ContractRegistryClient.sol';
-import './interfaces/IBancorConverterRegistryData.sol';
 import './interfaces/IBancorConverter.sol';
-import '../token/interfaces/IERC20Token.sol';
+import './interfaces/IBancorConverterRegistryData.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/ISmartTokenController.sol';
+import '../utility/ContractRegistryClient.sol';
 
 contract BancorConverterRegistryLogic is ContractRegistryClient {
     /**
@@ -92,21 +91,43 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
         return _smartToken.totalSupply() > 0 && _smartToken.owner() == address(_converter);
     }
 
+    /**
+      * @dev add a liquidity pool
+      * 
+      * @param _liquidityPool liquidity pool
+    */
     function addLiquidityPool(IBancorConverterRegistryData _converterRegistryData, address _liquidityPool) internal {
         _converterRegistryData.addLiquidityPool(_liquidityPool);
         emit LiquidityPoolAdded(_liquidityPool);
     }
 
+    /**
+      * @dev remove a liquidity pool
+      * 
+      * @param _liquidityPool liquidity pool
+    */
     function removeLiquidityPool(IBancorConverterRegistryData _converterRegistryData, address _liquidityPool) internal {
         _converterRegistryData.removeLiquidityPool(_liquidityPool);
         emit LiquidityPoolRemoved(_liquidityPool);
     }
 
+    /**
+      * @dev add a convertible token
+      * 
+      * @param _convertibleToken convertible token
+      * @param _smartToken associated smart token
+    */
     function addConvertibleToken(IBancorConverterRegistryData _converterRegistryData, address _convertibleToken, address _smartToken) internal {
         _converterRegistryData.addConvertibleToken(_convertibleToken, _smartToken);
         emit ConvertibleTokenAdded(_convertibleToken, _smartToken);
     }
 
+    /**
+      * @dev remove a convertible token
+      * 
+      * @param _convertibleToken convertible token
+      * @param _smartToken associated smart token
+    */
     function removeConvertibleToken(IBancorConverterRegistryData _converterRegistryData, address _convertibleToken, address _smartToken) internal {
         _converterRegistryData.removeConvertibleToken(_convertibleToken, _smartToken);
         emit ConvertibleTokenRemoved(_convertibleToken, _smartToken);
