@@ -151,7 +151,7 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
       * @param _converter converter
       * @return whether or not the given token is operative in the given converter
     */
-    function isValid(ISmartToken _smartToken, IBancorConverter _converter) internal view returns (bool) {
+    function isValid(ISmartToken _smartToken, IBancorConverter _converter) public view returns (bool) {
         return _smartToken.totalSupply() > 0 && _smartToken.owner() == address(_converter);
     }
 
