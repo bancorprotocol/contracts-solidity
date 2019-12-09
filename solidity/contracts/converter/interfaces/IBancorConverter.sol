@@ -1,7 +1,6 @@
 pragma solidity 0.4.26;
 import '../../token/interfaces/IERC20Token.sol';
 import '../../utility/interfaces/IWhitelist.sol';
-import '../../utility/interfaces/IContractRegistry.sol';
 
 /*
     Bancor Converter interface
@@ -15,7 +14,6 @@ contract IBancorConverter {
     function reserves(address _address) public view returns (uint256, uint32, bool, bool, bool) {_address; this;}
     function getReserveBalance(IERC20Token _reserveToken) public view returns (uint256);
     function reserveTokens(uint256 _index) public view returns (IERC20Token) {_index; this;}
-    function registry() public view returns (IContractRegistry) {this;}
     // deprecated, backward compatibility
     function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256);
     function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256);

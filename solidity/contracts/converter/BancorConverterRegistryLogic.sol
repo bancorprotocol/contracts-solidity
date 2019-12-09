@@ -35,7 +35,6 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
       * @param _bancorConverter Bancor Converter
     */
     function addBancorConverter(IBancorConverter _bancorConverter) external {
-        require(_bancorConverter.registry() == registry);
         IBancorConverterRegistryData bancorConverterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_bancorConverter).token();
         require(isOperative(token, _bancorConverter));
@@ -55,7 +54,6 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
       * @param _bancorConverter Bancor Converter
     */
     function removeBancorConverter(IBancorConverter _bancorConverter) external {
-        require(_bancorConverter.registry() == registry);
         IBancorConverterRegistryData bancorConverterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_bancorConverter).token();
         require(msg.sender == owner || !isOperative(token, _bancorConverter));
