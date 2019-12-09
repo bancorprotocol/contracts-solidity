@@ -80,6 +80,42 @@ contract BancorConverterRegistryLogic is ContractRegistryClient {
             removeConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
     }
 
+    function getLiquidityPoolCount() external view returns (uint) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPoolCount();
+    }
+
+    function getLiquidityPoolArray() external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPoolArray();
+    }
+
+    function getLiquidityPool(uint _index) external view returns (address) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPool(_index);
+    }
+
+    function getConvertibleTokenCount() external view returns (uint) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenCount();
+    }
+
+    function getConvertibleTokenArray() external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenArray();
+    }
+
+    function getConvertibleToken(uint _index) external view returns (address) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleToken(_index);
+    }
+
+    function getSmartTokenCount(address _convertibleToken) external view returns (uint) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokenCount(_convertibleToken);
+    }
+
+    function getSmartTokenArray(address _convertibleToken) external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokenArray(_convertibleToken);
+    }
+
+    function getSmartToken(address _convertibleToken, uint _index) external view returns (address) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartToken(_convertibleToken, _index);
+    }
+
     /**
       * @dev check whether or not a given token is operative in a given converter
       * 
