@@ -127,8 +127,8 @@ async function run() {
     const nonStandardTokenRegistry    = await web3Func(deploy, "nonStandardTokenRegistry"   , "NonStandardTokenRegistry"   , []);
     const bancorFormula               = await web3Func(deploy, "bancorFormula"              , "BancorFormula"              , []);
     const bancorNetwork               = await web3Func(deploy, "bancorNetwork"              , "BancorNetwork"              , [contractRegistry._address]);
-    const bancorConverterRegistry     = await web3Func(deploy, "bancorConverterRegistry"    , "BancorConverterRegistry"    , []);
-    const bancorConverterRegistryData = await web3Func(deploy, "bancorConverterRegistryData", "BancorConverterRegistryData", []);
+    const bancorConverterRegistry     = await web3Func(deploy, "bancorConverterRegistry"    , "BancorConverterRegistry"    , [contractRegistry._address]);
+    const bancorConverterRegistryData = await web3Func(deploy, "bancorConverterRegistryData", "BancorConverterRegistryData", [contractRegistry._address]);
     const bancorGasPriceLimit         = await web3Func(deploy, "bancorGasPriceLimit"        , "BancorGasPriceLimit"        , [priceLimitParams.value]);
     const etherToken                  = await web3Func(deploy, "etherToken"                 , "EtherToken"                 , []);
     const smartToken1                 = await web3Func(deploy, "smartToken1"                , "SmartToken"                 , [smartToken1Params.name, smartToken1Params.symbol, smartToken1Params.decimals]);
