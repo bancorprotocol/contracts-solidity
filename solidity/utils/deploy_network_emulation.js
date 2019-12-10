@@ -171,10 +171,6 @@ async function run() {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("EtherToken"                 ), etherToken                 ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"                   ), smartToken1                ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTConverter"               ), bancorConverter1           ._address));
-    await execute(bancorConverterRegistry.methods.addConverter(bancorConverter1._address));
-    await execute(bancorConverterRegistry.methods.addConverter(bancorConverter2._address));
-    await execute(bancorConverterRegistry.methods.addConverter(bancorConverter3._address));
-    await execute(bancorConverterRegistry.methods.addConverter(bancorConverter4._address));
     await execute(etherToken .methods.transfer(bancorConverter1._address, converter1Params.reserve1));
     await execute(smartToken1.methods.transfer(bancorConverter2._address, converter2Params.reserve1));
     await execute(smartToken1.methods.transfer(bancorConverter3._address, converter3Params.reserve1));
@@ -189,7 +185,10 @@ async function run() {
     await execute(bancorConverter2.methods.acceptTokenOwnership());
     await execute(bancorConverter3.methods.acceptTokenOwnership());
     await execute(bancorConverter4.methods.acceptTokenOwnership());
-    await execute(bancorNetworkPathFinder.methods.updateAnchorToken());
+    await execute(bancorConverterRegistry.methods.addConverter(bancorConverter1._address));
+    await execute(bancorConverterRegistry.methods.addConverter(bancorConverter2._address));
+    await execute(bancorConverterRegistry.methods.addConverter(bancorConverter3._address));
+    await execute(bancorConverterRegistry.methods.addConverter(bancorConverter4._address));
     await execute(bancorNetwork.methods.registerEtherToken(etherToken._address, true));
 
     if (web3.currentProvider.constructor.name == "WebsocketProvider")
