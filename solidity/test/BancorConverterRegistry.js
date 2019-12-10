@@ -1,3 +1,6 @@
+/* global artifacts, contract, before, it, assert, web3 */
+/* eslint-disable prefer-reflect */
+
 const utils = require('./helpers/Utils');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
@@ -57,7 +60,7 @@ contract('BancorConverterRegistry', function(accounts) {
         contractRegistry = await ContractRegistry.new();
 
         converterRegistry = await BancorConverterRegistry.new(contractRegistry.address);
-        converterRegistryData  = await BancorConverterRegistryData .new(contractRegistry.address);
+        converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
 
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken .address, 500000);
         converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken4.address, 500000);
@@ -75,7 +78,7 @@ contract('BancorConverterRegistry', function(accounts) {
         await converter7.addReserve(smartToken2.address, 500000);
 
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY, converterRegistry.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA , converterRegistryData.address );
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
         await etherToken.deposit({value: 1000000});
         await smartToken1.issue(accounts[0], 1000000);
