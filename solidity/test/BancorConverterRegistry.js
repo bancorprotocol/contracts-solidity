@@ -5,8 +5,8 @@ const EtherToken = artifacts.require('EtherToken');
 const SmartToken = artifacts.require('SmartToken');
 const BancorConverter = artifacts.require('BancorConverter');
 const ContractRegistry = artifacts.require('ContractRegistry');
-const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
+const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
 
 contract('BancorConverterRegistry', function(accounts) {
     let converter1;
@@ -33,8 +33,8 @@ contract('BancorConverterRegistry', function(accounts) {
     let smartTokenE;
     let smartTokenF;
     let contractRegistry
-    let converterRegistryData;
     let converterRegistry;
+    let converterRegistryData;
 
     before(async function() {
         etherToken  = await EtherToken.new();
@@ -56,8 +56,8 @@ contract('BancorConverterRegistry', function(accounts) {
 
         contractRegistry = await ContractRegistry.new();
 
-        converterRegistryData  = await BancorConverterRegistryData .new(contractRegistry.address);
         converterRegistry = await BancorConverterRegistry.new(contractRegistry.address);
+        converterRegistryData  = await BancorConverterRegistryData .new(contractRegistry.address);
 
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken .address, 500000);
         converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken4.address, 500000);
@@ -74,8 +74,8 @@ contract('BancorConverterRegistry', function(accounts) {
         await converter6.addReserve(smartToken1.address, 500000);
         await converter7.addReserve(smartToken2.address, 500000);
 
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA , converterRegistryData.address );
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY, converterRegistry.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA , converterRegistryData.address );
 
         await etherToken.deposit({value: 1000000});
         await smartToken1.issue(accounts[0], 1000000);
@@ -122,30 +122,30 @@ contract('BancorConverterRegistry', function(accounts) {
     });
 });
 
-async function test(func, converter, postfix) {
+async function test(func, converter, suffix) {
     const response = await func(converter.address);
     const token    = await converter.token();
     const count    = await converter.connectorTokenCount();
     const log      = response.logs[0];
-    const expected = `SmartToken${postfix}(${token})`;
+    const expected = `SmartToken${suffix}(${token})`;
     const actual   = `${log.event}(${log.args._smartToken})`;
     assert.equal(actual, expected);
     if (count.greaterThan(1)) {
         const log      = response.logs[1];
-        const expected = `LiquidityPool${postfix}(${token})`;
+        const expected = `LiquidityPool${suffix}(${token})`;
         const actual   = `${log.event}(${log.args._liquidityPool})`;
         assert.equal(actual, expected);
     }
     else {
         const log      = response.logs[1];
-        const expected = `ConvertibleToken${postfix}(${token},${token})`;
+        const expected = `ConvertibleToken${suffix}(${token},${token})`;
         const actual   = `${log.event}(${log.args._convertibleToken},${log.args._smartToken})`;
         assert.equal(actual, expected);
     }
     for (let i = 0; count.greaterThan(i); i++) {
         const connectorToken = await converter.connectorTokens(i);
         const log      = response.logs[2 + i];
-        const expected = `ConvertibleToken${postfix}(${connectorToken},${token})`;
+        const expected = `ConvertibleToken${suffix}(${connectorToken},${token})`;
         const actual   = `${log.event}(${log.args._convertibleToken},${log.args._smartToken})`;
         assert.equal(actual, expected);
     }
