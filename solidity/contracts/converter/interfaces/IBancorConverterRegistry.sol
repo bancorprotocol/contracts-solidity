@@ -1,10 +1,19 @@
 pragma solidity 0.4.26;
+import './IBancorConverter.sol';
 
-contract IBancorConverterRegistry {
-    function tokens(uint256 _index) public view returns (address) {_index; this;}
-    function tokenCount() public view returns (uint256);
-    function converterCount(address _token) public view returns (uint256);
-    function converterAddress(address _token, uint32 _index) public view returns (address);
-    function latestConverterAddress(address _token) public view returns (address);
-    function tokenAddress(address _converter) public view returns (address);
+interface IBancorConverterRegistry {
+    function addConverter(IBancorConverter _converter) external;
+    function removeConverter(IBancorConverter _converter) external;
+    function getSmartTokenCount() external view returns (uint);
+    function getSmartTokens() external view returns (address[]);
+    function getSmartToken(uint _index) external view returns (address);
+    function getLiquidityPoolCount() external view returns (uint);
+    function getLiquidityPools() external view returns (address[]);
+    function getLiquidityPool(uint _index) external view returns (address);
+    function getConvertibleTokenCount() external view returns (uint);
+    function getConvertibleTokens() external view returns (address[]);
+    function getConvertibleToken(uint _index) external view returns (address);
+    function getConvertibleTokenSmartTokenCount(address _convertibleToken) external view returns (uint);
+    function getConvertibleTokenSmartTokens(address _convertibleToken) external view returns (address[]);
+    function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address);
 }

@@ -1,202 +1,219 @@
 pragma solidity 0.4.26;
+import '../utility/ContractRegistryClient.sol';
 import './interfaces/IBancorConverterRegistry.sol';
-import '../utility/Owned.sol';
-import '../utility/Utils.sol';
+import './interfaces/IBancorConverterRegistryData.sol';
+import '../token/interfaces/ISmartToken.sol';
+import '../token/interfaces/ISmartTokenController.sol';
 
-/**
-  * @dev Bancor Converter Registry
-  * 
-  * The Bancor Converter Registry keeps converter addresses by token addresses and vice versa. The owner can update converter addresses so that the token address always points to the updated list of converters for each token. 
-  * 
-  * The contract is also able to iterate through all the tokens in the network. 
-  * 
-  * Note that converter addresses for each token are returned in ascending order (from oldest to newest).
-  * 
-*/
-contract BancorConverterRegistry is IBancorConverterRegistry, Owned, Utils {
-    mapping (address => address[]) private tokensToConverters;  // token address -> converter addresses
-    mapping (address => address) private convertersToTokens;    // converter address -> token address
-    address[] public tokens;                                    // list of all token addresses
-
-    struct TokenInfo {
-        bool valid;
-        uint256 index;
-    }
-
-    mapping(address => TokenInfo) public tokenTable;
-
+contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryClient {
     /**
-      * @dev triggered when a token is added to the registry
+      * @dev emitted when a smart token is added
       * 
-      * @param _token   token
+      * @param _smartToken smart token
     */
-    event TokenAddition(address indexed _token);
+    event SmartTokenAdded(address indexed _smartToken);
 
     /**
-      * @dev triggered when a token is removed from the registry
+      * @dev emitted when a smart token is removed
       * 
-      * @param _token   token
+      * @param _smartToken smart token
     */
-    event TokenRemoval(address indexed _token);
+    event SmartTokenRemoved(address indexed _smartToken);
 
     /**
-      * @dev triggered when a converter is added to the registry
+      * @dev emitted when a liquidity pool is added
       * 
-      * @param _token   token
-      * @param _address converter
+      * @param _liquidityPool liquidity pool
     */
-    event ConverterAddition(address indexed _token, address _address);
+    event LiquidityPoolAdded(address indexed _liquidityPool);
 
     /**
-      * @dev triggered when a converter is removed from the registry
+      * @dev emitted when a liquidity pool is removed
       * 
-      * @param _token   token
-      * @param _address converter
+      * @param _liquidityPool liquidity pool
     */
-    event ConverterRemoval(address indexed _token, address _address);
+    event LiquidityPoolRemoved(address indexed _liquidityPool);
 
     /**
-      * @dev initializes a new BancorConverterRegistry instance
+      * @dev emitted when a convertible token is added
+      * 
+      * @param _convertibleToken convertible token
+      * @param _smartToken associated smart token
     */
-    constructor() public {
+    event ConvertibleTokenAdded(address indexed _convertibleToken, address indexed _smartToken);
+
+    /**
+      * @dev emitted when a convertible token is removed
+      * 
+      * @param _convertibleToken convertible token
+      * @param _smartToken associated smart token
+    */
+    event ConvertibleTokenRemoved(address indexed _convertibleToken, address indexed _smartToken);
+
+    /**
+      * @dev initialize a new BancorConverterRegistry instance
+      * 
+      * @param _registry address of a contract registry contract
+    */
+    constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
     }
 
     /**
-      * @dev returns the number of tokens in the registry
+      * @dev add a converter
       * 
-      * @return number of tokens
+      * @param _converter converter
     */
-    function tokenCount() public view returns (uint256) {
-        return tokens.length;
+    function addConverter(IBancorConverter _converter) external {
+        IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
+        ISmartToken token = ISmartTokenController(_converter).token();
+        require(isValid(token, _converter));
+        uint connectorTokenCount = _converter.connectorTokenCount();
+        addSmartToken(converterRegistryData, token);
+        if (connectorTokenCount > 1)
+            addLiquidityPool(converterRegistryData, token);
+        else
+            addConvertibleToken(converterRegistryData, token, token);
+        for (uint i = 0; i < connectorTokenCount; i++)
+            addConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
     }
 
     /**
-      * @dev returns the number of converters associated with the given token
-      * or 0 if the token isn't registered
+      * @dev remove a converter
       * 
-      * @param _token   token address
-      * 
-      * @return number of converters
+      * @param _converter converter
     */
-    function converterCount(address _token) public view returns (uint256) {
-        return tokensToConverters[_token].length;
+    function removeConverter(IBancorConverter _converter) external {
+        IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
+        ISmartToken token = ISmartTokenController(_converter).token();
+        require(msg.sender == owner || !isValid(token, _converter));
+        uint connectorTokenCount = _converter.connectorTokenCount();
+        removeSmartToken(converterRegistryData, token);
+        if (connectorTokenCount > 1)
+            removeLiquidityPool(converterRegistryData, token);
+        else
+            removeConvertibleToken(converterRegistryData, token, token);
+        for (uint i = 0; i < connectorTokenCount; i++)
+            removeConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
+    }
+
+    function getSmartTokenCount() external view returns (uint) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokenCount();
+    }
+
+    function getSmartTokens() external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokens();
+    }
+
+    function getSmartToken(uint _index) external view returns (address) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartToken(_index);
+    }
+
+    function getLiquidityPoolCount() external view returns (uint) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPoolCount();
+    }
+
+    function getLiquidityPools() external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPools();
+    }
+
+    function getLiquidityPool(uint _index) external view returns (address) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPool(_index);
+    }
+
+    function getConvertibleTokenCount() external view returns (uint) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenCount();
+    }
+
+    function getConvertibleTokens() external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokens();
+    }
+
+    function getConvertibleToken(uint _index) external view returns (address) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleToken(_index);
+    }
+
+    function getConvertibleTokenSmartTokenCount(address _convertibleToken) external view returns (uint) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokenCount(_convertibleToken);
+    }
+
+    function getConvertibleTokenSmartTokens(address _convertibleToken) external view returns (address[]) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokens(_convertibleToken);
+    }
+
+    function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartToken(_convertibleToken, _index);
     }
 
     /**
-      * @dev returns the converter address associated with the given token
-      * or zero address if no such converter exists
+      * @dev check whether or not a given token is operative in a given converter
       * 
-      * @param _token   token address
-      * @param _index   converter index
-      * 
-      * @return converter address
+      * @param _smartToken smart token
+      * @param _converter converter
+      * @return whether or not the given token is operative in the given converter
     */
-    function converterAddress(address _token, uint32 _index) public view returns (address) {
-        if (tokensToConverters[_token].length > _index)
-            return tokensToConverters[_token][_index];
-
-        return address(0);
+    function isValid(ISmartToken _smartToken, IBancorConverter _converter) public view returns (bool) {
+        return _smartToken.totalSupply() > 0 && _smartToken.owner() == address(_converter);
     }
 
     /**
-      * @dev returns the latest converter address associated with the given token
-      * or zero address if no such converter exists
+      * @dev add a smart token
       * 
-      * @param _token   token address
-      * 
-      * @return latest converter address
+      * @param _smartToken smart token
     */
-    function latestConverterAddress(address _token) public view returns (address) {
-        if (tokensToConverters[_token].length > 0)
-            return tokensToConverters[_token][tokensToConverters[_token].length - 1];
-
-        return address(0);
+    function addSmartToken(IBancorConverterRegistryData _converterRegistryData, address _smartToken) internal {
+        _converterRegistryData.addSmartToken(_smartToken);
+        emit SmartTokenAdded(_smartToken);
     }
 
     /**
-      * @dev returns the token address associated with the given converter
-      * or zero address if no such converter exists
+      * @dev remove a smart token
       * 
-      * @param _converter   converter address
-      * 
-      * @return token address
+      * @param _smartToken smart token
     */
-    function tokenAddress(address _converter) public view returns (address) {
-        return convertersToTokens[_converter];
+    function removeSmartToken(IBancorConverterRegistryData _converterRegistryData, address _smartToken) internal {
+        _converterRegistryData.removeSmartToken(_smartToken);
+        emit SmartTokenRemoved(_smartToken);
     }
 
     /**
-      * @dev adds a new converter address for a given token to the registry
-      * throws if the converter is already registered
+      * @dev add a liquidity pool
       * 
-      * @param _token       token address
-      * @param _converter   converter address
+      * @param _liquidityPool liquidity pool
     */
-    function registerConverter(address _token, address _converter)
-        public
-        ownerOnly
-        validAddress(_token)
-        validAddress(_converter)
-    {
-        require(convertersToTokens[_converter] == address(0));
-
-        // add the token to the list of tokens if needed
-        TokenInfo storage tokenInfo = tokenTable[_token];
-        if (tokenInfo.valid == false) {
-            tokenInfo.valid = true;
-            tokenInfo.index = tokens.push(_token) - 1;
-            emit TokenAddition(_token);
-        }
-
-        tokensToConverters[_token].push(_converter);
-        convertersToTokens[_converter] = _token;
-
-        // dispatch the converter addition event
-        emit ConverterAddition(_token, _converter);
+    function addLiquidityPool(IBancorConverterRegistryData _converterRegistryData, address _liquidityPool) internal {
+        _converterRegistryData.addLiquidityPool(_liquidityPool);
+        emit LiquidityPoolAdded(_liquidityPool);
     }
 
     /**
-      * @dev removes an existing converter from the registry
-      * note that the function doesn't scale and might be needed to be called
-      * multiple times when removing an older converter from a large converter list
+      * @dev remove a liquidity pool
       * 
-      * @param _token   token address
-      * @param _index   converter index
+      * @param _liquidityPool liquidity pool
     */
-    function unregisterConverter(address _token, uint32 _index)
-        public
-        ownerOnly
-        validAddress(_token)
-    {
-        require(_index < tokensToConverters[_token].length);
+    function removeLiquidityPool(IBancorConverterRegistryData _converterRegistryData, address _liquidityPool) internal {
+        _converterRegistryData.removeLiquidityPool(_liquidityPool);
+        emit LiquidityPoolRemoved(_liquidityPool);
+    }
 
-        address converter = tokensToConverters[_token][_index];
+    /**
+      * @dev add a convertible token
+      * 
+      * @param _convertibleToken convertible token
+      * @param _smartToken associated smart token
+    */
+    function addConvertibleToken(IBancorConverterRegistryData _converterRegistryData, address _convertibleToken, address _smartToken) internal {
+        _converterRegistryData.addConvertibleToken(_convertibleToken, _smartToken);
+        emit ConvertibleTokenAdded(_convertibleToken, _smartToken);
+    }
 
-        // move all newer converters 1 position lower
-        for (uint32 i = _index + 1; i < tokensToConverters[_token].length; i++) {
-            tokensToConverters[_token][i - 1] = tokensToConverters[_token][i];
-        }
-
-        // decrease the number of converters defined for the token by 1
-        tokensToConverters[_token].length--;
-
-        // remove the token from the list of tokens if needed
-        if (tokensToConverters[_token].length == 0) {
-            TokenInfo storage tokenInfo = tokenTable[_token];
-            assert(tokens.length > tokenInfo.index);
-            assert(_token == tokens[tokenInfo.index]);
-            address lastToken = tokens[tokens.length - 1];
-            tokenTable[lastToken].index = tokenInfo.index;
-            tokens[tokenInfo.index] = lastToken;
-            tokens.length--;
-            delete tokenTable[_token];
-            emit TokenRemoval(_token);
-        }
-
-        // remove the converter from the converters -> tokens list
-        delete convertersToTokens[converter];
-
-        // dispatch the converter removal event
-        emit ConverterRemoval(_token, converter);
+    /**
+      * @dev remove a convertible token
+      * 
+      * @param _convertibleToken convertible token
+      * @param _smartToken associated smart token
+    */
+    function removeConvertibleToken(IBancorConverterRegistryData _converterRegistryData, address _convertibleToken, address _smartToken) internal {
+        _converterRegistryData.removeConvertibleToken(_convertibleToken, _smartToken);
+        emit ConvertibleTokenRemoved(_convertibleToken, _smartToken);
     }
 }

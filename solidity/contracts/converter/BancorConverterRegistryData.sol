@@ -41,7 +41,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * 
       * @param _smartToken smart token
     */
-    function addSmartToken(address _smartToken) external only(BANCOR_CONVERTER_REGISTRY_LOGIC) {
+    function addSmartToken(address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
         Item storage item = smartTokens.table[_smartToken];
 
         require(item.valid == false);
@@ -55,7 +55,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * 
       * @param _smartToken smart token
     */
-    function removeSmartToken(address _smartToken) external only(BANCOR_CONVERTER_REGISTRY_LOGIC) {
+    function removeSmartToken(address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
         Item storage item = smartTokens.table[_smartToken];
 
         require(item.valid == true);
@@ -72,7 +72,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * 
       * @param _liquidityPool liquidity pool
     */
-    function addLiquidityPool(address _liquidityPool) external only(BANCOR_CONVERTER_REGISTRY_LOGIC) {
+    function addLiquidityPool(address _liquidityPool) external only(BANCOR_CONVERTER_REGISTRY) {
         Item storage item = liquidityPools.table[_liquidityPool];
 
         require(item.valid == false);
@@ -86,7 +86,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * 
       * @param _liquidityPool liquidity pool
     */
-    function removeLiquidityPool(address _liquidityPool) external only(BANCOR_CONVERTER_REGISTRY_LOGIC) {
+    function removeLiquidityPool(address _liquidityPool) external only(BANCOR_CONVERTER_REGISTRY) {
         Item storage item = liquidityPools.table[_liquidityPool];
 
         require(item.valid == true);
@@ -104,7 +104,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
-    function addConvertibleToken(address _convertibleToken, address _smartToken) external only(BANCOR_CONVERTER_REGISTRY_LOGIC) {
+    function addConvertibleToken(address _convertibleToken, address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
         List storage list = convertibleTokens.table[_convertibleToken];
         Item storage item = list.table[_smartToken];
 
@@ -122,7 +122,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
-    function removeConvertibleToken(address _convertibleToken, address _smartToken) external only(BANCOR_CONVERTER_REGISTRY_LOGIC) {
+    function removeConvertibleToken(address _convertibleToken, address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
         List storage list = convertibleTokens.table[_convertibleToken];
         Item storage item = list.table[_smartToken];
 

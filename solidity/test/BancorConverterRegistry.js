@@ -1,230 +1,152 @@
-/* global artifacts, contract, it, assert */
-/* eslint-disable prefer-reflect */
-
-const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const utils = require('./helpers/Utils');
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
-contract('BancorConverterRegistry', accounts => {
-    it('verifies that the registry is reset after construction', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        let count = await converterRegistry.tokenCount.call();
-        assert.equal(count, 0);
+const EtherToken = artifacts.require('EtherToken');
+const SmartToken = artifacts.require('SmartToken');
+const BancorConverter = artifacts.require('BancorConverter');
+const ContractRegistry = artifacts.require('ContractRegistry');
+const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
+const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
+
+contract('BancorConverterRegistry', function(accounts) {
+    let converter1;
+    let converter2;
+    let converter3;
+    let converter4;
+    let converter5;
+    let converter6;
+    let converter7;
+    let etherToken;
+    let smartToken1;
+    let smartToken2;
+    let smartToken3;
+    let smartToken4;
+    let smartToken5;
+    let smartToken6;
+    let smartToken7;
+    let smartToken8;
+    let smartToken9;
+    let smartTokenA;
+    let smartTokenB;
+    let smartTokenC;
+    let smartTokenD;
+    let smartTokenE;
+    let smartTokenF;
+    let contractRegistry
+    let converterRegistryData;
+    let converterRegistry;
+
+    before(async function() {
+        etherToken  = await EtherToken.new();
+        smartToken1 = await SmartToken.new('Token1', 'TKN1', 18);
+        smartToken2 = await SmartToken.new('Token2', 'TKN2', 18);
+        smartToken3 = await SmartToken.new('Token3', 'TKN3', 18);
+        smartToken4 = await SmartToken.new('Token4', 'TKN4', 18);
+        smartToken5 = await SmartToken.new('Token5', 'TKN5', 18);
+        smartToken6 = await SmartToken.new('Token6', 'TKN6', 18);
+        smartToken7 = await SmartToken.new('Token7', 'TKN7', 18);
+        smartToken8 = await SmartToken.new('Token8', 'TKN8', 18);
+        smartToken9 = await SmartToken.new('Token9', 'TKN9', 18);
+        smartTokenA = await SmartToken.new('TokenA', 'TKNA', 18);
+        smartTokenB = await SmartToken.new('TokenB', 'TKNB', 18);
+        smartTokenC = await SmartToken.new('TokenC', 'TKNC', 18);
+        smartTokenD = await SmartToken.new('TokenD', 'TKND', 18);
+        smartTokenE = await SmartToken.new('TokenE', 'TKNE', 18);
+        smartTokenF = await SmartToken.new('TokenF', 'TKNF', 18);
+
+        contractRegistry = await ContractRegistry.new();
+
+        converterRegistryData  = await BancorConverterRegistryData .new(contractRegistry.address);
+        converterRegistry = await BancorConverterRegistry.new(contractRegistry.address);
+
+        converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken .address, 500000);
+        converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken4.address, 500000);
+        converter3 = await BancorConverter.new(smartToken3.address, contractRegistry.address, 0, smartToken6.address, 500000);
+        converter4 = await BancorConverter.new(smartToken4.address, contractRegistry.address, 0, smartToken8.address, 500000);
+        converter5 = await BancorConverter.new(smartToken5.address, contractRegistry.address, 0, smartTokenA.address, 500000);
+        converter6 = await BancorConverter.new(smartToken6.address, contractRegistry.address, 0, smartTokenC.address, 500000);
+        converter7 = await BancorConverter.new(smartToken7.address, contractRegistry.address, 0, smartTokenE.address, 500000);
+
+        await converter2.addReserve(smartToken1.address, 500000);
+        await converter3.addReserve(smartToken1.address, 500000);
+        await converter4.addReserve(smartToken1.address, 500000);
+        await converter5.addReserve(smartToken1.address, 500000);
+        await converter6.addReserve(smartToken1.address, 500000);
+        await converter7.addReserve(smartToken2.address, 500000);
+
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA , converterRegistryData.address );
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY, converterRegistry.address);
+
+        await etherToken.deposit({value: 1000000});
+        await smartToken1.issue(accounts[0], 1000000);
+        await smartToken2.issue(accounts[0], 1000000);
+        await smartToken3.issue(accounts[0], 1000000);
+        await smartToken4.issue(accounts[0], 1000000);
+        await smartToken5.issue(accounts[0], 1000000);
+        await smartToken6.issue(accounts[0], 1000000);
+        await smartToken7.issue(accounts[0], 1000000);
+        await smartToken1.transferOwnership(converter1.address);
+        await smartToken2.transferOwnership(converter2.address);
+        await smartToken3.transferOwnership(converter3.address);
+        await smartToken4.transferOwnership(converter4.address);
+        await smartToken5.transferOwnership(converter5.address);
+        await smartToken6.transferOwnership(converter6.address);
+        await smartToken7.transferOwnership(converter7.address);
+        await converter1.acceptTokenOwnership();
+        await converter2.acceptTokenOwnership();
+        await converter3.acceptTokenOwnership();
+        await converter4.acceptTokenOwnership();
+        await converter5.acceptTokenOwnership();
+        await converter6.acceptTokenOwnership();
+        await converter7.acceptTokenOwnership();
     });
 
-    it('verifies that the owner can register a converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        let tokenAddress = await converterRegistry.tokenAddress.call(accounts[2]);
-        assert.equal(tokenAddress, accounts[1]);
+    it('function addBancorConverter', async function() {
+        await test(converterRegistry.addConverter, converter1, 'Added');
+        await test(converterRegistry.addConverter, converter2, 'Added');
+        await test(converterRegistry.addConverter, converter3, 'Added');
+        await test(converterRegistry.addConverter, converter4, 'Added');
+        await test(converterRegistry.addConverter, converter5, 'Added');
+        await test(converterRegistry.addConverter, converter6, 'Added');
+        await test(converterRegistry.addConverter, converter7, 'Added');
     });
 
-    it('should throw when a non owner attempts to register a converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-
-        await utils.catchRevert(converterRegistry.registerConverter(accounts[1], accounts[2], { from: accounts[3] }));
+    it('function removeBancorConverter', async function() {
+        await test(converterRegistry.removeConverter, converter1, 'Removed');
+        await test(converterRegistry.removeConverter, converter2, 'Removed');
+        await test(converterRegistry.removeConverter, converter3, 'Removed');
+        await test(converterRegistry.removeConverter, converter4, 'Removed');
+        await test(converterRegistry.removeConverter, converter5, 'Removed');
+        await test(converterRegistry.removeConverter, converter6, 'Removed');
+        await test(converterRegistry.removeConverter, converter7, 'Removed');
     });
-
-    it('should throw when attempting to register an invalid token address', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-
-        await utils.catchRevert(converterRegistry.registerConverter(utils.zeroAddress, accounts[2]));
-    });
-
-    it('should throw when attempting to register an invalid converter address', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-
-        await utils.catchRevert(converterRegistry.registerConverter(accounts[1], utils.zeroAddress));
-    });
-
-    it('should throw when attempting to register a converter that already exists', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-
-        await utils.catchRevert(converterRegistry.registerConverter(accounts[1], accounts[2]));
-    });
-
-    it('verifies that the token count is increased when registering the first converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        let prevCount = await converterRegistry.tokenCount.call();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        let newCount = await converterRegistry.tokenCount.call();
-        assert.equal(prevCount.toNumber() + 1, newCount.toNumber());
-    });
-
-    it('verifies that the token count is not increased when registering another converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        let prevCount = await converterRegistry.tokenCount.call();
-        await converterRegistry.registerConverter(accounts[1], accounts[3]);
-        let newCount = await converterRegistry.tokenCount.call();
-        assert.equal(prevCount.toNumber(), newCount.toNumber());
-    });
-
-    it('verifies that the token count is increased when registering converters for 2 different tokens', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        let prevCount = await converterRegistry.tokenCount.call();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        await converterRegistry.registerConverter(accounts[3], accounts[4]);
-        let newCount = await converterRegistry.tokenCount.call();
-        assert.equal(prevCount.toNumber() + 2, newCount.toNumber());
-    });
-
-    it('verifies that the converter count is increased when registering a converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        let prevCount = await converterRegistry.converterCount.call(accounts[1]);
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        let newCount = await converterRegistry.converterCount.call(accounts[1]);
-        assert.equal(prevCount.toNumber() + 1, newCount.toNumber());
-    });
-
-    it('verifies that the converter count is increased when registering another converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        let prevCount = await converterRegistry.converterCount.call(accounts[1]);
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        await converterRegistry.registerConverter(accounts[1], accounts[3]);
-        let newCount = await converterRegistry.converterCount.call(accounts[1]);
-        assert.equal(prevCount.toNumber() + 2, newCount.toNumber());
-    });
-
-    it('verifies that the correct converter addresses are returned when registering 2 converters for the same token', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        let converter0 = await converterRegistry.converterAddress.call(accounts[1], 0);
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        let converter1 = await converterRegistry.converterAddress.call(accounts[1], 0);
-        await converterRegistry.registerConverter(accounts[1], accounts[3]);
-        let converter2 = await converterRegistry.converterAddress.call(accounts[1], 1);
-        assert.equal(converter0, utils.zeroAddress);
-        assert.equal(converter1, accounts[2]);
-        assert.equal(converter2, accounts[3]);
-    });
-
-    it('verifies that the correct latest converter addresses are returned when registering 2 converters for the same token', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        let converter0 = await converterRegistry.latestConverterAddress.call(accounts[1]);
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        let converter1 = await converterRegistry.latestConverterAddress.call(accounts[1]);
-        await converterRegistry.registerConverter(accounts[1], accounts[3]);
-        let converter2 = await converterRegistry.latestConverterAddress.call(accounts[1]);
-        assert.equal(converter0, utils.zeroAddress);
-        assert.equal(converter1, accounts[2]);
-        assert.equal(converter2, accounts[3]);
-    });
-
-    it('verifies that the correct token address is returned when registering 2 converters for the same token', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        let token1 = await converterRegistry.tokenAddress.call(accounts[2]);
-        await converterRegistry.registerConverter(accounts[1], accounts[3]);
-        let token2 = await converterRegistry.tokenAddress.call(accounts[3]);
-        assert.equal(token1, accounts[1]);
-        assert.equal(token2, accounts[1]);
-    });
-
-    it('verifies that the owner can unregister a converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        await converterRegistry.unregisterConverter(accounts[1], 0);
-        let tokenAddress = await converterRegistry.tokenAddress.call(accounts[2]);
-        assert.equal(tokenAddress, utils.zeroAddress);
-    });
-
-    it('should throw when a non owner attempts to unregister a converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-
-        await utils.catchRevert(converterRegistry.unregisterConverter(accounts[1], 0, { from: accounts[3] }));
-    });
-
-    it('should throw when attempting to unregister with an invalid token address', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-
-        await utils.catchRevert(converterRegistry.unregisterConverter(utils.zeroAddress, 0));
-    });
-
-    it('should throw when attempting to unregister with an invalid converter index', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-
-        await utils.catchRevert(converterRegistry.unregisterConverter(accounts[1], 1));
-    });
-
-    it('verifies that a converter is not registered after unregistering a converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        await converterRegistry.unregisterConverter(accounts[1], 0);
-        let tokenAddress = await converterRegistry.tokenAddress.call(accounts[2]);
-        assert.equal(tokenAddress, utils.zeroAddress);
-    });
-
-    it('verifies that the converter count is decreased after unregistering a converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        let prevCount = await converterRegistry.converterCount.call(accounts[1]);
-        await converterRegistry.unregisterConverter(accounts[1], 0);
-        let newCount = await converterRegistry.converterCount.call(accounts[1]);
-        assert.equal(prevCount.toNumber() - 1, newCount.toNumber());
-    });
-
-    it('verifies that the token count is not decreased after unregistering one of several converters', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        await converterRegistry.registerConverter(accounts[1], accounts[3]);
-        let prevCount = await converterRegistry.tokenCount.call();
-        await converterRegistry.unregisterConverter(accounts[1], 0);
-        let newCount = await converterRegistry.tokenCount.call();
-        assert.equal(prevCount.toNumber(), newCount.toNumber());
-    });
-
-    it('verifies that the token count is decreased after unregistering the only remaining converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        let prevCount = await converterRegistry.tokenCount.call();
-        await converterRegistry.unregisterConverter(accounts[1], 0);
-        let newCount = await converterRegistry.tokenCount.call();
-        assert.equal(prevCount.toNumber() - 1, newCount.toNumber());
-    });
-
-    it('verifies that the correct converter is returned after deleting an older converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        await converterRegistry.registerConverter(accounts[1], accounts[3]);
-        await converterRegistry.unregisterConverter(accounts[1], 0);
-        let converter = await converterRegistry.converterAddress.call(accounts[1], 0);
-        assert.equal(converter, accounts[3]);
-    });
-
-    it('verifies that the correct latest converter is returned after deleting an older converter', async () => {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await converterRegistry.registerConverter(accounts[1], accounts[2]);
-        await converterRegistry.registerConverter(accounts[1], accounts[3]);
-        await converterRegistry.unregisterConverter(accounts[1], 0);
-        let converter = await converterRegistry.latestConverterAddress.call(accounts[1]);
-        assert.equal(converter, accounts[3]);
-    });
-
-    it('delete first token until all tokens deleted', async function() {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await deleteAllOneByOne(converterRegistry, +1);
-    });
-
-    it('delete last token until all tokens deleted', async function() {
-        let converterRegistry = await BancorConverterRegistry.new();
-        await deleteAllOneByOne(converterRegistry, -1);
-    });
-
-    async function deleteAllOneByOne(converterRegistry, direction) {
-        console.log(`adding ${accounts.length} tokens...`);
-        for (const account of accounts)
-            await converterRegistry.registerConverter(account, account);
-        for (let tokens = accounts.slice(); tokens.length > 0; tokens.length--) {
-            const bgnIndex = (tokens.length - 1) * (1 - direction) / 2;
-            const endIndex = (tokens.length - 1) * (1 + direction) / 2;
-            const token = await converterRegistry.tokens(bgnIndex);
-            await converterRegistry.unregisterConverter(token, 0);
-            assert.equal(token, tokens[bgnIndex]);
-            tokens[bgnIndex] = tokens[endIndex];
-            console.log(`token ${bgnIndex} deleted`);
-        }
-    };
 });
+
+async function test(func, converter, postfix) {
+    const response = await func(converter.address);
+    const token    = await converter.token();
+    const count    = await converter.connectorTokenCount();
+    const log      = response.logs[0];
+    const expected = `SmartToken${postfix}(${token})`;
+    const actual   = `${log.event}(${log.args._smartToken})`;
+    assert.equal(actual, expected);
+    if (count.greaterThan(1)) {
+        const log      = response.logs[1];
+        const expected = `LiquidityPool${postfix}(${token})`;
+        const actual   = `${log.event}(${log.args._liquidityPool})`;
+        assert.equal(actual, expected);
+    }
+    else {
+        const log      = response.logs[1];
+        const expected = `ConvertibleToken${postfix}(${token},${token})`;
+        const actual   = `${log.event}(${log.args._convertibleToken},${log.args._smartToken})`;
+        assert.equal(actual, expected);
+    }
+    for (let i = 0; count.greaterThan(i); i++) {
+        const connectorToken = await converter.connectorTokens(i);
+        const log      = response.logs[2 + i];
+        const expected = `ConvertibleToken${postfix}(${connectorToken},${token})`;
+        const actual   = `${log.event}(${log.args._convertibleToken},${log.args._smartToken})`;
+        assert.equal(actual, expected);
+    }
+}
