@@ -13,8 +13,10 @@ contract ContractRegistryClient is Owned, Utils {
     bytes32 internal constant BANCOR_NETWORK = "BancorNetwork";
     bytes32 internal constant BANCOR_FORMULA = "BancorFormula";
     bytes32 internal constant BANCOR_GAS_PRICE_LIMIT = "BancorGasPriceLimit";
-    bytes32 internal constant BANCOR_CONVERTER_UPGRADER = "BancorConverterUpgrader";
     bytes32 internal constant BANCOR_CONVERTER_FACTORY = "BancorConverterFactory";
+    bytes32 internal constant BANCOR_CONVERTER_UPGRADER = "BancorConverterUpgrader";
+    bytes32 internal constant BANCOR_CONVERTER_REGISTRY = "BancorConverterRegistry";
+    bytes32 internal constant BANCOR_CONVERTER_REGISTRY_DATA = "BancorConverterRegistryData";
     bytes32 internal constant BNT_TOKEN = "BNTToken";
     bytes32 internal constant BANCOR_X = "BancorX";
     bytes32 internal constant BANCOR_X_UPGRADER = "BancorXUpgrader";

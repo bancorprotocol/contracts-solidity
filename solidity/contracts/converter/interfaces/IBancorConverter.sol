@@ -21,4 +21,5 @@ contract IBancorConverter {
     function connectors(address _address) public view returns (uint256, uint32, bool, bool, bool);
     function getConnectorBalance(IERC20Token _connectorToken) public view returns (uint256);
     function connectorTokens(uint256 _index) public view returns (IERC20Token);
+    function connectorTokenCount() public view returns (uint16);
 }

@@ -1,9 +1,12 @@
 pragma solidity 0.4.26;
-import './IBancorConverter.sol';
 
-interface IBancorConverterRegistry {
-    function addConverter(IBancorConverter _converter) external;
-    function removeConverter(IBancorConverter _converter) external;
+interface IBancorConverterRegistryData {
+    function addSmartToken(address _smartToken) external;
+    function removeSmartToken(address _smartToken) external;
+    function addLiquidityPool(address _liquidityPool) external;
+    function removeLiquidityPool(address _liquidityPool) external;
+    function addConvertibleToken(address _convertibleToken, address _smartToken) external;
+    function removeConvertibleToken(address _convertibleToken, address _smartToken) external;
     function getSmartTokenCount() external view returns (uint);
     function getSmartTokens() external view returns (address[]);
     function getSmartToken(uint _index) external view returns (address);
