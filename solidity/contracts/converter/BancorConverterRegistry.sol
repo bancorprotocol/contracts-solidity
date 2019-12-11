@@ -51,7 +51,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     event ConvertibleTokenRemoved(address indexed _convertibleToken, address indexed _smartToken);
 
     /**
-      * @dev initialize a new BancorConverterRegistry instance
+      * @dev initializes a new BancorConverterRegistry instance
       * 
       * @param _registry address of a contract registry contract
     */
@@ -59,7 +59,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev add a converter
+      * @dev adds a converter
       * 
       * @param _converter converter
     */
@@ -78,7 +78,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev remove a converter
+      * @dev removes a converter
       * 
       * @param _converter converter
     */
@@ -97,7 +97,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev get the number of smart tokens
+      * @dev gets the number of smart tokens
       * 
       * @return the number of smart tokens
     */
@@ -106,7 +106,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev get the list of smart tokens
+      * @dev gets the list of smart tokens
       * 
       * @return the list of smart tokens
     */
@@ -115,7 +115,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev get the smart token at a given index
+      * @dev gets the smart token at a given index
       * 
       * @param _index index
       * @return the smart token at the given index
@@ -125,7 +125,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev check whether or not a given value is a smart token
+      * @dev checks whether or not a given value is a smart token
       * 
       * @param _value value
       * @return whether or not the given value is a smart token
@@ -135,7 +135,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev get the number of liquidity pools
+      * @dev gets the number of liquidity pools
       * 
       * @return the number of liquidity pools
     */
@@ -144,7 +144,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev get the list of liquidity pools
+      * @dev gets the list of liquidity pools
       * 
       * @return the list of liquidity pools
     */
@@ -153,7 +153,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev get the liquidity pool at a given index
+      * @dev gets the liquidity pool at a given index
       * 
       * @param _index index
       * @return the liquidity pool at the given index
@@ -163,7 +163,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev check whether or not a given value is a liquidity pool
+      * @dev checks whether or not a given value is a liquidity pool
       * 
       * @param _value value
       * @return whether or not the given value is a liquidity pool
@@ -173,7 +173,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev get the number of convertible tokens
+      * @dev gets the number of convertible tokens
       * 
       * @return the number of convertible tokens
     */
@@ -182,7 +182,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev get the list of convertible tokens
+      * @dev gets the list of convertible tokens
       * 
       * @return the list of convertible tokens
     */
@@ -191,7 +191,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev get the convertible token at a given index
+      * @dev gets the convertible token at a given index
       * 
       * @param _index index
       * @return the convertible token at the given index
@@ -201,7 +201,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev check whether or not a given value is a convertible token
+      * @dev checks whether or not a given value is a convertible token
       * 
       * @param _value value
       * @return whether or not the given value is a convertible token
@@ -211,7 +211,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev get the number of smart tokens associated with a given convertible token
+      * @dev gets the number of smart tokens associated with a given convertible token
       * 
       * @param _convertibleToken convertible token
       * @return the number of smart tokens associated with the given convertible token
@@ -221,7 +221,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev get the list of smart tokens associated with a given convertible token
+      * @dev gets the list of smart tokens associated with a given convertible token
       * 
       * @param _convertibleToken convertible token
       * @return the list of smart tokens associated with the given convertible token
@@ -231,7 +231,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev get the smart token associated with a given convertible token at a given index
+      * @dev gets the smart token associated with a given convertible token at a given index
       * 
       * @param _index index
       * @return the smart token associated with the given convertible token at the given index
@@ -241,7 +241,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev check whether or not a given value is a smart token of a given convertible token
+      * @dev checks whether or not a given value is a smart token of a given convertible token
       * 
       * @param _convertibleToken convertible token
       * @param _value value
@@ -252,7 +252,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev check whether or not a given token is operative in a given converter
+      * @dev checks whether or not a given token is operative in a given converter
       * 
       * @param _smartToken smart token
       * @param _converter converter
@@ -263,7 +263,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev add a smart token
+      * @dev adds a smart token
       * 
       * @param _smartToken smart token
     */
@@ -273,7 +273,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev remove a smart token
+      * @dev removes a smart token
       * 
       * @param _smartToken smart token
     */
@@ -283,7 +283,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev add a liquidity pool
+      * @dev adds a liquidity pool
       * 
       * @param _liquidityPool liquidity pool
     */
@@ -293,7 +293,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev remove a liquidity pool
+      * @dev removes a liquidity pool
       * 
       * @param _liquidityPool liquidity pool
     */
@@ -303,7 +303,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev add a convertible token
+      * @dev adds a convertible token
       * 
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
@@ -314,7 +314,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev remove a convertible token
+      * @dev removes a convertible token
       * 
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
