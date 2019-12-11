@@ -103,50 +103,116 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
         }
     }
 
+    /**
+      * @dev get the number of smart tokens
+      * 
+      * @return the number of smart tokens
+    */
     function getSmartTokenCount() external view returns (uint) {
         return smartTokens.array.length;
     }
 
+    /**
+      * @dev get the list of smart tokens
+      * 
+      * @return the list of smart tokens
+    */
     function getSmartTokens() external view returns (address[]) {
         return smartTokens.array;
     }
 
+    /**
+      * @dev get the smart token at a given index
+      * 
+      * @param _index index
+      * @return the smart token at the given index
+    */
     function getSmartToken(uint _index) external view returns (address) {
         return smartTokens.array[_index];
     }
 
+    /**
+      * @dev get the number of liquidity pools
+      * 
+      * @return the number of liquidity pools
+    */
     function getLiquidityPoolCount() external view returns (uint) {
         return liquidityPools.array.length;
     }
 
+    /**
+      * @dev get the list of liquidity pools
+      * 
+      * @return the list of liquidity pools
+    */
     function getLiquidityPools() external view returns (address[]) {
         return liquidityPools.array;
     }
 
+    /**
+      * @dev get the liquidity pool at a given index
+      * 
+      * @param _index index
+      * @return the liquidity pool at the given index
+    */
     function getLiquidityPool(uint _index) external view returns (address) {
         return liquidityPools.array[_index];
     }
 
+    /**
+      * @dev get the number of convertible tokens
+      * 
+      * @return the number of convertible tokens
+    */
     function getConvertibleTokenCount() external view returns (uint) {
         return convertibleTokens.array.length;
     }
 
+    /**
+      * @dev get the list of convertible tokens
+      * 
+      * @return the list of convertible tokens
+    */
     function getConvertibleTokens() external view returns (address[]) {
         return convertibleTokens.array;
     }
 
+    /**
+      * @dev get the convertible token at a given index
+      * 
+      * @param _index index
+      * @return the convertible token at the given index
+    */
     function getConvertibleToken(uint _index) external view returns (address) {
         return convertibleTokens.array[_index];
     }
 
+    /**
+      * @dev get the number of smart tokens associated with a given convertible token
+      * 
+      * @param _convertibleToken convertible token
+      * @return the number of smart tokens associated with the given convertible token
+    */
     function getConvertibleTokenSmartTokenCount(address _convertibleToken) external view returns (uint) {
         return convertibleTokens.table[_convertibleToken].items.array.length;
     }
 
+    /**
+      * @dev get the list of smart tokens associated with a given convertible token
+      * 
+      * @param _convertibleToken convertible token
+      * @return the list of smart tokens associated with the given convertible token
+    */
     function getConvertibleTokenSmartTokens(address _convertibleToken) external view returns (address[]) {
         return convertibleTokens.table[_convertibleToken].items.array;
     }
 
+    /**
+      * @dev get the smart token associated with a given convertible token at a given index
+      * 
+      * @param _index index
+      * @return the smart token associated with the given convertible token at the given index
+    */
     function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address) {
         return convertibleTokens.table[_convertibleToken].items.array[_index];
     }
