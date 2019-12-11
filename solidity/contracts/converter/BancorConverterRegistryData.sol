@@ -14,7 +14,6 @@ import './interfaces/IBancorConverterRegistryData.sol';
     access utilities that it exposes.
 */
 contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRegistryClient {
-
     struct Item {
         bool valid;
         uint index;
