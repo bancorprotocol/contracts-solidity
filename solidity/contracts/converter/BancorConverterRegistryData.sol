@@ -277,7 +277,6 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
     */
     function addItem(Items storage _items, address _value) internal {
         Item storage item = _items.table[_value];
-
         require(item.valid == false);
 
         item.index = _items.array.push(_value) - 1;
@@ -292,7 +291,6 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
     */
     function removeItem(Items storage _items, address _value) internal {
         Item storage item = _items.table[_value];
-
         require(item.valid == true);
 
         address lastValue = _items.array[_items.array.length - 1];
