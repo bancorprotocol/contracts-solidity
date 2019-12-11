@@ -64,7 +64,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _converter converter
     */
     function addConverter(IBancorConverter _converter) external {
-        require(isValid(_converter));
+        require(isConverterValid(_converter));
         IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_converter).token();
         uint connectorTokenCount = _converter.connectorTokenCount();
@@ -83,7 +83,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _converter converter
     */
     function removeConverter(IBancorConverter _converter) external {
-        require(msg.sender == owner || !isValid(_converter));
+        require(msg.sender == owner || !isConverterValid(_converter));
         IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_converter).token();
         uint connectorTokenCount = _converter.connectorTokenCount();
@@ -257,7 +257,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _converter converter
       * @return whether or not the given converter is valid
     */
-    function isValid(IBancorConverter _converter) public view returns (bool) {
+    function isConverterValid(IBancorConverter _converter) public view returns (bool) {
         ISmartToken token = ISmartTokenController(_converter).token();
         if (token.totalSupply() == 0 || token.owner() != address(_converter))
             return false;
