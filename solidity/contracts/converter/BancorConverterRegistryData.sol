@@ -217,6 +217,22 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
         return convertibleTokens.table[_convertibleToken].items.array[_index];
     }
 
+    function isSmartToken(address _value) external view returns (bool) {
+        return smartTokens.table[_value].valid;
+    }
+
+    function isLiquidityPool(address _value) external view returns (bool) {
+        return liquidityPools.table[_value].valid;
+    }
+
+    function isConvertibleToken(address _value) external view returns (bool) {
+        return convertibleTokens.table[_value].items.array.length > 0;
+    }
+
+    function isConvertibleTokenSmartToken(address _convertibleToken, address _value) external view returns (bool) {
+        return convertibleTokens.table[_convertibleToken].items.table[_value].valid;
+    }
+
     /**
       * @dev add an item to a list of items
       * 

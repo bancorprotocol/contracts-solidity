@@ -16,4 +16,8 @@ interface IBancorConverterRegistry {
     function getConvertibleTokenSmartTokenCount(address _convertibleToken) external view returns (uint);
     function getConvertibleTokenSmartTokens(address _convertibleToken) external view returns (address[]);
     function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address);
+    function isSmartToken(address _value) external view returns (bool);
+    function isLiquidityPool(address _value) external view returns (bool);
+    function isConvertibleToken(address _value) external view returns (bool);
+    function isConvertibleTokenSmartToken(address _convertibleToken, address _value) external view returns (bool);
 }

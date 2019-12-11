@@ -210,6 +210,22 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartToken(_convertibleToken, _index);
     }
 
+    function isSmartToken(address _value) external view returns (bool) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isSmartToken(_value);
+    }
+
+    function isLiquidityPool(address _value) external view returns (bool) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isLiquidityPool(_value);
+    }
+
+    function isConvertibleToken(address _value) external view returns (bool) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isConvertibleToken(_value);
+    }
+
+    function isConvertibleTokenSmartToken(address _convertibleToken, address _value) external view returns (bool) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isConvertibleTokenSmartToken(_convertibleToken, _value);
+    }
+
     /**
       * @dev check whether or not a given token is operative in a given converter
       * 
