@@ -8,15 +8,14 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
         uint index;
     }
 
-    struct List {
-        uint index;
+    struct Items {
         address[] array;
         mapping(address => Item) table;
     }
 
-    struct Items {
-        address[] array;
-        mapping(address => Item) table;
+    struct List {
+        uint index;
+        Items items;
     }
 
     struct Lists {
@@ -42,12 +41,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * @param _smartToken smart token
     */
     function addSmartToken(address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
-        Item storage item = smartTokens.table[_smartToken];
-
-        require(item.valid == false);
-
-        item.index = smartTokens.array.push(_smartToken) - 1;
-        item.valid = true;
+        addItem(smartTokens, _smartToken);
     }
 
     /**
@@ -56,15 +50,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * @param _smartToken smart token
     */
     function removeSmartToken(address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
-        Item storage item = smartTokens.table[_smartToken];
-
-        require(item.valid == true);
-
-        address lastSmartToken = smartTokens.array[smartTokens.array.length - 1];
-        smartTokens.table[lastSmartToken].index = item.index;
-        smartTokens.array[item.index] = lastSmartToken;
-        smartTokens.array.length--;
-        delete smartTokens.table[_smartToken];
+        removeItem(smartTokens, _smartToken);
     }
 
     /**
@@ -73,12 +59,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * @param _liquidityPool liquidity pool
     */
     function addLiquidityPool(address _liquidityPool) external only(BANCOR_CONVERTER_REGISTRY) {
-        Item storage item = liquidityPools.table[_liquidityPool];
-
-        require(item.valid == false);
-
-        item.index = liquidityPools.array.push(_liquidityPool) - 1;
-        item.valid = true;
+        addItem(liquidityPools, _liquidityPool);
     }
 
     /**
@@ -87,15 +68,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * @param _liquidityPool liquidity pool
     */
     function removeLiquidityPool(address _liquidityPool) external only(BANCOR_CONVERTER_REGISTRY) {
-        Item storage item = liquidityPools.table[_liquidityPool];
-
-        require(item.valid == true);
-
-        address lastLiquidityPool = liquidityPools.array[liquidityPools.array.length - 1];
-        liquidityPools.table[lastLiquidityPool].index = item.index;
-        liquidityPools.array[item.index] = lastLiquidityPool;
-        liquidityPools.array.length--;
-        delete liquidityPools.table[_liquidityPool];
+        removeItem(liquidityPools, _liquidityPool);
     }
 
     /**
@@ -106,14 +79,10 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
     */
     function addConvertibleToken(address _convertibleToken, address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
         List storage list = convertibleTokens.table[_convertibleToken];
-        Item storage item = list.table[_smartToken];
-
-        require(item.valid == false);
-
-        if (list.array.length == 0)
+        if (list.items.array.length == 0) {
             list.index = convertibleTokens.array.push(_convertibleToken) - 1;
-        item.index = list.array.push(_smartToken) - 1;
-        item.valid = true;
+        }
+        addItem(list.items, _smartToken);
     }
 
     /**
@@ -124,17 +93,8 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
     */
     function removeConvertibleToken(address _convertibleToken, address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
         List storage list = convertibleTokens.table[_convertibleToken];
-        Item storage item = list.table[_smartToken];
-
-        require(item.valid == true);
-
-        address lastSmartToken = list.array[list.array.length - 1];
-        list.table[lastSmartToken].index = item.index;
-        list.array[item.index] = lastSmartToken;
-        list.array.length--;
-        delete list.table[_smartToken];
-
-        if (list.array.length == 0) {
+        removeItem(list.items, _smartToken);
+        if (list.items.array.length == 0) {
             address lastConvertibleToken = convertibleTokens.array[convertibleTokens.array.length - 1];
             convertibleTokens.table[lastConvertibleToken].index = list.index;
             convertibleTokens.array[list.index] = lastConvertibleToken;
@@ -180,14 +140,47 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
     }
 
     function getConvertibleTokenSmartTokenCount(address _convertibleToken) external view returns (uint) {
-        return convertibleTokens.table[_convertibleToken].array.length;
+        return convertibleTokens.table[_convertibleToken].items.array.length;
     }
 
     function getConvertibleTokenSmartTokens(address _convertibleToken) external view returns (address[]) {
-        return convertibleTokens.table[_convertibleToken].array;
+        return convertibleTokens.table[_convertibleToken].items.array;
     }
 
     function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address) {
-        return convertibleTokens.table[_convertibleToken].array[_index];
+        return convertibleTokens.table[_convertibleToken].items.array[_index];
+    }
+
+    /**
+      * @dev add an item to a list of items
+      * 
+      * @param _items list of items
+      * @param _value item's value
+    */
+    function addItem(Items storage _items, address _value) internal {
+        Item storage item = _items.table[_value];
+
+        require(item.valid == false);
+
+        item.index = _items.array.push(_value) - 1;
+        item.valid = true;
+    }
+
+    /**
+      * @dev remove an item from a list of items
+      * 
+      * @param _items list of items
+      * @param _value item's value
+    */
+    function removeItem(Items storage _items, address _value) internal {
+        Item storage item = _items.table[_value];
+
+        require(item.valid == true);
+
+        address lastValue = _items.array[_items.array.length - 1];
+        _items.table[lastValue].index = item.index;
+        _items.array[item.index] = lastValue;
+        _items.array.length--;
+        delete _items.table[_value];
     }
 }
