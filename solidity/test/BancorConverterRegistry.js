@@ -88,6 +88,28 @@ contract('BancorConverterRegistry', function(accounts) {
         await smartToken5.issue(accounts[0], 1000000);
         await smartToken6.issue(accounts[0], 1000000);
         await smartToken7.issue(accounts[0], 1000000);
+        await smartToken8.issue(accounts[0], 1000000);
+        await smartToken9.issue(accounts[0], 1000000);
+        await smartTokenA.issue(accounts[0], 1000000);
+        await smartTokenB.issue(accounts[0], 1000000);
+        await smartTokenC.issue(accounts[0], 1000000);
+        await smartTokenD.issue(accounts[0], 1000000);
+        await smartTokenE.issue(accounts[0], 1000000);
+
+        await etherToken .transfer(converter1.address, 1000);
+        await smartToken4.transfer(converter2.address, 1000);
+        await smartToken6.transfer(converter3.address, 1000);
+        await smartToken8.transfer(converter4.address, 1000);
+        await smartTokenA.transfer(converter5.address, 1000);
+        await smartTokenC.transfer(converter6.address, 1000);
+        await smartTokenE.transfer(converter7.address, 1000);
+        await smartToken1.transfer(converter2.address, 1000);
+        await smartToken1.transfer(converter3.address, 1000);
+        await smartToken1.transfer(converter4.address, 1000);
+        await smartToken1.transfer(converter5.address, 1000);
+        await smartToken1.transfer(converter6.address, 1000);
+        await smartToken2.transfer(converter7.address, 1000);
+
         await smartToken1.transferOwnership(converter1.address);
         await smartToken2.transferOwnership(converter2.address);
         await smartToken3.transferOwnership(converter3.address);
