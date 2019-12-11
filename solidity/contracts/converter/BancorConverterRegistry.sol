@@ -125,6 +125,16 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
+      * @dev check whether or not a given value is a smart token
+      * 
+      * @param _value value
+      * @return whether or not the given value is a smart token
+    */
+    function isSmartToken(address _value) external view returns (bool) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isSmartToken(_value);
+    }
+
+    /**
       * @dev get the number of liquidity pools
       * 
       * @return the number of liquidity pools
@@ -150,6 +160,16 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     */
     function getLiquidityPool(uint _index) external view returns (address) {
         return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPool(_index);
+    }
+
+    /**
+      * @dev check whether or not a given value is a liquidity pool
+      * 
+      * @param _value value
+      * @return whether or not the given value is a liquidity pool
+    */
+    function isLiquidityPool(address _value) external view returns (bool) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isLiquidityPool(_value);
     }
 
     /**
@@ -181,6 +201,16 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
+      * @dev check whether or not a given value is a convertible token
+      * 
+      * @param _value value
+      * @return whether or not the given value is a convertible token
+    */
+    function isConvertibleToken(address _value) external view returns (bool) {
+        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isConvertibleToken(_value);
+    }
+
+    /**
       * @dev get the number of smart tokens associated with a given convertible token
       * 
       * @param _convertibleToken convertible token
@@ -208,36 +238,6 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     */
     function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address) {
         return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartToken(_convertibleToken, _index);
-    }
-
-    /**
-      * @dev check whether or not a given value is a smart token
-      * 
-      * @param _value value
-      * @return whether or not the given value is a smart token
-    */
-    function isSmartToken(address _value) external view returns (bool) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isSmartToken(_value);
-    }
-
-    /**
-      * @dev check whether or not a given value is a liquidity pool
-      * 
-      * @param _value value
-      * @return whether or not the given value is a liquidity pool
-    */
-    function isLiquidityPool(address _value) external view returns (bool) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isLiquidityPool(_value);
-    }
-
-    /**
-      * @dev check whether or not a given value is a convertible token
-      * 
-      * @param _value value
-      * @return whether or not the given value is a convertible token
-    */
-    function isConvertibleToken(address _value) external view returns (bool) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isConvertibleToken(_value);
     }
 
     /**

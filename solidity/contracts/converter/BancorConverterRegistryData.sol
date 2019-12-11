@@ -132,6 +132,16 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
     }
 
     /**
+      * @dev check whether or not a given value is a smart token
+      * 
+      * @param _value value
+      * @return whether or not the given value is a smart token
+    */
+    function isSmartToken(address _value) external view returns (bool) {
+        return smartTokens.table[_value].valid;
+    }
+
+    /**
       * @dev get the number of liquidity pools
       * 
       * @return the number of liquidity pools
@@ -157,6 +167,16 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
     */
     function getLiquidityPool(uint _index) external view returns (address) {
         return liquidityPools.array[_index];
+    }
+
+    /**
+      * @dev check whether or not a given value is a liquidity pool
+      * 
+      * @param _value value
+      * @return whether or not the given value is a liquidity pool
+    */
+    function isLiquidityPool(address _value) external view returns (bool) {
+        return liquidityPools.table[_value].valid;
     }
 
     /**
@@ -188,6 +208,16 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
     }
 
     /**
+      * @dev check whether or not a given value is a convertible token
+      * 
+      * @param _value value
+      * @return whether or not the given value is a convertible token
+    */
+    function isConvertibleToken(address _value) external view returns (bool) {
+        return convertibleTokens.table[_value].items.array.length > 0;
+    }
+
+    /**
       * @dev get the number of smart tokens associated with a given convertible token
       * 
       * @param _convertibleToken convertible token
@@ -215,36 +245,6 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
     */
     function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address) {
         return convertibleTokens.table[_convertibleToken].items.array[_index];
-    }
-
-    /**
-      * @dev check whether or not a given value is a smart token
-      * 
-      * @param _value value
-      * @return whether or not the given value is a smart token
-    */
-    function isSmartToken(address _value) external view returns (bool) {
-        return smartTokens.table[_value].valid;
-    }
-
-    /**
-      * @dev check whether or not a given value is a liquidity pool
-      * 
-      * @param _value value
-      * @return whether or not the given value is a liquidity pool
-    */
-    function isLiquidityPool(address _value) external view returns (bool) {
-        return liquidityPools.table[_value].valid;
-    }
-
-    /**
-      * @dev check whether or not a given value is a convertible token
-      * 
-      * @param _value value
-      * @return whether or not the given value is a convertible token
-    */
-    function isConvertibleToken(address _value) external view returns (bool) {
-        return convertibleTokens.table[_value].items.array.length > 0;
     }
 
     /**
