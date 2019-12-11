@@ -34,7 +34,6 @@ contract('BancorConverterRegistry', function(accounts) {
     let smartTokenC;
     let smartTokenD;
     let smartTokenE;
-    let smartTokenF;
     let contractRegistry
     let converterRegistry;
     let converterRegistryData;
@@ -55,11 +54,10 @@ contract('BancorConverterRegistry', function(accounts) {
         smartTokenC = await SmartToken.new('TokenC', 'TKNC', 18);
         smartTokenD = await SmartToken.new('TokenD', 'TKND', 18);
         smartTokenE = await SmartToken.new('TokenE', 'TKNE', 18);
-        smartTokenF = await SmartToken.new('TokenF', 'TKNF', 18);
 
         contractRegistry = await ContractRegistry.new();
 
-        converterRegistry = await BancorConverterRegistry.new(contractRegistry.address);
+        converterRegistry     = await BancorConverterRegistry    .new(contractRegistry.address);
         converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
 
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken .address, 500000);
@@ -70,15 +68,15 @@ contract('BancorConverterRegistry', function(accounts) {
         converter6 = await BancorConverter.new(smartToken6.address, contractRegistry.address, 0, smartTokenC.address, 500000);
         converter7 = await BancorConverter.new(smartToken7.address, contractRegistry.address, 0, smartTokenE.address, 500000);
 
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+
         await converter2.addReserve(smartToken1.address, 500000);
         await converter3.addReserve(smartToken1.address, 500000);
         await converter4.addReserve(smartToken1.address, 500000);
         await converter5.addReserve(smartToken1.address, 500000);
         await converter6.addReserve(smartToken1.address, 500000);
         await converter7.addReserve(smartToken2.address, 500000);
-
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY, converterRegistry.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
         await etherToken.deposit({value: 1000000});
         await smartToken1.issue(accounts[0], 1000000);
