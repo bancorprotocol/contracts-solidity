@@ -64,9 +64,9 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _converter converter
     */
     function addConverter(IBancorConverter _converter) external {
+        require(isValid(_converter));
         IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_converter).token();
-        require(isValid(token, _converter));
         uint connectorTokenCount = _converter.connectorTokenCount();
         addSmartToken(converterRegistryData, token);
         if (connectorTokenCount > 1)
@@ -83,9 +83,9 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _converter converter
     */
     function removeConverter(IBancorConverter _converter) external {
+        require(msg.sender == owner || !isValid(_converter));
         IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_converter).token();
-        require(msg.sender == owner || !isValid(token, _converter));
         uint connectorTokenCount = _converter.connectorTokenCount();
         removeSmartToken(converterRegistryData, token);
         if (connectorTokenCount > 1)
@@ -252,14 +252,22 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev checks whether or not a given token is operative in a given converter
+      * @dev checks whether or not a given converter is valid
       * 
-      * @param _smartToken smart token
       * @param _converter converter
-      * @return whether or not the given token is operative in the given converter
+      * @return whether or not the given converter is valid
     */
-    function isValid(ISmartToken _smartToken, IBancorConverter _converter) public view returns (bool) {
-        return _smartToken.totalSupply() > 0 && _smartToken.owner() == address(_converter);
+    function isValid(IBancorConverter _converter) public view returns (bool) {
+        ISmartToken token = ISmartTokenController(_converter).token();
+        if (token.totalSupply() == 0 || token.owner() != address(_converter))
+            return false;
+        uint connectorTokenCount = _converter.connectorTokenCount();
+        for (uint i = 0; i < connectorTokenCount; i++) {
+            IERC20Token connectorToken = _converter.connectorTokens(i);
+            if (connectorToken.balanceOf(_converter) == 0)
+                return false;
+        }
+        return true;
     }
 
     /**
