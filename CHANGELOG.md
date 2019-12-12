@@ -9,6 +9,9 @@ require re-adding converters after a converter upgrade
 BancorConverter:
 * Added support for fund/liquidate in non 50%/50% reserves converters
 
+BancorFormula:
+* Added support for fund/liquidate in non 50%/50% reserves converters
+
 
 ### 0.5.6 (2019-11-18)
 BancorConverter:
