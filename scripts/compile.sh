@@ -1,7 +1,7 @@
 #!/bin/bash
 solc="docker run -v $HOME/git/contracts/solidity:/solidity ethereum/solc:0.4.26"
-CONTRACTS_PATH=/solidity/contracts
-OUTPUT_PATH=/solidity/build
+CONTRACTS_PATH=../solidity/contracts
+OUTPUT_PATH=../solidity/build
 $solc --optimize --optimize-runs 200 --abi --bin --allow-paths $CONTRACTS_PATH, -o $OUTPUT_PATH --overwrite $CONTRACTS_PATH/BancorNetwork.sol
 $solc --optimize --optimize-runs 200 --abi --bin --allow-paths $CONTRACTS_PATH, -o $OUTPUT_PATH --overwrite $CONTRACTS_PATH/bancorx/BancorX.sol
 $solc --optimize --optimize-runs 200 --abi --bin --allow-paths $CONTRACTS_PATH, -o $OUTPUT_PATH --overwrite $CONTRACTS_PATH/bancorx/XTransferRerouter.sol
