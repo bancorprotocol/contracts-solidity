@@ -10,7 +10,7 @@ BancorConverter:
 * Added support for fund/liquidate in non 50%/50% reserves converters
 
 BancorFormula:
-* Added support for fund/liquidate in non 50%/50% reserves converters
+* Added calculations for fund/liquidate in non 50%/50% reserves
 
 
 ### 0.5.6 (2019-11-18)
