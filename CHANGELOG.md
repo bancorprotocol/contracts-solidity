@@ -1,3 +1,8 @@
+### 0.5.8 (2019-12-12)
+General
+* Minor cleanups
+
+
 ### 0.5.7 (2019-12-12)
 General:
 * Added ContractRegistryClient contract for common contract registry behavior and cleaner access, and updated all registry clients
