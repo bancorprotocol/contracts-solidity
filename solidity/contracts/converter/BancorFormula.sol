@@ -6,7 +6,6 @@ import '../utility/Utils.sol';
 contract BancorFormula is IBancorFormula, Utils {
     using SafeMath for uint256;
 
-
     uint16 public version = 5;
 
     uint256 private constant ONE = 1;
