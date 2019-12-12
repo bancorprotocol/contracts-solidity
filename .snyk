@@ -6,3 +6,12 @@ patch:
   SNYK-JS-TREEKILL-536781:
     - solidity-coverage > tree-kill:
         patched: '2019-12-12T13:55:11.672Z'
+  SNYK-JS-LODASH-450202:
+    - snyk > @snyk/dep-graph > lodash:
+        patched: '2019-12-12T13:56:19.599Z'
+    - snyk > @snyk/snyk-cocoapods-plugin > @snyk/dep-graph > lodash:
+        patched: '2019-12-12T13:56:19.599Z'
+    - snyk > snyk-nuget-plugin > dotnet-deps-parser > lodash:
+        patched: '2019-12-12T13:56:19.599Z'
+    - snyk > @snyk/snyk-cocoapods-plugin > @snyk/cocoapods-lockfile-parser > @snyk/dep-graph > lodash:
+        patched: '2019-12-12T13:56:19.599Z'
