@@ -3,11 +3,11 @@
 
 const sign = require('./helpers/Sign');
 const utils = require('./helpers/Utils');
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const Whitelist = artifacts.require('Whitelist');
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
-const ContractIds = artifacts.require('ContractIds');
 const BancorConverter = artifacts.require('BancorConverter');
 const SmartToken = artifacts.require('SmartToken');
 const NonStandardSmartToken = artifacts.require('NonStandardSmartToken');
@@ -25,7 +25,6 @@ let smartToken3;
 let smartToken4;
 let erc20Token;
 let contractRegistry;
-let contractIds;
 let converter1;
 let converter2;
 let converter3;
@@ -55,27 +54,21 @@ contract('BancorNetwork', accounts => {
 
     before(async () => {
         contractRegistry = await ContractRegistry.new();
-        contractIds = await ContractIds.new();
 
         let contractFeatures = await ContractFeatures.new();
-        let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
-        await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
 
         let gasPriceLimit = await BancorGasPriceLimit.new(BancorGasPriceLimit.class_defaults.gasPrice);
-        let gasPriceLimitId = await contractIds.BANCOR_GAS_PRICE_LIMIT.call();
-        await contractRegistry.registerAddress(gasPriceLimitId, gasPriceLimit.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_GAS_PRICE_LIMIT, gasPriceLimit.address);
 
-        let formula = await BancorFormula.new();
-        let formulaId = await contractIds.BANCOR_FORMULA.call();
-        await contractRegistry.registerAddress(formulaId, formula.address);
+        let bancorFormula = await BancorFormula.new();
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
 
         let nonStandardTokenRegistry = await NonStandardTokenRegistry.new();
-        let nonStandardTokenRegistryId = await contractIds.NON_STANDARD_TOKEN_REGISTRY.call();
-        await contractRegistry.registerAddress(nonStandardTokenRegistryId, nonStandardTokenRegistry.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.NON_STANDARD_TOKEN_REGISTRY, nonStandardTokenRegistry.address);
 
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-        let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
-        await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[3]);
 
         etherToken = await EtherToken.new();
@@ -95,7 +88,7 @@ contract('BancorNetwork', accounts => {
         smartToken4 = await SmartToken.new('Token4', 'TKN4', 2);
         await smartToken4.issue(accounts[0], 2500000);
 
-        await contractRegistry.registerAddress(await contractIds.BNT_TOKEN.call(), smartToken1.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, smartToken1.address);
 
         erc20Token = await TestNonStandardERC20Token.new('ERC20Token', 'ERC5', 1000000);
 

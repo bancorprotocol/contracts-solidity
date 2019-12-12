@@ -1,3 +1,18 @@
+### 0.5.7 (2019-12-12)
+General:
+* Added ContractRegistryClient contract for common contract registry behavior and cleaner access, and updated all registry clients
+
+BancorConverterRegistry:
+* Full redesign - it now allows iterating over different primitives in the network and does not
+require re-adding converters after a converter upgrade
+
+BancorConverter:
+* Added support for fund/liquidate in non 50%/50% reserves converters
+
+BancorFormula:
+* Added calculations for fund/liquidate in non 50%/50% reserves
+
+
 ### 0.5.6 (2019-11-18)
 BancorConverter:
 * Updated the virtual balances mechanism - it now scales all reserve balances by the same factor
@@ -158,7 +173,6 @@ Bug fixes:
 
 
 ### 0.4.0 (2018-06-06)
-
 General:
  * Restructured contract folders
  * Upgraded compiler version to 0.4.21

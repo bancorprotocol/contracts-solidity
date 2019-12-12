@@ -3,12 +3,10 @@ import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorConverterUpgrader.sol';
 import './interfaces/IBancorFormula.sol';
 import '../IBancorNetwork.sol';
-import '../ContractIds.sol';
 import '../FeatureIds.sol';
 import '../utility/Managed.sol';
-import '../utility/Utils.sol';
 import '../utility/SafeMath.sol';
-import '../utility/interfaces/IContractRegistry.sol';
+import '../utility/ContractRegistryClient.sol';
 import '../utility/interfaces/IContractFeatures.sol';
 import '../utility/interfaces/IAddressList.sol';
 import '../token/SmartTokenController.sol';
@@ -39,7 +37,7 @@ import '../bancorx/interfaces/IBancorX.sol';
   * Other potential solutions might include a commit/reveal based schemes
   * - Possibly add getters for the reserve fields so that the client won't need to rely on the order in the struct
 */
-contract BancorConverter is IBancorConverter, SmartTokenController, Managed, ContractIds, FeatureIds {
+contract BancorConverter is IBancorConverter, SmartTokenController, Managed, ContractRegistryClient, FeatureIds {
     using SafeMath for uint256;
 
     uint32 private constant RATIO_RESOLUTION = 1000000;
@@ -56,12 +54,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev version number
     */
-    uint16 public version = 20;
+    uint16 public version = 21;
     string public converterType = 'bancor';
 
-    bool public allowRegistryUpdate = true;             // allows the owner to prevent/allow the registry to be updated
-    IContractRegistry public prevRegistry;              // address of previous registry as security mechanism
-    IContractRegistry public registry;                  // contract registry contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public reserveTokens;                 // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
     mapping (address => Reserve) public reserves;       // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
@@ -142,15 +137,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         uint32 _maxConversionFee,
         IERC20Token _reserveToken,
         uint32 _reserveRatio
-    )
+    )   ContractRegistryClient(_registry)
         public
         SmartTokenController(_token)
-        validAddress(_registry)
         validConversionFee(_maxConversionFee)
     {
-        registry = _registry;
-        prevRegistry = _registry;
-        IContractFeatures features = IContractFeatures(registry.addressOf(ContractIds.CONTRACT_FEATURES));
+        IContractFeatures features = IContractFeatures(addressOf(CONTRACT_FEATURES));
 
         // initialize supported features
         if (features != address(0))
@@ -180,29 +172,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
-    // allows execution only when the total ratio is 100%
-    modifier fullTotalRatioOnly() {
-        require(totalReserveRatio == RATIO_RESOLUTION);
-        _;
-    }
-
     // allows execution only when conversions aren't disabled
     modifier conversionsAllowed {
         require(conversionsEnabled);
-        _;
-    }
-
-    // allows execution by the BancorNetwork contract only
-    modifier bancorNetworkOnly {
-        IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
-        require(msg.sender == address(bancorNetwork));
-        _;
-    }
-
-    // allows execution by the converter upgrader contract only
-    modifier converterUpgraderOnly {
-        address converterUpgrader = registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER);
-        require(msg.sender == converterUpgrader);
         _;
     }
 
@@ -212,45 +184,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
-    /**
-      * @dev sets the contract registry to whichever address the current registry is pointing to
-     */
-    function updateRegistry() public {
-        // require that upgrading is allowed or that the caller is the owner
-        require(allowRegistryUpdate || msg.sender == owner);
-
-        // get the address of whichever registry the current registry is pointing to
-        address newRegistry = registry.addressOf(ContractIds.CONTRACT_REGISTRY);
-
-        // if the new registry hasn't changed or is the zero address, revert
-        require(newRegistry != address(registry) && newRegistry != address(0));
-
-        // set the previous registry as current registry and current registry as newRegistry
-        prevRegistry = registry;
-        registry = IContractRegistry(newRegistry);
-    }
-
-    /**
-      * @dev security mechanism allowing the converter owner to revert to the previous registry,
-      * to be used in emergency scenario
-    */
-    function restoreRegistry() public ownerOrManagerOnly {
-        // set the registry as previous registry
-        registry = prevRegistry;
-
-        // after a previous registry is restored, only the owner can allow future updates
-        allowRegistryUpdate = false;
-    }
-
-    /**
-      * @dev disables the registry update functionality
-      * this is a safety mechanism in case of a emergency
-      * can only be called by the manager or owner
-      * 
-      * @param _disable    true to disable registry updates, false to re-enable them
-    */
-    function disableRegistryUpdate(bool _disable) public ownerOrManagerOnly {
-        allowRegistryUpdate = !_disable;
+    // allows execution only on a multiple-reserve converter
+    modifier multipleReservesOnly {
+        require(reserveTokens.length > 1);
+        _;
     }
 
     /**
@@ -303,7 +240,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function transferTokenOwnership(address _newOwner)
         public
         ownerOnly
-        converterUpgraderOnly
+        only(BANCOR_CONVERTER_UPGRADER)
     {
         super.transferTokenOwnership(_newOwner);
     }
@@ -359,7 +296,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @param _amount  amount to withdraw
     */
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public {
-        address converterUpgrader = registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER);
+        address converterUpgrader = addressOf(BANCOR_CONVERTER_UPGRADER);
 
         // if the token is not a reserve token, allow withdrawal
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
@@ -373,7 +310,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * note that the owner needs to call acceptOwnership/acceptManagement on the new converter after the upgrade
     */
     function upgrade() public ownerOnly {
-        IBancorConverterUpgrader converterUpgrader = IBancorConverterUpgrader(registry.addressOf(ContractIds.BANCOR_CONVERTER_UPGRADER));
+        IBancorConverterUpgrader converterUpgrader = IBancorConverterUpgrader(addressOf(BANCOR_CONVERTER_UPGRADER));
 
         transferOwnership(converterUpgrader);
         converterUpgrader.upgrade(version);
@@ -419,7 +356,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function updateReserveVirtualBalance(IERC20Token _reserveToken, uint256 _virtualBalance)
         public
         ownerOnly
-        converterUpgraderOnly
+        only(BANCOR_CONVERTER_UPGRADER)
         validReserve(_reserveToken)
     {
         Reserve storage reserve = reserves[_reserveToken];
@@ -538,7 +475,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         uint256 tokenSupply = token.totalSupply();
         uint256 reserveBalance = _reserveToken.balanceOf(this);
-        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         uint256 amount = formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
         uint256 finalAmount = getFinalAmount(amount, 1);
 
@@ -565,7 +502,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         Reserve storage reserve = reserves[_reserveToken];
         uint256 tokenSupply = token.totalSupply();
         uint256 reserveBalance = _reserveToken.balanceOf(this);
-        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         uint256 amount = formula.calculateSaleReturn(tokenSupply, reserveBalance, reserve.ratio, _sellAmount);
         uint256 finalAmount = getFinalAmount(amount, 1);
 
@@ -596,7 +533,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         Reserve storage toReserve = reserves[_toReserveToken];
         require(fromReserve.isSaleEnabled); // validate input
 
-        IBancorFormula formula = IBancorFormula(registry.addressOf(ContractIds.BANCOR_FORMULA));
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         uint256 amount = formula.calculateCrossReserveReturn(
             getReserveBalance(_fromReserveToken), 
             fromReserve.ratio, 
@@ -623,7 +560,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn)
         public
-        bancorNetworkOnly
+        only(BANCOR_NETWORK)
         conversionsAllowed
         greaterThanZero(_minReturn)
         returns (uint256)
@@ -662,7 +599,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         ensureTransferFrom(_fromToken, msg.sender, this, _amount);
         // transfer funds to the caller in the to reserve token
         // the transfer might fail if virtual balance is enabled
-        ensureTransfer(_toToken, msg.sender, amount);
+        ensureTransferFrom(_toToken, this, msg.sender, amount);
 
         // dispatch the conversion event
         // the fee is higher (magnitude = 2) since cross reserve conversion equals 2 conversions (from / to the smart token)
@@ -738,7 +675,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // destroy _sellAmount from the caller's balance in the smart token
         token.destroy(msg.sender, _sellAmount);
         // transfer funds to the caller in the reserve token
-        ensureTransfer(_reserveToken, msg.sender, amount);
+        ensureTransferFrom(_reserveToken, this, msg.sender, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(token, _reserveToken, _sellAmount, amount, feeAmount);
@@ -815,7 +752,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     {
         require(_signature.length == 0 || _signature[0] == _amount);
 
-        IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
+        IBancorNetwork bancorNetwork = IBancorNetwork(addressOf(BANCOR_NETWORK));
 
         // we need to transfer the source tokens from the caller to the BancorNetwork contract,
         // so it can execute the conversion on behalf of the caller
@@ -867,11 +804,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         // verify that the custom value (if valid) is equal to _conversionId
         require(_signature.length == 0 || _signature[0] == _conversionId);
 
-        IBancorX bancorX = IBancorX(registry.addressOf(ContractIds.BANCOR_X));
-        IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
+        IBancorX bancorX = IBancorX(addressOf(BANCOR_X));
+        IBancorNetwork bancorNetwork = IBancorNetwork(addressOf(BANCOR_NETWORK));
 
         // verify that the first token in the path is BNT
-        require(_path[0] == registry.addressOf(ContractIds.BNT_TOKEN));
+        require(_path[0] == addressOf(BNT_TOKEN));
 
         // get conversion amount from BancorX contract
         uint256 amount = bancorX.getXTransferAmount(_conversionId, msg.sender);
@@ -884,26 +821,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
-      * true on success but revert on failure instead
-      * 
-      * @param _token     the token to transfer
-      * @param _to        the address to transfer the tokens to
-      * @param _amount    the amount to transfer
-    */
-    function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
-        IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
-
-        if (addressList.listedAddresses(_token)) {
-            uint256 prevBalance = _token.balanceOf(_to);
-            // we have to cast the token contract in an interface which has no return value
-            INonStandardERC20(_token).transfer(_to, _amount);
-            uint256 postBalance = _token.balanceOf(_to);
-            assert(postBalance > prevBalance);
-        } else {
-            // if the token isn't whitelisted, we assert on transfer
-            assert(_token.transfer(_to, _amount));
-        }
+      * @dev returns whether or not the caller is an administrator
+     */
+    function isAdmin() internal view returns (bool) {
+        return msg.sender == owner || msg.sender == manager;
     }
 
     /**
@@ -916,17 +837,23 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @param _amount    the amount to transfer
     */
     function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
-        IAddressList addressList = IAddressList(registry.addressOf(ContractIds.NON_STANDARD_TOKEN_REGISTRY));
-
+        IAddressList addressList = IAddressList(addressOf(NON_STANDARD_TOKEN_REGISTRY));
+        bool transferFromThis = _from == address(this);
         if (addressList.listedAddresses(_token)) {
             uint256 prevBalance = _token.balanceOf(_to);
             // we have to cast the token contract in an interface which has no return value
-            INonStandardERC20(_token).transferFrom(_from, _to, _amount);
+            if (transferFromThis)
+                INonStandardERC20(_token).transfer(_to, _amount);
+            else
+                INonStandardERC20(_token).transferFrom(_from, _to, _amount);
             uint256 postBalance = _token.balanceOf(_to);
             assert(postBalance > prevBalance);
         } else {
             // if the token is standard, we assert on transfer
-            assert(_token.transferFrom(_from, _to, _amount));
+            if (transferFromThis)
+                assert(_token.transfer(_to, _amount));
+            else
+                assert(_token.transferFrom(_from, _to, _amount));
         }
     }
 
@@ -934,16 +861,17 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @dev buys the token with all reserve tokens using the same percentage
       * for example, if the caller increases the supply by 10%,
       * then it will cost an amount equal to 10% of each reserve token balance
-      * note that the function can be called only if the total ratio is 100% and conversions are enabled
+      * note that the function can be called only when conversions are enabled
       * 
       * @param _amount  amount to increase the supply by (in the smart token)
     */
     function fund(uint256 _amount)
         public
-        fullTotalRatioOnly
         conversionsAllowed
+        multipleReservesOnly
     {
         uint256 supply = token.totalSupply();
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
 
         // iterate through the reserve tokens and transfer a percentage equal to the ratio between _amount
         // and the total supply in each reserve from the caller to the converter
@@ -953,7 +881,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < reserveTokens.length; i++) {
             reserveToken = reserveTokens[i];
             reserveBalance = reserveToken.balanceOf(this);
-            reserveAmount = _amount.mul(reserveBalance).sub(1).div(supply).add(1);
+            reserveAmount = formula.calculateFundCost(supply, reserveBalance, totalReserveRatio, _amount);
 
             // update virtual balance if relevant
             Reserve storage reserve = reserves[reserveToken];
@@ -975,12 +903,16 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @dev sells the token for all reserve tokens using the same percentage
       * for example, if the holder sells 10% of the supply,
       * then they will receive 10% of each reserve token balance in return
-      * note that the function can be called only if the total ratio is 100%
+      * note that the function can be called also when conversions are disabled
       * 
       * @param _amount  amount to liquidate (in the smart token)
     */
-    function liquidate(uint256 _amount) public fullTotalRatioOnly {
+    function liquidate(uint256 _amount)
+        public
+        multipleReservesOnly
+    {
         uint256 supply = token.totalSupply();
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
 
         // destroy _amount from the caller's balance in the smart token
         token.destroy(msg.sender, _amount);
@@ -993,7 +925,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         for (uint16 i = 0; i < reserveTokens.length; i++) {
             reserveToken = reserveTokens[i];
             reserveBalance = reserveToken.balanceOf(this);
-            reserveAmount = _amount.mul(reserveBalance).div(supply);
+            reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _amount);
 
             // update virtual balance if relevant
             Reserve storage reserve = reserves[reserveToken];
@@ -1001,7 +933,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
                 reserve.virtualBalance = reserve.virtualBalance.sub(reserveAmount);
 
             // transfer funds to the caller in the reserve token
-            ensureTransfer(reserveToken, msg.sender, reserveAmount);
+            ensureTransferFrom(reserveToken, this, msg.sender, reserveAmount);
 
             // dispatch price data update for the smart token/reserve
             emit PriceDataUpdate(reserveToken, supply - _amount, reserveBalance - reserveAmount, reserve.ratio);

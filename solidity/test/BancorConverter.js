@@ -2,9 +2,12 @@
 /* eslint-disable prefer-reflect */
 
 const fs = require('fs');
+
+const utils = require('./helpers/Utils');
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
+
 const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
-const ContractIds = artifacts.require('ContractIds');
 const BancorConverter = artifacts.require('BancorConverter');
 const SmartToken = artifacts.require('SmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
@@ -15,7 +18,6 @@ const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
-const utils = require('./helpers/Utils');
 
 const ratio10Percent = 100000;
 const gasPrice = 22000000000;
@@ -24,7 +26,6 @@ const gasPriceBadHigh = 22000000001;
 let token;
 let tokenAddress;
 let contractRegistry;
-let contractIds;
 let contractFeatures;
 let reserveToken;
 let reserveToken2;
@@ -73,36 +74,28 @@ function getConversionAmount(transaction, logIndex = 0) {
 contract('BancorConverter', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
-        contractIds = await ContractIds.new();
 
         contractFeatures = await ContractFeatures.new();
-        let contractFeaturesId = await contractIds.CONTRACT_FEATURES.call();
-        await contractRegistry.registerAddress(contractFeaturesId, contractFeatures.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
 
         let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
-        let gasPriceLimitId = await contractIds.BANCOR_GAS_PRICE_LIMIT.call();
-        await contractRegistry.registerAddress(gasPriceLimitId, gasPriceLimit.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_GAS_PRICE_LIMIT, gasPriceLimit.address);
 
-        let formula = await BancorFormula.new();
-        let formulaId = await contractIds.BANCOR_FORMULA.call();
-        await contractRegistry.registerAddress(formulaId, formula.address);
+        let bancorFormula = await BancorFormula.new();
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
 
         let nonStandardTokenRegistry = await NonStandardTokenRegistry.new();
-        let nonStandardTokenRegistryId = await contractIds.NON_STANDARD_TOKEN_REGISTRY.call();
-        await contractRegistry.registerAddress(nonStandardTokenRegistryId, nonStandardTokenRegistry.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.NON_STANDARD_TOKEN_REGISTRY, nonStandardTokenRegistry.address);
 
         let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-        let bancorNetworkId = await contractIds.BANCOR_NETWORK.call();
-        await contractRegistry.registerAddress(bancorNetworkId, bancorNetwork.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[3]);
 
         let factory = await BancorConverterFactory.new();
-        let bancorConverterFactoryId = await contractIds.BANCOR_CONVERTER_FACTORY.call();
-        await contractRegistry.registerAddress(bancorConverterFactoryId, factory.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY, factory.address);
 
         upgrader = await BancorConverterUpgrader.new(contractRegistry.address);
-        let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
-        await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
 
         let token = await SmartToken.new('Token1', 'TKN1', 2); 
         tokenAddress = token.address;
@@ -390,12 +383,11 @@ contract('BancorConverter', accounts => {
         let reserve = await converter.reserves.call(reserveToken.address);
         verifyReserve(reserve, true, true, ratio10Percent, false, 0);
 
-        let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
-        await contractRegistry.registerAddress(bancorConverterUpgraderId, accounts[0]);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, accounts[0]);
 
         await converter.updateReserveVirtualBalance(reserveToken.address, 50);
 
-        await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
         
         reserve = await converter.reserves.call(reserveToken.address);
         verifyReserve(reserve, true, true, ratio10Percent, true, 50);
@@ -421,12 +413,11 @@ contract('BancorConverter', accounts => {
         let reserve = await converter.reserves.call(reserveToken.address);
         verifyReserve(reserve, true, true, ratio10Percent, false, 0);
 
-        let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
-        await contractRegistry.registerAddress(bancorConverterUpgraderId, accounts[0]);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, accounts[0]);
 
         await utils.catchRevert(converter.updateReserveVirtualBalance(reserveToken2.address, 0));
 
-        await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
     });
 
     it('verifies that the owner can enable / disable virtual balances', async () => {
@@ -599,12 +590,11 @@ contract('BancorConverter', accounts => {
     it('verifies that the owner can transfer the token ownership if the owner is the upgrader contract', async () => {
         let converter = await initConverter(accounts, true);
 
-        let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
-        await contractRegistry.registerAddress(bancorConverterUpgraderId, accounts[0]);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, accounts[0]);
 
         await converter.transferTokenOwnership(accounts[1]);
 
-        await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
         let tokenAddress = await converter.token.call();
         let contract = await web3.eth.contract(JSON.parse(fs.readFileSync(__dirname + '/../build/SmartToken.abi')));
         let token = await contract.at(tokenAddress);
@@ -626,11 +616,10 @@ contract('BancorConverter', accounts => {
 
     it('should throw when a the upgrader contract attempts to transfer the token ownership while the upgrader is not the owner', async () => {
         let converter = await initConverter(accounts, true);
-        let bancorConverterUpgraderId = await contractIds.BANCOR_CONVERTER_UPGRADER.call();
-        await contractRegistry.registerAddress(bancorConverterUpgraderId, accounts[2]);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, accounts[2]);
 
         await utils.catchRevert(converter.transferTokenOwnership(accounts[1], { from: accounts[2] }));
-        await contractRegistry.registerAddress(bancorConverterUpgraderId, upgrader.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
     });
 
     it('verifies that the owner can withdraw a non reserve token from the converter while the converter is not active', async () => {
@@ -1002,6 +991,18 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.convert(tokenAddress, reserveToken.address, 30000, 1));
     });
 
+    it('should throw when attempting to execute fund on a single-reserve converter', async () => {
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, reserveToken.address, 1000000);
+
+        await utils.catchRevert(converter.fund(1));
+    });
+
+    it('should throw when attempting to execute liquidate on a single-reserve converter', async () => {
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, reserveToken.address, 1000000);
+
+        await utils.catchRevert(converter.liquidate(1));
+    });
+
     it('verifies that getReturn returns the same amount as getCrossReserveReturn when converting between 2 reserves', async () => {
         let converter = await initConverter(accounts, true);
         let returnAmount = (await converter.getReturn.call(reserveToken.address, reserveToken2.address, 500))[0];
@@ -1031,24 +1032,26 @@ contract('BancorConverter', accounts => {
         assert.equal(returnAmount.toNumber(), returnAmount2);
     });
 
-    it('verifies that fund executes when the total reserve ratio equals 100%', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addReserve(reserveToken3.address, 600000);
+    for (const percent of [50, 75, 100]) {
+        it(`verifies that fund executes when the total reserve ratio equals ${percent}%`, async () => {
+            let converter = await initConverter(accounts, false);
+            await converter.addReserve(reserveToken3.address, (percent - 40) * 10000);
 
-        await reserveToken3.transfer(converter.address, 6000);
+            await reserveToken3.transfer(converter.address, 6000);
 
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
+            await token.transferOwnership(converter.address);
+            await converter.acceptTokenOwnership();
 
-        let prevBalance = await token.balanceOf.call(accounts[0]);
-        await reserveToken.approve(converter.address, 100000);
-        await reserveToken2.approve(converter.address, 100000);
-        await reserveToken3.approve(converter.address, 100000);
-        await converter.fund(100);
-        let balance = await token.balanceOf.call(accounts[0]);
+            let prevBalance = await token.balanceOf.call(accounts[0]);
+            await reserveToken.approve(converter.address, 100000);
+            await reserveToken2.approve(converter.address, 100000);
+            await reserveToken3.approve(converter.address, 100000);
+            await converter.fund(100);
+            let balance = await token.balanceOf.call(accounts[0]);
 
-        assert.equal(balance.toNumber(), prevBalance.toNumber() + 100);
-    });
+            assert.equal(balance.toNumber(), prevBalance.toNumber() + 100);
+        });
+    }
 
     it('verifies that fund updates the virtual balance correctly', async () => {
         let converter = await initConverter(accounts, false);
@@ -1185,22 +1188,6 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.fund(100));
     });
 
-    it('should throw when attempting to fund the converter when the total reserve ratio is not equal to 100%', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addReserve(reserveToken3.address, 500000);
-
-        await reserveToken3.transfer(converter.address, 6000);
-
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
-
-        await reserveToken.approve(converter.address, 100000);
-        await reserveToken2.approve(converter.address, 100000);
-        await reserveToken3.approve(converter.address, 100000);
-
-        await utils.catchRevert(converter.fund(100));
-    });
-
     it('should throw when attempting to fund the converter with insufficient funds', async () => {
         let converter = await initConverter(accounts, false);
         await converter.addReserve(reserveToken3.address, 600000);
@@ -1230,21 +1217,23 @@ contract('BancorConverter', accounts => {
         
     });
 
-    it('verifies that liquidate executes when the total reserve ratio equals 100%', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addReserve(reserveToken3.address, 600000);
+    for (const percent of [50, 75, 100]) {
+        it(`verifies that liquidate executes when the total reserve ratio equals ${percent}%`, async () => {
+            let converter = await initConverter(accounts, false);
+            await converter.addReserve(reserveToken3.address, (percent - 40) * 10000);
 
-        await reserveToken3.transfer(converter.address, 6000);
+            await reserveToken3.transfer(converter.address, 6000);
 
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
+            await token.transferOwnership(converter.address);
+            await converter.acceptTokenOwnership();
 
-        let prevSupply = await token.totalSupply.call();
-        await converter.liquidate(100);
-        let supply = await token.totalSupply();
+            let prevSupply = await token.totalSupply.call();
+            await converter.liquidate(100);
+            let supply = await token.totalSupply();
 
-        assert.equal(prevSupply - 100, supply);
-    });
+            assert.equal(prevSupply - 100, supply);
+        });
+    }
 
     it('verifies that liquidate updates the virtual balance correctly', async () => {
         let converter = await initConverter(accounts, false);
@@ -1392,18 +1381,6 @@ contract('BancorConverter', accounts => {
         assert.equal(prevSupply - 100, supply);
     });
 
-    it('should throw when attempting to liquidate when the total reserve ratio is not equal to 100%', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addReserve(reserveToken3.address, 500000);
-
-        await reserveToken3.transfer(converter.address, 6000);
-
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
-
-        await utils.catchRevert(converter.liquidate(100));
-    });
-
     it('should throw when attempting to liquidate with insufficient funds', async () => {
         let converter = await initConverter(accounts, false);
         await converter.addReserve(reserveToken3.address, 600000);
@@ -1420,60 +1397,77 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.liquidate(600, { from: accounts[9] }));
     });
 
-    it('should have the registry point to itself after initialization', async () => {
-        let contractRegistryId = await contractIds.CONTRACT_REGISTRY.call();
-        let registryAddress = await contractRegistry.addressOf.call(contractRegistryId)
-        assert.equal(registryAddress, contractRegistry.address)
+    it('should throw when attempting to register the registry to the zero address', async () => {
+        await utils.catchRevert(contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, utils.zeroAddress));
     });
 
-    it('should throw when attempting to update the registry when no new registry is set', async () => {
+    it('should throw when attempting to update the registry when it points to the zero address', async () => {
         let converter = await initConverter(accounts, false);
 
         await utils.catchRevert(converter.updateRegistry());
+        assert.equal(await converter.registry.call(), contractRegistry.address);
+        assert.equal(await converter.prevRegistry.call(), contractRegistry.address);
     });
 
-    it('should throw when attempting to register the registry to the zero address', async () => {
-        let contractRegistryId = await contractIds.CONTRACT_REGISTRY.call();
+    it('should throw when attempting to update the registry when it points to the current registry', async () => {
+        let converter = await initConverter(accounts, false);
 
-        await utils.catchRevert(contractRegistry.registerAddress(contractRegistryId, "0x0"))
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, contractRegistry.address);
+        await utils.catchRevert(converter.updateRegistry());
+        assert.equal(await converter.registry.call(), contractRegistry.address);
+        assert.equal(await converter.prevRegistry.call(), contractRegistry.address);
+    });
+
+    it('should throw when attempting to update the registry when it points to a new registry which points to the zero address', async () => {
+        let converter = await initConverter(accounts, false);
+
+        let newRegistry = await ContractRegistry.new();
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, newRegistry.address);
+        await utils.catchRevert(converter.updateRegistry());
+        assert.equal(await converter.registry.call(), contractRegistry.address);
+        assert.equal(await converter.prevRegistry.call(), contractRegistry.address);
+
+        // set the original registry back
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, contractRegistry.address);
     });
 
     it('should allow anyone to update the registry address', async () => {
         let converter = await initConverter(accounts, false);
-        let contractRegistryId = await contractIds.CONTRACT_REGISTRY.call();
-        let newRegistry = await ContractRegistry.new()
+        let newRegistry = await ContractRegistry.new();
 
-        await contractRegistry.registerAddress(contractRegistryId, newRegistry.address)
-        await converter.updateRegistry({ from: accounts[1] })
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, newRegistry.address);
+        await newRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, newRegistry.address);
+        await converter.updateRegistry({ from: accounts[1] });
 
-        assert.equal(await converter.registry.call(), newRegistry.address)
-        assert.equal(await converter.prevRegistry.call(), contractRegistry.address)
+        assert.equal(await converter.registry.call(), newRegistry.address);
+        assert.equal(await converter.prevRegistry.call(), contractRegistry.address);
 
         // set the original registry back
-        await contractRegistry.registerAddress(contractRegistryId, contractRegistry.address)
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, contractRegistry.address);
     });
 
     it('should allow the owner to restore the previous registry and disable updates', async () => {
         let converter = await initConverter(accounts, false);
-        let contractRegistryId = await contractIds.CONTRACT_REGISTRY.call();
-        let newRegistry = await ContractRegistry.new()
+        let newRegistry = await ContractRegistry.new();
 
-        await contractRegistry.registerAddress(contractRegistryId, newRegistry.address)
-        await converter.updateRegistry({ from: accounts[1] })
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, newRegistry.address);
+        await newRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, newRegistry.address);
+        await converter.updateRegistry({ from: accounts[1] });
 
-        await converter.restoreRegistry({ from: accounts[0] })
+        await converter.restoreRegistry({ from: accounts[0] });
 
-        assert.equal(await converter.registry.call(), contractRegistry.address)
-        assert.equal(await converter.prevRegistry.call(), contractRegistry.address)
+        assert.equal(await converter.registry.call(), contractRegistry.address);
+        assert.equal(await converter.prevRegistry.call(), contractRegistry.address);
 
-        await utils.catchRevert(converter.updateRegistry({ from: accounts[1] }))
+        await converter.restrictRegistryUpdate(true, { from: accounts[0] });
+        await utils.catchRevert(converter.updateRegistry({ from: accounts[1] }));
 
-        await converter.updateRegistry({ from: accounts[0] })
-        assert.equal(await converter.registry.call(), newRegistry.address)
-        assert.equal(await converter.prevRegistry.call(), contractRegistry.address)
+        await converter.updateRegistry({ from: accounts[0] });
+        assert.equal(await converter.registry.call(), newRegistry.address);
+        assert.equal(await converter.prevRegistry.call(), contractRegistry.address);
 
         // re register address
-        await contractRegistry.registerAddress(contractRegistryId, contractRegistry.address)
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, contractRegistry.address);
     });
 
     it('verifies that getReturn returns the same amount as buy -> sell when converting between 2 reserves', async () => {
