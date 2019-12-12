@@ -6,7 +6,7 @@ import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/ISmartTokenController.sol';
 
 /**
-  * The BancorConverterRegistry maintains a list of all active converters in the Bancor Network.
+  * @dev The BancorConverterRegistry maintains a list of all active converters in the Bancor Network.
   *
   * Since converters can be upgraded and thus their address can change, the registry actually
   * keeps smart tokens internally and not the converters themselves.
