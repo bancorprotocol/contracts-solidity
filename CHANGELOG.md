@@ -1,8 +1,4 @@
-### 0.5.9 (2019-12-12)
-General
-* Updated docs
-
-### 0.5.8 (2019-12-12)
+### 0.5.8-9 (2019-12-12)
 General
 * Minor cleanups
 
