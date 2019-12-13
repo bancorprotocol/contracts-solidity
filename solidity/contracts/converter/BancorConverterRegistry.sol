@@ -5,23 +5,23 @@ import './interfaces/IBancorConverterRegistryData.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/ISmartTokenController.sol';
 
-/*
-    The BancorConverterRegistry maintains a list of all active converters in the Bancor Network.
-
-    Since converters can be upgraded and thus their address can change, the registry actually
-    keeps smart tokens internally and not the converters themselves.
-    The active converter for each smart token can be easily accessed by querying the smart token owner.
-
-    The registry exposes 3 differnet lists that can be accessed and iterated, based on the use-case of the caller:
-    - Smart tokens - can be used to get all the latest / historical data in the network
-    - Liquidity pools - can be used to get all liquidity pools for funding, liquidation etc.
-    - Convertible tokens - can be used to get all tokens that can be converted in the network (excluding pool
-      tokens), and for each one - all smart tokens that hold it in their reserves
-
-
-    The contract fires events whenever one of the primitives is added to or removed from the registry
-
-    The contract is upgradable.
+/**
+  * @dev The BancorConverterRegistry maintains a list of all active converters in the Bancor Network.
+  *
+  * Since converters can be upgraded and thus their address can change, the registry actually
+  * keeps smart tokens internally and not the converters themselves.
+  * The active converter for each smart token can be easily accessed by querying the smart token owner.
+  *
+  * The registry exposes 3 differnet lists that can be accessed and iterated, based on the use-case of the caller:
+  * - Smart tokens - can be used to get all the latest / historical data in the network
+  * - Liquidity pools - can be used to get all liquidity pools for funding, liquidation etc.
+  * - Convertible tokens - can be used to get all tokens that can be converted in the network (excluding pool
+  *   tokens), and for each one - all smart tokens that hold it in their reserves
+  *
+  *
+  * The contract fires events whenever one of the primitives is added to or removed from the registry
+  *
+  * The contract is upgradable.
 */
 contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryClient {
     /**

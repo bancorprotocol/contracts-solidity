@@ -2,16 +2,16 @@ pragma solidity 0.4.26;
 import '../utility/ContractRegistryClient.sol';
 import './interfaces/IBancorConverterRegistryData.sol';
 
-/*
-    The BancorConverterRegistryData contract is an integral part of the Bancor converter registry
-    as it serves as the database contract that holds all registry data.
-
-    The registry is separated into two different contracts for upgradability - the data contract
-    is harder to upgrade as it requires migrating all registry data into a new contract, while
-    the registry contract itself can be easily upgraded.
-
-    For that same reason, the data contract is simple and contains no logic beyond the basic data
-    access utilities that it exposes.
+/**
+  * @dev The BancorConverterRegistryData contract is an integral part of the Bancor converter registry
+  * as it serves as the database contract that holds all registry data.
+  *
+  * The registry is separated into two different contracts for upgradability - the data contract
+  * is harder to upgrade as it requires migrating all registry data into a new contract, while
+  * the registry contract itself can be easily upgraded.
+  *
+  * For that same reason, the data contract is simple and contains no logic beyond the basic data
+  * access utilities that it exposes.
 */
 contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRegistryClient {
     struct Item {

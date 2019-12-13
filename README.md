@@ -40,138 +40,6 @@ The terms “reserves” and “connectors” have the same meaning throughout B
 
 Bancor is a work in progress. Make sure you understand the risks before using it.
 
-# The Bancor Standards
-
-Bancor protocol is implemented using multiple contracts. The main contracts are SmartToken and BancorConverter.
-BancorConverter is responsible for converting between a token and its reserves.
-SmartToken represents a converter aware ERC-20 compliant token.
-
-# The Smart Token Standard
-
-## Motivation
-
-Those will allow creating a Bancor compliant token while keeping dependencies at a minimum.
-In addition, it allows an owning contract to extend its functionality by giving the owner full control.
-
-## Specification
-
-### SmartToken
-
-First and foremost, a Smart Token is also an ERC-20 compliant token.
-As such, it implements both the standard token methods and the standard token events.
-
-### Methods
-
-Note that these methods can only be executed by the token owner.
-
-**issue**
-```solidity
-function issue(address _to, uint256 _amount)
-```
-Increases the token supply and sends the new tokens to an account.
-<br>
-<br>
-<br>
-**destroy**
-```solidity
-function destroy(address _from, uint256 _amount)
-```
-Removes tokens from an account and decreases the token supply.
-<br>
-<br>
-<br>
-**disableTransfers**
-```solidity
-function disableTransfers(bool _disable)
-```
-Disables transfer/transferFrom functionality.
-<br>
-<br>
-<br>
-
-### Events
-
-**NewSmartToken**
-```solidity
-event NewSmartToken(address _token)
-```
-Triggered when a smart token is deployed.
-<br>
-<br>
-<br>
-**Issuance**
-```solidity
-event Issuance(uint256 _amount)
-```
-Triggered when the total supply is increased.
-<br>
-<br>
-<br>
-**Destruction**
-```solidity
-event Destruction(uint256 _amount)
-```
-Triggered when the total supply is decreased.
-<br>
-<br>
-<br>
-
-# The Bancor Converter Standard
-
-The following section describes standard functions a bancor converter can implement.
-
-## Motivation
-
-Those will allow dapps and wallets to buy and sell the token.
-
-The most important here is `convert`.
-
-## Specification
-
-### Methods
-
-**reserveTokenCount**
-```solidity
-function reserveTokenCount() public constant returns (uint16 count)
-```
-Gets the number of reserve tokens defined for the token.
-<br>
-<br>
-<br>
-**reserveTokens**
-```solidity
-function reserveTokens() public constant returns (address[] reserveTokens)
-```
-Gets an array of the reserve token contract addresses.
-<br>
-<br>
-<br>
-**reserves**
-```solidity
-function reserves(address _reserveToken) public constant
-```
-Gets the reserve token details.
-<br>
-<br>
-<br>
-**convert**
-```solidity
-function convert(address _fromToken, address _toToken, uint256 _amount, uint256 _minReturn)
-```
-converts a specific amount of _fromToken to _toToken
-The conversion will only take place if it returns a value greater or equal to `_minReturn`.
-<br>
-<br>
-<br>
-
-### Events
-
-**Conversion**
-```solidity
-event Conversion(address indexed _fromToken, address indexed _toToken, address indexed _trader, uint256 _amount, uint256 _return, uint256 _currentPriceN, uint256 _currentPriceD);
-```
-Triggered when a conversion between one of the convertible tokens takes place.
-
 ## Testing
 
 ### Prerequisites
@@ -192,7 +60,7 @@ Triggered when a conversion between one of the convertible tokens takes place.
   * `npm test 2` (full coverage)
 * [Verifying the BancorFormula contract](./solidity/python/README.md)
 
-### [Operational](./solidity/utils/README.md)
+### [Utilities](./solidity/utils/README.md)
 
 ## Collaborators
 
