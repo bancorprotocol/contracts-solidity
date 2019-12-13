@@ -11,11 +11,11 @@
   },
   "scripts": {
     "install": "node scripts/fix-modules.js",
-    "flatten": "node scripts/flatten.js",
     "build": "node scripts/rebuild-all.js",
     "test": "node scripts/run-tests.js",
     "deploy": "node scripts/deploy-one.js",
     "verify": "node scripts/verify-all.js",
+    "flatten": "node scripts/flatten.js",
     "snyk-protect": "snyk protect",
     "prepare": "npm run snyk-protect"
   },
