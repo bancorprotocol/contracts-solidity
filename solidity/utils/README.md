@@ -12,6 +12,24 @@ node retrieve_contract_version.js
     Designated contract address
 ```
 
+### Verify Network Path Finder
+
+```bash
+node verify_network_path_finder.js
+    Ethereum node address
+    BancorNetworkPathFinder contract address
+```
+
+### Migrate Converter Registry
+
+```bash
+node migrate_converter_registry.js
+    Ethereum node address
+    Account private key
+    Old BancorConverterRegistry contract address
+    New BancorConverterRegistry contract address
+```
+
 ### Deploy Network Emulation
 
 ```bash
