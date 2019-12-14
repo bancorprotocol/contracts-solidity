@@ -82,7 +82,7 @@ async function run() {
         for (let j = 0; j < convertibleTokens.length; j++) {
             const expected = await get(web3, convertibleTokens[i], convertibleTokens[j], anchorToken, registry);
             const actual = await rpc(finder.methods.get(convertibleTokens[i], convertibleTokens[j]));
-            console.log(`path from ${i} to ${j} (out of ${tokenCount}): ${actual}`);
+            console.log(`path from ${i} to ${j} (out of ${convertibleTokens.length}): ${actual}`);
             assert.equal(`${actual}`, `${expected}`);
         }
     }
