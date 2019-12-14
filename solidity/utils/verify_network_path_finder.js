@@ -16,20 +16,20 @@ async function get(web3, sourceToken, targetToken, anchorToken, registry) {
     return getShortestPath(sourcePath, targetPath);
 }
 
-async function getPath(web3, token, anchorToken, registry) {
+async function getPath(web3, token, anchorToken, registryContract) {
     if (token == anchorToken)
         return [token];
 
-    const isSmartToken = await rpc(registry.methods.isSmartToken(token));
-    const smartTokens = isSmartToken ? [token] : await rpc(registry.methods.getConvertibleTokenSmartTokens(token));
+    const isSmartToken = await rpc(registryContract.methods.isSmartToken(token));
+    const smartTokens = isSmartToken ? [token] : await rpc(registryContract.methods.getConvertibleTokenSmartTokens(token));
     for (const smartToken of smartTokens) {
-        const smartToken = new web3.eth.Contract(SMART_TOKEN_ABI, smartToken);
-        const converter = new web3.eth.Contract(CONVERTER_ABI, await rpc(smartToken.methods.owner()));
-        const connectorTokenCount = await rpc(converter.methods.connectorTokenCount());
+        const smartTokenContract = new web3.eth.Contract(SMART_TOKEN_ABI, smartToken);
+        const converterContract = new web3.eth.Contract(CONVERTER_ABI, await rpc(smartTokenContract.methods.owner()));
+        const connectorTokenCount = await rpc(converterContract.methods.connectorTokenCount());
         for (let i = 0; i < connectorTokenCount; i++) {
-            const connectorToken = await rpc(converter.methods.connectorTokens(i));
+            const connectorToken = await rpc(converterContract.methods.connectorTokens(i));
             if (connectorToken != token) {
-                const path = await getPath(web3, connectorToken, anchorToken, registry);
+                const path = await getPath(web3, connectorToken, anchorToken, registryContract);
                 if (path.length > 0)
                     return [token, smartToken, ...path];
             }
@@ -74,7 +74,7 @@ async function rpc(func) {
 async function run() {
     const web3 = new Web3(NODE_ADDRESS);
     const finder = new web3.eth.Contract(FINDER_ABI, FINDER_ADDRESS);
-    const registry = new web3.eth.Contract(REGISTRY_ABI, await rpc(finder.methods.anchorToken());
+    const registry = new web3.eth.Contract(REGISTRY_ABI, await rpc(finder.methods.anchorToken()));
     const anchorToken = await rpc(finder.methods.anchorToken());
 
     const convertibleTokens = await rpc(registry.methods.getConvertibleTokens());
