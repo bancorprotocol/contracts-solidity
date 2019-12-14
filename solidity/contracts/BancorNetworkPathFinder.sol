@@ -15,7 +15,7 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
     /**
       * @dev initializes a new BancorNetworkPathFinder instance
       * 
-      * @param _registry    address of a contract registry contract
+      * @param _registry address of a contract registry contract
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
         anchorToken = addressOf(BNT_TOKEN);
@@ -63,7 +63,7 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
     /**
       * @dev retrieves the conversion path between a given token and the anchor token
       * 
-      * @param _token   address of the token
+      * @param _token address of the token
       * 
       * @return path from the input token to the anchor token
     */
@@ -81,9 +81,9 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
             IBancorConverter converter = IBancorConverter(ISmartToken(smartTokens[n]).owner());
             uint256 connectorTokenCount = converter.connectorTokenCount();
             for (uint256 i = 0; i < connectorTokenCount; i++) {
-                address token = converter.connectorTokens(i);
-                if (token != _token) {
-                    address[] memory path = getPath(token);
+                address connectorToken = converter.connectorTokens(i);
+                if (connectorToken != _token) {
+                    address[] memory path = getPath(connectorToken);
                     if (path.length > 0)
                         return getExtendedArray(_token, smartTokens[n], path);
                 }
@@ -94,41 +94,10 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
     }
 
     /**
-      * @dev creates a new array containing a single item
-      * 
-      * @param _item    item
-      * 
-      * @return initial array
-    */
-    function getInitialArray(address _item) private pure returns (address[] memory) {
-        address[] memory array = new address[](1);
-        array[0] = _item;
-        return array;
-    }
-
-    /**
-      * @dev prepends two items to the beginning of an array
-      * 
-      * @param _item0   first item
-      * @param _item1   second item
-      * @param _array   initial array
-      * 
-      * @return extended array
-    */
-    function getExtendedArray(address _item0, address _item1, address[] memory _array) private pure returns (address[] memory) {
-        address[] memory array = new address[](2 + _array.length);
-        array[0] = _item0;
-        array[1] = _item1;
-        for (uint256 i = 0; i < _array.length; i++)
-            array[2 + i] = _array[i];
-        return array;
-    }
-
-    /**
       * @dev merges two paths with a common suffix into one
       * 
-      * @param _sourcePath  address of the source path
-      * @param _targetPath  address of the target path
+      * @param _sourcePath address of the source path
+      * @param _targetPath address of the target path
       * 
       * @return merged path
     */
@@ -150,5 +119,36 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
         }
 
         return new address[](0);
+    }
+
+    /**
+      * @dev creates a new array containing a single item
+      * 
+      * @param _item item
+      * 
+      * @return initial array
+    */
+    function getInitialArray(address _item) private pure returns (address[] memory) {
+        address[] memory array = new address[](1);
+        array[0] = _item;
+        return array;
+    }
+
+    /**
+      * @dev prepends two items to the beginning of an array
+      * 
+      * @param _item0 first item
+      * @param _item1 second item
+      * @param _array initial array
+      * 
+      * @return extended array
+    */
+    function getExtendedArray(address _item0, address _item1, address[] memory _array) private pure returns (address[] memory) {
+        address[] memory array = new address[](2 + _array.length);
+        array[0] = _item0;
+        array[1] = _item1;
+        for (uint256 i = 0; i < _array.length; i++)
+            array[2 + i] = _array[i];
+        return array;
     }
 }
