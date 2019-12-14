@@ -20,8 +20,10 @@ async function getPath(web3, token, anchorToken, registry) {
     if (token == anchorToken)
         return [token];
 
-    if (await rpc(registry.methods.isSmartToken(token))) {
-        const smartToken = new web3.eth.Contract(SMART_TOKEN_ABI, token);
+    const isSmartToken = await rpc(registry.methods.isSmartToken(token));
+    const smartTokens = isSmartToken ? [token] : await rpc(registry.methods.getConvertibleTokenSmartTokens(token));
+    for (const smartToken of smartTokens) {
+        const smartToken = new web3.eth.Contract(SMART_TOKEN_ABI, smartToken);
         const converter = new web3.eth.Contract(CONVERTER_ABI, await rpc(smartToken.methods.owner()));
         const connectorTokenCount = await rpc(converter.methods.connectorTokenCount());
         for (let i = 0; i < connectorTokenCount; i++) {
@@ -29,7 +31,7 @@ async function getPath(web3, token, anchorToken, registry) {
             if (connectorToken != token) {
                 const path = await getPath(web3, connectorToken, anchorToken, registry);
                 if (path.length > 0)
-                    return [token, token, ...path];
+                    return [token, smartToken, ...path];
             }
         }
     }

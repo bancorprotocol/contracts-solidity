@@ -22,15 +22,17 @@ async function getPath(token, anchorToken, converterRegistry) {
     if (token == anchorToken)
         return [token];
 
-    if (await converterRegistry.isSmartToken(token)) {
-        const converter = BancorConverter.at(await SmartToken.at(token).owner());
+    const isSmartToken = await converterRegistry.isSmartToken(token);
+    const smartTokens = isSmartToken ? [token] : await converterRegistry.getConvertibleTokenSmartTokens(token);
+    for (const smartToken of smartTokens) {
+        const converter = BancorConverter.at(await SmartToken.at(smartToken).owner());
         const connectorTokenCount = await converter.connectorTokenCount();
         for (let i = 0; i < connectorTokenCount; i++) {
             const connectorToken = await converter.connectorTokens(i);
             if (connectorToken != token) {
                 const path = await getPath(connectorToken, anchorToken, converterRegistry);
                 if (path.length > 0)
-                    return [token, token, ...path];
+                    return [token, smartToken, ...path];
             }
         }
     }

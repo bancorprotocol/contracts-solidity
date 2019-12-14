@@ -68,21 +68,24 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
       * @return path from the input token to the anchor token
     */
     function getPath(address _token) private view returns (address[] memory) {
-        if (_token == anchorToken) {
-            address[] memory initialPath = new address[](1);
-            initialPath[0] = _token;
-            return initialPath;
-        }
+        if (_token == anchorToken)
+            return getInitialArray(_token);
 
-        if (IBancorConverterRegistry(converterRegistry).isSmartToken(_token)) {
-            IBancorConverter converter = IBancorConverter(ISmartToken(_token).owner());
+        address[] memory smartTokens;
+        if (IBancorConverterRegistry(converterRegistry).isSmartToken(_token))
+            smartTokens = getInitialArray(_token);
+        else
+            smartTokens = IBancorConverterRegistry(converterRegistry).getConvertibleTokenSmartTokens(_token);
+
+        for (uint256 n = 0; n < smartTokens.length; n++) {
+            IBancorConverter converter = IBancorConverter(ISmartToken(smartTokens[n]).owner());
             uint256 connectorTokenCount = converter.connectorTokenCount();
             for (uint256 i = 0; i < connectorTokenCount; i++) {
                 address token = converter.connectorTokens(i);
                 if (token != _token) {
                     address[] memory path = getPath(token);
                     if (path.length > 0)
-                        return getNewPath(path, _token, _token);
+                        return getExtendedArray(_token, smartTokens[n], path);
                 }
             }
         }
@@ -91,20 +94,34 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
     }
 
     /**
-      * @dev prepends two tokens to the beginning of a given path
+      * @dev creates a new array containing a single item
       * 
-      * @param _token0  address of the 1st token
-      * @param _token1  address of the 2nd token
+      * @param _item    item
       * 
-      * @return extended path
+      * @return initial array
     */
-    function getNewPath(address[] memory _path, address _token0, address _token1) private pure returns (address[] memory) {
-        address[] memory newPath = new address[](2 + _path.length);
-        newPath[0] = _token0;
-        newPath[1] = _token1;
-        for (uint256 k = 0; k < _path.length; k++)
-            newPath[2 + k] = _path[k];
-        return newPath;
+    function getInitialArray(address _item) private pure returns (address[] memory) {
+        address[] memory array = new address[](1);
+        array[0] = _item;
+        return array;
+    }
+
+    /**
+      * @dev prepends two items to the beginning of an array
+      * 
+      * @param _item0   first item
+      * @param _item1   second item
+      * @param _array   initial array
+      * 
+      * @return extended array
+    */
+    function getExtendedArray(address _item0, address _item1, address[] memory _array) private pure returns (address[] memory) {
+        address[] memory array = new address[](2 + _array.length);
+        array[0] = _item0;
+        array[1] = _item1;
+        for (uint256 i = 0; i < _array.length; i++)
+            array[2 + i] = _array[i];
+        return array;
     }
 
     /**
