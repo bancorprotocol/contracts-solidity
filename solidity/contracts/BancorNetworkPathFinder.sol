@@ -18,30 +18,39 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
       * @param _registry address of a contract registry contract
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
-        anchorToken = addressOf(BNT_TOKEN);
-        anchorToken = addressOf(BANCOR_CONVERTER_REGISTRY);
+        (anchorToken, converterRegistry) = getState();
     }
 
     /**
-      * @dev updates the anchor token to point to the most recent BNT token deployed
+      * @dev retrieves the anchor-token and the converter-registry
       * 
-      * Note that this function needs to be called only when the BNT token has been redeployed
+      * @return the anchor-token and the converter-registry
     */
-    function updateAnchorToken() external {
-        address temp = addressOf(BNT_TOKEN);
-        require(anchorToken != temp);
-        anchorToken = temp;
+    function getState() public view returns (address, address) {
+        return (addressOf(ETH_TOKEN), addressOf(BANCOR_CONVERTER_REGISTRY));
     }
 
     /**
-      * @dev updates the converter registry to point to the most recent converter registry deployed
+      * @dev checks if both the anchor-token and the converter-registry are updated
       * 
-      * Note that this function needs to be called only when the converter registry has been redeployed
+      * @param _anchorToken the registered anchor-token
+      * @param _converterRegistry the registered converter-registry
+      * 
+      * @return true if both the anchor-token and the converter-registry are updated; false otherwise
     */
-    function updateConverterRegistry() external {
-        address temp = addressOf(BANCOR_CONVERTER_REGISTRY);
-        require(converterRegistry != temp);
-        converterRegistry = temp;
+    function isUpdated(address _anchorToken, address _converterRegistry) public view returns (bool) {
+        return _anchorToken == anchorToken && _converterRegistry == converterRegistry;
+    }
+
+    /**
+      * @dev updates the anchor-token and/or the converter-registry
+      * 
+      * Note that this function needs to be called only when either one of them has been redeployed
+    */
+    function updateState() public {
+        (address _anchorToken, address _converterRegistry) = getState();
+        require(!isUpdated(_anchorToken, _converterRegistry));
+        (anchorToken, converterRegistry) = (_anchorToken, _converterRegistry);
     }
 
     /**
@@ -53,8 +62,8 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
       * @return path from the source token to the target token
     */
     function get(address _sourceToken, address _targetToken) public view returns (address[] memory) {
-        assert(anchorToken == addressOf(BNT_TOKEN));
-        assert(converterRegistry == addressOf(BANCOR_CONVERTER_REGISTRY));
+        (address _anchorToken, address _converterRegistry) = getState();
+        require(isUpdated(_anchorToken, _converterRegistry));
         address[] memory sourcePath = getPath(_sourceToken);
         address[] memory targetPath = getPath(_targetToken);
         return getShortestPath(sourcePath, targetPath);

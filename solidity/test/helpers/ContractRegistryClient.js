@@ -9,5 +9,6 @@ module.exports.BANCOR_CONVERTER_UPGRADER       = web3.fromAscii("BancorConverter
 module.exports.BANCOR_CONVERTER_REGISTRY       = web3.fromAscii("BancorConverterRegistry");
 module.exports.BANCOR_CONVERTER_REGISTRY_DATA  = web3.fromAscii("BancorConverterRegistryData");
 module.exports.BNT_TOKEN                       = web3.fromAscii("BNTToken");
+module.exports.ETH_TOKEN                       = web3.fromAscii("ETHToken");
 module.exports.BANCOR_X                        = web3.fromAscii("BancorX");
 module.exports.BANCOR_X_UPGRADER               = web3.fromAscii("BancorXUpgrader");

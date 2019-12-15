@@ -170,7 +170,7 @@ async function run() {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistry"    ), bancorConverterRegistry    ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistryData"), bancorConverterRegistryData._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorGasPriceLimit"        ), bancorGasPriceLimit        ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("EtherToken"                 ), etherToken                 ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ETHToken"                   ), etherToken                 ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"                   ), smartToken1                ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTConverter"               ), bancorConverter1           ._address));
     await execute(etherToken .methods.transfer(bancorConverter1._address, converter1Params.reserve1));
@@ -192,8 +192,7 @@ async function run() {
     await execute(bancorConverterRegistry.methods.addConverter(bancorConverter3._address));
     await execute(bancorConverterRegistry.methods.addConverter(bancorConverter4._address));
     await execute(bancorNetwork.methods.registerEtherToken(etherToken._address, true));
-    await execute(bancorNetworkPathFinder.methods.updateConverterRegistry());
-    await execute(bancorNetworkPathFinder.methods.updateAnchorToken());
+    await execute(bancorNetworkPathFinder.methods.updateState());
 
     if (web3.currentProvider.constructor.name == "WebsocketProvider")
         web3.currentProvider.connection.close();

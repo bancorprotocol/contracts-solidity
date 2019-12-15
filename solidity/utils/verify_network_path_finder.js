@@ -71,6 +71,17 @@ async function rpc(func) {
     }
 }
 
+async function symbol(token) {
+    const contract = new web3.eth.Contract(SMART_TOKEN_ABI, token);
+    return await rpc(contract.methods.symbol());
+}
+
+function print(convertibleTokens, i, j, sourceSymbol, targetSymbol, path) {
+    const total = convertibleTokens.length ** 2;
+    const count = convertibleTokens.length * i + j;
+    console.log(`path ${count} out of ${total} (from ${sourceSymbol} to ${targetSymbol}): ${path}`);
+}
+
 async function run() {
     const web3 = new Web3(NODE_ADDRESS);
     const finder = new web3.eth.Contract(FINDER_ABI, FINDER_ADDRESS);
@@ -79,10 +90,13 @@ async function run() {
 
     const convertibleTokens = await rpc(registry.methods.getConvertibleTokens());
     for (let i = 0; i < convertibleTokens.length; i++) {
+        const sourceSymbol = await symbol(convertibleTokens[i]);
         for (let j = 0; j < convertibleTokens.length; j++) {
+            const targetSymbol = await symbol(convertibleTokens[j]);
             const expected = await get(web3, convertibleTokens[i], convertibleTokens[j], anchorToken, registry);
             const actual = await rpc(finder.methods.get(convertibleTokens[i], convertibleTokens[j]));
-            console.log(`path from ${i} to ${j} (out of ${convertibleTokens.length}): ${actual}`);
+            const path = await Promise.all(actual.map(token => symbol(token)));
+            print(convertibleTokens, i, j, sourceSymbol, targetSymbol, path);
             assert.equal(`${actual}`, `${expected}`);
         }
     }

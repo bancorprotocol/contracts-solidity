@@ -12,6 +12,13 @@ const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
 const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
 
+async function print(sourceToken, targetToken, path) {
+    const sourceSymbol = await SmartToken.at(sourceToken).symbol();
+    const targetSymbol = await SmartToken.at(targetToken).symbol();
+    const symbols = await Promise.all(path.map(token => SmartToken.at(token).symbol()));
+    console.log(`path from ${sourceSymbol} to ${targetSymbol} = ${symbols}`);
+}
+
 async function get(sourceToken, targetToken, anchorToken, converterRegistry) {
     const sourcePath = await getPath(sourceToken, anchorToken, converterRegistry);
     const targetPath = await getPath(targetToken, anchorToken, converterRegistry);
@@ -84,6 +91,7 @@ contract('BancorNetworkPathFinder', accounts => {
     let smartTokenC;
     let smartTokenD;
     let smartTokenE;
+    let anchorToken;
     let contractRegistry
     let converterRegistry;
     let converterRegistryData;
@@ -104,6 +112,7 @@ contract('BancorNetworkPathFinder', accounts => {
         smartTokenC = await SmartToken.new('TokenC', 'TKNC', 18);
         smartTokenD = await SmartToken.new('TokenD', 'TKND', 18);
         smartTokenE = await SmartToken.new('TokenE', 'TKNE', 18);
+        anchorToken = etherToken.address;
 
         contractRegistry = await ContractRegistry.new();
 
@@ -119,7 +128,7 @@ contract('BancorNetworkPathFinder', accounts => {
         converter6 = await BancorConverter.new(smartToken6.address, contractRegistry.address, 0, smartTokenC.address, 500000);
         converter7 = await BancorConverter.new(smartToken7.address, contractRegistry.address, 0, smartTokenE.address, 500000);
 
-        await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN                     , smartToken1          .address);
+        await contractRegistry.registerAddress(ContractRegistryClient.ETH_TOKEN                     , anchorToken                  );
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
@@ -184,28 +193,19 @@ contract('BancorNetworkPathFinder', accounts => {
         await converterRegistry.addConverter(converter7.address);
     });
 
-    it('should abort with an error if the anchor-token is not yet updated', async () => {
-        await utils.catchInvalidOpcode(pathFinder.get(smartToken2.address, smartToken3.address));
+    it('should abort with an error if the state is not yet updated', async () => {
+        await utils.catchRevert(pathFinder.get(smartToken2.address, smartToken3.address));
     });
 
-    it('should abort with an error if the anchor-token is already updated', async () => {
-        await pathFinder.updateAnchorToken();
-        await utils.catchRevert(pathFinder.updateAnchorToken());
-    });
-
-    it('should abort with an error if the converter-registry is not yet updated', async () => {
-        await utils.catchInvalidOpcode(pathFinder.get(smartToken2.address, smartToken3.address));
-    });
-
-    it('should abort with an error if the converter-registry is already updated', async () => {
-        await pathFinder.updateConverterRegistry();
-        await utils.catchRevert(pathFinder.updateConverterRegistry());
+    it('should abort with an error if the state is already updated', async () => {
+        await pathFinder.updateState();
+        await utils.catchRevert(pathFinder.updateState());
     });
 
     it('should return an empty path if the source-token has no path to the anchor-token', async () => {
         const sourceToken = utils.zeroAddress;
         const targetToken = smartToken1.address;
-        const expected = await get(sourceToken, targetToken, smartToken1.address, converterRegistry);
+        const expected = await get(sourceToken, targetToken, anchorToken, converterRegistry);
         const actual = await pathFinder.get(sourceToken, targetToken);
         assert.equal(actual + expected, []);
     });
@@ -213,7 +213,7 @@ contract('BancorNetworkPathFinder', accounts => {
     it('should return an empty path if the target-token has no path to the anchor-token', async () => {
         const sourceToken = smartToken1.address;
         const targetToken = utils.zeroAddress;
-        const expected = await get(sourceToken, targetToken, smartToken1.address, converterRegistry);
+        const expected = await get(sourceToken, targetToken, anchorToken, converterRegistry);
         const actual = await pathFinder.get(sourceToken, targetToken);
         assert.equal(actual + expected, []);
     });
@@ -223,9 +223,10 @@ contract('BancorNetworkPathFinder', accounts => {
             it(`from smartToken${i} to smartToken${j}`, async () => {
                 const sourceToken = eval(`smartToken${i}.address`);
                 const targetToken = eval(`smartToken${j}.address`);
-                const expected = await get(sourceToken, targetToken, smartToken1.address, converterRegistry);
+                const expected = await get(sourceToken, targetToken, anchorToken, converterRegistry);
                 const actual = await pathFinder.get(sourceToken, targetToken);
                 assert.equal(`${actual}`, `${expected}`);
+                print(sourceToken, targetToken, actual);
             });
         }
     }
