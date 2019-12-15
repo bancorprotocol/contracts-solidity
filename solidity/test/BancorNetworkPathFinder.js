@@ -218,12 +218,12 @@ contract('BancorNetworkPathFinder', accounts => {
         assert.equal(actual + expected, []);
     });
 
-    const varNames = ["etherToken", ..."123456789ABCDE".split("").map(c => "smartToken" + c)];
-    for (const sourceVarName of varNames) {
-        for (const targetVarName of varNames) {
-            it(`from ${sourceVarName} to ${targetVarName}`, async () => {
-                const sourceToken = eval(`${sourceVarName}.address`);
-                const targetToken = eval(`${targetVarName}.address`);
+    const variables = ["etherToken", ..."123456789ABCDE".split("").map(c => "smartToken" + c)];
+    for (const sourceVariable of variables) {
+        for (const targetVariable of variables) {
+            it(`from ${sourceVariable} to ${targetVariable}`, async () => {
+                const sourceToken = eval(`${sourceVariable}.address`);
+                const targetToken = eval(`${targetVariable}.address`);
                 const expected = await get(sourceToken, targetToken, anchorToken, converterRegistry);
                 const actual = await pathFinder.get(sourceToken, targetToken);
                 assert.equal(`${actual}`, `${expected}`);
