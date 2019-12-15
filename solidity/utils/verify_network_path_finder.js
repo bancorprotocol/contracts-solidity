@@ -71,9 +71,28 @@ async function rpc(func) {
     }
 }
 
-async function symbol(token) {
-    const contract = new web3.eth.Contract(SMART_TOKEN_ABI, token);
-    return await rpc(contract.methods.symbol());
+async function symbol(web3, token) {
+    for (const type of ["string", "bytes32"]) {
+        try {
+            const contract = new web3.eth.Contract([{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":type}],"payable":false,"stateMutability":"view","type":"function"}], token);
+            const symbol = await rpc(contract.methods.symbol());
+            if (type.startsWith("bytes")) {
+                const list = [];
+                for (let i = 2; i < symbol.length; i += 2) {
+                    const num = Number("0x" + symbol.slice(i, i + 2));
+                    if (32 <= num && num <= 126)
+                        list.push(num);
+                    else
+                        break;
+                }
+                return String.fromCharCode(...list);
+            }
+            return symbol;
+        }
+        catch (error) {
+        }
+    }
+    return token;
 }
 
 function print(convertibleTokens, i, j, sourceSymbol, targetSymbol, path) {
@@ -91,12 +110,12 @@ async function run() {
     const convertibleTokens = await rpc(registry.methods.getConvertibleTokens());
 
     for (let i = 0; i < convertibleTokens.length; i++) {
-        const sourceSymbol = await symbol(convertibleTokens[i]);
+        const sourceSymbol = await symbol(web3, convertibleTokens[i]);
         for (let j = 0; j < convertibleTokens.length; j++) {
-            const targetSymbol = await symbol(convertibleTokens[j]);
+            const targetSymbol = await symbol(web3, convertibleTokens[j]);
             const expected = await get(web3, convertibleTokens[i], convertibleTokens[j], anchorToken, registry);
             const actual = await rpc(finder.methods.get(convertibleTokens[i], convertibleTokens[j]));
-            const path = await Promise.all(actual.map(token => symbol(token)));
+            const path = await Promise.all(actual.map(token => symbol(web3, token)));
             print(convertibleTokens, i, j, sourceSymbol, targetSymbol, path);
             assert.equal(`${actual}`, `${expected}`);
         }
