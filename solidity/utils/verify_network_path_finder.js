@@ -86,9 +86,10 @@ async function run() {
     const web3 = new Web3(NODE_ADDRESS);
     const finder = new web3.eth.Contract(FINDER_ABI, FINDER_ADDRESS);
     const registry = new web3.eth.Contract(REGISTRY_ABI, await rpc(finder.methods.converterRegistry()));
-    const anchorToken = await rpc(finder.methods.anchorToken());
 
+    const anchorToken = await rpc(finder.methods.anchorToken());
     const convertibleTokens = await rpc(registry.methods.getConvertibleTokens());
+
     for (let i = 0; i < convertibleTokens.length; i++) {
         const sourceSymbol = await symbol(convertibleTokens[i]);
         for (let j = 0; j < convertibleTokens.length; j++) {
