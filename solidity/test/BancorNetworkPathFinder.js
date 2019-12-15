@@ -16,7 +16,7 @@ async function print(sourceToken, targetToken, path) {
     const sourceSymbol = await SmartToken.at(sourceToken).symbol();
     const targetSymbol = await SmartToken.at(targetToken).symbol();
     const symbols = await Promise.all(path.map(token => SmartToken.at(token).symbol()));
-    console.log(`path from ${sourceSymbol} to ${targetSymbol} = ${symbols}`);
+    console.log(`path from ${sourceSymbol} to ${targetSymbol} = [${symbols}]`);
 }
 
 async function get(sourceToken, targetToken, anchorToken, converterRegistry) {
@@ -218,15 +218,16 @@ contract('BancorNetworkPathFinder', accounts => {
         assert.equal(actual + expected, []);
     });
 
-    for (let i = 1; i <= 7; i++) {
-        for (let j = 1; j <= 7; j++) {
-            it(`from smartToken${i} to smartToken${j}`, async () => {
-                const sourceToken = eval(`smartToken${i}.address`);
-                const targetToken = eval(`smartToken${j}.address`);
+    const varNames = ["etherToken", ..."123456789ABCDE".split("").map(c => "smartToken" + c)];
+    for (const sourceVarName of varNames) {
+        for (const targetVarName of varNames) {
+            it(`from ${sourceVarName} to ${targetVarName}`, async () => {
+                const sourceToken = eval(`${sourceVarName}.address`);
+                const targetToken = eval(`${targetVarName}.address`);
                 const expected = await get(sourceToken, targetToken, anchorToken, converterRegistry);
                 const actual = await pathFinder.get(sourceToken, targetToken);
                 assert.equal(`${actual}`, `${expected}`);
-                print(sourceToken, targetToken, actual);
+                await print(sourceToken, targetToken, actual);
             });
         }
     }
