@@ -53,7 +53,17 @@ function getShortestPath(sourcePath, targetPath) {
             path.push(sourcePath[n]);
         for (let n = j; n >= 0; n--)
             path.push(targetPath[n]);
-        return path;
+
+        let length = 0;
+        for (let p = 0; p < path.length; p += 1) {
+            for (let q = p + 2; q < path.length - p % 2; q += 2) {
+                if (path[p] == path[q])
+                    p = q;
+            }
+            path[length++] = path[p];
+        }
+
+        return path.slice(0, length);
     }
 
     return [];
