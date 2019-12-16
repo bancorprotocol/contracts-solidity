@@ -310,17 +310,17 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
             reserveRatios[i] = connectors(_converter, reserveToken);
         }
 
-        return getIdenticalLiquidityPool(reserveTokens, reserveRatios) == IBancorConverter(0);
+        return getLiquidityPoolByReserveDetails(reserveTokens, reserveRatios) == IBancorConverter(0);
     }
 
     /**
-      * @dev searches for a liquidity pool with an identical set of reserve tokens and reserve ratios
+      * @dev searches for a liquidity pool with specific reserve details
       * 
       * @param _reserveTokens   reserve tokens
       * @param _reserveRatios   reserve ratios
-      * @return the converter of an identical liquidity pool, or zero if non such liquidity pool exists
+      * @return the converter of the liquidity pool, or zero if no such liquidity pool exists
     */
-    function getIdenticalLiquidityPool(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (IBancorConverter) {
+    function getLiquidityPoolByReserveDetails(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (IBancorConverter) {
         if (_reserveTokens.length == _reserveRatios.length && _reserveTokens.length > 1) {
             address[] memory convertibleTokenSmartTokens = getIdenticalLiquidityPoolCandidateSmartTokens(_reserveTokens);
             for (uint i = 0; i < convertibleTokenSmartTokens.length; i++) {
