@@ -49,8 +49,8 @@ function getShortestPath(sourcePath, targetPath) {
         }
 
         const path = [];
-        for (let n = 0; n <= i + 1; n++)
-            path.push(sourcePath[n]);
+        for (let m = 0; m <= i + 1; m++)
+            path.push(sourcePath[m]);
         for (let n = j; n >= 0; n--)
             path.push(targetPath[n]);
 
