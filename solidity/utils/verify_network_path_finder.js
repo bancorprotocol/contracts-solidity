@@ -124,7 +124,7 @@ async function run() {
         for (let j = 0; j < convertibleTokens.length; j++) {
             const targetSymbol = await symbol(web3, convertibleTokens[j]);
             const expected = await get(web3, convertibleTokens[i], convertibleTokens[j], anchorToken, registry);
-            const actual = await rpc(finder.methods.get(convertibleTokens[i], convertibleTokens[j]));
+            const actual = await rpc(finder.methods.generatePath(convertibleTokens[i], convertibleTokens[j]));
             const path = await Promise.all(actual.map(token => symbol(web3, token)));
             print(convertibleTokens, i, j, sourceSymbol, targetSymbol, path);
             assert.equal(`${actual}`, `${expected}`);
