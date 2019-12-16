@@ -124,7 +124,17 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
                 path[m] = _sourcePath[m];
             for (uint256 n = j; n > 0; n--)
                 path[path.length - n] = _targetPath[n - 1];
-            return path;
+
+            uint256 length = 0;
+            for (uint256 p = 0; p < path.length; p += 1) {
+                for (uint256 q = p + 2; q < path.length - p % 2; q += 2) {
+                    if (path[p] == path[q])
+                        p = q;
+                }
+                path[length++] = path[p];
+            }
+
+            return getPartialArray(path, length);
         }
 
         return new address[](0);
@@ -158,6 +168,21 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
         array[1] = _item1;
         for (uint256 i = 0; i < _array.length; i++)
             array[2 + i] = _array[i];
+        return array;
+    }
+
+    /**
+      * @dev extracts the prefix of a given array
+      * 
+      * @param _array given array
+      * @param _length prefix length
+      * 
+      * @return partial array
+    */
+    function getPartialArray(address[] memory _array, uint256 _length) private pure returns (address[] memory) {
+        address[] memory array = new address[](_length);
+        for (uint256 i = 0; i < _length; i++)
+            array[i] = _array[i];
         return array;
     }
 }
