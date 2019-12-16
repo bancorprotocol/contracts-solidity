@@ -134,6 +134,16 @@ contract('BancorConverterRegistry', function(accounts) {
         await test(converterRegistry.addConverter, converter7, 'Added');
     });
 
+    it('function getIdenticalLiquidityPool', async function() {
+        assert.equal(await converterRegistry.getIdenticalLiquidityPool([etherToken .address                     ], [500000        ]), utils.zeroAddress );
+        assert.equal(await converterRegistry.getIdenticalLiquidityPool([smartToken4.address, smartToken1.address], [500000, 500000]), converter2.address);
+        assert.equal(await converterRegistry.getIdenticalLiquidityPool([smartToken6.address, smartToken1.address], [500000, 500000]), converter3.address);
+        assert.equal(await converterRegistry.getIdenticalLiquidityPool([smartToken8.address, smartToken1.address], [500000, 500000]), converter4.address);
+        assert.equal(await converterRegistry.getIdenticalLiquidityPool([smartTokenA.address, smartToken1.address], [500000, 500000]), converter5.address);
+        assert.equal(await converterRegistry.getIdenticalLiquidityPool([smartTokenC.address, smartToken1.address], [500000, 500000]), converter6.address);
+        assert.equal(await converterRegistry.getIdenticalLiquidityPool([smartTokenE.address, smartToken2.address], [500000, 500000]), converter7.address);
+    });
+
     it('function removeBancorConverter', async function() {
         await test(converterRegistry.removeConverter, converter1, 'Removed');
         await test(converterRegistry.removeConverter, converter2, 'Removed');
