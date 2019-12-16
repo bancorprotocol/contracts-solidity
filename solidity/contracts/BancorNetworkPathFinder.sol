@@ -6,7 +6,7 @@ import './token/interfaces/ISmartToken.sol';
 
 /**
   * @dev The BancorNetworkPathFinder contract allows generating a conversion path between any token pair in the Bancor Network.
-  * The path can then be used in various functions on the BancorNetwork contract.
+  * The path can then be used in various functions in the BancorNetwork contract.
   *
   * See the BancorNetwork contract for conversion path format.
 */
