@@ -5,12 +5,13 @@ import './converter/interfaces/IBancorConverter.sol';
 import './token/interfaces/ISmartToken.sol';
 
 /**
-  * @dev The BancorNetworkPathFinder contract allows for retrieving the conversion path between any pair of tokens in the Bancor Network.
-  * This conversion path can then be used in various functions on the BancorNetwork contract (see this contract for more details on conversion paths).
+  * @dev The BancorNetworkPathFinder contract allows generating a conversion path between any token pair in the Bancor Network.
+  * The path can then be used in various functions on the BancorNetwork contract.
+  *
+  * See the BancorNetwork contract for conversion path format.
 */
 contract BancorNetworkPathFinder is ContractRegistryClient {
     address public anchorToken;
-    address public converterRegistry;
 
     /**
       * @dev initializes a new BancorNetworkPathFinder instance
@@ -18,59 +19,33 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
       * @param _registry address of a contract registry contract
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
-        (anchorToken, converterRegistry) = getState();
     }
 
     /**
-      * @dev retrieves the anchor-token and the converter-registry
+      * @dev updates the anchor token
       * 
-      * @return the anchor-token and the converter-registry
+      * @param _anchorToken address of the anchor token
     */
-    function getState() public view returns (address, address) {
-        return (addressOf(ETH_TOKEN), addressOf(BANCOR_CONVERTER_REGISTRY));
+    function setAnchorToken(address _anchorToken) public ownerOnly {
+        anchorToken = _anchorToken;
     }
 
     /**
-      * @dev checks if both the anchor-token and the converter-registry are updated
-      * 
-      * @param _anchorToken the registered anchor-token
-      * @param _converterRegistry the registered converter-registry
-      * 
-      * @return true if both the anchor-token and the converter-registry are updated; false otherwise
-    */
-    function isUpdated(address _anchorToken, address _converterRegistry) public view returns (bool) {
-        return _anchorToken == anchorToken && _converterRegistry == converterRegistry;
-    }
-
-    /**
-      * @dev updates the anchor-token and/or the converter-registry
-      * 
-      * Note that this function needs to be called only when either one of them has been redeployed
-    */
-    function updateState() public {
-        (address _anchorToken, address _converterRegistry) = getState();
-        require(!isUpdated(_anchorToken, _converterRegistry));
-        (anchorToken, converterRegistry) = (_anchorToken, _converterRegistry);
-    }
-
-    /**
-      * @dev retrieves the conversion path between a given pair of tokens in the Bancor Network
+      * @dev generates and returns the conversion path between a given token pair in the Bancor Network
       * 
       * @param _sourceToken address of the source token
       * @param _targetToken address of the target token
       * 
       * @return path from the source token to the target token
     */
-    function get(address _sourceToken, address _targetToken) public view returns (address[] memory) {
-        (address _anchorToken, address _converterRegistry) = getState();
-        require(isUpdated(_anchorToken, _converterRegistry));
+    function generatePath(address _sourceToken, address _targetToken) public view returns (address[] memory) {
         address[] memory sourcePath = getPath(_sourceToken);
         address[] memory targetPath = getPath(_targetToken);
         return getShortestPath(sourcePath, targetPath);
     }
 
     /**
-      * @dev retrieves the conversion path between a given token and the anchor token
+      * @dev generates and returns the conversion path between a given token and the anchor token
       * 
       * @param _token address of the token
       * 
@@ -81,10 +56,10 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
             return getInitialArray(_token);
 
         address[] memory smartTokens;
-        if (IBancorConverterRegistry(converterRegistry).isSmartToken(_token))
+        if (IBancorConverterRegistry(addressOf(BANCOR_CONVERTER_REGISTRY)).isSmartToken(_token))
             smartTokens = getInitialArray(_token);
         else
-            smartTokens = IBancorConverterRegistry(converterRegistry).getConvertibleTokenSmartTokens(_token);
+            smartTokens = IBancorConverterRegistry(addressOf(BANCOR_CONVERTER_REGISTRY)).getConvertibleTokenSmartTokens(_token);
 
         for (uint256 n = 0; n < smartTokens.length; n++) {
             IBancorConverter converter = IBancorConverter(ISmartToken(smartTokens[n]).owner());

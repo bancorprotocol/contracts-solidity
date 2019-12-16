@@ -18,7 +18,6 @@ contract ContractRegistryClient is Owned, Utils {
     bytes32 internal constant BANCOR_CONVERTER_REGISTRY = "BancorConverterRegistry";
     bytes32 internal constant BANCOR_CONVERTER_REGISTRY_DATA = "BancorConverterRegistryData";
     bytes32 internal constant BNT_TOKEN = "BNTToken";
-    bytes32 internal constant ETH_TOKEN = "ETHToken";
     bytes32 internal constant BANCOR_X = "BancorX";
     bytes32 internal constant BANCOR_X_UPGRADER = "BancorXUpgrader";
 
