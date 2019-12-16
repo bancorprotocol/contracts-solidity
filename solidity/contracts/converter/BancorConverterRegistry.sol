@@ -285,6 +285,22 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
+      * @dev returns a list of converters for a given list of smart tokens
+      * this is a utility function that can be used to reduce the number of calls to the contract
+      * 
+      * @param _smartTokens list of smart tokens
+      * @return list of converters
+    */
+    function getConvertersBySmartTokens(address[] _smartTokens) external view returns (address[]) {
+        address[] memory converters = new address[](_smartTokens.length);
+
+        for (uint i = 0; i < _smartTokens.length; i++)
+            converters[i] = ISmartToken(_smartTokens[i]).owner();
+
+        return converters;
+    }
+
+    /**
       * @dev checks whether or not a given converter is valid
       * 
       * @param _converter converter

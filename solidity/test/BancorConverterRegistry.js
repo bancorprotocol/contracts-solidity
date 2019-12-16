@@ -153,6 +153,13 @@ contract('BancorConverterRegistry', function(accounts) {
         await test(converterRegistry.removeConverter, converter6, 'Removed');
         await test(converterRegistry.removeConverter, converter7, 'Removed');
     });
+
+    it('should return a list of converters for a list of smart tokens', async () => {
+        const tokens = [smartToken1.address, smartToken2.address, smartToken3.address];
+        const expected = [converter1.address, converter2.address, converter3.address];
+        const actual = await converterRegistry.getConvertersBySmartTokens(tokens);
+        assert.deepEqual(actual, expected);
+    });
 });
 
 async function test(func, converter, suffix) {
