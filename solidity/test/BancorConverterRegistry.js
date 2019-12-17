@@ -134,14 +134,14 @@ contract('BancorConverterRegistry', function(accounts) {
         await test(converterRegistry.addConverter, converter7, 'Added');
     });
 
-    it('function getLiquidityPoolByReserveDetails', async function() {
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveDetails([etherToken .address                     ], [500000        ]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveDetails([smartToken4.address, smartToken1.address], [500000, 500000]), converter2.address);
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveDetails([smartToken6.address, smartToken1.address], [500000, 500000]), converter3.address);
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveDetails([smartToken8.address, smartToken1.address], [500000, 500000]), converter4.address);
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveDetails([smartTokenA.address, smartToken1.address], [500000, 500000]), converter5.address);
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveDetails([smartTokenC.address, smartToken1.address], [500000, 500000]), converter6.address);
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveDetails([smartTokenE.address, smartToken2.address], [500000, 500000]), converter7.address);
+    it('function getLiquidityPoolByReserveConfig', async function() {
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([etherToken .address                     ], [500000        ]), utils.zeroAddress );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken4.address, smartToken1.address], [500000, 500000]), converter2.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken6.address, smartToken1.address], [500000, 500000]), converter3.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken8.address, smartToken1.address], [500000, 500000]), converter4.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartTokenA.address, smartToken1.address], [500000, 500000]), converter5.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartTokenC.address, smartToken1.address], [500000, 500000]), converter6.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartTokenE.address, smartToken2.address], [500000, 500000]), converter7.address);
     });
 
     it('function removeBancorConverter', async function() {
