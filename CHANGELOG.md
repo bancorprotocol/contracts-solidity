@@ -3,7 +3,7 @@ General
 * Added the BancorNetworkPathFinder contract, now compatible with the new converter registry contract
 
 BancorConverterRegistry
-* Now enforces only a single converter for every reserve configuration
+* Now enforces only a single liquidity pool for every reserve configuration
 * Disabled converters are now considered invalid (can be removed by anyone)
 * Added a utility function that returns a list of converters for a given list of smart tokens
 
