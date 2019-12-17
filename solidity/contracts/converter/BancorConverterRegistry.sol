@@ -8,8 +8,7 @@ import '../token/interfaces/ISmartTokenController.sol';
 /**
   * @dev The BancorConverterRegistry maintains a list of all active converters in the Bancor Network.
   *
-  * Since converters can be upgraded and thus their address can change, the registry actually
-  * keeps smart tokens internally and not the converters themselves.
+  * Since converters can be upgraded and thus their address can change, the registry actually keeps smart tokens internally and not the converters themselves.
   * The active converter for each smart token can be easily accessed by querying the smart token owner.
   *
   * The registry exposes 3 differnet lists that can be accessed and iterated, based on the use-case of the caller:

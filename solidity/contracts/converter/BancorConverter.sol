@@ -54,7 +54,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev version number
     */
-    uint16 public version = 21;
+    uint16 public version = 22;
     string public converterType = 'bancor';
 
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
@@ -411,6 +411,23 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         validReserve(_reserveToken)
     {
         reserves[_reserveToken].isSaleEnabled = !_disable;
+    }
+
+    /**
+      * @dev returns the reserve's ratio
+      * added in version 22
+      * 
+      * @param _reserveToken    reserve token contract address
+      * 
+      * @return reserve ratio
+    */
+    function getReserveRatio(IERC20Token _reserveToken)
+        public
+        view
+        validReserve(_reserveToken)
+        returns (uint256)
+    {
+        return reserves[_reserveToken].ratio;
     }
 
     /**
