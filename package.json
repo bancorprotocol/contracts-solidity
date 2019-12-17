@@ -1,6 +1,6 @@
 {
   "name": "bancor-contracts",
-  "version": "0.5.10",
+  "version": "0.5.11",
   "repository": {
     "type": "git",
     "url": "https://github.com/bancorprotocol/contracts"
