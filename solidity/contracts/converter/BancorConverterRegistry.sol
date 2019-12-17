@@ -79,6 +79,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     /**
       * @dev adds a converter to the registry
       * anyone can add a converter to the registry, as long as the converter is active and valid
+      * note that a liquidity pool converter can only be added if there's no existing pool with the same reserves configuration
       * 
       * @param _converter converter
     */
