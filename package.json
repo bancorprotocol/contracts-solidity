@@ -1,7 +1,6 @@
 {
   "name": "bancor-contracts",
   "version": "0.5.10",
-  "author": "Yudi Levi",
   "repository": {
     "type": "git",
     "url": "https://github.com/bancorprotocol/contracts"
@@ -11,16 +10,16 @@
   },
   "scripts": {
     "install": "node scripts/fix-modules.js",
-    "flatten": "node scripts/flatten.js",
     "build": "node scripts/rebuild-all.js",
     "test": "node scripts/run-tests.js",
     "deploy": "node scripts/deploy-one.js",
     "verify": "node scripts/verify-all.js",
+    "flatten": "node scripts/flatten.js",
     "snyk-protect": "snyk protect",
     "prepare": "npm run snyk-protect"
   },
   "dependencies": {
-    "decimal.js": "^10.2.0",
+    "decimal.js": "10.2.0",
     "ganache-cli": "6.7.0",
     "solidity-coverage": "0.6.7",
     "truffle": "4.1.16",

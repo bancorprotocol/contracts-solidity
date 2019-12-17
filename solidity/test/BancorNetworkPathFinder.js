@@ -6,12 +6,79 @@ const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const EtherToken = artifacts.require('EtherToken');
 const SmartToken = artifacts.require('SmartToken');
-const BancorConverter = artifacts.require('BancorConverter');
 const ContractRegistry = artifacts.require('ContractRegistry');
+const BancorConverter = artifacts.require('BancorConverter');
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
+const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
 
-contract('BancorConverterRegistry', function(accounts) {
+async function print(sourceToken, targetToken, path) {
+    const sourceSymbol = await SmartToken.at(sourceToken).symbol();
+    const targetSymbol = await SmartToken.at(targetToken).symbol();
+    const symbols = await Promise.all(path.map(token => SmartToken.at(token).symbol()));
+    console.log(`path from ${sourceSymbol} to ${targetSymbol} = [${symbols}]`);
+}
+
+async function generatePath(sourceToken, targetToken, anchorToken, converterRegistry) {
+    const sourcePath = await getPath(sourceToken, anchorToken, converterRegistry);
+    const targetPath = await getPath(targetToken, anchorToken, converterRegistry);
+    return getShortestPath(sourcePath, targetPath);
+}
+
+async function getPath(token, anchorToken, converterRegistry) {
+    if (token == anchorToken)
+        return [token];
+
+    const isSmartToken = await converterRegistry.isSmartToken(token);
+    const smartTokens = isSmartToken ? [token] : await converterRegistry.getConvertibleTokenSmartTokens(token);
+    for (const smartToken of smartTokens) {
+        const converter = BancorConverter.at(await SmartToken.at(smartToken).owner());
+        const connectorTokenCount = await converter.connectorTokenCount();
+        for (let i = 0; i < connectorTokenCount; i++) {
+            const connectorToken = await converter.connectorTokens(i);
+            if (connectorToken != token) {
+                const path = await getPath(connectorToken, anchorToken, converterRegistry);
+                if (path.length > 0)
+                    return [token, smartToken, ...path];
+            }
+        }
+    }
+
+    return [];
+}
+
+function getShortestPath(sourcePath, targetPath) {
+    if (sourcePath.length > 0 && targetPath.length > 0) {
+        let i = sourcePath.length - 1;
+        let j = targetPath.length - 1;
+        while (i >= 0 && j >= 0 && sourcePath[i] == targetPath[j]) {
+            i--;
+            j--;
+        }
+
+        const path = [];
+        for (let m = 0; m <= i + 1; m++)
+            path.push(sourcePath[m]);
+        for (let n = j; n >= 0; n--)
+            path.push(targetPath[n]);
+
+        let length = 0;
+        for (let p = 0; p < path.length; p += 1) {
+            for (let q = p + 2; q < path.length - p % 2; q += 2) {
+                if (path[p] == path[q])
+                    p = q;
+            }
+            path[length++] = path[p];
+        }
+
+        return path.slice(0, length);
+    }
+
+    return [];
+}
+
+contract('BancorNetworkPathFinder', accounts => {
+    let pathFinder;
     let converter1;
     let converter2;
     let converter3;
@@ -34,6 +101,7 @@ contract('BancorConverterRegistry', function(accounts) {
     let smartTokenC;
     let smartTokenD;
     let smartTokenE;
+    let anchorToken;
     let contractRegistry
     let converterRegistry;
     let converterRegistryData;
@@ -54,9 +122,11 @@ contract('BancorConverterRegistry', function(accounts) {
         smartTokenC = await SmartToken.new('TokenC', 'TKNC', 18);
         smartTokenD = await SmartToken.new('TokenD', 'TKND', 18);
         smartTokenE = await SmartToken.new('TokenE', 'TKNE', 18);
+        anchorToken = etherToken.address;
 
         contractRegistry = await ContractRegistry.new();
 
+        pathFinder            = await BancorNetworkPathFinder    .new(contractRegistry.address);
         converterRegistry     = await BancorConverterRegistry    .new(contractRegistry.address);
         converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
 
@@ -122,71 +192,52 @@ contract('BancorConverterRegistry', function(accounts) {
         await converter5.acceptTokenOwnership();
         await converter6.acceptTokenOwnership();
         await converter7.acceptTokenOwnership();
+
+        await converterRegistry.addConverter(converter1.address);
+        await converterRegistry.addConverter(converter2.address);
+        await converterRegistry.addConverter(converter3.address);
+        await converterRegistry.addConverter(converter4.address);
+        await converterRegistry.addConverter(converter5.address);
+        await converterRegistry.addConverter(converter6.address);
+        await converterRegistry.addConverter(converter7.address);
     });
 
-    it('function addBancorConverter', async function() {
-        await test(converterRegistry.addConverter, converter1, 'Added');
-        await test(converterRegistry.addConverter, converter2, 'Added');
-        await test(converterRegistry.addConverter, converter3, 'Added');
-        await test(converterRegistry.addConverter, converter4, 'Added');
-        await test(converterRegistry.addConverter, converter5, 'Added');
-        await test(converterRegistry.addConverter, converter6, 'Added');
-        await test(converterRegistry.addConverter, converter7, 'Added');
+    it('verifies that the owner can update the anchor token', async () => {
+        await pathFinder.setAnchorToken(anchorToken, {from: accounts[0]});
+        assert.equal(await pathFinder.anchorToken(), anchorToken);
     });
 
-    it('function getLiquidityPoolByReserveConfig', async function() {
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([etherToken .address                     ], [500000        ]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken4.address, smartToken1.address], [500000, 500000]), converter2.address);
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken6.address, smartToken1.address], [500000, 500000]), converter3.address);
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken8.address, smartToken1.address], [500000, 500000]), converter4.address);
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartTokenA.address, smartToken1.address], [500000, 500000]), converter5.address);
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartTokenC.address, smartToken1.address], [500000, 500000]), converter6.address);
-        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartTokenE.address, smartToken2.address], [500000, 500000]), converter7.address);
+    it('should throw when a non owner tries to update the anchor token', async () => {
+        await utils.catchRevert(pathFinder.setAnchorToken(anchorToken, {from: accounts[1]}));
     });
 
-    it('function removeBancorConverter', async function() {
-        await test(converterRegistry.removeConverter, converter1, 'Removed');
-        await test(converterRegistry.removeConverter, converter2, 'Removed');
-        await test(converterRegistry.removeConverter, converter3, 'Removed');
-        await test(converterRegistry.removeConverter, converter4, 'Removed');
-        await test(converterRegistry.removeConverter, converter5, 'Removed');
-        await test(converterRegistry.removeConverter, converter6, 'Removed');
-        await test(converterRegistry.removeConverter, converter7, 'Removed');
+    it('should return an empty path if the source-token has no path to the anchor-token', async () => {
+        const sourceToken = utils.zeroAddress;
+        const targetToken = smartToken1.address;
+        const expected = await generatePath(sourceToken, targetToken, anchorToken, converterRegistry);
+        const actual = await pathFinder.generatePath(sourceToken, targetToken);
+        assert.equal(actual + expected, []);
     });
 
-    it('should return a list of converters for a list of smart tokens', async () => {
-        const tokens = [smartToken1.address, smartToken2.address, smartToken3.address];
-        const expected = [converter1.address, converter2.address, converter3.address];
-        const actual = await converterRegistry.getConvertersBySmartTokens(tokens);
-        assert.deepEqual(actual, expected);
+    it('should return an empty path if the target-token has no path to the anchor-token', async () => {
+        const sourceToken = smartToken1.address;
+        const targetToken = utils.zeroAddress;
+        const expected = await generatePath(sourceToken, targetToken, anchorToken, converterRegistry);
+        const actual = await pathFinder.generatePath(sourceToken, targetToken);
+        assert.equal(actual + expected, []);
     });
+
+    const variables = ["etherToken", ..."123456789ABCDE".split("").map(c => "smartToken" + c)];
+    for (const sourceVariable of variables) {
+        for (const targetVariable of variables) {
+            it(`from ${sourceVariable} to ${targetVariable}`, async () => {
+                const sourceToken = eval(`${sourceVariable}.address`);
+                const targetToken = eval(`${targetVariable}.address`);
+                const expected = await generatePath(sourceToken, targetToken, anchorToken, converterRegistry);
+                const actual = await pathFinder.generatePath(sourceToken, targetToken);
+                assert.equal(`${actual}`, `${expected}`);
+                await print(sourceToken, targetToken, actual);
+            });
+        }
+    }
 });
-
-async function test(func, converter, suffix) {
-    const response = await func(converter.address);
-    const token    = await converter.token();
-    const count    = await converter.connectorTokenCount();
-    const log      = response.logs[0];
-    const expected = `SmartToken${suffix}(${token})`;
-    const actual   = `${log.event}(${log.args._smartToken})`;
-    assert.equal(actual, expected);
-    if (count.greaterThan(1)) {
-        const log      = response.logs[1];
-        const expected = `LiquidityPool${suffix}(${token})`;
-        const actual   = `${log.event}(${log.args._liquidityPool})`;
-        assert.equal(actual, expected);
-    }
-    else {
-        const log      = response.logs[1];
-        const expected = `ConvertibleToken${suffix}(${token},${token})`;
-        const actual   = `${log.event}(${log.args._convertibleToken},${log.args._smartToken})`;
-        assert.equal(actual, expected);
-    }
-    for (let i = 0; count.greaterThan(i); i++) {
-        const connectorToken = await converter.connectorTokens(i);
-        const log      = response.logs[2 + i];
-        const expected = `ConvertibleToken${suffix}(${connectorToken},${token})`;
-        const actual   = `${log.event}(${log.args._convertibleToken},${log.args._smartToken})`;
-        assert.equal(actual, expected);
-    }
-}
