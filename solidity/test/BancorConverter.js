@@ -566,6 +566,12 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.disableReserveSale(reserveToken2.address, true));
     });
 
+    it('verifies that the correct reserve ratio is returned', async () => {
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, reserveToken.address, ratio10Percent);
+        let reserveRatio = await converter.getReserveRatio(reserveToken.address);
+        assert.equal(reserveRatio, ratio10Percent);
+    });
+
     it('verifies that the correct reserve balance is returned regardless of whether virtual balance is set or not', async () => {
         let converter = await initConverter(accounts, true);
         let reserveTokenAddress = await converter.reserveTokens(0);

@@ -2,6 +2,9 @@
 General
 * Added the BancorNetworkPathFinder contract, now compatible with the new converter registry contract
 
+BancorConverter
+* Added a dedicated getReserveRatio function
+
 BancorConverterRegistry
 * Now enforces only a single liquidity pool for each reserve configuration
 * Disabled converters are now considered invalid (can be removed by anyone)
