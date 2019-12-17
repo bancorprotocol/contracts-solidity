@@ -10,7 +10,7 @@ const REGISTRY_ABI    = JSON.parse(fs.readFileSync(__dirname + "/../build/Bancor
 const CONVERTER_ABI   = JSON.parse(fs.readFileSync(__dirname + "/../build/BancorConverter.abi"        ));
 const SMART_TOKEN_ABI = JSON.parse(fs.readFileSync(__dirname + "/../build/SmartToken.abi"             ));
 
-async function get(web3, sourceToken, targetToken, anchorToken, registry) {
+async function generatePath(web3, sourceToken, targetToken, anchorToken, registry) {
     const sourcePath = await getPath(web3, sourceToken, anchorToken, registry);
     const targetPath = await getPath(web3, targetToken, anchorToken, registry);
     return getShortestPath(sourcePath, targetPath);
@@ -123,7 +123,7 @@ async function run() {
         const sourceSymbol = await symbol(web3, convertibleTokens[i]);
         for (let j = 0; j < convertibleTokens.length; j++) {
             const targetSymbol = await symbol(web3, convertibleTokens[j]);
-            const expected = await get(web3, convertibleTokens[i], convertibleTokens[j], anchorToken, registry);
+            const expected = await generatePath(web3, convertibleTokens[i], convertibleTokens[j], anchorToken, registry);
             const actual = await rpc(finder.methods.generatePath(convertibleTokens[i], convertibleTokens[j]));
             const path = await Promise.all(actual.map(token => symbol(web3, token)));
             print(convertibleTokens, i, j, sourceSymbol, targetSymbol, path);

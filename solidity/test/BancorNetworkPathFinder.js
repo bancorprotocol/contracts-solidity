@@ -130,8 +130,6 @@ contract('BancorNetworkPathFinder', accounts => {
         converterRegistry     = await BancorConverterRegistry    .new(contractRegistry.address);
         converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
 
-        await pathFinder.setAnchorToken(anchorToken);
-
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken .address, 500000);
         converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken4.address, 500000);
         converter3 = await BancorConverter.new(smartToken3.address, contractRegistry.address, 0, smartToken6.address, 500000);
@@ -205,15 +203,12 @@ contract('BancorNetworkPathFinder', accounts => {
     });
 
     it('verifies that the owner can update the anchor token', async () => {
-        await pathFinder.setAnchorToken(smartToken1.address);
-        const anchorToken = await pathFinder.anchorToken();
-        assert.equal(anchorToken, smartToken1.address);
-
-        await pathFinder.setAnchorToken(etherToken.address);
+        await pathFinder.setAnchorToken(anchorToken, {from: accounts[0]});
+        assert.equal(await pathFinder.anchorToken(), anchorToken);
     });
 
     it('should throw when a non owner tries to update the anchor token', async () => {
-        await utils.catchRevert(pathFinder.setAnchorToken(smartToken1.address, { from: accounts[1] }));
+        await utils.catchRevert(pathFinder.setAnchorToken(anchorToken, {from: accounts[1]}));
     });
 
     it('should return an empty path if the source-token has no path to the anchor-token', async () => {
