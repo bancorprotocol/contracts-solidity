@@ -79,7 +79,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     /**
       * @dev adds a converter to the registry
       * anyone can add a converter to the registry, as long as the converter is active and valid
-      * note that a liquidity pool converter can only be added if there's no existing pool with the same reserves configuration
+      * note that a liquidity pool converter can only be added if there's no existing pool with the same reserve configuration
       * 
       * @param _converter converter
     */
@@ -327,7 +327,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
             reserveRatios[i] = connectors(_converter, reserveToken);
         }
 
-        return getLiquidityPoolByReservesConfig(reserveTokens, reserveRatios) == IBancorConverter(0);
+        return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) == IBancorConverter(0);
     }
 
     /**
@@ -337,7 +337,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _reserveRatios   reserve ratios
       * @return the converter of the liquidity pool, or zero if no such liquidity pool exists
     */
-    function getLiquidityPoolByReservesConfig(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (IBancorConverter) {
+    function getLiquidityPoolByReserveConfig(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (IBancorConverter) {
         // validate input - ensure that the number of reserve tokens match the number of reserve ratio
         if (_reserveTokens.length == _reserveRatios.length && _reserveTokens.length > 1) {
 
