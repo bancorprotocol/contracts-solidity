@@ -39,27 +39,29 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
       * @return path from the source token to the target token
     */
     function generatePath(address _sourceToken, address _targetToken) public view returns (address[] memory) {
-        address[] memory sourcePath = getPath(_sourceToken);
-        address[] memory targetPath = getPath(_targetToken);
+        IBancorConverterRegistry converterRegistry = IBancorConverterRegistry(addressOf(BANCOR_CONVERTER_REGISTRY));
+        address[] memory sourcePath = getPath(_sourceToken, converterRegistry);
+        address[] memory targetPath = getPath(_targetToken, converterRegistry);
         return getShortestPath(sourcePath, targetPath);
     }
 
     /**
       * @dev generates and returns the conversion path between a given token and the anchor token
       * 
-      * @param _token address of the token
+      * @param _token               address of the token
+      * @param _converterRegistry   address of the converter registry
       * 
       * @return path from the input token to the anchor token
     */
-    function getPath(address _token) private view returns (address[] memory) {
+    function getPath(address _token, IBancorConverterRegistry _converterRegistry) private view returns (address[] memory) {
         if (_token == anchorToken)
             return getInitialArray(_token);
 
         address[] memory smartTokens;
-        if (IBancorConverterRegistry(addressOf(BANCOR_CONVERTER_REGISTRY)).isSmartToken(_token))
+        if (_converterRegistry.isSmartToken(_token))
             smartTokens = getInitialArray(_token);
         else
-            smartTokens = IBancorConverterRegistry(addressOf(BANCOR_CONVERTER_REGISTRY)).getConvertibleTokenSmartTokens(_token);
+            smartTokens = _converterRegistry.getConvertibleTokenSmartTokens(_token);
 
         for (uint256 n = 0; n < smartTokens.length; n++) {
             IBancorConverter converter = IBancorConverter(ISmartToken(smartTokens[n]).owner());
@@ -67,7 +69,7 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
             for (uint256 i = 0; i < connectorTokenCount; i++) {
                 address connectorToken = converter.connectorTokens(i);
                 if (connectorToken != _token) {
-                    address[] memory path = getPath(connectorToken);
+                    address[] memory path = getPath(connectorToken, _converterRegistry);
                     if (path.length > 0)
                         return getExtendedArray(_token, smartTokens[n], path);
                 }
