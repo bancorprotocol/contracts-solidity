@@ -54,7 +54,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev version number
     */
-    uint16 public version = 22;
+    uint16 public version = 23;
     string public converterType = 'bancor';
 
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
