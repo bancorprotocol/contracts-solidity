@@ -4,7 +4,6 @@
 const BancorConverter = require('./helpers/BancorConverter');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
-const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const TestBancorNetwork = artifacts.require('TestBancorNetwork');
 const SmartToken = artifacts.require('SmartToken');
@@ -45,9 +44,6 @@ contract('BancorNetworkWithOldConverter', accounts => {
         let bancorFormula = await BancorFormula.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
 
-        let nonStandardTokenRegistry = await NonStandardTokenRegistry.new();
-        await contractRegistry.registerAddress(ContractRegistryClient.NON_STANDARD_TOKEN_REGISTRY, nonStandardTokenRegistry.address);
-
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[3]);
@@ -60,8 +56,6 @@ contract('BancorNetworkWithOldConverter', accounts => {
 
         smartToken3 = await SmartToken.new('Token3', 'TKN3', 2);
         await smartToken3.issue(accounts[0], 3000000);
-
-        await nonStandardTokenRegistry.setAddress(smartToken2.address, true);
 
         converter = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000, OLD_CONVERTER_VERSION);
         await converter.addConnector(smartToken3.address, 150000, false);

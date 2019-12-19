@@ -854,24 +854,17 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @param _amount    the amount to transfer
     */
     function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
-        IAddressList addressList = IAddressList(addressOf(NON_STANDARD_TOKEN_REGISTRY));
-        bool transferFromThis = _from == address(this);
-        if (addressList.listedAddresses(_token)) {
-            uint256 prevBalance = _token.balanceOf(_to);
-            // we have to cast the token contract in an interface which has no return value
-            if (transferFromThis)
-                INonStandardERC20(_token).transfer(_to, _amount);
-            else
-                INonStandardERC20(_token).transferFrom(_from, _to, _amount);
-            uint256 postBalance = _token.balanceOf(_to);
-            assert(postBalance > prevBalance);
-        } else {
-            // if the token is standard, we assert on transfer
-            if (transferFromThis)
-                assert(_token.transfer(_to, _amount));
-            else
-                assert(_token.transferFrom(_from, _to, _amount));
-        }
+        // We must assume that functions `transfer` and `transferFrom` do not return anything,
+        // because not all tokens abide the requirement of the ERC20 standard to return success or failure.
+        // This is because in the current compiler version, the calling contract can handle more returned data than expected but not less.
+        // This may change in the future, so that the calling contract will revert if the size of the data is not exactly what it expects.
+        uint256 prevBalance = _token.balanceOf(_to);
+        if (_from == address(this))
+            INonStandardERC20(_token).transfer(_to, _amount);
+        else
+            INonStandardERC20(_token).transferFrom(_from, _to, _amount);
+        uint256 postBalance = _token.balanceOf(_to);
+        require(postBalance > prevBalance);
     }
 
     /**

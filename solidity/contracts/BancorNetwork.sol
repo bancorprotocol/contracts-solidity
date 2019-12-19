@@ -187,7 +187,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         if (etherTokens[toToken])
             IEtherToken(toToken).withdrawTo(_for, amount);
         else
-            ensureTransfer(toToken, _for, amount);
+            ensureTransferFrom(toToken, this, _for, amount);
 
         return amount;
     }
@@ -507,46 +507,22 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * true on success but revert on failure instead
       * 
       * @param _token     the token to transfer
-      * @param _to        the address to transfer the tokens to
-      * @param _amount    the amount to transfer
-    */
-    function ensureTransfer(IERC20Token _token, address _to, uint256 _amount) private {
-        IAddressList addressList = IAddressList(addressOf(NON_STANDARD_TOKEN_REGISTRY));
-
-        if (addressList.listedAddresses(_token)) {
-            uint256 prevBalance = _token.balanceOf(_to);
-            // we have to cast the token contract in an interface which has no return value
-            INonStandardERC20(_token).transfer(_to, _amount);
-            uint256 postBalance = _token.balanceOf(_to);
-            assert(postBalance > prevBalance);
-        } else {
-            // if the token isn't whitelisted, we assert on transfer
-            assert(_token.transfer(_to, _amount));
-        }
-    }
-
-    /**
-      * @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
-      * true on success but revert on failure instead
-      * 
-      * @param _token     the token to transfer
       * @param _from      the address to transfer the tokens from
       * @param _to        the address to transfer the tokens to
       * @param _amount    the amount to transfer
     */
     function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
-        IAddressList addressList = IAddressList(addressOf(NON_STANDARD_TOKEN_REGISTRY));
-
-        if (addressList.listedAddresses(_token)) {
-            uint256 prevBalance = _token.balanceOf(_to);
-            // we have to cast the token contract in an interface which has no return value
+        // We must assume that functions `transfer` and `transferFrom` do not return anything,
+        // because not all tokens abide the requirement of the ERC20 standard to return success or failure.
+        // This is because in the current compiler version, the calling contract can handle more returned data than expected but not less.
+        // This may change in the future, so that the calling contract will revert if the size of the data is not exactly what it expects.
+        uint256 prevBalance = _token.balanceOf(_to);
+        if (_from == address(this))
+            INonStandardERC20(_token).transfer(_to, _amount);
+        else
             INonStandardERC20(_token).transferFrom(_from, _to, _amount);
-            uint256 postBalance = _token.balanceOf(_to);
-            assert(postBalance > prevBalance);
-        } else {
-            // if the token isn't whitelisted, we assert on transfer
-            assert(_token.transferFrom(_from, _to, _amount));
-        }
+        uint256 postBalance = _token.balanceOf(_to);
+        require(postBalance > prevBalance);
     }
 
     /**
