@@ -1,4 +1,12 @@
-### 0.5.8-11 (2019-12-17)
+### 0.5.12 (2019-12-19)
+General
+* Better handling for non standard ERC20 tokens's transfer function (removed NonStandardTokenRegistry contract, gas optimization)
+
+BancorConverterRegistry
+* Fixed an issue that allowed adding duplicate pools to the registry in certain situations
+
+
+### 0.5.11 (2019-12-17)
 General
 * Added the BancorNetworkPathFinder contract, now compatible with the new converter registry contract
 
