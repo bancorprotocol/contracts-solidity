@@ -339,25 +339,14 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     function getLiquidityPoolByReserveConfig(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (IBancorConverter) {
         // validate input - ensure that the number of reserve tokens match the number of reserve ratio
         if (_reserveTokens.length == _reserveRatios.length && _reserveTokens.length > 1) {
-
             // get the smart tokens of the least frequent token (optimization)
             address[] memory convertibleTokenSmartTokens = getLeastFrequentTokenSmartTokens(_reserveTokens);
+            // search for a converter with an identical reserve-configuration
             for (uint i = 0; i < convertibleTokenSmartTokens.length; i++) {
                 ISmartToken smartToken = ISmartToken(convertibleTokenSmartTokens[i]);
                 IBancorConverter converter = IBancorConverter(smartToken.owner());
-
-                // compare reserves
-                if (_reserveTokens.length == converter.connectorTokenCount()) {
-                    bool identical = true;
-                    for (uint j = 0; j < _reserveTokens.length; j++) {
-                        if (_reserveRatios[j] != getReserveRatio(converter, _reserveTokens[j])) {
-                            identical = false;
-                            break;
-                        }
-                    }
-                    if (identical)
-                        return converter;
-                }
+                if (isConverterReserveConfigEqual(converter, _reserveTokens, _reserveRatios))
+                    return converter;
             }
         }
 
@@ -440,6 +429,18 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
             }
         }
         return smartTokens;
+    }
+
+    function isConverterReserveConfigEqual(IBancorConverter _converter, address[] memory _reserveTokens, uint[] memory _reserveRatios) private view returns (bool) {
+        if (_reserveTokens.length != _converter.connectorTokenCount())
+            return false;
+
+        for (uint i = 0; i < _reserveTokens.length; i++) {
+            if (_reserveRatios[i] != getReserveRatio(_converter, _reserveTokens[i]))
+                return false;
+        }
+
+        return true;
     }
 
     bytes4 private constant CONNECTORS_FUNC_SELECTOR = bytes4(uint256(keccak256("connectors(address)") >> (256 - 4 * 8)));
