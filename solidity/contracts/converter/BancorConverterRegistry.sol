@@ -323,7 +323,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
             if (reserveToken.balanceOf(_converter) == 0)
                 return false;
             reserveTokens[i] = reserveToken;
-            reserveRatios[i] = connectors(_converter, reserveToken);
+            reserveRatios[i] = getReserveRatio(_converter, reserveToken);
         }
 
         return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) == IBancorConverter(0);
@@ -347,17 +347,10 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
                 IBancorConverter converter = IBancorConverter(smartToken.owner());
 
                 // compare reserves
-                uint reserveTokenCount = converter.connectorTokenCount();
-                if (reserveTokenCount == _reserveTokens.length) {
+                if (_reserveTokens.length == converter.connectorTokenCount()) {
                     bool identical = true;
-                    for (uint j = 0; j < reserveTokenCount; j++) {
-                        IERC20Token reserveToken = converter.connectorTokens(j);
-                        if (reserveToken != _reserveTokens[j]) {
-                            identical = false;
-                            break;
-                        }
-                        uint256 ratio = connectors(converter, reserveToken);
-                        if (ratio != _reserveRatios[j]) {
+                    for (uint j = 0; j < _reserveTokens.length; j++) {
+                        if (_reserveRatios[j] != getReserveRatio(converter, _reserveTokens[j])) {
                             identical = false;
                             break;
                         }
@@ -451,14 +444,14 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
 
     bytes4 private constant CONNECTORS_FUNC_SELECTOR = bytes4(uint256(keccak256("connectors(address)") >> (256 - 4 * 8)));
 
-    function connectors(address _dest, address _address) private view returns (uint256) {
+    function getReserveRatio(address _converter, address _reserveToken) private view returns (uint256) {
         uint256[2] memory ret;
-        bytes memory data = abi.encodeWithSelector(CONNECTORS_FUNC_SELECTOR, _address);
+        bytes memory data = abi.encodeWithSelector(CONNECTORS_FUNC_SELECTOR, _reserveToken);
 
         assembly {
             let success := staticcall(
                 gas,           // gas remaining
-                _dest,         // destination address
+                _converter,    // destination address
                 add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
                 mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
                 ret,           // output buffer
