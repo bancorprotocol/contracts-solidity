@@ -323,10 +323,10 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
             if (reserveToken.balanceOf(_converter) == 0)
                 return false;
             reserveTokens[i] = reserveToken;
-            reserveRatios[i] = connectors(_converter, reserveToken);
+            reserveRatios[i] = getReserveRatio(_converter, reserveToken);
         }
 
-        return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) == IBancorConverter(0);
+        return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) == ISmartToken(0);
     }
 
     /**
@@ -334,41 +334,23 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * 
       * @param _reserveTokens   reserve tokens
       * @param _reserveRatios   reserve ratios
-      * @return the converter of the liquidity pool, or zero if no such liquidity pool exists
+      * @return the liquidity pool, or zero if no such liquidity pool exists
     */
-    function getLiquidityPoolByReserveConfig(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (IBancorConverter) {
+    function getLiquidityPoolByReserveConfig(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (ISmartToken) {
         // validate input - ensure that the number of reserve tokens match the number of reserve ratio
         if (_reserveTokens.length == _reserveRatios.length && _reserveTokens.length > 1) {
-
             // get the smart tokens of the least frequent token (optimization)
             address[] memory convertibleTokenSmartTokens = getLeastFrequentTokenSmartTokens(_reserveTokens);
+            // search for a converter with an identical reserve-configuration
             for (uint i = 0; i < convertibleTokenSmartTokens.length; i++) {
                 ISmartToken smartToken = ISmartToken(convertibleTokenSmartTokens[i]);
                 IBancorConverter converter = IBancorConverter(smartToken.owner());
-
-                // compare reserves
-                uint reserveTokenCount = converter.connectorTokenCount();
-                if (reserveTokenCount == _reserveTokens.length) {
-                    bool identical = true;
-                    for (uint j = 0; j < reserveTokenCount; j++) {
-                        IERC20Token reserveToken = converter.connectorTokens(j);
-                        if (reserveToken != _reserveTokens[j]) {
-                            identical = false;
-                            break;
-                        }
-                        uint256 ratio = connectors(converter, reserveToken);
-                        if (ratio != _reserveRatios[j]) {
-                            identical = false;
-                            break;
-                        }
-                    }
-                    if (identical)
-                        return converter;
-                }
+                if (isConverterReserveConfigEqual(converter, _reserveTokens, _reserveRatios))
+                    return smartToken;
             }
         }
 
-        return IBancorConverter(0);
+        return ISmartToken(0);
     }
 
     /**
@@ -449,16 +431,28 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         return smartTokens;
     }
 
+    function isConverterReserveConfigEqual(IBancorConverter _converter, address[] memory _reserveTokens, uint[] memory _reserveRatios) private view returns (bool) {
+        if (_reserveTokens.length != _converter.connectorTokenCount())
+            return false;
+
+        for (uint i = 0; i < _reserveTokens.length; i++) {
+            if (_reserveRatios[i] != getReserveRatio(_converter, _reserveTokens[i]))
+                return false;
+        }
+
+        return true;
+    }
+
     bytes4 private constant CONNECTORS_FUNC_SELECTOR = bytes4(uint256(keccak256("connectors(address)") >> (256 - 4 * 8)));
 
-    function connectors(address _dest, address _address) private view returns (uint256) {
+    function getReserveRatio(address _converter, address _reserveToken) private view returns (uint256) {
         uint256[2] memory ret;
-        bytes memory data = abi.encodeWithSelector(CONNECTORS_FUNC_SELECTOR, _address);
+        bytes memory data = abi.encodeWithSelector(CONNECTORS_FUNC_SELECTOR, _reserveToken);
 
         assembly {
             let success := staticcall(
                 gas,           // gas remaining
-                _dest,         // destination address
+                _converter,    // destination address
                 add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
                 mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
                 ret,           // output buffer

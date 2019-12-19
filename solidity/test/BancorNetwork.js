@@ -6,7 +6,6 @@ const utils = require('./helpers/Utils');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const Whitelist = artifacts.require('Whitelist');
-const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const BancorConverter = artifacts.require('BancorConverter');
 const SmartToken = artifacts.require('SmartToken');
@@ -64,9 +63,6 @@ contract('BancorNetwork', accounts => {
         let bancorFormula = await BancorFormula.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
 
-        let nonStandardTokenRegistry = await NonStandardTokenRegistry.new();
-        await contractRegistry.registerAddress(ContractRegistryClient.NON_STANDARD_TOKEN_REGISTRY, nonStandardTokenRegistry.address);
-
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[3]);
@@ -91,9 +87,6 @@ contract('BancorNetwork', accounts => {
         await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, smartToken1.address);
 
         erc20Token = await TestNonStandardERC20Token.new('ERC20Token', 'ERC5', 1000000);
-
-        await nonStandardTokenRegistry.setAddress(smartToken2.address, true);
-        await nonStandardTokenRegistry.setAddress(erc20Token.address, true);
 
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000);
 

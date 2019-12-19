@@ -15,7 +15,6 @@ const BancorFormula = artifacts.require('BancorFormula');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const ERC20Token = artifacts.require('ERC20Token');
-const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 
 const MAX_LOCK_LIMIT = '1000000000000000000000' // 1000 bnt
 const MAX_RELEASE_LIMIT = '1000000000000000000000' // 1000 bnt
@@ -926,7 +925,6 @@ const initBancorNetwork = async accounts => {
     const bancorFormula = await BancorFormula.new();
     const contractRegistry = await ContractRegistry.new()
     const contractFeatures = await ContractFeatures.new()
-    const tokenWhitelist = await NonStandardTokenRegistry.new()
         
     etherToken = await EtherToken.new()
     bntToken = await SmartToken.new('Bancor', 'BNT', 18)
@@ -965,7 +963,6 @@ const initBancorNetwork = async accounts => {
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address)
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address)
     await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address)
-    await contractRegistry.registerAddress(ContractRegistryClient.NON_STANDARD_TOKEN_REGISTRY, tokenWhitelist.address)
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_X, bancorX.address)
 
     // issue bnt and transfer ownership to converter
