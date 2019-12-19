@@ -326,7 +326,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
             reserveRatios[i] = getReserveRatio(_converter, reserveToken);
         }
 
-        return getConverterByReserveConfig(reserveTokens, reserveRatios) == IBancorConverter(0);
+        return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) == ISmartToken(0);
     }
 
     /**
@@ -334,9 +334,9 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * 
       * @param _reserveTokens   reserve tokens
       * @param _reserveRatios   reserve ratios
-      * @return the converter of the liquidity pool, or zero if no such liquidity pool exists
+      * @return the liquidity pool, or zero if no such liquidity pool exists
     */
-    function getConverterByReserveConfig(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (IBancorConverter) {
+    function getLiquidityPoolByReserveConfig(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (ISmartToken) {
         // validate input - ensure that the number of reserve tokens match the number of reserve ratio
         if (_reserveTokens.length == _reserveRatios.length && _reserveTokens.length > 1) {
             // get the smart tokens of the least frequent token (optimization)
@@ -346,11 +346,11 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
                 ISmartToken smartToken = ISmartToken(convertibleTokenSmartTokens[i]);
                 IBancorConverter converter = IBancorConverter(smartToken.owner());
                 if (isConverterReserveConfigEqual(converter, _reserveTokens, _reserveRatios))
-                    return converter;
+                    return smartToken;
             }
         }
 
-        return IBancorConverter(0);
+        return ISmartToken(0);
     }
 
     /**

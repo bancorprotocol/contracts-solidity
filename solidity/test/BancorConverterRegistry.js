@@ -134,32 +134,32 @@ contract('BancorConverterRegistry', function(accounts) {
         await test(converterRegistry.addConverter, converter7, 'Added');
     });
 
-    it('function getConverterByReserveConfig', async function() {
-        assert.equal(await converterRegistry.getConverterByReserveConfig([etherToken .address                     ], [0x1000        ]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken1.address, smartToken4.address], [0x2400, 0x2100]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken1.address, smartToken6.address], [0x3600, 0x3100]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken1.address, smartToken8.address], [0x4800, 0x4100]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken1.address, smartTokenA.address], [0x5A00, 0x5100]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken1.address, smartTokenC.address], [0x6C00, 0x6100]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken2.address, smartTokenE.address], [0x7E00, 0x7200]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken4.address, smartToken1.address], [0x2100, 0x2400]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken6.address, smartToken1.address], [0x3100, 0x3600]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken8.address, smartToken1.address], [0x4100, 0x4800]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartTokenA.address, smartToken1.address], [0x5100, 0x5A00]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartTokenC.address, smartToken1.address], [0x6100, 0x6C00]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartTokenE.address, smartToken2.address], [0x7200, 0x7E00]), utils.zeroAddress );
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken1.address, smartToken4.address], [0x2100, 0x2400]), converter2.address);
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken1.address, smartToken6.address], [0x3100, 0x3600]), converter3.address);
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken1.address, smartToken8.address], [0x4100, 0x4800]), converter4.address);
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken1.address, smartTokenA.address], [0x5100, 0x5A00]), converter5.address);
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken1.address, smartTokenC.address], [0x6100, 0x6C00]), converter6.address);
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken2.address, smartTokenE.address], [0x7200, 0x7E00]), converter7.address);
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken4.address, smartToken1.address], [0x2400, 0x2100]), converter2.address);
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken6.address, smartToken1.address], [0x3600, 0x3100]), converter3.address);
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartToken8.address, smartToken1.address], [0x4800, 0x4100]), converter4.address);
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartTokenA.address, smartToken1.address], [0x5A00, 0x5100]), converter5.address);
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartTokenC.address, smartToken1.address], [0x6C00, 0x6100]), converter6.address);
-        assert.equal(await converterRegistry.getConverterByReserveConfig([smartTokenE.address, smartToken2.address], [0x7E00, 0x7200]), converter7.address);
+    it('function getLiquidityPoolByReserveConfig', async function() {
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([etherToken .address                     ], [0x1000        ]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken1.address, smartToken4.address], [0x2400, 0x2100]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken1.address, smartToken6.address], [0x3600, 0x3100]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken1.address, smartToken8.address], [0x4800, 0x4100]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken1.address, smartTokenA.address], [0x5A00, 0x5100]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken1.address, smartTokenC.address], [0x6C00, 0x6100]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken2.address, smartTokenE.address], [0x7E00, 0x7200]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken4.address, smartToken1.address], [0x2100, 0x2400]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken6.address, smartToken1.address], [0x3100, 0x3600]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken8.address, smartToken1.address], [0x4100, 0x4800]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartTokenA.address, smartToken1.address], [0x5100, 0x5A00]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartTokenC.address, smartToken1.address], [0x6100, 0x6C00]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartTokenE.address, smartToken2.address], [0x7200, 0x7E00]), utils.zeroAddress  );
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken1.address, smartToken4.address], [0x2100, 0x2400]), smartToken2.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken1.address, smartToken6.address], [0x3100, 0x3600]), smartToken3.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken1.address, smartToken8.address], [0x4100, 0x4800]), smartToken4.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken1.address, smartTokenA.address], [0x5100, 0x5A00]), smartToken5.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken1.address, smartTokenC.address], [0x6100, 0x6C00]), smartToken6.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken2.address, smartTokenE.address], [0x7200, 0x7E00]), smartToken7.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken4.address, smartToken1.address], [0x2400, 0x2100]), smartToken2.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken6.address, smartToken1.address], [0x3600, 0x3100]), smartToken3.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartToken8.address, smartToken1.address], [0x4800, 0x4100]), smartToken4.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartTokenA.address, smartToken1.address], [0x5A00, 0x5100]), smartToken5.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartTokenC.address, smartToken1.address], [0x6C00, 0x6100]), smartToken6.address);
+        assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([smartTokenE.address, smartToken2.address], [0x7E00, 0x7200]), smartToken7.address);
     });
 
     it('function removeConverter', async function() {
