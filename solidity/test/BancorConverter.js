@@ -6,7 +6,6 @@ const fs = require('fs');
 const utils = require('./helpers/Utils');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
-const NonStandardTokenRegistry = artifacts.require('NonStandardTokenRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const BancorConverter = artifacts.require('BancorConverter');
 const SmartToken = artifacts.require('SmartToken');
@@ -84,9 +83,6 @@ contract('BancorConverter', accounts => {
         let bancorFormula = await BancorFormula.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
 
-        let nonStandardTokenRegistry = await NonStandardTokenRegistry.new();
-        await contractRegistry.registerAddress(ContractRegistryClient.NON_STANDARD_TOKEN_REGISTRY, nonStandardTokenRegistry.address);
-
         let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
         await bancorNetwork.setSignerAddress(accounts[3]);
@@ -103,8 +99,6 @@ contract('BancorConverter', accounts => {
         reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
         reserveToken2 = await TestNonStandardERC20Token.new('ERC Token 2', 'ERC2', 2000000000);
         reserveToken3 = await ERC20Token.new('ERC Token 3', 'ERC2', 0, 1500000000);
-
-        await nonStandardTokenRegistry.setAddress(reserveToken2.address, true);
     });
 
     it('verifies the converter data after construction', async () => {
