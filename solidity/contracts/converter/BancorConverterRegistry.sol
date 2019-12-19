@@ -326,7 +326,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
             reserveRatios[i] = getReserveRatio(_converter, reserveToken);
         }
 
-        return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) == IBancorConverter(0);
+        return getConverterByReserveConfig(reserveTokens, reserveRatios) == IBancorConverter(0);
     }
 
     /**
@@ -336,7 +336,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _reserveRatios   reserve ratios
       * @return the converter of the liquidity pool, or zero if no such liquidity pool exists
     */
-    function getLiquidityPoolByReserveConfig(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (IBancorConverter) {
+    function getConverterByReserveConfig(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (IBancorConverter) {
         // validate input - ensure that the number of reserve tokens match the number of reserve ratio
         if (_reserveTokens.length == _reserveRatios.length && _reserveTokens.length > 1) {
             // get the smart tokens of the least frequent token (optimization)
