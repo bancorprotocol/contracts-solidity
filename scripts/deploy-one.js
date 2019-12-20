@@ -72,7 +72,7 @@ async function send(web3, account, transaction) {
 async function run() {
     const web3        = new Web3(NODE_ADDRESS);
     const account     = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
-    const path        = "solidity/build/" + CONTRACT_NAME;
+    const path        = __dirname + "/../solidity/build/" + CONTRACT_NAME;
     const abi         = fs.readFileSync(path + ".abi", {encoding: "utf8"});
     const bin         = fs.readFileSync(path + ".bin", {encoding: "utf8"});
     const contract    = new web3.eth.Contract(JSON.parse(abi));
