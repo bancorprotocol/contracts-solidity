@@ -17,7 +17,8 @@ function set(record) {
     fs.writeFileSync(CFG_FILE_NAME, JSON.stringify({...get(), ...record}, null, 4));
 }
 
-async function scan() {
+async function scan(message) {
+    process.stdout.write(message);
     return await new Promise(function(resolve, reject) {
         process.stdin.resume();
         process.stdin.once("data", function(data) {
@@ -30,8 +31,7 @@ async function scan() {
 async function getGasPrice(web3) {
     while (true) {
         const nodeGasPrice = await web3.eth.getGasPrice();
-        process.stdout.write(`Enter gas-price or leave empty to use ${nodeGasPrice}: `);
-        const userGasPrice = await scan();
+        const userGasPrice = await scan(`Enter gas-price or leave empty to use ${nodeGasPrice}: `);
         if (/^\d+$/.test(userGasPrice))
             return userGasPrice;
         if (userGasPrice == "")
@@ -42,8 +42,7 @@ async function getGasPrice(web3) {
 
 async function getTransactionReceipt(web3) {
     while (true) {
-        process.stdout.write("Enter transaction-hash or leave empty to retry: ");
-        const hash = await scan();
+        const hash = await scan("Enter transaction-hash or leave empty to retry: ");
         if (/^0x([0-9A-Fa-f]{64})$/.test(hash)) {
             const receipt = await web3.eth.getTransactionReceipt(hash);
             if (receipt)
@@ -145,7 +144,7 @@ async function run() {
     let phase = 0;
     if (get().phase == undefined)
         set({phase});
-    const execute = async(transaction, ...args) => {
+    const execute = async (transaction, ...args) => {
         if (get().phase == phase++) {
             await web3Func(send, transaction, ...args);
             console.log(`phase ${phase} executed`);
