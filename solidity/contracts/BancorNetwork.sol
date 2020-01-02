@@ -535,16 +535,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * @param _value   allowance amount
     */
     function ensureAllowance(IERC20Token _token, address _spender, uint256 _value) private {
-        // check if allowance for the given amount already exists
-        if (_token.allowance(this, _spender) >= _value)
-            return;
-
-        // if the allowance is nonzero, must reset it to 0 first
-        if (_token.allowance(this, _spender) != 0)
-            INonStandardERC20(_token).approve(_spender, 0);
-
-        // approve the new allowance
-        INonStandardERC20(_token).approve(_spender, _value);
+        uint256 allowance = _token.allowance(this, _spender);
+        if (allowance < _value) {
+            if (allowance > 0)
+                INonStandardERC20(_token).approve(_spender, 0);
+            INonStandardERC20(_token).approve(_spender, _value);
+        }
     }
 
     /**
