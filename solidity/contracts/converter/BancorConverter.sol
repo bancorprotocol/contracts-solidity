@@ -54,7 +54,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev version number
     */
-    uint16 public version = 23;
+    uint16 public version = 24;
     string public converterType = 'bancor';
 
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
@@ -64,7 +64,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     uint32 public maxConversionFee = 0;                 // maximum conversion fee for the lifetime of the contract,
                                                         // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public conversionFee = 0;                    // current conversion fee, represented in ppm, 0...maxConversionFee
-    bool public conversionsEnabled = true;              // true if token conversions is enabled, false if not
 
     /**
       * @dev triggered when a conversion between two tokens occurs
@@ -107,13 +106,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @param  _newFee     new fee percentage, represented in ppm
     */
     event ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee);
-
-    /**
-      * @dev triggered when conversions are enabled/disabled
-      * 
-      * @param  _conversionsEnabled true if conversions are enabled, false if not
-    */
-    event ConversionsEnable(bool _conversionsEnabled);
 
     /**
       * @dev triggered when virtual balances are enabled/disabled
@@ -172,12 +164,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         _;
     }
 
-    // allows execution only when conversions aren't disabled
-    modifier conversionsAllowed {
-        require(conversionsEnabled);
-        _;
-    }
-
     // allows execution only if the total-supply of the token is greater than zero
     modifier totalSupplyGreaterThanZeroOnly {
         require(token.totalSupply() > 0);
@@ -213,20 +199,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         notThis(_whitelist)
     {
         conversionWhitelist = _whitelist;
-    }
-
-    /**
-      * @dev disables the entire conversion functionality
-      * this is a safety mechanism in case of a emergency
-      * can only be called by the manager
-      * 
-      * @param _disable true to disable conversions, false to re-enable them
-    */
-    function disableConversions(bool _disable) public ownerOrManagerOnly {
-        if (conversionsEnabled == _disable) {
-            conversionsEnabled = !_disable;
-            emit ConversionsEnable(conversionsEnabled);
-        }
     }
 
     /**
@@ -578,7 +550,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn)
         public
         only(BANCOR_NETWORK)
-        conversionsAllowed
         greaterThanZero(_minReturn)
         returns (uint256)
     {
@@ -877,7 +848,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     function fund(uint256 _amount)
         public
-        conversionsAllowed
         multipleReservesOnly
     {
         uint256 supply = token.totalSupply();

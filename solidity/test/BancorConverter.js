@@ -114,8 +114,6 @@ contract('BancorConverter', accounts => {
 
         let maxConversionFee = await converter.maxConversionFee.call();
         assert.equal(maxConversionFee, 0);
-        let conversionsEnabled = await converter.conversionsEnabled.call();
-        assert.equal(conversionsEnabled, true);
     });
 
     it('should allow to claim tokens if caller is set as BancorX in the converter', async () => {
@@ -236,22 +234,6 @@ contract('BancorConverter', accounts => {
         assert.equal(finalAmount, 495000);
         finalAmount = await converter.getFinalAmount.call(500000, 2);
         assert.equal(finalAmount, 490050);
-    });
-
-    it('verifies that an event is fired when an owner/manager disables conversions', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
-        let watcher = converter.ConversionsEnable();
-        await converter.disableConversions(true);
-        let events = await watcher.get();
-        assert.equal(events[0].args._conversionsEnabled.valueOf(), false);
-    });
-
-    it('verifies that the conversionsEnabled event doesn\'t fire when passing identical value to conversionEnabled', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
-        let watcher = converter.ConversionsEnable();
-        await converter.disableConversions(false);
-        let events = await watcher.get();
-        assert.equal(events.length, 0);
     });
 
     it('verifies that an event is fired when the owner updates the fee', async () => {
@@ -493,44 +475,6 @@ contract('BancorConverter', accounts => {
         let crossReturnWithVBAmount = (await converter.getCrossReserveReturn.call(reserveToken.address, reserveToken2.address, 500))[0];
 
         assert.notEqual(crossReturnAmount.toNumber(), crossReturnWithVBAmount.toNumber());
-    });
-
-    it('verifies that the owner can disable / re-enable conversions', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-
-        let conversionsEnabled = await converter.conversionsEnabled.call();
-        assert.equal(conversionsEnabled, true);
-
-        await converter.disableConversions(true);
-        conversionsEnabled = await converter.conversionsEnabled.call();
-        assert.equal(conversionsEnabled, false);
-
-        await converter.disableConversions(false);
-        conversionsEnabled = await converter.conversionsEnabled.call();
-        assert.equal(conversionsEnabled, true);
-    });
-
-    it('verifies that the manager can disable / re-enable conversions', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        await converter.transferManagement(accounts[4]);
-        await converter.acceptManagement({ from: accounts[4] });
-
-        let conversionsEnabled = await converter.conversionsEnabled.call();
-        assert.equal(conversionsEnabled, true);
-
-        await converter.disableConversions(true, { from: accounts[4] });
-        conversionsEnabled = await converter.conversionsEnabled.call();
-        assert.equal(conversionsEnabled, false);
-
-        await converter.disableConversions(false, { from: accounts[4] });
-        conversionsEnabled = await converter.conversionsEnabled.call();
-        assert.equal(conversionsEnabled, true);
-    });
-
-    it('should throw when a non owner attempts to disable conversions', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-
-        await utils.catchRevert(converter.disableConversions(true, { from: accounts[1] }));
     });
 
     it('verifies that the owner can disable / re-enable reserve sale', async () => {
@@ -915,14 +859,6 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.convert(reserveToken.address, tokenAddress, 0, 1));
     });
 
-    it('should throw when attempting to convert while conversions are disabled', async () => {
-        let converter = await initConverter(accounts, true);
-        await converter.disableConversions(true);
-        await reserveToken.approve(converter.address, 500);
-
-        await utils.catchRevert(converter.convert(reserveToken.address, tokenAddress, 500, 1));
-    });
-
     it('should throw when attempting to buy with gas price higher than the universal limit', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
@@ -1167,27 +1103,6 @@ contract('BancorConverter', accounts => {
         await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
     });
 
-    it('should throw when attempting to fund the converter while conversions are disabled', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addReserve(reserveToken3.address, 600000);
-
-        await reserveToken3.transfer(converter.address, 6000);
-
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
-
-        await reserveToken.approve(converter.address, 100000);
-        await reserveToken2.approve(converter.address, 100000);
-        await reserveToken3.approve(converter.address, 100000);
-        await converter.fund(100);
-
-        await converter.disableConversions(true);
-        let conversionsEnabled = await converter.conversionsEnabled.call();
-        assert.equal(conversionsEnabled, false);
-
-        await utils.catchRevert(converter.fund(100));
-    });
-
     it('should throw when attempting to fund the converter with insufficient funds', async () => {
         let converter = await initConverter(accounts, false);
         await converter.addReserve(reserveToken3.address, 600000);
@@ -1359,26 +1274,6 @@ contract('BancorConverter', accounts => {
         await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
         await reserveToken2.transfer(accounts[0], token2Balance, { from: accounts[9] });
         await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
-    });
-
-    it('verifies that liquidate executes when conversions are disabled', async () => {
-        let converter = await initConverter(accounts, false);
-        await converter.addReserve(reserveToken3.address, 600000);
-
-        await reserveToken3.transfer(converter.address, 6000);
-
-        await token.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
-
-        await converter.disableConversions(true);
-        let conversionsEnabled = await converter.conversionsEnabled.call();
-        assert.equal(conversionsEnabled, false);
-
-        let prevSupply = await token.totalSupply.call();
-        await converter.liquidate(100);
-        let supply = await token.totalSupply();
-
-        assert.equal(prevSupply - 100, supply);
     });
 
     it('should throw when attempting to liquidate with insufficient funds', async () => {
@@ -1653,14 +1548,6 @@ contract('BancorConverter', accounts => {
         await reserveToken.approve(converter.address, 500);
 
         await utils.catchRevert(converter.convert2(reserveToken.address, tokenAddress, 0, 1, utils.zeroAddress, 0));
-    });
-
-    it('should throw when attempting to convert2 while conversions are disabled', async () => {
-        let converter = await initConverter(accounts, true);
-        await converter.disableConversions(true);
-        await reserveToken.approve(converter.address, 500);
-
-        await utils.catchRevert(converter.convert2(reserveToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0));
     });
 
     it('should throw when attempting to buy with gas price higher than the universal limit', async () => {
