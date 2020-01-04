@@ -369,23 +369,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     /**
-      * @dev disables converting from the given reserve token in case the reserve token got compromised
-      * can only be called by the owner
-      * note that converting to the token is still enabled regardless of this flag and it cannot be disabled by the owner
-      * note that prior to version 17, you should use 'disableConnectorSale' instead
-      * 
-      * @param _reserveToken    reserve token contract address
-      * @param _disable         true to disable the token, false to re-enable it
-    */
-    function disableReserveSale(IERC20Token _reserveToken, bool _disable)
-        public
-        ownerOnly
-        validReserve(_reserveToken)
-    {
-        reserves[_reserveToken].isSaleEnabled = !_disable;
-    }
-
-    /**
       * @dev returns the reserve's ratio
       * added in version 22
       * 
@@ -460,7 +443,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         returns (uint256, uint256)
     {
         Reserve storage reserve = reserves[_reserveToken];
-        require(reserve.isSaleEnabled); // validate input
 
         uint256 tokenSupply = token.totalSupply();
         uint256 reserveBalance = _reserveToken.balanceOf(this);
@@ -520,7 +502,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     {
         Reserve storage fromReserve = reserves[_fromReserveToken];
         Reserve storage toReserve = reserves[_toReserveToken];
-        require(fromReserve.isSaleEnabled); // validate input
 
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         uint256 amount = formula.calculateCrossReserveReturn(
@@ -1024,13 +1005,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     */
     function updateConnector(IERC20Token _connectorToken, uint32 /*_weight*/, bool /*_enableVirtualBalance*/, uint256 _virtualBalance) public {
         updateReserveVirtualBalance(_connectorToken, _virtualBalance);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function disableConnectorSale(IERC20Token _connectorToken, bool _disable) public {
-        disableReserveSale(_connectorToken, _disable);
     }
 
     /**

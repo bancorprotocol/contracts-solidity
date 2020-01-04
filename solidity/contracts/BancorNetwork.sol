@@ -402,9 +402,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                     converter = IBancorConverter(ISmartToken(smartToken).owner());
                 }
 
-                // validate input
-                require(getReserveSaleEnabled(converter, fromToken));
-
                 // calculate the amount & the conversion fee
                 balance = converter.getConnectorBalance(fromToken);
                 (, ratio, , , ) = converter.connectors(fromToken);
@@ -541,24 +538,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 INonStandardERC20(_token).approve(_spender, 0);
             INonStandardERC20(_token).approve(_spender, _value);
         }
-    }
-
-    /**
-      * @dev returns true if reserve sale is enabled
-      * 
-      * @param _converter       converter contract address
-      * @param _reserve         reserve's address to read from
-      * 
-      * @return true if reserve sale is enabled, otherwise - false
-    */
-    function getReserveSaleEnabled(IBancorConverter _converter, IERC20Token _reserve)
-        private
-        view
-        returns(bool)
-    {
-        bool isSaleEnabled;
-        (, , , isSaleEnabled, ) = _converter.connectors(_reserve);
-        return isSaleEnabled;
     }
 
     function getSignature(

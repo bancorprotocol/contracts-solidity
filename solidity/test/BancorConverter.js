@@ -477,33 +477,6 @@ contract('BancorConverter', accounts => {
         assert.notEqual(crossReturnAmount.toNumber(), crossReturnWithVBAmount.toNumber());
     });
 
-    it('verifies that the owner can disable / re-enable reserve sale', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        await converter.addReserve(reserveToken.address, ratio10Percent);
-        let reserve = await converter.reserves.call(reserveToken.address);
-        verifyReserve(reserve, true, true, ratio10Percent, false, 0);
-        await converter.disableReserveSale(reserveToken.address, true);
-        reserve = await converter.reserves.call(reserveToken.address);
-        verifyReserve(reserve, true, false, ratio10Percent, false, 0);
-        await converter.disableReserveSale(reserveToken.address, false);
-        reserve = await converter.reserves.call(reserveToken.address);
-        verifyReserve(reserve, true, true, ratio10Percent, false, 0);
-    });
-
-    it('should throw when a non owner attempts to disable reserve sale', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        await converter.addReserve(reserveToken.address, ratio10Percent);
-
-        await utils.catchRevert(converter.disableReserveSale(reserveToken.address, true, { from: accounts[1] }));
-    });
-
-    it('should throw when attempting to disable reserve sale for a reserve that does not exist', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        await converter.addReserve(reserveToken.address, ratio10Percent);
-
-        await utils.catchRevert(converter.disableReserveSale(reserveToken2.address, true));
-    });
-
     it('verifies that the correct reserve ratio is returned', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, reserveToken.address, ratio10Percent);
         let reserveRatio = await converter.getReserveRatio(reserveToken.address);
@@ -737,13 +710,6 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.getPurchaseReturn.call(tokenAddress, 500));
     });
 
-    it('should throw when attempting to get the purchase return while selling the reserve is disabled', async () => {
-        let converter = await initConverter(accounts, true);
-        await converter.disableReserveSale(reserveToken.address, true);
-
-        await utils.catchRevert(converter.getPurchaseReturn.call(reserveToken.address, 500));
-    });
-
     it('should throw when attempting to get the sale return while the converter is not active', async () => {
         let converter = await initConverter(accounts, false);
 
@@ -871,14 +837,6 @@ contract('BancorConverter', accounts => {
         await reserveToken.approve(converter.address, 500);
 
         await utils.catchRevert(converter.convert(reserveToken.address, tokenAddress, 500, 0));
-    });
-
-    it('should throw when attempting to buy while the reserve sale are disabled', async () => {
-        let converter = await initConverter(accounts, true);
-        await reserveToken.approve(converter.address, 500);
-        await converter.disableReserveSale(reserveToken.address, true);
-
-        await utils.catchRevert(converter.convert(reserveToken.address, tokenAddress, 500, 1));
     });
 
     it('should throw when attempting to buy without first approving the converter to transfer from the buyer account in the reserve contract', async () => {
@@ -1428,13 +1386,6 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.getPurchaseReturn.call(tokenAddress, 500));
     });
 
-    it('should throw when attempting to get the purchase return while selling the reserve is disabled', async () => {
-        let converter = await initConverter(accounts, true);
-        await converter.disableReserveSale(reserveToken.address, true);
-
-        await utils.catchRevert(converter.getPurchaseReturn.call(reserveToken.address, 500));
-    });
-
     it('should throw when attempting to get the sale return while the converter is not active', async () => {
         let converter = await initConverter(accounts, false);
 
@@ -1562,14 +1513,6 @@ contract('BancorConverter', accounts => {
         await reserveToken.approve(converter.address, 500);
 
         await utils.catchRevert(converter.convert2(reserveToken.address, tokenAddress, 500, 0, utils.zeroAddress, 0));
-    });
-
-    it('should throw when attempting to buy while the reserve sale are disabled', async () => {
-        let converter = await initConverter(accounts, true);
-        await reserveToken.approve(converter.address, 500);
-        await converter.disableReserveSale(reserveToken.address, true);
-
-        await utils.catchRevert(converter.convert2(reserveToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0));
     });
 
     it('should throw when attempting to buy without first approving the converter to transfer from the buyer account in the reserve contract', async () => {
