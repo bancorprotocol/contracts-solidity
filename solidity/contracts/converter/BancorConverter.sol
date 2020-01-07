@@ -939,13 +939,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev deprecated, backward compatibility
     */
-    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        return convertInternal(_fromToken, _toToken, _amount, _minReturn);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
     function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
         return convert2(_fromToken, _toToken, _amount, _minReturn, address(0), 0);
     }
