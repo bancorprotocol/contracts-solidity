@@ -53,67 +53,75 @@ Here is an example of the initial configuration file which should be provided to
 ```json
 {
     "etherTokenParams": {
-        "supply": "13000000000000000"
+        "supply": "12800000000000000"
     },
-    "smartToken1Params": {
+    "smartToken0Params": {
         "name": "Bancor Network Token",
         "symbol": "BNT",
         "decimals": 18,
-        "supply": "68000000000000000000"
+        "supply": "69100000000000000000"
+    },
+    "smartToken1Params": {
+        "name": "ETH/BNT Relay Token",
+        "symbol": "ETHBNT",
+        "decimals": 18,
+        "supply": "13800000000000000000"
     },
     "smartToken2Params": {
+        "name": "XXX/BNT Relay Token",
+        "symbol": "XXXBNT",
+        "decimals": 18,
+        "supply": "8380000000000000000"
+    },
+    "smartToken3Params": {
+        "name": "YYY/BNT Relay Token",
+        "symbol": "YYYBNT",
+        "decimals": 18,
+        "supply": "93900000000000000"
+    },
+    "smartToken4Params": {
         "name": "Smart Token Of Chayot",
         "symbol": "STC",
         "decimals": 18,
-        "supply": "1000000000000000000"
-    },
-    "smartToken3Params": {
-            "name": "XXX/BNT Relay Token",
-        "symbol": "XXXBNT",
-        "decimals": 18,
-        "supply": "200000000000000000"
-    },
-    "smartToken4Params": {
-            "name": "YYY/BNT Relay Token",
-        "symbol": "YYYBNT",
-        "decimals": 18,
-        "supply": "8300000000000000000"
+        "supply": "56500000000000000000"
     },
     "erc20TokenAParams": {
-            "name": "XXX Standard Token",
+        "name": "XXX Standard Token",
         "symbol": "XXX",
-        "decimals": 18,
-        "supply": "1500000000000000000000"
-    },
-    "erc20TokenBParams": {
-            "name": "YYY Standard Token",
-        "symbol": "YYY",
         "decimals": 18,
         "supply": "1000000000000000000000"
     },
+    "erc20TokenBParams": {
+        "name": "YYY Standard Token",
+        "symbol": "YYY",
+        "decimals": 18,
+        "supply": "36000000000000000000"
+    },
     "converter1Params": {
-        "fee": 0,
-        "ratio1": 100000,
-        "reserve1": "13000000000000000"
+        "fee": 1000,
+        "ratio1": 500000,
+        "reserve1": "7950000000000000000",
+        "ratio2": 500000,
+        "reserve2": "12700000000000000"
     },
     "converter2Params": {
-        "fee": 0,
+        "fee": 1000,
         "ratio1": 500000,
-        "reserve1": "300000000000000000"
+        "reserve1": "340000000000000000",
+        "ratio2": 500000,
+        "reserve2": "1040000000000000000"
     },
     "converter3Params": {
-        "fee": 1000,
+        "fee": 2000,
         "ratio1": 500000,
-        "reserve1": "400000000000000000",
+        "reserve1": "369000000000000000",
         "ratio2": 500000,
-        "reserve2": "520000000000000000"
+        "reserve2": "84800000000000000"
     },
     "converter4Params": {
-        "fee": 1000,
-        "ratio1": 500000,
-        "reserve1": "250000000000000000",
-        "ratio2": 500000,
-        "reserve2": "1300000000000000000"
+        "fee": 3000,
+        "ratio1": 100000,
+        "reserve1": "41100000000000000"
     },
     "priceLimitParams": {
         "value": "6000000000"

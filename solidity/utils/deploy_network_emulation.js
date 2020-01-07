@@ -109,6 +109,7 @@ async function run() {
     const web3Func = (func, ...args) => func(web3, account, gasPrice, ...args);
 
     const etherTokenParams  = get().etherTokenParams ;
+    const smartToken0Params = get().smartToken0Params;
     const smartToken1Params = get().smartToken1Params;
     const smartToken2Params = get().smartToken2Params;
     const smartToken3Params = get().smartToken3Params;
@@ -130,16 +131,17 @@ async function run() {
     const bancorConverterRegistryData = await web3Func(deploy, "bancorConverterRegistryData", "BancorConverterRegistryData", [contractRegistry._address]);
     const bancorGasPriceLimit         = await web3Func(deploy, "bancorGasPriceLimit"        , "BancorGasPriceLimit"        , [priceLimitParams.value]);
     const etherToken                  = await web3Func(deploy, "etherToken"                 , "EtherToken"                 , []);
+    const smartToken0                 = await web3Func(deploy, "smartToken0"                , "SmartToken"                 , [smartToken0Params.name, smartToken0Params.symbol, smartToken0Params.decimals]);
     const smartToken1                 = await web3Func(deploy, "smartToken1"                , "SmartToken"                 , [smartToken1Params.name, smartToken1Params.symbol, smartToken1Params.decimals]);
     const smartToken2                 = await web3Func(deploy, "smartToken2"                , "SmartToken"                 , [smartToken2Params.name, smartToken2Params.symbol, smartToken2Params.decimals]);
     const smartToken3                 = await web3Func(deploy, "smartToken3"                , "SmartToken"                 , [smartToken3Params.name, smartToken3Params.symbol, smartToken3Params.decimals]);
     const smartToken4                 = await web3Func(deploy, "smartToken4"                , "SmartToken"                 , [smartToken4Params.name, smartToken4Params.symbol, smartToken4Params.decimals]);
     const erc20TokenA                 = await web3Func(deploy, "erc20TokenA"                , "ERC20Token"                 , [erc20TokenAParams.name, erc20TokenAParams.symbol, erc20TokenAParams.decimals, erc20TokenAParams.supply]);
     const erc20TokenB                 = await web3Func(deploy, "erc20TokenB"                , "ERC20Token"                 , [erc20TokenBParams.name, erc20TokenBParams.symbol, erc20TokenBParams.decimals, erc20TokenBParams.supply]);
-    const bancorConverter1            = await web3Func(deploy, "bancorConverter1"           , "BancorConverter"            , [smartToken1._address, contractRegistry._address, converter1Params.fee, etherToken ._address, converter1Params.ratio1]);
-    const bancorConverter2            = await web3Func(deploy, "bancorConverter2"           , "BancorConverter"            , [smartToken2._address, contractRegistry._address, converter2Params.fee, smartToken1._address, converter2Params.ratio1]);
-    const bancorConverter3            = await web3Func(deploy, "bancorConverter3"           , "BancorConverter"            , [smartToken3._address, contractRegistry._address, converter3Params.fee, smartToken1._address, converter3Params.ratio1]);
-    const bancorConverter4            = await web3Func(deploy, "bancorConverter4"           , "BancorConverter"            , [smartToken4._address, contractRegistry._address, converter4Params.fee, smartToken1._address, converter4Params.ratio1]);
+    const bancorConverter1            = await web3Func(deploy, "bancorConverter1"           , "BancorConverter"            , [smartToken1._address, contractRegistry._address, converter1Params.fee, smartToken0._address, converter1Params.ratio1]);
+    const bancorConverter2            = await web3Func(deploy, "bancorConverter2"           , "BancorConverter"            , [smartToken2._address, contractRegistry._address, converter2Params.fee, smartToken0._address, converter2Params.ratio1]);
+    const bancorConverter3            = await web3Func(deploy, "bancorConverter3"           , "BancorConverter"            , [smartToken3._address, contractRegistry._address, converter3Params.fee, smartToken0._address, converter3Params.ratio1]);
+    const bancorConverter4            = await web3Func(deploy, "bancorConverter4"           , "BancorConverter"            , [smartToken4._address, contractRegistry._address, converter4Params.fee, smartToken0._address, converter4Params.ratio1]);
 
     let phase = 0;
     if (get().phase == undefined)
@@ -153,12 +155,14 @@ async function run() {
     };
 
     await execute(etherToken.methods.deposit(), etherTokenParams.supply);
+    await execute(smartToken0.methods.issue(account.address, smartToken0Params.supply));
     await execute(smartToken1.methods.issue(account.address, smartToken1Params.supply));
     await execute(smartToken2.methods.issue(account.address, smartToken2Params.supply));
     await execute(smartToken3.methods.issue(account.address, smartToken3Params.supply));
     await execute(smartToken4.methods.issue(account.address, smartToken4Params.supply));
-    await execute(bancorConverter3.methods.addReserve(erc20TokenA._address, converter3Params.ratio2));
-    await execute(bancorConverter4.methods.addReserve(erc20TokenB._address, converter4Params.ratio2));
+    await execute(bancorConverter1.methods.addReserve(etherToken ._address, converter1Params.ratio2));
+    await execute(bancorConverter2.methods.addReserve(erc20TokenA._address, converter2Params.ratio2));
+    await execute(bancorConverter3.methods.addReserve(erc20TokenB._address, converter3Params.ratio2));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractRegistry"           ), contractRegistry           ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractFeatures"           ), contractFeatures           ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"              ), bancorFormula              ._address));
@@ -167,14 +171,14 @@ async function run() {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistry"    ), bancorConverterRegistry    ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistryData"), bancorConverterRegistryData._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorGasPriceLimit"        ), bancorGasPriceLimit        ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"                   ), smartToken1                ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTConverter"               ), bancorConverter1           ._address));
-    await execute(etherToken .methods.transfer(bancorConverter1._address, converter1Params.reserve1));
-    await execute(smartToken1.methods.transfer(bancorConverter2._address, converter2Params.reserve1));
-    await execute(smartToken1.methods.transfer(bancorConverter3._address, converter3Params.reserve1));
-    await execute(smartToken1.methods.transfer(bancorConverter4._address, converter4Params.reserve1));
-    await execute(erc20TokenA.methods.transfer(bancorConverter3._address, converter3Params.reserve2));
-    await execute(erc20TokenB.methods.transfer(bancorConverter4._address, converter4Params.reserve2));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"                   ), smartToken0                ._address));
+    await execute(smartToken0.methods.transfer(bancorConverter1._address, converter1Params.reserve1));
+    await execute(smartToken0.methods.transfer(bancorConverter2._address, converter2Params.reserve1));
+    await execute(smartToken0.methods.transfer(bancorConverter3._address, converter3Params.reserve1));
+    await execute(smartToken0.methods.transfer(bancorConverter4._address, converter4Params.reserve1));
+    await execute(etherToken .methods.transfer(bancorConverter1._address, converter1Params.reserve2));
+    await execute(erc20TokenA.methods.transfer(bancorConverter2._address, converter2Params.reserve2));
+    await execute(erc20TokenB.methods.transfer(bancorConverter3._address, converter3Params.reserve2));
     await execute(smartToken1.methods.transferOwnership(bancorConverter1._address));
     await execute(smartToken2.methods.transferOwnership(bancorConverter2._address));
     await execute(smartToken3.methods.transferOwnership(bancorConverter3._address));
@@ -187,7 +191,7 @@ async function run() {
     await execute(bancorConverterRegistry.methods.addConverter(bancorConverter2._address));
     await execute(bancorConverterRegistry.methods.addConverter(bancorConverter3._address));
     await execute(bancorConverterRegistry.methods.addConverter(bancorConverter4._address));
-    await execute(bancorNetworkPathFinder.methods.setAnchorToken(etherToken._address));
+    await execute(bancorNetworkPathFinder.methods.setAnchorToken(smartToken0._address));
     await execute(bancorNetwork.methods.registerEtherToken(etherToken._address, true));
 
     if (web3.currentProvider.constructor.name == "WebsocketProvider")
