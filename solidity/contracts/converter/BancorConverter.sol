@@ -62,6 +62,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     uint32 public maxConversionFee = 0;                 // maximum conversion fee for the lifetime of the contract,
                                                         // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public conversionFee = 0;                    // current conversion fee, represented in ppm, 0...maxConversionFee
+    bool public conversionsEnabled = true;              // deprecated, backward compatibility
 
     /**
       * @dev triggered when a conversion between two tokens occurs
