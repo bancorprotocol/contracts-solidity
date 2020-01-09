@@ -348,7 +348,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 ensureAllowance(_path[i - 2], converter, fromAmount);
 
             // make the conversion - if it's the last one, also provide the minimum return value
-            toAmount = converter.convertInternal(_path[i - 2], _path[i], fromAmount, i == lastIndex ? _minReturn : 1);
+            toAmount = converter.convert(_path[i - 2], _path[i], fromAmount, i == lastIndex ? _minReturn : 1);
 
             // pay affiliate-fee if needed
             if (address(_path[i]) == bntToken) {
