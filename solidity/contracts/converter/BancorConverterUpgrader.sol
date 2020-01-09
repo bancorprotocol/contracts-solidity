@@ -196,13 +196,11 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
         uint256 virtualBalance;
         uint32 weight;
         bool isVirtualBalanceEnabled;
-        bool isSaleEnabled;
-        bool isSet;
         uint16 connectorTokenCount = _isLegacyVersion ? _oldConverter.reserveTokenCount() : _oldConverter.connectorTokenCount();
 
         for (uint16 i = 0; i < connectorTokenCount; i++) {
             address connectorAddress = _isLegacyVersion ? _oldConverter.reserveTokens(i) : _oldConverter.connectorTokens(i);
-            (virtualBalance, weight, isVirtualBalanceEnabled, isSaleEnabled, isSet) = readConnector(
+            (virtualBalance, weight, isVirtualBalanceEnabled, , ) = readConnector(
                 _oldConverter,
                 connectorAddress,
                 _isLegacyVersion
