@@ -1,3 +1,13 @@
+### 0.5.13 (2020-01-09)
+BancorNetwork
+* Added a new Conversion event that gets emitted for any conversion in the network
+
+BancorConverter
+* Owners cannot disable conversions anymore
+* Owners cannot disable conversions from specific reserves anymore
+* Removed the virtual balance mechanism
+
+
 ### 0.5.12 (2019-12-19)
 General
 * Better handling for non standard ERC20 tokens's transfer function (removed NonStandardTokenRegistry contract, gas optimization)
