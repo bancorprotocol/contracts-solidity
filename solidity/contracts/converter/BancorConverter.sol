@@ -55,14 +55,14 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     uint16 public version = 24;
     string public converterType = 'bancor';
 
-    IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
-    IERC20Token[] public reserveTokens;                 // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
-    mapping (address => Reserve) public reserves;       // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
-    uint32 private totalReserveRatio = 0;               // used to efficiently prevent increasing the total reserve ratio above 100%
-    uint32 public maxConversionFee = 0;                 // maximum conversion fee for the lifetime of the contract,
-                                                        // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
-    uint32 public conversionFee = 0;                    // current conversion fee, represented in ppm, 0...maxConversionFee
-    bool public conversionsEnabled = true;              // deprecated, backward compatibility
+    IWhitelist public conversionWhitelist;          // whitelist contract with list of addresses that are allowed to use the converter
+    IERC20Token[] public reserveTokens;             // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
+    mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
+    uint32 private totalReserveRatio = 0;           // used to efficiently prevent increasing the total reserve ratio above 100%
+    uint32 public maxConversionFee = 0;             // maximum conversion fee for the lifetime of the contract,
+                                                    // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
+    uint32 public conversionFee = 0;                // current conversion fee, represented in ppm, 0...maxConversionFee
+    bool public conversionsEnabled = true;          // deprecated, backward compatibility
 
     /**
       * @dev triggered when a conversion between two tokens occurs
