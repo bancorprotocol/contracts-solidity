@@ -43,6 +43,25 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     mapping (bytes32 => bool) public conversionHashes;  // list of conversion hashes, to prevent re-use of the same hash
 
     /**
+      * @dev triggered when a conversion between two tokens occurs
+      * 
+      * @param _smartToken      smart token governed by the converter
+      * @param _fromToken       ERC20 token converted from
+      * @param _toToken         ERC20 token converted to
+      * @param _fromAmount      amount converted, in fromToken
+      * @param _toAmount        amount returned, minus conversion fee
+      * @param _trader          wallet that initiated the trade
+    */
+    event Conversion(
+        address indexed _smartToken,
+        address indexed _fromToken,
+        address indexed _toToken,
+        uint256 _fromAmount,
+        uint256 _toAmount,
+        address _trader
+    );
+
+    /**
       * @dev initializes a new BancorNetwork instance
       * 
       * @param _registry    address of a contract registry contract
@@ -306,7 +325,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         address _affiliateAccount,
         uint256 _affiliateFee
     ) private returns (uint256) {
-        uint256 amount = _amount;
+        uint256 toAmount;
+        uint256 fromAmount = _amount;
         uint256 lastIndex = _path.length - 1;
 
         address bntToken;
@@ -325,21 +345,24 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
             // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
             if (_path[i - 1] != _path[i - 2])
-                ensureAllowance(_path[i - 2], converter, amount);
+                ensureAllowance(_path[i - 2], converter, fromAmount);
 
             // make the conversion - if it's the last one, also provide the minimum return value
-            amount = converter.change(_path[i - 2], _path[i], amount, i == lastIndex ? _minReturn : 1);
+            toAmount = converter.change(_path[i - 2], _path[i], fromAmount, i == lastIndex ? _minReturn : 1);
 
             // pay affiliate-fee if needed
             if (address(_path[i]) == bntToken) {
-                uint256 affiliateAmount = amount.mul(_affiliateFee).div(AFFILIATE_FEE_RESOLUTION);
+                uint256 affiliateAmount = toAmount.mul(_affiliateFee).div(AFFILIATE_FEE_RESOLUTION);
                 require(_path[i].transfer(_affiliateAccount, affiliateAmount));
-                amount -= affiliateAmount;
+                toAmount -= affiliateAmount;
                 bntToken = address(0);
             }
+
+            emit Conversion(_path[i - 1], _path[i - 2], _path[i], fromAmount, toAmount, msg.sender);
+            fromAmount = toAmount;
         }
 
-        return amount;
+        return toAmount;
     }
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(uint256(keccak256("getReturn(address,address,uint256)") >> (256 - 4 * 8)));
@@ -401,9 +424,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                     supply = smartToken.totalSupply();
                     converter = IBancorConverter(ISmartToken(smartToken).owner());
                 }
-
-                // validate input
-                require(getReserveSaleEnabled(converter, fromToken));
 
                 // calculate the amount & the conversion fee
                 balance = converter.getConnectorBalance(fromToken);
@@ -535,34 +555,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * @param _value   allowance amount
     */
     function ensureAllowance(IERC20Token _token, address _spender, uint256 _value) private {
-        // check if allowance for the given amount already exists
-        if (_token.allowance(this, _spender) >= _value)
-            return;
-
-        // if the allowance is nonzero, must reset it to 0 first
-        if (_token.allowance(this, _spender) != 0)
-            INonStandardERC20(_token).approve(_spender, 0);
-
-        // approve the new allowance
-        INonStandardERC20(_token).approve(_spender, _value);
-    }
-
-    /**
-      * @dev returns true if reserve sale is enabled
-      * 
-      * @param _converter       converter contract address
-      * @param _reserve         reserve's address to read from
-      * 
-      * @return true if reserve sale is enabled, otherwise - false
-    */
-    function getReserveSaleEnabled(IBancorConverter _converter, IERC20Token _reserve)
-        private
-        view
-        returns(bool)
-    {
-        bool isSaleEnabled;
-        (, , , isSaleEnabled, ) = _converter.connectors(_reserve);
-        return isSaleEnabled;
+        uint256 allowance = _token.allowance(this, _spender);
+        if (allowance < _value) {
+            if (allowance > 0)
+                INonStandardERC20(_token).approve(_spender, 0);
+            INonStandardERC20(_token).approve(_spender, _value);
+        }
     }
 
     function getSignature(
