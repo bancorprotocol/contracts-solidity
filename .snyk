@@ -15,3 +15,8 @@ patch:
         patched: '2019-12-12T13:56:19.599Z'
     - snyk > @snyk/snyk-cocoapods-plugin > @snyk/cocoapods-lockfile-parser > @snyk/dep-graph > lodash:
         patched: '2019-12-12T13:56:19.599Z'
+  SNYK-JS-HTTPSPROXYAGENT-469131:
+    - solidity-coverage > solidity-parser-antlr > npm-check-updates > pacote > make-fetch-happen > https-proxy-agent:
+        patched: '2020-01-12T17:40:02.086Z'
+    - solidity-coverage > solidity-parser-antlr > npm-check-updates > pacote > npm-registry-fetch > make-fetch-happen > https-proxy-agent:
+        patched: '2020-01-12T17:40:02.086Z'
