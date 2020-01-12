@@ -329,6 +329,10 @@ contract BancorFormula is IBancorFormula, Utils {
         if (_amount == 0)
             return 0;
 
+        // special case for liquidating the entire supply
+        if (_amount == _supply)
+            return _reserveBalance;
+
         // special case if the total ratio = 100%
         if (_totalRatio == MAX_RATIO)
             return _amount.mul(_reserveBalance) / _supply;
