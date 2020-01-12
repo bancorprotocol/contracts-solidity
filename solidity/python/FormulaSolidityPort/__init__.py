@@ -306,6 +306,10 @@ def calculateLiquidateReturn(_supply, _reserveBalance, _totalRatio, _amount):
     if (_amount == 0):
         return 0;
 
+    # special case for liquidating the entire supply
+    if (_amount == _supply):
+        return _reserveBalance;
+
     # special case if the total ratio = 100%
     if (_totalRatio == MAX_RATIO):
         return safeMul(_amount, _reserveBalance) // _supply;
