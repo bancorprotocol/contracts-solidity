@@ -21,7 +21,7 @@
   "dependencies": {
     "decimal.js": "10.2.0",
     "ganache-cli": "6.7.0",
-    "solidity-coverage": "0.7.0",
+    "solidity-coverage": "0.6.7",
     "truffle": "4.1.16",
     "truffle-contract": "3.0.8",
     "truffle-flattener": "1.4.2",
