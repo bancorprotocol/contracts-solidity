@@ -12,7 +12,6 @@ const EtherToken = artifacts.require('EtherToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const BancorFormula = artifacts.require('BancorFormula');
-const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const ERC20Token = artifacts.require('ERC20Token');
 
@@ -45,7 +44,7 @@ contract("XConversions", accounts => {
 
         it("should be able to xConvertPrioritized from eth with a valid signature", async () => {
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const path = ethBntPath
             const amount = web3.toWei('1')
             const { v, r, s } = sign(
@@ -93,7 +92,7 @@ contract("XConversions", accounts => {
 
         it("should be able to xConvertPrioritized from eth without a valid signature", async () => {
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const path = ethBntPath
             const amount = web3.toWei('1')
             const { v, r, s } = sign(
@@ -141,7 +140,7 @@ contract("XConversions", accounts => {
 
         it("shouldn't be able to xConvertPrioritized from eth with an invalid signature", async () => {
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const path = ethBntPath
             const amount = web3.toWei('1')
             const { v, r, s } = sign(
@@ -171,7 +170,7 @@ contract("XConversions", accounts => {
 
         it("should be able to xConvertPrioritized2 from eth with a valid signature", async () => {
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const path = ethBntPath
             const amount = web3.toWei('1')
             const { v, r, s } = sign(
@@ -213,7 +212,7 @@ contract("XConversions", accounts => {
 
         it("should be able to xConvertPrioritized2 from eth without a valid signature", async () => {
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const path = ethBntPath
             const amount = web3.toWei('1')
             const { v, r, s } = sign(
@@ -255,7 +254,7 @@ contract("XConversions", accounts => {
 
         it("shouldn't be able to xConvertPrioritized2 from eth with an invalid signature", async () => {
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const path = ethBntPath
             const amount = web3.toWei('1')
             const { v, r, s } = sign(
@@ -282,7 +281,7 @@ contract("XConversions", accounts => {
 
         it("shouldn't be able to xConvertPrioritized2 from eth with a valid signature but custom value different than amount", async () => {
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const path = ethBntPath
             const amount = web3.toWei('1')
             const customVal = amount + '1'
@@ -339,7 +338,7 @@ contract("XConversions", accounts => {
 
         it("should be able to xConvert from an ERC20", async () => {
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const path = erc20TokenBntPath
             const amount = web3.toWei('1')
 
@@ -401,7 +400,7 @@ contract("XConversions", accounts => {
             const txId = getId()
             const xTransferId = getId()
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const amount = web3.toWei('10') // releasing 10 BNT
             const path = bntErc20Path
 
@@ -450,7 +449,7 @@ contract("XConversions", accounts => {
             const txId = getId()
             const xTransferId = getId()
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const amount = web3.toWei('10') // releasing 10 BNT
             const path = bntErc20Path
 
@@ -484,7 +483,7 @@ contract("XConversions", accounts => {
             const txId2 = getId()
             const xTransferId2 = getId()
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const amount = web3.toWei('10') // releasing 10 BNT
             const path = bntErc20Path
 
@@ -540,7 +539,7 @@ contract("XConversions", accounts => {
             const txId = getId()
             const xTransferId = getId()
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const amount = web3.toWei('10') // releasing 10 BNT
             const path = bntErc20Path
 
@@ -583,7 +582,7 @@ contract("XConversions", accounts => {
             const txId = getId()
             const xTransferId = getId()
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const amount = web3.toWei('10') // releasing 10 BNT
             const path = bntErc20Path
 
@@ -614,7 +613,7 @@ contract("XConversions", accounts => {
             const txId2 = getId()
             const xTransferId2 = getId()
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const amount = web3.toWei('10') // releasing 10 BNT
             const path = bntErc20Path
 
@@ -645,7 +644,7 @@ contract("XConversions", accounts => {
             const xTransferId = getId()
             const customVal = xTransferId + '1'
             const maximumBlock = web3.eth.blockNumber + 100
-            const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+            const gasPrice = BancorNetwork.class_defaults.gasPrice
             const amount = web3.toWei('10') // releasing 10 BNT
             const path = bntErc20Path
 
@@ -680,7 +679,7 @@ contract("XConversions", accounts => {
 
             it("should be able to xConvertPrioritized3 from eth with a valid signature", async () => {
                 const maximumBlock = web3.eth.blockNumber + 100
-                const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+                const gasPrice = BancorNetwork.class_defaults.gasPrice
                 const path = ethBntPath
                 const amount = web3.toWei('1')
                 const { v, r, s } = sign(
@@ -726,7 +725,7 @@ contract("XConversions", accounts => {
 
             it("should be able to xConvertPrioritized3 from eth without a valid signature", async () => {
                 const maximumBlock = web3.eth.blockNumber + 100
-                const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+                const gasPrice = BancorNetwork.class_defaults.gasPrice
                 const path = ethBntPath
                 const amount = web3.toWei('1')
                 const { v, r, s } = sign(
@@ -772,7 +771,7 @@ contract("XConversions", accounts => {
 
             it("shouldn't be able to xConvertPrioritized3 from eth with an invalid signature", async () => {
                 const maximumBlock = web3.eth.blockNumber + 100
-                const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+                const gasPrice = BancorNetwork.class_defaults.gasPrice
                 const path = ethBntPath
                 const amount = web3.toWei('1')
                 const { v, r, s } = sign(
@@ -800,7 +799,7 @@ contract("XConversions", accounts => {
 
             it("shouldn't be able to xConvertPrioritized3 from eth with a valid signature but custom value different than amount", async () => {
                 const maximumBlock = web3.eth.blockNumber + 100
-                const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+                const gasPrice = BancorNetwork.class_defaults.gasPrice
                 const path = ethBntPath
                 const amount = web3.toWei('1')
                 const customVal = amount + '1'
@@ -862,7 +861,7 @@ contract("XConversions", accounts => {
 
             it("should be able to xConvert2 from an ERC20", async () => {
                 const maximumBlock = web3.eth.blockNumber + 100
-                const gasPrice = BancorGasPriceLimit.class_defaults.gasPrice
+                const gasPrice = BancorNetwork.class_defaults.gasPrice
                 const path = erc20TokenBntPath
                 const amount = web3.toWei('1')
 
@@ -921,7 +920,6 @@ const initBancorNetwork = async accounts => {
     nonSignerAddress = accounts[5]
     affiliateAddress = accounts[6]
 
-    const gasPriceLimit = await BancorGasPriceLimit.new("30000000000"); // 30 gwei
     const bancorFormula = await BancorFormula.new();
     const contractRegistry = await ContractRegistry.new()
     const contractFeatures = await ContractFeatures.new()
@@ -959,7 +957,6 @@ const initBancorNetwork = async accounts => {
     await bancorNetwork.registerEtherToken(etherToken.address, true);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, bntToken.address)
-    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_GAS_PRICE_LIMIT, gasPriceLimit.address)
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address)
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address)
     await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address)

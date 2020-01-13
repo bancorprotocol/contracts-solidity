@@ -3,7 +3,6 @@ import './IBancorNetwork.sol';
 import './FeatureIds.sol';
 import './converter/interfaces/IBancorConverter.sol';
 import './converter/interfaces/IBancorFormula.sol';
-import './converter/interfaces/IBancorGasPriceLimit.sol';
 import './utility/TokenHolder.sol';
 import './utility/SafeMath.sol';
 import './utility/ContractRegistryClient.sol';
@@ -605,11 +604,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         if (_signature.length >= 5) {
             // verify signature
             verifyTrustedSender(_path, _sender, _signature);
-        }
-        else {
-            // verify gas price limit
-            IBancorGasPriceLimit gasPriceLimit = IBancorGasPriceLimit(addressOf(BANCOR_GAS_PRICE_LIMIT));
-            gasPriceLimit.validateGasPrice(tx.gasprice);
         }
     }
 

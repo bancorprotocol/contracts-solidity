@@ -11,7 +11,6 @@ const BancorConverter = artifacts.require('BancorConverter');
 const SmartToken = artifacts.require('SmartToken');
 const NonStandardSmartToken = artifacts.require('NonStandardSmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
-const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const EtherToken = artifacts.require('EtherToken');
@@ -56,9 +55,6 @@ contract('BancorNetwork', accounts => {
 
         let contractFeatures = await ContractFeatures.new();
         await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
-
-        let gasPriceLimit = await BancorGasPriceLimit.new(BancorGasPriceLimit.class_defaults.gasPrice);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_GAS_PRICE_LIMIT, gasPriceLimit.address);
 
         let bancorFormula = await BancorFormula.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
@@ -534,7 +530,7 @@ contract('BancorNetwork', accounts => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -553,7 +549,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling quickConvertPrioritized with untrusted signature', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, untrustedAddress);
 
@@ -563,7 +559,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling quickConvertPrioritized with wrong path', async () => {
         let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, wrongPath, trustedAddress);
 
@@ -572,7 +568,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling quickConvertPrioritized with wrong amount', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -582,7 +578,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling quickConvertPrioritized with higher block number than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -592,7 +588,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling quickConvertPrioritized with lower block number than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock - 1;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -601,7 +597,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling quickConvertPrioritized with higher gas price than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice - 1;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -610,7 +606,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling quickConvertPrioritized with lower gas price than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice + 1;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -621,7 +617,7 @@ contract('BancorNetwork', accounts => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -640,7 +636,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling convertForPrioritized2 with untrusted signature', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, untrustedAddress);
 
@@ -650,7 +646,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling convertForPrioritized2 with wrong path', async () => {
         let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, wrongPath, trustedAddress);
 
@@ -659,7 +655,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling convertForPrioritized2 with wrong amount', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -669,7 +665,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling convertForPrioritized2 with higher block number than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -679,7 +675,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling convertForPrioritized2 with lower block number than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock - 1;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -688,7 +684,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling convertForPrioritized2 with higher gas price than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice - 1;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -697,7 +693,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling convertForPrioritized2 with lower gas price than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice + 1;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -708,7 +704,7 @@ contract('BancorNetwork', accounts => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -727,7 +723,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling convertForPrioritized3 with untrusted signature', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, untrustedAddress);
 
@@ -737,7 +733,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling convertForPrioritized3 with wrong path', async () => {
         let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, wrongPath, trustedAddress);
 
@@ -746,7 +742,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling convertForPrioritized3 with wrong amount', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -756,7 +752,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling convertForPrioritized3 with higher block number than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -766,7 +762,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling convertForPrioritized3 with lower block number than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock - 1;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -775,7 +771,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling convertForPrioritized3 with higher gas price than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice - 1;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -784,7 +780,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling convertForPrioritized3 with lower gas price than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice + 1;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -1124,7 +1120,7 @@ contract('BancorNetwork', accounts => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -1143,7 +1139,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling quickConvertPrioritized2 with trusted signature but custom value different than amount', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -1152,7 +1148,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling quickConvertPrioritized2 with untrusted signature', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, untrustedAddress);
 
@@ -1162,7 +1158,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling quickConvertPrioritized2 with wrong path', async () => {
         let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, wrongPath, trustedAddress);
 
@@ -1171,7 +1167,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling quickConvertPrioritized2 with wrong amount', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -1181,7 +1177,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling quickConvertPrioritized2 with higher block number than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -1191,7 +1187,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling quickConvertPrioritized2 with lower block number than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock - 1;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -1200,7 +1196,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling quickConvertPrioritized2 with higher gas price than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice - 1;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -1209,7 +1205,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling quickConvertPrioritized2 with lower gas price than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice + 1;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], converter1.address, 100, smartToken1BuyPath, trustedAddress);
 
@@ -1220,7 +1216,7 @@ contract('BancorNetwork', accounts => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -1239,7 +1235,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling convertForPrioritized4 with untrusted signature', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, untrustedAddress);
 
@@ -1249,7 +1245,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling convertForPrioritized4 with wrong path', async () => {
         let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, wrongPath, trustedAddress);
 
@@ -1258,7 +1254,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling convertForPrioritized4 with wrong amount', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -1268,7 +1264,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling convertForPrioritized4 with higher block number than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -1278,7 +1274,7 @@ contract('BancorNetwork', accounts => {
     it('should throw when calling convertForPrioritized4 with lower block number than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
         let wrongBlockNumber = maximumBlock - 1;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -1287,7 +1283,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling convertForPrioritized4 with higher gas price than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice - 1;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice - 1;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 
@@ -1296,7 +1292,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when calling convertForPrioritized4 with lower gas price than what appears in the signing data', async () => {
         let maximumBlock = web3.eth.blockNumber + 100;
-        let gasPrice = BancorGasPriceLimit.class_defaults.gasPrice + 1;
+        let gasPrice = BancorNetwork.class_defaults.gasPrice + 1;
 
         let result = sign(maximumBlock, gasPrice, accounts[1], accounts[1], 100, smartToken1BuyPath, trustedAddress);
 

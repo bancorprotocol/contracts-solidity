@@ -2,7 +2,6 @@ module.exports.CONTRACT_FEATURES              = web3.fromAscii("ContractFeatures
 module.exports.CONTRACT_REGISTRY              = web3.fromAscii("ContractRegistry");
 module.exports.BANCOR_NETWORK                 = web3.fromAscii("BancorNetwork");
 module.exports.BANCOR_FORMULA                 = web3.fromAscii("BancorFormula");
-module.exports.BANCOR_GAS_PRICE_LIMIT         = web3.fromAscii("BancorGasPriceLimit");
 module.exports.BANCOR_CONVERTER_FACTORY       = web3.fromAscii("BancorConverterFactory");
 module.exports.BANCOR_CONVERTER_UPGRADER      = web3.fromAscii("BancorConverterUpgrader");
 module.exports.BANCOR_CONVERTER_REGISTRY      = web3.fromAscii("BancorConverterRegistry");
