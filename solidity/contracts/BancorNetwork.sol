@@ -144,8 +144,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     {
         _signature;
 
-        // verify that the conversion parameters are legal
-        verifyConversionParams(_path, _for);
+        // verify that the number of elements is odd and that maximum number of 'hops' is 10
+        require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
+
+        // verify that the account which should receive the conversion result is whitelisted
+        require(isWhitelisted(_path, _for));
 
         // handle msg.value
         handleValue(_path[0], _amount, false);
@@ -234,8 +237,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     {
         _signature;
 
-        // verify that the conversion parameters are legal
-        verifyConversionParams(_path, this);
+        // verify that the number of elements is odd and that maximum number of 'hops' is 10
+        require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
 
         // verify that the destination token is BNT
         require(_path[_path.length - 1] == addressOf(BNT_TOKEN));
@@ -508,19 +511,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
     }
 
-    function verifyConversionParams(IERC20Token[] _path, address _receiver) private view {
-        // verify that the number of elements is odd and that maximum number of 'hops' is 10
-        require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
-
-        // verify that the account which should receive the conversion result is whitelisted
+    function isWhitelisted(IERC20Token[] _path, address _receiver) private view returns (bool) {
         IContractFeatures features = IContractFeatures(addressOf(CONTRACT_FEATURES));
         for (uint256 i = 1; i < _path.length; i += 2) {
             IBancorConverter converter = IBancorConverter(ISmartToken(_path[i]).owner());
             if (features.isSupported(converter, FeatureIds.CONVERTER_CONVERSION_WHITELIST)) {
                 IWhitelist whitelist = converter.conversionWhitelist();
-                require(whitelist == address(0) || whitelist.isWhitelisted(_receiver));
+                if (whitelist != address(0) && !whitelist.isWhitelisted(_receiver))
+                    return false;
             }
         }
+        return true;
     }
 
     function handleValue(IERC20Token _token, uint256 _amount, bool _claim) private {
