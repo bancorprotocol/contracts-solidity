@@ -107,16 +107,14 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * @param _version     old converter version
     */
     function upgradeOld(IBancorConverter _converter, bytes32 _version) public {
-        bool formerVersions = false;
-        if (_version == "0.4")
-            formerVersions = true;
+        _version;
         IBancorConverterExtended converter = IBancorConverterExtended(_converter);
         address prevOwner = converter.owner();
         acceptConverterOwnership(converter);
         IBancorConverterExtended newConverter = createConverter(converter);
-        copyConnectors(converter, newConverter, formerVersions);
+        copyConnectors(converter, newConverter);
         copyConversionFee(converter, newConverter);
-        transferConnectorsBalances(converter, newConverter, formerVersions);                
+        transferConnectorsBalances(converter, newConverter);                
         ISmartToken token = converter.token();
 
         if (token.owner() == address(converter)) {
@@ -188,23 +186,18 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * 
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
-      * @param _isLegacyVersion true if the converter version is under 0.5
     */
-    function copyConnectors(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter, bool _isLegacyVersion)
+    function copyConnectors(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter)
         private
     {
         uint256 virtualBalance;
         uint32 weight;
         bool isVirtualBalanceEnabled;
-        uint16 connectorTokenCount = _isLegacyVersion ? _oldConverter.reserveTokenCount() : _oldConverter.connectorTokenCount();
+        uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
 
         for (uint16 i = 0; i < connectorTokenCount; i++) {
-            address connectorAddress = _isLegacyVersion ? _oldConverter.reserveTokens(i) : _oldConverter.connectorTokens(i);
-            (virtualBalance, weight, isVirtualBalanceEnabled, , ) = readConnector(
-                _oldConverter,
-                connectorAddress,
-                _isLegacyVersion
-            );
+            address connectorAddress = _oldConverter.connectorTokens(i);
+            (virtualBalance, weight, isVirtualBalanceEnabled, , ) = _oldConverter.connectors(connectorAddress);
 
             IERC20Token connectorToken = IERC20Token(connectorAddress);
             _newConverter.addConnector(connectorToken, weight, isVirtualBalanceEnabled);
@@ -232,36 +225,18 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * 
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
-      * @param _isLegacyVersion true if the converter version is under 0.5
     */
-    function transferConnectorsBalances(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter, bool _isLegacyVersion)
+    function transferConnectorsBalances(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter)
         private
     {
         uint256 connectorBalance;
-        uint16 connectorTokenCount = _isLegacyVersion ? _oldConverter.reserveTokenCount() : _oldConverter.connectorTokenCount();
+        uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
 
         for (uint16 i = 0; i < connectorTokenCount; i++) {
-            address connectorAddress = _isLegacyVersion ? _oldConverter.reserveTokens(i) : _oldConverter.connectorTokens(i);
+            address connectorAddress = _oldConverter.connectorTokens(i);
             IERC20Token connector = IERC20Token(connectorAddress);
             connectorBalance = connector.balanceOf(_oldConverter);
             _oldConverter.withdrawTokens(connector, address(_newConverter), connectorBalance);
         }
-    }
-
-    /**
-      * @dev returns the connector settings
-      * 
-      * @param _converter       old converter contract address
-      * @param _address         connector's address to read from
-      * @param _isLegacyVersion true if the converter version is under 0.5
-      * 
-      * @return connector's settings
-    */
-    function readConnector(IBancorConverterExtended _converter, address _address, bool _isLegacyVersion) 
-        private
-        view
-        returns(uint256 virtualBalance, uint32 weight, bool isVirtualBalanceEnabled, bool isSaleEnabled, bool isSet)
-    {
-        return _isLegacyVersion ? _converter.reserves(_address) : _converter.connectors(_address);
     }
 }
