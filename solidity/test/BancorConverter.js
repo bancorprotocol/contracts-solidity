@@ -79,7 +79,6 @@ contract('BancorConverter', accounts => {
 
         let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
-        await bancorNetwork.setSignerAddress(accounts[3]);
 
         let factory = await BancorConverterFactory.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY, factory.address);

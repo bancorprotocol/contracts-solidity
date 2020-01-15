@@ -13,6 +13,7 @@ async function tryCatch(promise, message) {
 
 module.exports = {
     zeroAddress            : "0x0000000000000000000000000000000000000000",
+    zeroBytes32            : "0x0000000000000000000000000000000000000000000000000000000000000000",
     catchRevert            : async function(promise) {await tryCatch(promise, "revert"             );},
     catchOutOfGas          : async function(promise) {await tryCatch(promise, "out of gas"         );},
     catchInvalidJump       : async function(promise) {await tryCatch(promise, "invalid JUMP"       );},

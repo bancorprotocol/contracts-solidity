@@ -42,7 +42,6 @@ contract('BancorNetworkWithOldConverter', accounts => {
 
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
-        await bancorNetwork.setSignerAddress(accounts[3]);
 
         smartToken1 = await SmartToken.new('Token1', 'TKN1', 2);
         await smartToken1.issue(accounts[0], 1000000);
