@@ -41,15 +41,15 @@ contract("XConversions", accounts => {
 
         it("should be able to xConvertPrioritized from eth", async () => {
             const path = ethBntPath
-            const amount = web3.toWei('1')
+            const amount = web3.toWei(1)
 
             const retAmount = await bancorNetwork.xConvertPrioritized.call(
                 path,                         
                 amount,               
-                '1',                                
+                1,                                
                 EOS_BLOCKCHAIN,                     
                 eosAddress,                         
-                '0',                                
+                0,                                
                 0,                                                    
                 0,                                                      
                 utils.zeroBytes32,                                                      
@@ -62,10 +62,10 @@ contract("XConversions", accounts => {
             const res = await bancorNetwork.xConvertPrioritized(
                 path,                                               
                 amount,                                     
-                '1',                                                      
+                1,                                                      
                 EOS_BLOCKCHAIN,                                           
                 eosAddress,                                               
-                '0',                                                      
+                0,                                                      
                 0,                                                    
                 0,                                                      
                 utils.zeroBytes32,                                                      
@@ -78,15 +78,15 @@ contract("XConversions", accounts => {
 
         it("should be able to xConvertPrioritized2 from eth", async () => {
             const path = ethBntPath
-            const amount = web3.toWei('1')
+            const amount = web3.toWei(1)
 
             const retAmount = await bancorNetwork.xConvertPrioritized2.call(
                 path,                         
                 amount,               
-                '1',                                
+                1,                                
                 EOS_BLOCKCHAIN,                     
                 eosAddress,                         
-                '0',                                
+                0,                                
                 [],
                 { from: accounts[5], value: amount }
             )
@@ -96,10 +96,10 @@ contract("XConversions", accounts => {
             const res = await bancorNetwork.xConvertPrioritized2(
                 path,                                               
                 amount,                                     
-                '1',                                                      
+                1,                                                      
                 EOS_BLOCKCHAIN,                                           
                 eosAddress,                                               
-                '0',                                                      
+                0,                                                      
                 [],
                 { from: accounts[5], value: amount }
             )
@@ -109,15 +109,15 @@ contract("XConversions", accounts => {
 
         it("should be able to xConvert from eth", async () => {
             const path = ethBntPath
-            const amount = web3.toWei('1')
+            const amount = web3.toWei(1)
 
             const retAmount = await bancorNetwork.xConvert.call(
                 path,                         
                 amount,               
-                '1',                                
+                1,                                
                 EOS_BLOCKCHAIN,                     
                 eosAddress,                         
-                '0',                                
+                0,                                
                 { from: accounts[5], value: amount }
             )
 
@@ -126,10 +126,10 @@ contract("XConversions", accounts => {
             const res = await bancorNetwork.xConvert(
                 path,                                               
                 amount,                                     
-                '1',                                                      
+                1,                                                      
                 EOS_BLOCKCHAIN,                                           
                 eosAddress,                                               
-                '0',                                                      
+                0,                                                      
                 { from: accounts[5], value: amount }
             )
 
@@ -138,17 +138,17 @@ contract("XConversions", accounts => {
 
         it("should be able to xConvert from an ERC20", async () => {
             const path = erc20TokenBntPath
-            const amount = web3.toWei('1')
+            const amount = web3.toWei(1)
 
             await erc20Token.approve(bancorNetwork.address, amount, { from: accounts[5] })
 
             const retAmount = await bancorNetwork.xConvert.call(
                 path,                         
                 amount,               
-                '1',                                
+                1,                                
                 EOS_BLOCKCHAIN,                     
                 eosAddress,                         
-                '0',                                
+                0,                                
                 { from: accounts[5] }
             )
 
@@ -157,10 +157,10 @@ contract("XConversions", accounts => {
             const res = await bancorNetwork.xConvert(
                 path,                                               
                 amount,                                     
-                '1',                                                      
+                1,                                                      
                 EOS_BLOCKCHAIN,                                           
                 eosAddress,                                               
-                '0',                                                      
+                0,                                                      
                 { from: accounts[5] }
             )
 
@@ -180,7 +180,7 @@ contract("XConversions", accounts => {
 
             const res = await bntConverter.completeXConversion(
                 path,
-                '1',
+                1,
                 xTransferId,
                 0,
                 0,
@@ -206,7 +206,7 @@ contract("XConversions", accounts => {
 
             const retAmount = await bntConverter.completeXConversion.call(
                 path,                                              
-                '1',                                               
+                1,                                               
                 xTransferId,                                       
                 0,                                                    
                 0,                                                      
@@ -217,7 +217,7 @@ contract("XConversions", accounts => {
 
             const res = await bntConverter.completeXConversion(
                 path,                                              
-                '1',                                               
+                1,                                               
                 xTransferId,                                       
                 0,                                                    
                 0,                                                      
@@ -244,7 +244,7 @@ contract("XConversions", accounts => {
 
             await utils.catchRevert(bntConverter.completeXConversion(
                 path,                                              
-                '1',                                               
+                1,                                               
                 xTransferId2,                                       
                 0,                                                    
                 0,                                                      
@@ -266,7 +266,7 @@ contract("XConversions", accounts => {
 
             const res = await bntConverter.completeXConversion2(
                 path,
-                '1',
+                1,
                 xTransferId,
                 [],
                 { from: accounts[5] }
@@ -289,7 +289,7 @@ contract("XConversions", accounts => {
 
             const retAmount = await bntConverter.completeXConversion2.call(
                 path,                                              
-                '1',                                               
+                1,                                               
                 xTransferId,                                       
                 [],
                 { from: accounts[5] }
@@ -297,7 +297,7 @@ contract("XConversions", accounts => {
 
             const res = await bntConverter.completeXConversion2(
                 path,                                              
-                '1',                                               
+                1,                                               
                 xTransferId,                                       
                 [],
                 { from: accounts[5] }
@@ -321,7 +321,7 @@ contract("XConversions", accounts => {
 
             await utils.catchRevert(bntConverter.completeXConversion2(
                 path,                                              
-                '1',                                               
+                1,                                               
                 xTransferId2,                                       
                 [],
                 { from: accounts[5] }
@@ -338,15 +338,15 @@ contract("XConversions", accounts => {
 
             it("should be able to xConvertPrioritized3 from eth", async () => {
                 const path = ethBntPath
-                const amount = web3.toWei('1')
+                const amount = web3.toWei(1)
 
                 const retAmount = await bancorNetwork.xConvertPrioritized3.call(
                     path,                         
                     amount,               
-                    '1',                                
+                    1,                                
                     EOS_BLOCKCHAIN,                     
                     eosAddress,                         
-                    '0',                                
+                    0,                                
                     [],
                     affiliateAddress, affiliateFee,
                     { from: accounts[5], value: amount }
@@ -358,10 +358,10 @@ contract("XConversions", accounts => {
                 const res = await bancorNetwork.xConvertPrioritized3(
                     path,                                               
                     amount,                                     
-                    '1',                                                      
+                    1,                                                      
                     EOS_BLOCKCHAIN,                                           
                     eosAddress,                                               
-                    '0',                                                      
+                    0,                                                      
                     [],
                     affiliateAddress, affiliateFee,
                     { from: accounts[5], value: amount }
@@ -373,15 +373,15 @@ contract("XConversions", accounts => {
 
             it("should be able to xConvert2 from eth", async () => {
                 const path = ethBntPath
-                const amount = web3.toWei('1')
+                const amount = web3.toWei(1)
 
                 const retAmount = await bancorNetwork.xConvert2.call(
                     path,                         
                     amount,               
-                    '1',                                
+                    1,                                
                     EOS_BLOCKCHAIN,                     
                     eosAddress,                         
-                    '0',                                
+                    0,                                
                     affiliateAddress, affiliateFee,
                     { from: accounts[5], value: amount }
                 )
@@ -392,10 +392,10 @@ contract("XConversions", accounts => {
                 const res = await bancorNetwork.xConvert2(
                     path,                                               
                     amount,                                     
-                    '1',                                                      
+                    1,                                                      
                     EOS_BLOCKCHAIN,                                           
                     eosAddress,                                               
-                    '0',                                                      
+                    0,                                                      
                     affiliateAddress, affiliateFee,
                     { from: accounts[5], value: amount }
                 )
@@ -406,17 +406,17 @@ contract("XConversions", accounts => {
 
             it("should be able to xConvert2 from an ERC20", async () => {
                 const path = erc20TokenBntPath
-                const amount = web3.toWei('1')
+                const amount = web3.toWei(1)
 
                 await erc20Token.approve(bancorNetwork.address, amount, { from: accounts[5] })
 
                 const retAmount = await bancorNetwork.xConvert2.call(
                     path,                         
                     amount,               
-                    '1',                                
+                    1,                                
                     EOS_BLOCKCHAIN,                     
                     eosAddress,                         
-                    '0',                                
+                    0,                                
                     affiliateAddress, affiliateFee,
                     { from: accounts[5] }
                 )
@@ -427,10 +427,10 @@ contract("XConversions", accounts => {
                 const res = await bancorNetwork.xConvert2(
                     path,                                               
                     amount,                                     
-                    '1',                                                      
+                    1,                                                      
                     EOS_BLOCKCHAIN,                                           
                     eosAddress,                                               
-                    '0',                                                      
+                    0,                                                      
                     affiliateAddress, affiliateFee,
                     { from: accounts[5] }
                 )
