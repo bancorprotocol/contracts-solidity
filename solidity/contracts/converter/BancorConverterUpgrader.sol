@@ -77,24 +77,9 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * ownership of the new converter will be transferred back to the original owner.
       * fires the ConverterUpgrade event upon success.
       * can only be called by a converter
-      * 
-      * @param _version old converter version
     */
-    function upgrade(bytes32 _version) public {
-        upgradeOld(IBancorConverter(msg.sender), _version);
-    }
-
-    /**
-      * @dev upgrades an old converter to the latest version
-      * will throw if ownership wasn't transferred to the upgrader before calling this function.
-      * ownership of the new converter will be transferred back to the original owner.
-      * fires the ConverterUpgrade event upon success.
-      * can only be called by a converter
-      * 
-      * @param _version old converter version
-    */
-    function upgrade(uint16 _version) public {
-        upgradeOld(IBancorConverter(msg.sender), bytes32(_version));
+    function upgrade() public {
+        upgradeOld(IBancorConverter(msg.sender));
     }
 
     /**
@@ -104,10 +89,8 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * fires the ConverterUpgrade event upon success.
       * 
       * @param _converter   old converter contract address
-      * @param _version     old converter version
     */
-    function upgradeOld(IBancorConverter _converter, bytes32 _version) public {
-        _version;
+    function upgradeOld(IBancorConverter _converter) public {
         IBancorConverterExtended converter = IBancorConverterExtended(_converter);
         address prevOwner = converter.owner();
         acceptConverterOwnership(converter);

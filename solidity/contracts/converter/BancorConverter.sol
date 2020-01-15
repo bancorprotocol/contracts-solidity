@@ -276,7 +276,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         IBancorConverterUpgrader converterUpgrader = IBancorConverterUpgrader(addressOf(BANCOR_CONVERTER_UPGRADER));
 
         transferOwnership(converterUpgrader);
-        converterUpgrader.upgrade(version);
+        converterUpgrader.upgrade();
         acceptOwnership();
     }
 
