@@ -268,7 +268,6 @@ contract("XConversions", accounts => {
                 path,
                 1,
                 xTransferId,
-                [],
                 { from: accounts[5] }
             )
 
@@ -291,7 +290,6 @@ contract("XConversions", accounts => {
                 path,                                              
                 1,                                               
                 xTransferId,                                       
-                [],
                 { from: accounts[5] }
             )
 
@@ -299,7 +297,6 @@ contract("XConversions", accounts => {
                 path,                                              
                 1,                                               
                 xTransferId,                                       
-                [],
                 { from: accounts[5] }
             )
 
@@ -323,7 +320,6 @@ contract("XConversions", accounts => {
                 path,                                              
                 1,                                               
                 xTransferId2,                                       
-                [],
                 { from: accounts[5] }
             ))
         })

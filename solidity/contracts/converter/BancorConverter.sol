@@ -665,21 +665,17 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @param _path            conversion path, see conversion path format in the BancorNetwork contract
       * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction 
-      * @param _signature       deprecated
       * 
       * @return tokens issued in return
     */
     function completeXConversion2(
         IERC20Token[] _path,
         uint256 _minReturn,
-        uint256 _conversionId,
-        uint256[] memory _signature
+        uint256 _conversionId
     )
         public
         returns (uint256)
     {
-        _signature;
-
         IBancorX bancorX = IBancorX(addressOf(BANCOR_X));
         IBancorNetwork bancorNetwork = IBancorNetwork(addressOf(BANCOR_NETWORK));
 
@@ -858,7 +854,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @dev deprecated, backward compatibility
     */
     function completeXConversion(IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256, uint8, bytes32, bytes32) public returns (uint256) {
-        return completeXConversion2(_path, _minReturn, _conversionId, new uint256[](0));
+        return completeXConversion2(_path, _minReturn, _conversionId);
     }
 
     /**
