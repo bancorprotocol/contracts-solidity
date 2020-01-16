@@ -254,16 +254,16 @@ def calculateCrossReserveReturn(_fromReserveBalance, _fromReserveRatio, _toReser
     return (temp1 - temp2) // result;
 
 '''
-    @dev given a relay token supply, reserve balance, total ratio and an amount of relay tokens,
-    calculates the amount of reserve tokens required for purchasing the given amount of relay tokens
+    @dev given a smart token supply, reserve balance, total ratio and an amount of requested smart tokens,
+    calculates the amount of reserve tokens required for purchasing the given amount of smart tokens
 
     Formula:
     Return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_RATIO / _totalRatio) - 1)
 
-    @param _supply              relay token supply
+    @param _supply              smart token supply
     @param _reserveBalance      reserve token balance
     @param _totalRatio          total ratio, represented in ppm, 2-2000000
-    @param _amount              amount of relay tokens
+    @param _amount              requested amount of smart tokens
 
     @return amount of reserve tokens
 '''
@@ -285,16 +285,16 @@ def calculateFundCost(_supply, _reserveBalance, _totalRatio, _amount):
     return temp - _reserveBalance;
 
 '''
-    @dev given a relay token supply, reserve balance, total ratio and an amount of relay tokens,
-    calculates the amount of reserve tokens received for selling the given amount of relay tokens
+    @dev given a smart token supply, reserve balance, total ratio and an amount of smart tokens to liquidate,
+    calculates the amount of reserve tokens received for selling the given amount of smart tokens
 
     Formula:
     Return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_RATIO / _totalRatio))
 
-    @param _supply              relay token supply
+    @param _supply              smart token supply
     @param _reserveBalance      reserve token balance
     @param _totalRatio          total ratio, represented in ppm, 2-2000000
-    @param _amount              amount of relay tokens
+    @param _amount              amount of smart tokens to liquidate
 
     @return amount of reserve tokens
 '''
