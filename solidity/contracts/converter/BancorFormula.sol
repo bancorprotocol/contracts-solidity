@@ -312,7 +312,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * calculates the amount of reserve tokens received for selling the given amount of smart tokens
       * 
       * Formula:
-      * Return = _reserveBalance * ((_supply / (_supply - _amount)) ^ (MAX_RATIO / _totalRatio) - 1)
+      * Return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_RATIO / _totalRatio))
       * 
       * @param _supply              smart token supply
       * @param _reserveBalance      reserve token balance
@@ -341,8 +341,9 @@ contract BancorFormula is IBancorFormula, Utils {
         uint8 precision;
         uint256 baseD = _supply - _amount;
         (result, precision) = power(_supply, baseD, MAX_RATIO, _totalRatio);
-        uint256 temp = _reserveBalance.mul(result) >> precision;
-        return temp - _reserveBalance;
+        uint256 temp1 = _reserveBalance.mul(result);
+        uint256 temp2 = _reserveBalance << precision;
+        return (temp1 - temp2) / result;
     }
 
     /**

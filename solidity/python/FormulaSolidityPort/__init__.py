@@ -289,7 +289,7 @@ def calculateFundCost(_supply, _reserveBalance, _totalRatio, _amount):
     calculates the amount of reserve tokens received for selling the given amount of relay tokens
 
     Formula:
-    Return = _reserveBalance * ((_supply / (_supply - _amount)) ^ (MAX_RATIO / _totalRatio) - 1)
+    Return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_RATIO / _totalRatio))
 
     @param _supply              relay token supply
     @param _reserveBalance      reserve token balance
@@ -316,8 +316,9 @@ def calculateLiquidateReturn(_supply, _reserveBalance, _totalRatio, _amount):
 
     baseD = _supply - _amount;
     (result, precision) = power(_supply, baseD, MAX_RATIO, _totalRatio);
-    temp = safeMul(_reserveBalance, result) >> precision;
-    return temp - _reserveBalance;
+    temp1 = safeMul(_reserveBalance, result);
+    temp2 = _reserveBalance << precision;
+    return (temp1 - temp2) // result;
 
 '''
     @dev General Description:
