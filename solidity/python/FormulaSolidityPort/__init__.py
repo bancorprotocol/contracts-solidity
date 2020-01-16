@@ -192,7 +192,7 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
     calculates the return for a given conversion (in the reserve token)
 
     Formula:
-    Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 1000000)))
+    Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1000000 / _reserveRatio))
 
     @param _supply              token total supply
     @param _reserveBalance      total reserve

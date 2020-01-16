@@ -6,7 +6,7 @@ import '../utility/Utils.sol';
 contract BancorFormula is IBancorFormula, Utils {
     using SafeMath for uint256;
 
-    uint16 public version = 5;
+    uint16 public version = 6;
 
     uint256 private constant ONE = 1;
     uint32 private constant MAX_RATIO = 1000000;
@@ -206,7 +206,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * calculates the return for a given conversion (in the reserve token)
       * 
       * Formula:
-      * Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 1000000)))
+      * Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1000000 / _reserveRatio))
       * 
       * @param _supply              token total supply
       * @param _reserveBalance      total reserve
