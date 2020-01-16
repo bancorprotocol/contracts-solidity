@@ -39,16 +39,6 @@ contract IBancorNetwork {
         uint256 _affiliateFee
     ) public returns (uint256);
 
-    function convertForPrioritized4(
-        IERC20Token[] _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        address _for,
-        uint256[] memory _signature,
-        address _affiliateAccount,
-        uint256 _affiliateFee
-    ) public payable returns (uint256);
-
     // deprecated, backward compatibility
     function convert(
         IERC20Token[] _path,
@@ -78,6 +68,17 @@ contract IBancorNetwork {
         uint256 _minReturn,
         address _for
     ) public returns (uint256);
+
+    // deprecated, backward compatibility
+    function convertForPrioritized4(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _for,
+        uint256[] memory _signature,
+        address _affiliateAccount,
+        uint256 _affiliateFee
+    ) public payable returns (uint256);
 
     // deprecated, backward compatibility
     function convertForPrioritized3(
