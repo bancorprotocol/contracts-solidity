@@ -635,28 +635,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         payable
         returns (uint256)
     {
-        return quickConvertPrioritized2(_path, _amount, _minReturn, new uint256[](0), _affiliateAccount, _affiliateFee);
-    }
-
-    /**
-      * @dev converts the token to any other token in the bancor network by following a predefined conversion path
-      * note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
-      * note that prior to version 16, you should use 'quickConvertPrioritized' instead
-      * 
-      * @param _path                conversion path, see conversion path format in the BancorNetwork contract
-      * @param _amount              amount to convert from (in the initial source token)
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-      * @param _signature           deprecated
-      * @param _affiliateAccount    affiliate account
-      * @param _affiliateFee        affiliate fee in PPM
-      * 
-      * @return tokens issued in return
-    */
-    function quickConvertPrioritized2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256[] memory _signature, address _affiliateAccount, uint256 _affiliateFee)
-        public
-        payable
-        returns (uint256)
-    {
         IBancorNetwork bancorNetwork = IBancorNetwork(addressOf(BANCOR_NETWORK));
 
         // we need to transfer the source tokens from the caller to the BancorNetwork contract,
@@ -675,7 +653,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         }
 
         // execute the conversion and pass on the ETH with the call
-        return bancorNetwork.convertForPrioritized4.value(msg.value)(_path, _amount, _minReturn, msg.sender, _signature, _affiliateAccount, _affiliateFee);
+        return bancorNetwork.convertFor2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -700,6 +678,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         public
         returns (uint256)
     {
+        _signature;
+
         IBancorX bancorX = IBancorX(addressOf(BANCOR_X));
         IBancorNetwork bancorNetwork = IBancorNetwork(addressOf(BANCOR_NETWORK));
 
@@ -713,7 +693,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         token.destroy(msg.sender, amount);
         token.issue(bancorNetwork, amount);
 
-        return bancorNetwork.convertForPrioritized4(_path, amount, _minReturn, msg.sender, _signature, address(0), 0);
+        return bancorNetwork.convertFor2(_path, amount, _minReturn, msg.sender, address(0), 0);
     }
 
     /**
@@ -863,8 +843,15 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev deprecated, backward compatibility
     */
+    function quickConvertPrioritized2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256[] memory, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
+        return quickConvert2(_path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
     function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256, uint8, bytes32, bytes32) public payable returns (uint256) {
-        return quickConvertPrioritized2(_path, _amount, _minReturn, new uint256[](0), address(0), 0);
+        return quickConvert2(_path, _amount, _minReturn, address(0), 0);
     }
 
     /**

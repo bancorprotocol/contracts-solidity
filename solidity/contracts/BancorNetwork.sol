@@ -110,40 +110,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * @return tokens issued in return
     */
     function convertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, new uint256[](0), _affiliateAccount, _affiliateFee);
-    }
-
-    /**
-      * @dev converts the token to any other token in the bancor network
-      * by following a predefined conversion path and transfers the result
-      * tokens to a target account.
-      * note that the network should already own the source tokens
-      * 
-      * @param _path                conversion path, see conversion path format above
-      * @param _amount              amount to convert from (in the initial source token)
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-      * @param _for                 account that will receive the conversion result
-      * @param _signature           deprecated
-      * @param _affiliateAccount    affiliate account
-      * @param _affiliateFee        affiliate fee in PPM
-      * 
-      * @return tokens issued in return
-    */
-    function convertForPrioritized4(
-        IERC20Token[] _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        address _for,
-        uint256[] memory _signature,
-        address _affiliateAccount,
-        uint256 _affiliateFee
-    )
-        public
-        payable
-        returns (uint256)
-    {
-        _signature;
-
         // verify that the number of elements is odd and that maximum number of 'hops' is 10
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
 
@@ -199,44 +165,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         payable
         returns (uint256)
     {
-        return xConvertPrioritized3(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, new uint256[](0), _affiliateAccount, _affiliateFee);
-    }
-
-    /**
-      * @dev converts any other token to BNT in the bancor network
-      * by following a predefined conversion path and transfers the resulting
-      * tokens to BancorX.
-      * note that the network should already have been given allowance of the source token (if not ETH)
-      * 
-      * @param _path                conversion path, see conversion path format above
-      * @param _amount              amount to convert from (in the initial source token)
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-      * @param _toBlockchain        blockchain BNT will be issued on
-      * @param _to                  address/account on _toBlockchain to send the BNT to
-      * @param _conversionId        pre-determined unique (if non zero) id which refers to this transaction 
-      * @param _signature           deprecated
-      * @param _affiliateAccount    affiliate account
-      * @param _affiliateFee        affiliate fee in PPM
-      * 
-      * @return the amount of BNT received from this conversion
-    */
-    function xConvertPrioritized3(
-        IERC20Token[] _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        bytes32 _toBlockchain,
-        bytes32 _to,
-        uint256 _conversionId,
-        uint256[] memory _signature,
-        address _affiliateAccount,
-        uint256 _affiliateFee
-    )
-        public
-        payable
-        returns (uint256)
-    {
-        _signature;
-
         // verify that the number of elements is odd and that maximum number of 'hops' is 10
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
 
@@ -607,6 +535,27 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     /**
       * @dev deprecated, backward compatibility
     */
+    function xConvertPrioritized3(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        bytes32 _toBlockchain,
+        bytes32 _to,
+        uint256 _conversionId,
+        uint256[] memory,
+        address _affiliateAccount,
+        uint256 _affiliateFee
+    )
+        public
+        payable
+        returns (uint256)
+    {
+        return xConvert2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, _affiliateAccount, _affiliateFee);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
     function xConvertPrioritized2(
         IERC20Token[] _path,
         uint256 _amount,
@@ -614,13 +563,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         bytes32 _toBlockchain,
         bytes32 _to,
         uint256 _conversionId,
-        uint256[] memory _signature
+        uint256[] memory
     )
         public
         payable
         returns (uint256)
     {
-        return xConvertPrioritized3(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, _signature, address(0), 0);
+        return xConvert2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, address(0), 0);
     }
 
     /**
@@ -642,7 +591,26 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         payable
         returns (uint256)
     {
-        return xConvertPrioritized3(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, new uint256[](0), address(0), 0);
+        return xConvert2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, address(0), 0);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function convertForPrioritized4(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _for,
+        uint256[] memory,
+        address _affiliateAccount,
+        uint256 _affiliateFee
+    )
+        public
+        payable
+        returns (uint256)
+    {
+        return convertFor2(_path, _amount, _minReturn, _for, _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -663,7 +631,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         payable
         returns (uint256)
     {
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, new uint256[](0), address(0), 0);
+        return convertFor2(_path, _amount, _minReturn, _for, address(0), 0);
     }
 
     /**
@@ -683,7 +651,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         payable
         returns (uint256)
     {
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, new uint256[](0), address(0), 0);
+        return convertFor2(_path, _amount, _minReturn, _for, address(0), 0);
     }
 
     /**
@@ -702,6 +670,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     )
         public payable returns (uint256)
     {
-        return convertForPrioritized4(_path, _amount, _minReturn, _for, new uint256[](0), address(0), 0);
+        return convertFor2(_path, _amount, _minReturn, _for, address(0), 0);
     }
 }
