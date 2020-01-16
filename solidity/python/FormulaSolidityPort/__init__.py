@@ -336,6 +336,7 @@ def calculateLiquidateReturn(_supply, _reserveBalance, _totalRatio, _amount):
         Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
         This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
         This functions assumes that "_expN < 2 ^ 256 / log(MAX_NUM - 1)", otherwise the multiplication should be replaced with a "safeMul".
+        Since we rely on unsigned-integer arithmetic and "base < 1" ==> "log(base) < 0", this function does not support "_baseN < _baseD".
 '''
 def power(_baseN, _baseD, _expN, _expD):
     assert(_baseN < MAX_NUM);

@@ -362,6 +362,7 @@ contract BancorFormula is IBancorFormula, Utils {
       *     Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
       *     This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
       *     This functions assumes that "_expN < 2 ^ 256 / log(MAX_NUM - 1)", otherwise the multiplication should be replaced with a "safeMul".
+      *     Since we rely on unsigned-integer arithmetic and "base < 1" ==> "log(base) < 0", this function does not support "_baseN < _baseD".
     */
     function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) internal view returns (uint256, uint8) {
         require(_baseN < MAX_NUM);
