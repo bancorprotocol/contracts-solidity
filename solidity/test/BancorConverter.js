@@ -513,7 +513,7 @@ contract('BancorConverter', accounts => {
     it('verifies that the owner can upgrade the converter while the converter using the legacy upgrade function', async () => {
         let converter = await initConverter(accounts, true);
         await converter.transferOwnership(upgrader.address);
-        await upgrader.upgradeOld(converter.address);
+        await upgrader.upgradeOld(converter.address, web3.fromUtf8("0.9"));
     });
 
     it('should throw when a non owner attempts to upgrade the converter', async () => {

@@ -59,7 +59,7 @@ async function upgradeConverter(converter, version = null) {
         // for previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
         // then accept ownership of the new and old converter. The end results should be the same.
         await converter.transferOwnership(converterUpgrader.address);
-        await converterUpgrader.upgradeOld(converter.address);
+        await converterUpgrader.upgradeOld(converter.address, web3.fromAscii(`0.${version}`));
         newConverter = await getNewConverter();
         await converter.acceptOwnership();
     }
@@ -160,7 +160,7 @@ contract('BancorConverterUpgrader', accounts => {
 
     it('should throw if the upgrader did not receive the converter ownership before calling the upgrade function', async () => {
         let converter = await initConverter(accounts, true);
-        await utils.catchRevert(converterUpgrader.upgradeOld(converter.address));
+        await utils.catchRevert(converterUpgrader.upgradeOld(converter.address, web3.fromUtf8("0.7")));
     });
 
     it('verifies that the max conversion fee after upgrade is the same', async () => {
