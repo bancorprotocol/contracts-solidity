@@ -192,7 +192,7 @@ def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmo
     calculates the return for a given conversion (in the reserve token)
 
     Formula:
-    Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 1000000)))
+    Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1000000 / _reserveRatio))
 
     @param _supply              token total supply
     @param _reserveBalance      total reserve
@@ -254,16 +254,16 @@ def calculateCrossReserveReturn(_fromReserveBalance, _fromReserveRatio, _toReser
     return (temp1 - temp2) // result;
 
 '''
-    @dev given a relay token supply, reserve balance, total ratio and an amount of relay tokens,
-    calculates the amount of reserve tokens required for purchasing the given amount of relay tokens
+    @dev given a smart token supply, reserve balance, total ratio and an amount of requested smart tokens,
+    calculates the amount of reserve tokens required for purchasing the given amount of smart tokens
 
     Formula:
     Return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_RATIO / _totalRatio) - 1)
 
-    @param _supply              relay token supply
+    @param _supply              smart token supply
     @param _reserveBalance      reserve token balance
     @param _totalRatio          total ratio, represented in ppm, 2-2000000
-    @param _amount              amount of relay tokens
+    @param _amount              requested amount of smart tokens
 
     @return amount of reserve tokens
 '''
@@ -285,16 +285,16 @@ def calculateFundCost(_supply, _reserveBalance, _totalRatio, _amount):
     return temp - _reserveBalance;
 
 '''
-    @dev given a relay token supply, reserve balance, total ratio and an amount of relay tokens,
-    calculates the amount of reserve tokens received for selling the given amount of relay tokens
+    @dev given a smart token supply, reserve balance, total ratio and an amount of smart tokens to liquidate,
+    calculates the amount of reserve tokens received for selling the given amount of smart tokens
 
     Formula:
-    Return = _reserveBalance * ((_supply / (_supply - _amount)) ^ (MAX_RATIO / _totalRatio) - 1)
+    Return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_RATIO / _totalRatio))
 
-    @param _supply              relay token supply
+    @param _supply              smart token supply
     @param _reserveBalance      reserve token balance
     @param _totalRatio          total ratio, represented in ppm, 2-2000000
-    @param _amount              amount of relay tokens
+    @param _amount              amount of smart tokens to liquidate
 
     @return amount of reserve tokens
 '''
@@ -306,14 +306,19 @@ def calculateLiquidateReturn(_supply, _reserveBalance, _totalRatio, _amount):
     if (_amount == 0):
         return 0;
 
+    # special case for liquidating the entire supply
+    if (_amount == _supply):
+        return _reserveBalance;
+
     # special case if the total ratio = 100%
     if (_totalRatio == MAX_RATIO):
         return safeMul(_amount, _reserveBalance) // _supply;
 
     baseD = _supply - _amount;
     (result, precision) = power(_supply, baseD, MAX_RATIO, _totalRatio);
-    temp = safeMul(_reserveBalance, result) >> precision;
-    return temp - _reserveBalance;
+    temp1 = safeMul(_reserveBalance, result);
+    temp2 = _reserveBalance << precision;
+    return (temp1 - temp2) // result;
 
 '''
     @dev General Description:
@@ -331,6 +336,7 @@ def calculateLiquidateReturn(_supply, _reserveBalance, _totalRatio, _amount):
         Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
         This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
         This functions assumes that "_expN < 2 ^ 256 / log(MAX_NUM - 1)", otherwise the multiplication should be replaced with a "safeMul".
+        Since we rely on unsigned-integer arithmetic and "base < 1" ==> "log(base) < 0", this function does not support "_baseN < _baseD".
 '''
 def power(_baseN, _baseD, _expN, _expD):
     assert(_baseN < MAX_NUM);

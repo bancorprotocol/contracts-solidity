@@ -36,18 +36,14 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     }
 
     /**
-      * @dev deposit ether in the account
+      * @dev deposit ether on behalf of the sender
     */
     function deposit() public payable {
-        balanceOf[msg.sender] = balanceOf[msg.sender].add(msg.value); // add the value to the account balance
-        totalSupply = totalSupply.add(msg.value); // increase the total supply
-
-        emit Issuance(msg.value);
-        emit Transfer(this, msg.sender, msg.value);
+        depositTo(msg.sender);
     }
 
     /**
-      * @dev withdraw ether from the account
+      * @dev withdraw ether to the sender's account
       * 
       * @param _amount  amount of ether to withdraw
     */
@@ -56,7 +52,24 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     }
 
     /**
-      * @dev withdraw ether from the account to a target account
+      * @dev deposit ether to be entitled for a given account
+      * 
+      * @param _to      account to be entitled for the ether
+    */
+    function depositTo(address _to)
+        public
+        payable
+        notThis(_to)
+    {
+        balanceOf[_to] = balanceOf[_to].add(msg.value); // add the value to the account balance
+        totalSupply = totalSupply.add(msg.value); // increase the total supply
+
+        emit Issuance(msg.value);
+        emit Transfer(this, _to, msg.value);
+    }
+
+    /**
+      * @dev withdraw ether entitled by the sender to a given account
       * 
       * @param _to      account to receive the ether
       * @param _amount  amount of ether to withdraw

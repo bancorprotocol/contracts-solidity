@@ -10,7 +10,6 @@ const BancorNetwork = artifacts.require('BancorNetwork');
 const BancorConverter = artifacts.require('BancorConverter');
 const SmartToken = artifacts.require('SmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
-const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const ERC20Token = artifacts.require('ERC20Token');
@@ -19,8 +18,6 @@ const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
 const ratio10Percent = 100000;
-const gasPrice = 22000000000;
-const gasPriceBadHigh = 22000000001;
 
 let token;
 let tokenAddress;
@@ -77,15 +74,11 @@ contract('BancorConverter', accounts => {
         contractFeatures = await ContractFeatures.new();
         await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
 
-        let gasPriceLimit = await BancorGasPriceLimit.new(gasPrice);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_GAS_PRICE_LIMIT, gasPriceLimit.address);
-
         let bancorFormula = await BancorFormula.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
 
         let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
-        await bancorNetwork.setSignerAddress(accounts[3]);
 
         let factory = await BancorConverterFactory.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY, factory.address);
@@ -730,13 +723,6 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.convert(reserveToken.address, tokenAddress, 0, 1));
     });
 
-    it('should throw when attempting to buy with gas price higher than the universal limit', async () => {
-        let converter = await initConverter(accounts, true);
-        await reserveToken.approve(converter.address, 500);
-
-        await utils.catchRevert(converter.convert(reserveToken.address, tokenAddress, 500, 1, { gasPrice: gasPriceBadHigh }));
-    });
-
     it('should throw when attempting to buy with 0 minimum requested amount', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
@@ -1355,13 +1341,6 @@ contract('BancorConverter', accounts => {
         await reserveToken.approve(converter.address, 500);
 
         await utils.catchRevert(converter.convert2(reserveToken.address, tokenAddress, 0, 1, utils.zeroAddress, 0));
-    });
-
-    it('should throw when attempting to buy with gas price higher than the universal limit', async () => {
-        let converter = await initConverter(accounts, true);
-        await reserveToken.approve(converter.address, 500);
-
-        await utils.catchRevert(converter.convert2(reserveToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0, { gasPrice: gasPriceBadHigh }));
     });
 
     it('should throw when attempting to buy with 0 minimum requested amount', async () => {

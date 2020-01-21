@@ -52,8 +52,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev version number
     */
-    uint16 public version = 24;
-    string public converterType = 'bancor';
+    uint16 public version = 25;
 
     IWhitelist public conversionWhitelist;          // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public reserveTokens;             // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
@@ -636,36 +635,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         payable
         returns (uint256)
     {
-        return quickConvertPrioritized2(_path, _amount, _minReturn, getSignature(0x0, 0x0, 0x0, 0x0, 0x0), _affiliateAccount, _affiliateFee);
-    }
-
-    /**
-      * @dev converts the token to any other token in the bancor network by following a predefined conversion path
-      * note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
-      * note that prior to version 16, you should use 'quickConvertPrioritized' instead
-      * 
-      * @param _path                conversion path, see conversion path format in the BancorNetwork contract
-      * @param _amount              amount to convert from (in the initial source token)
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-      * @param _signature           an array of the following elements:
-      *     [0] uint256             custom value that was signed for prioritized conversion; must be equal to _amount
-      *     [1] uint256             if the current block exceeded the given parameter - it is cancelled
-      *     [2] uint8               (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-      *     [3] bytes32             (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-      *     [4] bytes32             (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
-      * if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
-      * @param _affiliateAccount    affiliate account
-      * @param _affiliateFee        affiliate fee in PPM
-      * 
-      * @return tokens issued in return
-    */
-    function quickConvertPrioritized2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256[] memory _signature, address _affiliateAccount, uint256 _affiliateFee)
-        public
-        payable
-        returns (uint256)
-    {
-        require(_signature.length == 0 || _signature[0] == _amount);
-
         IBancorNetwork bancorNetwork = IBancorNetwork(addressOf(BANCOR_NETWORK));
 
         // we need to transfer the source tokens from the caller to the BancorNetwork contract,
@@ -684,7 +653,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         }
 
         // execute the conversion and pass on the ETH with the call
-        return bancorNetwork.convertForPrioritized4.value(msg.value)(_path, _amount, _minReturn, msg.sender, _signature, _affiliateAccount, _affiliateFee);
+        return bancorNetwork.convertFor2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -696,28 +665,17 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
       * @param _path            conversion path, see conversion path format in the BancorNetwork contract
       * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction 
-      * @param _signature       an array of the following elements:
-      *     [0] uint256         custom value that was signed for prioritized conversion; must be equal to _conversionId
-      *     [1] uint256         if the current block exceeded the given parameter - it is cancelled
-      *     [2] uint8           (signature[128:130]) associated with the signer address and helps to validate if the signature is legit
-      *     [3] bytes32         (signature[0:64]) associated with the signer address and helps to validate if the signature is legit
-      *     [4] bytes32         (signature[64:128]) associated with the signer address and helps to validate if the signature is legit
-      * if the array is empty (length == 0), then the gas-price limit is verified instead of the signature
       * 
       * @return tokens issued in return
     */
     function completeXConversion2(
         IERC20Token[] _path,
         uint256 _minReturn,
-        uint256 _conversionId,
-        uint256[] memory _signature
+        uint256 _conversionId
     )
         public
         returns (uint256)
     {
-        // verify that the custom value (if valid) is equal to _conversionId
-        require(_signature.length == 0 || _signature[0] == _conversionId);
-
         IBancorX bancorX = IBancorX(addressOf(BANCOR_X));
         IBancorNetwork bancorNetwork = IBancorNetwork(addressOf(BANCOR_NETWORK));
 
@@ -731,7 +689,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         token.destroy(msg.sender, amount);
         token.issue(bancorNetwork, amount);
 
-        return bancorNetwork.convertForPrioritized4(_path, amount, _minReturn, msg.sender, _signature, address(0), 0);
+        return bancorNetwork.convertFor2(_path, amount, _minReturn, msg.sender, address(0), 0);
     }
 
     /**
@@ -857,29 +815,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         emit Conversion(_fromToken, _toToken, msg.sender, _amount, _returnAmount, int256(_feeAmount));
     }
 
-    function getSignature(
-        uint256 _customVal,
-        uint256 _block,
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s
-    ) private pure returns (uint256[] memory) {
-        if (_v == 0x0 && _r == 0x0 && _s == 0x0)
-            return new uint256[](0);
-        uint256[] memory signature = new uint256[](5);
-        signature[0] = _customVal;
-        signature[1] = _block;
-        signature[2] = uint256(_v);
-        signature[3] = uint256(_r);
-        signature[4] = uint256(_s);
-        return signature;
-    }
-
-    /**	
-      * @dev deprecated, backward compatibility	
-    */	
-    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {	
-        return convertInternal(_fromToken, _toToken, _amount, _minReturn);	
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+        return convertInternal(_fromToken, _toToken, _amount, _minReturn);
     }
 
     /**
@@ -899,15 +839,22 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev deprecated, backward compatibility
     */
-    function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) public payable returns (uint256) {
-        return quickConvertPrioritized2(_path, _amount, _minReturn, getSignature(_amount, _block, _v, _r, _s), address(0), 0);
+    function quickConvertPrioritized2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256[] memory, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
+        return quickConvert2(_path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function completeXConversion(IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s) public returns (uint256) {
-        return completeXConversion2(_path, _minReturn, _conversionId, getSignature(_conversionId, _block, _v, _r, _s));
+    function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256, uint8, bytes32, bytes32) public payable returns (uint256) {
+        return quickConvert2(_path, _amount, _minReturn, address(0), 0);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function completeXConversion(IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256, uint8, bytes32, bytes32) public returns (uint256) {
+        return completeXConversion2(_path, _minReturn, _conversionId);
     }
 
     /**

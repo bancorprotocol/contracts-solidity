@@ -35,6 +35,15 @@ contract('EtherToken', accounts => {
         assert.equal(supply, 1000);
     });
 
+    it('verifies the balance and supply after a deposit through the depositTo function', async () => {
+        let token = await EtherToken.new();
+        await token.depositTo(accounts[1], { value: 1000 });
+        let balance = await token.balanceOf.call(accounts[1]);
+        assert.equal(balance, 1000);
+        let supply = await token.totalSupply.call();
+        assert.equal(supply, 1000);
+    });
+
     it('verifies the balance and supply after a withdrawal', async () => {
         let token = await EtherToken.new();
         await token.deposit({ value: 100 });

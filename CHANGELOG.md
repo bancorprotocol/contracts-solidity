@@ -1,3 +1,20 @@
+### 0.5.14 (2020-01-21)
+BancorNetwork
+* Removed signature/gas price limit logic
+
+BancorConverter
+* Removed the `converterType` variable
+
+BancorConverterUpgrader
+* Removed legacy converter (0.4) support
+
+BancorFormula
+* Increased liquidation cost precision
+
+EtherToken
+* Added `depositTo` function for direct depositing to another account for gas optimization
+
+
 ### 0.5.13 (2020-01-09)
 BancorNetwork
 * Added a new Conversion event that gets emitted for any conversion in the network

@@ -22,7 +22,7 @@ def calculateFundCost(supply, balance, ratios, amount):
 
 
 def calculateLiquidateReturn(supply, balance, ratios, amount):
-    return Decimal(balance)*((Decimal(supply)/Decimal(supply-amount))**(1000000/Decimal(ratios))-1)
+    return Decimal(balance)*(1-(Decimal(supply-amount)/Decimal(supply))**(1000000/Decimal(ratios)))
 
 
 def power(baseN, baseD, expN, expD, precision):

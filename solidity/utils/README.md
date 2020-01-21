@@ -122,9 +122,6 @@ Here is an example of the initial configuration file which should be provided to
         "fee": 3000,
         "ratio1": 100000,
         "reserve1": "41100000000000000"
-    },
-    "priceLimitParams": {
-        "value": "6000000000"
     }
 }
 ```

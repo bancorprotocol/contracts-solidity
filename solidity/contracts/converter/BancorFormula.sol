@@ -6,7 +6,7 @@ import '../utility/Utils.sol';
 contract BancorFormula is IBancorFormula, Utils {
     using SafeMath for uint256;
 
-    uint16 public version = 5;
+    uint16 public version = 6;
 
     uint256 private constant ONE = 1;
     uint32 private constant MAX_RATIO = 1000000;
@@ -206,7 +206,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * calculates the return for a given conversion (in the reserve token)
       * 
       * Formula:
-      * Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1 / (_reserveRatio / 1000000)))
+      * Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1000000 / _reserveRatio))
       * 
       * @param _supply              token total supply
       * @param _reserveBalance      total reserve
@@ -312,7 +312,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * calculates the amount of reserve tokens received for selling the given amount of smart tokens
       * 
       * Formula:
-      * Return = _reserveBalance * ((_supply / (_supply - _amount)) ^ (MAX_RATIO / _totalRatio) - 1)
+      * Return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_RATIO / _totalRatio))
       * 
       * @param _supply              smart token supply
       * @param _reserveBalance      reserve token balance
@@ -329,6 +329,10 @@ contract BancorFormula is IBancorFormula, Utils {
         if (_amount == 0)
             return 0;
 
+        // special case for liquidating the entire supply
+        if (_amount == _supply)
+            return _reserveBalance;
+
         // special case if the total ratio = 100%
         if (_totalRatio == MAX_RATIO)
             return _amount.mul(_reserveBalance) / _supply;
@@ -337,8 +341,9 @@ contract BancorFormula is IBancorFormula, Utils {
         uint8 precision;
         uint256 baseD = _supply - _amount;
         (result, precision) = power(_supply, baseD, MAX_RATIO, _totalRatio);
-        uint256 temp = _reserveBalance.mul(result) >> precision;
-        return temp - _reserveBalance;
+        uint256 temp1 = _reserveBalance.mul(result);
+        uint256 temp2 = _reserveBalance << precision;
+        return (temp1 - temp2) / result;
     }
 
     /**
@@ -357,6 +362,7 @@ contract BancorFormula is IBancorFormula, Utils {
       *     Hence we need to determine the highest precision which can be used for the given input, before calling the exponentiation function.
       *     This allows us to compute "base ^ exp" with maximum accuracy and without exceeding 256 bits in any of the intermediate computations.
       *     This functions assumes that "_expN < 2 ^ 256 / log(MAX_NUM - 1)", otherwise the multiplication should be replaced with a "safeMul".
+      *     Since we rely on unsigned-integer arithmetic and "base < 1" ==> "log(base) < 0", this function does not support "_baseN < _baseD".
     */
     function power(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) internal view returns (uint256, uint8) {
         require(_baseN < MAX_NUM);
