@@ -128,7 +128,7 @@ async function run() {
     const bancorNetworkPathFinder     = await web3Func(deploy, "bancorNetworkPathFinder"    , "BancorNetworkPathFinder"    , [contractRegistry._address]);
     const bancorConverterRegistry     = await web3Func(deploy, "bancorConverterRegistry"    , "BancorConverterRegistry"    , [contractRegistry._address]);
     const bancorConverterRegistryData = await web3Func(deploy, "bancorConverterRegistryData", "BancorConverterRegistryData", [contractRegistry._address]);
-    const etherToken                  = await web3Func(deploy, "etherToken"                 , "EtherToken"                 , []);
+    const etherToken                  = await web3Func(deploy, "etherToken"                 , "EtherToken"                 , [etherTokenParams .name, etherTokenParams .symbol]);
     const smartToken0                 = await web3Func(deploy, "smartToken0"                , "SmartToken"                 , [smartToken0Params.name, smartToken0Params.symbol, smartToken0Params.decimals]);
     const smartToken1                 = await web3Func(deploy, "smartToken1"                , "SmartToken"                 , [smartToken1Params.name, smartToken1Params.symbol, smartToken1Params.decimals]);
     const smartToken2                 = await web3Func(deploy, "smartToken2"                , "SmartToken"                 , [smartToken2Params.name, smartToken2Params.symbol, smartToken2Params.decimals]);

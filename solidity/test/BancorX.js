@@ -29,7 +29,7 @@ function assertEqual(x, y) {
 }
 
 async function initBancorX(accounts, isSmartToken) {
-    const etherToken = await EtherToken.new()
+    const etherToken = await EtherToken.new('Ether', 'ETH')
     const contractRegistry = await ContractRegistry.new()
     const smartToken = await SmartToken.new('Bancor', 'BNT', 18)
     const bancorConverter = await BancorConverter.new(

@@ -5,20 +5,22 @@ const EtherToken = artifacts.require('EtherToken');
 const utils = require('./helpers/Utils');
 
 contract('EtherToken', accounts => {
+    let token;
+    beforeEach(async () => {
+        token = await EtherToken.new('Ether Token', 'ETH');
+    });
+
     it('verifies the token name after construction', async () => {
-        let token = await EtherToken.new();
         let name = await token.name.call();
         assert.equal(name, 'Ether Token');
     });
 
     it('verifies the token symbol after construction', async () => {
-        let token = await EtherToken.new();
         let symbol = await token.symbol.call();
         assert.equal(symbol, 'ETH');
     });
 
     it('verifies the balance and supply after a deposit through the deposit function', async () => {
-        let token = await EtherToken.new();
         await token.deposit({ value: 1000 });
         let balance = await token.balanceOf.call(accounts[0]);
         assert.equal(balance, 1000);
@@ -27,7 +29,6 @@ contract('EtherToken', accounts => {
     });
 
     it('verifies the balance and supply after a deposit through the fallback function', async () => {
-        let token = await EtherToken.new();
         await token.send(1000);
         let balance = await token.balanceOf.call(accounts[0]);
         assert.equal(balance, 1000);
@@ -36,7 +37,6 @@ contract('EtherToken', accounts => {
     });
 
     it('verifies the balance and supply after a deposit through the depositTo function', async () => {
-        let token = await EtherToken.new();
         await token.depositTo(accounts[1], { value: 1000 });
         let balance = await token.balanceOf.call(accounts[1]);
         assert.equal(balance, 1000);
@@ -45,7 +45,6 @@ contract('EtherToken', accounts => {
     });
 
     it('verifies the balance and supply after a withdrawal', async () => {
-        let token = await EtherToken.new();
         await token.deposit({ value: 100 });
         await token.withdraw(20);
         let tokenBalance = await token.balanceOf.call(accounts[0]);
@@ -55,7 +54,6 @@ contract('EtherToken', accounts => {
     });
 
     it('verifies the ether balance after a withdrawal', async () => {
-        let token = await EtherToken.new();
         await token.deposit({ value: 100 });
         let prevBalance = web3.eth.getBalance(accounts[0]);
         let res = await token.withdraw(20);
@@ -68,7 +66,6 @@ contract('EtherToken', accounts => {
     });
 
     it('verifies the ether balance after a withdrawal to target account', async () => {
-        let token = await EtherToken.new();
         await token.deposit({ value: 100 });
         let prevBalance = web3.eth.getBalance(accounts[1]);
         await token.withdrawTo(accounts[1], 20);
@@ -79,7 +76,6 @@ contract('EtherToken', accounts => {
     });
 
     it('verifies the balances after a transfer', async () => {
-        let token = await EtherToken.new();
         await token.deposit({ value: 100 });
         await token.transfer(accounts[1], 10);
         let balance;
@@ -90,14 +86,12 @@ contract('EtherToken', accounts => {
     });
 
     it('should throw when attempting to transfer to the token address', async () => {
-        let token = await EtherToken.new();
         await token.deposit({ value: 100 });
 
         await utils.catchRevert(token.transfer(token.address, 10));
     });
 
     it('should throw when attempting to transferFrom to the token address', async () => {
-        let token = await EtherToken.new();
         await token.deposit({ value: 100 });
         await token.approve(accounts[1], 50);
 

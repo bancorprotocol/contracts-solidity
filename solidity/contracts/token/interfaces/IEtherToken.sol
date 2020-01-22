@@ -1,11 +1,10 @@
 pragma solidity 0.4.26;
 import './IERC20Token.sol';
-import '../../utility/interfaces/ITokenHolder.sol';
 
 /*
     Ether Token interface
 */
-contract IEtherToken is ITokenHolder, IERC20Token {
+contract IEtherToken is IERC20Token {
     function deposit() public payable;
     function withdraw(uint256 _amount) public;
     function depositTo(address _to) public payable;

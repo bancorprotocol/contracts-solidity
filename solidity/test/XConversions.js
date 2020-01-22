@@ -461,7 +461,7 @@ const initBancorNetwork = async accounts => {
     const contractRegistry = await ContractRegistry.new()
     const contractFeatures = await ContractFeatures.new()
         
-    etherToken = await EtherToken.new()
+    etherToken = await EtherToken.new('Ether', 'ETH')
     bntToken = await SmartToken.new('Bancor', 'BNT', 18)
     bntConverter = await BancorConverter.new(
         bntToken.address,

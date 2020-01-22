@@ -39,7 +39,7 @@ contract('BancorConverterRegistry', function(accounts) {
     let converterRegistryData;
 
     before(async function() {
-        etherToken  = await EtherToken.new();
+        etherToken  = await EtherToken.new('Token0', 'TKN0');
         smartToken1 = await SmartToken.new('Token1', 'TKN1', 18);
         smartToken2 = await SmartToken.new('Token2', 'TKN2', 18);
         smartToken3 = await SmartToken.new('Token3', 'TKN3', 18);

@@ -53,6 +53,8 @@ Here is an example of the initial configuration file which should be provided to
 ```json
 {
     "etherTokenParams": {
+        "name": "Bancor Ether Token",
+        "symbol": "ETH",
         "supply": "12800000000000000"
     },
     "smartToken0Params": {
