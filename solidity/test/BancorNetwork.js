@@ -61,7 +61,7 @@ contract('BancorNetwork', accounts => {
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
 
-        etherToken = await EtherToken.new();
+        etherToken = await EtherToken.new('Token0', 'TKN0');
         await etherToken.deposit({ value: 10000000 });
 
         await bancorNetwork.registerEtherToken(etherToken.address, true);
@@ -232,7 +232,7 @@ contract('BancorNetwork', accounts => {
     });
 
     it('verifies valid ether token registration', async () => {
-        let etherToken1 = await EtherToken.new();
+        let etherToken1 = await EtherToken.new('Token0', 'TKN0');
         await etherToken1.deposit({ value: 10000000 });
         let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
         await bancorNetwork1.registerEtherToken(etherToken1.address, true);
@@ -246,14 +246,14 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when non owner attempting register ether token', async () => {
-        let etherToken1 = await EtherToken.new();
+        let etherToken1 = await EtherToken.new('Token0', 'TKN0');
         await etherToken1.deposit({ value: 10000000 });
         let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
         await utils.catchRevert(bancorNetwork1.registerEtherToken(etherToken1.address, true, { from: accounts[1] }));
     });
 
     it('verifies valid ether token unregistration', async () => {
-        let etherToken1 = await EtherToken.new();
+        let etherToken1 = await EtherToken.new('Token0', 'TKN0');
         await etherToken1.deposit({ value: 10000000 });
         let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
         await bancorNetwork1.registerEtherToken(etherToken1.address, true);
@@ -265,7 +265,7 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when non owner attempting to unregister ether token', async () => {
-        let etherToken1 = await EtherToken.new();
+        let etherToken1 = await EtherToken.new('Token0', 'TKN0');
         await etherToken1.deposit({ value: 10000000 });
         let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
         await bancorNetwork1.registerEtherToken(etherToken1.address, true);

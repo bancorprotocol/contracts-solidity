@@ -1,8 +1,6 @@
 pragma solidity 0.4.26;
 import './ERC20Token.sol';
 import './interfaces/IEtherToken.sol';
-import '../utility/Owned.sol';
-import '../utility/TokenHolder.sol';
 import '../utility/SafeMath.sol';
 
 /**
@@ -10,7 +8,7 @@ import '../utility/SafeMath.sol';
   * 
   * 'Owned' is specified here for readability reasons
 */
-contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
+contract EtherToken is IEtherToken, ERC20Token {
     using SafeMath for uint256;
 
     /**
@@ -29,10 +27,13 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
 
     /**
       * @dev initializes a new EtherToken instance
+      * 
+      * @param _name        token name
+      * @param _symbol      token symbol
     */
-    constructor()
+    constructor(string _name, string _symbol)
         public
-        ERC20Token('Ether Token', 'ETH', 18, 0) {
+        ERC20Token(_name, _symbol, 18, 0) {
     }
 
     /**
