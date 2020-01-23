@@ -1,3 +1,8 @@
+### 0.5.15 (2020-01-23)
+EtherToken
+* Name & symbol are now constructor args
+
+
 ### 0.5.14 (2020-01-21)
 BancorNetwork
 * Removed signature/gas price limit logic
