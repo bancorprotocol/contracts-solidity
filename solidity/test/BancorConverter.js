@@ -1116,20 +1116,38 @@ contract('BancorConverter', accounts => {
         await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, contractRegistry.address);
     });
 
+    it('should allow anyone to update the registry address', async () => {
+        let converter = await initConverter(accounts, false);
+        let newRegistry = await ContractRegistry.new();
+
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, newRegistry.address);
+        await newRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, newRegistry.address);
+        await converter.updateRegistry({ from: accounts[1] });
+
+        assert.equal(await converter.registry.call(), newRegistry.address);
+        assert.equal(await converter.prevRegistry.call(), contractRegistry.address);
+
+        // set the original registry back
+        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, contractRegistry.address);
+    });
+
     it('should allow the owner to restore the previous registry and disable updates', async () => {
         let converter = await initConverter(accounts, false);
         let newRegistry = await ContractRegistry.new();
 
         await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, newRegistry.address);
         await newRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, newRegistry.address);
-        await converter.updateRegistry();
+        await converter.updateRegistry({ from: accounts[1] });
 
-        await converter.restoreRegistry();
+        await converter.restoreRegistry({ from: accounts[0] });
 
         assert.equal(await converter.registry.call(), contractRegistry.address);
         assert.equal(await converter.prevRegistry.call(), contractRegistry.address);
 
-        await converter.updateRegistry();
+        await converter.restrictRegistryUpdate(true, { from: accounts[0] });
+        await utils.catchRevert(converter.updateRegistry({ from: accounts[1] }));
+
+        await converter.updateRegistry({ from: accounts[0] });
         assert.equal(await converter.registry.call(), newRegistry.address);
         assert.equal(await converter.prevRegistry.call(), contractRegistry.address);
 
