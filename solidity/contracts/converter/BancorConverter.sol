@@ -4,7 +4,6 @@ import './interfaces/IBancorConverterUpgrader.sol';
 import './interfaces/IBancorFormula.sol';
 import '../IBancorNetwork.sol';
 import '../FeatureIds.sol';
-import '../utility/Managed.sol';
 import '../utility/SafeMath.sol';
 import '../utility/ContractRegistryClient.sol';
 import '../utility/interfaces/IContractFeatures.sol';
@@ -35,7 +34,7 @@ import '../bancorx/interfaces/IBancorX.sol';
   * Other potential solutions might include a commit/reveal based schemes
   * - Possibly add getters for the reserve fields so that the client won't need to rely on the order in the struct
 */
-contract BancorConverter is IBancorConverter, SmartTokenController, Managed, ContractRegistryClient, FeatureIds {
+contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegistryClient, FeatureIds {
     using SafeMath for uint256;
 
     uint32 private constant RATIO_RESOLUTION = 1000000;
@@ -223,13 +222,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     /**
       * @dev updates the current conversion fee
-      * can only be called by the manager
+      * can only be called by the contract owner
       * 
       * @param _conversionFee new conversion fee, represented in ppm
     */
     function setConversionFee(uint32 _conversionFee)
         public
-        ownerOrManagerOnly
+        ownerOnly
     {
         require(_conversionFee >= 0 && _conversionFee <= maxConversionFee);
         emit ConversionFeeUpdate(conversionFee, _conversionFee);
@@ -270,7 +269,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
       * @dev upgrades the converter to the latest version
       * can only be called by the owner
-      * note that the owner needs to call acceptOwnership/acceptManagement on the new converter after the upgrade
+      * note that the owner needs to call acceptOwnership on the new converter after the upgrade
     */
     function upgrade() public ownerOnly {
         IBancorConverterUpgrader converterUpgrader = IBancorConverterUpgrader(addressOf(BANCOR_CONVERTER_UPGRADER));
@@ -690,13 +689,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         token.issue(bancorNetwork, amount);
 
         return bancorNetwork.convertFor2(_path, amount, _minReturn, msg.sender, address(0), 0);
-    }
-
-    /**
-      * @dev returns whether or not the caller is an administrator
-     */
-    function isAdmin() internal view returns (bool) {
-        return msg.sender == owner || msg.sender == manager;
     }
 
     /**

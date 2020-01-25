@@ -198,23 +198,13 @@ contract('BancorConverter', accounts => {
         assert.equal(conversionFee, 30000);
     });
 
-    it('verifies the manager can update the fee', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
-        await converter.transferManagement(accounts[4]);
-        await converter.acceptManagement({ from: accounts[4] });
-
-        await converter.setConversionFee(30000, { from: accounts[4] });
-        let conversionFee = await converter.conversionFee.call();
-        assert.equal(conversionFee, 30000);
-    });
-
     it('should throw when attempting to update the fee to an invalid value', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
 
         await utils.catchRevert(converter.setConversionFee(200001));
     });
 
-    it('should throw when a non owner and non manager attempts to update the fee', async () => {
+    it('should throw when a non owner attempts to update the fee', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
 
         await utils.catchRevert(converter.setConversionFee(30000, { from: accounts[1] }));
