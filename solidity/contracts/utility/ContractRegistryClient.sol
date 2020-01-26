@@ -21,7 +21,7 @@ contract ContractRegistryClient is Owned, Utils {
 
     IContractRegistry public registry;      // address of the current contract-registry
     IContractRegistry public prevRegistry;  // address of the previous contract-registry
-    bool public adminOnly;                  // only an administrator can update the contract-registry
+    bool public onlyOwnerCanUpdateRegistry; // only an owner can update the contract-registry
 
     /**
       * @dev verifies that the caller is mapped to the given contract name
@@ -48,7 +48,7 @@ contract ContractRegistryClient is Owned, Utils {
      */
     function updateRegistry() public {
         // verify that this function is permitted
-        require(!adminOnly || isAdmin());
+        require(msg.sender == owner || !onlyOwnerCanUpdateRegistry);
 
         // get the new contract-registry
         address newRegistry = addressOf(CONTRACT_REGISTRY);
@@ -69,10 +69,7 @@ contract ContractRegistryClient is Owned, Utils {
     /**
       * @dev restores the previous contract-registry
     */
-    function restoreRegistry() public {
-        // verify that this function is permitted
-        require(isAdmin());
-
+    function restoreRegistry() public ownerOnly {
         // restore the previous contract-registry
         registry = prevRegistry;
     }
@@ -80,21 +77,11 @@ contract ContractRegistryClient is Owned, Utils {
     /**
       * @dev restricts the permission to update the contract-registry
       * 
-      * @param _adminOnly    indicates whether or not permission is restricted to administrator only
+      * @param _onlyOwnerCanUpdateRegistry  indicates whether or not permission is restricted to owner only
     */
-    function restrictRegistryUpdate(bool _adminOnly) public {
-        // verify that this function is permitted
-        require(adminOnly != _adminOnly && isAdmin());
-
+    function restrictRegistryUpdate(bool _onlyOwnerCanUpdateRegistry) ownerOnly public {
         // change the permission to update the contract-registry
-        adminOnly = _adminOnly;
-    }
-
-    /**
-      * @dev returns whether or not the caller is an administrator
-     */
-    function isAdmin() internal view returns (bool) {
-        return msg.sender == owner;
+        onlyOwnerCanUpdateRegistry = _onlyOwnerCanUpdateRegistry;
     }
 
     /**
