@@ -7,7 +7,6 @@ import '../FeatureIds.sol';
 import '../utility/SafeMath.sol';
 import '../utility/ContractRegistryClient.sol';
 import '../utility/interfaces/IContractFeatures.sol';
-import '../utility/interfaces/IAddressList.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/INonStandardERC20.sol';
