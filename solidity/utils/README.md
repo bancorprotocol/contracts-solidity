@@ -6,12 +6,14 @@
 
 ### Fetch Conversion Events
 
-```bash
-node fetch_conversion_events.js
-    Ethereum node address
-    Smart token address
-    From block number
-    To block number
+```javascript
+const fetch = require("./fetch_conversion_events.js");
+
+async function main() {
+    ...
+    const events = await fetch(nodeAddress, tokenAddress, fromBlock, toBlock);
+    ...
+}
 ```
 
 ### Retrieve Contract Version
