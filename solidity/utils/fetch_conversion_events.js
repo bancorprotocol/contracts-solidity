@@ -13,10 +13,11 @@ const CONVERSION_EVENT_LEGACY = [
 ];
 
 function parseOwnerUpdateEvent(log) {
+    const indexed = log.topics.length > 1;
     return {
         blockNumber: log.blockNumber,
-        prevOwner: Web3.utils.toChecksumAddress(log.topics[1] ? log.topics[1].slice(-40) : log.data.slice(26, 66)),
-        currOwner: Web3.utils.toChecksumAddress(log.topics[2] ? log.topics[2].slice(-40) : log.data.slice(90, 130))
+        prevOwner: Web3.utils.toChecksumAddress(indexed ? log.topics[1].slice(-40) : log.data.slice(26, 66)),
+        currOwner: Web3.utils.toChecksumAddress(indexed ? log.topics[2].slice(-40) : log.data.slice(90, 130))
     };
 }
 
