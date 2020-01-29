@@ -61,12 +61,12 @@ async function getConversionEvents(web3, tokenAddress, fromBlock, toBlock) {
     const batches = [{fromBlock: fromBlock}];
     const events = await getOwnerUpdateEvents(web3, tokenAddress, fromBlock, toBlock);
     for (const event of events.filter(event => event.blockNumber > fromBlock)) {
-        batches[batches.length - 1].owner = event.prevOwner;
         batches[batches.length - 1].toBlock = event.blockNumber - 1;
+        batches[batches.length - 1].owner = event.prevOwner;
         batches.push({fromBlock: event.blockNumber});
     }
-    batches[batches.length - 1].owner = events[events.length - 1].currOwner;
     batches[batches.length - 1].toBlock = toBlock;
+    batches[batches.length - 1].owner = events[events.length - 1].currOwner;
 
     let index = 0;
     for (const batch of batches) {
