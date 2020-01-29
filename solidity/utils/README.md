@@ -4,6 +4,16 @@
 
 ### [Installation](../../README.md#installation)
 
+### Fetch Conversion Events
+
+```bash
+node fetch_conversion_events.js
+    Ethereum node address
+    Smart token address
+    From block number
+    To block number
+```
+
 ### Retrieve Contract Version
 
 ```bash
