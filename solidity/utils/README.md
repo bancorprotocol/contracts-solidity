@@ -4,26 +4,6 @@
 
 ### [Installation](../../README.md#installation)
 
-### Fetch Conversion Events
-
-```javascript
-const fetch = require("./fetch_conversion_events.js");
-
-async function main() {
-    ...
-    const events = await fetch(nodeAddress, tokenAddress, fromBlock, toBlock);
-    ...
-}
-```
-
-### Retrieve Contract Version
-
-```bash
-node retrieve_contract_version.js
-    Ethereum node address
-    Designated contract address
-```
-
 ### Verify Network Path Finder
 
 ```bash
