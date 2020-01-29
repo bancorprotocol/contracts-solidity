@@ -12,6 +12,14 @@ const CONVERSION_EVENT_LEGACY = [
     {"anonymous":false,"inputs":[{"indexed":true,"name":"fromToken","type":"address"},{"indexed":true,"name":"toToken","type":"address"},{"indexed":true,"name":"trader","type":"address"},{"indexed":false,"name":"inputAmount","type":"uint256"},{"indexed":false,"name":"outputAmount","type":"uint256"},{"indexed":false,"name":"conversionFee","type":"int256"}],"name":"Conversion","type":"event"}
 ];
 
+function parseOwnerUpdateEvent(log) {
+    return {
+        blockNumber: log.blockNumber,
+        prevOwner: Web3.utils.toChecksumAddress(log.topics[1] ? log.topics[1].slice(-40) : log.data.slice(26, 66)),
+        currOwner: Web3.utils.toChecksumAddress(log.topics[2] ? log.topics[2].slice(-40) : log.data.slice(90, 130))
+    };
+}
+
 async function getPastLogs(web3, address, topic0, fromBlock, toBlock) {
     try {
         return await web3.eth.getPastLogs({address: address, topics: [topic0], fromBlock: fromBlock, toBlock: toBlock});
@@ -37,18 +45,12 @@ async function getPastEvents(contract, eventName, fromBlock, toBlock) {
 }
 
 async function getOwnerUpdateEvents(web3, tokenAddress, fromBlock, toBlock) {
-    while (toBlock >= GENESIS_BLOCK_NUMBER) {
-        const logs = await getPastLogs(web3, tokenAddress, OWNER_UPDATE_EVENT_HASH, fromBlock, toBlock);
-        if (logs.length > 0) {
-            return logs.map(log => ({
-                blockNumber: log.blockNumber,
-                prevOwner: Web3.utils.toChecksumAddress(log.topics[1] ? log.topics[1].slice(-40) : log.data.slice(26, 66)),
-                currOwner: Web3.utils.toChecksumAddress(log.topics[2] ? log.topics[2].slice(-40) : log.data.slice(90, 130))
-            }));
-        }
-        toBlock = fromBlock - 1;
-        fromBlock = fromBlock >> 1;
-    }
+    const logs = await getPastLogs(web3, tokenAddress, OWNER_UPDATE_EVENT_HASH, fromBlock, toBlock);
+    if (logs.length > 0)
+        return logs.map(log => parseOwnerUpdateEvent(log));
+    const prelogs = await getPastLogs(web3, tokenAddress, OWNER_UPDATE_EVENT_HASH, GENESIS_BLOCK_NUMBER, fromBlock - 1);
+    if (prelogs.length > 0)
+        return [parseOwnerUpdateEvent(prelogs[prelogs.length - 1])];
     throw new Error("Inactive Token");
 }
 
