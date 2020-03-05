@@ -25,13 +25,8 @@ import '../bancorx/interfaces/IBancorX.sol';
   * WARNING: It is NOT RECOMMENDED to use the converter with Smart Tokens that have less than 8 decimal digits or with very small numbers because of precision loss 
   * 
   * Open issues:
-  * - Front-running attacks are currently mitigated by the following mechanisms:
-  *     - minimum return argument for each conversion provides a way to define a minimum/maximum price for the transaction
-  *     - gas price limit prevents users from having control over the order of execution
-  *     - gas price limit check can be skipped if the transaction comes from a trusted, whitelisted signer
-  * 
-  * Other potential solutions might include a commit/reveal based schemes
-  * - Possibly add getters for the reserve fields so that the client won't need to rely on the order in the struct
+  * - Front-running attacks are currently mitigated by providing the minimum return argument for each conversion
+  *   Other potential solutions might include a commit/reveal based schemes
 */
 contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegistryClient, FeatureIds {
     using SafeMath for uint256;
