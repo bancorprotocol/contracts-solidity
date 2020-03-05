@@ -84,7 +84,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     */
     function addConverter(IBancorConverter _converter) external {
         // validate input
-        require(isConverterValid(_converter));
+        require(isConverterValid(_converter) && getLiquidityPoolByReserveConfig(_converter) == ISmartToken(0));
 
         IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_converter).token();
@@ -307,45 +307,50 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return true if the given converter is valid, false if not
     */
     function isConverterValid(IBancorConverter _converter) public view returns (bool) {
+        // verify the the smart token has a supply and that the converter is active
         ISmartToken token = ISmartTokenController(_converter).token();
-
-        // verifies the the smart token has a supply and that the converter is active
         if (token.totalSupply() == 0 || token.owner() != address(_converter))
             return false;
 
+        // verify that the converter holds balance in each of its reserves
         uint reserveTokenCount = _converter.connectorTokenCount();
-        address[] memory reserveTokens = new address[](reserveTokenCount);
-        uint[] memory reserveRatios = new uint[](reserveTokenCount);
-
-        // verifies that the converter holds balance in each of its reserves
         for (uint i = 0; i < reserveTokenCount; i++) {
-            IERC20Token reserveToken = _converter.connectorTokens(i);
-            if (reserveToken.balanceOf(_converter) == 0)
+            if (_converter.connectorTokens(i).balanceOf(_converter) == 0)
                 return false;
-            reserveTokens[i] = reserveToken;
-            reserveRatios[i] = getReserveRatio(_converter, reserveToken);
         }
 
-        return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) == ISmartToken(0);
+        return true;
     }
 
     /**
-      * @dev searches for a liquidity pool with specific reserve tokens / ratios
+      * @dev searches for a liquidity pool with specific reserve tokens/ratios
       * 
-      * @param _reserveTokens   reserve tokens
-      * @param _reserveRatios   reserve ratios
+      * @param _converter converter with specific reserve tokens/ratios
       * @return the liquidity pool, or zero if no such liquidity pool exists
     */
-    function getLiquidityPoolByReserveConfig(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (ISmartToken) {
-        // validate input - ensure that the number of reserve tokens match the number of reserve ratio
-        if (_reserveTokens.length == _reserveRatios.length && _reserveTokens.length > 1) {
+    function getLiquidityPoolByReserveConfig(IBancorConverter _converter) public view returns (ISmartToken) {
+        uint reserveTokenCount = _converter.connectorTokenCount();
+
+        // verify that the converter holds a liquidity pool
+        if (reserveTokenCount > 1) {
+            address[] memory reserveTokens = new address[](reserveTokenCount);
+            uint[] memory reserveRatios = new uint[](reserveTokenCount);
+
+            // get the reserve-configuration of the converter
+            for (uint n = 0; n < reserveTokenCount; n++) {
+                IERC20Token reserveToken = _converter.connectorTokens(n);
+                reserveTokens[n] = reserveToken;
+                reserveRatios[n] = getReserveRatio(_converter, reserveToken);
+            }
+
             // get the smart tokens of the least frequent token (optimization)
-            address[] memory convertibleTokenSmartTokens = getLeastFrequentTokenSmartTokens(_reserveTokens);
+            address[] memory convertibleTokenSmartTokens = getLeastFrequentTokenSmartTokens(reserveTokens);
+
             // search for a converter with an identical reserve-configuration
             for (uint i = 0; i < convertibleTokenSmartTokens.length; i++) {
                 ISmartToken smartToken = ISmartToken(convertibleTokenSmartTokens[i]);
                 IBancorConverter converter = IBancorConverter(smartToken.owner());
-                if (isConverterReserveConfigEqual(converter, _reserveTokens, _reserveRatios))
+                if (isConverterReserveConfigEqual(converter, reserveTokens, reserveRatios))
                     return smartToken;
             }
         }

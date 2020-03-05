@@ -4,14 +4,6 @@
 
 ### [Installation](../../README.md#installation)
 
-### Retrieve Contract Version
-
-```bash
-node retrieve_contract_version.js
-    Ethereum node address
-    Designated contract address
-```
-
 ### Verify Network Path Finder
 
 ```bash

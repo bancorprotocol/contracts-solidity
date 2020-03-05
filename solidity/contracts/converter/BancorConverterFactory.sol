@@ -49,7 +49,6 @@ contract BancorConverterFactory is IBancorConverterFactory {
         );
 
         converter.transferOwnership(msg.sender);
-        converter.transferManagement(msg.sender);
 
         address _converterAddress = address(converter);
         emit NewConverter(_converterAddress, msg.sender);

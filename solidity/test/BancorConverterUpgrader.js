@@ -128,16 +128,6 @@ contract('BancorConverterUpgrader', accounts => {
         }        
     });
 
-    it('verifies that the management of the new converter is transfered to the old converter owner', async () => {        
-        for (let i = 0; i < versions.length; i++) {
-            let converter = await initConverter(accounts, true, versions[i]);
-            let initialManager = await converter.manager.call();
-            let newConverter = await upgradeConverter(converter, versions[i]);
-            let newManager = await newConverter.newManager.call();
-            assert.equal(initialManager, newManager);    
-        }
-    });
-
     it('verifies that the whitelist feature is enabled in the new converter', async () => {
         let converter = await initConverter(accounts, true);
         await converter.upgrade();

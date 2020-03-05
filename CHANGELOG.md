@@ -1,3 +1,12 @@
+### 0.5.16 (2020-03-05)
+BancorConverter
+* Removed `Manager` permission/code
+* `totalReserveRatio` is now public
+
+BancorConverterRegistry
+* Fixed a bug with identifying converters with similar configurations
+
+
 ### 0.5.15 (2020-01-23)
 EtherToken
 * Name & symbol are now constructor args
