@@ -78,13 +78,13 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     /**
       * @dev adds a converter to the registry
       * anyone can add a converter to the registry, as long as the converter is active and valid
-      * note that a liquidity pool converter can only be added if there's no existing pool with the same reserve configuration
+      * note that a liquidity pool converter can be added only if no converter with the same reserve-configuration is already registered
       * 
       * @param _converter converter
     */
     function addConverter(IBancorConverter _converter) external {
         // validate input
-        require(isConverterValid(_converter) && isSimilarLiquidityPoolNotRegistered(_converter));
+        require(isConverterValid(_converter) && !isSimilarLiquidityPoolRegistered(_converter));
 
         IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_converter).token();
@@ -347,12 +347,12 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev checks if a liquidity pool with given reserve tokens/ratios is not already registered
+      * @dev checks if a liquidity pool with given reserve tokens/ratios is already registered
       * 
       * @param _converter converter with specific reserve tokens/ratios
-      * @return if a liquidity pool with the same reserve tokens/ratios is not already registered
+      * @return if a liquidity pool with the same reserve tokens/ratios is already registered
     */
-    function isSimilarLiquidityPoolNotRegistered(IBancorConverter _converter) internal view returns (bool) {
+    function isSimilarLiquidityPoolRegistered(IBancorConverter _converter) internal view returns (bool) {
         uint reserveTokenCount = _converter.connectorTokenCount();
         address[] memory reserveTokens = new address[](reserveTokenCount);
         uint[] memory reserveRatios = new uint[](reserveTokenCount);
@@ -364,8 +364,8 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
             reserveRatios[i] = getReserveRatio(_converter, reserveToken);
         }
 
-        // return if a liquidity pool with the same reserve tokens/ratios is not already registered
-        return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) == ISmartToken(0);
+        // return if a liquidity pool with the same reserve tokens/ratios is already registered
+        return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) != ISmartToken(0);
     }
 
     /**
