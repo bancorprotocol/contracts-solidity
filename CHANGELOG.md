@@ -1,3 +1,8 @@
+### 0.5.17 (2020-03-05)
+BancorConverterRegistry
+* Reverted the signature change of `getLiquidityPoolByReserveConfig` (logic is still intact)
+
+
 ### 0.5.16 (2020-03-05)
 BancorConverter
 * Removed `Manager` permission/code
