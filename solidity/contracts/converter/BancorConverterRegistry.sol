@@ -84,7 +84,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     */
     function addConverter(IBancorConverter _converter) external {
         // validate input
-        require(isConverterValid(_converter) && getLiquidityPoolByReserveConfig(_converter) == ISmartToken(0));
+        require(isConverterValid(_converter) && isSimilarLiquidityPoolNotRegistered(_converter));
 
         IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_converter).token();
@@ -325,37 +325,47 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     /**
       * @dev searches for a liquidity pool with specific reserve tokens/ratios
       * 
-      * @param _converter converter with specific reserve tokens/ratios
+      * @param _reserveTokens   reserve tokens
+      * @param _reserveRatios   reserve ratios
       * @return the liquidity pool, or zero if no such liquidity pool exists
     */
-    function getLiquidityPoolByReserveConfig(IBancorConverter _converter) public view returns (ISmartToken) {
-        uint reserveTokenCount = _converter.connectorTokenCount();
-
-        // verify that the converter holds a liquidity pool
-        if (reserveTokenCount > 1) {
-            address[] memory reserveTokens = new address[](reserveTokenCount);
-            uint[] memory reserveRatios = new uint[](reserveTokenCount);
-
-            // get the reserve-configuration of the converter
-            for (uint n = 0; n < reserveTokenCount; n++) {
-                IERC20Token reserveToken = _converter.connectorTokens(n);
-                reserveTokens[n] = reserveToken;
-                reserveRatios[n] = getReserveRatio(_converter, reserveToken);
-            }
-
+    function getLiquidityPoolByReserveConfig(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (ISmartToken) {
+        // verify that the input parameters represent a valid liquidity pool
+        if (_reserveTokens.length == _reserveRatios.length && _reserveTokens.length > 1) {
             // get the smart tokens of the least frequent token (optimization)
-            address[] memory convertibleTokenSmartTokens = getLeastFrequentTokenSmartTokens(reserveTokens);
-
+            address[] memory convertibleTokenSmartTokens = getLeastFrequentTokenSmartTokens(_reserveTokens);
             // search for a converter with an identical reserve-configuration
             for (uint i = 0; i < convertibleTokenSmartTokens.length; i++) {
                 ISmartToken smartToken = ISmartToken(convertibleTokenSmartTokens[i]);
                 IBancorConverter converter = IBancorConverter(smartToken.owner());
-                if (isConverterReserveConfigEqual(converter, reserveTokens, reserveRatios))
+                if (isConverterReserveConfigEqual(converter, _reserveTokens, _reserveRatios))
                     return smartToken;
             }
         }
 
         return ISmartToken(0);
+    }
+
+    /**
+      * @dev checks if a liquidity pool with given reserve tokens/ratios is not already registered
+      * 
+      * @param _converter converter with specific reserve tokens/ratios
+      * @return if a liquidity pool with the same reserve tokens/ratios is not already registered
+    */
+    function isSimilarLiquidityPoolNotRegistered(IBancorConverter _converter) internal view returns (bool) {
+        uint reserveTokenCount = _converter.connectorTokenCount();
+        address[] memory reserveTokens = new address[](reserveTokenCount);
+        uint[] memory reserveRatios = new uint[](reserveTokenCount);
+
+        // get the reserve-configuration of the converter
+        for (uint i = 0; i < reserveTokenCount; i++) {
+            IERC20Token reserveToken = _converter.connectorTokens(i);
+            reserveTokens[i] = reserveToken;
+            reserveRatios[i] = getReserveRatio(_converter, reserveToken);
+        }
+
+        // return if a liquidity pool with the same reserve tokens/ratios is not already registered
+        return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) == ISmartToken(0);
     }
 
     /**
