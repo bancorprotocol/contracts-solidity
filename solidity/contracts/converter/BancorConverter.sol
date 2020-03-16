@@ -532,6 +532,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         payable
         only(BANCOR_NETWORK)
     {
+        assert(reserves[address(0)].isSet);
     }
 
     /**
@@ -545,6 +546,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         public
         only(BANCOR_NETWORK)
     {
+        assert(reserves[address(0)].isSet);
         _to.transfer(_amount);
     }
 
