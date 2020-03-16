@@ -64,6 +64,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * @param _registry    address of a contract registry contract
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
+        etherTokens[address(0)] = true;
     }
 
     /**
