@@ -10,7 +10,6 @@ import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/INonStandardERC20.sol';
-import '../token/interfaces/IEtherToken.sol';
 import '../bancorx/interfaces/IBancorX.sol';
 
 /**
@@ -45,7 +44,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     /**
       * @dev version number
     */
-    uint16 public version = 26;
+    uint16 public version = 27;
 
     IWhitelist public conversionWhitelist;          // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public reserveTokens;             // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
@@ -522,6 +521,31 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         emit PriceDataUpdate(_fromToken, token.totalSupply(), _fromToken.balanceOf(this), fromReserve.ratio);
         emit PriceDataUpdate(_toToken, token.totalSupply(), _toToken.balanceOf(this), toReserve.ratio);
         return amount;
+    }
+
+    /**
+      * @dev deposit ether
+      * can only be called by the bancor network contract
+    */
+    function deposit()
+        public
+        payable
+        only(BANCOR_NETWORK)
+    {
+    }
+
+    /**
+      * @dev withdraw ether to a given account
+      * can only be called by the bancor network contract
+      * 
+      * @param _to      account to receive the ether
+      * @param _amount  amount of ether to withdraw
+    */
+    function withdrawTo(address _to, uint256 _amount)
+        public
+        only(BANCOR_NETWORK)
+    {
+        _to.transfer(_amount);
     }
 
     /**

@@ -14,6 +14,8 @@ contract IBancorConverter {
     function reserves(address _address) public view returns (uint256, uint32, bool, bool, bool) {_address; this;}
     function getReserveBalance(IERC20Token _reserveToken) public view returns (uint256);
     function reserveTokens(uint256 _index) public view returns (IERC20Token) {_index; this;}
+    function deposit() public payable;
+    function withdrawTo(address _to, uint256 _amount) public;
 
     // deprecated, backward compatibility
     function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256);

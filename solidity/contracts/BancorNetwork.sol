@@ -115,20 +115,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // verify that the account which should receive the conversion result is whitelisted
         require(isWhitelisted(_path, _for));
 
-        // handle msg.value
-        handleValue(_path[0], _amount, false);
+        // handle the first token
+        handleFirstToken(_path, _amount, false);
 
         // convert and get the resulting amount
         uint256 amount = convertByPath(_path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
 
-        // finished the conversion, transfer the funds to the target account
-        // if the target token is an ether token, withdraw the tokens and send them as ETH
-        // otherwise, transfer the tokens as is
-        IERC20Token toToken = _path[_path.length - 1];
-        if (etherTokens[toToken])
-            IEtherToken(toToken).withdrawTo(_for, amount);
-        else
-            ensureTransferFrom(toToken, this, _for, amount);
+        // handle the last token
+        handleLastToken(_path, amount, _for);
 
         return amount;
     }
@@ -170,8 +164,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // verify that the destination token is BNT
         require(_path[_path.length - 1] == addressOf(BNT_TOKEN));
 
-        // handle msg.value
-        handleValue(_path[0], _amount, true);
+        // handle the first token
+        handleFirstToken(_path, _amount, true);
 
         // convert and get the resulting amount
         uint256 amount = convertByPath(_path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
@@ -451,16 +445,39 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         return true;
     }
 
-    function handleValue(IERC20Token _token, uint256 _amount, bool _claim) private {
-        // if ETH is provided, ensure that the amount is identical to _amount, verify that the source token is an ether token and deposit the ETH in it
-        if (msg.value > 0) {
-            require(_amount == msg.value && etherTokens[_token]);
-            IEtherToken(_token).deposit.value(msg.value)();
+    function handleFirstToken(IERC20Token[] _path, uint256 _amount, bool _claim) private {
+        IERC20Token firstToken = _path[0];
+        if (etherTokens[firstToken]) {
+            require(msg.value == _amount);
+            IBancorConverter converter = IBancorConverter(ISmartToken(_path[1]).owner());
+            if (isETHConverter(converter))
+                converter.deposit.value(msg.value)();
+            else
+                IEtherToken(firstToken).deposit.value(msg.value)();
         }
-        // Otherwise, claim the tokens from the sender if needed
         else if (_claim) {
-            ensureTransferFrom(_token, msg.sender, this, _amount);
+            require(msg.value == 0);
+            ensureTransferFrom(firstToken, msg.sender, this, _amount);
         }
+    }
+
+    function handleLastToken(IERC20Token[] _path, uint256 _amount, address _receiver) private {
+        IERC20Token lastToken = _path[_path.length - 1];
+        if (etherTokens[lastToken]) {
+            IBancorConverter converter = IBancorConverter(ISmartToken(_path[_path.length - 2]).owner());
+            if (isETHConverter(converter))
+                converter.withdrawTo(_receiver, _amount);
+            else
+                IEtherToken(lastToken).withdrawTo(_receiver, _amount);
+        }
+        else {
+            ensureTransferFrom(lastToken, this, _receiver, _amount);
+        }
+    }
+
+    function isETHConverter(IBancorConverter _converter) private view returns (bool) {
+        (, , , , bool isSet) = _converter.connectors(address(0));
+        return isSet;
     }
 
     /**
