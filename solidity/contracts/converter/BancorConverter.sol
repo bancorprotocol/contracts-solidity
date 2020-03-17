@@ -274,12 +274,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     }
 
     /**
-      * @dev defines a new reserve for the token
+      * @dev defines a new reserve token for the converter
       * can only be called by the owner while the converter is inactive
       * note that prior to version 17, you should use 'addConnector' instead
       * 
-      * @param _token                  address of the reserve token
-      * @param _ratio                  constant reserve ratio, represented in ppm, 1-1000000
+      * @param _token   address of the reserve token
+      * @param _ratio   constant reserve ratio, represented in ppm, 1-1000000
     */
     function addReserve(IERC20Token _token, uint32 _ratio)
         public
@@ -298,6 +298,38 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         reserves[_token].isSet = true;
         reserveTokens.push(_token);
         totalReserveRatio += _ratio;
+    }
+
+    /**
+      * @dev defines an ETH reserve for the converter
+      * can only be called by the owner while the converter is inactive
+      * 
+      * @param _ratio   constant reserve ratio, represented in ppm, 1-1000000
+    */
+    function addETHReserve(uint32 _ratio)
+        public
+        ownerOnly
+        inactive
+        validReserveRatio(_ratio)
+    {
+        require(!hasETHReserve() && totalReserveRatio + _ratio <= RATIO_RESOLUTION); // validate input
+
+        reserves[address(0)].ratio = _ratio;
+        reserves[address(0)].isVirtualBalanceEnabled = false;
+        reserves[address(0)].virtualBalance = 0;
+        reserves[address(0)].isSaleEnabled = true;
+        reserves[address(0)].isSet = true;
+        reserveTokens.push(IERC20Token(0));
+        totalReserveRatio += _ratio;
+    }
+
+    /**
+      * @dev checks whether or not the converter has an ETH reserve
+      * 
+      * @return true if the converter has an ETH reserve, false otherwise
+    */
+    function hasETHReserve() public view returns (bool) {
+        return reserves[address(0)].isSet;
     }
 
     /**
@@ -532,7 +564,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         payable
         only(BANCOR_NETWORK)
     {
-        assert(reserves[address(0)].isSet);
+        assert(hasETHReserve());
     }
 
     /**
@@ -546,7 +578,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         public
         only(BANCOR_NETWORK)
     {
-        assert(reserves[address(0)].isSet);
+        assert(hasETHReserve());
         _to.transfer(_amount);
     }
 
