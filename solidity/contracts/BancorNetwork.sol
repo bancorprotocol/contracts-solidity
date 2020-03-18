@@ -119,10 +119,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // handle msg.value
         if (etherTokens[_path[0]]) {
             require(msg.value == _amount);
-            IBancorConverter converter = IBancorConverter(ISmartToken(_path[1]).owner());
-            if (isETHConverter(converter))
-                converter.deposit.value(msg.value)();
-            else
+            if (!isOwnerAnETHConverter(_path[1]))
                 IEtherToken(_path[0]).deposit.value(msg.value)();
         }
         else {
@@ -137,9 +134,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // otherwise, transfer the tokens as is
         IERC20Token toToken = _path[_path.length - 1];
         if (etherTokens[toToken]) {
-            IBancorConverter toConverter = IBancorConverter(ISmartToken(_path[_path.length - 2]).owner());
-            if (isETHConverter(toConverter))
-                toConverter.withdrawTo(_for, _amount);
+            if (isOwnerAnETHConverter(_path[_path.length - 2]))
+                _for.transfer(_amount);
             else
                 IEtherToken(toToken).withdrawTo(_for, _amount);
         }
@@ -193,10 +189,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // handle msg.value
         if (etherTokens[_path[0]]) {
             require(msg.value == _amount);
-            IBancorConverter converter = IBancorConverter(ISmartToken(_path[1]).owner());
-            if (isETHConverter(converter))
-                converter.deposit.value(msg.value)();
-            else
+            if (!isOwnerAnETHConverter(_path[1]))
                 IEtherToken(_path[0]).deposit.value(msg.value)();
         }
         else {
@@ -464,8 +457,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         return true;
     }
 
-    function isETHConverter(IBancorConverter _converter) private view returns (bool) {
-        (, , , , bool isSet) = _converter.connectors(address(0));
+    function isOwnerAnETHConverter(IERC20Token _smartToken) private view returns (bool) {
+        (, , , , bool isSet) = IBancorConverter(ISmartToken(_smartToken).owner()).connectors(address(0));
         return isSet;
     }
 
