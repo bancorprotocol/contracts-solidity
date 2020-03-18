@@ -494,47 +494,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     }
 
     /**
-      * @dev converts one of the reserve tokens to the other
-      * 
-      * @param _fromToken   source reserve token contract address
-      * @param _toToken     target reserve token contract address
-      * @param _amount      amount to convert (in the source reserve token)
-      * @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-      * 
-      * @return conversion return amount
-    */
-    function cross(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) internal returns (uint256) {
-        uint256 amount;
-        uint256 feeAmount;
-
-        // conversion between 2 reserves
-        (amount, feeAmount) = getCrossReserveReturn(_fromToken, _toToken, _amount);
-        // ensure the trade gives something in return and meets the minimum requested amount
-        require(amount != 0 && amount >= _minReturn);
-
-        Reserve storage fromReserve = reserves[_fromToken];
-        Reserve storage toReserve = reserves[_toToken];
-
-        // ensure that the trade won't deplete the reserve balance
-        uint256 toReserveBalance = getReserveBalance(_toToken);
-        assert(amount < toReserveBalance);
-
-        // transfer funds from the caller in the from reserve token
-        ensureTransferFrom(_fromToken, msg.sender, this, _amount);
-        // transfer funds to the caller in the to reserve token
-        ensureTransferFrom(_toToken, this, msg.sender, amount);
-
-        // dispatch the conversion event
-        // the fee is higher (magnitude = 2) since cross reserve conversion equals 2 conversions (from / to the smart token)
-        dispatchConversionEvent(_fromToken, _toToken, _amount, amount, feeAmount);
-
-        // dispatch price data updates for the smart token / both reserves
-        emit PriceDataUpdate(_fromToken, token.totalSupply(), _fromToken.balanceOf(this), fromReserve.ratio);
-        emit PriceDataUpdate(_toToken, token.totalSupply(), _toToken.balanceOf(this), toReserve.ratio);
-        return amount;
-    }
-
-    /**
       * @dev buys the token by depositing one of its reserve tokens
       * 
       * @param _reserveToken    reserve token contract address
@@ -599,6 +558,47 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
 
         // dispatch price data update for the smart token/reserve
         emit PriceDataUpdate(_reserveToken, token.totalSupply(), _reserveToken.balanceOf(this), reserve.ratio);
+        return amount;
+    }
+
+    /**
+      * @dev converts one of the reserve tokens to the other
+      * 
+      * @param _fromToken   source reserve token contract address
+      * @param _toToken     target reserve token contract address
+      * @param _amount      amount to convert (in the source reserve token)
+      * @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * 
+      * @return conversion return amount
+    */
+    function cross(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) internal returns (uint256) {
+        uint256 amount;
+        uint256 feeAmount;
+
+        // conversion between 2 reserves
+        (amount, feeAmount) = getCrossReserveReturn(_fromToken, _toToken, _amount);
+        // ensure the trade gives something in return and meets the minimum requested amount
+        require(amount != 0 && amount >= _minReturn);
+
+        Reserve storage fromReserve = reserves[_fromToken];
+        Reserve storage toReserve = reserves[_toToken];
+
+        // ensure that the trade won't deplete the reserve balance
+        uint256 toReserveBalance = getReserveBalance(_toToken);
+        assert(amount < toReserveBalance);
+
+        // transfer funds from the caller in the from reserve token
+        ensureTransferFrom(_fromToken, msg.sender, this, _amount);
+        // transfer funds to the caller in the to reserve token
+        ensureTransferFrom(_toToken, this, msg.sender, amount);
+
+        // dispatch the conversion event
+        // the fee is higher (magnitude = 2) since cross reserve conversion equals 2 conversions (from / to the smart token)
+        dispatchConversionEvent(_fromToken, _toToken, _amount, amount, feeAmount);
+
+        // dispatch price data updates for the smart token / both reserves
+        emit PriceDataUpdate(_fromToken, token.totalSupply(), _fromToken.balanceOf(this), fromReserve.ratio);
+        emit PriceDataUpdate(_toToken, token.totalSupply(), _toToken.balanceOf(this), toReserve.ratio);
         return amount;
     }
 
