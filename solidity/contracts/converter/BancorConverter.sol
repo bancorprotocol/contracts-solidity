@@ -788,23 +788,18 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         uint256 supply = token.totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
 
-        // iterate through the reserve tokens and transfer a percentage equal to the ratio between _amount
-        // and the total supply in each reserve from the caller to the converter
-        IERC20Token reserveToken;
-        uint256 reserveBalance;
-        uint256 reserveAmount;
+        // iterate through the reserve tokens and transfer a percentage equal to the ratio between
+        // _amount and the total supply in each reserve from the caller to the converter
         for (uint16 i = 0; i < reserveTokens.length; i++) {
-            reserveToken = reserveTokens[i];
-            reserveBalance = reserveToken.balanceOf(this);
-            reserveAmount = formula.calculateFundCost(supply, reserveBalance, totalReserveRatio, _amount);
-
-            Reserve storage reserve = reserves[reserveToken];
+            IERC20Token reserveToken = reserveTokens[i];
+            uint256 reserveBalance = reserveToken.balanceOf(this);
+            uint256 reserveAmount = formula.calculateFundCost(supply, reserveBalance, totalReserveRatio, _amount);
 
             // transfer funds from the caller in the reserve token
             ensureTransferFrom(reserveToken, msg.sender, this, reserveAmount);
 
             // dispatch price data update for the smart token/reserve
-            emit PriceDataUpdate(reserveToken, supply + _amount, reserveBalance + reserveAmount, reserve.ratio);
+            emit PriceDataUpdate(reserveToken, supply + _amount, reserveBalance + reserveAmount, reserves[reserveToken].ratio);
         }
 
         // issue new funds to the caller in the smart token
@@ -829,23 +824,18 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         // destroy _amount from the caller's balance in the smart token
         token.destroy(msg.sender, _amount);
 
-        // iterate through the reserve tokens and send a percentage equal to the ratio between _amount
-        // and the total supply from each reserve balance to the caller
-        IERC20Token reserveToken;
-        uint256 reserveBalance;
-        uint256 reserveAmount;
+        // iterate through the reserve tokens and send a percentage equal to the ratio between
+        // _amount and the total supply from each reserve balance to the caller
         for (uint16 i = 0; i < reserveTokens.length; i++) {
-            reserveToken = reserveTokens[i];
-            reserveBalance = reserveToken.balanceOf(this);
-            reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _amount);
-
-            Reserve storage reserve = reserves[reserveToken];
+            IERC20Token reserveToken = reserveTokens[i];
+            uint256 reserveBalance = reserveToken.balanceOf(this);
+            uint256 reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _amount);
 
             // transfer funds to the caller in the reserve token
             ensureTransferFrom(reserveToken, this, msg.sender, reserveAmount);
 
             // dispatch price data update for the smart token/reserve
-            emit PriceDataUpdate(reserveToken, supply - _amount, reserveBalance - reserveAmount, reserve.ratio);
+            emit PriceDataUpdate(reserveToken, supply - _amount, reserveBalance - reserveAmount, reserves[reserveToken].ratio);
         }
     }
 
