@@ -630,7 +630,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @return amount of tokens received (in units of the target reserve token)
     */
     function cross(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) internal returns (uint256) {
-        // conversion between 2 reserves
         (uint256 amount, uint256 feeAmount) = getCrossReserveReturn(_fromToken, _toToken, _amount);
 
         // ensure the trade gives something in return and meets the minimum requested amount
