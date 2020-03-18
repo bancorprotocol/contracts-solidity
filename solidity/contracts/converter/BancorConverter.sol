@@ -472,10 +472,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * 
       * @param _fromToken  ERC20 token to convert from
       * @param _toToken    ERC20 token to convert to
-      * @param _amount     amount to convert, in fromToken
+      * @param _amount     amount of tokens to convert (in units of the source token)
       * @param _minReturn  if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * 
-      * @return conversion return amount
+      * @return amount of tokens received (in units of the target token)
     */
     function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn)
         internal
@@ -494,13 +494,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     }
 
     /**
-      * @dev buys the token by depositing one of its reserve tokens
+      * @dev buys the smart token by depositing one of its reserve tokens
       * 
       * @param _reserveToken    reserve token contract address
-      * @param _depositAmount   amount to deposit (in the reserve token)
+      * @param _depositAmount   amount of tokens to deposit (in units of the reserve token)
       * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * 
-      * @return buy return amount
+      * @return amount of tokens received (in units of the smart token)
     */
     function buy(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn) internal returns (uint256) {
         uint256 amount;
@@ -525,13 +525,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     }
 
     /**
-      * @dev sells the token by withdrawing from one of its reserve tokens
+      * @dev sells the smart token by withdrawing from one of its reserve tokens
       * 
       * @param _reserveToken    reserve token contract address
-      * @param _sellAmount      amount to sell (in the smart token)
+      * @param _sellAmount      amount of tokens to sell (in units of the smart token)
       * @param _minReturn       if the conversion results in an amount smaller the minimum return - it is cancelled, must be nonzero
       * 
-      * @return sell return amount
+      * @return amount of tokens received (in units of the reserve token)
     */
     function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn) internal returns (uint256) {
         require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
@@ -566,10 +566,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * 
       * @param _fromToken   source reserve token contract address
       * @param _toToken     target reserve token contract address
-      * @param _amount      amount to convert (in the source reserve token)
+      * @param _amount      amount of tokens to convert (in units of the source reserve token)
       * @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * 
-      * @return conversion return amount
+      * @return amount of tokens received (in units of the target reserve token)
     */
     function cross(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) internal returns (uint256) {
         uint256 amount;
