@@ -10,7 +10,6 @@ import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/INonStandardERC20.sol';
-import '../token/interfaces/IEtherToken.sol';
 import '../bancorx/interfaces/IBancorX.sol';
 
 /**
@@ -368,14 +367,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256, uint256) {
         require(_fromToken != _toToken); // validate input
 
-        // conversion between the token and one of its reserves
         if (_toToken == token)
             return getPurchaseReturn(_fromToken, _amount);
         else if (_fromToken == token)
             return getSaleReturn(_toToken, _amount);
-
-        // conversion between 2 reserves
-        return getCrossReserveReturn(_fromToken, _toToken, _amount);
+        else
+            return getCrossReserveReturn(_fromToken, _toToken, _amount);
     }
 
     /**
@@ -481,19 +478,32 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @return conversion return amount
     */
     function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn)
-        public
+        internal
         only(BANCOR_NETWORK)
         greaterThanZero(_minReturn)
         returns (uint256)
     {
         require(_fromToken != _toToken); // validate input
 
-        // conversion between the token and one of its reserves
         if (_toToken == token)
             return buy(_fromToken, _amount, _minReturn);
         else if (_fromToken == token)
             return sell(_toToken, _amount, _minReturn);
+        else
+            return cross(_fromToken, _toToken, _amount, _minReturn);
+    }
 
+    /**
+      * @dev converts one of the reserve tokens to the other
+      * 
+      * @param _fromToken   source reserve token contract address
+      * @param _toToken     target reserve token contract address
+      * @param _amount      amount to convert (in the source reserve token)
+      * @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * 
+      * @return conversion return amount
+    */
+    function cross(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) internal returns (uint256) {
         uint256 amount;
         uint256 feeAmount;
 
