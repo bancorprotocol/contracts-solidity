@@ -250,7 +250,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 ensureAllowance(_path[i - 2], converter, fromAmount);
 
             // make the conversion - if it's the last one, also provide the minimum return value
-            toAmount = converter.change(_path[i - 2], _path[i], fromAmount, i == lastIndex ? _minReturn : 1);
+            toAmount = change(converter, _path[i - 2], _path[i], fromAmount, i == lastIndex ? _minReturn : 1);
 
             // pay affiliate-fee if needed
             if (address(_path[i]) == bntToken) {
@@ -265,6 +265,22 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
 
         return toAmount;
+    }
+
+    function change(
+        IBancorConverter _converter,
+        IERC20Token _fromToken,
+        IERC20Token _toToken,
+        uint256 _amount,
+        uint256 _minReturn
+    ) private returns (uint256) {
+        if (isETHConverter(_converter)) {
+            if (etherTokens[_fromToken])
+                return _converter.change.value(msg.value)(IERC20Token(0), _toToken, _amount, _minReturn);
+            if (etherTokens[_toToken])
+                return _converter.change(_fromToken, IERC20Token(0), _amount, _minReturn);
+        }
+        return _converter.change(_fromToken, _toToken, _amount, _minReturn);
     }
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(uint256(keccak256("getReturn(address,address,uint256)") >> (256 - 4 * 8)));
@@ -458,7 +474,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     }
 
     function isOwnerAnETHConverter(IERC20Token _smartToken) private view returns (bool) {
-        (, , , , bool isSet) = IBancorConverter(ISmartToken(_smartToken).owner()).connectors(address(0));
+        return isETHConverter(IBancorConverter(ISmartToken(_smartToken).owner()));
+    }
+
+    function isETHConverter(IBancorConverter _converter) private view returns (bool) {
+        (, , , , bool isSet) = _converter.connectors(address(0));
         return isSet;
     }
 
