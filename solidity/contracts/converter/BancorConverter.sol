@@ -423,12 +423,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         validReserve(_reserveToken)
         returns (uint256, uint256)
     {
-        Reserve storage reserve = reserves[_reserveToken];
+        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).calculatePurchaseReturn(
+            token.totalSupply(),
+            _reserveToken.balanceOf(this),
+            reserves[_reserveToken].ratio,
+            _depositAmount
+        );
 
-        uint256 tokenSupply = token.totalSupply();
-        uint256 reserveBalance = _reserveToken.balanceOf(this);
-        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-        uint256 amount = formula.calculatePurchaseReturn(tokenSupply, reserveBalance, reserve.ratio, _depositAmount);
         uint256 finalAmount = getFinalAmount(amount, 1);
 
         // return the amount minus the conversion fee and the conversion fee
@@ -451,11 +452,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         validReserve(_reserveToken)
         returns (uint256, uint256)
     {
-        Reserve storage reserve = reserves[_reserveToken];
-        uint256 tokenSupply = token.totalSupply();
-        uint256 reserveBalance = _reserveToken.balanceOf(this);
-        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-        uint256 amount = formula.calculateSaleReturn(tokenSupply, reserveBalance, reserve.ratio, _sellAmount);
+        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).calculateSaleReturn(
+            token.totalSupply(),
+            _reserveToken.balanceOf(this),
+            reserves[_reserveToken].ratio,
+            _sellAmount
+        );
+
         uint256 finalAmount = getFinalAmount(amount, 1);
 
         // return the amount minus the conversion fee and the conversion fee
@@ -481,16 +484,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         validReserve(_toReserveToken)
         returns (uint256, uint256)
     {
-        Reserve storage fromReserve = reserves[_fromReserveToken];
-        Reserve storage toReserve = reserves[_toReserveToken];
-
-        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-        uint256 amount = formula.calculateCrossReserveReturn(
+        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).calculateCrossReserveReturn(
             getReserveBalance(_fromReserveToken), 
-            fromReserve.ratio, 
+            reserves[_fromReserveToken].ratio, 
             getReserveBalance(_toReserveToken), 
-            toReserve.ratio, 
+            reserves[_toReserveToken].ratio, 
             _amount);
+
         uint256 finalAmount = getFinalAmount(amount, 2);
 
         // return the amount minus the conversion fee and the conversion fee
