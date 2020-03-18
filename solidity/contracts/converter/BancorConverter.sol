@@ -457,12 +457,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
             reserves[_fromReserveToken].ratio, 
             getReserveBalance(_toReserveToken), 
             reserves[_toReserveToken].ratio, 
-            _amount);
+            _amount
+        );
 
+        // using a magnitude of 2 because this operation is equivalent to 2 conversions (to/from the smart token)
         uint256 finalAmount = getFinalAmount(amount, 2);
 
         // return the amount minus the conversion fee and the conversion fee
-        // the fee is higher (magnitude = 2) since cross reserve conversion equals 2 conversions (from / to the smart token)
         return (finalAmount, amount - finalAmount);
     }
 
