@@ -44,7 +44,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     /**
       * @dev version number
     */
-    uint16 public version = 27;
+    uint16 public version = 28;
 
     IWhitelist public conversionWhitelist;          // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public reserveTokens;             // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
