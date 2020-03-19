@@ -246,7 +246,7 @@ contract('BancorNetwork', accounts => {
 
     it('should throw when attempting register ether token with invalid address', async () => {
         let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
-        await utils.catchRevert(bancorNetwork1.registerEtherToken('0x0', true));
+        await utils.catchRevert(bancorNetwork1.registerEtherToken(utils.zeroAddress, true));
     });
 
     it('should throw when non owner attempting register ether token', async () => {
