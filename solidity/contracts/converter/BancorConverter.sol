@@ -161,6 +161,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     }
 
     /**
+      * @dev deposit ether
+    */
+    function() external payable {
+        require(hasETHReserve());
+    }
+
+    /**
       * @dev returns the number of reserve tokens defined
       * note that prior to version 17, you should use 'connectorTokenCount' instead
       * 
@@ -528,13 +535,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
             return sell(_toToken, _amount, _minReturn);
         else
             return cross(_fromToken, _toToken, _amount, _minReturn);
-    }
-
-    /**
-      * @dev deposit ether
-    */
-    function() external payable {
-        require(hasETHReserve());
     }
 
     /**
