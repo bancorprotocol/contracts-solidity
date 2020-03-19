@@ -162,6 +162,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
 
     /**
       * @dev deposit ether
+      * can only be called if the converter has an ETH reserve
     */
     function() external payable {
         require(hasETHReserve());
