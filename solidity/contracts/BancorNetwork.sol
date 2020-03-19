@@ -68,6 +68,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     }
 
     /**
+      * @dev deposit ether
+    */
+    function() external payable {
+    }
+
+    /**
       * @dev allows the owner to update the maximum affiliate-fee
       * 
       * @param _maxAffiliateFee   maximum affiliate-fee
@@ -234,7 +240,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         address bntToken;
         if (address(_affiliateAccount) == 0) {
             require(_affiliateFee == 0);
-            bntToken = address(0);
+            bntToken = address(~0);
         }
         else {
             require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee);
@@ -257,7 +263,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 uint256 affiliateAmount = toAmount.mul(_affiliateFee).div(AFFILIATE_FEE_RESOLUTION);
                 require(_path[i].transfer(_affiliateAccount, affiliateAmount));
                 toAmount -= affiliateAmount;
-                bntToken = address(0);
+                bntToken = address(~0);
             }
 
             emit Conversion(_path[i - 1], _path[i - 2], _path[i], fromAmount, toAmount, msg.sender);
