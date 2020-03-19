@@ -274,11 +274,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         uint256 _amount,
         uint256 _minReturn
     ) private returns (uint256) {
-        if (isETHConverter(_converter)) {
-            if (etherTokens[_fromToken])
-                return _converter.change.value(msg.value)(IERC20Token(0), _toToken, _amount, _minReturn);
-            if (etherTokens[_toToken])
-                return _converter.change(_fromToken, IERC20Token(0), _amount, _minReturn);
+        if (etherTokens[_fromToken] || etherTokens[_toToken]) {
+            if (isETHConverter(_converter)) {
+                if (etherTokens[_fromToken])
+                    return _converter.change.value(msg.value)(IERC20Token(0), _toToken, _amount, _minReturn);
+                if (etherTokens[_toToken])
+                    return _converter.change(_fromToken, IERC20Token(0), _amount, _minReturn);
+            }
         }
         return _converter.change(_fromToken, _toToken, _amount, _minReturn);
     }
