@@ -532,10 +532,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
 
     /**
       * @dev deposit ether
-      * can only be called by the bancor converter upgrader contract
     */
-    function() external payable only(BANCOR_CONVERTER_UPGRADER) {
-        assert(hasETHReserve());
+    function() external payable {
+        require(hasETHReserve());
     }
 
     /**
