@@ -246,7 +246,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             IBancorConverter converter = IBancorConverter(ISmartToken(_path[i - 1]).owner());
 
             // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
-            if (_path[i - 1] != _path[i - 2])
+            if (_path[i - 1] != _path[i - 2] && _path[i - 2] != IERC20Token(0))
                 ensureAllowance(_path[i - 2], converter, fromAmount);
 
             // make the conversion - if it's the last one, also provide the minimum return value
