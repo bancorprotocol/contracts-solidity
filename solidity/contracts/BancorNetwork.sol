@@ -135,9 +135,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         IERC20Token toToken = _path[_path.length - 1];
         if (etherTokens[toToken]) {
             if (isOwnerAnETHConverter(_path[_path.length - 2]))
-                _for.transfer(_amount);
+                _for.transfer(amount);
             else
-                IEtherToken(toToken).withdrawTo(_for, _amount);
+                IEtherToken(toToken).withdrawTo(_for, amount);
         }
         else {
             uint256 prevBalance = toToken.balanceOf(_for);
