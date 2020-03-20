@@ -95,34 +95,33 @@ contract('BancorConverterUpgrader', accounts => {
     });
 
     it('verifies that the ownership of the converter is returned to the original owner after upgrade', async () => {
-        for (let i = 0; i < versions.length; i++) {
-            let converter = await initConverter(accounts, true, versions[i]);
+        for (const version of versions) {
+            let converter = await initConverter(accounts, true, version);
             let initialOwner = await converter.owner.call();
-            await upgradeConverter(converter, versions[i])
+            await upgradeConverter(converter, version)
             let currentOwner = await converter.owner.call();
             assert.equal(initialOwner, currentOwner);    
         }
     });
 
     it('verifies that the ownership of the new converter is transfered to the old converter owner', async () => {
-        for (let i = 0; i < versions.length; i++) {
-            let converter = await initConverter(accounts, true, versions[i]);
+        for (const version of versions) {
+            let converter = await initConverter(accounts, true, version);
             let initialOwner = await converter.owner.call();
-            let newConverter = await upgradeConverter(converter, versions[i])
-
+            let newConverter = await upgradeConverter(converter, version)
             let newOwner = await newConverter.newOwner.call();
             assert.equal(initialOwner, newOwner);    
         }
     });
 
     it('verifies that the token ownership held by the converter is transfered to the new converter', async () => {
-        for (let i = 0; i < versions.length; i++) {
-            let converter = await initConverter(accounts, true, versions[i]);
+        for (const version of versions) {
+            let converter = await initConverter(accounts, true, version);
             let tokenAddress = await converter.token.call();
             let token1 = await SmartToken.at(tokenAddress)
             let initialTokenOwner = await token1.owner.call();
             assert.equal(initialTokenOwner, converter.address);
-            let newConverter = await upgradeConverter(converter, versions[i]);
+            let newConverter = await upgradeConverter(converter, version);
             let currentTokenOwner = await token1.owner.call();
             assert.equal(currentTokenOwner, newConverter.address);    
         }        
@@ -132,7 +131,6 @@ contract('BancorConverterUpgrader', accounts => {
         let converter = await initConverter(accounts, true);
         await converter.upgrade();
         let newConverter = await getNewConverter();
-        
         let featureWhitelist = await newConverter.CONVERTER_CONVERSION_WHITELIST.call();
         let isSupported = await contractFeatures.isSupported.call(newConverter.address, featureWhitelist);
         assert(isSupported);
@@ -154,9 +152,9 @@ contract('BancorConverterUpgrader', accounts => {
     });
 
     it('verifies that the max conversion fee after upgrade is the same', async () => {
-        for (let i = 0; i < versions.length; i++) {
-            let converter = await initConverter(accounts, true, versions[i], 20000);
-            let newConverter = await upgradeConverter(converter, versions[i]);
+        for (const version of versions) {
+            let converter = await initConverter(accounts, true, version, 20000);
+            let newConverter = await upgradeConverter(converter, version);
             let newVal = await newConverter.maxConversionFee.call();
             assert.equal(newVal.toFixed(), "20000");            
         }
@@ -164,10 +162,10 @@ contract('BancorConverterUpgrader', accounts => {
     });
 
     it('verifies that the conversion fee after upgrade is the same', async () => {
-        for (let i = 0; i < versions.length; i++) {
-            let converter = await initConverter(accounts, true, versions[i]);
+        for (const version of versions) {
+            let converter = await initConverter(accounts, true, version);
             let initialConversionFee = await converter.conversionFee.call();
-            let newConverter = await upgradeConverter(converter, versions[i]);
+            let newConverter = await upgradeConverter(converter, version);
             let currentConversionFee = await newConverter.conversionFee.call();
             assert.equal(initialConversionFee.toFixed(), currentConversionFee.toFixed());            
         }
@@ -176,7 +174,6 @@ contract('BancorConverterUpgrader', accounts => {
     it('verifies that the ownership did not change if the process stopped due to gas limitation', async () => {
         let converter = await initConverter(accounts, true);
         let initialOwner = await converter.owner.call();
-        
         await utils.catchRevert(converter.upgrade({ gas: 2000000 }));
         let currentOwner = await converter.owner.call();
         assert.equal(initialOwner, currentOwner);
@@ -200,23 +197,23 @@ contract('BancorConverterUpgrader', accounts => {
     });
 
     it('verifies that the connectors count after an upgrade is the same', async () => {
-        for (let i = 0; i < versions.length; i++) {
-            let converter = await initConverter(accounts, true, versions[i]);
+        for (const version of versions) {
+            let converter = await initConverter(accounts, true, version);
             let currentConverterConnectorTokenCount = await converter.connectorTokenCount.call();
-            let newConverter = await upgradeConverter(converter, versions[i]);
+            let newConverter = await upgradeConverter(converter, version);
             let newConverterConnectorTokenCount = await newConverter.connectorTokenCount.call();
             assert.equal(currentConverterConnectorTokenCount.toFixed(), newConverterConnectorTokenCount.toFixed());            
         }
     });
 
     it('verifies that the connector balances after upgrade is equal', async () => {
-        for (let i = 0; i < versions.length; i++) {
-            let converter = await initConverter(accounts, true, versions[i]);
+        for (const version of versions) {
+            let converter = await initConverter(accounts, true, version);
             let connector1 = await converter.connectorTokens.call(0);
             let connector2 = await converter.connectorTokens.call(1);
             let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
             let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
-            let newConverter = await upgradeConverter(converter, versions[i]);
+            let newConverter = await upgradeConverter(converter, version);
             let currentConnectorBalance1 = await newConverter.getConnectorBalance.call(connector1);
             let currentConnectorBalance2 = await newConverter.getConnectorBalance.call(connector2);
             assert.equal(initialConnectorBalance1.toFixed(), currentConnectorBalance1.toFixed());
@@ -230,7 +227,6 @@ contract('BancorConverterUpgrader', accounts => {
         let connector2 = await converter.connectorTokens.call(1);
         let initialConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
         let initialConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
-        
         await utils.catchRevert(converter.upgrade({ gas: 2000000 }));
         let currentConnectorBalance1 = await converter.getConnectorBalance.call(connector1);
         let currentConnectorBalance2 = await converter.getConnectorBalance.call(connector2);
