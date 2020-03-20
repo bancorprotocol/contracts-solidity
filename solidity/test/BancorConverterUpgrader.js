@@ -13,7 +13,7 @@ const Whitelist = artifacts.require('Whitelist');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
-const versions = [9, 10, 11, 27];
+const versions = [9, 10, 11, 23];
 
 let token;
 let contractRegistry;

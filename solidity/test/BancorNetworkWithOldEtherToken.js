@@ -15,7 +15,7 @@ const ContractFeatures = artifacts.require('ContractFeatures');
 const EtherToken = artifacts.require('EtherToken');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 
-const OLD_CONVERTER_VERSION = 27;
+const OLD_CONVERTER_VERSION = 23;
 
 let etherToken;
 let smartToken1;
