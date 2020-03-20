@@ -13,7 +13,7 @@ const Whitelist = artifacts.require('Whitelist');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
-const versions = [9, 10, 11];
+const versions = [9, 10, 11, 27];
 
 let token;
 let contractRegistry;
@@ -90,7 +90,7 @@ contract('BancorConverterUpgrader', accounts => {
         let converterFactory = await BancorConverterFactory.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY, converterFactory.address);
 
-        converterUpgrader = await BancorConverterUpgrader.new(contractRegistry.address);
+        converterUpgrader = await BancorConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, converterUpgrader.address);
     });
 

@@ -5,6 +5,7 @@ import './interfaces/IBancorConverterFactory.sol';
 import '../utility/ContractRegistryClient.sol';
 import '../utility/interfaces/IContractFeatures.sol';
 import '../utility/interfaces/IWhitelist.sol';
+import '../token/interfaces/IEtherToken.sol';
 import '../FeatureIds.sol';
 
 /*
@@ -24,6 +25,7 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function acceptTokenOwnership() public;
     function setConversionFee(uint32 _conversionFee) public;
     function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance) public;
+    function addETHReserve(uint32 _ratio) public;
     function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance) public;
 }
 
@@ -43,7 +45,7 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
   * and then the upgrader 'upgrade' function should be executed directly.
 */
 contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryClient, FeatureIds {
-    string public version = '0.3';
+    IEtherToken etherToken;
 
     /**
       * @dev triggered when the contract accept a converter ownership
@@ -66,7 +68,8 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * 
       * @param _registry    address of a contract registry contract
     */
-    constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
+    constructor(IContractRegistry _registry, IEtherToken _etherToken) ContractRegistryClient(_registry) public {
+        etherToken = _etherToken;
     }
 
     /**
@@ -195,11 +198,15 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
             address connectorAddress = _oldConverter.connectorTokens(i);
             (virtualBalance, weight, isVirtualBalanceEnabled, , ) = _oldConverter.connectors(connectorAddress);
 
-            IERC20Token connectorToken = IERC20Token(connectorAddress);
-            _newConverter.addConnector(connectorToken, weight, isVirtualBalanceEnabled);
-
-            if (isVirtualBalanceEnabled)
-                _newConverter.updateConnector(connectorToken, weight, isVirtualBalanceEnabled, virtualBalance);
+            if (connectorAddress == address(0) || connectorAddress == address(etherToken)) {
+                _newConverter.addETHReserve(weight);
+            }
+            else {
+                IERC20Token connectorToken = IERC20Token(connectorAddress);
+                _newConverter.addConnector(connectorToken, weight, isVirtualBalanceEnabled);
+                if (isVirtualBalanceEnabled)
+                    _newConverter.updateConnector(connectorToken, weight, isVirtualBalanceEnabled, virtualBalance);
+            }
         }
     }
 
@@ -230,9 +237,15 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
 
         for (uint16 i = 0; i < connectorTokenCount; i++) {
             address connectorAddress = _oldConverter.connectorTokens(i);
-            IERC20Token connector = IERC20Token(connectorAddress);
-            connectorBalance = connector.balanceOf(_oldConverter);
-            _oldConverter.withdrawTokens(connector, address(_newConverter), connectorBalance);
+            if (connectorAddress == address(0)) {
+                connectorBalance = etherToken.balanceOf(_oldConverter);
+                etherToken.withdrawTo(address(_newConverter), connectorBalance);
+            }
+            else {
+                IERC20Token connector = IERC20Token(connectorAddress);
+                connectorBalance = connector.balanceOf(_oldConverter);
+                _oldConverter.withdrawTokens(connector, address(_newConverter), connectorBalance);
+            }
         }
     }
 }
