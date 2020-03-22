@@ -7,6 +7,7 @@ const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const Whitelist = artifacts.require('Whitelist');
 const SmartToken = artifacts.require('SmartToken');
+const EtherToken = artifacts.require('EtherToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
@@ -19,7 +20,7 @@ const CONNECTOR1_BALANCE = '5000';
 const CONNECTOR2_BALANCE = '8000';
 const TOKEN_TOTAL_SUPPLY = '20000';
 
-const versions = [9, 10, 11];
+const versions = [9, 10, 11, 23];
 
 let contractRegistry;
 let contractFeatures;
@@ -30,7 +31,7 @@ async function initWithConnectors(deployer, version, active) {
     const connectorToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, CONNECTOR1_BALANCE);
     const connectorToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, CONNECTOR2_BALANCE);
     const converter = await BancorConverter.new(smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, connectorToken1.address, 500000, version);
-    const upgrader = await BancorConverterUpgrader.new(contractRegistry.address);
+    const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
     await converter.addConnector(connectorToken2.address, 500000, false);
@@ -50,12 +51,35 @@ async function initWithConnectors(deployer, version, active) {
 async function initWithoutConnectors(deployer, version, active) {
     const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
     const converter = await BancorConverter.new(smartToken.address, contractRegistry.address, 0, utils.zeroAddress, 0, version);
-    const upgrader = await BancorConverterUpgrader.new(contractRegistry.address);
+    const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
 
     if (active) {
         throw new Error("converter with no connectors cannot be active");
+    }
+
+    return [upgrader, converter];
+}
+
+async function initWithEtherConnector(deployer, version, active) {
+    const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
+    const connectorToken1 = await EtherToken.new('Ether Token', 'ETH');
+    const connectorToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, CONNECTOR2_BALANCE);
+    const converter = await BancorConverter.new(smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, connectorToken1.address, 500000, version);
+    const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, connectorToken1.zeroAddress);
+
+    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
+    await converter.addConnector(connectorToken2.address, 500000, false);
+    await converter.setConversionFee(CONVERSION_FEE);
+    await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
+    await connectorToken1.deposit({value: CONNECTOR1_BALANCE});
+    await connectorToken1.transfer(converter.address, CONNECTOR1_BALANCE);
+    await connectorToken2.transfer(converter.address, CONNECTOR2_BALANCE);
+
+    if (active) {
+        await smartToken.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
     }
 
     return [upgrader, converter];
@@ -129,7 +153,7 @@ contract('BancorConverterUpgrader', accounts => {
 
     const f = (a, b) => [].concat(...a.map(d => b.map(e => [].concat(d, e))));
     const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
-    const product = cartesian([initWithConnectors, initWithoutConnectors], versions, [false, true]);
+    const product = cartesian([initWithConnectors, initWithoutConnectors, initWithEtherConnector], versions, [false, true]);
     const combinations = product.filter(([init, version, active]) => !(init == initWithoutConnectors && active));
 
     for (const [init, version, active] of combinations) {
