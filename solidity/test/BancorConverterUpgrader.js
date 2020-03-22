@@ -55,8 +55,7 @@ async function initWithoutConnectors(deployer, version, active) {
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
 
     if (active) {
-        await smartToken.transferOwnership(converter.address);
-        await converter.acceptTokenOwnership();
+        throw new Error("converter with no connectors cannot be active");
     }
 
     return [upgrader, converter];
