@@ -251,6 +251,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
             // Ether reserve token
             else if (connectorAddress == address(etherToken)) {
                 connectorBalance = etherToken.balanceOf(_oldConverter);
+                _oldConverter.withdrawTokens(etherToken, address(this), connectorBalance);
                 etherToken.withdrawTo(address(_newConverter), connectorBalance);
             }
             // ERC20 reserve token
