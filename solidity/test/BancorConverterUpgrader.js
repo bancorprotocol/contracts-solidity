@@ -112,7 +112,6 @@ async function initWithETHReserve(deployer, version, active) {
 
 async function upgradeConverter(upgrader, converter, version, options = {}) {
     let response;
-    const blockNumber = web3.eth.blockNumber;
 
     // for version 11 or higher, we just call upgrade on the converter
     if (converter.upgrade) {
@@ -132,10 +131,10 @@ async function upgradeConverter(upgrader, converter, version, options = {}) {
         return BancorConverter.at(logs[0].args._newConverter);
 
     const newConverterAddress = await new Promise((resolve, reject) => {
-        upgrader.ConverterUpgrade({fromBlock: blockNumber, toBlock: 'latest'}).get((error, logs) => {
+        upgrader.ConverterUpgrade({fromBlock: response.receipt.blockNumber, toBlock: response.receipt.blockNumber}).get((error, logs) => {
             assert.equal(error, null);
-            assert.isAtMost(logs.length, 1);
-            resolve(logs[logs.length - 1].args._newConverter);
+            assert.equal(logs.length, 1);
+            resolve(logs[0].args._newConverter);
         });
     });
 
