@@ -83,7 +83,7 @@ contract('BancorConverter', accounts => {
         let factory = await BancorConverterFactory.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY, factory.address);
 
-        upgrader = await BancorConverterUpgrader.new(contractRegistry.address);
+        upgrader = await BancorConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
 
         let token = await SmartToken.new('Token1', 'TKN1', 2); 
