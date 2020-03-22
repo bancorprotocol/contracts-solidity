@@ -85,6 +85,31 @@ async function initWithEtherConnector(deployer, version, active) {
     return [upgrader, converter];
 }
 
+async function initWithETHReserve(deployer, version, active) {
+    if (version) {
+        throw new Error(`converter version ${version} does not support ETH-reserve`);
+    }
+
+    const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
+    const connectorToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, CONNECTOR1_BALANCE);
+    const converter = await BancorConverter.new(smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, connectorToken1.address, 500000);
+    const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
+
+    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
+    await converter.addETHReserve(500000);
+    await converter.setConversionFee(CONVERSION_FEE);
+    await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
+    await connectorToken1.transfer(converter.address, CONNECTOR1_BALANCE);
+    await web3.eth.sendTransaction({from: deployer, to: converter.address, value: CONNECTOR2_BALANCE});
+
+    if (active) {
+        await smartToken.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+    }
+
+    return [upgrader, converter];
+}
+
 async function upgradeConverter(upgrader, converter, version, options = {}) {
     let response;
     const blockNumber = web3.eth.blockNumber;
@@ -153,11 +178,11 @@ contract('BancorConverterUpgrader', accounts => {
 
     const f = (a, b) => [].concat(...a.map(d => b.map(e => [].concat(d, e))));
     const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
-    const product = cartesian([initWithConnectors, initWithoutConnectors, initWithEtherConnector], versions, [false, true]);
-    const combinations = product.filter(([init, version, active]) => !(init == initWithoutConnectors && active));
+    const product = cartesian([initWithConnectors, initWithoutConnectors, initWithEtherConnector, initWithETHReserve], [...versions, null], [false, true]);
+    const combinations = product.filter(([init, version, active]) => !(init == initWithoutConnectors && active) && !(init == initWithETHReserve && version));
 
     for (const [init, version, active] of combinations) {
-        describe(`${init.name}(version = ${version}, active = ${active}):`, () => {
+        describe(`${init.name}(version = ${version ? version : 'latest'}, active = ${active}):`, () => {
             it('upgrade should complete successfully', async () => {
                 const [upgrader, oldConverter] = await init(deployer, version, active);
                 const oldConverterInitialState = getConverterState(oldConverter);
