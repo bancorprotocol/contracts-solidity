@@ -67,7 +67,7 @@ async function initWithEtherConnector(deployer, version, active) {
     const connectorToken1 = await EtherToken.new('Ether Token', 'ETH');
     const connectorToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, CONNECTOR2_BALANCE);
     const converter = await BancorConverter.new(smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, connectorToken1.address, 500000, version);
-    const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, connectorToken1.zeroAddress);
+    const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, connectorToken1.address);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
     await converter.addConnector(connectorToken2.address, 500000, false);
