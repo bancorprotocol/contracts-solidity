@@ -22,6 +22,7 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function setConversionWhitelist(IWhitelist _whitelist) public;
     function transferTokenOwnership(address _newOwner) public;
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public;
+    function withdrawETH(address _to) public;
     function acceptTokenOwnership() public;
     function setConversionFee(uint32 _conversionFee) public;
     function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance) public;
@@ -198,9 +199,15 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
             address connectorAddress = _oldConverter.connectorTokens(i);
             (virtualBalance, weight, isVirtualBalanceEnabled, , ) = _oldConverter.connectors(connectorAddress);
 
-            if (connectorAddress == address(0) || connectorAddress == address(etherToken)) {
+            // Ether reserve
+            if (connectorAddress == address(0)) {
                 _newConverter.addETHReserve(weight);
             }
+            // Ether reserve token
+            else if (connectorAddress == address(etherToken)) {
+                _newConverter.addETHReserve(weight);
+            }
+            // ERC20 reserve token
             else {
                 IERC20Token connectorToken = IERC20Token(connectorAddress);
                 _newConverter.addConnector(connectorToken, weight, isVirtualBalanceEnabled);
@@ -237,10 +244,16 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
 
         for (uint16 i = 0; i < connectorTokenCount; i++) {
             address connectorAddress = _oldConverter.connectorTokens(i);
+            // Ether reserve
             if (connectorAddress == address(0)) {
+                _oldConverter.withdrawETH(address(_newConverter));
+            }
+            // Ether reserve token
+            else if (connectorAddress == address(etherToken)) {
                 connectorBalance = etherToken.balanceOf(_oldConverter);
                 etherToken.withdrawTo(address(_newConverter), connectorBalance);
             }
+            // ERC20 reserve token
             else {
                 IERC20Token connector = IERC20Token(connectorAddress);
                 connectorBalance = connector.balanceOf(_oldConverter);
