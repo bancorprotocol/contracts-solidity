@@ -19,15 +19,10 @@ solidity/coverage.json
 solidity/scTopics
 
 # npm run build
-solidity/build/INonStandardSmartToken.bin
 solidity/build/Migrations.abi
 solidity/build/Migrations.bin
 solidity/build/NewBancorConverter.abi
 solidity/build/NewBancorConverter.bin
-solidity/build/NonStandardERC20Token.abi
-solidity/build/NonStandardERC20Token.bin
-solidity/build/NonStandardSmartToken.abi
-solidity/build/NonStandardSmartToken.bin
 solidity/build/OldBancorConverter.abi
 solidity/build/OldBancorConverter.bin
 solidity/build/TestBancorFormula.abi
