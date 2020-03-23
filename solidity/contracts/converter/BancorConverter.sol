@@ -34,11 +34,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     uint64 private constant CONVERSION_FEE_RESOLUTION = 1000000;
 
     struct Reserve {
-        uint256 virtualBalance;         // reserve virtual balance
-        uint32 ratio;                   // reserve ratio, represented in ppm, 1-1000000
-        bool deprecated1;               // deprecated
-        bool deprecated2;               // deprecated
-        bool isSet;                     // used to tell if the mapping element is defined
+        uint256 virtualBalance; // reserve virtual balance
+        uint32 ratio;           // reserve ratio, represented in ppm, 1-1000000
+        bool deprecated1;       // deprecated
+        bool deprecated2;       // deprecated
+        bool isSet;             // used to tell if the mapping element is defined
     }
 
     /**
