@@ -435,7 +435,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * 
       * @param _reserveToken    contract address of the reserve token
       * @param _depositAmount   amount of reserve-tokens received from the user
-      * @param _delta           ???
+      * @param _delta           amount deposited into the reserve prior to calling this function
       * 
       * @return amount of supply-tokens that the user will receive
       * @return amount of supply-tokens that the user will pay as fee
@@ -496,7 +496,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @param _fromReserveToken    contract address of the reserve token to convert from
       * @param _toReserveToken      contract address of the reserve token to convert to
       * @param _amount              amount of tokens received from the user
-      * @param _delta               ???
+      * @param _delta               amount deposited into the reserve prior to calling this function
       * 
       * @return amount of tokens that the user will receive
       * @return amount of tokens that the user will pay as fee
