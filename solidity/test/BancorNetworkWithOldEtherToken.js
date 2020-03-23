@@ -83,7 +83,7 @@ contract('BancorNetwork', accounts => {
 
         await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, smartToken1.address);
 
-        erc20Token = await TestNonStandardERC20Token.new('ERC20Token', 'ERC5', 1000000);
+        erc20Token = await TestNonStandardERC20Token.new('ERC20Token', 'ERC5', 2, 1000000);
 
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000, OLD_CONVERTER_VERSION);
 
