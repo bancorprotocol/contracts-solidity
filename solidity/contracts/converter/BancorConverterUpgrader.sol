@@ -187,14 +187,11 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
     function copyConnectors(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter)
         private
     {
-        uint256 virtualBalance;
-        uint32 weight;
-        bool isVirtualBalanceEnabled;
         uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
 
         for (uint16 i = 0; i < connectorTokenCount; i++) {
             address connectorAddress = _oldConverter.connectorTokens(i);
-            (virtualBalance, weight, isVirtualBalanceEnabled, , ) = _oldConverter.connectors(connectorAddress);
+            (uint256 virtualBalance, uint32 weight, , , ) = _oldConverter.connectors(connectorAddress);
 
             // Ether reserve
             if (connectorAddress == address(0)) {
@@ -206,10 +203,10 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
             }
             // ERC20 reserve token
             else {
-                _newConverter.addConnector(IERC20Token(connectorAddress), weight, isVirtualBalanceEnabled);
+                _newConverter.addConnector(IERC20Token(connectorAddress), weight, false);
             }
-            if (isVirtualBalanceEnabled)
-                _newConverter.updateConnector(IERC20Token(connectorAddress), weight, isVirtualBalanceEnabled, virtualBalance);
+            if (virtualBalance > 0)
+                _newConverter.updateConnector(IERC20Token(connectorAddress), weight, false, virtualBalance);
         }
     }
 
