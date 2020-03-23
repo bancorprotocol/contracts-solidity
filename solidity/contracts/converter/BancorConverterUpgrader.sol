@@ -206,11 +206,10 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
             }
             // ERC20 reserve token
             else {
-                IERC20Token connectorToken = IERC20Token(connectorAddress);
-                _newConverter.addConnector(connectorToken, weight, isVirtualBalanceEnabled);
-                if (isVirtualBalanceEnabled)
-                    _newConverter.updateConnector(connectorToken, weight, isVirtualBalanceEnabled, virtualBalance);
+                _newConverter.addConnector(IERC20Token(connectorAddress), weight, isVirtualBalanceEnabled);
             }
+            if (isVirtualBalanceEnabled)
+                _newConverter.updateConnector(IERC20Token(connectorAddress), weight, isVirtualBalanceEnabled, virtualBalance);
         }
     }
 
