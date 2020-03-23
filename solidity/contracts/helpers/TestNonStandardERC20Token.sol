@@ -20,7 +20,7 @@ contract TestNonStandardERC20Token is INonStandardERC20, Utils {
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     /**
-      * @dev initializes a new NonStandardERC20Token instance
+      * @dev initializes a new TestNonStandardERC20Token instance
       * 
       * @param _name        token name
       * @param _symbol      token symbol
