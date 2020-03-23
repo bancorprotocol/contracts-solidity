@@ -536,7 +536,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @return amount of tokens received (in units of the target token)
     */
     function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn)
-        public
+        internal
         only(BANCOR_NETWORK)
         greaterThanZero(_minReturn)
         returns (uint256)
