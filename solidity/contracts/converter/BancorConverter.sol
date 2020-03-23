@@ -165,7 +165,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * can only be called if the converter has an ETH-reserve
     */
     function() external payable {
-        require(hasETHReserve());
+        require(reserves[address(0)].isSet); // require(hasETHReserve());
+        // a workaround for a problem when running solidity-coverage
+        // see https://github.com/sc-forks/solidity-coverage/issues/487
     }
 
     /**
