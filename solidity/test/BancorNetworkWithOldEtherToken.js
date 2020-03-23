@@ -8,7 +8,6 @@ const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 const Whitelist = artifacts.require('Whitelist');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const SmartToken = artifacts.require('SmartToken');
-const NonStandardSmartToken = artifacts.require('NonStandardSmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
@@ -73,7 +72,7 @@ contract('BancorNetwork', accounts => {
         smartToken1 = await SmartToken.new('Token1', 'TKN1', 2);
         await smartToken1.issue(accounts[0], 1000000);
 
-        smartToken2 = await NonStandardSmartToken.new('Token2', 'TKN2', 2);
+        smartToken2 = await SmartToken.new('Token2', 'TKN2', 2);
         await smartToken2.issue(accounts[0], 2000000);
 
         smartToken3 = await SmartToken.new('Token3', 'TKN3', 2);
