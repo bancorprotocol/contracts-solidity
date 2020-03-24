@@ -25,6 +25,8 @@ solidity/build/NewBancorConverter.abi
 solidity/build/NewBancorConverter.bin
 solidity/build/OldBancorConverter.abi
 solidity/build/OldBancorConverter.bin
+solidity/build/TestBancorConverter.abi
+solidity/build/TestBancorConverter.bin
 solidity/build/TestBancorFormula.abi
 solidity/build/TestBancorFormula.bin
 solidity/build/TestBancorNetwork.abi
