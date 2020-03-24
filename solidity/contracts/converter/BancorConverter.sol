@@ -302,7 +302,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @dev updates a reserve's virtual balance
       * only used during an upgrade process
       * can only be called by the contract owner while the owner is the converter upgrader contract
-      * note that prior to version 17, you should use 'updateConnector' instead
       * 
       * @param _reserveToken    address of the reserve token
       * @param _virtualBalance  new reserve virtual balance, or 0 to disable virtual balance
@@ -863,13 +862,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     */
     function addConnector(IERC20Token _token, uint32 _weight, bool /*_enableVirtualBalance*/) public {
         addReserve(_token, _weight);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function updateConnector(IERC20Token _connectorToken, uint32 /*_weight*/, bool /*_enableVirtualBalance*/, uint256 _virtualBalance) public {
-        updateReserveVirtualBalance(_connectorToken, _virtualBalance);
     }
 
     /**
