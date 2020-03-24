@@ -660,14 +660,14 @@ contract('BancorConverter', accounts => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert(reserveToken.address, reserveToken.address, 500, 0));
+        await utils.catchRevert(converter.convert(reserveToken.address, reserveToken.address, 500, 1));
     });
 
     it('should throw when attempting to convert with 0 minimum requested amount', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert(reserveToken.address, reserveToken2.address, 500, 2000));
+        await utils.catchRevert(converter.convert(reserveToken.address, reserveToken2.address, 500, 0));
     });
 
     it('should throw when attempting to convert when the return is smaller than the minimum requested amount', async () => {
@@ -1238,14 +1238,14 @@ contract('BancorConverter', accounts => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert2(reserveToken.address, reserveToken.address, 500, 0, utils.zeroAddress, 0));
+        await utils.catchRevert(converter.convert2(reserveToken.address, reserveToken.address, 500, 1, utils.zeroAddress, 0));
     });
 
     it('should throw when attempting to convert2 with 0 minimum requested amount', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert2(reserveToken.address, reserveToken2.address, 500, 2000, utils.zeroAddress, 0));
+        await utils.catchRevert(converter.convert2(reserveToken.address, reserveToken2.address, 500, 0, utils.zeroAddress, 0));
     });
 
     it('should throw when attempting to convert2 when the return is smaller than the minimum requested amount', async () => {
