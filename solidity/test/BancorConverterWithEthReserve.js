@@ -48,7 +48,7 @@ async function initConverter(accounts, activate, maxConversionFee = 0) {
     await token.issue(accounts[0], 20000);
     await reserveToken.transfer(converter.address, 5000);
     await etherToken.transfer(converter.address, 8000);
-    await await web3.eth.sendTransaction({from: accounts[0], to: converter.address, value: 8000});
+    await web3.eth.sendTransaction({from: accounts[0], to: converter.address, value: 8000});
 
     if (activate) {
         await token.transferOwnership(converter.address);
@@ -848,7 +848,7 @@ contract('BancorConverterWithEthReserve', accounts => {
 //        await converter.acceptTokenOwnership();
 //
 //        await reserveToken.transfer(accounts[9], 5000);
-//        await await web3.eth.sendTransaction({from: accounts[0], to: accounts[9], value: 5000});
+//        await web3.eth.sendTransaction({from: accounts[0], to: accounts[9], value: 5000});
 //        await reserveToken3.transfer(accounts[9], 5000);
 //
 //        let supply = await token.totalSupply.call();
@@ -878,7 +878,7 @@ contract('BancorConverterWithEthReserve', accounts => {
 //        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
 //
 //        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-//        await await web3.eth.sendTransaction({from: accounts[9], to: accounts[0], value: token2Balance});
+//        await web3.eth.sendTransaction({from: accounts[9], to: accounts[0], value: token2Balance});
 //        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
 //    });
 //
@@ -892,7 +892,7 @@ contract('BancorConverterWithEthReserve', accounts => {
 //        await converter.acceptTokenOwnership();
 //
 //        await reserveToken.transfer(accounts[9], 500000);
-//        await await web3.eth.sendTransaction({from: accounts[0], to: accounts[9], value: 500000});
+//        await web3.eth.sendTransaction({from: accounts[0], to: accounts[9], value: 500000});
 //        await reserveToken3.transfer(accounts[9], 500000);
 //
 //        let supply = await token.totalSupply.call();
@@ -922,7 +922,7 @@ contract('BancorConverterWithEthReserve', accounts => {
 //        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
 //
 //        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-//        await await web3.eth.sendTransaction({from: accounts[9], to: accounts[0], value: token2Balance});
+//        await web3.eth.sendTransaction({from: accounts[9], to: accounts[0], value: token2Balance});
 //        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
 //    });
 //
@@ -936,7 +936,7 @@ contract('BancorConverterWithEthReserve', accounts => {
 //        await converter.acceptTokenOwnership();
 //
 //        await reserveToken.transfer(accounts[9], 100);
-//        await await web3.eth.sendTransaction({from: accounts[0], to: accounts[9], value: 100});
+//        await web3.eth.sendTransaction({from: accounts[0], to: accounts[9], value: 100});
 //        await reserveToken3.transfer(accounts[9], 100);
 //
 //        await reserveToken.approve(converter.address, 100000, { from: accounts[9] });
@@ -950,7 +950,7 @@ contract('BancorConverterWithEthReserve', accounts => {
 //        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
 //
 //        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-//        await await web3.eth.sendTransaction({from: accounts[9], to: accounts[0], value: token2Balance});
+//        await web3.eth.sendTransaction({from: accounts[9], to: accounts[0], value: token2Balance});
 //        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
 //        
 //    });
@@ -1004,7 +1004,7 @@ contract('BancorConverterWithEthReserve', accounts => {
 //        assert.equal(token3Balance.toNumber(), Math.floor(token3Amount));
 //
 //        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-//        await await web3.eth.sendTransaction({from: accounts[9], to: accounts[0], value: token2Balance});
+//        await web3.eth.sendTransaction({from: accounts[9], to: accounts[0], value: token2Balance});
 //        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
 //    });
 //
@@ -1040,7 +1040,7 @@ contract('BancorConverterWithEthReserve', accounts => {
 //        assert.equal(token3Balance.toNumber(), Math.floor(token3Amount));
 //
 //        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-//        await await web3.eth.sendTransaction({from: accounts[9], to: accounts[0], value: token2Balance});
+//        await web3.eth.sendTransaction({from: accounts[9], to: accounts[0], value: token2Balance});
 //        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
 //    });
 //
@@ -1072,7 +1072,7 @@ contract('BancorConverterWithEthReserve', accounts => {
 //        assert.equal(token3Balance.toNumber(), reserve3Balance.toNumber());
 //
 //        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-//        await await web3.eth.sendTransaction({from: accounts[9], to: accounts[0], value: token2Balance});
+//        await web3.eth.sendTransaction({from: accounts[9], to: accounts[0], value: token2Balance});
 //        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
 //    });
 //
