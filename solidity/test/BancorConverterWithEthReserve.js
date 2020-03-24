@@ -41,17 +41,17 @@ async function initConverter(accounts, activate, maxConversionFee = 0) {
         reserveToken.address,
         250000
     );
-    let converterAddress = converter.address;
+
     await converter.setEtherToken(etherToken.address);
     await converter.addETHReserve(150000);
 
     await token.issue(accounts[0], 20000);
-    await reserveToken.transfer(converterAddress, 5000);
-    await etherToken.transfer(converterAddress, 8000);
-    await await web3.eth.sendTransaction({from: accounts[0], to: converterAddress, value: 8000});
+    await reserveToken.transfer(converter.address, 5000);
+    await etherToken.transfer(converter.address, 8000);
+    await await web3.eth.sendTransaction({from: accounts[0], to: converter.address, value: 8000});
 
     if (activate) {
-        await token.transferOwnership(converterAddress);
+        await token.transferOwnership(converter.address);
         await converter.acceptTokenOwnership();
     }
 
