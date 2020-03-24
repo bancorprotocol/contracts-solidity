@@ -56,6 +56,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     uint32 public conversionFee = 0;                // current conversion fee, represented in ppm, 0...maxConversionFee
     bool public conversionsEnabled = true;          // deprecated, backward compatibility
 
+    IERC20Token internal etherToken = IERC20Token(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
+
     /**
       * @dev triggered when a conversion between two tokens occurs
       * 
@@ -817,7 +819,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
             if (isETH && msg.value > reserveAmount)
                 msg.sender.transfer(msg.value - reserveAmount);
             else if (isETH && msg.value < reserveAmount)
-                ensureTransferFrom(IERC20Token(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315), msg.sender, this, reserveAmount - msg.value);
+                ensureTransferFrom(etherToken, msg.sender, this, reserveAmount - msg.value);
             else
                 ensureTransferFrom(reserveToken, msg.sender, this, reserveAmount);
 
