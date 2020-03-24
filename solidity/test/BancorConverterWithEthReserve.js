@@ -817,27 +817,27 @@ contract('BancorConverterWithEthReserve', accounts => {
         assert.equal(returnAmount.toNumber(), returnAmount2);
     });
 
-//    for (const percent of [50, 75, 100]) {
-//        it(`verifies that fund executes when the total reserve ratio equals ${percent}%`, async () => {
-//            let converter = await initConverter(accounts, false);
-//            await converter.addReserve(reserveToken3.address, (percent - 40) * 10000);
-//
-//            await reserveToken3.transfer(converter.address, 6000);
-//
-//            await token.transferOwnership(converter.address);
-//            await converter.acceptTokenOwnership();
-//
-//            let prevBalance = await token.balanceOf.call(accounts[0]);
-//            await reserveToken.approve(converter.address, 100000);
-//            etherToken.approve(converter.address, 100000);
-//            await reserveToken3.approve(converter.address, 100000);
-//            await converter.fund(100);
-//            let balance = await token.balanceOf.call(accounts[0]);
-//
-//            assert.equal(balance.toNumber(), prevBalance.toNumber() + 100);
-//        });
-//    }
-//
+    for (const percent of [50, 75, 100]) {
+        it(`verifies that fund executes when the total reserve ratio equals ${percent}%`, async () => {
+            let converter = await initConverter(accounts, false);
+            await converter.addReserve(reserveToken3.address, (percent - 40) * 10000);
+
+            await reserveToken3.transfer(converter.address, 6000);
+
+            await token.transferOwnership(converter.address);
+            await converter.acceptTokenOwnership();
+
+            let prevBalance = await token.balanceOf.call(accounts[0]);
+            await reserveToken.approve(converter.address, 100000);
+            etherToken.approve(converter.address, 100000);
+            await reserveToken3.approve(converter.address, 100000);
+            await converter.fund(100);
+            let balance = await token.balanceOf.call(accounts[0]);
+
+            assert.equal(balance.toNumber(), prevBalance.toNumber() + 100);
+        });
+    }
+
 //    it('verifies that fund gets the correct reserve balance amounts from the caller', async () => {
 //        let converter = await initConverter(accounts, false);
 //        await converter.addReserve(reserveToken3.address, 600000);
@@ -1075,22 +1075,22 @@ contract('BancorConverterWithEthReserve', accounts => {
 //        await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
 //        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
 //    });
-//
-//    it('should throw when attempting to liquidate with insufficient funds', async () => {
-//        let converter = await initConverter(accounts, false);
-//        await converter.addReserve(reserveToken3.address, 600000);
-//
-//        await reserveToken3.transfer(converter.address, 6000);
-//
-//        await token.transferOwnership(converter.address);
-//        await converter.acceptTokenOwnership();
-//
-//        await token.transfer(accounts[9], 100);
-//
-//        await converter.liquidate(5, { from: accounts[9] });
-//
-//        await utils.catchRevert(converter.liquidate(600, { from: accounts[9] }));
-//    });
+
+    it('should throw when attempting to liquidate with insufficient funds', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addReserve(reserveToken3.address, 600000);
+
+        await reserveToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        await token.transfer(accounts[9], 100);
+
+        await converter.liquidate(5, { from: accounts[9] });
+
+        await utils.catchRevert(converter.liquidate(600, { from: accounts[9] }));
+    });
 
     it('should throw when attempting to register the registry to the zero address', async () => {
         await utils.catchRevert(contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, utils.zeroAddress));
