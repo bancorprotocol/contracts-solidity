@@ -93,7 +93,7 @@ contract('BancorConverter', accounts => {
     });
 
     it('verifies the converter data after construction', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         let token = await converter.token.call();
         assert.equal(token, tokenAddress);
         let registry = await converter.registry.call();
@@ -127,15 +127,15 @@ contract('BancorConverter', accounts => {
     });
 
     it('should throw when attempting to construct a converter with no token', async () => {
-        await utils.catchRevert(BancorConverter.new('0x0', contractRegistry.address, 0, '0x0', 0));
+        await utils.catchRevert(BancorConverter.new(utils.zeroAddress, contractRegistry.address, 0, utils.zeroAddress, 0));
     });
 
     it('should throw when attempting to construct a converter with no contract registry', async () => {
-        await utils.catchRevert(BancorConverter.new(tokenAddress, '0x0', 0, '0x0', 0));
+        await utils.catchRevert(BancorConverter.new(tokenAddress, utils.zeroAddress, 0, utils.zeroAddress, 0));
     });
 
     it('should throw when attempting to construct a converter with invalid conversion fee', async () => {
-        await utils.catchRevert(BancorConverter.new(tokenAddress, contractRegistry.address, 1000001, '0x0', 0));
+        await utils.catchRevert(BancorConverter.new(tokenAddress, contractRegistry.address, 1000001, utils.zeroAddress, 0));
     });
 
     it('verifies the first reserve when provided at construction time', async () => {
@@ -164,7 +164,7 @@ contract('BancorConverter', accounts => {
     });
 
     it('verifies the owner can update the conversion whitelist contract address', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         let prevWhitelist = await converter.conversionWhitelist.call();
         await converter.setConversionWhitelist(accounts[3]);
         let newWhitelist = await converter.conversionWhitelist.call();
@@ -172,13 +172,13 @@ contract('BancorConverter', accounts => {
     });
 
     it('should throw when a non owner attempts update the conversion whitelist contract address', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
 
         await utils.catchRevert(converter.setConversionWhitelist(accounts[3], { from: accounts[1] }));
     });
 
     it('verifies the owner can remove the conversion whitelist contract address', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         await converter.setConversionWhitelist(accounts[3]);
         let whitelist = await converter.conversionWhitelist.call();
         assert.equal(whitelist, accounts[3]);
@@ -188,32 +188,32 @@ contract('BancorConverter', accounts => {
     });
 
     it('should throw when the owner attempts update the conversion whitelist contract address with the converter address', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
 
         await utils.catchRevert(converter.setConversionWhitelist(converter.address));
     });
 
     it('verifies the owner can update the fee', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, utils.zeroAddress, 0);
         await converter.setConversionFee(30000);
         let conversionFee = await converter.conversionFee.call();
         assert.equal(conversionFee, 30000);
     });
 
     it('should throw when attempting to update the fee to an invalid value', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, utils.zeroAddress, 0);
 
         await utils.catchRevert(converter.setConversionFee(200001));
     });
 
     it('should throw when a non owner attempts to update the fee', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, utils.zeroAddress, 0);
 
         await utils.catchRevert(converter.setConversionFee(30000, { from: accounts[1] }));
     });
 
     it('verifies that getFinalAmount returns the correct amount', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, utils.zeroAddress, 0);
         await converter.setConversionFee(10000);
         let finalAmount = await converter.getFinalAmount.call(500000, 1);
         assert.equal(finalAmount, 495000);
@@ -222,7 +222,7 @@ contract('BancorConverter', accounts => {
     });
 
     it('verifies that an event is fired when the owner updates the fee', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, utils.zeroAddress, 0);
         let watcher = converter.ConversionFeeUpdate();
         await converter.setConversionFee(30000);
         let events = await watcher.get();
@@ -231,7 +231,7 @@ contract('BancorConverter', accounts => {
     });
 
     it('verifies that an event is fired when the owner updates the fee multiple times', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, utils.zeroAddress, 0);
         let watcher = converter.ConversionFeeUpdate();
         let events;
         for (let i = 1; i <= 10; ++i) {
@@ -243,7 +243,7 @@ contract('BancorConverter', accounts => {
     });
 
     it('should not fire an event when attempting to update the fee to an invalid value', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, utils.zeroAddress, 0);
         let watcher = converter.ConversionFeeUpdate();
 
         await utils.catchRevert(converter.setConversionFee(200001));
@@ -252,7 +252,7 @@ contract('BancorConverter', accounts => {
     });
 
     it('should not fire an event when a non owner attempts to update the fee', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 200000, utils.zeroAddress, 0);
         let watcher = converter.ConversionFeeUpdate();
 
         await utils.catchRevert(converter.setConversionFee(30000, { from: accounts[1] }));
@@ -261,7 +261,7 @@ contract('BancorConverter', accounts => {
     });
 
     it('verifies that 2 reserves are added correctly', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         await converter.addReserve(reserveToken.address, ratio10Percent);
         let reserve = await converter.reserves.call(reserveToken.address);
         verifyReserve(reserve, 0, ratio10Percent, true);
@@ -271,14 +271,14 @@ contract('BancorConverter', accounts => {
     });
 
     it('should throw when a non owner attempts to add a reserve', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
 
         await utils.catchRevert(converter.addReserve(reserveToken.address, ratio10Percent, { from: accounts[1] }));
     });
 
     it('should throw when attempting to accept token ownership when its total supply is zero', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
-        let converter = await BancorConverter.new(token.address, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(token.address, contractRegistry.address, 0, utils.zeroAddress, 0);
         await token.transferOwnership(converter.address);
 
         await utils.catchRevert(converter.acceptTokenOwnership());
@@ -286,7 +286,7 @@ contract('BancorConverter', accounts => {
 
     it('should throw when attempting to add a reserve when the converter is active', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
-        let converter = await BancorConverter.new(token.address, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(token.address, contractRegistry.address, 0, utils.zeroAddress, 0);
         await token.issue(accounts[0], 20000);
         await token.transferOwnership(converter.address);
         await converter.acceptTokenOwnership();
@@ -295,51 +295,51 @@ contract('BancorConverter', accounts => {
     });
 
     it('should throw when attempting to add a reserve with invalid address', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
 
-        await utils.catchRevert(converter.addReserve('0x0', ratio10Percent));
+        await utils.catchRevert(converter.addReserve(utils.zeroAddress, ratio10Percent));
     });
 
     it('should throw when attempting to add a reserve with ratio = 0', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
 
         await utils.catchRevert(converter.addReserve(reserveToken.address, 0));
     });
 
     it('should throw when attempting to add a reserve with ratio greater than 100%', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
 
         await utils.catchRevert(converter.addReserve(reserveToken.address, 1000001));
     });
 
     it('should throw when attempting to add the token as a reserve', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
 
         await utils.catchRevert(converter.addReserve(tokenAddress, ratio10Percent));
     });
 
     it('should throw when attempting to add the converter as a reserve', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
 
         await utils.catchRevert(converter.addReserve(converter.address, ratio10Percent));
     });
 
     it('should throw when attempting to add a reserve that already exists', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         await converter.addReserve(reserveToken.address, ratio10Percent);
 
         await utils.catchRevert(converter.addReserve(reserveToken.address, 200000));
     });
 
     it('should throw when attempting to add multiple reserves with total ratio greater than 100%', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         await converter.addReserve(reserveToken.address, 500000);
 
         await utils.catchRevert(converter.addReserve(reserveToken2.address, 500001));
     });
 
     it('verifies that the owner can update a reserve virtual balance if the owner is the upgrader contract', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         await converter.addReserve(reserveToken.address, ratio10Percent);
         let reserve = await converter.reserves.call(reserveToken.address);
         verifyReserve(reserve, 0, ratio10Percent, true);
@@ -355,21 +355,21 @@ contract('BancorConverter', accounts => {
     });
 
     it('should throw when the owner attempts to update a reserve virtual balance', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         await converter.addReserve(reserveToken.address, ratio10Percent);
 
         await utils.catchRevert(converter.updateReserveVirtualBalance(reserveToken.address, 0));
     });
 
     it('should throw when a non owner attempts to update a reserve virtual balance', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         await converter.addReserve(reserveToken.address, ratio10Percent);
 
         await utils.catchRevert(converter.updateReserveVirtualBalance(reserveToken.address, 0, { from: accounts[1] }));
     });
 
     it('should throw when attempting to update a reserve virtual balance for a reserve that does not exist', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         await converter.addReserve(reserveToken.address, ratio10Percent);
         let reserve = await converter.reserves.call(reserveToken.address);
         verifyReserve(reserve, 0, ratio10Percent, true);
@@ -388,7 +388,7 @@ contract('BancorConverter', accounts => {
     });
 
     it('should throw when attempting to retrieve the balance for a reserve that does not exist', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
+        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         await converter.addReserve(reserveToken.address, ratio10Percent);
 
         await utils.catchRevert(converter.getReserveBalance.call(reserveToken2.address));
@@ -573,13 +573,13 @@ contract('BancorConverter', accounts => {
     it('should throw when attempting to get the return with an invalid from token adress', async () => {
         let converter = await initConverter(accounts, true);
 
-        await utils.catchRevert(converter.getReturn.call('0x0', reserveToken2.address, 500));
+        await utils.catchRevert(converter.getReturn.call(utils.zeroAddress, reserveToken2.address, 500));
     });
 
     it('should throw when attempting to get the return with an invalid to token address', async () => {
         let converter = await initConverter(accounts, true);
 
-        await utils.catchRevert(converter.getReturn.call(reserveToken.address, '0x0', 500));
+        await utils.catchRevert(converter.getReturn.call(reserveToken.address, utils.zeroAddress, 500));
     });
 
     it('should throw when attempting to get the return with identical from/to addresses', async () => {
@@ -646,14 +646,14 @@ contract('BancorConverter', accounts => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert('0x0', reserveToken2.address, 500, 1));
+        await utils.catchRevert(converter.convert(utils.zeroAddress, reserveToken2.address, 500, 1));
     });
 
     it('should throw when attempting to convert with an invalid to token address', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert(reserveToken.address, '0x0', 500, 1));
+        await utils.catchRevert(converter.convert(reserveToken.address, utils.zeroAddress, 500, 1));
     });
 
     it('should throw when attempting to convert with identical from/to addresses', async () => {
@@ -1190,48 +1190,6 @@ contract('BancorConverter', accounts => {
         assert('_conversionFee' in saleRes.logs[0].args);
     });
 
-    it('should throw when attempting to get the return with an invalid from token adress', async () => {
-        let converter = await initConverter(accounts, true);
-
-        await utils.catchRevert(converter.getReturn.call('0x0', reserveToken2.address, 500));
-    });
-
-    it('should throw when attempting to get the return with an invalid to token address', async () => {
-        let converter = await initConverter(accounts, true);
-
-        await utils.catchRevert(converter.getReturn.call(reserveToken.address, '0x0', 500));
-    });
-
-    it('should throw when attempting to get the return with identical from/to addresses', async () => {
-        let converter = await initConverter(accounts, true);
-
-        await utils.catchRevert(converter.getReturn.call(reserveToken.address, reserveToken.address, 500));
-    });
-
-    it('should throw when attempting to get the purchase return while the converter is not active', async () => {
-        let converter = await initConverter(accounts, false);
-
-        await utils.catchRevert(converter.getPurchaseReturn.call(reserveToken.address, 500, 0));
-    });
-
-    it('should throw when attempting to get the purchase return with a non reserve address', async () => {
-        let converter = await initConverter(accounts, true);
-
-        await utils.catchRevert(converter.getPurchaseReturn.call(tokenAddress, 500, 0));
-    });
-
-    it('should throw when attempting to get the sale return while the converter is not active', async () => {
-        let converter = await initConverter(accounts, false);
-
-        await utils.catchRevert(converter.getSaleReturn.call(reserveToken.address, 500));
-    });
-
-    it('should throw when attempting to get the sale return with a non reserve address', async () => {
-        let converter = await initConverter(accounts, true);
-
-        await utils.catchRevert(converter.getSaleReturn.call(tokenAddress, 500));
-    });
-
     it('verifies that convert2 returns a valid amount', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
@@ -1266,14 +1224,14 @@ contract('BancorConverter', accounts => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert2('0x0', reserveToken2.address, 500, 1, utils.zeroAddress, 0));
+        await utils.catchRevert(converter.convert2(utils.zeroAddress, reserveToken2.address, 500, 1, utils.zeroAddress, 0));
     });
 
     it('should throw when attempting to convert2 with an invalid to token address', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert2(reserveToken.address, '0x0', 500, 1, utils.zeroAddress, 0));
+        await utils.catchRevert(converter.convert2(reserveToken.address, utils.zeroAddress, 500, 1, utils.zeroAddress, 0));
     });
 
     it('should throw when attempting to convert2 with identical from/to addresses', async () => {
