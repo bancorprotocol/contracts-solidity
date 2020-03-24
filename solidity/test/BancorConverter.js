@@ -55,11 +55,9 @@ async function initConverter(accounts, activate, maxConversionFee = 0) {
     return converter;
 }
 
-function verifyReserve(reserve, isSet, isEnabled, ratio, isVirtualBalanceEnabled, virtualBalance) {
+function verifyReserve(reserve, virtualBalance, ratio, isSet) {
     assert.equal(reserve[0], virtualBalance);
     assert.equal(reserve[1], ratio);
-    assert.equal(reserve[2], isVirtualBalanceEnabled);
-    assert.equal(reserve[3], isEnabled);
     assert.equal(reserve[4], isSet);
 }
 
@@ -145,7 +143,7 @@ contract('BancorConverter', accounts => {
         let reserveTokenAddress = await converter.reserveTokens.call(0);
         assert.equal(reserveTokenAddress, reserveToken.address);
         let reserve = await converter.reserves.call(reserveTokenAddress);
-        verifyReserve(reserve, true, true, 200000, false, 0);
+        verifyReserve(reserve, 0, 200000, true);
     });
 
     it('should throw when attempting to construct a converter with a reserve with invalid ratio', async () => {
@@ -266,10 +264,10 @@ contract('BancorConverter', accounts => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addReserve(reserveToken.address, ratio10Percent);
         let reserve = await converter.reserves.call(reserveToken.address);
-        verifyReserve(reserve, true, true, ratio10Percent, false, 0);
+        verifyReserve(reserve, 0, ratio10Percent, true);
         await converter.addReserve(reserveToken2.address, 200000);
         reserve = await converter.reserves.call(reserveToken2.address);
-        verifyReserve(reserve, true, true, 200000, false, 0);
+        verifyReserve(reserve, 0, 200000, true);
     });
 
     it('should throw when a non owner attempts to add a reserve', async () => {
@@ -344,7 +342,7 @@ contract('BancorConverter', accounts => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addReserve(reserveToken.address, ratio10Percent);
         let reserve = await converter.reserves.call(reserveToken.address);
-        verifyReserve(reserve, true, true, ratio10Percent, false, 0);
+        verifyReserve(reserve, 0, ratio10Percent, true);
 
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, accounts[0]);
 
@@ -353,7 +351,7 @@ contract('BancorConverter', accounts => {
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
         
         reserve = await converter.reserves.call(reserveToken.address);
-        verifyReserve(reserve, true, true, ratio10Percent, true, 50);
+        verifyReserve(reserve, 50, ratio10Percent, true);
     });
 
     it('should throw when the owner attempts to update a reserve virtual balance', async () => {
@@ -374,7 +372,7 @@ contract('BancorConverter', accounts => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
         await converter.addReserve(reserveToken.address, ratio10Percent);
         let reserve = await converter.reserves.call(reserveToken.address);
-        verifyReserve(reserve, true, true, ratio10Percent, false, 0);
+        verifyReserve(reserve, 0, ratio10Percent, true);
 
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, accounts[0]);
 

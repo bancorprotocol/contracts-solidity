@@ -183,20 +183,17 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
     function copyConnectors(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter)
         private
     {
-        uint256 virtualBalance;
-        uint32 weight;
-        bool isVirtualBalanceEnabled;
         uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
 
         for (uint16 i = 0; i < connectorTokenCount; i++) {
             address connectorAddress = _oldConverter.connectorTokens(i);
-            (virtualBalance, weight, isVirtualBalanceEnabled, , ) = _oldConverter.connectors(connectorAddress);
+            (uint256 virtualBalance, uint32 weight, , , ) = _oldConverter.connectors(connectorAddress);
 
             IERC20Token connectorToken = IERC20Token(connectorAddress);
-            _newConverter.addConnector(connectorToken, weight, isVirtualBalanceEnabled);
+            _newConverter.addConnector(connectorToken, weight, false);
 
-            if (isVirtualBalanceEnabled)
-                _newConverter.updateConnector(connectorToken, weight, isVirtualBalanceEnabled, virtualBalance);
+            if (virtualBalance > 0)
+                _newConverter.updateConnector(connectorToken, weight, false, virtualBalance);
         }
     }
 

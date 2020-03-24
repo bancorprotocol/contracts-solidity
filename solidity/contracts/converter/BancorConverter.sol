@@ -34,11 +34,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     uint64 private constant CONVERSION_FEE_RESOLUTION = 1000000;
 
     struct Reserve {
-        uint256 virtualBalance;         // reserve virtual balance
-        uint32 ratio;                   // reserve ratio, represented in ppm, 1-1000000
-        bool isVirtualBalanceEnabled;   // true if virtual balance is enabled, false if not
-        bool isSaleEnabled;             // is sale of the reserve token enabled, can be set by the owner
-        bool isSet;                     // used to tell if the mapping element is defined
+        uint256 virtualBalance; // reserve virtual balance
+        uint32 ratio;           // reserve ratio, represented in ppm, 1-1000000
+        bool deprecated1;       // deprecated
+        bool deprecated2;       // deprecated
+        bool isSet;             // used to tell if the mapping element is defined
     }
 
     /**
@@ -292,9 +292,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         require(_token != token && !reserves[_token].isSet && totalReserveRatio + _ratio <= RATIO_RESOLUTION); // validate input
 
         reserves[_token].ratio = _ratio;
-        reserves[_token].isVirtualBalanceEnabled = false;
         reserves[_token].virtualBalance = 0;
-        reserves[_token].isSaleEnabled = true;
         reserves[_token].isSet = true;
         reserveTokens.push(_token);
         totalReserveRatio += _ratio;
@@ -316,7 +314,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         validReserve(_reserveToken)
     {
         Reserve storage reserve = reserves[_reserveToken];
-        reserve.isVirtualBalanceEnabled = _virtualBalance != 0;
         reserve.virtualBalance = _virtualBalance;
     }
 
@@ -844,7 +841,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     */
     function connectors(address _address) public view returns (uint256, uint32, bool, bool, bool) {
         Reserve storage reserve = reserves[_address];
-        return(reserve.virtualBalance, reserve.ratio, reserve.isVirtualBalanceEnabled, reserve.isSaleEnabled, reserve.isSet);
+        return(reserve.virtualBalance, reserve.ratio, false, false, reserve.isSet);
     }
 
     /**
