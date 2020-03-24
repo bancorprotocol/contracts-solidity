@@ -48,7 +48,7 @@ Token network structure:
 
 */
 
-contract('BancorNetwork', accounts => {
+contract('BancorNetworkWithOldEtherToken', accounts => {
     const trustedAddress = accounts[3];
     const untrustedAddress = accounts[1];
 
