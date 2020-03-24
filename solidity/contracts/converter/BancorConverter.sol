@@ -356,7 +356,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * only used during an upgrade process
       * can only be called by the contract owner while the owner is the converter upgrader contract
       * 
-      * @param _reserveToken    address of the reserve token
+      * @param _reserveToken    address of the reserve token, or address(0) for ETH reserve
       * @param _virtualBalance  new reserve virtual balance, or 0 to disable virtual balance
     */
     function updateReserveVirtualBalance(IERC20Token _reserveToken, uint256 _virtualBalance)
