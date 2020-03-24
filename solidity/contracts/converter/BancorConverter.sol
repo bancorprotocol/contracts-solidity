@@ -113,9 +113,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         uint32 _maxConversionFee,
         IERC20Token _reserveToken,
         uint32 _reserveRatio
-    )   ContractRegistryClient(_registry)
-        public
+    )
         SmartTokenController(_token)
+        ContractRegistryClient(_registry)
+        public
         validConversionFee(_maxConversionFee)
     {
         IContractFeatures features = IContractFeatures(addressOf(CONTRACT_FEATURES));
