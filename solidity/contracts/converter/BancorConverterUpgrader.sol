@@ -24,7 +24,7 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function setConversionFee(uint32 _conversionFee) public;
     function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance) public;
     function addETHReserve(uint32 _ratio) public;
-    function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance) public;
+    function updateReserveVirtualBalance(IERC20Token _reserveToken, uint256 _virtualBalance) public;
 }
 
 /**
@@ -206,7 +206,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
                 _newConverter.addConnector(IERC20Token(connectorAddress), weight, false);
             }
             if (virtualBalance > 0)
-                _newConverter.updateConnector(IERC20Token(connectorAddress), weight, false, virtualBalance);
+                _newConverter.updateReserveVirtualBalance(IERC20Token(connectorAddress), virtualBalance);
         }
     }
 
