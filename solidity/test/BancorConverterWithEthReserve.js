@@ -834,11 +834,11 @@ contract('BancorConverterWithEthReserve', accounts => {
         assert.equal(reserve3Balance.toFixed(), prevReserve3Balance.plus(Math.ceil(token3Amount)).toFixed());
 
         let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
-        //let token2Balance = await etherToken.balanceOf.call(accounts[9]);
+        let token2Balance = await etherToken.balanceOf.call(accounts[9]);
         let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
 
         await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
+        await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
         await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
     });
 
@@ -878,11 +878,11 @@ contract('BancorConverterWithEthReserve', accounts => {
         assert.equal(reserve3Balance.toFixed(), prevReserve3Balance.plus(Math.ceil(token3Amount)).toFixed());
 
         let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
-        //let token2Balance = await etherToken.balanceOf.call(accounts[9]);
+        let token2Balance = await etherToken.balanceOf.call(accounts[9]);
         let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
 
         await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
+        await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
         await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
     });
 
@@ -906,11 +906,11 @@ contract('BancorConverterWithEthReserve', accounts => {
 
         await utils.catchRevert(converter.fund(600, { from: accounts[9], value: 10 }));
         let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
-        //let token2Balance = await etherToken.balanceOf.call(accounts[9]);
+        let token2Balance = await etherToken.balanceOf.call(accounts[9]);
         let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
 
         await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
+        await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
         await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
         
     });
