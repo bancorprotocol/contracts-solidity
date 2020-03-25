@@ -539,6 +539,24 @@ contract('BancorNetwork', accounts => {
         await utils.catchRevert(converter1.quickConvertPrioritized(smartToken1BuyPath, 200, 1, 0, 0, utils.zeroBytes32, utils.zeroBytes32, { from: accounts[1], value: 100 }));
     });
 
+    it('verifies convertForPrioritized', async () => {
+        let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
+
+        await bancorNetwork.convertForPrioritized(smartToken1BuyPath, 100, 1, accounts[1], 0, 0, 0, utils.zeroBytes32, utils.zeroBytes32, { from: accounts[1], value: 100 });
+        let newBalance = await smartToken1.balanceOf.call(accounts[1]);
+        assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
+    });
+
+    it('should throw when calling convertForPrioritized with wrong path', async () => {
+        let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
+
+        await utils.catchRevert(bancorNetwork.convertForPrioritized(wrongPath, 100, 1, accounts[1], 0, 0, 0, utils.zeroBytes32, utils.zeroBytes32, { from: accounts[1], value: 100 }));
+    });
+
+    it('should throw when calling convertForPrioritized with wrong amount', async () => {
+        await utils.catchRevert(bancorNetwork.convertForPrioritized(smartToken1BuyPath, 200, 1, accounts[1], 0, 0, 0, utils.zeroBytes32, utils.zeroBytes32, { from: accounts[1], value: 100 }));
+    });
+
     it('verifies convertForPrioritized2', async () => {
         let prevBalance = await smartToken1.balanceOf.call(accounts[1]);
 
