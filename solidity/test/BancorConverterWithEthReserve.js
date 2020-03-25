@@ -789,7 +789,7 @@ contract('BancorConverterWithEthReserve', accounts => {
 
             let prevBalance = await token.balanceOf.call(accounts[0]);
             await reserveToken.approve(converter.address, 100000);
-            etherToken.approve(converter.address, 100000);
+            await etherToken.approve(converter.address, 100000);
             await reserveToken3.approve(converter.address, 100000);
             await converter.fund(100);
             let balance = await token.balanceOf.call(accounts[0]);
@@ -821,7 +821,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let token3Amount = prevReserve3Balance * percentage / 100;
 
         await reserveToken.approve(converter.address, 100000, { from: accounts[9] });
-        etherToken.approve(converter.address, 100000, { from: accounts[9] });
+        await etherToken.approve(converter.address, 100000, { from: accounts[9] });
         await reserveToken3.approve(converter.address, 100000, { from: accounts[9] });
         await converter.fund(19, { from: accounts[9], value: 10 });
 
@@ -865,7 +865,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let token3Amount = prevReserve3Balance * percentage / 100;
 
         await reserveToken.approve(converter.address, 100000, { from: accounts[9] });
-        etherToken.approve(converter.address, 100000, { from: accounts[9] });
+        await etherToken.approve(converter.address, 100000, { from: accounts[9] });
         await reserveToken3.approve(converter.address, 100000, { from: accounts[9] });
         await converter.fund(140854, { from: accounts[9], value: 200000 });
 
@@ -900,7 +900,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         await reserveToken3.transfer(accounts[9], 100);
 
         await reserveToken.approve(converter.address, 100000, { from: accounts[9] });
-        etherToken.approve(converter.address, 100000, { from: accounts[9] });
+        await etherToken.approve(converter.address, 100000, { from: accounts[9] });
         await reserveToken3.approve(converter.address, 100000, { from: accounts[9] });
         await converter.fund(5, { from: accounts[9], value: 10 });
 
