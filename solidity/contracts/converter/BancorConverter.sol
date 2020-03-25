@@ -382,7 +382,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @return amount of supply-tokens that the user will pay as fee
     */
     function getPurchaseReturn(IERC20Token _reserveToken, uint256 _depositAmount)
-        public
+        internal
         view
         active
         validReserve(_reserveToken)
@@ -411,7 +411,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @return amount of reserve-tokens that the user will pay as fee
     */
     function getSaleReturn(IERC20Token _reserveToken, uint256 _sellAmount)
-        public
+        internal
         view
         active
         validReserve(_reserveToken)
@@ -432,7 +432,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
 
     /**
       * @dev calculates the expected return of converting a given amount from one reserve to another
-      * note that prior to version 17, you should use 'getCrossConnectorReturn' instead
       * 
       * @param _fromReserveToken    contract address of the reserve token to convert from
       * @param _toReserveToken      contract address of the reserve token to convert to
@@ -442,7 +441,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @return amount of tokens that the user will pay as fee
     */
     function getCrossReserveReturn(IERC20Token _fromReserveToken, IERC20Token _toReserveToken, uint256 _amount)
-        public
+        internal
         view
         active
         validReserve(_fromReserveToken)
@@ -870,12 +869,5 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     */
     function getConnectorBalance(IERC20Token _connectorToken) public view returns (uint256) {
         return getReserveBalance(_connectorToken);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function getCrossConnectorReturn(IERC20Token _fromConnectorToken, IERC20Token _toConnectorToken, uint256 _amount) public view returns (uint256, uint256) {
-        return getCrossReserveReturn(_fromConnectorToken, _toConnectorToken, _amount);
     }
 }
