@@ -521,22 +521,6 @@ contract('BancorConverter', accounts => {
         assert.notEqual(returnAmount.toNumber(), 0);
     });
 
-    it('verifies that getReturn returns the same amount as getPurchaseReturn when converting from a reserve to the token', async () => {
-        let converter = await initConverter(accounts, true);
-        let returnAmount = (await converter.getReturn.call(reserveToken.address, tokenAddress, 500))[0];
-        let purchaseReturnAmount = (await converter.getPurchaseReturn.call(reserveToken.address, 500, 0))[0];
-        assert.equal(returnAmount.toNumber(), purchaseReturnAmount.toNumber());
-    });
-
-    it('verifies that getReturn returns the same amount as getSaleReturn when converting from the token to a reserve', async () => {
-        let converter = await initConverter(accounts, true);
-        let returnAmount = (await converter.getReturn.call(tokenAddress, reserveToken.address, 500))[0];
-        let saleReturnAmount = (await converter.getSaleReturn.call(reserveToken.address, 500))[0];
-        assert.isNumber(returnAmount.toNumber());
-        assert.notEqual(returnAmount.toNumber(), 0);
-        assert.equal(returnAmount.toNumber(), saleReturnAmount.toNumber());
-    });
-
     it('verifies that getReturn returns the same amount as buy -> sell when converting between 2 reserves', async () => {
         let converter = await initConverter(accounts, true);
         let returnAmount = (await converter.getReturn.call(reserveToken.address, reserveToken2.address, 500))[0];
@@ -585,31 +569,25 @@ contract('BancorConverter', accounts => {
     it('should throw when attempting to get the return with identical from/to addresses', async () => {
         let converter = await initConverter(accounts, true);
 
-        await utils.catchRevert(converter.getReturn.call(reserveToken.address, reserveToken.address, 500));
+        await utils.catchRevert(converter.getReturn.call(tokenAddress, tokenAddress, 500));
     });
 
     it('should throw when attempting to get the purchase return while the converter is not active', async () => {
         let converter = await initConverter(accounts, false);
 
-        await utils.catchRevert(converter.getPurchaseReturn.call(reserveToken.address, 500, 0));
-    });
-
-    it('should throw when attempting to get the purchase return with a non reserve address', async () => {
-        let converter = await initConverter(accounts, true);
-
-        await utils.catchRevert(converter.getPurchaseReturn.call(tokenAddress, 500, 0));
+        await utils.catchRevert(converter.getReturn.call(reserveToken.address, tokenAddress, 500));
     });
 
     it('should throw when attempting to get the sale return while the converter is not active', async () => {
         let converter = await initConverter(accounts, false);
 
-        await utils.catchRevert(converter.getSaleReturn.call(reserveToken.address, 500));
+        await utils.catchRevert(converter.getReturn.call(tokenAddress, reserveToken.address, 500));
     });
 
-    it('should throw when attempting to get the sale return with a non reserve address', async () => {
-        let converter = await initConverter(accounts, true);
+    it('should throw when attempting to get the cross-reserve return while the converter is not active', async () => {
+        let converter = await initConverter(accounts, false);
 
-        await utils.catchRevert(converter.getSaleReturn.call(tokenAddress, 500));
+        await utils.catchRevert(converter.getReturn.call(reserveToken.address, reserveToken2.address, 500));
     });
 
     it('verifies that convert returns a valid amount', async () => {
@@ -780,27 +758,9 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.liquidate(1));
     });
 
-    it('verifies that getReturn returns the same amount as getCrossReserveReturn when converting between 2 reserves', async () => {
+    it('verifies that getReturn returns the same amount as converting between 2 reserves', async () => {
         let converter = await initConverter(accounts, true);
         let returnAmount = (await converter.getReturn.call(reserveToken.address, reserveToken2.address, 500))[0];
-        let returnAmount2 = (await converter.getCrossReserveReturn.call(reserveToken.address, reserveToken2.address, 500, 0))[0];
-        assert.equal(returnAmount.toNumber(), returnAmount2.toNumber());
-    });
-
-    it('verifies that getCrossReserveReturn returns the same amount as converting between 2 reserves', async () => {
-        let converter = await initConverter(accounts, true);
-        let returnAmount = (await converter.getCrossReserveReturn.call(reserveToken.address, reserveToken2.address, 500, 0))[0];
-
-        await reserveToken.approve(converter.address, 500);
-        let convertRes = await converter.convert(reserveToken.address, reserveToken2.address, 500, 1);
-        let returnAmount2 = getConversionAmount(convertRes);
-
-        assert.equal(returnAmount.toNumber(), returnAmount2);
-    });
-
-    it('verifies that getCrossReserveReturn returns the same amount as converting between 2 reserves', async () => {
-        let converter = await initConverter(accounts, true);
-        let returnAmount = (await converter.getCrossReserveReturn.call(reserveToken.address, reserveToken2.address, 500, 0))[0];
 
         await reserveToken.approve(converter.address, 500);
         let convertRes = await converter.convert(reserveToken.address, reserveToken2.address, 500, 1);
@@ -1346,27 +1306,9 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.convert2(tokenAddress, reserveToken.address, 30000, 1, utils.zeroAddress, 0));
     });
 
-    it('verifies that getReturn returns the same amount as getCrossReserveReturn when converting between 2 reserves', async () => {
+    it('verifies that getReturn returns the same amount as converting between 2 reserves', async () => {
         let converter = await initConverter(accounts, true);
         let returnAmount = (await converter.getReturn.call(reserveToken.address, reserveToken2.address, 500))[0];
-        let returnAmount2 = (await converter.getCrossReserveReturn.call(reserveToken.address, reserveToken2.address, 500, 0))[0];
-        assert.equal(returnAmount.toNumber(), returnAmount2.toNumber());
-    });
-
-    it('verifies that getCrossReserveReturn returns the same amount as converting between 2 reserves', async () => {
-        let converter = await initConverter(accounts, true);
-        let returnAmount = (await converter.getCrossReserveReturn.call(reserveToken.address, reserveToken2.address, 500, 0))[0];
-
-        await reserveToken.approve(converter.address, 500);
-        let convertRes = await converter.convert2(reserveToken.address, reserveToken2.address, 500, 1, utils.zeroAddress, 0);
-        let returnAmount2 = getConversionAmount(convertRes);
-
-        assert.equal(returnAmount.toNumber(), returnAmount2);
-    });
-
-    it('verifies that getCrossReserveReturn returns the same amount as converting between 2 reserves', async () => {
-        let converter = await initConverter(accounts, true);
-        let returnAmount = (await converter.getCrossReserveReturn.call(reserveToken.address, reserveToken2.address, 500, 0))[0];
 
         await reserveToken.approve(converter.address, 500);
         let convertRes = await converter.convert2(reserveToken.address, reserveToken2.address, 500, 1, utils.zeroAddress, 0);

@@ -162,8 +162,7 @@ contract('BancorNetwork', accounts => {
     it('verifies that quick buy with minimum return equal to the full expected return amount results in the exact increase in balance for the buyer', async () => {
         let prevBalance = await smartToken2.balanceOf.call(accounts[0]);
         
-        let token1Return = (await converter1.getPurchaseReturn(utils.zeroAddress, 100000, 0))[0];
-        let token2Return = (await converter2.getPurchaseReturn(smartToken1.address, token1Return, 0))[0];
+        let token2Return = (await bancorNetwork.getReturnByPath(smartToken2BuyPath, 100000))[0];
 
         await converter2.quickConvert(smartToken2BuyPath, 100000, token2Return, { value: 100000 });
         let newBalance = await smartToken2.balanceOf.call(accounts[0]);
@@ -791,8 +790,7 @@ contract('BancorNetwork', accounts => {
     it('verifies that quick buy with minimum return equal to the full expected return amount results in the exact increase in balance for the buyer', async () => {
         let prevBalance = await smartToken2.balanceOf.call(accounts[0]);
         
-        let token1Return = (await converter1.getPurchaseReturn(utils.zeroAddress, 100000, 0))[0];
-        let token2Return = (await converter2.getPurchaseReturn(smartToken1.address, token1Return, 0))[0];
+        let token2Return = (await bancorNetwork.getReturnByPath(smartToken2BuyPath, 100000))[0];
 
         await converter2.quickConvert2(smartToken2BuyPath, 100000, token2Return, utils.zeroAddress, 0, { value: 100000 });
         let newBalance = await smartToken2.balanceOf.call(accounts[0]);
