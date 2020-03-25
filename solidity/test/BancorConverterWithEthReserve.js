@@ -594,7 +594,7 @@ contract('BancorConverterWithEthReserve', accounts => {
     it('should throw when attempting to get the cross-reserve return while the converter is not active', async () => {
         let converter = await initConverter(accounts, false);
 
-        await utils.catchRevert(converter.getReturn.call(reserveToken.address, reserveToken2.address, 500));
+        await utils.catchRevert(converter.getReturn.call(reserveToken.address, reserveToken3.address, 500));
     });
 
     it('verifies that convert returns a valid amount', async () => {
