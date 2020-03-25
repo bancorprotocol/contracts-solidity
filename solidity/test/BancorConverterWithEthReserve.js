@@ -996,7 +996,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         await converter.liquidate(19, { from: accounts[9] });
 
         let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
-        let token2Balance = await web3.eth.getBalance(accounts[9]);
+        //let token2Balance = await reserveToken2.balanceOf.call(accounts[9]);
         let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
 
         assert.equal(token1Balance.toNumber(), Math.floor(token1Amount));
@@ -1032,7 +1032,7 @@ contract('BancorConverterWithEthReserve', accounts => {
 
         supply = await token.totalSupply.call();
         let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
-        let token2Balance = await web3.eth.getBalance(accounts[9]);
+        //let token2Balance = await reserveToken2.balanceOf.call(accounts[9]);
         let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
 
         assert.equal(token1Balance.toNumber(), Math.floor(token1Amount));
@@ -1063,7 +1063,7 @@ contract('BancorConverterWithEthReserve', accounts => {
 
         let supply = await token.totalSupply.call();
         let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
-        let token2Balance = await web3.eth.getBalance(accounts[9]);
+        //let token2Balance = await reserveToken2.balanceOf.call(accounts[9]);
         let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
 
         assert.equal(supply, 0);
