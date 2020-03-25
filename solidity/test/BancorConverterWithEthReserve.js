@@ -838,243 +838,243 @@ contract('BancorConverterWithEthReserve', accounts => {
         });
     }
 
-//    it('verifies that fund gets the correct reserve balance amounts from the caller', async () => {
-//        let converter = await initConverter(accounts, false);
-//        await converter.addReserve(reserveToken3.address, 600000);
-//
-//        await reserveToken3.transfer(converter.address, 6000);
-//
-//        await token.transferOwnership(converter.address);
-//        await converter.acceptTokenOwnership();
-//
-//        await reserveToken.transfer(accounts[9], 5000);
-//        await etherToken.transfer(accounts[9], 5000);
-//        await reserveToken3.transfer(accounts[9], 5000);
-//
-//        let supply = await token.totalSupply.call();
-//        let percentage = 100 / (supply / 19);
-//        let prevReserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
-//        let prevReserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
-//        let prevReserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
-//        let token1Amount = prevReserve1Balance * percentage / 100;
-//        let token2Amount = prevReserve2Balance * percentage / 100;
-//        let token3Amount = prevReserve3Balance * percentage / 100;
-//
-//        await reserveToken.approve(converter.address, 100000, { from: accounts[9] });
-//        etherToken.approve(converter.address, 100000, { from: accounts[9] });
-//        await reserveToken3.approve(converter.address, 100000, { from: accounts[9] });
-//        await converter.fund(19, { from: accounts[9], value: 10 });
-//
-//        let reserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
-//        let reserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
-//        let reserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
-//
-//        assert.equal(reserve1Balance.toFixed(), prevReserve1Balance.plus(Math.ceil(token1Amount)).toFixed());
-//        assert.equal(reserve2Balance.toFixed(), prevReserve2Balance.plus(Math.ceil(token2Amount)).toFixed());
-//        assert.equal(reserve3Balance.toFixed(), prevReserve3Balance.plus(Math.ceil(token3Amount)).toFixed());
-//
-//        let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
-//        //let token2Balance = await web3.eth.getBalance(accounts[9]);
-//        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
-//
-//        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-//        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
-//        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
-//    });
-//
-//    it('verifies that increasing the liquidity by a large amount gets the correct reserve balance amounts from the caller', async () => {
-//        let converter = await initConverter(accounts, false);
-//        await converter.addReserve(reserveToken3.address, 600000);
-//
-//        await reserveToken3.transfer(converter.address, 6000);
-//
-//        await token.transferOwnership(converter.address);
-//        await converter.acceptTokenOwnership();
-//
-//        await reserveToken.transfer(accounts[9], 500000);
-//        await etherToken.transfer(accounts[9], 500000);
-//        await reserveToken3.transfer(accounts[9], 500000);
-//
-//        let supply = await token.totalSupply.call();
-//        let percentage = 100 / (supply / 140854);
-//        let prevReserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
-//        let prevReserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
-//        let prevReserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
-//        let token1Amount = prevReserve1Balance * percentage / 100;
-//        let token2Amount = prevReserve2Balance * percentage / 100;
-//        let token3Amount = prevReserve3Balance * percentage / 100;
-//
-//        await reserveToken.approve(converter.address, 100000, { from: accounts[9] });
-//        etherToken.approve(converter.address, 100000, { from: accounts[9] });
-//        await reserveToken3.approve(converter.address, 100000, { from: accounts[9] });
-//        await converter.fund(140854, { from: accounts[9], value: 200000 });
-//
-//        let reserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
-//        let reserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
-//        let reserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
-//
-//        assert.equal(reserve1Balance.toFixed(), prevReserve1Balance.plus(Math.ceil(token1Amount)).toFixed());
-//        assert.equal(reserve2Balance.toFixed(), prevReserve2Balance.plus(Math.ceil(token2Amount)).toFixed());
-//        assert.equal(reserve3Balance.toFixed(), prevReserve3Balance.plus(Math.ceil(token3Amount)).toFixed());
-//
-//        let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
-//        //let token2Balance = await web3.eth.getBalance(accounts[9]);
-//        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
-//
-//        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-//        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
-//        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
-//    });
-//
-//    it('should throw when attempting to fund the converter with insufficient funds', async () => {
-//        let converter = await initConverter(accounts, false);
-//        await converter.addReserve(reserveToken3.address, 600000);
-//
-//        await reserveToken3.transfer(converter.address, 6000);
-//
-//        await token.transferOwnership(converter.address);
-//        await converter.acceptTokenOwnership();
-//
-//        await reserveToken.transfer(accounts[9], 100);
-//        await etherToken.transfer(accounts[9], 100);
-//        await reserveToken3.transfer(accounts[9], 100);
-//
-//        await reserveToken.approve(converter.address, 100000, { from: accounts[9] });
-//        etherToken.approve(converter.address, 100000, { from: accounts[9] });
-//        await reserveToken3.approve(converter.address, 100000, { from: accounts[9] });
-//        await converter.fund(5, { from: accounts[9], value: 10 });
-//
-//        await utils.catchRevert(converter.fund(600, { from: accounts[9], value: 10 }));
-//        let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
-//        //let token2Balance = await web3.eth.getBalance(accounts[9]);
-//        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
-//
-//        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-//        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
-//        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
-//        
-//    });
-//
-//    for (const percent of [50, 75, 100]) {
-//        it(`verifies that liquidate executes when the total reserve ratio equals ${percent}%`, async () => {
-//            let converter = await initConverter(accounts, false);
-//            await converter.addReserve(reserveToken3.address, (percent - 40) * 10000);
-//
-//            await reserveToken3.transfer(converter.address, 6000);
-//
-//            await token.transferOwnership(converter.address);
-//            await converter.acceptTokenOwnership();
-//
-//            let prevSupply = await token.totalSupply.call();
-//            await converter.liquidate(100);
-//            let supply = await token.totalSupply();
-//
-//            assert.equal(prevSupply - 100, supply);
-//        });
-//    }
-//
-//    it('verifies that liquidate sends the correct reserve balance amounts to the caller', async () => {
-//        let converter = await initConverter(accounts, false);
-//        await converter.addReserve(reserveToken3.address, 600000);
-//
-//        await reserveToken3.transfer(converter.address, 6000);
-//
-//        await token.transferOwnership(converter.address);
-//        await converter.acceptTokenOwnership();
-//
-//        await token.transfer(accounts[9], 100);
-//
-//        let supply = await token.totalSupply.call();
-//        let percentage = 100 / (supply / 19);
-//        let reserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
-//        //let reserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
-//        let reserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
-//        let token1Amount = reserve1Balance * percentage / 100;
-//        //let token2Amount = reserve2Balance * percentage / 100;
-//        let token3Amount = reserve3Balance * percentage / 100;
-//
-//        await converter.liquidate(19, { from: accounts[9] });
-//
-//        let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
-//        let token2Balance = await web3.eth.getBalance(accounts[9]);
-//        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
-//
-//        assert.equal(token1Balance.toNumber(), Math.floor(token1Amount));
-//        //assert.equal(token2Balance.toNumber(), Math.floor(token2Amount));
-//        assert.equal(token3Balance.toNumber(), Math.floor(token3Amount));
-//
-//        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-//        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
-//        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
-//    });
-//
-//    it('verifies that liquidating a large amount sends the correct reserve balance amounts to the caller', async () => {
-//        let converter = await initConverter(accounts, false);
-//        await converter.addReserve(reserveToken3.address, 600000);
-//
-//        await reserveToken3.transfer(converter.address, 6000);
-//
-//        await token.transferOwnership(converter.address);
-//        await converter.acceptTokenOwnership();
-//
-//        await token.transfer(accounts[9], 15000);
-//
-//        let supply = await token.totalSupply.call();
-//        let percentage = 100 / (supply / 14854);
-//        let reserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
-//        //let reserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
-//        let reserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
-//        let token1Amount = reserve1Balance * percentage / 100;
-//        //let token2Amount = reserve2Balance * percentage / 100;
-//        let token3Amount = reserve3Balance * percentage / 100;
-//
-//        await converter.liquidate(14854, { from: accounts[9] });
-//
-//        supply = await token.totalSupply.call();
-//        let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
-//        let token2Balance = await web3.eth.getBalance(accounts[9]);
-//        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
-//
-//        assert.equal(token1Balance.toNumber(), Math.floor(token1Amount));
-//        //assert.equal(token2Balance.toNumber(), Math.floor(token2Amount));
-//        assert.equal(token3Balance.toNumber(), Math.floor(token3Amount));
-//
-//        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-//        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
-//        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
-//    });
-//
-//    it('verifies that liquidating the entire supply sends the full reserve balances to the caller', async () => {
-//        let converter = await initConverter(accounts, false);
-//        await converter.addReserve(reserveToken3.address, 600000);
-//
-//        await reserveToken3.transfer(converter.address, 6000);
-//
-//        await token.transferOwnership(converter.address);
-//        await converter.acceptTokenOwnership();
-//
-//        await token.transfer(accounts[9], 20000);
-//
-//        let reserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
-//        //let reserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
-//        let reserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
-//
-//        await converter.liquidate(20000, { from: accounts[9] });
-//
-//        let supply = await token.totalSupply.call();
-//        let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
-//        let token2Balance = await web3.eth.getBalance(accounts[9]);
-//        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
-//
-//        assert.equal(supply, 0);
-//        assert.equal(token1Balance.toFixed(), reserve1Balance.toFixed());
-//        //assert.equal(token2Balance.toFixed(), reserve2Balance.toFixed());
-//        assert.equal(token3Balance.toFixed(), reserve3Balance.toFixed());
-//
-//        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
-//        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
-//        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
-//    });
+    it('verifies that fund gets the correct reserve balance amounts from the caller', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addReserve(reserveToken3.address, 600000);
+
+        await reserveToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        await reserveToken.transfer(accounts[9], 5000);
+        await etherToken.transfer(accounts[9], 5000);
+        await reserveToken3.transfer(accounts[9], 5000);
+
+        let supply = await token.totalSupply.call();
+        let percentage = 100 / (supply / 19);
+        let prevReserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
+        let prevReserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
+        let prevReserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
+        let token1Amount = prevReserve1Balance * percentage / 100;
+        let token2Amount = prevReserve2Balance * percentage / 100;
+        let token3Amount = prevReserve3Balance * percentage / 100;
+
+        await reserveToken.approve(converter.address, 100000, { from: accounts[9] });
+        etherToken.approve(converter.address, 100000, { from: accounts[9] });
+        await reserveToken3.approve(converter.address, 100000, { from: accounts[9] });
+        await converter.fund(19, { from: accounts[9], value: 10 });
+
+        let reserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
+        let reserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
+        let reserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
+
+        assert.equal(reserve1Balance.toFixed(), prevReserve1Balance.plus(Math.ceil(token1Amount)).toFixed());
+        assert.equal(reserve2Balance.toFixed(), prevReserve2Balance.plus(Math.ceil(token2Amount)).toFixed());
+        assert.equal(reserve3Balance.toFixed(), prevReserve3Balance.plus(Math.ceil(token3Amount)).toFixed());
+
+        let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
+        //let token2Balance = await web3.eth.getBalance(accounts[9]);
+        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
+
+        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
+        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
+        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
+    });
+
+    it('verifies that increasing the liquidity by a large amount gets the correct reserve balance amounts from the caller', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addReserve(reserveToken3.address, 600000);
+
+        await reserveToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        await reserveToken.transfer(accounts[9], 500000);
+        await etherToken.transfer(accounts[9], 500000);
+        await reserveToken3.transfer(accounts[9], 500000);
+
+        let supply = await token.totalSupply.call();
+        let percentage = 100 / (supply / 140854);
+        let prevReserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
+        let prevReserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
+        let prevReserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
+        let token1Amount = prevReserve1Balance * percentage / 100;
+        let token2Amount = prevReserve2Balance * percentage / 100;
+        let token3Amount = prevReserve3Balance * percentage / 100;
+
+        await reserveToken.approve(converter.address, 100000, { from: accounts[9] });
+        etherToken.approve(converter.address, 100000, { from: accounts[9] });
+        await reserveToken3.approve(converter.address, 100000, { from: accounts[9] });
+        await converter.fund(140854, { from: accounts[9], value: 200000 });
+
+        let reserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
+        let reserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
+        let reserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
+
+        assert.equal(reserve1Balance.toFixed(), prevReserve1Balance.plus(Math.ceil(token1Amount)).toFixed());
+        assert.equal(reserve2Balance.toFixed(), prevReserve2Balance.plus(Math.ceil(token2Amount)).toFixed());
+        assert.equal(reserve3Balance.toFixed(), prevReserve3Balance.plus(Math.ceil(token3Amount)).toFixed());
+
+        let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
+        //let token2Balance = await web3.eth.getBalance(accounts[9]);
+        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
+
+        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
+        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
+        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
+    });
+
+    it('should throw when attempting to fund the converter with insufficient funds', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addReserve(reserveToken3.address, 600000);
+
+        await reserveToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        await reserveToken.transfer(accounts[9], 100);
+        await etherToken.transfer(accounts[9], 100);
+        await reserveToken3.transfer(accounts[9], 100);
+
+        await reserveToken.approve(converter.address, 100000, { from: accounts[9] });
+        etherToken.approve(converter.address, 100000, { from: accounts[9] });
+        await reserveToken3.approve(converter.address, 100000, { from: accounts[9] });
+        await converter.fund(5, { from: accounts[9], value: 10 });
+
+        await utils.catchRevert(converter.fund(600, { from: accounts[9], value: 10 }));
+        let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
+        //let token2Balance = await web3.eth.getBalance(accounts[9]);
+        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
+
+        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
+        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
+        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
+        
+    });
+
+    for (const percent of [50, 75, 100]) {
+        it(`verifies that liquidate executes when the total reserve ratio equals ${percent}%`, async () => {
+            let converter = await initConverter(accounts, false);
+            await converter.addReserve(reserveToken3.address, (percent - 40) * 10000);
+
+            await reserveToken3.transfer(converter.address, 6000);
+
+            await token.transferOwnership(converter.address);
+            await converter.acceptTokenOwnership();
+
+            let prevSupply = await token.totalSupply.call();
+            await converter.liquidate(100);
+            let supply = await token.totalSupply();
+
+            assert.equal(prevSupply - 100, supply);
+        });
+    }
+
+    it('verifies that liquidate sends the correct reserve balance amounts to the caller', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addReserve(reserveToken3.address, 600000);
+
+        await reserveToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        await token.transfer(accounts[9], 100);
+
+        let supply = await token.totalSupply.call();
+        let percentage = 100 / (supply / 19);
+        let reserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
+        //let reserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
+        let reserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
+        let token1Amount = reserve1Balance * percentage / 100;
+        //let token2Amount = reserve2Balance * percentage / 100;
+        let token3Amount = reserve3Balance * percentage / 100;
+
+        await converter.liquidate(19, { from: accounts[9] });
+
+        let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
+        let token2Balance = await web3.eth.getBalance(accounts[9]);
+        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
+
+        assert.equal(token1Balance.toNumber(), Math.floor(token1Amount));
+        //assert.equal(token2Balance.toNumber(), Math.floor(token2Amount));
+        assert.equal(token3Balance.toNumber(), Math.floor(token3Amount));
+
+        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
+        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
+        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
+    });
+
+    it('verifies that liquidating a large amount sends the correct reserve balance amounts to the caller', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addReserve(reserveToken3.address, 600000);
+
+        await reserveToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        await token.transfer(accounts[9], 15000);
+
+        let supply = await token.totalSupply.call();
+        let percentage = 100 / (supply / 14854);
+        let reserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
+        //let reserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
+        let reserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
+        let token1Amount = reserve1Balance * percentage / 100;
+        //let token2Amount = reserve2Balance * percentage / 100;
+        let token3Amount = reserve3Balance * percentage / 100;
+
+        await converter.liquidate(14854, { from: accounts[9] });
+
+        supply = await token.totalSupply.call();
+        let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
+        let token2Balance = await web3.eth.getBalance(accounts[9]);
+        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
+
+        assert.equal(token1Balance.toNumber(), Math.floor(token1Amount));
+        //assert.equal(token2Balance.toNumber(), Math.floor(token2Amount));
+        assert.equal(token3Balance.toNumber(), Math.floor(token3Amount));
+
+        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
+        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
+        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
+    });
+
+    it('verifies that liquidating the entire supply sends the full reserve balances to the caller', async () => {
+        let converter = await initConverter(accounts, false);
+        await converter.addReserve(reserveToken3.address, 600000);
+
+        await reserveToken3.transfer(converter.address, 6000);
+
+        await token.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        await token.transfer(accounts[9], 20000);
+
+        let reserve1Balance = await converter.getReserveBalance.call(reserveToken.address);
+        //let reserve2Balance = await converter.getReserveBalance.call(utils.zeroAddress);
+        let reserve3Balance = await converter.getReserveBalance.call(reserveToken3.address);
+
+        await converter.liquidate(20000, { from: accounts[9] });
+
+        let supply = await token.totalSupply.call();
+        let token1Balance = await reserveToken.balanceOf.call(accounts[9]);
+        let token2Balance = await web3.eth.getBalance(accounts[9]);
+        let token3Balance = await reserveToken3.balanceOf.call(accounts[9]);
+
+        assert.equal(supply, 0);
+        assert.equal(token1Balance.toFixed(), reserve1Balance.toFixed());
+        //assert.equal(token2Balance.toFixed(), reserve2Balance.toFixed());
+        assert.equal(token3Balance.toFixed(), reserve3Balance.toFixed());
+
+        await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
+        //await etherToken.transfer(accounts[0], token2Balance, { from: accounts[9] });
+        await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
+    });
 
     it('should throw when attempting to liquidate with insufficient funds', async () => {
         let converter = await initConverter(accounts, false);
