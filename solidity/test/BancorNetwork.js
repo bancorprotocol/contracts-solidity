@@ -302,12 +302,12 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
 
-    it('verifies that convertFor returns a valid amount', async () => {
+    it('verifies that convertFor returns a valid amount when buying the smart token', async () => {
         let amount = await bancorNetwork.convertFor.call(smartToken1BuyPath, 10000, 1, accounts[1], { value: 10000 });
         assert.isAbove(amount.toNumber(), 0, 'amount converted');
     });
 
-    it('verifies that convert returns a valid amount', async () => {
+    it('verifies that convert returns a valid amount when buying the smart token', async () => {
         let amount = await bancorNetwork.convert.call(smartToken1BuyPath, 10000, 1, { from: accounts[1], value: 10000 });
         assert.isAbove(amount.toNumber(), 0, 'amount converted');
     });
@@ -634,12 +634,12 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });
 
-    it('verifies that convertFor2 returns a valid amount', async () => {
+    it('verifies that convertFor2 returns a valid amount when buying the smart token', async () => {
         let amount = await bancorNetwork.convertFor2.call(smartToken1BuyPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 });
         assert.isAbove(amount.toNumber(), 0, 'amount converted');
     });
 
-    it('verifies that convert2 returns a valid amount', async () => {
+    it('verifies that convert2 returns a valid amount when buying the smart token', async () => {
         let amount = await bancorNetwork.convert2.call(smartToken1BuyPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 });
         assert.isAbove(amount.toNumber(), 0, 'amount converted');
     });
