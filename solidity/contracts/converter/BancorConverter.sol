@@ -175,7 +175,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     }
 
     /**
-      * @dev deposit ether
+      * @dev withdraw ether
       * can only be called by the upgrader contract
       * can only be called after the upgrader contract has accepted the ownership of this contract
       * can only be called if the converter has an ETH-reserve
