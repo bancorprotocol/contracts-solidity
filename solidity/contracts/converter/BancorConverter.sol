@@ -9,6 +9,7 @@ import '../utility/ContractRegistryClient.sol';
 import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
+import '../token/interfaces/IEtherToken.sol';
 import '../token/interfaces/INonStandardERC20.sol';
 import '../bancorx/interfaces/IBancorX.sol';
 
@@ -56,7 +57,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     uint32 public conversionFee = 0;                // current conversion fee, represented in ppm, 0...maxConversionFee
     bool public conversionsEnabled = true;          // deprecated, backward compatibility
 
-    IERC20Token internal etherToken = IERC20Token(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
+    IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
 
     /**
       * @dev triggered when a conversion between two tokens occurs
@@ -815,10 +816,15 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
             uint256 reserveAmount = formula.calculateFundCost(supply, reserveBalance, totalReserveRatio, _amount);
 
             // transfer funds from the caller in the reserve token
-            if (isETH && msg.value > reserveAmount)
-                msg.sender.transfer(msg.value - reserveAmount);
-            else if (isETH && msg.value < reserveAmount)
-                ensureTransferFrom(etherToken, msg.sender, this, reserveAmount - msg.value);
+            if (isETH) {
+                if (msg.value > reserveAmount)
+                    msg.sender.transfer(msg.value - reserveAmount);
+                else if (msg.value < reserveAmount) {
+                    require(msg.value == 0);
+                    ensureTransferFrom(etherToken, msg.sender, this, reserveAmount);
+                    etherToken.withdraw(reserveAmount);
+                }
+            }
             else
                 ensureTransferFrom(reserveToken, msg.sender, this, reserveAmount);
 

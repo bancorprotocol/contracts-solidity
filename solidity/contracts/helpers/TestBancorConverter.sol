@@ -12,10 +12,10 @@ contract TestBancorConverter is BancorConverter {
         BancorConverter(_token, _registry, _maxConversionFee, _reserveToken, _reserveRatio)
         public
     {
-        etherToken = IERC20Token(0);
+        etherToken = IEtherToken(0);
     }
 
-    function setEtherToken(IERC20Token _etherToken) public {
+    function setEtherToken(IEtherToken _etherToken) public {
         etherToken = _etherToken;
     }
 }
