@@ -548,7 +548,7 @@ contract('BancorNetwork', accounts => {
     });
 
     it('should throw when calling convertForPrioritized with wrong path', async () => {
-        let wrongPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
+        let wrongPath = [utils.zeroAddress, smartToken1.address, smartToken1.address, smartToken1.address, smartToken1.address];
 
         await utils.catchRevert(bancorNetwork.convertForPrioritized(wrongPath, 100, 1, accounts[1], 0, 0, 0, utils.zeroBytes32, utils.zeroBytes32, { from: accounts[1], value: 100 }));
     });
