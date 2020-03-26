@@ -817,16 +817,18 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
 
             // transfer funds from the caller in the reserve token
             if (isETH) {
-                if (msg.value > reserveAmount)
+                if (msg.value > reserveAmount) {
                     msg.sender.transfer(msg.value - reserveAmount);
+                }
                 else if (msg.value < reserveAmount) {
                     require(msg.value == 0);
                     ensureTransferFrom(etherToken, msg.sender, this, reserveAmount);
                     etherToken.withdraw(reserveAmount);
                 }
             }
-            else
+            else {
                 ensureTransferFrom(reserveToken, msg.sender, this, reserveAmount);
+            }
 
             // dispatch price data update for the smart token/reserve
             emit PriceDataUpdate(reserveToken, supply + _amount, reserveBalance + reserveAmount, reserves[reserveToken].ratio);
