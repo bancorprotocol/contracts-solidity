@@ -41,7 +41,7 @@ Token network structure:
           \          \
            \        SmartToken4
             \        /      \
-            EtherToken     ERC20Token
+            ETHReserve     ERC20Token
 
 */
 
