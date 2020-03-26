@@ -116,7 +116,7 @@ contract('BancorNetwork', accounts => {
         smartToken2SellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, utils.zeroAddress];
         smartToken3SellPath = [smartToken3.address, smartToken2.address, smartToken2.address, smartToken2.address, smartToken1.address];
 
-        etherToErc20ConvertPath = [etherToken.address, smartToken4.address, erc20Token.address];
+        etherToErc20ConvertPath = [utils.zeroAddress, smartToken4.address, erc20Token.address];
     });
 
     it('verifies that sending ether to the converter fails if it has no ETH reserve', async () => {

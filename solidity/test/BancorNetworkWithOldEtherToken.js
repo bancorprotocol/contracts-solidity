@@ -34,6 +34,7 @@ let smartToken3BuyPath;
 let smartToken1SellPath;
 let smartToken2SellPath;
 let smartToken3SellPath;
+let etherToErc20ConvertPath;
 
 /*
 Token network structure:
@@ -121,6 +122,8 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
         smartToken1SellPath = [smartToken1.address, smartToken1.address, etherToken.address];
         smartToken2SellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address];
         smartToken3SellPath = [smartToken3.address, smartToken2.address, smartToken2.address, smartToken2.address, smartToken1.address];
+
+        etherToErc20ConvertPath = [etherToken.address, smartToken4.address, erc20Token.address];
     });
 
     it('verifies that sending ether to the converter fails', async () => {
@@ -308,6 +311,16 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
 
     it('verifies that convert returns a valid amount', async () => {
         let amount = await bancorNetwork.convert.call(smartToken1BuyPath, 10000, 1, { from: accounts[1], value: 10000 });
+        assert.isAbove(amount.toNumber(), 0, 'amount converted');
+    });
+
+    it('verifies that convertFor returns a valid amount when converting from ETH to ERC20', async () => {
+        let amount = await bancorNetwork.convertFor.call(etherToErc20ConvertPath, 10000, 1, accounts[1], { value: 10000 });
+        assert.isAbove(amount.toNumber(), 0, 'amount converted');
+    });
+
+    it('verifies that convert returns a valid amount when converting from ETH to ERC20', async () => {
+        let amount = await bancorNetwork.convert.call(etherToErc20ConvertPath, 10000, 1, { from: accounts[1], value: 10000 });
         assert.isAbove(amount.toNumber(), 0, 'amount converted');
     });
 
@@ -612,6 +625,16 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
 
     it('verifies that convert2 returns a valid amount', async () => {
         let amount = await bancorNetwork.convert2.call(smartToken1BuyPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 });
+        assert.isAbove(amount.toNumber(), 0, 'amount converted');
+    });
+
+    it('verifies that convertFor2 returns a valid amount when converting from ETH to ERC20', async () => {
+        let amount = await bancorNetwork.convertFor2.call(etherToErc20ConvertPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 });
+        assert.isAbove(amount.toNumber(), 0, 'amount converted');
+    });
+
+    it('verifies that convert2 returns a valid amount when converting from ETH to ERC20', async () => {
+        let amount = await bancorNetwork.convert2.call(etherToErc20ConvertPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 });
         assert.isAbove(amount.toNumber(), 0, 'amount converted');
     });
 
