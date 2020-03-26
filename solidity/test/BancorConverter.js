@@ -590,13 +590,31 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.getReturn.call(reserveToken.address, reserveToken2.address, 500));
     });
 
-    it('verifies that convert returns a valid amount', async () => {
-        let converter = await initConverter(accounts, true);
+    it('verifies that convert returns valid amount and fee after buying', async () => {
+        let converter = await initConverter(accounts, true, 5000);
+        await converter.setConversionFee(3000);
         await reserveToken.approve(converter.address, 500);
-        let res = await converter.convert(reserveToken.address, tokenAddress, 500, 1);
-        let conversionAmount = getConversionAmount(res);
-        assert.isNumber(conversionAmount);
-        assert.notEqual(conversionAmount, 0);
+        let response = await converter.convert(reserveToken.address, tokenAddress, 500, 1);
+        assert(response.logs.length > 0 && response.logs[0].event == 'Conversion');
+        assert(response.logs[0].args._return.equals(480), response.logs[0].args._conversionFee.equals(2));
+    });
+
+    it('verifies that convert returns valid amount and fee after selling', async () => {
+        let converter = await initConverter(accounts, true, 5000);
+        await converter.setConversionFee(3000);
+        await token.approve(converter.address, 500);
+        let response = await converter.convert(tokenAddress, reserveToken.address, 500, 1);
+        assert(response.logs.length > 0 && response.logs[0].event == 'Conversion');
+        assert(response.logs[0].args._return.equals(479), response.logs[0].args._conversionFee.equals(2));
+    });
+
+    it('verifies that convert returns valid amount and fee after converting', async () => {
+        let converter = await initConverter(accounts, true, 5000);
+        await converter.setConversionFee(3000);
+        await reserveToken.approve(converter.address, 500);
+        let response = await converter.convert(reserveToken.address, reserveToken2.address, 500, 1);
+        assert(response.logs.length > 0 && response.logs[0].event == 'Conversion');
+        assert(response.logs[0].args._return.equals(1167), response.logs[0].args._conversionFee.equals(8));
     });
 
     it('verifies that selling right after buying does not result in an amount greater than the original purchase amount', async () => {
@@ -1132,31 +1150,31 @@ contract('BancorConverter', accounts => {
         assert(returnAmount.minus(saleAmount).absoluteValue().toNumber() < 2);
     });
 
-    it('verifies that Conversion event returns conversion fee after buying', async () => {
+    it('verifies that convert2 returns valid amount and fee after buying', async () => {
         let converter = await initConverter(accounts, true, 5000);
         await converter.setConversionFee(3000);
         await reserveToken.approve(converter.address, 500);
-        let purchaseRes = await converter.convert2(reserveToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0);
-        assert(purchaseRes.logs.length > 0 && purchaseRes.logs[0].event == 'Conversion');
-        assert('_conversionFee' in purchaseRes.logs[0].args);
+        let response = await converter.convert2(reserveToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0);
+        assert(response.logs.length > 0 && response.logs[0].event == 'Conversion');
+        assert(response.logs[0].args._return.equals(480), response.logs[0].args._conversionFee.equals(2));
     });
 
-    it('verifies that Conversion event returns conversion fee after selling', async () => {
+    it('verifies that convert2 returns valid amount and fee after selling', async () => {
+        let converter = await initConverter(accounts, true, 5000);
+        await converter.setConversionFee(3000);
+        await token.approve(converter.address, 500);
+        let response = await converter.convert2(tokenAddress, reserveToken.address, 500, 1, utils.zeroAddress, 0);
+        assert(response.logs.length > 0 && response.logs[0].event == 'Conversion');
+        assert(response.logs[0].args._return.equals(479), response.logs[0].args._conversionFee.equals(2));
+    });
+
+    it('verifies that convert2 returns valid amount and fee after converting', async () => {
         let converter = await initConverter(accounts, true, 5000);
         await converter.setConversionFee(3000);
         await reserveToken.approve(converter.address, 500);
-        let saleRes = await converter.convert2(tokenAddress, reserveToken.address, 500, 1, utils.zeroAddress, 0);
-        assert(saleRes.logs.length > 0 && saleRes.logs[0].event == 'Conversion');
-        assert('_conversionFee' in saleRes.logs[0].args);
-    });
-
-    it('verifies that convert2 returns a valid amount', async () => {
-        let converter = await initConverter(accounts, true);
-        await reserveToken.approve(converter.address, 500);
-        let res = await converter.convert2(reserveToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0);
-        let conversionAmount = getConversionAmount(res);
-        assert.isNumber(conversionAmount);
-        assert.notEqual(conversionAmount, 0);
+        let response = await converter.convert2(reserveToken.address, reserveToken2.address, 500, 1, utils.zeroAddress, 0);
+        assert(response.logs.length > 0 && response.logs[0].event == 'Conversion');
+        assert(response.logs[0].args._return.equals(1167), response.logs[0].args._conversionFee.equals(8));
     });
 
     it('verifies that selling right after buying does not result in an amount greater than the original purchase amount', async () => {
