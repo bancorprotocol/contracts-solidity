@@ -576,14 +576,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         // ensure the trade gives something in return and meets the minimum requested amount
         require(amount != 0 && amount >= _minReturn);
 
-        // transfer funds from the caller in the reserve token
-        if (_reserveToken == IERC20Token(0)) {
+        // ensure that the input amount was already deposited
+        if (_reserveToken == IERC20Token(0))
             require(msg.value == _depositAmount);
-        }
-        else {
-            require(msg.value == 0);
-            ensureTransferFrom(_reserveToken, msg.sender, this, _depositAmount);
-        }
+        else
+            require(msg.value == 0 && _reserveToken.balanceOf(this).sub(getReserveBalance(_reserveToken)) >= _depositAmount);
 
         // sync the reserve balance
         syncReserveBalance(_reserveToken);
@@ -630,12 +627,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         reserveBalances[_reserveToken] = reserveBalances[_reserveToken].sub(amount);
 
         // transfer funds to the beneficiary in the reserve token
-        if (_reserveToken == IERC20Token(0)) {
+        if (_reserveToken == IERC20Token(0))
             _beneficiary.transfer(amount);
-        }
-        else {
+        else
             ensureTransferFrom(_reserveToken, this, _beneficiary, amount);
-        }
 
         // dispatch the conversion event
         dispatchConversionEvent(token, _reserveToken, _sellAmount, amount, feeAmount);
@@ -667,26 +662,21 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         uint256 toReserveBalance = getReserveBalance(_toToken);
         assert(amount < toReserveBalance);
 
-        // transfer funds from the caller in the from reserve token
-        if (_fromToken == IERC20Token(0)) {
+        // ensure that the input amount was already deposited
+        if (_fromToken == IERC20Token(0))
             require(msg.value == _amount);
-        }
-        else {
-            require(msg.value == 0);
-            ensureTransferFrom(_fromToken, msg.sender, this, _amount);
-        }
+        else
+            require(msg.value == 0 && _fromToken.balanceOf(this).sub(getReserveBalance(_fromToken)) >= _amount);
 
         // sync the reserve balances
         syncReserveBalance(_fromToken);
         reserveBalances[_toToken] = reserveBalances[_toToken].sub(amount);
 
         // transfer funds to the beneficiary in the to reserve token
-        if (_toToken == IERC20Token(0)) {
+        if (_toToken == IERC20Token(0))
             _beneficiary.transfer(amount);
-        }
-        else {
+        else
             ensureTransferFrom(_toToken, this, _beneficiary, amount);
-        }
 
         // dispatch the conversion event
         dispatchConversionEvent(_fromToken, _toToken, _amount, amount, feeAmount);

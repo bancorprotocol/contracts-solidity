@@ -257,12 +257,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         for (uint256 i = 2; i <= lastIndex; i += 2) {
             IBancorConverter converter = IBancorConverter(ISmartToken(_path[i - 1]).owner());
 
-            // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
-            if (_path[i - 1] != _path[i - 2] && _path[i - 2] != IERC20Token(0))
-                ensureAllowance(_path[i - 2], converter, fromAmount);
+            // if the smart token isn't the source (from token), the converter doesn't have control over it and
+            // thus we need to either transfer the funds to the (new) converter or grant allowance to the (old) converter
+            if (_path[i - 1] != _path[i - 2] && _path[i - 2] != IERC20Token(0)) {
+                if (isBeneficiarySupportedConverter(converter))
+                    ensureTransferFrom(_path[i - 2], this, converter, fromAmount);
+                else
+                    ensureAllowance(_path[i - 2], converter, fromAmount);
+            }
 
             // make the conversion - if it's the last one, also provide the minimum return value
-            toAmount = change(converter, _path[i - 2], _path[i], fromAmount, i == lastIndex ? _minReturn : 1);
+            toAmount = change(converter, _path[i - 2], _path[i], fromAmount, i == lastIndex ? _minReturn : 1, this);
 
             // pay affiliate-fee if needed
             if (address(_path[i]) == bntToken) {
@@ -284,17 +289,18 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         IERC20Token _fromToken,
         IERC20Token _toToken,
         uint256 _amount,
-        uint256 _minReturn
+        uint256 _minReturn,
+        address _beneficiary
     ) private returns (uint256) {
         if ((etherTokens[_fromToken] || etherTokens[_toToken]) && isETHConverter(_converter)) {
             if (etherTokens[_fromToken])
-                return _converter.convertInternal.value(msg.value)(IERC20Token(0), _toToken, _amount, _minReturn, this);
+                return _converter.convertInternal.value(msg.value)(IERC20Token(0), _toToken, _amount, _minReturn, _beneficiary);
 
-            return _converter.convertInternal(_fromToken, IERC20Token(0), _amount, _minReturn, this);
+            return _converter.convertInternal(_fromToken, IERC20Token(0), _amount, _minReturn, _beneficiary);
         }
 
         if (isBeneficiarySupportedConverter(_converter))
-            return _converter.convertInternal(_fromToken, _toToken, _amount, _minReturn, this);
+            return _converter.convertInternal(_fromToken, _toToken, _amount, _minReturn, _beneficiary);
 
         return ILegacyBancorConverter(_converter).change(_fromToken, _toToken, _amount, _minReturn);
     }
@@ -474,6 +480,29 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 INonStandardERC20(_token).approve(_spender, 0);
             INonStandardERC20(_token).approve(_spender, _value);
         }
+    }
+
+    /**
+      * @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
+      * true on success but revert on failure instead
+      * 
+      * @param _token     the token to transfer
+      * @param _from      the address to transfer the tokens from
+      * @param _to        the address to transfer the tokens to
+      * @param _amount    the amount to transfer
+    */
+    function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
+        // We must assume that functions `transfer` and `transferFrom` do not return anything,
+        // because not all tokens abide the requirement of the ERC20 standard to return success or failure.
+        // This is because in the current compiler version, the calling contract can handle more returned data than expected but not less.
+        // This may change in the future, so that the calling contract will revert if the size of the data is not exactly what it expects.
+        uint256 prevBalance = _token.balanceOf(_to);
+        if (_from == address(this))
+            INonStandardERC20(_token).transfer(_to, _amount);
+        else
+            INonStandardERC20(_token).transferFrom(_from, _to, _amount);
+        uint256 postBalance = _token.balanceOf(_to);
+        require(postBalance > prevBalance);
     }
 
     function isWhitelisted(IERC20Token[] _path, address _receiver) private view returns (bool) {
