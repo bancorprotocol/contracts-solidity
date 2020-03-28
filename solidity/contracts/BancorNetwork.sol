@@ -490,7 +490,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         return isSet;
     }
 
-    function isBalancePreDepositConverter(IBancorConverter _converter) private view returns (bool) {
+    function isManagedBalancedConverter(IBancorConverter _converter) private view returns (bool) {
         // TODO: need to check if the converter version >= 27 by introducing a dedicated function in the converter
         return true;
     }
