@@ -331,6 +331,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         reserves[_token].ratio = _ratio;
         reserves[_token].virtualBalance = 0;
         reserves[_token].isSet = true;
+        reserveBalances[_token] = 0;
         reserveTokens.push(_token);
         totalReserveRatio += _ratio;
     }
@@ -352,6 +353,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         reserves[address(0)].ratio = _ratio;
         reserves[address(0)].virtualBalance = 0;
         reserves[address(0)].isSet = true;
+        reserveBalances[address(0)] = 0;
         reserveTokens.push(IERC20Token(0));
         totalReserveRatio += _ratio;
     }
