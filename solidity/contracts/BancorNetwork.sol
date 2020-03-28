@@ -13,6 +13,12 @@ import './token/interfaces/ISmartToken.sol';
 import './token/interfaces/INonStandardERC20.sol';
 import './bancorx/interfaces/IBancorX.sol';
 
+// interface of older converters for backward compatibility
+contract ILegacyBancorConverter is IBancorConverter {
+    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public payable returns (uint256);
+}
+
+
 /**
   * @dev The BancorNetwork contract is the main entry point for Bancor token conversions.
   * It also allows for the conversion of any token in the Bancor Network to any other token in a single transaction by providing a conversion path.
@@ -280,15 +286,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         uint256 _amount,
         uint256 _minReturn
     ) private returns (uint256) {
-        if (etherTokens[_fromToken] || etherTokens[_toToken]) {
-            if (isETHConverter(_converter)) {
-                if (etherTokens[_fromToken])
-                    return _converter.change.value(msg.value)(IERC20Token(0), _toToken, _amount, _minReturn);
-                if (etherTokens[_toToken])
-                    return _converter.change(_fromToken, IERC20Token(0), _amount, _minReturn);
-            }
+        if ((etherTokens[_fromToken] || etherTokens[_toToken]) && isETHConverter(_converter)) {
+            if (etherTokens[_fromToken])
+                return _converter.convertInternal.value(msg.value)(IERC20Token(0), _toToken, _amount, _minReturn, this);
+
+            return _converter.convertInternal(_fromToken, IERC20Token(0), _amount, _minReturn, this);
         }
-        return _converter.change(_fromToken, _toToken, _amount, _minReturn);
+
+        if (isBeneficiarySupportedConverter(_converter))
+            return _converter.convertInternal(_fromToken, _toToken, _amount, _minReturn, this);
+
+        return ILegacyBancorConverter(_converter).change(_fromToken, _toToken, _amount, _minReturn);
     }
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(uint256(keccak256("getReturn(address,address,uint256)") >> (256 - 4 * 8)));
@@ -490,7 +498,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         return isSet;
     }
 
-    function isManagedBalancedConverter(IBancorConverter _converter) private view returns (bool) {
+    function isBeneficiarySupportedConverter(IBancorConverter _converter) private view returns (bool) {
         // TODO: need to check if the converter version >= 27 by introducing a dedicated function in the converter
         return true;
     }
