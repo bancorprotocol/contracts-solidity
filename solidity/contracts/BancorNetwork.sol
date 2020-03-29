@@ -527,9 +527,25 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         return isSet;
     }
 
-    function isBeneficiarySupportedConverter(IBancorConverter _converter) private view returns (bool) {
-        // TODO: need to check if the converter version >= 27 by introducing a dedicated function in the converter
-        return true;
+    bytes4 private constant HAS_ETH_RESERVE_FUNC_SELECTOR = bytes4(uint256(keccak256("hasETHReserve()") >> (256 - 4 * 8)));
+
+    function isBeneficiarySupportedConverter(IBancorConverter _converter) public view returns (bool) {
+        bool success;
+        uint256[1] memory ret;
+        bytes memory data = abi.encodeWithSelector(HAS_ETH_RESERVE_FUNC_SELECTOR);
+
+        assembly {
+            success := staticcall(
+                gas,           // gas remaining
+                _converter,    // destination address
+                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
+                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
+                ret,           // output buffer
+                32             // output length
+            )
+        }
+
+        return success;
     }
 
     /**
