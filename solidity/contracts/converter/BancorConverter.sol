@@ -940,6 +940,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
             }
         }
 
+        for (i = 0; i < reserveTokens.length; i++) {
+            require(reserveBalances[reserveTokens[i]] > 0);
+        }
+
         require(amount >= _minReturn);
         return amount;
     }
