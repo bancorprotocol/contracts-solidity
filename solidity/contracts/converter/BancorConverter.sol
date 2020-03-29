@@ -910,14 +910,17 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         uint256 totalSupply = token.totalSupply();
 
         if (totalSupply == 0) {
-            amount = _reserveAmounts[0].mul(RATIO_RESOLUTION).div(reserves[_reserveTokens[0]].ratio);
+            address bntToken = addressOf(BNT_TOKEN);
             for (i = 0; i < length; i++) {
                 require(_reserveAmounts[i] > 0);
                 require(reserves[_reserveTokens[i]].isSet);
                 require(reserveBalances[_reserveTokens[i]] == 0);
-                if (_reserveTokens[i] != IERC20Token(0))
+                if (_reserveTokens[i] == IERC20Token(0))
+                    require(msg.value == _reserveAmounts[i]);
+                else
                     ensureTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
-                // TODO: change amount if _reserveTokens[i] is BNT token
+                if (amount == 0 || _reserveTokens[i] == bntToken)
+                    amount = _reserveAmounts[i].mul(RATIO_RESOLUTION).div(reserves[_reserveTokens[i]].ratio);
             }
             token.issue(msg.sender, amount);
         }
