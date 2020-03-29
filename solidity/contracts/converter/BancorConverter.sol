@@ -566,7 +566,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @param _reserveToken    reserve token contract address
       * @param _depositAmount   amount of tokens to deposit (in units of the reserve token)
       * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-      * @param _beneficiary wallet to receive the conversion result
+      * @param _beneficiary     wallet to receive the conversion result
       * 
       * @return amount of tokens received (in units of the smart token)
     */
@@ -893,6 +893,47 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
             // dispatch price data update for the smart token/reserve
             emit PriceDataUpdate(reserveToken, supply - _amount, reserveBalance - reserveAmount, reserves[reserveToken].ratio);
         }
+    }
+
+    function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _minReturn)
+        public
+        payable
+        returns (uint256)
+    {
+        // TODO: handle ETH
+
+        uint256 i;
+        uint256 amount;
+
+        uint256 length = _reserveTokens.length;
+        require(length == _reserveAmounts.length);
+        uint256 totalSupply = token.totalSupply();
+
+        if (totalSupply == 0) {
+            amount = _reserveAmounts[0].mul(RATIO_RESOLUTION).div(reserves[_reserveTokens[0]].ratio);
+            for (i = 0; i < length; i++) {
+                require(_reserveAmounts[i] > 0);
+                require(reserves[_reserveTokens[i]].isSet);
+                require(reserveBalances[_reserveTokens[i]] == 0);
+                if (_reserveTokens[i] != IERC20Token(0))
+                    ensureTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
+                // TODO: change amount if _reserveTokens[i] is BNT token
+            }
+            token.issue(msg.sender, amount);
+        }
+        else {
+            for (i = 0; i < length; i++) {
+                require(_reserveAmounts[i] > 0);
+                require(reserves[_reserveTokens[i]].isSet);
+                require(reserveBalances[_reserveTokens[i]] > 0);
+                if (_reserveTokens[i] != IERC20Token(0))
+                    ensureTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
+                amount += buy(_reserveTokens[i], _reserveAmounts[i], 1, msg.sender);
+            }
+        }
+
+        require(amount >= _minReturn);
+        return amount;
     }
 
     /**
