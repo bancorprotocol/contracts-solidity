@@ -258,13 +258,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             IBancorConverter converter = IBancorConverter(ISmartToken(_path[i - 1]).owner());
 
             // if the smart token isn't the source (from token), the converter doesn't have control over it and
-            // thus we need to either transfer the funds to the (new) converter or grant allowance to the (old) converter
-            if (_path[i - 1] != _path[i - 2] && _path[i - 2] != IERC20Token(0)) {
-                if (isBeneficiarySupportedConverter(converter))
-                    ensureTransferFrom(_path[i - 2], this, converter, fromAmount);
-                else
-                    ensureAllowance(_path[i - 2], converter, fromAmount);
-            }
+            // thus we need to grant allowance to the converter
+            if (_path[i - 1] != _path[i - 2] && _path[i - 2] != IERC20Token(0))
+                ensureAllowance(_path[i - 2], converter, fromAmount);
 
             // make the conversion - if it's the last one, also provide the minimum return value
             toAmount = change(converter, _path[i - 2], _path[i], fromAmount, i == lastIndex ? _minReturn : 1, this);
