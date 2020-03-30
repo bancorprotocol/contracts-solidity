@@ -21,12 +21,6 @@ import '../bancorx/interfaces/IBancorX.sol';
   * This mechanism opens the possibility to create different financial tools (for example, lower slippage in conversions).
   * 
   * The converter is upgradable (just like any SmartTokenController) and all upgrades are opt-in. 
-  * 
-  * WARNING: It is NOT RECOMMENDED to use the converter with Smart Tokens that have less than 8 decimal digits or with very small numbers because of precision loss 
-  * 
-  * Open issues:
-  * - Front-running attacks are currently mitigated by providing the minimum return argument for each conversion
-  *   Other potential solutions might include a commit/reveal based schemes
 */
 contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegistryClient, FeatureIds {
     using SafeMath for uint256;
