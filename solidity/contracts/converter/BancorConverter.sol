@@ -180,6 +180,15 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     }
 
     /**
+      * @dev checks whether or not the converter version is 27 or higher
+      * 
+      * @return true, since the converter version is 27 or higher
+    */
+    function isV27OrHigher() public pure returns (bool) {
+        return true;
+    }
+
+    /**
       * @dev returns the number of reserve tokens defined
       * note that prior to version 17, you should use 'connectorTokenCount' instead
       * 

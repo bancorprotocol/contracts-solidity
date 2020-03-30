@@ -523,12 +523,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         return isSet;
     }
 
-    bytes4 private constant HAS_ETH_RESERVE_FUNC_SELECTOR = bytes4(uint256(keccak256("hasETHReserve()") >> (256 - 4 * 8)));
+    bytes4 private constant IS_V27_OR_HIGHER_FUNC_SELECTOR = bytes4(uint256(keccak256("isV27OrHigher()") >> (256 - 4 * 8)));
 
     function isBeneficiarySupportedConverter(IBancorConverter _converter) public view returns (bool) {
         bool success;
         uint256[1] memory ret;
-        bytes memory data = abi.encodeWithSelector(HAS_ETH_RESERVE_FUNC_SELECTOR);
+        bytes memory data = abi.encodeWithSelector(IS_V27_OR_HIGHER_FUNC_SELECTOR);
 
         assembly {
             success := staticcall(
