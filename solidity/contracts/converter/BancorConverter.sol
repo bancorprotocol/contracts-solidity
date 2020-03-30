@@ -556,11 +556,14 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         // ensure the trade gives something in return and meets the minimum requested amount
         require(amount != 0 && amount >= _minReturn);
 
-        // ensure that the input amount was already deposited
-        if (_reserveToken == IERC20Token(0))
+        // transfer funds from the caller in the from reserve token
+        if (_reserveToken == IERC20Token(0)) {
             require(msg.value == _depositAmount);
-        else
-            require(msg.value == 0 && _reserveToken.balanceOf(this).sub(getReserveBalance(_reserveToken)) >= _depositAmount);
+        }
+        else {
+            require(msg.value == 0);
+            ensureTransferFrom(_reserveToken, msg.sender, this, _depositAmount);
+        }
 
         // issue new funds to the beneficiary in the smart token
         token.issue(_beneficiary, amount);
@@ -636,11 +639,14 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         uint256 toReserveBalance = getReserveBalance(_toToken);
         assert(amount < toReserveBalance);
 
-        // ensure that the input amount was already deposited
-        if (_fromToken == IERC20Token(0))
+        // transfer funds from the caller in the from reserve token
+        if (_fromToken == IERC20Token(0)) {
             require(msg.value == _amount);
-        else
-            require(msg.value == 0 && _fromToken.balanceOf(this).sub(getReserveBalance(_fromToken)) >= _amount);
+        }
+        else {
+            require(msg.value == 0);
+            ensureTransferFrom(_fromToken, msg.sender, this, _amount);
+        }
 
         // transfer funds to the beneficiary in the to reserve token
         if (_toToken == IERC20Token(0))
