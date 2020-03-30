@@ -41,16 +41,15 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     */
     uint16 public version = 27;
 
-    IWhitelist public conversionWhitelist;                // whitelist contract with list of addresses that are allowed to use the converter
-    IERC20Token[] public reserveTokens;                   // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
-    mapping (address => Reserve) public reserves;         // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
-    mapping (address => uint256) private reserveBalances; // reserve token addresses -> reserve balance
-    uint32 public totalReserveRatio = 0;                  // total ratio of all reservces, also used to efficiently prevent increasing
-                                                          // the total reserve ratio above 100%
-    uint32 public maxConversionFee = 0;                   // maximum conversion fee for the lifetime of the contract,
-                                                          // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
-    uint32 public conversionFee = 0;                      // current conversion fee, represented in ppm, 0...maxConversionFee
-    bool public conversionsEnabled = true;                // deprecated, backward compatibility
+    IWhitelist public conversionWhitelist;          // whitelist contract with list of addresses that are allowed to use the converter
+    IERC20Token[] public reserveTokens;             // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
+    mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
+    uint32 public totalReserveRatio = 0;            // total ratio of all reservces, also used to efficiently prevent increasing
+                                                    // the total reserve ratio above 100%
+    uint32 public maxConversionFee = 0;             // maximum conversion fee for the lifetime of the contract,
+                                                    // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
+    uint32 public conversionFee = 0;                // current conversion fee, represented in ppm, 0...maxConversionFee
+    bool public conversionsEnabled = true;          // deprecated, backward compatibility
 
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
 
@@ -178,9 +177,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     function withdrawETH(address _to) public ownerOnly only(BANCOR_CONVERTER_UPGRADER) {
         require(hasETHReserve());
         _to.transfer(address(this).balance);
-
-        // sync the ETH reserve balance
-        syncReserveBalance(IERC20Token(0));
     }
 
     /**
@@ -235,10 +231,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         totalSupplyGreaterThanZeroOnly
     {
         super.acceptTokenOwnership();
-
-        // sync all reserve balances
-        for (uint16 i = 0; i < reserveTokens.length; i++)
-            syncReserveBalance(reserveTokens[i]);
     }
 
     /**
@@ -285,10 +277,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
         require(!reserves[_token].isSet || token.owner() != address(this) || owner == converterUpgrader);
         super.withdrawTokens(_token, _to, _amount);
-
-        // if the token is a reserve token, sync the reserve balance
-        if (reserves[_token].isSet)
-            syncReserveBalance(_token);
     }
 
     /**
@@ -325,7 +313,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         reserves[_token].ratio = _ratio;
         reserves[_token].virtualBalance = 0;
         reserves[_token].isSet = true;
-        reserveBalances[_token] = 0;
         reserveTokens.push(_token);
         totalReserveRatio += _ratio;
     }
@@ -347,7 +334,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         reserves[address(0)].ratio = _ratio;
         reserves[address(0)].virtualBalance = 0;
         reserves[address(0)].isSet = true;
-        reserveBalances[address(0)] = 0;
         reserveTokens.push(IERC20Token(0));
         totalReserveRatio += _ratio;
     }
@@ -410,7 +396,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         validReserve(_reserveToken)
         returns (uint256)
     {
-        return reserveBalances[_reserveToken];
+        return _reserveToken.balanceOf(this);
     }
 
     /**
@@ -576,9 +562,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         else
             require(msg.value == 0 && _reserveToken.balanceOf(this).sub(getReserveBalance(_reserveToken)) >= _depositAmount);
 
-        // sync the reserve balance
-        syncReserveBalance(_reserveToken);
-
         // issue new funds to the beneficiary in the smart token
         token.issue(_beneficiary, amount);
 
@@ -616,9 +599,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
 
         // destroy _sellAmount from the caller's balance in the smart token
         token.destroy(msg.sender, _sellAmount);
-
-        // update the reserve balance
-        reserveBalances[_reserveToken] = reserveBalances[_reserveToken].sub(amount);
 
         // transfer funds to the beneficiary in the reserve token
         if (_reserveToken == IERC20Token(0))
@@ -661,10 +641,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
             require(msg.value == _amount);
         else
             require(msg.value == 0 && _fromToken.balanceOf(this).sub(getReserveBalance(_fromToken)) >= _amount);
-
-        // sync the reserve balances
-        syncReserveBalance(_fromToken);
-        reserveBalances[_toToken] = reserveBalances[_toToken].sub(amount);
 
         // transfer funds to the beneficiary in the to reserve token
         if (_toToken == IERC20Token(0))
@@ -839,9 +815,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
                 ensureTransferFrom(reserveToken, msg.sender, this, reserveAmount);
             }
 
-            // sync the reserve balance
-            syncReserveBalance(reserveToken);
-
             // dispatch price data update for the smart token/reserve
             emit PriceDataUpdate(reserveToken, supply + _amount, reserveBalance + reserveAmount, reserves[reserveToken].ratio);
         }
@@ -876,8 +849,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
             uint256 reserveBalance = getReserveBalance(reserveToken);
             uint256 reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _amount);
 
-            reserveBalances[reserveToken] = reserveBalances[reserveToken].sub(reserveAmount);
-
             // transfer funds to the caller in the reserve token
             if (isETH)
                 msg.sender.transfer(reserveAmount);
@@ -887,71 +858,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
             // dispatch price data update for the smart token/reserve
             emit PriceDataUpdate(reserveToken, supply - _amount, reserveBalance - reserveAmount, reserves[reserveToken].ratio);
         }
-    }
-
-    function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _minReturn)
-        public
-        payable
-        returns (uint256)
-    {
-        uint256 i;
-        uint256 amount;
-
-        uint256 length = _reserveTokens.length;
-        require(length == _reserveAmounts.length);
-        uint256 totalSupply = token.totalSupply();
-
-        if (msg.value > 0) {
-            for (i = 0; i < length; i++) {
-                if (_reserveTokens[i] == IERC20Token(0))
-                    break;
-            }
-            require(i < length);
-        }
-
-        for (i = 0; i < length; i++) {
-            require(_reserveAmounts[i] > 0);
-            require(reserves[_reserveTokens[i]].isSet);
-            if (_reserveTokens[i] == IERC20Token(0))
-                require(msg.value == _reserveAmounts[i]);
-            else
-                ensureTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
-        }
-
-        if (totalSupply == 0) {
-            address bntToken = addressOf(BNT_TOKEN);
-            for (i = 0; i < length; i++) {
-                require(reserveBalances[_reserveTokens[i]] == 0);
-                if (amount == 0 || _reserveTokens[i] == bntToken)
-                    amount = _reserveAmounts[i].mul(RATIO_RESOLUTION).div(reserves[_reserveTokens[i]].ratio);
-            }
-            token.issue(msg.sender, amount);
-        }
-        else {
-            for (i = 0; i < length; i++) {
-                require(reserveBalances[_reserveTokens[i]] > 0);
-                amount += buy(_reserveTokens[i], _reserveAmounts[i], 1, msg.sender);
-            }
-        }
-
-        for (i = 0; i < reserveTokens.length; i++) {
-            require(reserveBalances[reserveTokens[i]] > 0);
-        }
-
-        require(amount >= _minReturn);
-        return amount;
-    }
-
-    /**
-      * @dev syncs the stored reserve balance for a given reserve with the real reserve balance
-      * 
-      * @param _reserveToken    address of the reserve token, or address(0) for ETH reserve
-    */
-    function syncReserveBalance(IERC20Token _reserveToken) internal validReserve(_reserveToken) {
-        if (_reserveToken == address(0))
-            reserveBalances[_reserveToken] = address(this).balance;
-        else
-            reserveBalances[_reserveToken] = _reserveToken.balanceOf(this);
     }
 
     /**
