@@ -396,6 +396,9 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         validReserve(_reserveToken)
         returns (uint256)
     {
+        if (_reserveToken == IERC20Token(0))
+            return address(this).balance;
+
         return _reserveToken.balanceOf(this);
     }
 
