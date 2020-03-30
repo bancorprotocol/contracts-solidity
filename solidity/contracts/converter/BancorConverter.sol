@@ -815,7 +815,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         for (uint16 i = 0; i < reserveTokens.length; i++) {
             IERC20Token reserveToken = reserveTokens[i];
             bool isETH = reserveToken == IERC20Token(0);
-            uint256 reserveBalance = getReserveBalance(reserveToken);
+            uint256 reserveBalance = getReserveBalance(reserveToken) - (isETH ? msg.value : 0);
             uint256 reserveAmount = formula.calculateFundCost(supply, reserveBalance, totalReserveRatio, _amount);
 
             // transfer funds from the caller in the reserve token
