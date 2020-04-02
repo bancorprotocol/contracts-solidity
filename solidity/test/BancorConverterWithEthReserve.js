@@ -14,7 +14,6 @@ const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const ERC20Token = artifacts.require('ERC20Token');
 const EtherToken = artifacts.require('EtherToken');
-const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
