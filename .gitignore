@@ -39,5 +39,9 @@ solidity/build/TestFeatures.abi
 solidity/build/TestFeatures.bin
 solidity/build/TestNonStandardERC20Token.abi
 solidity/build/TestNonStandardERC20Token.bin
+solidity/build/TestNonStandardToken.abi
+solidity/build/TestNonStandardToken.bin
 solidity/build/TestSafeMath.abi
 solidity/build/TestSafeMath.bin
+solidity/build/TestStandardToken.abi
+solidity/build/TestStandardToken.bin

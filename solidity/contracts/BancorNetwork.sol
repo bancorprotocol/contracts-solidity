@@ -10,7 +10,6 @@ import './utility/interfaces/IContractFeatures.sol';
 import './utility/interfaces/IWhitelist.sol';
 import './token/interfaces/IEtherToken.sol';
 import './token/interfaces/ISmartToken.sol';
-import './token/interfaces/INonStandardERC20.sol';
 import './bancorx/interfaces/IBancorX.sol';
 
 // interface of older converters for backward compatibility
@@ -152,10 +151,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 IEtherToken(toToken).withdrawTo(_for, amount);
         }
         else {
-            uint256 prevBalance = toToken.balanceOf(_for);
-            INonStandardERC20(toToken).transfer(_for, amount);
-            uint256 postBalance = toToken.balanceOf(_for);
-            require(postBalance > prevBalance);
+            safeTransfer(toToken, _for, amount);
         }
 
         return amount;
@@ -206,10 +202,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
         else {
             require(msg.value == 0);
-            uint256 prevBalance = _path[0].balanceOf(this);
-            INonStandardERC20(_path[0]).transferFrom(msg.sender, this, _amount);
-            uint256 postBalance = _path[0].balanceOf(this);
-            require(postBalance > prevBalance);
+            safeTransferFrom(_path[0], msg.sender, this, _amount);
         }
 
         // convert and get the resulting amount
@@ -419,10 +412,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // we need to transfer the tokens from the caller to the network before we follow
         // the conversion path, to allow it to execute the conversion on behalf of the caller
         // note: we assume we already have allowance
-        uint256 prevBalance = _path[0].balanceOf(this);
-        INonStandardERC20(_path[0]).transferFrom(msg.sender, this, _amount);
-        uint256 postBalance = _path[0].balanceOf(this);
-        require(postBalance > prevBalance);
+        safeTransferFrom(_path[0], msg.sender, this, _amount);
         return convertFor2(_path, _amount, _minReturn, _for, _affiliateAccount, _affiliateFee);
     }
 
@@ -473,8 +463,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         uint256 allowance = _token.allowance(this, _spender);
         if (allowance < _value) {
             if (allowance > 0)
-                INonStandardERC20(_token).approve(_spender, 0);
-            INonStandardERC20(_token).approve(_spender, _value);
+                safeApprove(_token, _spender, 0);
+            safeApprove(_token, _spender, _value);
         }
     }
 
@@ -488,17 +478,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * @param _amount    the amount to transfer
     */
     function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
-        // We must assume that functions `transfer` and `transferFrom` do not return anything,
-        // because not all tokens abide the requirement of the ERC20 standard to return success or failure.
-        // This is because in the current compiler version, the calling contract can handle more returned data than expected but not less.
-        // This may change in the future, so that the calling contract will revert if the size of the data is not exactly what it expects.
-        uint256 prevBalance = _token.balanceOf(_to);
         if (_from == address(this))
-            INonStandardERC20(_token).transfer(_to, _amount);
+            safeTransfer(_token, _to, _amount);
         else
-            INonStandardERC20(_token).transferFrom(_from, _to, _amount);
-        uint256 postBalance = _token.balanceOf(_to);
-        require(postBalance > prevBalance);
+            safeTransferFrom(_token, _from, _to, _amount);
     }
 
     function isWhitelisted(IERC20Token[] _path, address _receiver) private view returns (bool) {
