@@ -576,7 +576,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         }
         else {
             require(msg.value == 0);
-            ensureTransferFrom(_reserveToken, msg.sender, this, _depositAmount);
+            safeTransferFrom(_reserveToken, msg.sender, this, _depositAmount);
         }
 
         // issue new funds to the beneficiary in the smart token
@@ -621,7 +621,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         if (_reserveToken == IERC20Token(0))
             _beneficiary.transfer(amount);
         else
-            ensureTransferFrom(_reserveToken, this, _beneficiary, amount);
+            safeTransfer(_reserveToken, _beneficiary, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(token, _reserveToken, _sellAmount, amount, feeAmount);
@@ -659,14 +659,14 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         }
         else {
             require(msg.value == 0);
-            ensureTransferFrom(_fromToken, msg.sender, this, _amount);
+            safeTransferFrom(_fromToken, msg.sender, this, _amount);
         }
 
         // transfer funds to the beneficiary in the to reserve token
         if (_toToken == IERC20Token(0))
             _beneficiary.transfer(amount);
         else
-            ensureTransferFrom(_toToken, this, _beneficiary, amount);
+            safeTransfer(_toToken, _beneficiary, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(_fromToken, _toToken, _amount, amount, feeAmount);
@@ -729,7 +729,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
                 token.issue(bancorNetwork, _amount); // issue _amount new tokens to the BancorNetwork contract
             } else {
                 // otherwise, we assume we already have allowance, transfer the tokens directly to the BancorNetwork contract
-                ensureTransferFrom(_path[0], msg.sender, bancorNetwork, _amount);
+                safeTransferFrom(_path[0], msg.sender, bancorNetwork, _amount);
             }
         }
 
@@ -774,22 +774,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     }
 
     /**
-      * @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
-      * true on success but revert on failure instead
-      * 
-      * @param _token     the token to transfer
-      * @param _from      the address to transfer the tokens from
-      * @param _to        the address to transfer the tokens to
-      * @param _amount    the amount to transfer
-    */
-    function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
-        if (_from == address(this))
-            safeTransfer(_token, _to, _amount);
-        else
-            safeTransferFrom(_token, _from, _to, _amount);
-    }
-
-    /**
       * @dev buys the token with all reserve tokens using the same percentage
       * for example, if the caller increases the supply by 10%,
       * then it will cost an amount equal to 10% of each reserve token balance
@@ -820,12 +804,12 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
                 }
                 else if (msg.value < reserveAmount) {
                     require(msg.value == 0);
-                    ensureTransferFrom(etherToken, msg.sender, this, reserveAmount);
+                    safeTransferFrom(etherToken, msg.sender, this, reserveAmount);
                     etherToken.withdraw(reserveAmount);
                 }
             }
             else {
-                ensureTransferFrom(reserveToken, msg.sender, this, reserveAmount);
+                safeTransferFrom(reserveToken, msg.sender, this, reserveAmount);
             }
 
             // dispatch price data update for the smart token/reserve
@@ -866,7 +850,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             if (isETH)
                 msg.sender.transfer(reserveAmount);
             else
-                ensureTransferFrom(reserveToken, this, msg.sender, reserveAmount);
+                safeTransfer(reserveToken, msg.sender, reserveAmount);
 
             // dispatch price data update for the smart token/reserve
             emit PriceDataUpdate(reserveToken, supply - _amount, reserveBalance - reserveAmount, reserves[reserveToken].ratio);

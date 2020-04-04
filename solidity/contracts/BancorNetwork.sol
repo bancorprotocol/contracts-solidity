@@ -468,22 +468,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
     }
 
-    /**
-      * @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
-      * true on success but revert on failure instead
-      * 
-      * @param _token     the token to transfer
-      * @param _from      the address to transfer the tokens from
-      * @param _to        the address to transfer the tokens to
-      * @param _amount    the amount to transfer
-    */
-    function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
-        if (_from == address(this))
-            safeTransfer(_token, _to, _amount);
-        else
-            safeTransferFrom(_token, _from, _to, _amount);
-    }
-
     function isWhitelisted(IERC20Token[] _path, address _receiver) private view returns (bool) {
         IContractFeatures features = IContractFeatures(addressOf(CONTRACT_FEATURES));
         for (uint256 i = 1; i < _path.length; i += 2) {
