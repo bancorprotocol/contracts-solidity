@@ -461,7 +461,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     }
 
     /**
-      * @dev creates a memory cache of all conversion steps for to minimize external calls and logic during conversions
+      * @dev creates a memory cache of all conversion steps data to minimize logic and external calls during conversions
       * 
       * @param _conversionPath  conversion path, see conversion path format above
       * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
