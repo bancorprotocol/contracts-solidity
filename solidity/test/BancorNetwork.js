@@ -119,8 +119,8 @@ contract('BancorNetwork', accounts => {
         etherToErc20ConvertPath = [utils.zeroAddress, smartToken4.address, erc20Token.address];
     });
 
-    it('verifies that isBeneficiarySupportedConverter returns true', async () => {
-        assert.isTrue(await bancorNetwork.isBeneficiarySupportedConverter.call(converter1.address));
+    it('verifies that isV27OrHigherConverter returns true', async () => {
+        assert.isTrue(await bancorNetwork.isV27OrHigherConverter.call(converter1.address));
     });
 
     it('verifies that sending ether to the converter fails if it has no ETH reserve', async () => {

@@ -39,6 +39,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     uint256 private constant CONVERSION_FEE_RESOLUTION = 1000000;
     uint256 private constant AFFILIATE_FEE_RESOLUTION = 1000000;
 
+    struct ConversionStep {
+        IBancorConverter converter;
+        ISmartToken smartToken;
+        IERC20Token sourceToken;
+        IERC20Token targetToken;
+        uint256 minReturn;
+    }
+
     uint256 public maxAffiliateFee = 30000;     // maximum affiliate-fee
 
     mapping (address => bool) public etherTokens;       // list of all supported ether tokens
@@ -138,7 +146,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
 
         // convert and get the resulting amount
-        uint256 amount = convertByPath(_path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
+        ConversionStep[] memory data = createConversionData(_path, _minReturn);
+        uint256 amount = doConversion(data, _amount, _affiliateAccount, _affiliateFee);
 
         // finished the conversion, transfer the funds to the target account
         // if the target token is an ether token, withdraw the tokens and send them as ETH
@@ -206,7 +215,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
 
         // convert and get the resulting amount
-        uint256 amount = convertByPath(_path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
+        ConversionStep[] memory data = createConversionData(_path, _minReturn);
+        uint256 amount = doConversion(data, _amount, _affiliateAccount, _affiliateFee);
 
         // transfer the resulting amount to BancorX
         IBancorX(addressOf(BANCOR_X)).xTransfer(_toBlockchain, _to, amount, _conversionId);
@@ -217,24 +227,21 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     /**
       * @dev executes the actual conversion by following the conversion path
       * 
-      * @param _path                conversion path, see conversion path format above
+      * @param _data                conversion data, see ConversionStep struct above
       * @param _amount              amount to convert from (in the initial source token)
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
       * 
       * @return amount of tokens issued
     */
-    function convertByPath(
-        IERC20Token[] _path,
+    function doConversion(
+        ConversionStep[] _data,
         uint256 _amount,
-        uint256 _minReturn,
         address _affiliateAccount,
         uint256 _affiliateFee
     ) private returns (uint256) {
         uint256 toAmount;
         uint256 fromAmount = _amount;
-        uint256 lastIndex = _path.length - 1;
 
         address bntToken;
         if (address(_affiliateAccount) == 0) {
@@ -246,31 +253,30 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             bntToken = addressOf(BNT_TOKEN);
         }
 
-        // iterate over the conversion path
-        for (uint256 i = 2; i <= lastIndex; i += 2) {
-            IBancorConverter converter = IBancorConverter(ISmartToken(_path[i - 1]).owner());
-
-            // if the smart token isn't the source (from token), the converter doesn't have control over it and
-            // thus we need to either transfer the funds to the (new) converter or grant allowance to the (old) converter
-            if (_path[i - 1] != _path[i - 2] && _path[i - 2] != IERC20Token(0)) {
-                if (isBeneficiarySupportedConverter(converter))
-                    safeTransfer(_path[i - 2], converter, fromAmount);
+        // iterate over the conversion data
+        for (uint8 i = 0; i < _data.length; i++) {
+            ConversionStep memory stepData = _data[i];
+            // if the smart token isn't the source token, the converter doesn't have control over it and
+            // thus we need to either transfer the funds to a newer converter or grant allowance to an older converter
+            if (stepData.smartToken != stepData.sourceToken && stepData.sourceToken != IERC20Token(0)) {
+                if (isV27OrHigherConverter(stepData.converter))
+                    safeTransfer(stepData.sourceToken, stepData.converter, fromAmount);
                 else
-                    ensureAllowance(_path[i - 2], converter, fromAmount);
+                    ensureAllowance(stepData.sourceToken, stepData.converter, fromAmount);
             }
 
             // make the conversion - if it's the last one, also provide the minimum return value
-            toAmount = change(converter, _path[i - 2], _path[i], fromAmount, i == lastIndex ? _minReturn : 1, this);
+            toAmount = change(stepData.converter, stepData.sourceToken, stepData.targetToken, fromAmount, stepData.minReturn, this);
 
             // pay affiliate-fee if needed
-            if (address(_path[i]) == bntToken) {
+            if (address(stepData.targetToken) == bntToken) {
                 uint256 affiliateAmount = toAmount.mul(_affiliateFee).div(AFFILIATE_FEE_RESOLUTION);
-                require(_path[i].transfer(_affiliateAccount, affiliateAmount));
+                require(stepData.targetToken.transfer(_affiliateAccount, affiliateAmount));
                 toAmount -= affiliateAmount;
                 bntToken = address(~0);
             }
 
-            emit Conversion(_path[i - 1], _path[i - 2], _path[i], fromAmount, toAmount, msg.sender);
+            emit Conversion(stepData.smartToken, stepData.sourceToken, stepData.targetToken, fromAmount, toAmount, msg.sender);
             fromAmount = toAmount;
         }
 
@@ -292,7 +298,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             return _converter.convertInternal(_fromToken, IERC20Token(0), _amount, _minReturn, _beneficiary);
         }
 
-        if (isBeneficiarySupportedConverter(_converter))
+        if (isV27OrHigherConverter(_converter))
             return _converter.convertInternal(_fromToken, _toToken, _amount, _minReturn, _beneficiary);
 
         return ILegacyBancorConverter(_converter).change(_fromToken, _toToken, _amount, _minReturn);
@@ -455,6 +461,42 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     }
 
     /**
+      * @dev creates a memory cache of all conversion steps for to minimize external calls and logic during conversions
+      * 
+      * @param _conversionPath  conversion path, see conversion path format above
+      * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * 
+      * @return cached conversion data to be ingested later on by the conversion flow
+    */
+    function createConversionData(IERC20Token[] _conversionPath, uint256 _minReturn) private view returns (ConversionStep[]) {
+        ConversionStep[] memory data = new ConversionStep[](_conversionPath.length / 2);
+
+        // iteration the conversion path and creating the conversion data for each step
+        for (uint8 i = 0; i < _conversionPath.length - 1; i += 2) {
+            ConversionStep memory stepData;
+
+            // setting the smart token
+            stepData.smartToken = ISmartToken(_conversionPath[i + 1]);
+
+            // setting the converter
+            stepData.converter = IBancorConverter(stepData.smartToken.owner());
+
+            // setting the source/target tokens
+            stepData.sourceToken = _conversionPath[i];
+            stepData.targetToken = _conversionPath[i + 2];
+
+            // setting the minimum return
+            stepData.minReturn = 1;
+
+            data[i / 2] = stepData;
+        }
+
+        // the last conversion step is the only one that checks the minimum return
+        data[data.length - 1].minReturn = _minReturn;
+        return data;
+    }
+
+    /**
       * @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't.
       * Note that we use the non standard erc-20 interface in which `approve` has no return value so that
       * this function will work for both standard and non standard tokens
@@ -496,7 +538,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
     bytes4 private constant IS_V27_OR_HIGHER_FUNC_SELECTOR = bytes4(uint256(keccak256("isV27OrHigher()") >> (256 - 4 * 8)));
 
-    function isBeneficiarySupportedConverter(IBancorConverter _converter) public view returns (bool) {
+    function isV27OrHigherConverter(IBancorConverter _converter) public view returns (bool) {
         bool success;
         uint256[1] memory ret;
         bytes memory data = abi.encodeWithSelector(IS_V27_OR_HIGHER_FUNC_SELECTOR);
