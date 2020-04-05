@@ -63,10 +63,7 @@ contract('BancorConverterLiquidity', accounts => {
                 const balances = await Promise.all(reserveTokens.map(reserveToken => getReserveBalance(reserveToken, converter)));
                 const balance = await smartToken.balanceOf(accounts[0]);
 
-                if (total == 0)
-                    total = liquidity;
-                else
-                    total += Math.floor(liquidity * Math.min(...ratios) / 100);
+                total += liquidity;
 
                 assert(balance.equals(total), `owner balance in the smart token: expected ${total} but got ${balance}`);
                 for (let i = 0; i < balances.length; i++)
