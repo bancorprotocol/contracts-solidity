@@ -473,22 +473,22 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
         // iteration the conversion path and creating the conversion data for each step
         for (uint8 i = 0; i < _conversionPath.length - 1; i += 2) {
-            ConversionStep memory stepData;
+            ISmartToken smartToken = ISmartToken(_conversionPath[i + 1]);
 
-            // setting the smart token
-            stepData.smartToken = ISmartToken(_conversionPath[i + 1]);
+            data[i / 2] = ConversionStep({
+                // setting the smart token
+                smartToken: smartToken,
 
-            // setting the converter
-            stepData.converter = IBancorConverter(stepData.smartToken.owner());
+                // setting the converter
+                converter: IBancorConverter(smartToken.owner()),
 
-            // setting the source/target tokens
-            stepData.sourceToken = _conversionPath[i];
-            stepData.targetToken = _conversionPath[i + 2];
+                // setting the source/target tokens
+                sourceToken: _conversionPath[i],
+                targetToken: _conversionPath[i + 2],
 
-            // setting the minimum return
-            stepData.minReturn = 1;
-
-            data[i / 2] = stepData;
+                // setting the minimum return
+                minReturn: 1
+            });
         }
 
         // the last conversion step is the only one that checks the minimum return
