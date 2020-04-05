@@ -146,12 +146,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         _;
     }
 
-    // allows execution only if the total-supply of the token is greater than zero
-    modifier totalSupplyGreaterThanZeroOnly {
-        require(token.totalSupply() > 0);
-        _;
-    }
-
     // allows execution only on a multiple-reserve converter
     modifier multipleReservesOnly {
         require(reserveTokens.length > 1);
@@ -237,7 +231,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     function acceptTokenOwnership()
         public
         ownerOnly
-        totalSupplyGreaterThanZeroOnly
     {
         super.acceptTokenOwnership();
     }
@@ -787,6 +780,73 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             safeTransfer(_token, _to, _amount);
         else
             safeTransferFrom(_token, _from, _to, _amount);
+    }
+
+    function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)
+        public
+        payable
+        multipleReservesOnly
+    {
+        uint256 i;
+        uint256 j;
+        uint256 length = _reserveTokens.length;
+        require(length == reserveTokens.length);
+        for (i = 0; i < length; i++) {
+            require(reserves[_reserveTokens[i]].isSet);
+            for (j = 0; j < length; j++) {
+                if (_reserveTokens[i] == reserveTokens[j])
+                    break;
+            }
+            require(j < length);
+            require(_reserveAmounts[i] > 0);
+            if (_reserveTokens[i] == address(0))
+                require(_reserveAmounts[i] == msg.value);
+        }
+        if (msg.value > 0)
+            require(reserves[address(0)].isSet);
+
+        uint256 supply = token.totalSupply();
+        uint256 issue;
+
+        if (supply == 0) {
+            issue = _reserveAmounts[0];
+            for (i = 1; i < length; i++) {
+                if (issue < _reserveAmounts[i])
+                    issue = _reserveAmounts[i];
+            }
+
+            for (i = 0; i < length; i++) {
+                if (_reserveTokens[i] != address(0))
+                    _reserveTokens[i].transferFrom(msg.sender, this, _reserveAmounts[i]);
+            }
+        }
+        else {
+            uint256[] memory balances = new uint256[](length);
+            IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+
+            for (i = 0; i < length; i++) {
+                balances[i] = getReserveBalance(_reserveTokens[i]);
+            }
+
+            issue = supply.mul(_reserveAmounts[0]).div(balances[0]);
+            for (i = 1; i < length; i++) {
+                uint256 share = supply.mul(_reserveAmounts[i]).div(balances[i]);
+                if (issue > share)
+                    issue = share;
+            }
+
+            for (i = 0; i < length; i++) {
+                uint256 amount = formula.calculateFundCost(supply, balances[i], totalReserveRatio, issue);
+                require(amount > 0);
+                assert(amount <= _reserveAmounts[i]);
+                if (_reserveTokens[i] != address(0))
+                    _reserveTokens[i].transferFrom(msg.sender, this, amount);
+                else if (_reserveAmounts[i] > amount)
+                    msg.sender.transfer(_reserveAmounts[i] - amount);
+            }
+        }
+
+        token.issue(msg.sender, issue);
     }
 
     /**
