@@ -45,6 +45,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         IERC20Token sourceToken;
         IERC20Token targetToken;
         uint256 minReturn;
+        address beneficiary;
+        bool isV27OrHigherConverter;
+        bool isETHConverter;
+        bool processAffiliateFee;
     }
 
     uint256 public maxAffiliateFee = 30000;     // maximum affiliate-fee
@@ -145,8 +149,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             require(msg.value == 0);
         }
 
+        bool affiliateFeeEnabled = false;
+        if (address(_affiliateAccount) == 0) {
+            require(_affiliateFee == 0);
+        }
+        else {
+            require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee);
+            affiliateFeeEnabled = true;
+        }
+
         // convert and get the resulting amount
-        ConversionStep[] memory data = createConversionData(_path, _minReturn);
+        ConversionStep[] memory data = createConversionData(_path, _minReturn, affiliateFeeEnabled);
         uint256 amount = doConversion(data, _amount, _affiliateAccount, _affiliateFee);
 
         // finished the conversion, transfer the funds to the target account
@@ -214,8 +227,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             safeTransferFrom(_path[0], msg.sender, this, _amount);
         }
 
+        bool affiliateFeeEnabled = false;
+        if (address(_affiliateAccount) == 0) {
+            require(_affiliateFee == 0);
+        }
+        else {
+            require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee);
+            affiliateFeeEnabled = true;
+        }
+
         // convert and get the resulting amount
-        ConversionStep[] memory data = createConversionData(_path, _minReturn);
+        ConversionStep[] memory data = createConversionData(_path, _minReturn, affiliateFeeEnabled);
         uint256 amount = doConversion(data, _amount, _affiliateAccount, _affiliateFee);
 
         // transfer the resulting amount to BancorX
@@ -243,23 +265,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         uint256 toAmount;
         uint256 fromAmount = _amount;
 
-        address bntToken;
-        if (address(_affiliateAccount) == 0) {
-            require(_affiliateFee == 0);
-            bntToken = address(~0);
-        }
-        else {
-            require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee);
-            bntToken = addressOf(BNT_TOKEN);
-        }
-
         // iterate over the conversion data
         for (uint8 i = 0; i < _data.length; i++) {
             ConversionStep memory stepData = _data[i];
             // if the smart token isn't the source token, the converter doesn't have control over it and
             // thus we need to either transfer the funds to a newer converter or grant allowance to an older converter
             if (stepData.smartToken != stepData.sourceToken && stepData.sourceToken != IERC20Token(0)) {
-                if (isV27OrHigherConverter(stepData.converter))
+                if (stepData.isV27OrHigherConverter)
                     safeTransfer(stepData.sourceToken, stepData.converter, fromAmount);
                 else
                     ensureAllowance(stepData.sourceToken, stepData.converter, fromAmount);
@@ -269,11 +281,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             toAmount = change(stepData.converter, stepData.sourceToken, stepData.targetToken, fromAmount, stepData.minReturn, this);
 
             // pay affiliate-fee if needed
-            if (address(stepData.targetToken) == bntToken) {
+            if (stepData.processAffiliateFee) {
                 uint256 affiliateAmount = toAmount.mul(_affiliateFee).div(AFFILIATE_FEE_RESOLUTION);
                 require(stepData.targetToken.transfer(_affiliateAccount, affiliateAmount));
                 toAmount -= affiliateAmount;
-                bntToken = address(~0);
             }
 
             emit Conversion(stepData.smartToken, stepData.sourceToken, stepData.targetToken, fromAmount, toAmount, msg.sender);
@@ -463,35 +474,53 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     /**
       * @dev creates a memory cache of all conversion steps data to minimize logic and external calls during conversions
       * 
-      * @param _conversionPath  conversion path, see conversion path format above
-      * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _conversionPath      conversion path, see conversion path format above
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _affiliateFeeEnabled true if affiliate fee was requested by the sender, false if not
       * 
       * @return cached conversion data to be ingested later on by the conversion flow
     */
-    function createConversionData(IERC20Token[] _conversionPath, uint256 _minReturn) private view returns (ConversionStep[]) {
+    function createConversionData(IERC20Token[] _conversionPath, uint256 _minReturn, bool _affiliateFeeEnabled) private view returns (ConversionStep[]) {
         ConversionStep[] memory data = new ConversionStep[](_conversionPath.length / 2);
 
+        bool affiliateFeeProcessed = false;
+        address bntToken = addressOf(BNT_TOKEN);
         // iteration the conversion path and creating the conversion data for each step
         for (uint8 i = 0; i < _conversionPath.length - 1; i += 2) {
             ISmartToken smartToken = ISmartToken(_conversionPath[i + 1]);
+            IBancorConverter converter = IBancorConverter(smartToken.owner());
+            IERC20Token targetToken = _conversionPath[i + 2];
+
+            // checking of the affiliate fee should be processed in this step
+            bool processAffiliateFee = _affiliateFeeEnabled && !affiliateFeeProcessed && targetToken == bntToken;
+            if (processAffiliateFee)
+                affiliateFeeProcessed = true;
 
             data[i / 2] = ConversionStep({
                 // setting the smart token
                 smartToken: smartToken,
 
                 // setting the converter
-                converter: IBancorConverter(smartToken.owner()),
+                converter: converter,
 
                 // setting the source/target tokens
                 sourceToken: _conversionPath[i],
-                targetToken: _conversionPath[i + 2],
+                targetToken: targetToken,
 
                 // setting the minimum return
-                minReturn: 1
+                minReturn: 1,
+
+                // requires knowledge about the next step, so initializing in the next phase
+                beneficiary: address(0),
+
+                // setting flags
+                isV27OrHigherConverter: isV27OrHigherConverter(converter),
+                isETHConverter: isETHConverter(converter),
+                processAffiliateFee: processAffiliateFee
             });
         }
 
-        // the last conversion step is the only one that checks the minimum return
+        // the last conversion step is the only one that should check the minimum return
         data[data.length - 1].minReturn = _minReturn;
         return data;
     }
