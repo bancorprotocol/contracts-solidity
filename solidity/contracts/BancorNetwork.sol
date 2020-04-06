@@ -486,12 +486,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         bool affiliateFeeProcessed = false;
         address bntToken = addressOf(BNT_TOKEN);
         // iteration the conversion path and creating the conversion data for each step
-        for (uint8 i = 0; i < _conversionPath.length - 1; i += 2) {
+        uint8 i;
+        for (i = 0; i < _conversionPath.length - 1; i += 2) {
             ISmartToken smartToken = ISmartToken(_conversionPath[i + 1]);
             IBancorConverter converter = IBancorConverter(smartToken.owner());
             IERC20Token targetToken = _conversionPath[i + 2];
 
-            // checking of the affiliate fee should be processed in this step
+            // checking if the affiliate fee should be processed in this step
             bool processAffiliateFee = _affiliateFeeEnabled && !affiliateFeeProcessed && targetToken == bntToken;
             if (processAffiliateFee)
                 affiliateFeeProcessed = true;
@@ -518,6 +519,31 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 isETHConverter: isETHConverter(converter),
                 processAffiliateFee: processAffiliateFee
             });
+        }
+
+        // setting the beneficiary for each step
+        for (i = 0; i < data.length; i++) {
+            ConversionStep memory stepData = data[i];
+
+            // first check if the converter in this step is newer as older converters don't even support the beneficiary argument
+            if (stepData.isV27OrHigherConverter) {
+                // if affiliate fee is processed in this step, beneficiary is the network contract
+                if (stepData.processAffiliateFee)
+                    stepData.beneficiary = this;
+                // if it's the last step, beneficiary is the sender
+                else if (i == data.length - 1)
+                    stepData.beneficiary = msg.sender;
+                // if the converter in the next step is newer, beneficiary is the next converter
+                else if (data[i + 1].isV27OrHigherConverter)
+                    stepData.beneficiary = data[i + 1].converter;
+                // converter in the next step is older, beneficiary is the network contract
+                else
+                    stepData.beneficiary = this;
+            }
+            else {
+                // converter in this step is older, beneficiary is the network contract
+                stepData.beneficiary = this;
+            }
         }
 
         // the last conversion step is the only one that should check the minimum return
