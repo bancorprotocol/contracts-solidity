@@ -9,7 +9,6 @@ const ContractFeatures = artifacts.require('ContractFeatures');
 const ContractRegistry = artifacts.require('ContractRegistry');
 
 const MAX = web3.toBigNumber(-1);
-const LIQUIDITIES = [1000000000, 1000000, 2000000, 3000000, 4000000];
 
 async function initLiquidityPool(hasETH, ...ratios) {
     const smartToken = await SmartToken.new('name', 'symbol', 0);
@@ -43,31 +42,39 @@ contract('BancorConverterLiquidity', accounts => {
 
     for (const hasETH of [false])
         for (const ratio1 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
-            test(hasETH, ratio1, 100 - ratio1);
+            for (const ratio2 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
+                if (ratio1 + ratio2 <= 100)
+                    test(hasETH, ratio1, ratio2);
 
     for (const hasETH of [false])
-        for (const ratio1 of [10, 20, 30, 40])
-            for (const ratio2 of [10, 20, 30, 40])
-                test(hasETH, ratio1, ratio2, 100 - ratio1 - ratio2);
+        for (const ratio1 of [10, 20, 30, 40, 50, 60])
+            for (const ratio2 of [10, 20, 30, 40, 50, 60])
+                for (const ratio3 of [10, 20, 30, 40, 50, 60])
+                    if (ratio1 + ratio2 + ratio3 <= 100)
+                        test(hasETH, ratio1, ratio2, ratio3);
 
     function test(hasETH, ...ratios) {
         it(`hasETH = ${hasETH}, ratios = [${ratios.join('%, ')}%]`, async () => {
             const [converter, smartToken] = await initLiquidityPool(hasETH, ...ratios);
             const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
-            await Promise.all(reserveTokens.map(reserveToken => ERC20Token.at(reserveToken).approve(converter.address, MAX)));
+            const responses = await Promise.all(reserveTokens.map(reserveToken => ERC20Token.at(reserveToken).approve(converter.address, MAX)));
 
-            let total = 0;
+            let expected = [];
+            const minDiff = ratios.reduce((a, b) => a + b, 0) == 100 ? "1" : "0.996";
 
-            for (const liquidity of LIQUIDITIES) {
-                await converter.addLiquidity(reserveTokens, reserveTokens.map(reserveToken => liquidity), {value: liquidity * hasETH});
+            for (const liquidity of [1000000000, 1000000, 2000000, 3000000, 4000000]) {
+                const reserveAmounts = reserveTokens.map((reserveToken, i) => web3.toBigNumber(liquidity).times(100 + i).div(100));
+                const response = await converter.addLiquidity(reserveTokens, reserveAmounts, {value: hasETH ? reserveAmounts.slice(-1)[0] : 0});
                 const balances = await Promise.all(reserveTokens.map(reserveToken => getReserveBalance(reserveToken, converter)));
-                const balance = await smartToken.balanceOf(accounts[0]);
+                const supply = await smartToken.balanceOf(accounts[0]);
 
-                total += liquidity;
+                const actual = balances.map(balance => balance.div(supply));
+                for (let i = 0; i < expected.length; i++) {
+                    const diff = expected[i].div(actual[i]);
+                    assert(diff.greaterThanOrEqualTo(minDiff) && diff.lessThanOrEqualTo("1"), `reserve token #${i + 1}: diff = ${diff.toFixed()}`);
+                }
 
-                assert(balance.equals(total), `owner balance in the smart token: expected ${total} but got ${balance}`);
-                for (let i = 0; i < balances.length; i++)
-                    assert(balance.equals(total), `converter balance in reserve token #${i + 1}: expected ${total} but got ${balances[i]}`);
+                expected = actual;
             }
         });
     }

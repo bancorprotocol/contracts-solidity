@@ -828,15 +828,15 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
                 balances[i] = getReserveBalance(_reserveTokens[i]);
             }
 
-            issue = supply.mul(_reserveAmounts[0]).div(balances[0]);
+            issue = supply.mul(_reserveAmounts[0]).mul(totalReserveRatio).div(balances[0].mul(RATIO_RESOLUTION));
             for (i = 1; i < length; i++) {
-                uint256 share = supply.mul(_reserveAmounts[i]).div(balances[i]);
+                uint256 share = supply.mul(_reserveAmounts[i]).mul(totalReserveRatio).div(balances[i].mul(RATIO_RESOLUTION));
                 if (issue > share)
                     issue = share;
             }
 
             for (i = 0; i < length; i++) {
-                uint256 amount = formula.calculateFundCost(supply, balances[i], totalReserveRatio, issue);
+                uint256 amount = formula.calculateLiquidateReturn(supply, balances[i], totalReserveRatio, issue);
                 require(amount > 0);
                 assert(amount <= _reserveAmounts[i]);
                 if (_reserveTokens[i] != address(0))
