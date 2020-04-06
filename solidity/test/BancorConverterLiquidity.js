@@ -44,8 +44,7 @@ contract('BancorConverterLiquidity', accounts => {
         let converter;
 
         before(async () => {
-            const smartToken = await SmartToken.new('name', 'symbol', 0);
-            converter = await BancorConverter.new(smartToken.address, contractRegistry.address, 0, utils.zeroAddress, 0);
+            converter = await BancorConverter.new('0x'.padEnd(42, '1'), contractRegistry.address, 0, utils.zeroAddress, 0);
         });
 
         for (let n = 1; n <= 77; n++) {
