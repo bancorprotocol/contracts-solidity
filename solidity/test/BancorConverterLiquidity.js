@@ -40,6 +40,45 @@ contract('BancorConverterLiquidity', accounts => {
         await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
     });
 
+    describe('math functions:', () => {
+        let converter;
+
+        before(async () => {
+            const smartToken = await SmartToken.new('name', 'symbol', 0);
+            converter = await BancorConverter.new(smartToken.address, contractRegistry.address, 0, utils.zeroAddress, 0);
+        });
+
+        for (let n = 1; n <= 77; n++) {
+            for (const k of [-1, 0, +1]) {
+                const input = web3.toBigNumber(10).pow(n).add(k);
+                it(`ceilLog(${input.toFixed()})`, async () => {
+                    const expected = input.toFixed().length;
+                    const actual = await converter.ceilLog(input);
+                    assert(actual.equals(expected), `expected ${expected} but got ${actual}`);
+                });
+            }
+        }
+
+        for (let n = 1; n <= 15; n++) {
+            for (let d = 1; d <= 15; d++) {
+                it(`roundDiv(${n}, ${d})`, async () => {
+                    const expected = Math.round(n / d);
+                    const actual = await converter.roundDiv(n, d);
+                    assert(actual.equals(expected), `expected ${expected} but got ${actual}`);
+                });
+            }
+        }
+
+        for (const values of [[123, 456789], [12, 345, 6789], [1, 1000, 1000000, 1000000000, 1000000000000]]) {
+            it(`geometricMean([${values}])`, async () => {
+                const expected = 10 ** Math.round(values.join('').length / values.length);
+                const actual = await converter.geometricMean(values);
+                assert(actual.equals(expected), `expected ${expected} but got ${actual}`);
+            });
+        }
+    });
+
+    describe('function addLiquidity:', () => {
     for (const hasETH of [false, true])
         for (const ratio1 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
             for (const ratio2 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
@@ -86,6 +125,7 @@ contract('BancorConverterLiquidity', accounts => {
             }
         });
     }
+    });
 
     async function approve(reserveToken, converter, amount) {
         if (reserveToken != utils.zeroAddress)

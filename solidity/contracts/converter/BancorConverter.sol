@@ -782,6 +782,27 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             safeTransferFrom(_token, _from, _to, _amount);
     }
 
+    function ceilLog(uint256 _x) public pure returns (uint256) {
+        uint256 y = 0;
+        while (_x > 0) {
+            _x /= 10;
+            y += 1;
+        }
+        return y;
+    }
+
+    function roundDiv(uint256 _n, uint256 _d) public pure returns (uint256) {
+        return (_n + _d / 2) / _d;
+    }
+
+    function geometricMean(uint256[] memory _values) public pure returns (uint256) {
+        uint256 numOfDigits = 0;
+        uint256 length = _values.length;
+        for (uint256 i = 0; i < length; i++)
+            numOfDigits += ceilLog(_values[i]);
+        return uint256(10) ** roundDiv(numOfDigits, length);
+    }
+
     function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)
         public
         payable
@@ -809,11 +830,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         uint256 issue;
 
         if (supply == 0) {
-            issue = _reserveAmounts[0];
-            for (i = 1; i < length; i++) {
-                if (issue < _reserveAmounts[i])
-                    issue = _reserveAmounts[i];
-            }
+            issue = geometricMean(_reserveAmounts);
 
             for (i = 0; i < length; i++) {
                 if (_reserveTokens[i] != address(0))
