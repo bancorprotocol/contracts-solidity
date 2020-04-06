@@ -817,7 +817,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
             for (i = 0; i < length; i++) {
                 if (_reserveTokens[i] != address(0))
-                    _reserveTokens[i].transferFrom(msg.sender, this, _reserveAmounts[i]);
+                    safeTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
             }
         }
         else {
@@ -843,7 +843,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
                 require(amount > 0);
                 assert(amount <= _reserveAmounts[i]);
                 if (_reserveTokens[i] != address(0))
-                    _reserveTokens[i].transferFrom(msg.sender, this, amount);
+                    safeTransferFrom(_reserveTokens[i], msg.sender, this, amount);
                 else if (_reserveAmounts[i] > amount)
                     msg.sender.transfer(_reserveAmounts[i] - amount);
             }
