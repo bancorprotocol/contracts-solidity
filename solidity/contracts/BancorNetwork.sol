@@ -544,7 +544,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 // if the converter in the next step is newer, beneficiary is the next converter
                 else if (data[i + 1].isV27OrHigherConverter)
                     stepData.beneficiary = data[i + 1].converter;
-                // converter in the next step is older, beneficiary is the network contract
+                // the converter in the next step is older, beneficiary is the network contract
                 else
                     stepData.beneficiary = this;
             }
