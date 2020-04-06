@@ -493,43 +493,43 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
         bool affiliateFeeProcessed = false;
         address bntToken = addressOf(BNT_TOKEN);
-        // iteration the conversion path and creating the conversion data for each step
+        // iterate the conversion path and create the conversion data for each step
         uint8 i;
         for (i = 0; i < _conversionPath.length - 1; i += 2) {
             ISmartToken smartToken = ISmartToken(_conversionPath[i + 1]);
             IBancorConverter converter = IBancorConverter(smartToken.owner());
             IERC20Token targetToken = _conversionPath[i + 2];
 
-            // checking if the affiliate fee should be processed in this step
+            // check if the affiliate fee should be processed in this step
             bool processAffiliateFee = _affiliateFeeEnabled && !affiliateFeeProcessed && targetToken == bntToken;
             if (processAffiliateFee)
                 affiliateFeeProcessed = true;
 
             data[i / 2] = ConversionStep({
-                // setting the smart token
+                // set the smart token
                 smartToken: smartToken,
 
-                // setting the converter
+                // set the converter
                 converter: converter,
 
-                // setting the source/target tokens
+                // set the source/target tokens
                 sourceToken: _conversionPath[i],
                 targetToken: targetToken,
 
-                // setting the minimum return
+                // set the minimum return
                 minReturn: 1,
 
-                // requires knowledge about the next step, so initializing in the next phase
+                // requires knowledge about the next step, so initialize in the next phase
                 beneficiary: address(0),
 
-                // setting flags
+                // set flags
                 isV27OrHigherConverter: isV27OrHigherConverter(converter),
                 isETHConverter: isETHConverter(converter),
                 processAffiliateFee: processAffiliateFee
             });
         }
 
-        // setting the beneficiary for each step
+        // set the beneficiary for each step
         for (i = 0; i < data.length; i++) {
             ConversionStep memory stepData = data[i];
 
