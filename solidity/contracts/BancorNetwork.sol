@@ -268,6 +268,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // iterate over the conversion data
         for (uint8 i = 0; i < _data.length; i++) {
             ConversionStep memory stepData = _data[i];
+
             // if the smart token isn't the source token, the converter doesn't have control over it and
             // thus we need to either transfer the funds to a newer converter or grant allowance to an older converter
             if (stepData.smartToken != stepData.sourceToken && stepData.sourceToken != IERC20Token(0)) {
@@ -278,7 +279,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             }
 
             // make the conversion - if it's the last one, also provide the minimum return value
-            toAmount = change(stepData.converter, stepData.sourceToken, stepData.targetToken, fromAmount, stepData.minReturn, this);
+            toAmount = change(stepData.converter,
+                              stepData.sourceToken,
+                              stepData.targetToken,
+                              fromAmount,
+                              stepData.minReturn,
+                              this,
+                              stepData.isETHConverter);
 
             // pay affiliate-fee if needed
             if (stepData.processAffiliateFee) {
@@ -300,9 +307,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         IERC20Token _toToken,
         uint256 _amount,
         uint256 _minReturn,
-        address _beneficiary
+        address _beneficiary,
+        bool _isETHConverter
     ) private returns (uint256) {
-        if ((etherTokens[_fromToken] || etherTokens[_toToken]) && isETHConverter(_converter)) {
+        if ((etherTokens[_fromToken] || etherTokens[_toToken]) && _isETHConverter) {
             if (etherTokens[_fromToken])
                 return _converter.convertInternal.value(msg.value)(IERC20Token(0), _toToken, _amount, _minReturn, _beneficiary);
 
