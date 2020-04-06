@@ -825,7 +825,10 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
 
             for (i = 0; i < length; i++) {
-                balances[i] = getReserveBalance(_reserveTokens[i]);
+                if (_reserveTokens[i] != address(0))
+                    balances[i] = _reserveTokens[i].balanceOf(this);
+                else
+                    balances[i] = address(this).balance - msg.value;
             }
 
             issue = supply.mul(_reserveAmounts[0]).mul(totalReserveRatio).div(balances[0].mul(RATIO_RESOLUTION));

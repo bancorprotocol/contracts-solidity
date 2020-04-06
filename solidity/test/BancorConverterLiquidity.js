@@ -40,13 +40,13 @@ contract('BancorConverterLiquidity', accounts => {
         await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
     });
 
-    for (const hasETH of [false])
+    for (const hasETH of [false, true])
         for (const ratio1 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
             for (const ratio2 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
                 if (ratio1 + ratio2 <= 100)
                     test(hasETH, ratio1, ratio2);
 
-    for (const hasETH of [false])
+    for (const hasETH of [false, true])
         for (const ratio1 of [10, 20, 30, 40, 50, 60])
             for (const ratio2 of [10, 20, 30, 40, 50, 60])
                 for (const ratio3 of [10, 20, 30, 40, 50, 60])
