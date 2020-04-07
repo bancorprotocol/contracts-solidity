@@ -40,7 +40,7 @@ contract('BancorConverterLiquidity', accounts => {
         await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
     });
 
-    describe('math functions:', () => {
+    describe('auxiliary functions:', () => {
         let converter;
 
         before(async () => {
@@ -121,7 +121,7 @@ contract('BancorConverterLiquidity', accounts => {
         });
     });
 
-    describe('function addLiquidity:', () => {
+    describe('functionality assertion:', () => {
         for (const hasETH of [false, true])
             for (const ratio1 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
                 for (const ratio2 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
