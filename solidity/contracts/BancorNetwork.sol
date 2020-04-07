@@ -249,14 +249,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 ensureAllowance(stepData.sourceToken, stepData.converter, fromAmount);
             }
 
-            // make the conversion - if it's the last one, also provide the minimum return value
-            toAmount = change(stepData.converter,
-                              stepData.sourceToken,
-                              stepData.targetToken,
-                              fromAmount,
-                              stepData.minReturn,
-                              stepData.beneficiary,
-                              stepData.isV27OrHigherConverter);
+            // do the conversion
+            if (!stepData.isV27OrHigherConverter)
+                toAmount = ILegacyBancorConverter(stepData.converter).change(stepData.sourceToken, stepData.targetToken, fromAmount, stepData.minReturn);
+            else if (etherTokens[stepData.sourceToken])
+                toAmount = stepData.converter.convertInternal.value(msg.value)(stepData.sourceToken, stepData.targetToken, fromAmount, stepData.minReturn, stepData.beneficiary);
+            else
+                toAmount = stepData.converter.convertInternal(stepData.sourceToken, stepData.targetToken, fromAmount, stepData.minReturn, stepData.beneficiary);
 
             // pay affiliate-fee if needed
             if (stepData.processAffiliateFee) {
@@ -270,28 +269,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
 
         return toAmount;
-    }
-
-    function change(
-        IBancorConverter _converter,
-        IERC20Token _fromToken,
-        IERC20Token _toToken,
-        uint256 _amount,
-        uint256 _minReturn,
-        address _beneficiary,
-        bool _isV27OrHigherConverter
-    ) private returns (uint256) {
-        if ((etherTokens[_fromToken] || etherTokens[_toToken]) && _isV27OrHigherConverter) {
-            if (etherTokens[_fromToken])
-                return _converter.convertInternal.value(msg.value)(IERC20Token(0), _toToken, _amount, _minReturn, _beneficiary);
-
-            return _converter.convertInternal(_fromToken, IERC20Token(0), _amount, _minReturn, _beneficiary);
-        }
-
-        if (_isV27OrHigherConverter)
-            return _converter.convertInternal(_fromToken, _toToken, _amount, _minReturn, _beneficiary);
-
-        return ILegacyBancorConverter(_converter).change(_fromToken, _toToken, _amount, _minReturn);
     }
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(uint256(keccak256("getReturn(address,address,uint256)") >> (256 - 4 * 8)));
@@ -454,8 +431,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 // EtherToken converter - deposit the ETH into the EtherToken
                 // note that it can still be a non ETH converter if the path is wrong
                 // but such conversion will simply revert
-                if (!isNewerConverter)
-                    IEtherToken(_sourceToken).deposit.value(msg.value)();
+                if (!isNewerConverter) {
+                    IEtherToken etherToken = getConverterEtherTokenAddress(firstConverter);
+                    IEtherToken(etherToken).deposit.value(msg.value)();
+                }
             }
             // handle EtherToken
             else {
@@ -558,9 +537,32 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             });
         }
 
+        // ETH support
+        // source is ETH
+        ConversionStep memory stepData = data[0];
+        if (etherTokens[stepData.sourceToken]) {
+            // newer converter - replace the source token with address(0)
+            if (stepData.isV27OrHigherConverter)
+                stepData.sourceToken = IERC20Token(0);
+            // older converter - replace the source token with the EtherToken address used by the converter
+            else
+                stepData.sourceToken = getConverterEtherTokenAddress(stepData.converter);
+        }
+
+        // target is ETH
+        stepData = data[data.length - 1];
+        if (etherTokens[stepData.targetToken]) {
+            // newer converter - replace the source token with address(0)
+            if (stepData.isV27OrHigherConverter)
+                stepData.targetToken = IERC20Token(0);
+            // older converter - replace the source token with the EtherToken address used by the converter
+            else
+                stepData.targetToken = getConverterEtherTokenAddress(stepData.converter);
+        }
+
         // set the beneficiary for each step
         for (i = 0; i < data.length; i++) {
-            ConversionStep memory stepData = data[i];
+            stepData = data[i];
 
             // first check if the converter in this step is newer as older converters don't even support the beneficiary argument
             if (stepData.isV27OrHigherConverter) {
@@ -638,6 +640,19 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
 
         return success;
+    }
+
+    // legacy - returns the address of an EtherToken used by the converter
+    function getConverterEtherTokenAddress(IBancorConverter _converter) private view returns (IEtherToken) {
+        uint16 reserveCount = _converter.connectorTokenCount();
+        IERC20Token reserveTokenAddress;
+        for (uint16 i = 0; i < reserveCount; i++) {
+            reserveTokenAddress = _converter.connectorTokens(i);
+            if (etherTokens[reserveTokenAddress])
+                return IEtherToken(reserveTokenAddress);
+        }
+
+        return IEtherToken(0);
     }
 
     /**
