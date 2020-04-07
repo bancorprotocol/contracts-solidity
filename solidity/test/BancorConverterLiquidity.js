@@ -111,13 +111,13 @@ contract('BancorConverterLiquidity', accounts => {
         });
 
         it('should revert if the input value to a non-ether converter is larger than zero', async () => {
-            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, {value: 1}));
+            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, {value: reserveAmounts.slice(-1)[0]}));
         });
 
         it('should revert if the input value is not equal to the input amount of ether', async () => {
             [converter, smartToken] = await initLiquidityPool(true, ...ratios);
             reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
-            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, {value: 2}));
+            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, {value: reserveAmounts.slice(-1)[0] + 1}));
         });
     });
 
