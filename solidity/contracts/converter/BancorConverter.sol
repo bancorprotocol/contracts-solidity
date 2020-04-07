@@ -810,8 +810,9 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     {
         uint256 i;
         uint256 j;
-        uint256 length = _reserveTokens.length;
-        require(length == reserveTokens.length);
+        uint256 length = reserveTokens.length;
+        require(length == _reserveTokens.length);
+        require(length == _reserveAmounts.length);
         for (i = 0; i < length; i++) {
             require(reserves[_reserveTokens[i]].isSet);
             for (j = 0; j < length; j++) {
