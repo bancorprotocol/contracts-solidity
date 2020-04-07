@@ -611,7 +611,8 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @return amount of tokens received (in units of the reserve token)
     */
     function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn, address _beneficiary) internal returns (uint256) {
-        require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
+        // ensure that the input amount was already deposited
+        require(_sellAmount <= token.balanceOf(this));
 
         (uint256 amount, uint256 feeAmount) = getSaleReturn(_reserveToken, _sellAmount);
 
@@ -623,8 +624,8 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         uint256 reserveBalance = getReserveBalance(_reserveToken);
         assert(amount < reserveBalance || (amount == reserveBalance && _sellAmount == tokenSupply));
 
-        // destroy _sellAmount from the caller's balance in the smart token
-        token.destroy(msg.sender, _sellAmount);
+        // destroy _sellAmount from the converter balance in the smart token
+        token.destroy(this, _sellAmount);
 
         // update the reserve balance
         reserveBalances[_reserveToken] = reserveBalances[_reserveToken].sub(amount);
@@ -730,24 +731,37 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     {
         IBancorNetwork bancorNetwork = IBancorNetwork(addressOf(BANCOR_NETWORK));
 
-        // we need to transfer the source tokens from the caller to the BancorNetwork contract,
+        // we need to transfer the source tokens from the caller to the converter contract,
         // so it can execute the conversion on behalf of the caller
-        if (_path[0] != IERC20Token(0)) {
+        if (_path[0] == IERC20Token(0)) {
+            // ETH - execute the conversion and pass on the ETH with the call
+            return bancorNetwork.convertFor2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
+        }
+        else {
+            // not ETH, claim the tokens
             require(msg.value == 0);
-            // not ETH, send the source tokens to the BancorNetwork contract
-            // if the token is the smart token, no allowance is required - destroy the tokens
-            // from the caller and issue them to the BancorNetwork contract
+
+            // if the token is the smart token, no allowance is required - destroy
+            // the tokens from the caller and issue them to the converter contract
             if (_path[0] == token) {
                 token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
-                token.issue(bancorNetwork, _amount); // issue _amount new tokens to the BancorNetwork contract
-            } else {
-                // otherwise, we assume we already have allowance, transfer the tokens directly to the BancorNetwork contract
-                safeTransferFrom(_path[0], msg.sender, bancorNetwork, _amount);
+                token.issue(this, _amount); // issue _amount new tokens to the converter contract
             }
-        }
+            // otherwise, we assume we already have allowance, claim the tokens
+            else {
+                safeTransferFrom(_path[0], msg.sender, this, _amount);
+            }
 
-        // execute the conversion and pass on the ETH with the call
-        return bancorNetwork.convertFor2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
+            // grant allowance to the network
+            uint256 allowance = _path[0].allowance(this, bancorNetwork);
+            if (allowance < _amount) {
+                if (allowance > 0)
+                    safeApprove(_path[0], bancorNetwork, 0);
+                safeApprove(_path[0], bancorNetwork, _amount);
+            }
+
+            return bancorNetwork.claimAndConvertFor2(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
+        }
     }
 
     /**
@@ -779,11 +793,19 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         // get conversion amount from BancorX contract
         uint256 amount = bancorX.getXTransferAmount(_conversionId, msg.sender);
 
-        // send BNT from msg.sender to the BancorNetwork contract
+        // send BNT from msg.sender to the converter contract
         token.destroy(msg.sender, amount);
-        token.issue(bancorNetwork, amount);
+        token.issue(this, amount);
 
-        return bancorNetwork.convertFor2(_path, amount, _minReturn, msg.sender, address(0), 0);
+        // grant allowance to the network
+        uint256 allowance = token.allowance(this, bancorNetwork);
+        if (allowance < amount) {
+            if (allowance > 0)
+                safeApprove(token, bancorNetwork, 0);
+            safeApprove(token, bancorNetwork, amount);
+        }
+
+        return bancorNetwork.claimAndConvertFor2(_path, amount, _minReturn, msg.sender, address(0), 0);
     }
 
     /**

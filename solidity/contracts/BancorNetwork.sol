@@ -47,14 +47,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         uint256 minReturn;
         address beneficiary;
         bool isV27OrHigherConverter;
-        bool isETHConverter;
         bool processAffiliateFee;
     }
 
     uint256 public maxAffiliateFee = 30000;     // maximum affiliate-fee
 
     mapping (address => bool) public etherTokens;       // list of all supported ether tokens
-    mapping (bytes32 => bool) public conversionHashes;  // list of conversion hashes, to prevent re-use of the same hash
 
     /**
       * @dev triggered when a conversion between two tokens occurs
@@ -82,12 +80,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
         etherTokens[address(0)] = true;
-    }
-
-    /**
-      * @dev deposit ether
-    */
-    function() external payable {
     }
 
     /**
@@ -124,7 +116,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * note that the network should already own the source tokens
       * 
       * @param _path                conversion path, see conversion path format above
-      * @param _amount              amount to convert from (in the initial source token)
+      * @param _amount              amount to convert from, in the source token
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _for                 account that will receive the conversion result
       * @param _affiliateAccount    affiliate account
@@ -139,15 +131,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // verify that the account which should receive the conversion result is whitelisted
         require(isWhitelisted(_path, _for));
 
-        // handle msg.value
-        if (etherTokens[_path[0]]) {
-            require(msg.value == _amount);
-            if (!isOwnerAnETHConverter(_path[1]))
-                IEtherToken(_path[0]).deposit.value(msg.value)();
-        }
-        else {
-            require(msg.value == 0);
-        }
+        // validate msg.value and prepare the source tokens for the conversion
+        handleSourceTokens(_path[0], ISmartToken(_path[1]), _amount);
 
         bool affiliateFeeEnabled = false;
         if (address(_affiliateAccount) == 0) {
@@ -159,22 +144,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
 
         // convert and get the resulting amount
-        ConversionStep[] memory data = createConversionData(_path, _minReturn, affiliateFeeEnabled);
+        ConversionStep[] memory data = createConversionData(_path, _minReturn, _for, affiliateFeeEnabled);
         uint256 amount = doConversion(data, _amount, _affiliateAccount, _affiliateFee);
 
-        // finished the conversion, transfer the funds to the target account
-        // if the target token is an ether token, withdraw the tokens and send them as ETH
-        // otherwise, transfer the tokens as is
-        IERC20Token toToken = _path[_path.length - 1];
-        if (etherTokens[toToken]) {
-            if (isOwnerAnETHConverter(_path[_path.length - 2]))
-                _for.transfer(amount);
-            else
-                IEtherToken(toToken).withdrawTo(_for, amount);
-        }
-        else {
-            safeTransfer(toToken, _for, amount);
-        }
+        // handle the conversion target tokens
+        handleTargetTokens(data, amount, _for);
 
         return amount;
     }
@@ -186,7 +160,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * note that the network should already have been given allowance of the source token (if not ETH)
       * 
       * @param _path                conversion path, see conversion path format above
-      * @param _amount              amount to convert from (in the initial source token)
+      * @param _amount              amount to convert from, in the source token
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _toBlockchain        blockchain BNT will be issued on
       * @param _to                  address/account on _toBlockchain to send the BNT to
@@ -216,16 +190,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // verify that the destination token is BNT
         require(_path[_path.length - 1] == addressOf(BNT_TOKEN));
 
-        // handle msg.value
-        if (etherTokens[_path[0]]) {
-            require(msg.value == _amount);
-            if (!isOwnerAnETHConverter(_path[1]))
-                IEtherToken(_path[0]).deposit.value(msg.value)();
-        }
-        else {
-            require(msg.value == 0);
-            safeTransferFrom(_path[0], msg.sender, this, _amount);
-        }
+        // validate msg.value and prepare the source tokens for the conversion
+        handleSourceTokens(_path[0], ISmartToken(_path[1]), _amount);
 
         bool affiliateFeeEnabled = false;
         if (address(_affiliateAccount) == 0) {
@@ -237,7 +203,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
 
         // convert and get the resulting amount
-        ConversionStep[] memory data = createConversionData(_path, _minReturn, affiliateFeeEnabled);
+        ConversionStep[] memory data = createConversionData(_path, _minReturn, this, affiliateFeeEnabled);
         uint256 amount = doConversion(data, _amount, _affiliateAccount, _affiliateFee);
 
         // transfer the resulting amount to BancorX
@@ -250,7 +216,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * @dev executes the actual conversion by following the conversion path
       * 
       * @param _data                conversion data, see ConversionStep struct above
-      * @param _amount              amount to convert from (in the initial source token)
+      * @param _amount              amount to convert from, in the source token
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
       * 
@@ -269,13 +235,18 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         for (uint8 i = 0; i < _data.length; i++) {
             ConversionStep memory stepData = _data[i];
 
-            // if the smart token isn't the source token, the converter doesn't have control over it and
-            // thus we need to either transfer the funds to a newer converter or grant allowance to an older converter
-            if (stepData.smartToken != stepData.sourceToken && stepData.sourceToken != IERC20Token(0)) {
-                if (stepData.isV27OrHigherConverter)
+            // newer converter
+            if (stepData.isV27OrHigherConverter) {
+                // transfer the tokens to the converter only if the network contract currently holds the tokens
+                // not needed with ETH or if it's the first conversion step
+                if (i != 0 && _data[i - 1].beneficiary == address(this) && !etherTokens[stepData.sourceToken])
                     safeTransfer(stepData.sourceToken, stepData.converter, fromAmount);
-                else
-                    ensureAllowance(stepData.sourceToken, stepData.converter, fromAmount);
+            }
+            // older converter
+            // if the source token is the smart token, no need to do any transfers as the converter controls it
+            else if (stepData.sourceToken != stepData.smartToken) {
+                // grant allowance for it to transfer the tokens from the network contract
+                ensureAllowance(stepData.sourceToken, stepData.converter, fromAmount);
             }
 
             // make the conversion - if it's the last one, also provide the minimum return value
@@ -284,8 +255,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                               stepData.targetToken,
                               fromAmount,
                               stepData.minReturn,
-                              this,
-                              stepData.isETHConverter);
+                              stepData.beneficiary,
+                              stepData.isV27OrHigherConverter);
 
             // pay affiliate-fee if needed
             if (stepData.processAffiliateFee) {
@@ -308,16 +279,16 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         uint256 _amount,
         uint256 _minReturn,
         address _beneficiary,
-        bool _isETHConverter
+        bool _isV27OrHigherConverter
     ) private returns (uint256) {
-        if ((etherTokens[_fromToken] || etherTokens[_toToken]) && _isETHConverter) {
+        if ((etherTokens[_fromToken] || etherTokens[_toToken]) && _isV27OrHigherConverter) {
             if (etherTokens[_fromToken])
                 return _converter.convertInternal.value(msg.value)(IERC20Token(0), _toToken, _amount, _minReturn, _beneficiary);
 
             return _converter.convertInternal(_fromToken, IERC20Token(0), _amount, _minReturn, _beneficiary);
         }
 
-        if (isV27OrHigherConverter(_converter))
+        if (_isV27OrHigherConverter)
             return _converter.convertInternal(_fromToken, _toToken, _amount, _minReturn, _beneficiary);
 
         return ILegacyBancorConverter(_converter).change(_fromToken, _toToken, _amount, _minReturn);
@@ -351,10 +322,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * note that there is no support for circular paths
       * 
       * @param _path        conversion path (see conversion path format above)
-      * @param _amount      amount of _path[0] tokens received from the user
+      * @param _amount      amount of _path[0] tokens received from the sender
       * 
-      * @return amount of _path[_path.length - 1] tokens that the user will receive
-      * @return amount of _path[_path.length - 1] tokens that the user will pay as fee
+      * @return amount of _path[_path.length - 1] tokens that the sender will receive
+      * @return amount of _path[_path.length - 1] tokens that the sender will pay as fee
     */
     function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
         uint256 amount;
@@ -424,34 +395,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     }
 
     /**
-      * @dev claims the caller's tokens, converts them to any other token in the bancor network
-      * by following a predefined conversion path and transfers the result tokens to a target account
-      * note that allowance must be set beforehand
-      * 
-      * @param _path                conversion path, see conversion path format above
-      * @param _amount              amount to convert from (in the initial source token)
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-      * @param _for                 account that will receive the conversion result
-      * @param _affiliateAccount    affiliate account
-      * @param _affiliateFee        affiliate fee in PPM
-      * 
-      * @return tokens issued in return
-    */
-    function claimAndConvertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
-        // we need to transfer the tokens from the caller to the network before we follow
-        // the conversion path, to allow it to execute the conversion on behalf of the caller
-        // note: we assume we already have allowance
-        safeTransferFrom(_path[0], msg.sender, this, _amount);
-        return convertFor2(_path, _amount, _minReturn, _for, _affiliateAccount, _affiliateFee);
-    }
-
-    /**
       * @dev converts the token to any other token in the bancor network by following
       * a predefined conversion path and transfers the result tokens back to the sender
       * note that the network should already own the source tokens
       * 
       * @param _path                conversion path, see conversion path format above
-      * @param _amount              amount to convert from (in the initial source token)
+      * @param _amount              amount to convert from, in the source token
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
@@ -468,7 +417,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * note that allowance must be set beforehand
       * 
       * @param _path                conversion path, see conversion path format above
-      * @param _amount              amount to convert from (in the initial source token)
+      * @param _amount              amount to convert from, in the source token
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
@@ -480,15 +429,96 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     }
 
     /**
+      * @dev validates msg.value and prepares the conversion source tokens for the conversion
+      * 
+      * @param _sourceToken source token of the first conversion step
+      * @param _smartToken  smart token of the first conversion step
+      * @param _amount      amount to convert from, in the source token
+    */
+    function handleSourceTokens(IERC20Token _sourceToken, ISmartToken _smartToken, uint256 _amount) private {
+        bool isSourceETH = etherTokens[_sourceToken];
+
+        // validate msg.value
+        if (msg.value > 0)
+            require(msg.value == _amount && isSourceETH);
+        else
+            require(msg.value == 0);
+
+        IBancorConverter firstConverter = IBancorConverter(_smartToken.owner());
+        bool isNewerConverter = isV27OrHigherConverter(firstConverter);
+
+        // ETH / EtherToken
+        if (isSourceETH) {
+            // handle ETH
+            if (msg.value > 0) {
+                // EtherToken converter - deposit the ETH into the EtherToken
+                // note that it can still be a non ETH converter if the path is wrong
+                // but such conversion will simply revert
+                if (!isNewerConverter)
+                    IEtherToken(_sourceToken).deposit.value(msg.value)();
+            }
+            // handle EtherToken
+            else {
+                // claim the tokens
+                safeTransferFrom(_sourceToken, msg.sender, this, _amount);
+
+                // ETH converter - withdraw the ETH
+                if (isNewerConverter)
+                    IEtherToken(_sourceToken).withdraw(_amount);
+            }
+        }
+        // other ERC20 token
+        else {
+            // newer converter - transfer the tokens from the sender directly to the converter
+            // otherwise claim the tokens
+            if (isNewerConverter)
+                safeTransferFrom(_sourceToken, msg.sender, firstConverter, _amount);
+            else
+                safeTransferFrom(_sourceToken, msg.sender, this, _amount);
+        }
+    }
+
+    /**
+      * @dev handles the conversion target tokens if the network still holds them at the end of the conversion
+      * 
+      * @param _data        conversion data, see ConversionStep struct above
+      * @param _amount      conversion return amount, in the target token
+      * @param _beneficiary wallet to receive the conversion result
+    */
+    function handleTargetTokens(ConversionStep[] _data, uint256 _amount, address _beneficiary) private {
+        ConversionStep memory stepData = _data[_data.length - 1];
+
+        // network contract doesn't hold the tokens, do nothing
+        if (stepData.beneficiary != address(this))
+            return;
+
+        IERC20Token targetToken = stepData.targetToken;
+
+        // ETH / EtherToken
+        if (etherTokens[targetToken]) {
+            // newer converter should send ETH directly to the beneficiary
+            assert(!stepData.isV27OrHigherConverter);
+
+            // EtherToken converter - withdraw the ETH and transfer to the beneficiary
+            IEtherToken(targetToken).withdrawTo(_beneficiary, _amount);
+        }
+        // other ERC20 token
+        else {
+            safeTransfer(targetToken, _beneficiary, _amount);
+        }
+    }
+
+    /**
       * @dev creates a memory cache of all conversion steps data to minimize logic and external calls during conversions
       * 
       * @param _conversionPath      conversion path, see conversion path format above
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _beneficiary         wallet to receive the conversion result
       * @param _affiliateFeeEnabled true if affiliate fee was requested by the sender, false if not
       * 
       * @return cached conversion data to be ingested later on by the conversion flow
     */
-    function createConversionData(IERC20Token[] _conversionPath, uint256 _minReturn, bool _affiliateFeeEnabled) private view returns (ConversionStep[]) {
+    function createConversionData(IERC20Token[] _conversionPath, uint256 _minReturn, address _beneficiary, bool _affiliateFeeEnabled) private view returns (ConversionStep[]) {
         ConversionStep[] memory data = new ConversionStep[](_conversionPath.length / 2);
 
         bool affiliateFeeProcessed = false;
@@ -524,7 +554,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
                 // set flags
                 isV27OrHigherConverter: isV27OrHigherConverter(converter),
-                isETHConverter: isETHConverter(converter),
                 processAffiliateFee: processAffiliateFee
             });
         }
@@ -538,9 +567,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 // if affiliate fee is processed in this step, beneficiary is the network contract
                 if (stepData.processAffiliateFee)
                     stepData.beneficiary = this;
-                // if it's the last step, beneficiary is the sender
+                // if it's the last step, beneficiary is the final beneficiary
                 else if (i == data.length - 1)
-                    stepData.beneficiary = msg.sender;
+                    stepData.beneficiary = _beneficiary;
                 // if the converter in the next step is newer, beneficiary is the next converter
                 else if (data[i + 1].isV27OrHigherConverter)
                     stepData.beneficiary = data[i + 1].converter;
@@ -588,15 +617,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             }
         }
         return true;
-    }
-
-    function isOwnerAnETHConverter(IERC20Token _smartToken) private view returns (bool) {
-        return isETHConverter(IBancorConverter(ISmartToken(_smartToken).owner()));
-    }
-
-    function isETHConverter(IBancorConverter _converter) private view returns (bool) {
-        (, , , , bool isSet) = _converter.connectors(address(0));
-        return isSet;
     }
 
     bytes4 private constant IS_V27_OR_HIGHER_FUNC_SELECTOR = bytes4(uint256(keccak256("isV27OrHigher()") >> (256 - 4 * 8)));
@@ -668,6 +688,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     ) public returns (uint256)
     {
         return claimAndConvertFor2(_path, _amount, _minReturn, _for, address(0), 0);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function claimAndConvertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
+        return convertFor2(_path, _amount, _minReturn, _for, _affiliateAccount, _affiliateFee);
     }
 
     /**
