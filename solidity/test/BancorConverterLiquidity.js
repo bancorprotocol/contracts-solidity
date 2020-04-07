@@ -80,15 +80,14 @@ contract('BancorConverterLiquidity', accounts => {
     describe('security assertion:', () => {
         let converter;
         let smartToken;
+        let reserveTokens;
 
-        const reserveTokens = [...Array(5).keys()].map(n => '0x'.padEnd(42, `${n + 1}`));
-        const reserveAmounts = reserveTokens.map(reserveToken => web3.toBigNumber(reserveToken));
+        const ratios = [1, 2, 3, 4, 5];
+        const reserveAmounts = ratios.map(ratio => 1);
 
         before(async () => {
-            smartToken = await SmartToken.new('name', 'symbol', 0);
-            converter = await BancorConverter.new(smartToken.address, contractRegistry.address, 0, utils.zeroAddress, 0);
-            for (const reserveToken of reserveTokens)
-                await converter.addReserve(reserveToken, 1);
+            [converter, smartToken] = await initLiquidityPool(false, ...ratios);
+            reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
         });
 
         it('should revert if the number of input reserve tokens is not equal to the number of reserve tokens', async () => {
@@ -116,8 +115,9 @@ contract('BancorConverterLiquidity', accounts => {
         });
 
         it('should revert if the input value is not equal to the input amount of ether', async () => {
-            await converter.addETHReserve(1);
-            await utils.catchRevert(converter.addLiquidity([...reserveTokens, utils.zeroAddress], [...reserveAmounts, 1], {value: 2}));
+            [converter, smartToken] = await initLiquidityPool(true, ...ratios);
+            reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, {value: 2}));
         });
     });
 
