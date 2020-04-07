@@ -141,8 +141,6 @@ contract('BancorConverterLiquidity', accounts => {
                 const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
 
                 let expected = [];
-                const minDiff = ratios.reduce((a, b) => a + b, 0) == 100 ? "1" : "0.996";
-                const maxDiff = ratios.reduce((a, b) => a + b, 0) == 100 ? "0" : "0.002";
 
                 for (const liquidity of [1000000000, 1000000, 2000000, 3000000, 4000000]) {
                     const reserveAmounts = reserveTokens.map((reserveToken, i) => web3.toBigNumber(liquidity).mul(100 + i).div(100));
@@ -155,13 +153,13 @@ contract('BancorConverterLiquidity', accounts => {
 
                     for (let i = 0; i < allowances.length; i++) {
                         const diff = allowances[i].div(reserveAmounts[i]);
-                        assert(diff.lessThanOrEqualTo(maxDiff), `allowance #${i + 1}: diff = ${diff.toFixed()}`);
+                        assert(inRange(diff, '0', '0.004'), `allowance #${i + 1}: diff = ${diff.toFixed()}`);
                     }
 
                     const actual = balances.map(balance => balance.div(supply));
                     for (let i = 0; i < expected.length; i++) {
                         const diff = expected[i].div(actual[i]);
-                        assert(diff.greaterThanOrEqualTo(minDiff) && diff.lessThanOrEqualTo("1"), `balance #${i + 1}: diff = ${diff.toFixed()}`);
+                        assert(inRange(diff, '0.996', '1'), `balance #${i + 1}: diff = ${diff.toFixed()}`);
                     }
 
                     expected = actual;
@@ -186,5 +184,9 @@ contract('BancorConverterLiquidity', accounts => {
         if (reserveToken != utils.zeroAddress)
             return await ERC20Token.at(reserveToken).balanceOf(converter.address);
         return await web3.eth.getBalance(converter.address);
+    }
+
+    function inRange(val, min, max) {
+        return val.greaterThanOrEqualTo(min) && val.lessThanOrEqualTo(max);
     }
 });

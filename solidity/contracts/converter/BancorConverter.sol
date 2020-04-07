@@ -782,6 +782,10 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             safeTransferFrom(_token, _from, _to, _amount);
     }
 
+    function getShare(uint256 _supply, uint256 _balance, uint256 _amount) private view returns (uint256) {
+        return _supply.mul(_amount).mul(totalReserveRatio).div(_balance.add(_amount).mul(RATIO_RESOLUTION));
+    }
+
     function ceilLog(uint256 _x) public pure returns (uint256) {
         uint256 y = 0;
         while (_x > 0) {
@@ -849,15 +853,15 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
                     balances[i] = address(this).balance - msg.value;
             }
 
-            issue = supply.mul(_reserveAmounts[0]).mul(totalReserveRatio).div(balances[0].mul(RATIO_RESOLUTION));
+            issue = getShare(supply, balances[0], _reserveAmounts[0]);
             for (i = 1; i < length; i++) {
-                uint256 share = supply.mul(_reserveAmounts[i]).mul(totalReserveRatio).div(balances[i].mul(RATIO_RESOLUTION));
+                uint256 share = getShare(supply, balances[i], _reserveAmounts[i]);
                 if (issue > share)
                     issue = share;
             }
 
             for (i = 0; i < length; i++) {
-                uint256 amount = formula.calculateLiquidateReturn(supply, balances[i], totalReserveRatio, issue);
+                uint256 amount = formula.calculateFundCost(supply, balances[i], totalReserveRatio, issue);
                 require(amount > 0);
                 assert(amount <= _reserveAmounts[i]);
                 if (_reserveTokens[i] != address(0))
