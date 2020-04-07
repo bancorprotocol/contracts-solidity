@@ -77,6 +77,50 @@ contract('BancorConverterLiquidity', accounts => {
         }
     });
 
+    describe('security assertion:', () => {
+        let converter;
+        let smartToken;
+
+        const reserveTokens = [...Array(5).keys()].map(n => '0x'.padEnd(42, `${n + 1}`));
+        const reserveAmounts = reserveTokens.map(reserveToken => web3.toBigNumber(reserveToken));
+
+        before(async () => {
+            smartToken = await SmartToken.new('name', 'symbol', 0);
+            converter = await BancorConverter.new(smartToken.address, contractRegistry.address, 0, utils.zeroAddress, 0);
+            for (const reserveToken of reserveTokens)
+                await converter.addReserve(reserveToken, 1);
+        });
+
+        it('should revert if the number of input reserve tokens is not equal to the number of reserve tokens', async () => {
+            await utils.catchRevert(converter.addLiquidity(reserveTokens.slice(0, -1), reserveAmounts));
+        });
+
+        it('should revert if the number of input reserve amounts is not equal to the number of reserve tokens', async () => {
+            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts.slice(0, -1)));
+        });
+
+        it('should revert if any of the input reserve tokens is not one of the reserve tokens', async () => {
+            await utils.catchRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), smartToken.address], reserveAmounts));
+        });
+
+        it('should revert if any of the reserve tokens is not within the input reserve tokens', async () => {
+            await utils.catchRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), reserveTokens[0]], reserveAmounts));
+        });
+
+        it('should revert if any of the input reserve amounts is not larger than zero', async () => {
+            await utils.catchRevert(converter.addLiquidity(reserveTokens, [...reserveAmounts.slice(0, -1), 0]));
+        });
+
+        it('should revert if the input value to a non-ether converter is larger than zero', async () => {
+            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, {value: 1}));
+        });
+
+        it('should revert if the input value is not equal to the input amount of ether', async () => {
+            await converter.addETHReserve(1);
+            await utils.catchRevert(converter.addLiquidity([...reserveTokens, utils.zeroAddress], [...reserveAmounts, 1], {value: 2}));
+        });
+    });
+
     describe('function addLiquidity:', () => {
         for (const hasETH of [false, true])
             for (const ratio1 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
