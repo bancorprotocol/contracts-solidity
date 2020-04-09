@@ -287,7 +287,7 @@ contract('BancorNetwork', accounts => {
 
     it('verifies that convert transfers the converted amount correctly', async () => {
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
-        let res = await bancorNetwork.convert(smartToken1BuyPath, 10000, 1, { from: accounts[1], value: 10000 });
+        await bancorNetwork.convert(smartToken1BuyPath, 10000, 1, { from: accounts[1], value: 10000 });
         let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
         assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
     });

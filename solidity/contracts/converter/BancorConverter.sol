@@ -828,12 +828,11 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         // _amount and the total supply in each reserve from the caller to the converter
         for (uint16 i = 0; i < reserveTokens.length; i++) {
             IERC20Token reserveToken = reserveTokens[i];
-            bool isETH = reserveToken == IERC20Token(0);
             uint256 reserveBalance = getReserveBalance(reserveToken);
             uint256 reserveAmount = formula.calculateFundCost(supply, reserveBalance, totalReserveRatio, _amount);
 
             // transfer funds from the caller in the reserve token
-            if (isETH) {
+            if (reserveToken == IERC20Token(0)) {
                 if (msg.value > reserveAmount) {
                     msg.sender.transfer(msg.value - reserveAmount);
                 }
@@ -880,14 +879,13 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         // _amount and the total supply from each reserve balance to the caller
         for (uint16 i = 0; i < reserveTokens.length; i++) {
             IERC20Token reserveToken = reserveTokens[i];
-            bool isETH = reserveToken == IERC20Token(0);
             uint256 reserveBalance = getReserveBalance(reserveToken);
             uint256 reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _amount);
 
             reserveBalances[reserveToken] = reserveBalances[reserveToken].sub(reserveAmount);
 
             // transfer funds to the caller in the reserve token
-            if (isETH)
+            if (reserveToken == IERC20Token(0))
                 msg.sender.transfer(reserveAmount);
             else
                 safeTransfer(reserveToken, msg.sender, reserveAmount);
