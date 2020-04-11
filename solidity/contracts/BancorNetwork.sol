@@ -232,7 +232,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         uint256 fromAmount = _amount;
 
         // iterate over the conversion data
-        for (uint8 i = 0; i < _data.length; i++) {
+        for (uint256 i = 0; i < _data.length; i++) {
             ConversionStep memory stepData = _data[i];
 
             // newer converter
@@ -503,7 +503,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         bool affiliateFeeProcessed = false;
         address bntToken = addressOf(BNT_TOKEN);
         // iterate the conversion path and create the conversion data for each step
-        uint8 i;
+        uint256 i;
         for (i = 0; i < _conversionPath.length - 1; i += 2) {
             ISmartToken smartToken = ISmartToken(_conversionPath[i + 1]);
             IBancorConverter converter = IBancorConverter(smartToken.owner());
