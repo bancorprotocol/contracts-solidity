@@ -131,8 +131,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // verify that the account which should receive the conversion result is whitelisted
         require(isWhitelisted(_path, _for));
 
-        // validate msg.value and prepare the source tokens for the conversion
-        handleSourceTokens(_path[0], ISmartToken(_path[1]), _amount);
+        // validate msg.value and prepare the source token for the conversion
+        handleSourceToken(_path[0], ISmartToken(_path[1]), _amount);
 
         bool affiliateFeeEnabled = false;
         if (address(_affiliateAccount) == 0) {
@@ -148,7 +148,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         uint256 amount = doConversion(data, _amount, _affiliateAccount, _affiliateFee);
 
         // handle the conversion target tokens
-        handleTargetTokens(data, amount, _for);
+        handleTargetToken(data, amount, _for);
 
         return amount;
     }
@@ -190,8 +190,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // verify that the destination token is BNT
         require(_path[_path.length - 1] == addressOf(BNT_TOKEN));
 
-        // validate msg.value and prepare the source tokens for the conversion
-        handleSourceTokens(_path[0], ISmartToken(_path[1]), _amount);
+        // validate msg.value and prepare the source token for the conversion
+        handleSourceToken(_path[0], ISmartToken(_path[1]), _amount);
 
         bool affiliateFeeEnabled = false;
         if (address(_affiliateAccount) == 0) {
@@ -406,13 +406,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     }
 
     /**
-      * @dev validates msg.value and prepares the conversion source tokens for the conversion
+      * @dev validates msg.value and prepares the conversion source token for the conversion
       * 
       * @param _sourceToken source token of the first conversion step
       * @param _smartToken  smart token of the first conversion step
       * @param _amount      amount to convert from, in the source token
     */
-    function handleSourceTokens(IERC20Token _sourceToken, ISmartToken _smartToken, uint256 _amount) private {
+    function handleSourceToken(IERC20Token _sourceToken, ISmartToken _smartToken, uint256 _amount) private {
         bool isSourceETH = etherTokens[_sourceToken];
 
         // validate msg.value
@@ -458,13 +458,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     }
 
     /**
-      * @dev handles the conversion target tokens if the network still holds them at the end of the conversion
+      * @dev handles the conversion target token if the network still holds it at the end of the conversion
       * 
       * @param _data        conversion data, see ConversionStep struct above
       * @param _amount      conversion return amount, in the target token
       * @param _beneficiary wallet to receive the conversion result
     */
-    function handleTargetTokens(ConversionStep[] _data, uint256 _amount, address _beneficiary) private {
+    function handleTargetToken(ConversionStep[] _data, uint256 _amount, address _beneficiary) private {
         ConversionStep memory stepData = _data[_data.length - 1];
 
         // network contract doesn't hold the tokens, do nothing
