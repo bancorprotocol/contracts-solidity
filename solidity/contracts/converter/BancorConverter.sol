@@ -245,8 +245,8 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     {
         super.acceptTokenOwnership();
 
-        // sync all reserve balances	
-        for (uint16 i = 0; i < reserveTokens.length; i++)	
+        // sync all reserve balances
+        for (uint256 i = 0; i < reserveTokens.length; i++)
             syncReserveBalance(reserveTokens[i]);
     }
 
@@ -826,7 +826,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
         // iterate through the reserve tokens and transfer a percentage equal to the ratio between
         // _amount and the total supply in each reserve from the caller to the converter
-        for (uint16 i = 0; i < reserveTokens.length; i++) {
+        for (uint256 i = 0; i < reserveTokens.length; i++) {
             IERC20Token reserveToken = reserveTokens[i];
             uint256 reserveBalance = getReserveBalance(reserveToken);
             uint256 reserveAmount = formula.calculateFundCost(supply, reserveBalance, totalReserveRatio, _amount);
@@ -877,7 +877,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
         // iterate through the reserve tokens and send a percentage equal to the ratio between
         // _amount and the total supply from each reserve balance to the caller
-        for (uint16 i = 0; i < reserveTokens.length; i++) {
+        for (uint256 i = 0; i < reserveTokens.length; i++) {
             IERC20Token reserveToken = reserveTokens[i];
             uint256 reserveBalance = getReserveBalance(reserveToken);
             uint256 reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _amount);
