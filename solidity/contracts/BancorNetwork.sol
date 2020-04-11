@@ -125,8 +125,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * @return tokens issued in return
     */
     function convertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
-        // verify that the number of elements is odd and that maximum number of 'hops' is 10
-        require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
+        // verify that the path contrains at least a single 'hop' and that the number of elements is odd
+        require(_path.length > 2 &&  _path.length % 2 == 1);
 
         // verify that the account which should receive the conversion result is whitelisted
         require(isWhitelisted(_path, _for));
@@ -184,8 +184,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         payable
         returns (uint256)
     {
-        // verify that the number of elements is odd and that maximum number of 'hops' is 10
-        require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
+        // verify that the path contrains at least a single 'hop' and that the number of elements is odd
+        require(_path.length > 2 &&  _path.length % 2 == 1);
 
         // verify that the destination token is BNT
         require(_path[_path.length - 1] == addressOf(BNT_TOKEN));
