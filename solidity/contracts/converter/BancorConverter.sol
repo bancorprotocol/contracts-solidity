@@ -874,6 +874,50 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         token.issue(msg.sender, issue);
     }
 
+    function removeLiquidity(uint256 _supplyAmount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
+        public
+        multipleReservesOnly
+    {
+        uint256 i;
+        uint256 j;
+        uint256 length = reserveTokens.length;
+        require(length == _reserveTokens.length);
+        require(length == _reserveMinReturnAmounts.length);
+        for (i = 0; i < length; i++) {
+            require(reserves[_reserveTokens[i]].isSet);
+            for (j = 0; j < length; j++) {
+                if (reserveTokens[i] == _reserveTokens[j])
+                    break;
+            }
+            require(j < length);
+            require(_reserveMinReturnAmounts[i] > 0);
+        }
+
+        uint256 supply = token.totalSupply();
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+
+        // destroy _supplyAmount from the caller's balance in the smart token
+        token.destroy(msg.sender, _supplyAmount);
+
+        // iterate through the reserve tokens and send a percentage equal to the ratio between
+        // _supplyAmount and the total supply from each reserve balance to the caller
+        for (i = 0; i < length; i++) {
+            IERC20Token reserveToken = _reserveTokens[i];
+            uint256 reserveBalance = getReserveBalance(reserveToken);
+            uint256 reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _supplyAmount);
+            require(reserveAmount >= _reserveMinReturnAmounts[i]);
+
+            // transfer funds to the caller in the reserve token
+            if (reserveToken == IERC20Token(0))
+                msg.sender.transfer(reserveAmount);
+            else
+                ensureTransferFrom(reserveToken, this, msg.sender, reserveAmount);
+
+            // dispatch price data update for the smart token/reserve
+            emit PriceDataUpdate(reserveToken, supply - _supplyAmount, reserveBalance - reserveAmount, reserves[reserveToken].ratio);
+        }
+    }
+
     /**
       * @dev buys the token with all reserve tokens using the same percentage
       * for example, if the caller increases the supply by 10%,
