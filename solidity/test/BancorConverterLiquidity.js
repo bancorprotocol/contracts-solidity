@@ -114,6 +114,7 @@ contract('BancorConverterLiquidity', accounts => {
         it('should revert if the minimum-return is larger than the return', async () => {
             const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
             const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i])));
             await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, -1));
         });
 
