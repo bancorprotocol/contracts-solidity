@@ -14,7 +14,7 @@ import './bancorx/interfaces/IBancorX.sol';
 
 // interface of older converters for backward compatibility
 contract ILegacyBancorConverter is IBancorConverter {
-    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public payable returns (uint256);
+    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256);
 }
 
 
