@@ -921,7 +921,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
         // iterate through the reserve tokens and send a percentage equal to the ratio between
         // _supplyAmount and the total supply from each reserve balance to the caller
-        for (i = 0; i < length; i++) {
+        for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 reserveBalance = getReserveBalance(reserveToken);
             uint256 reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _supplyAmount);
