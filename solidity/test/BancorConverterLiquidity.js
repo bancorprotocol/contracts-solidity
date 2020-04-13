@@ -84,43 +84,55 @@ contract('BancorConverterLiquidity', accounts => {
         it('should revert if the number of input reserve tokens is not equal to the number of reserve tokens', async () => {
             const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
             const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
-            await utils.catchRevert(converter.addLiquidity(reserveTokens.slice(0, -1), reserveAmounts));
+            await utils.catchRevert(converter.addLiquidity(reserveTokens.slice(0, -1), reserveAmounts, 1));
         });
 
         it('should revert if the number of input reserve amounts is not equal to the number of reserve tokens', async () => {
             const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
             const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
-            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts.slice(0, -1)));
+            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts.slice(0, -1), 1));
         });
 
         it('should revert if any of the input reserve tokens is not one of the reserve tokens', async () => {
             const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
             const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
-            await utils.catchRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), smartToken.address], reserveAmounts));
+            await utils.catchRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), smartToken.address], reserveAmounts, 1));
         });
 
         it('should revert if any of the reserve tokens is not within the input reserve tokens', async () => {
             const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
             const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
-            await utils.catchRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), reserveTokens[0]], reserveAmounts));
+            await utils.catchRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), reserveTokens[0]], reserveAmounts, 1));
+        });
+
+        it('should revert if the minimum-return is not larger than zero', async () => {
+            const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
+            const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, 0));
+        });
+
+        it('should revert if the minimum-return is larger than the return', async () => {
+            const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
+            const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, -1));
         });
 
         it('should revert if any of the input reserve amounts is not larger than zero', async () => {
             [converter, smartToken] = await initLiquidityPool(false, ...ratios);
             reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
-            await utils.catchRevert(converter.addLiquidity(reserveTokens, [...reserveAmounts.slice(0, -1), 0]));
+            await utils.catchRevert(converter.addLiquidity(reserveTokens, [...reserveAmounts.slice(0, -1), 0], 1));
         });
 
         it('should revert if the input value to a non-ether converter is larger than zero', async () => {
             const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
             const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
-            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, {value: reserveAmounts.slice(-1)[0]}));
+            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, 1, {value: reserveAmounts.slice(-1)[0]}));
         });
 
         it('should revert if the input value is not equal to the input amount of ether', async () => {
             const [converter, smartToken] = await initLiquidityPool(true, ...ratios);
             const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
-            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, {value: reserveAmounts.slice(-1)[0] + 1}));
+            await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, 1, {value: reserveAmounts.slice(-1)[0] + 1}));
         });
     });
 
@@ -149,7 +161,7 @@ contract('BancorConverterLiquidity', accounts => {
                     const reserveAmounts = reserveTokens.map((reserveToken, i) => web3.toBigNumber(liquidity).mul(100 + i).div(100));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(0))));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(1))));
-                    await converter.addLiquidity(reserveTokens, reserveAmounts, {value: hasETH ? reserveAmounts.slice(-1)[0] : 0});
+                    await converter.addLiquidity(reserveTokens, reserveAmounts, 1, {value: hasETH ? reserveAmounts.slice(-1)[0] : 0});
                     const allowances = await Promise.all(reserveTokens.map(reserveToken => getAllowance(reserveToken, converter)));
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                     const supply = await smartToken.totalSupply();
