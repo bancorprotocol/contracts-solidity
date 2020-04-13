@@ -418,8 +418,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // validate msg.value
         if (msg.value > 0)
             require(msg.value == _amount && isSourceETH);
-        else
-            require(msg.value == 0);
 
         IBancorConverter firstConverter = IBancorConverter(_smartToken.owner());
         bool isNewerConverter = isV27OrHigherConverter(firstConverter);
