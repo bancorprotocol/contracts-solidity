@@ -925,6 +925,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             require(j < length);
             require(_reserveMinReturnAmounts[i] > 0);
         }
+        require(_supplyAmount > 0);
 
         uint256 supply = token.totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
