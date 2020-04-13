@@ -907,27 +907,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         return issue;
     }
 
-    function removeLiquidityVerifyInput(uint256 _supplyAmount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
-        private
-        view
-    {
-        uint256 i;
-        uint256 j;
-        uint256 length = reserveTokens.length;
-        require(length == _reserveTokens.length);
-        require(length == _reserveMinReturnAmounts.length);
-        for (i = 0; i < length; i++) {
-            require(reserves[_reserveTokens[i]].isSet);
-            for (j = 0; j < length; j++) {
-                if (reserveTokens[i] == _reserveTokens[j])
-                    break;
-            }
-            require(j < length);
-            require(_reserveMinReturnAmounts[i] > 0);
-        }
-        require(_supplyAmount > 0);
-    }
-
     function removeLiquidity(uint256 _supplyAmount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
         public
         multipleReservesOnly
@@ -957,6 +936,30 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             // dispatch price data update for the smart token/reserve
             emit PriceDataUpdate(reserveToken, supply - _supplyAmount, reserveBalance - reserveAmount, reserves[reserveToken].ratio);
         }
+    }
+
+    function removeLiquidityVerifyInput(uint256 _supplyAmount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
+        private
+        view
+    {
+        uint256 i;
+        uint256 j;
+
+        uint256 length = reserveTokens.length;
+        require(length == _reserveTokens.length);
+        require(length == _reserveMinReturnAmounts.length);
+
+        for (i = 0; i < length; i++) {
+            require(reserves[_reserveTokens[i]].isSet);
+            for (j = 0; j < length; j++) {
+                if (reserveTokens[i] == _reserveTokens[j])
+                    break;
+            }
+            require(j < length);
+            require(_reserveMinReturnAmounts[i] > 0);
+        }
+
+        require(_supplyAmount > 0);
     }
 
     /**
