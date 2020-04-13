@@ -804,7 +804,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         uint256 length = _values.length;
         for (uint256 i = 0; i < length; i++)
             numOfDigits += ceilLog(_values[i]);
-        return uint256(10) ** roundDiv(numOfDigits, length);
+        return uint256(10) ** roundDiv(numOfDigits, length).sub(1);
     }
 
     function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)

@@ -70,7 +70,7 @@ contract('BancorConverterLiquidity', accounts => {
 
         for (const values of [[123, 456789], [12, 345, 6789], [1, 1000, 1000000, 1000000000, 1000000000000]]) {
             it(`geometricMean([${values}])`, async () => {
-                const expected = 10 ** Math.round(values.join('').length / values.length);
+                const expected = 10 ** (Math.round(values.join('').length / values.length) - 1);
                 const actual = await converter.geometricMean(values);
                 assert(actual.equals(expected), `expected ${expected} but got ${actual}`);
             });
@@ -152,7 +152,7 @@ contract('BancorConverterLiquidity', accounts => {
                     await converter.addLiquidity(reserveTokens, reserveAmounts, {value: hasETH ? reserveAmounts.slice(-1)[0] : 0});
                     const allowances = await Promise.all(reserveTokens.map(reserveToken => getAllowance(reserveToken, converter)));
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
-                    const supply = await smartToken.balanceOf(owner);
+                    const supply = await smartToken.totalSupply();
 
                     for (let i = 0; i < allowances.length; i++) {
                         const diff = allowances[i].div(reserveAmounts[i]);
