@@ -782,6 +782,149 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             safeTransferFrom(_token, _from, _to, _amount);
     }
 
+    function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _supplyMinReturnAmount)
+        public
+        payable
+        multipleReservesOnly
+    {
+        verifyLiquidityInput(_reserveTokens, _reserveAmounts, _supplyMinReturnAmount);
+
+        for (uint256 i = 0; i < _reserveTokens.length; i++)
+            if (_reserveTokens[i] == address(0))
+                require(_reserveAmounts[i] == msg.value);
+
+        if (msg.value > 0)
+            require(reserves[address(0)].isSet);
+
+        uint256 totalSupply = token.totalSupply();
+        uint256 supplyAmount;
+
+        if (totalSupply == 0)
+            supplyAmount = addLiquidityToEmptyPool(_reserveTokens, _reserveAmounts);
+        else
+            supplyAmount = addLiquidityToNonEmptyPool(_reserveTokens, _reserveAmounts, totalSupply);
+
+        require(supplyAmount >= _supplyMinReturnAmount);
+        token.issue(msg.sender, supplyAmount);
+    }
+
+    function removeLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _supplyAmount)
+        public
+        multipleReservesOnly
+    {
+        verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _supplyAmount);
+
+        uint256 totalSupply = token.totalSupply();
+
+        token.destroy(msg.sender, _supplyAmount);
+
+        removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _supplyAmount);
+    }
+
+    function verifyLiquidityInput(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _supplyAmount)
+        private
+        view
+    {
+        uint256 i;
+        uint256 j;
+
+        uint256 length = reserveTokens.length;
+        require(length == _reserveTokens.length);
+        require(length == _reserveAmounts.length);
+
+        for (i = 0; i < length; i++) {
+            require(reserves[_reserveTokens[i]].isSet);
+            for (j = 0; j < length; j++) {
+                if (reserveTokens[i] == _reserveTokens[j])
+                    break;
+            }
+            require(j < length);
+            require(_reserveAmounts[i] > 0);
+        }
+
+        require(_supplyAmount > 0);
+    }
+
+    function addLiquidityToEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)
+        private
+        returns (uint256)
+    {
+        uint256 supplyAmount = geometricMean(_reserveAmounts);
+
+        for (uint256 i = 0; i < _reserveTokens.length; i++) {
+            if (_reserveTokens[i] != address(0))
+                safeTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
+            emit PriceDataUpdate(_reserveTokens[i], supplyAmount, _reserveAmounts[i], reserves[_reserveTokens[i]].ratio);
+        }
+
+        return supplyAmount;
+    }
+
+    function addLiquidityToNonEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
+        private
+        returns (uint256)
+    {
+        uint256[] memory reserveBalances = getBalances(_reserveTokens);
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+        uint256 supplyAmount = getMinShare(_totalSupply, reserveBalances, _reserveAmounts);
+
+        for (uint256 i = 0; i < _reserveTokens.length; i++) {
+            uint256 reserveAmount = formula.calculateFundCost(_totalSupply, reserveBalances[i], totalReserveRatio, supplyAmount);
+            require(reserveAmount > 0);
+            assert(reserveAmount <= _reserveAmounts[i]);
+
+            if (_reserveTokens[i] != address(0))
+                safeTransferFrom(_reserveTokens[i], msg.sender, this, reserveAmount);
+            else if (_reserveAmounts[i] > reserveAmount)
+                msg.sender.transfer(_reserveAmounts[i] - reserveAmount);
+
+            emit PriceDataUpdate(_reserveTokens[i], _totalSupply + supplyAmount, reserveBalances[i] + reserveAmount, reserves[_reserveTokens[i]].ratio);
+        }
+
+        return supplyAmount;
+    }
+
+    function removeLiquidityFromPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _totalSupply, uint256 _supplyAmount)
+        public
+        multipleReservesOnly
+    {
+        uint256[] memory reserveBalances = getBalances(_reserveTokens);
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+
+        for (uint256 i = 0; i < _reserveTokens.length; i++) {
+            uint256 reserveAmount = formula.calculateLiquidateReturn(_totalSupply, reserveBalances[i], totalReserveRatio, _supplyAmount);
+            require(reserveAmount >= _reserveMinReturnAmounts[i]);
+
+            if (_reserveTokens[i] == IERC20Token(0))
+                msg.sender.transfer(reserveAmount);
+            else
+                ensureTransferFrom(_reserveTokens[i], this, msg.sender, reserveAmount);
+
+            emit PriceDataUpdate(_reserveTokens[i], _totalSupply - _supplyAmount, reserveBalances[i] - reserveAmount, reserves[_reserveTokens[i]].ratio);
+        }
+    }
+
+    function getBalances(IERC20Token[] memory _tokens) private view returns (uint256[] memory) {
+        uint256[] memory balances = new uint256[](_tokens.length);
+        for (uint256 i = 0; i < _tokens.length; i++) {
+            if (_tokens[i] != address(0))
+                balances[i] = _tokens[i].balanceOf(this);
+            else
+                balances[i] = address(this).balance - msg.value;
+        }
+        return balances;
+    }
+
+    function getMinShare(uint256 _supply, uint256[] memory _balances, uint256[] memory _amounts) private view returns (uint256) {
+        uint256 minShare = getShare(_supply, _balances[0], _amounts[0]);
+        for (uint256 i = 1; i < _balances.length; i++) {
+            uint256 share = getShare(_supply, _balances[i], _amounts[i]);
+            if (minShare > share)
+                minShare = share;
+        }
+        return minShare;
+    }
+
     function getShare(uint256 _supply, uint256 _balance, uint256 _amount) private view returns (uint256) {
         return _supply.mul(_amount).mul(totalReserveRatio).div(_balance.add(_amount).mul(RATIO_RESOLUTION));
     }
@@ -805,161 +948,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         for (uint256 i = 0; i < length; i++)
             numOfDigits += ceilLog(_values[i]);
         return uint256(10) ** (roundDiv(numOfDigits, length) - 1);
-    }
-
-    function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _minReturn)
-        public
-        payable
-        multipleReservesOnly
-    {
-        addLiquidityVerifyInput(_reserveTokens, _reserveAmounts, _minReturn);
-
-        uint256 supply = token.totalSupply();
-        uint256 issue;
-
-        if (supply == 0)
-            issue = addLiquidityToEmptyPool(_reserveTokens, _reserveAmounts);
-        else
-            issue = addLiquidityToNonEmptyPool(_reserveTokens, _reserveAmounts, supply);
-
-        require(issue >= _minReturn);
-        token.issue(msg.sender, issue);
-    }
-
-    function addLiquidityVerifyInput(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _minReturn)
-        private
-        view
-    {
-        uint256 i;
-        uint256 j;
-
-        uint256 length = reserveTokens.length;
-        require(length == _reserveTokens.length);
-        require(length == _reserveAmounts.length);
-
-        for (i = 0; i < length; i++) {
-            require(reserves[_reserveTokens[i]].isSet);
-            for (j = 0; j < length; j++) {
-                if (reserveTokens[i] == _reserveTokens[j])
-                    break;
-            }
-            require(j < length);
-            require(_reserveAmounts[i] > 0);
-            if (_reserveTokens[i] == address(0))
-                require(_reserveAmounts[i] == msg.value);
-        }
-
-        if (msg.value > 0)
-            require(reserves[address(0)].isSet);
-
-        require(_minReturn > 0);
-    }
-
-    function addLiquidityToEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)
-        private
-        returns (uint256)
-    {
-        uint256 i;
-        uint256 issue = geometricMean(_reserveAmounts);
-
-        for (i = 0; i < _reserveTokens.length; i++) {
-            if (_reserveTokens[i] != address(0))
-                safeTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
-            emit PriceDataUpdate(_reserveTokens[i], issue, _reserveAmounts[i], reserves[_reserveTokens[i]].ratio);
-        }
-
-        return issue;
-    }
-
-    function addLiquidityToNonEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _supply)
-        private
-        returns (uint256)
-    {
-        uint256 i;
-        uint256[] memory balances = new uint256[](_reserveTokens.length);
-        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-
-        for (i = 0; i < _reserveTokens.length; i++) {
-            if (_reserveTokens[i] != address(0))
-                balances[i] = _reserveTokens[i].balanceOf(this);
-            else
-                balances[i] = address(this).balance - msg.value;
-        }
-
-        uint256 issue = getShare(_supply, balances[0], _reserveAmounts[0]);
-        for (i = 1; i < _reserveTokens.length; i++) {
-            uint256 share = getShare(_supply, balances[i], _reserveAmounts[i]);
-            if (issue > share)
-                issue = share;
-        }
-
-        for (i = 0; i < _reserveTokens.length; i++) {
-            uint256 amount = formula.calculateFundCost(_supply, balances[i], totalReserveRatio, issue);
-            require(amount > 0);
-            assert(amount <= _reserveAmounts[i]);
-            if (_reserveTokens[i] != address(0))
-                safeTransferFrom(_reserveTokens[i], msg.sender, this, amount);
-            else if (_reserveAmounts[i] > amount)
-                msg.sender.transfer(_reserveAmounts[i] - amount);
-            emit PriceDataUpdate(_reserveTokens[i], _supply + issue, balances[i] + amount, reserves[_reserveTokens[i]].ratio);
-        }
-
-        return issue;
-    }
-
-    function removeLiquidity(uint256 _supplyAmount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
-        public
-        multipleReservesOnly
-    {
-        removeLiquidityVerifyInput(_supplyAmount, _reserveTokens, _reserveMinReturnAmounts);
-
-        uint256 supply = token.totalSupply();
-        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-
-        // destroy _supplyAmount from the caller's balance in the smart token
-        token.destroy(msg.sender, _supplyAmount);
-
-        // iterate through the reserve tokens and send a percentage equal to the ratio between
-        // _supplyAmount and the total supply from each reserve balance to the caller
-        for (uint256 i = 0; i < _reserveTokens.length; i++) {
-            IERC20Token reserveToken = _reserveTokens[i];
-            uint256 reserveBalance = getReserveBalance(reserveToken);
-            uint256 reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _supplyAmount);
-            require(reserveAmount >= _reserveMinReturnAmounts[i]);
-
-            // transfer funds to the caller in the reserve token
-            if (reserveToken == IERC20Token(0))
-                msg.sender.transfer(reserveAmount);
-            else
-                ensureTransferFrom(reserveToken, this, msg.sender, reserveAmount);
-
-            // dispatch price data update for the smart token/reserve
-            emit PriceDataUpdate(reserveToken, supply - _supplyAmount, reserveBalance - reserveAmount, reserves[reserveToken].ratio);
-        }
-    }
-
-    function removeLiquidityVerifyInput(uint256 _supplyAmount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
-        private
-        view
-    {
-        uint256 i;
-        uint256 j;
-
-        uint256 length = reserveTokens.length;
-        require(length == _reserveTokens.length);
-        require(length == _reserveMinReturnAmounts.length);
-
-        for (i = 0; i < length; i++) {
-            require(reserves[_reserveTokens[i]].isSet);
-            for (j = 0; j < length; j++) {
-                if (reserveTokens[i] == _reserveTokens[j])
-                    break;
-            }
-            require(j < length);
-            require(_reserveMinReturnAmounts[i] > 0);
-        }
-
-        require(_supplyAmount > 0);
     }
 
     /**
