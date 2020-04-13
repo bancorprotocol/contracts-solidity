@@ -907,9 +907,9 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         return issue;
     }
 
-    function removeLiquidity(uint256 _supplyAmount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
-        public
-        multipleReservesOnly
+    function removeLiquidityVerifyInput(uint256 _supplyAmount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
+        private
+        view
     {
         uint256 i;
         uint256 j;
@@ -926,6 +926,13 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             require(_reserveMinReturnAmounts[i] > 0);
         }
         require(_supplyAmount > 0);
+    }
+
+    function removeLiquidity(uint256 _supplyAmount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
+        public
+        multipleReservesOnly
+    {
+        removeLiquidityVerifyInput(_supplyAmount, _reserveTokens, _reserveMinReturnAmounts);
 
         uint256 supply = token.totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
