@@ -167,13 +167,13 @@ contract('BancorConverterLiquidity', accounts => {
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                     const supply = await smartToken.totalSupply();
 
-                    for (let i = 0; i < reserveTokens.length; i++) {
+                    for (let i = 0; i < allowances.length; i++) {
                         const diff = allowances[i].div(reserveAmounts[i]);
                         assert(inRange(diff, '0', '0.004'), `allowance #${i + 1}: diff = ${diff.toFixed()}`);
                     }
 
                     const actual = balances.map(balance => balance.div(supply));
-                    for (let i = 0; i < reserveTokens.length; i++) {
+                    for (let i = 0; i < expected.length; i++) {
                         const diff = expected[i].div(actual[i]);
                         assert(inRange(diff, '0.996', '1'), `balance #${i + 1}: diff = ${diff.toFixed()}`);
                     }
