@@ -158,8 +158,8 @@ contract('BancorConverterLiquidity', accounts => {
 
                 let expected = [];
 
-                for (const liquidity of [1000000000, 1000000, 2000000, 3000000, 4000000]) {
-                    const reserveAmounts = reserveTokens.map((reserveToken, i) => web3.toBigNumber(liquidity).mul(100 + i).div(100));
+                for (const supplyAmount of [1000000000, 1000000, 2000000, 3000000, 4000000]) {
+                    const reserveAmounts = reserveTokens.map((reserveToken, i) => web3.toBigNumber(supplyAmount).mul(100 + i).div(100));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(0))));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(1))));
                     await converter.addLiquidity(reserveTokens, reserveAmounts, 1, {value: hasETH ? reserveAmounts.slice(-1)[0] : 0});
@@ -167,13 +167,13 @@ contract('BancorConverterLiquidity', accounts => {
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                     const supply = await smartToken.totalSupply();
 
-                    for (let i = 0; i < allowances.length; i++) {
+                    for (let i = 0; i < reserveTokens.length; i++) {
                         const diff = allowances[i].div(reserveAmounts[i]);
                         assert(inRange(diff, '0', '0.004'), `allowance #${i + 1}: diff = ${diff.toFixed()}`);
                     }
 
                     const actual = balances.map(balance => balance.div(supply));
-                    for (let i = 0; i < expected.length; i++) {
+                    for (let i = 0; i < reserveTokens.length; i++) {
                         const diff = expected[i].div(actual[i]);
                         assert(inRange(diff, '0.996', '1'), `balance #${i + 1}: diff = ${diff.toFixed()}`);
                     }
