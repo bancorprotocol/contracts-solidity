@@ -415,10 +415,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     function handleSourceToken(IERC20Token _sourceToken, ISmartToken _smartToken, uint256 _amount) private {
         bool isSourceETH = etherTokens[_sourceToken];
 
-        // validate msg.value
-        if (msg.value > 0)
-            require(msg.value == _amount && isSourceETH);
-
         IBancorConverter firstConverter = IBancorConverter(_smartToken.owner());
         bool isNewerConverter = isV27OrHigherConverter(firstConverter);
 
@@ -426,6 +422,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         if (isSourceETH) {
             // handle ETH
             if (msg.value > 0) {
+                // validate msg.value
+                require(msg.value == _amount);
+
                 // EtherToken converter - deposit the ETH into the EtherToken
                 // note that it can still be a non ETH converter if the path is wrong
                 // but such conversion will simply revert
@@ -446,6 +445,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
         // other ERC20 token
         else {
+            // validate msg.value
+            require(msg.value == 0);
+
             // newer converter - transfer the tokens from the sender directly to the converter
             // otherwise claim the tokens
             if (isNewerConverter)
