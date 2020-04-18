@@ -132,7 +132,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
             addReserve(_reserveToken, _reserveRatio);
     }
 
-    // protects a function against re-entrancy attacks
+    // protects a function against reentrancy attacks
     modifier protected() {
         require(!locked);
         locked = true;
