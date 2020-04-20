@@ -185,7 +185,8 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     */
     function addConverter(IBancorConverter _converter) public {
         // validate input
-        require(msg.sender == owner || isConverterValid(_converter) && !isSimilarLiquidityPoolRegistered(_converter));
+        require(msg.sender == owner || msg.sender == address(this));
+        require(isConverterValid(_converter) && !isSimilarLiquidityPoolRegistered(_converter));
 
         IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_converter).token();
@@ -416,8 +417,15 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         // verify that the converter holds balance in each of its reserves
         uint reserveTokenCount = _converter.connectorTokenCount();
         for (uint i = 0; i < reserveTokenCount; i++) {
-            if (_converter.connectorTokens(i).balanceOf(_converter) == 0)
-                return false;
+            IERC20Token reserveToken = _converter.connectorTokens(i);
+            if (reserveToken != IERC20Token(0)) {
+                if (reserveToken.balanceOf(_converter) == 0)
+                    return false;
+            }
+            else {
+                if (address(_converter).balance == 0)
+                    return false;
+            }
         }
 
         return true;
