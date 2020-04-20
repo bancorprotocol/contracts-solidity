@@ -184,7 +184,6 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _converter converter
     */
     function addConverter(IBancorConverter _converter) public {
-        // validate input
         require(msg.sender == owner || msg.sender == address(this));
         require(isConverterValid(_converter) && !isSimilarLiquidityPoolRegistered(_converter));
 
@@ -212,7 +211,6 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _converter converter
     */
     function removeConverter(IBancorConverter _converter) public {
-      // validate input
         require(msg.sender == owner || !isConverterValid(_converter));
 
         IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
