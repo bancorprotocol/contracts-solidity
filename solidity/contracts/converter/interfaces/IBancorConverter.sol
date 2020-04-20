@@ -12,8 +12,6 @@ contract IBancorConverter {
     function conversionWhitelist() public view returns (IWhitelist) {this;}
     function conversionFee() public view returns (uint32) {this;}
     function maxConversionFee() public view returns (uint32) {this;}
-    function reserves(address _address) public view returns (uint256, uint32, bool, bool, bool) {_address; this;}
-    function reserveTokens(uint256 _index) public view returns (IERC20Token) {_index; this;}
 
     function owner() public view returns (address);
     function transferOwnership(address _newOwner) public;
