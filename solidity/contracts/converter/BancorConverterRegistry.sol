@@ -78,58 +78,6 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev creates a liquidity-pool converter and adds it to the registry
-      * 
-      * @param _smartTokenName token name
-      * @param _smartTokenSymbol token symbol
-      * @param _smartTokenDecimals token decimals
-      * @param _maxConversionFee maximum conversion-fee
-      * @param _reserveTokens an array of reserve tokens
-      * @param _reserveRatios an array of reserve ratios
-      * @param _reserveAmounts an array of reserve amounts
-    */
-    function newLiquidityPool(
-        string _smartTokenName,
-        string _smartTokenSymbol,
-        uint8 _smartTokenDecimals,
-        uint32 _maxConversionFee,
-        IERC20Token[] memory _reserveTokens,
-        uint32[] memory _reserveRatios,
-        uint256[] memory _reserveAmounts
-    )
-    public payable
-    {
-        uint256 length = _reserveTokens.length;
-        require(length == _reserveRatios.length);
-        require(length == _reserveAmounts.length);
-        require(length > 1);
-
-        IBancorConverterFactory factory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
-        SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
-        IBancorConverter converter = IBancorConverter(factory.createConverter(token, registry, _maxConversionFee, IERC20Token(0), 0));
-
-        converter.acceptOwnership();
-
-        for (uint256 i = 0; i < length; i++) {
-            if (_reserveTokens[i] != address(0)) {
-                converter.addReserve(_reserveTokens[i], _reserveRatios[i]);
-                safeTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
-                safeApprove(_reserveTokens[i], converter, _reserveAmounts[i]);
-            }
-            else {
-                converter.addETHReserve(_reserveRatios[i]);
-            }
-        }
-
-        token.transferOwnership(converter);
-        converter.acceptTokenOwnership();
-        converter.addLiquidity.value(msg.value)(_reserveTokens, _reserveAmounts, 1);
-        converter.transferOwnership(msg.sender);
-
-        addConverter(converter);
-    }
-
-    /**
       * @dev creates a liquid-token converter and adds it to the registry
       * 
       * @param _smartTokenName token name
@@ -171,6 +119,58 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         token.issue(msg.sender, _reserveAmount);
         token.transferOwnership(converter);
         converter.acceptTokenOwnership();
+        converter.transferOwnership(msg.sender);
+
+        addConverter(converter);
+    }
+
+    /**
+      * @dev creates a liquidity-pool converter and adds it to the registry
+      * 
+      * @param _smartTokenName token name
+      * @param _smartTokenSymbol token symbol
+      * @param _smartTokenDecimals token decimals
+      * @param _maxConversionFee maximum conversion-fee
+      * @param _reserveTokens reserve tokens
+      * @param _reserveRatios reserve ratios
+      * @param _reserveAmounts reserve amounts
+    */
+    function newLiquidityPool(
+        string _smartTokenName,
+        string _smartTokenSymbol,
+        uint8 _smartTokenDecimals,
+        uint32 _maxConversionFee,
+        IERC20Token[] memory _reserveTokens,
+        uint32[] memory _reserveRatios,
+        uint256[] memory _reserveAmounts
+    )
+    public payable
+    {
+        uint256 length = _reserveTokens.length;
+        require(length == _reserveRatios.length);
+        require(length == _reserveAmounts.length);
+        require(length > 1);
+
+        IBancorConverterFactory factory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
+        SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
+        IBancorConverter converter = IBancorConverter(factory.createConverter(token, registry, _maxConversionFee, IERC20Token(0), 0));
+
+        converter.acceptOwnership();
+
+        for (uint256 i = 0; i < length; i++) {
+            if (_reserveTokens[i] != address(0)) {
+                converter.addReserve(_reserveTokens[i], _reserveRatios[i]);
+                safeTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
+                safeApprove(_reserveTokens[i], converter, _reserveAmounts[i]);
+            }
+            else {
+                converter.addETHReserve(_reserveRatios[i]);
+            }
+        }
+
+        token.transferOwnership(converter);
+        converter.acceptTokenOwnership();
+        converter.addLiquidity.value(msg.value)(_reserveTokens, _reserveAmounts, 1);
         converter.transferOwnership(msg.sender);
 
         addConverter(converter);
