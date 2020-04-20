@@ -4,14 +4,17 @@
 const utils = require('./helpers/Utils');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
+const ERC20Token = artifacts.require('ERC20Token');
 const EtherToken = artifacts.require('EtherToken');
 const SmartToken = artifacts.require('SmartToken');
 const BancorConverter = artifacts.require('BancorConverter');
 const ContractRegistry = artifacts.require('ContractRegistry');
+const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
 
 contract('BancorConverterRegistry', function(accounts) {
+    describe('create converters externally:', function() {
     let converter1;
     let converter2;
     let converter3;
@@ -219,6 +222,80 @@ contract('BancorConverterRegistry', function(accounts) {
         const expected = [converter1.address, converter2.address, converter3.address];
         const actual = await converterRegistry.getConvertersBySmartTokens(tokens);
         assert.deepEqual(actual, expected);
+    });
+    });
+
+    describe('create converters internally:', function() {
+        let converters;
+        let smartTokens;
+        let erc20Token1;
+        let erc20Token2;
+        let contractRegistry
+        let converterRegistry;
+        let converterRegistryData;
+
+        before(async function() {
+            erc20Token1 = await ERC20Token.new('ERC20Token1', 'ET1', 18, 1000000000);
+            erc20Token2 = await ERC20Token.new('ERC20Token2', 'ET2', 18, 1000000000);
+
+            contractRegistry = await ContractRegistry.new();
+
+            converterFactory      = await BancorConverterFactory     .new();
+            converterRegistry     = await BancorConverterRegistry    .new(contractRegistry.address);
+            converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
+
+            await erc20Token1.approve(converterRegistry.address, 3000000);
+            await erc20Token2.approve(converterRegistry.address, 3000000);
+
+            await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY      , converterFactory     .address);
+            await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);
+            await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+
+            await converterRegistry.newConverter('SmartToken1', 'ST1', 18, 0, [utils.zeroAddress                       ], [0x1000        ], [1000000         ], {value: 1000000});
+            await converterRegistry.newConverter('SmartToken2', 'ST2', 18, 0, [erc20Token1.address                     ], [0x2100        ], [1000000         ], {value:       0});
+            await converterRegistry.newConverter('SmartToken2', 'ST3', 18, 0, [erc20Token2.address                     ], [0x3200        ], [1000000         ], {value:       0});
+            await converterRegistry.newConverter('SmartToken3', 'ST4', 18, 0, [utils.zeroAddress  , erc20Token1.address], [0x4000, 0x4100], [1000000, 1000000], {value: 1000000});
+            await converterRegistry.newConverter('SmartToken4', 'ST5', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200], [1000000, 1000000], {value:       0});
+            await converterRegistry.newConverter('SmartToken5', 'ST6', 18, 0, [erc20Token2.address, utils.zeroAddress  ], [0x6200, 0x6000], [1000000, 1000000], {value: 1000000});
+
+            smartTokens = await converterRegistry.getSmartTokens();
+            converters = await Promise.all(smartTokens.map(smartToken => SmartToken.at(smartToken).owner()));
+            await Promise.all(converters.map(converter => BancorConverter.at(converter).acceptOwnership()));
+        });
+
+        it('function addConverter', async function() {
+            for (const converter of converters)
+                await utils.catchRevert(test(converterRegistry.addConverter, BancorConverter.at(converter), ''));
+        });
+
+        it('function getLiquidityPoolByReserveConfig', async function() {
+            assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([utils.zeroAddress                       ], [0x1000        ]), utils.zeroAddress);
+            assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([erc20Token1.address                     ], [0x2100        ]), utils.zeroAddress);
+            assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([erc20Token2.address                     ], [0x3200        ]), utils.zeroAddress);
+            assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([utils.zeroAddress  , erc20Token1.address], [0x4000, 0x4100]), smartTokens[3]);
+            assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]), smartTokens[4]);
+            assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([erc20Token2.address, utils.zeroAddress  ], [0x6200, 0x6000]), smartTokens[5]);
+        });
+
+        it('function removeConverter', async function() {
+            for (const converter of converters)
+                await test(converterRegistry.removeConverter, BancorConverter.at(converter), 'Removed');
+            for (const converter of converters)
+                await utils.catchRevert(test(converterRegistry.removeConverter, BancorConverter.at(converter), ''));
+        });
+
+        it('function getLiquidityPoolByReserveConfig', async function() {
+            assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([utils.zeroAddress                       ], [0x1000        ]), utils.zeroAddress);
+            assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([erc20Token1.address                     ], [0x2100        ]), utils.zeroAddress);
+            assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([erc20Token2.address                     ], [0x3200        ]), utils.zeroAddress);
+            assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([utils.zeroAddress  , erc20Token1.address], [0x4000, 0x4100]), utils.zeroAddress);
+            assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]), utils.zeroAddress);
+            assert.equal(await converterRegistry.getLiquidityPoolByReserveConfig([erc20Token2.address, utils.zeroAddress  ], [0x6200, 0x6000]), utils.zeroAddress);
+        });
+
+        it('should return a list of converters for a list of smart tokens', async () => {
+            assert.deepEqual(await converterRegistry.getConvertersBySmartTokens(smartTokens), converters);
+        });
     });
 });
 

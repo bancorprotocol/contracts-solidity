@@ -1,9 +1,11 @@
 pragma solidity 0.4.26;
+import '../utility/TokenHandler.sol';
 import '../utility/ContractRegistryClient.sol';
+import './interfaces/IBancorConverterFactory.sol';
 import './interfaces/IBancorConverterRegistry.sol';
 import './interfaces/IBancorConverterRegistryData.sol';
-import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/ISmartTokenController.sol';
+import '../token/SmartToken.sol';
 
 /**
   * @dev The BancorConverterRegistry maintains a list of all active converters in the Bancor Network.
@@ -22,7 +24,7 @@ import '../token/interfaces/ISmartTokenController.sol';
   *
   * The contract is upgradable.
 */
-contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryClient {
+contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryClient, TokenHandler {
     /**
       * @dev triggered when a smart token is added to the registry
       * 
@@ -76,15 +78,82 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev adds a converter to the registry
-      * anyone can add a converter to the registry, as long as the converter is active and valid
+      * @dev creates a new converter and adds it to the registry
+      * 
+      * @param _smartTokenName ???
+      * @param _smartTokenSymbol ???
+      * @param _smartTokenDecimals ???
+      * @param _maxConversionFee ???
+      * @param _reserveTokens ???
+      * @param _reserveRatios ???
+      * @param _reserveAmounts ???
+    */
+    function newConverter(
+        string _smartTokenName,
+        string _smartTokenSymbol,
+        uint8 _smartTokenDecimals,
+        uint32 _maxConversionFee,
+        IERC20Token[] memory _reserveTokens,
+        uint32[] memory _reserveRatios,
+        uint256[] memory _reserveAmounts
+    )
+    public payable
+    {
+        uint256 length = _reserveTokens.length;
+        require(length == _reserveRatios.length);
+        require(length == _reserveAmounts.length);
+
+        IBancorConverterFactory factory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
+        SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
+        IBancorConverter converter = IBancorConverter(factory.createConverter(token, registry, _maxConversionFee, IERC20Token(0), 0));
+
+        converter.acceptOwnership();
+
+        for (uint256 i = 0; i < length; i++) {
+            if (_reserveTokens[i] != address(0)) {
+                converter.addReserve(_reserveTokens[i], _reserveRatios[i]);
+                safeTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
+                safeApprove(_reserveTokens[i], converter, _reserveAmounts[i]);
+            }
+            else {
+                converter.addETHReserve(_reserveRatios[i]);
+            }
+        }
+
+        if (length == 1) {
+            token.issue(msg.sender, _reserveAmounts[0]);
+            token.transferOwnership(converter);
+            converter.acceptTokenOwnership();
+            if (_reserveTokens[0] != address(0)) {
+                safeApprove(_reserveTokens[0], converter, 0);
+                safeTransfer(_reserveTokens[0], converter, _reserveAmounts[0]);
+            }
+            else {
+                require(msg.value == _reserveAmounts[0]);
+                address(converter).transfer(_reserveAmounts[0]);
+            }
+        }
+        else {
+            token.transferOwnership(converter);
+            converter.acceptTokenOwnership();
+            converter.addLiquidity.value(msg.value)(_reserveTokens, _reserveAmounts, 1);
+        }
+
+        converter.transferOwnership(msg.sender);
+
+        addConverter(converter);
+    }
+
+    /**
+      * @dev adds an existing converter to the registry
+      * only the owner can add an existing converter to the registry, as long as the converter is active and valid
       * note that a liquidity pool converter can be added only if no converter with the same reserve-configuration is already registered
       * 
       * @param _converter converter
     */
-    function addConverter(IBancorConverter _converter) external {
+    function addConverter(IBancorConverter _converter) public {
         // validate input
-        require(isConverterValid(_converter) && !isSimilarLiquidityPoolRegistered(_converter));
+        require(msg.sender == owner || isConverterValid(_converter) && !isSimilarLiquidityPoolRegistered(_converter));
 
         IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_converter).token();
@@ -109,7 +178,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * 
       * @param _converter converter
     */
-    function removeConverter(IBancorConverter _converter) external {
+    function removeConverter(IBancorConverter _converter) public {
       // validate input
         require(msg.sender == owner || !isConverterValid(_converter));
 
