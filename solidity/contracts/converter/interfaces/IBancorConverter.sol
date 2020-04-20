@@ -7,16 +7,13 @@ import '../../utility/interfaces/IWhitelist.sol';
     Bancor Converter interface
 */
 contract IBancorConverter {
-    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256, uint256);
     function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _beneficiary) public payable returns (uint256);
-    function convert2(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256);
-    function quickConvert2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256);
+
     function conversionWhitelist() public view returns (IWhitelist) {this;}
     function conversionFee() public view returns (uint32) {this;}
+    function maxConversionFee() public view returns (uint32) {this;}
     function reserves(address _address) public view returns (uint256, uint32, bool, bool, bool) {_address; this;}
-    function getReserveBalance(IERC20Token _reserveToken) public view returns (uint256);
     function reserveTokens(uint256 _index) public view returns (IERC20Token) {_index; this;}
-    function() external payable;
 
     function owner() public view returns (address);
     function transferOwnership(address _newOwner) public;
@@ -24,7 +21,6 @@ contract IBancorConverter {
     function token() public view returns (ISmartToken);
     function transferTokenOwnership(address _newOwner) public;
     function acceptTokenOwnership() public;
-    function maxConversionFee() public view returns (uint32) {this;}
     function setConversionFee(uint32 _conversionFee) public;
     function setConversionWhitelist(IWhitelist _whitelist) public;
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public;
@@ -35,8 +31,6 @@ contract IBancorConverter {
     function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _supplyMinReturnAmount) public payable;
 
     // deprecated, backward compatibility
-    function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256);
-    function quickConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256);
     function connectors(address _address) public view returns (uint256, uint32, bool, bool, bool);
     function getConnectorBalance(IERC20Token _connectorToken) public view returns (uint256);
     function connectorTokens(uint256 _index) public view returns (IERC20Token);
