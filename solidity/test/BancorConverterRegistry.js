@@ -242,12 +242,12 @@ contract('BancorConverterRegistry', function(accounts) {
             await erc20Token1.approve(converterRegistry.address, 3000000);
             await erc20Token2.approve(converterRegistry.address, 3000000);
 
-            await converterRegistry.newConverter('SmartToken1', 'ST1', 18, 0, [utils.zeroAddress                       ], [0x1000        ], [1000000         ], {value: 1000000});
-            await converterRegistry.newConverter('SmartToken2', 'ST2', 18, 0, [erc20Token1.address                     ], [0x2100        ], [1000000         ], {value:       0});
-            await converterRegistry.newConverter('SmartToken2', 'ST3', 18, 0, [erc20Token2.address                     ], [0x3200        ], [1000000         ], {value:       0});
-            await converterRegistry.newConverter('SmartToken3', 'ST4', 18, 0, [utils.zeroAddress  , erc20Token1.address], [0x4000, 0x4100], [1000000, 1000000], {value: 1000000});
-            await converterRegistry.newConverter('SmartToken4', 'ST5', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200], [1000000, 1000000], {value:       0});
-            await converterRegistry.newConverter('SmartToken5', 'ST6', 18, 0, [erc20Token2.address, utils.zeroAddress  ], [0x6200, 0x6000], [1000000, 1000000], {value: 1000000});
+            await converterRegistry.newLiquidToken  ('SmartToken1', 'ST1', 18, 0, [utils.zeroAddress                       ], [0x1000        ], [1000000         ], {value: 1000000});
+            await converterRegistry.newLiquidToken  ('SmartToken2', 'ST2', 18, 0, [erc20Token1.address                     ], [0x2100        ], [1000000         ], {value:       0});
+            await converterRegistry.newLiquidToken  ('SmartToken2', 'ST3', 18, 0, [erc20Token2.address                     ], [0x3200        ], [1000000         ], {value:       0});
+            await converterRegistry.newLiquidityPool('SmartToken3', 'ST4', 18, 0, [utils.zeroAddress  , erc20Token1.address], [0x4000, 0x4100], [1000000, 1000000], {value: 1000000});
+            await converterRegistry.newLiquidityPool('SmartToken4', 'ST5', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200], [1000000, 1000000], {value:       0});
+            await converterRegistry.newLiquidityPool('SmartToken5', 'ST6', 18, 0, [erc20Token2.address, utils.zeroAddress  ], [0x6200, 0x6000], [1000000, 1000000], {value: 1000000});
 
             smartTokens = await converterRegistry.getSmartTokens();
             converters = await Promise.all(smartTokens.map(smartToken => SmartToken.at(smartToken).owner()));

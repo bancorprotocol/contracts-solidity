@@ -78,7 +78,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev creates a new converter and adds it to the registry
+      * @dev creates a liquidity-pool converter and adds it to the registry
       * 
       * @param _smartTokenName token name
       * @param _smartTokenSymbol token symbol
@@ -88,7 +88,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _reserveRatios an array of reserve ratios
       * @param _reserveAmounts an array of reserve amounts
     */
-    function newConverter(
+    function newLiquidityPool(
         string _smartTokenName,
         string _smartTokenSymbol,
         uint8 _smartTokenDecimals,
@@ -102,6 +102,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         uint256 length = _reserveTokens.length;
         require(length == _reserveRatios.length);
         require(length == _reserveAmounts.length);
+        require(length > 1);
 
         IBancorConverterFactory factory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
         SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
@@ -120,25 +121,56 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
             }
         }
 
-        if (length == 1) {
-            token.issue(msg.sender, _reserveAmounts[0]);
-            token.transferOwnership(converter);
-            converter.acceptTokenOwnership();
-            if (_reserveTokens[0] != address(0)) {
-                safeApprove(_reserveTokens[0], converter, 0);
-                safeTransfer(_reserveTokens[0], converter, _reserveAmounts[0]);
-            }
-            else {
-                require(msg.value == _reserveAmounts[0]);
-                address(converter).transfer(_reserveAmounts[0]);
-            }
+        token.transferOwnership(converter);
+        converter.acceptTokenOwnership();
+        converter.addLiquidity.value(msg.value)(_reserveTokens, _reserveAmounts, 1);
+        converter.transferOwnership(msg.sender);
+
+        addConverter(converter);
+    }
+
+    /**
+      * @dev creates a liquid-token converter and adds it to the registry
+      * 
+      * @param _smartTokenName token name
+      * @param _smartTokenSymbol token symbol
+      * @param _smartTokenDecimals token decimals
+      * @param _maxConversionFee maximum conversion-fee
+      * @param _reserveToken reserve token
+      * @param _reserveRatio reserve ratio
+      * @param _reserveAmount reserve amount
+    */
+    function newLiquidToken(
+        string _smartTokenName,
+        string _smartTokenSymbol,
+        uint8 _smartTokenDecimals,
+        uint32 _maxConversionFee,
+        IERC20Token _reserveToken,
+        uint32 _reserveRatio,
+        uint256 _reserveAmount
+    )
+    public payable
+    {
+        IBancorConverterFactory factory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
+        SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
+        IBancorConverter converter = IBancorConverter(factory.createConverter(token, registry, _maxConversionFee, IERC20Token(0), 0));
+
+        converter.acceptOwnership();
+
+        if (_reserveToken != address(0)) {
+            require(msg.value == 0);
+            converter.addReserve(_reserveToken, _reserveRatio);
+            safeTransferFrom(_reserveToken, msg.sender, converter, _reserveAmount);
         }
         else {
-            token.transferOwnership(converter);
-            converter.acceptTokenOwnership();
-            converter.addLiquidity.value(msg.value)(_reserveTokens, _reserveAmounts, 1);
+            require(msg.value == _reserveAmount);
+            converter.addETHReserve(_reserveRatio);
+            address(converter).transfer(_reserveAmount);
         }
 
+        token.issue(msg.sender, _reserveAmount);
+        token.transferOwnership(converter);
+        converter.acceptTokenOwnership();
         converter.transferOwnership(msg.sender);
 
         addConverter(converter);
