@@ -14,6 +14,21 @@ const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
 
 contract('BancorConverterRegistry', function(accounts) {
+    let contractRegistry
+    let converterFactory;
+    let converterRegistry;
+    let converterRegistryData;
+
+    before(async function() {
+        contractRegistry = await ContractRegistry.new();
+        converterFactory = await BancorConverterFactory.new();
+        converterRegistry = await BancorConverterRegistry.new(contractRegistry.address);
+        converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY      , converterFactory     .address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);
+        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+    });
+
     describe('create converters externally:', function() {
         let converter1;
         let converter2;
@@ -37,9 +52,6 @@ contract('BancorConverterRegistry', function(accounts) {
         let smartTokenC;
         let smartTokenD;
         let smartTokenE;
-        let contractRegistry
-        let converterRegistry;
-        let converterRegistryData;
 
         before(async function() {
             etherToken  = await EtherToken.new('Token0', 'TKN0');
@@ -58,11 +70,6 @@ contract('BancorConverterRegistry', function(accounts) {
             smartTokenD = await SmartToken.new('TokenD', 'TKND', 18);
             smartTokenE = await SmartToken.new('TokenE', 'TKNE', 18);
 
-            contractRegistry = await ContractRegistry.new();
-
-            converterRegistry     = await BancorConverterRegistry    .new(contractRegistry.address);
-            converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
-
             converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken .address, 0x1000);
             converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken4.address, 0x2400);
             converter3 = await BancorConverter.new(smartToken3.address, contractRegistry.address, 0, smartToken6.address, 0x3600);
@@ -70,9 +77,6 @@ contract('BancorConverterRegistry', function(accounts) {
             converter5 = await BancorConverter.new(smartToken5.address, contractRegistry.address, 0, smartTokenA.address, 0x5A00);
             converter6 = await BancorConverter.new(smartToken6.address, contractRegistry.address, 0, smartTokenC.address, 0x6C00);
             converter7 = await BancorConverter.new(smartToken7.address, contractRegistry.address, 0, smartTokenE.address, 0x7E00);
-
-            await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);
-            await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
             await converter2.addReserve(smartToken1.address, 0x2100);
             await converter3.addReserve(smartToken1.address, 0x3100);
@@ -230,26 +234,13 @@ contract('BancorConverterRegistry', function(accounts) {
         let smartTokens;
         let erc20Token1;
         let erc20Token2;
-        let contractRegistry
-        let converterRegistry;
-        let converterRegistryData;
 
         before(async function() {
             erc20Token1 = await ERC20Token.new('ERC20Token1', 'ET1', 18, 1000000000);
             erc20Token2 = await ERC20Token.new('ERC20Token2', 'ET2', 18, 1000000000);
 
-            contractRegistry = await ContractRegistry.new();
-
-            converterFactory      = await BancorConverterFactory     .new();
-            converterRegistry     = await BancorConverterRegistry    .new(contractRegistry.address);
-            converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
-
             await erc20Token1.approve(converterRegistry.address, 3000000);
             await erc20Token2.approve(converterRegistry.address, 3000000);
-
-            await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY      , converterFactory     .address);
-            await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);
-            await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
             await converterRegistry.newConverter('SmartToken1', 'ST1', 18, 0, [utils.zeroAddress                       ], [0x1000        ], [1000000         ], {value: 1000000});
             await converterRegistry.newConverter('SmartToken2', 'ST2', 18, 0, [erc20Token1.address                     ], [0x2100        ], [1000000         ], {value:       0});
