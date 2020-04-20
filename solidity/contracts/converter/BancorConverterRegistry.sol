@@ -80,13 +80,13 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     /**
       * @dev creates a new converter and adds it to the registry
       * 
-      * @param _smartTokenName ???
-      * @param _smartTokenSymbol ???
-      * @param _smartTokenDecimals ???
-      * @param _maxConversionFee ???
-      * @param _reserveTokens ???
-      * @param _reserveRatios ???
-      * @param _reserveAmounts ???
+      * @param _smartTokenName token name
+      * @param _smartTokenSymbol token symbol
+      * @param _smartTokenDecimals token decimals
+      * @param _maxConversionFee maximum conversion-fee
+      * @param _reserveTokens an array of reserve tokens
+      * @param _reserveRatios an array of reserve ratios
+      * @param _reserveAmounts an array of reserve amounts
     */
     function newConverter(
         string _smartTokenName,
