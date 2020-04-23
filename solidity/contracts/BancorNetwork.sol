@@ -13,7 +13,7 @@ import './token/interfaces/ISmartToken.sol';
 import './bancorx/interfaces/IBancorX.sol';
 
 // interface of older converters for backward compatibility
-contract ILegacyBancorConverter is IBancorConverter {
+contract ILegacyBancorConverter {
     function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256);
 }
 
