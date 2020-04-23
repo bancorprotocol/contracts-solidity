@@ -413,35 +413,33 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * @param _amount      amount to convert from, in the source token
     */
     function handleSourceToken(IERC20Token _sourceToken, ISmartToken _smartToken, uint256 _amount) private {
-        bool isSourceETH = etherTokens[_sourceToken];
-
         IBancorConverter firstConverter = IBancorConverter(_smartToken.owner());
         bool isNewerConverter = isV27OrHigherConverter(firstConverter);
 
-        // ETH / EtherToken
-        if (isSourceETH) {
-            // handle ETH
-            if (msg.value > 0) {
-                // validate msg.value
-                require(msg.value == _amount);
+        // handle ETH
+        if (_sourceToken == address(0)) {
+            // validate msg.value
+            require(msg.value == _amount);
 
-                // EtherToken converter - deposit the ETH into the EtherToken
-                // note that it can still be a non ETH converter if the path is wrong
-                // but such conversion will simply revert
-                if (!isNewerConverter) {
-                    IEtherToken etherToken = getConverterEtherTokenAddress(firstConverter);
-                    IEtherToken(etherToken).deposit.value(msg.value)();
-                }
+            // EtherToken converter - deposit the ETH into the EtherToken
+            // note that it can still be a non ETH converter if the path is wrong
+            // but such conversion will simply revert
+            if (!isNewerConverter) {
+                IEtherToken etherToken = getConverterEtherTokenAddress(firstConverter);
+                IEtherToken(etherToken).deposit.value(msg.value)();
             }
-            // handle EtherToken
-            else {
-                // claim the tokens
-                safeTransferFrom(_sourceToken, msg.sender, this, _amount);
+        }
+        // handle EtherToken
+        else if (etherTokens[_sourceToken]) {
+            // validate msg.value
+            require(msg.value == 0);
 
-                // ETH converter - withdraw the ETH
-                if (isNewerConverter)
-                    IEtherToken(_sourceToken).withdraw(_amount);
-            }
+            // claim the tokens
+            safeTransferFrom(_sourceToken, msg.sender, this, _amount);
+
+            // ETH converter - withdraw the ETH
+            if (isNewerConverter)
+                IEtherToken(_sourceToken).withdraw(_amount);
         }
         // other ERC20 token
         else {
