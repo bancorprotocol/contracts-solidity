@@ -500,8 +500,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     function createConversionData(IERC20Token[] _conversionPath, uint256 _minReturn, address _beneficiary, bool _affiliateFeeEnabled) private view returns (ConversionStep[]) {
         ConversionStep[] memory data = new ConversionStep[](_conversionPath.length / 2);
 
+        bool affiliateFeeProcessed = false;
         address bntToken = addressOf(BNT_TOKEN);
-        uint256 affiliateFeeCount = 0;
         // iterate the conversion path and create the conversion data for each step
         uint256 i;
         for (i = 0; i < _conversionPath.length - 1; i += 2) {
@@ -510,8 +510,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             IERC20Token targetToken = _conversionPath[i + 2];
 
             // check if the affiliate fee should be processed in this step
-            if (_affiliateFeeEnabled && targetToken == bntToken)
-                affiliateFeeCount += 1;
+            bool processAffiliateFee = _affiliateFeeEnabled && !affiliateFeeProcessed && targetToken == bntToken;
+            if (processAffiliateFee)
+                affiliateFeeProcessed = true;
 
             data[i / 2] = ConversionStep({
                 // set the smart token
@@ -532,7 +533,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
                 // set flags
                 isV27OrHigherConverter: isV27OrHigherConverter(converter),
-                processAffiliateFee: affiliateFeeCount == 1
+                processAffiliateFee: processAffiliateFee
             });
         }
 
