@@ -56,7 +56,7 @@ async function initWithoutConnectors(deployer, version, active) {
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
 
     if (active) {
-        throw new Error("converter with no connectors cannot be active");
+        throw new Error("converter with no reserves cannot be active");
     }
 
     return [upgrader, converter];

@@ -29,7 +29,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     uint64 private constant CONVERSION_FEE_RESOLUTION = 1000000;
 
     struct Reserve {
-        uint256 virtualBalance; // reserve virtual balance
+        uint256 balance;        // reserve balance
         uint32 ratio;           // reserve ratio, represented in ppm, 1-1000000
         bool deprecated1;       // deprecated
         bool deprecated2;       // deprecated
@@ -44,7 +44,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     IWhitelist public conversionWhitelist;                  // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public reserveTokens;                     // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
     mapping (address => Reserve) public reserves;           // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
-    mapping (address => uint256) private reserveBalances;   // reserve token addresses -> reserve balance
     uint32 public totalReserveRatio = 0;                    // total ratio of all reservces, also used to efficiently prevent increasing
                                                             // the total reserve ratio above 100%
     uint32 public maxConversionFee = 0;                     // maximum conversion fee for the lifetime of the contract,
@@ -331,10 +330,9 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     {
         require(_token != token && !reserves[_token].isSet && totalReserveRatio + _ratio <= RATIO_RESOLUTION); // validate input
 
+        reserves[_token].balance = 0;
         reserves[_token].ratio = _ratio;
-        reserves[_token].virtualBalance = 0;
         reserves[_token].isSet = true;
-        reserveBalances[_token] = 0;
         reserveTokens.push(_token);
         totalReserveRatio += _ratio;
     }
@@ -353,10 +351,9 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     {
         require(!hasETHReserve() && totalReserveRatio + _ratio <= RATIO_RESOLUTION); // validate input
 
+        reserves[address(0)].balance = 0;
         reserves[address(0)].ratio = _ratio;
-        reserves[address(0)].virtualBalance = 0;
         reserves[address(0)].isSet = true;
-        reserveBalances[address(0)] = 0;
         reserveTokens.push(IERC20Token(0));
         totalReserveRatio += _ratio;
     }
@@ -368,24 +365,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     */
     function hasETHReserve() public view returns (bool) {
         return reserves[address(0)].isSet;
-    }
-
-    /**
-      * @dev updates a reserve's virtual balance
-      * only used during an upgrade process
-      * can only be called by the contract owner while the owner is the converter upgrader contract
-      * 
-      * @param _reserveToken    address of the reserve token, or address(0) for ETH reserve
-      * @param _virtualBalance  new reserve virtual balance, or 0 to disable virtual balance
-    */
-    function updateReserveVirtualBalance(IERC20Token _reserveToken, uint256 _virtualBalance)
-        public
-        ownerOnly
-        only(BANCOR_CONVERTER_UPGRADER)
-        validReserve(_reserveToken)
-    {
-        Reserve storage reserve = reserves[_reserveToken];
-        reserve.virtualBalance = _virtualBalance;
     }
 
     /**
@@ -419,7 +398,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         validReserve(_reserveToken)
         returns (uint256)
     {
-        return reserveBalances[_reserveToken];
+        return reserves[_reserveToken].balance;
     }
 
     /**
@@ -628,7 +607,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         token.destroy(this, _sellAmount);
 
         // update the reserve balance
-        reserveBalances[_reserveToken] = reserveBalances[_reserveToken].sub(amount);
+        reserves[_reserveToken].balance = reserves[_reserveToken].balance.sub(amount);
 
         // transfer funds to the beneficiary in the reserve token
         if (_reserveToken == IERC20Token(0))
@@ -674,7 +653,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
         // sync the reserve balances
         syncReserveBalance(_fromToken);
-        reserveBalances[_toToken] = reserveBalances[_toToken].sub(amount);
+        reserves[_toToken].balance = reserves[_toToken].balance.sub(amount);
 
         // transfer funds to the beneficiary in the to reserve token
         if (_toToken == IERC20Token(0))
@@ -882,7 +861,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             uint256 reserveBalance = getReserveBalance(reserveToken);
             uint256 reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _amount);
 
-            reserveBalances[reserveToken] = reserveBalances[reserveToken].sub(reserveAmount);
+            reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
 
             // transfer funds to the caller in the reserve token
             if (reserveToken == IERC20Token(0))
@@ -902,9 +881,9 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     */
     function syncReserveBalance(IERC20Token _reserveToken) internal validReserve(_reserveToken) {
         if (_reserveToken == address(0))
-            reserveBalances[_reserveToken] = address(this).balance;
+            reserves[_reserveToken].balance = address(this).balance;
         else
-            reserveBalances[_reserveToken] = _reserveToken.balanceOf(this);
+            reserves[_reserveToken].balance = _reserveToken.balanceOf(this);
     }
 
     /**
@@ -964,7 +943,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     */
     function connectors(address _address) public view returns (uint256, uint32, bool, bool, bool) {
         Reserve storage reserve = reserves[_address];
-        return(reserve.virtualBalance, reserve.ratio, false, false, reserve.isSet);
+        return(reserve.balance, reserve.ratio, false, false, reserve.isSet);
     }
 
     /**
