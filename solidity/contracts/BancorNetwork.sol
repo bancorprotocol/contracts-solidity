@@ -416,7 +416,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         IBancorConverter firstConverter = IBancorConverter(_smartToken.owner());
         bool isNewerConverter = isV27OrHigherConverter(firstConverter);
 
-        // handle ETH
+        // ETH
         if (_sourceToken == address(0)) {
             // validate msg.value
             require(msg.value == _amount);
@@ -429,7 +429,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 IEtherToken(etherToken).deposit.value(msg.value)();
             }
         }
-        // handle EtherToken
+        // EtherToken
         else if (etherTokens[_sourceToken]) {
             // validate msg.value
             require(msg.value == 0);
