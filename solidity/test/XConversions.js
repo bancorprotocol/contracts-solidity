@@ -7,7 +7,6 @@ const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 const BancorConverter = artifacts.require('BancorConverter');
 const BancorX = artifacts.require('BancorX');
 const SmartToken = artifacts.require('SmartToken');
-const EtherToken = artifacts.require('EtherToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const BancorFormula = artifacts.require('BancorFormula');
@@ -27,7 +26,7 @@ const eosAddress = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c000000000000000000
 const EOS_BLOCKCHAIN = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c000000000000000000000000'
 
 // bancor network contracts
-let bancorX, bancorNetwork, bntConverter, bntToken, etherToken, erc20Token, erc20TokenConverter
+let bancorX, bancorNetwork, bntConverter, bntToken, erc20Token, erc20TokenConverter
 // paths
 let ethBntPath, bntEthPath, erc20TokenBntPath, bntErc20Path
 
@@ -461,15 +460,16 @@ const initBancorNetwork = async accounts => {
     const contractRegistry = await ContractRegistry.new()
     const contractFeatures = await ContractFeatures.new()
         
-    etherToken = await EtherToken.new('Ether', 'ETH')
     bntToken = await SmartToken.new('Bancor', 'BNT', 18)
     bntConverter = await BancorConverter.new(
         bntToken.address,
         contractRegistry.address,
         '30000',
-        etherToken.address,
-        '100000'
+        utils.zeroAddress,
+        '0'
     )
+
+    await bntConverter.addETHReserve('100000');
 
     bancorX = await BancorX.new(
         MAX_LOCK_LIMIT,
@@ -486,11 +486,9 @@ const initBancorNetwork = async accounts => {
     await bancorX.setReporter(reporter2, true)
     await bancorX.setReporter(reporter3, true)
 
-    await etherToken.deposit({ value: BNT_RESERVE_AMOUNT });
-    await etherToken.transfer(bntConverter.address, BNT_RESERVE_AMOUNT);
+    await bntConverter.send(BNT_RESERVE_AMOUNT);
 
     bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-    await bancorNetwork.registerEtherToken(etherToken.address, true);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, bntToken.address)
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address)
@@ -528,8 +526,8 @@ const initBancorNetwork = async accounts => {
     await erc20TokenConverter.acceptTokenOwnership()
 
     // settings paths for easy use
-    ethBntPath = [etherToken.address, bntToken.address, bntToken.address]
-    bntEthPath = [bntToken.address, bntToken.address, etherToken.address]
+    ethBntPath = [utils.zeroAddress, bntToken.address, bntToken.address]
+    bntEthPath = [bntToken.address, bntToken.address, utils.zeroAddress]
     erc20TokenBntPath = [erc20Token.address, relayToken.address, bntToken.address]
     bntErc20Path = [bntToken.address, relayToken.address, erc20Token.address]
 }

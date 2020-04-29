@@ -1,12 +1,11 @@
 pragma solidity 0.4.26;
-import '../token/interfaces/INonStandardERC20.sol';
 import '../utility/Utils.sol';
 import '../utility/SafeMath.sol';
 
 /**
   * ERC20 Non-Standard Token implementation
 */
-contract TestNonStandardERC20Token is INonStandardERC20, Utils {
+contract TestNonStandardERC20Token is Utils {
     using SafeMath for uint256;
 
     string public name;

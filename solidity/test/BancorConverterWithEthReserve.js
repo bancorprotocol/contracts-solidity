@@ -14,7 +14,6 @@ const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const ERC20Token = artifacts.require('ERC20Token');
 const EtherToken = artifacts.require('EtherToken');
-const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
@@ -341,49 +340,6 @@ contract('BancorConverterWithEthReserve', accounts => {
         await converter.addReserve(reserveToken.address, 500000);
 
         await utils.catchRevert(converter.addETHReserve(500001));
-    });
-
-    it('verifies that the owner can update a reserve virtual balance if the owner is the upgrader contract', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
-        await converter.addReserve(reserveToken.address, ratio10Percent);
-        let reserve = await converter.reserves.call(reserveToken.address);
-        verifyReserve(reserve, 0, ratio10Percent, true);
-
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, accounts[0]);
-
-        await converter.updateReserveVirtualBalance(reserveToken.address, 50);
-
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
-        
-        reserve = await converter.reserves.call(reserveToken.address);
-        verifyReserve(reserve, 50, ratio10Percent, true);
-    });
-
-    it('should throw when the owner attempts to update a reserve virtual balance', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
-        await converter.addReserve(reserveToken.address, ratio10Percent);
-
-        await utils.catchRevert(converter.updateReserveVirtualBalance(reserveToken.address, 0));
-    });
-
-    it('should throw when a non owner attempts to update a reserve virtual balance', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
-        await converter.addReserve(reserveToken.address, ratio10Percent);
-
-        await utils.catchRevert(converter.updateReserveVirtualBalance(reserveToken.address, 0, { from: accounts[1] }));
-    });
-
-    it('should throw when attempting to update a reserve virtual balance for a reserve that does not exist', async () => {
-        let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
-        await converter.addReserve(reserveToken.address, ratio10Percent);
-        let reserve = await converter.reserves.call(reserveToken.address);
-        verifyReserve(reserve, 0, ratio10Percent, true);
-
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, accounts[0]);
-
-        await utils.catchRevert(converter.updateReserveVirtualBalance(utils.zeroAddress, 0));
-
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
     });
 
     it('verifies that the correct reserve ratio is returned', async () => {

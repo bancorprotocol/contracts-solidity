@@ -1,8 +1,8 @@
 pragma solidity 0.4.26;
 import './Owned.sol';
 import './Utils.sol';
+import './TokenHandler.sol';
 import './interfaces/ITokenHolder.sol';
-import '../token/interfaces/INonStandardERC20.sol';
 import '../token/interfaces/IERC20Token.sol';
 
 /**
@@ -16,7 +16,7 @@ import '../token/interfaces/IERC20Token.sol';
   * in order to support both non standard as well as standard token contracts.
   * see https://github.com/ethereum/solidity/issues/4116
 */
-contract TokenHolder is ITokenHolder, Owned, Utils {
+contract TokenHolder is ITokenHolder, TokenHandler, Owned, Utils {
     /**
       * @dev initializes a new TokenHolder instance
     */
@@ -38,6 +38,6 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
         validAddress(_to)
         notThis(_to)
     {
-        INonStandardERC20(_token).transfer(_to, _amount);
+        safeTransfer(_token, _to, _amount);
     }
 }

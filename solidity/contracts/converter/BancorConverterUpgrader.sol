@@ -24,7 +24,6 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function setConversionFee(uint32 _conversionFee) public;
     function addReserve(IERC20Token _token, uint32 _ratio) public;
     function addETHReserve(uint32 _ratio) public;
-    function updateReserveVirtualBalance(IERC20Token _reserveToken, uint256 _virtualBalance) public;
 }
 
 /**
@@ -142,7 +141,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
 
     /**
       * @dev creates a new converter with same basic data as the original old converter
-      * the newly created converter will have no connectors at this step.
+      * the newly created converter will have no reserves at this step.
       * 
       * @param _oldConverter    old converter contract address
       * 
@@ -178,8 +177,8 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
     }
 
     /**
-      * @dev copies the connectors from the old converter to the new one.
-      * note that this will not work for an unlimited number of connectors due to block gas limit constraints.
+      * @dev copies the reserves from the old converter to the new one.
+      * note that this will not work for an unlimited number of reserves due to block gas limit constraints.
       * 
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
@@ -191,7 +190,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
 
         for (uint16 i = 0; i < connectorTokenCount; i++) {
             address connectorAddress = _oldConverter.connectorTokens(i);
-            (uint256 virtualBalance, uint32 ratio, , , ) = _oldConverter.connectors(connectorAddress);
+            (, uint32 ratio, , , ) = _oldConverter.connectors(connectorAddress);
 
             // Ether reserve
             if (connectorAddress == address(0)) {
@@ -205,8 +204,6 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
             else {
                 _newConverter.addReserve(IERC20Token(connectorAddress), ratio);
             }
-            if (virtualBalance > 0)
-                _newConverter.updateReserveVirtualBalance(IERC20Token(connectorAddress), virtualBalance);
         }
     }
 
@@ -224,7 +221,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
     /**
       * @dev transfers the balance of each connector in the old converter to the new one.
       * note that the function assumes that the new converter already has the exact same number of
-      * also, this will not work for an unlimited number of connectors due to block gas limit constraints.
+      * also, this will not work for an unlimited number of reserves due to block gas limit constraints.
       * 
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address

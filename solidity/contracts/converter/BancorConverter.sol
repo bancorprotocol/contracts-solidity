@@ -5,12 +5,12 @@ import './interfaces/IBancorFormula.sol';
 import '../IBancorNetwork.sol';
 import '../FeatureIds.sol';
 import '../utility/SafeMath.sol';
+import '../utility/TokenHandler.sol';
 import '../utility/ContractRegistryClient.sol';
 import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/IEtherToken.sol';
-import '../token/interfaces/INonStandardERC20.sol';
 import '../bancorx/interfaces/IBancorX.sol';
 
 /**
@@ -21,21 +21,15 @@ import '../bancorx/interfaces/IBancorX.sol';
   * This mechanism opens the possibility to create different financial tools (for example, lower slippage in conversions).
   * 
   * The converter is upgradable (just like any SmartTokenController) and all upgrades are opt-in. 
-  * 
-  * WARNING: It is NOT RECOMMENDED to use the converter with Smart Tokens that have less than 8 decimal digits or with very small numbers because of precision loss 
-  * 
-  * Open issues:
-  * - Front-running attacks are currently mitigated by providing the minimum return argument for each conversion
-  *   Other potential solutions might include a commit/reveal based schemes
 */
-contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegistryClient, FeatureIds {
+contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController, ContractRegistryClient, FeatureIds {
     using SafeMath for uint256;
 
     uint32 private constant RATIO_RESOLUTION = 1000000;
     uint64 private constant CONVERSION_FEE_RESOLUTION = 1000000;
 
     struct Reserve {
-        uint256 virtualBalance; // reserve virtual balance
+        uint256 balance;        // reserve balance
         uint32 ratio;           // reserve ratio, represented in ppm, 1-1000000
         bool deprecated1;       // deprecated
         bool deprecated2;       // deprecated
@@ -45,7 +39,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     /**
       * @dev version number
     */
-    uint16 public version = 27;
+    uint16 public version = 28;
 
     IWhitelist public conversionWhitelist;          // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public reserveTokens;             // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
@@ -56,7 +50,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
                                                     // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public conversionFee = 0;                // current conversion fee, represented in ppm, 0...maxConversionFee
     bool public conversionsEnabled = true;          // deprecated, backward compatibility
-    bool private locked = false;                    // re-entrancy protection
+    bool private locked = false;                    // true while protected code is being executed, false if not
 
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
 
@@ -192,6 +186,18 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     function withdrawETH(address _to) public ownerOnly only(BANCOR_CONVERTER_UPGRADER) {
         require(hasETHReserve());
         _to.transfer(address(this).balance);
+
+        // sync the ETH reserve balance	
+        syncReserveBalance(IERC20Token(0));
+    }
+
+    /**
+      * @dev checks whether or not the converter version is 27 or higher
+      * 
+      * @return true, since the converter version is 27 or higher
+    */
+    function isV27OrHigher() public pure returns (bool) {
+        return true;
     }
 
     /**
@@ -246,6 +252,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         totalSupplyGreaterThanZeroOnly
     {
         super.acceptTokenOwnership();
+
+        // sync all reserve balances
+        for (uint256 i = 0; i < reserveTokens.length; i++)
+            syncReserveBalance(reserveTokens[i]);
     }
 
     /**
@@ -292,6 +302,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
         require(!reserves[_token].isSet || token.owner() != address(this) || owner == converterUpgrader);
         super.withdrawTokens(_token, _to, _amount);
+
+        // if the token is a reserve token, sync the reserve balance
+        if (reserves[_token].isSet)
+            syncReserveBalance(_token);
     }
 
     /**
@@ -325,8 +339,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     {
         require(_token != token && !reserves[_token].isSet && totalReserveRatio + _ratio <= RATIO_RESOLUTION); // validate input
 
+        reserves[_token].balance = 0;
         reserves[_token].ratio = _ratio;
-        reserves[_token].virtualBalance = 0;
         reserves[_token].isSet = true;
         reserveTokens.push(_token);
         totalReserveRatio += _ratio;
@@ -346,8 +360,8 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     {
         require(!hasETHReserve() && totalReserveRatio + _ratio <= RATIO_RESOLUTION); // validate input
 
+        reserves[address(0)].balance = 0;
         reserves[address(0)].ratio = _ratio;
-        reserves[address(0)].virtualBalance = 0;
         reserves[address(0)].isSet = true;
         reserveTokens.push(IERC20Token(0));
         totalReserveRatio += _ratio;
@@ -360,24 +374,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     */
     function hasETHReserve() public view returns (bool) {
         return reserves[address(0)].isSet;
-    }
-
-    /**
-      * @dev updates a reserve's virtual balance
-      * only used during an upgrade process
-      * can only be called by the contract owner while the owner is the converter upgrader contract
-      * 
-      * @param _reserveToken    address of the reserve token, or address(0) for ETH reserve
-      * @param _virtualBalance  new reserve virtual balance, or 0 to disable virtual balance
-    */
-    function updateReserveVirtualBalance(IERC20Token _reserveToken, uint256 _virtualBalance)
-        public
-        ownerOnly
-        only(BANCOR_CONVERTER_UPGRADER)
-        validReserve(_reserveToken)
-    {
-        Reserve storage reserve = reserves[_reserveToken];
-        reserve.virtualBalance = _virtualBalance;
     }
 
     /**
@@ -411,9 +407,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         validReserve(_reserveToken)
         returns (uint256)
     {
-        if (_reserveToken == IERC20Token(0))
-            return address(this).balance;
-        return _reserveToken.balanceOf(this);
+        return reserves[_reserveToken].balance;
     }
 
     /**
@@ -430,11 +424,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         require(_fromToken != _toToken); // validate input
 
         if (_toToken == token)
-            return getPurchaseReturn(_fromToken, _amount, 0);
+            return getPurchaseReturn(_fromToken, _amount);
         else if (_fromToken == token)
             return getSaleReturn(_toToken, _amount);
         else
-            return getCrossReserveReturn(_fromToken, _toToken, _amount, 0);
+            return getCrossReserveReturn(_fromToken, _toToken, _amount);
     }
 
     /**
@@ -442,12 +436,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * 
       * @param _reserveToken    contract address of the reserve token
       * @param _depositAmount   amount of reserve-tokens received from the user
-      * @param _delta           amount deposited into the reserve prior to calling this function
       * 
       * @return amount of supply-tokens that the user will receive
       * @return amount of supply-tokens that the user will pay as fee
     */
-    function getPurchaseReturn(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _delta)
+    function getPurchaseReturn(IERC20Token _reserveToken, uint256 _depositAmount)
         internal
         view
         active
@@ -456,7 +449,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     {
         uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).calculatePurchaseReturn(
             token.totalSupply(),
-            getReserveBalance(_reserveToken) - _delta,
+            getReserveBalance(_reserveToken),
             reserves[_reserveToken].ratio,
             _depositAmount
         );
@@ -502,12 +495,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @param _fromReserveToken    contract address of the reserve token to convert from
       * @param _toReserveToken      contract address of the reserve token to convert to
       * @param _amount              amount of tokens received from the user
-      * @param _delta               amount deposited into the reserve prior to calling this function
       * 
       * @return amount of tokens that the user will receive
       * @return amount of tokens that the user will pay as fee
     */
-    function getCrossReserveReturn(IERC20Token _fromReserveToken, IERC20Token _toReserveToken, uint256 _amount, uint256 _delta)
+    function getCrossReserveReturn(IERC20Token _fromReserveToken, IERC20Token _toReserveToken, uint256 _amount)
         internal
         view
         active
@@ -516,10 +508,10 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         returns (uint256, uint256)
     {
         uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).calculateCrossReserveReturn(
-            getReserveBalance(_fromReserveToken) - _delta, 
-            reserves[_fromReserveToken].ratio, 
-            getReserveBalance(_toReserveToken), 
-            reserves[_toReserveToken].ratio, 
+            getReserveBalance(_fromReserveToken),
+            reserves[_fromReserveToken].ratio,
+            getReserveBalance(_toReserveToken),
+            reserves[_toReserveToken].ratio,
             _amount
         );
 
@@ -533,16 +525,18 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     /**
       * @dev converts a specific amount of _fromToken to _toToken
       * can only be called by the bancor network contract
-      * 
-      * @param _fromToken  ERC20 token to convert from
-      * @param _toToken    ERC20 token to convert to
-      * @param _amount     amount of tokens to convert (in units of the source token)
-      * @param _minReturn  if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-      * 
+      *
+      * @param _fromToken   ERC20 token to convert from
+      * @param _toToken     ERC20 token to convert to
+      * @param _amount      amount of tokens to convert (in units of the source token)
+      * @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _beneficiary wallet to receive the conversion result
+      *
       * @return amount of tokens received (in units of the target token)
     */
-    function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn)
-        internal
+    function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _beneficiary)
+        public
+        payable
         protected
         only(BANCOR_NETWORK)
         greaterThanZero(_minReturn)
@@ -551,11 +545,11 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         require(_fromToken != _toToken); // validate input
 
         if (_toToken == token)
-            return buy(_fromToken, _amount, _minReturn);
+            return buy(_fromToken, _amount, _minReturn, _beneficiary);
         else if (_fromToken == token)
-            return sell(_toToken, _amount, _minReturn);
+            return sell(_toToken, _amount, _minReturn, _beneficiary);
         else
-            return crossConvert(_fromToken, _toToken, _amount, _minReturn);
+            return crossConvert(_fromToken, _toToken, _amount, _minReturn, _beneficiary);
     }
 
     /**
@@ -564,26 +558,27 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @param _reserveToken    reserve token contract address
       * @param _depositAmount   amount of tokens to deposit (in units of the reserve token)
       * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _beneficiary     wallet to receive the conversion result
       * 
       * @return amount of tokens received (in units of the smart token)
     */
-    function buy(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn) internal returns (uint256) {
-        (uint256 amount, uint256 feeAmount) = getPurchaseReturn(_reserveToken, _depositAmount, msg.value);
+    function buy(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn, address _beneficiary) internal returns (uint256) {
+        (uint256 amount, uint256 feeAmount) = getPurchaseReturn(_reserveToken, _depositAmount);
 
         // ensure the trade gives something in return and meets the minimum requested amount
         require(amount != 0 && amount >= _minReturn);
 
-        // transfer funds from the caller in the reserve token
-        if (_reserveToken == IERC20Token(0)) {
+        // ensure that the input amount was already deposited
+        if (_reserveToken == IERC20Token(0))
             require(msg.value == _depositAmount);
-        }
-        else {
-            require(msg.value == 0);
-            ensureTransferFrom(_reserveToken, msg.sender, this, _depositAmount);
-        }
+        else
+            require(msg.value == 0 && _reserveToken.balanceOf(this).sub(getReserveBalance(_reserveToken)) >= _depositAmount);
 
-        // issue new funds to the caller in the smart token
-        token.issue(msg.sender, amount);
+        // sync the reserve balance
+        syncReserveBalance(_reserveToken);
+
+        // issue new funds to the beneficiary in the smart token
+        token.issue(_beneficiary, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(_reserveToken, token, _depositAmount, amount, feeAmount);
@@ -600,11 +595,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @param _reserveToken    reserve token contract address
       * @param _sellAmount      amount of tokens to sell (in units of the smart token)
       * @param _minReturn       if the conversion results in an amount smaller the minimum return - it is cancelled, must be nonzero
+      * @param _beneficiary     wallet to receive the conversion result
       * 
       * @return amount of tokens received (in units of the reserve token)
     */
-    function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn) internal returns (uint256) {
-        require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
+    function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn, address _beneficiary) internal returns (uint256) {
+        // ensure that the input amount was already deposited
+        require(_sellAmount <= token.balanceOf(this));
 
         (uint256 amount, uint256 feeAmount) = getSaleReturn(_reserveToken, _sellAmount);
 
@@ -616,16 +613,17 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         uint256 reserveBalance = getReserveBalance(_reserveToken);
         assert(amount < reserveBalance || (amount == reserveBalance && _sellAmount == tokenSupply));
 
-        // destroy _sellAmount from the caller's balance in the smart token
-        token.destroy(msg.sender, _sellAmount);
+        // destroy _sellAmount from the converter balance in the smart token
+        token.destroy(this, _sellAmount);
 
-        // transfer funds to the caller in the reserve token
-        if (_reserveToken == IERC20Token(0)) {
-            msg.sender.transfer(amount);
-        }
-        else {
-            ensureTransferFrom(_reserveToken, this, msg.sender, amount);
-        }
+        // update the reserve balance
+        reserves[_reserveToken].balance = reserves[_reserveToken].balance.sub(amount);
+
+        // transfer funds to the beneficiary in the reserve token
+        if (_reserveToken == IERC20Token(0))
+            _beneficiary.transfer(amount);
+        else
+            safeTransfer(_reserveToken, _beneficiary, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(token, _reserveToken, _sellAmount, amount, feeAmount);
@@ -643,11 +641,12 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
       * @param _toToken     target reserve token contract address
       * @param _amount      amount of tokens to convert (in units of the source reserve token)
       * @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _beneficiary wallet to receive the conversion result
       * 
       * @return amount of tokens received (in units of the target reserve token)
     */
-    function crossConvert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) internal returns (uint256) {
-        (uint256 amount, uint256 feeAmount) = getCrossReserveReturn(_fromToken, _toToken, _amount, msg.value);
+    function crossConvert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _beneficiary) internal returns (uint256) {
+        (uint256 amount, uint256 feeAmount) = getCrossReserveReturn(_fromToken, _toToken, _amount);
 
         // ensure the trade gives something in return and meets the minimum requested amount
         require(amount != 0 && amount >= _minReturn);
@@ -656,22 +655,21 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         uint256 toReserveBalance = getReserveBalance(_toToken);
         assert(amount < toReserveBalance);
 
-        // transfer funds from the caller in the from reserve token
-        if (_fromToken == IERC20Token(0)) {
+        // ensure that the input amount was already deposited
+        if (_fromToken == IERC20Token(0))
             require(msg.value == _amount);
-        }
-        else {
-            require(msg.value == 0);
-            ensureTransferFrom(_fromToken, msg.sender, this, _amount);
-        }
+        else
+            require(msg.value == 0 && _fromToken.balanceOf(this).sub(getReserveBalance(_fromToken)) >= _amount);
 
-        // transfer funds to the caller in the to reserve token
-        if (_toToken == IERC20Token(0)) {
-            msg.sender.transfer(amount);
-        }
-        else {
-            ensureTransferFrom(_toToken, this, msg.sender, amount);
-        }
+        // sync the reserve balances
+        syncReserveBalance(_fromToken);
+        reserves[_toToken].balance = reserves[_toToken].balance.sub(amount);
+
+        // transfer funds to the beneficiary in the to reserve token
+        if (_toToken == IERC20Token(0))
+            _beneficiary.transfer(amount);
+        else
+            safeTransfer(_toToken, _beneficiary, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(_fromToken, _toToken, _amount, amount, feeAmount);
@@ -722,24 +720,37 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     {
         IBancorNetwork bancorNetwork = IBancorNetwork(addressOf(BANCOR_NETWORK));
 
-        // we need to transfer the source tokens from the caller to the BancorNetwork contract,
+        // we need to transfer the source tokens from the caller to the converter contract,
         // so it can execute the conversion on behalf of the caller
-        if (_path[0] != IERC20Token(0)) {
+        if (_path[0] == IERC20Token(0)) {
+            // ETH - execute the conversion and pass on the ETH with the call
+            return bancorNetwork.convertFor2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
+        }
+        else {
+            // not ETH, claim the tokens
             require(msg.value == 0);
-            // not ETH, send the source tokens to the BancorNetwork contract
-            // if the token is the smart token, no allowance is required - destroy the tokens
-            // from the caller and issue them to the BancorNetwork contract
+
+            // if the token is the smart token, no allowance is required - destroy
+            // the tokens from the caller and issue them to the converter contract
             if (_path[0] == token) {
                 token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
-                token.issue(bancorNetwork, _amount); // issue _amount new tokens to the BancorNetwork contract
-            } else {
-                // otherwise, we assume we already have allowance, transfer the tokens directly to the BancorNetwork contract
-                ensureTransferFrom(_path[0], msg.sender, bancorNetwork, _amount);
+                token.issue(this, _amount); // issue _amount new tokens to the converter contract
             }
-        }
+            // otherwise, we assume we already have allowance, claim the tokens
+            else {
+                safeTransferFrom(_path[0], msg.sender, this, _amount);
+            }
 
-        // execute the conversion and pass on the ETH with the call
-        return bancorNetwork.convertFor2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
+            // grant allowance to the network
+            uint256 allowance = _path[0].allowance(this, bancorNetwork);
+            if (allowance < _amount) {
+                if (allowance > 0)
+                    safeApprove(_path[0], bancorNetwork, 0);
+                safeApprove(_path[0], bancorNetwork, _amount);
+            }
+
+            return bancorNetwork.claimAndConvertFor2(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
+        }
     }
 
     /**
@@ -771,34 +782,19 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         // get conversion amount from BancorX contract
         uint256 amount = bancorX.getXTransferAmount(_conversionId, msg.sender);
 
-        // send BNT from msg.sender to the BancorNetwork contract
+        // send BNT from msg.sender to the converter contract
         token.destroy(msg.sender, amount);
-        token.issue(bancorNetwork, amount);
+        token.issue(this, amount);
 
-        return bancorNetwork.convertFor2(_path, amount, _minReturn, msg.sender, address(0), 0);
-    }
+        // grant allowance to the network
+        uint256 allowance = token.allowance(this, bancorNetwork);
+        if (allowance < amount) {
+            if (allowance > 0)
+                safeApprove(token, bancorNetwork, 0);
+            safeApprove(token, bancorNetwork, amount);
+        }
 
-    /**
-      * @dev ensures transfer of tokens, taking into account that some ERC-20 implementations don't return
-      * true on success but revert on failure instead
-      * 
-      * @param _token     the token to transfer
-      * @param _from      the address to transfer the tokens from
-      * @param _to        the address to transfer the tokens to
-      * @param _amount    the amount to transfer
-    */
-    function ensureTransferFrom(IERC20Token _token, address _from, address _to, uint256 _amount) private {
-        // We must assume that functions `transfer` and `transferFrom` do not return anything,
-        // because not all tokens abide the requirement of the ERC20 standard to return success or failure.
-        // This is because in the current compiler version, the calling contract can handle more returned data than expected but not less.
-        // This may change in the future, so that the calling contract will revert if the size of the data is not exactly what it expects.
-        uint256 prevBalance = _token.balanceOf(_to);
-        if (_from == address(this))
-            INonStandardERC20(_token).transfer(_to, _amount);
-        else
-            INonStandardERC20(_token).transferFrom(_from, _to, _amount);
-        uint256 postBalance = _token.balanceOf(_to);
-        require(postBalance > prevBalance);
+        return bancorNetwork.claimAndConvertFor2(_path, amount, _minReturn, msg.sender, address(0), 0);
     }
 
     /**
@@ -820,26 +816,28 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
 
         // iterate through the reserve tokens and transfer a percentage equal to the ratio between
         // _amount and the total supply in each reserve from the caller to the converter
-        for (uint16 i = 0; i < reserveTokens.length; i++) {
+        for (uint256 i = 0; i < reserveTokens.length; i++) {
             IERC20Token reserveToken = reserveTokens[i];
-            bool isETH = reserveToken == IERC20Token(0);
-            uint256 reserveBalance = getReserveBalance(reserveToken) - (isETH ? msg.value : 0);
+            uint256 reserveBalance = getReserveBalance(reserveToken);
             uint256 reserveAmount = formula.calculateFundCost(supply, reserveBalance, totalReserveRatio, _amount);
 
             // transfer funds from the caller in the reserve token
-            if (isETH) {
+            if (reserveToken == IERC20Token(0)) {
                 if (msg.value > reserveAmount) {
                     msg.sender.transfer(msg.value - reserveAmount);
                 }
                 else if (msg.value < reserveAmount) {
                     require(msg.value == 0);
-                    ensureTransferFrom(etherToken, msg.sender, this, reserveAmount);
+                    safeTransferFrom(etherToken, msg.sender, this, reserveAmount);
                     etherToken.withdraw(reserveAmount);
                 }
             }
             else {
-                ensureTransferFrom(reserveToken, msg.sender, this, reserveAmount);
+                safeTransferFrom(reserveToken, msg.sender, this, reserveAmount);
             }
+
+            // sync the reserve balance	
+            syncReserveBalance(reserveToken);
 
             // dispatch price data update for the smart token/reserve
             emit PriceDataUpdate(reserveToken, supply + _amount, reserveBalance + reserveAmount, reserves[reserveToken].ratio);
@@ -870,21 +868,34 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
 
         // iterate through the reserve tokens and send a percentage equal to the ratio between
         // _amount and the total supply from each reserve balance to the caller
-        for (uint16 i = 0; i < reserveTokens.length; i++) {
+        for (uint256 i = 0; i < reserveTokens.length; i++) {
             IERC20Token reserveToken = reserveTokens[i];
-            bool isETH = reserveToken == IERC20Token(0);
             uint256 reserveBalance = getReserveBalance(reserveToken);
             uint256 reserveAmount = formula.calculateLiquidateReturn(supply, reserveBalance, totalReserveRatio, _amount);
 
+            reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
+
             // transfer funds to the caller in the reserve token
-            if (isETH)
+            if (reserveToken == IERC20Token(0))
                 msg.sender.transfer(reserveAmount);
             else
-                ensureTransferFrom(reserveToken, this, msg.sender, reserveAmount);
+                safeTransfer(reserveToken, msg.sender, reserveAmount);
 
             // dispatch price data update for the smart token/reserve
             emit PriceDataUpdate(reserveToken, supply - _amount, reserveBalance - reserveAmount, reserves[reserveToken].ratio);
         }
+    }
+
+    /**	
+      * @dev syncs the stored reserve balance for a given reserve with the real reserve balance
+      *
+      * @param _reserveToken    address of the reserve token, or address(0) for ETH reserve
+    */
+    function syncReserveBalance(IERC20Token _reserveToken) internal validReserve(_reserveToken) {
+        if (_reserveToken == address(0))
+            reserves[_reserveToken].balance = address(this).balance;
+        else
+            reserves[_reserveToken].balance = _reserveToken.balanceOf(this);
     }
 
     /**
@@ -902,13 +913,6 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
         assert(_feeAmount < 2 ** 255);
         emit Conversion(_fromToken, _toToken, msg.sender, _amount, _returnAmount, int256(_feeAmount));
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public payable returns (uint256) {
-        return convertInternal(_fromToken, _toToken, _amount, _minReturn);
     }
 
     /**
@@ -951,7 +955,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     */
     function connectors(address _address) public view returns (uint256, uint32, bool, bool, bool) {
         Reserve storage reserve = reserves[_address];
-        return(reserve.virtualBalance, reserve.ratio, false, false, reserve.isSet);
+        return(reserve.balance, reserve.ratio, false, false, reserve.isSet);
     }
 
     /**
