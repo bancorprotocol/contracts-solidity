@@ -932,20 +932,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**
       * @dev deprecated, backward compatibility
     */
-    function quickConvertPrioritized2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256[] memory, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
-        return quickConvert2(_path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256, uint8, bytes32, bytes32) public payable returns (uint256) {
-        return quickConvert2(_path, _amount, _minReturn, address(0), 0);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
     function completeXConversion(IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256, uint8, bytes32, bytes32) public returns (uint256) {
         return completeXConversion2(_path, _minReturn, _conversionId);
     }

@@ -38,74 +38,6 @@ contract("XConversions", accounts => {
             await initBancorNetwork(accounts)
         })
 
-        it("should be able to xConvertPrioritized from eth", async () => {
-            const path = ethBntPath
-            const amount = web3.toWei(1)
-
-            const retAmount = await bancorNetwork.xConvertPrioritized.call(
-                path,                         
-                amount,               
-                1,                                
-                EOS_BLOCKCHAIN,                     
-                eosAddress,                         
-                0,                                
-                0,                                                    
-                0,                                                      
-                utils.zeroBytes32,                                                      
-                utils.zeroBytes32,                                                      
-                { from: accounts[5], value: amount }
-            )
-
-            const prevBalance = await bntToken.balanceOf(bancorX.address)
-
-            const res = await bancorNetwork.xConvertPrioritized(
-                path,                                               
-                amount,                                     
-                1,                                                      
-                EOS_BLOCKCHAIN,                                           
-                eosAddress,                                               
-                0,                                                      
-                0,                                                    
-                0,                                                      
-                utils.zeroBytes32,                                                      
-                utils.zeroBytes32,                                                      
-                { from: accounts[5], value: amount }
-            )
-
-            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
-        })
-
-        it("should be able to xConvertPrioritized2 from eth", async () => {
-            const path = ethBntPath
-            const amount = web3.toWei(1)
-
-            const retAmount = await bancorNetwork.xConvertPrioritized2.call(
-                path,                         
-                amount,               
-                1,                                
-                EOS_BLOCKCHAIN,                     
-                eosAddress,                         
-                0,                                
-                [],
-                { from: accounts[5], value: amount }
-            )
-
-            const prevBalance = await bntToken.balanceOf(bancorX.address)
-
-            const res = await bancorNetwork.xConvertPrioritized2(
-                path,                                               
-                amount,                                     
-                1,                                                      
-                EOS_BLOCKCHAIN,                                           
-                eosAddress,                                               
-                0,                                                      
-                [],
-                { from: accounts[5], value: amount }
-            )
-
-            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
-        })
-
         it("should be able to xConvert from eth", async () => {
             const path = ethBntPath
             const amount = web3.toWei(1)
@@ -329,41 +261,6 @@ contract("XConversions", accounts => {
         describe(`advanced testing with affiliate-fee = ${percent}%:`, () => {
             before(async () => {
                 await initBancorNetwork(accounts)
-            })
-
-            it("should be able to xConvertPrioritized3 from eth", async () => {
-                const path = ethBntPath
-                const amount = web3.toWei(1)
-
-                const retAmount = await bancorNetwork.xConvertPrioritized3.call(
-                    path,                         
-                    amount,               
-                    1,                                
-                    EOS_BLOCKCHAIN,                     
-                    eosAddress,                         
-                    0,                                
-                    [],
-                    affiliateAddress, affiliateFee,
-                    { from: accounts[5], value: amount }
-                )
-
-                const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
-                const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
-
-                const res = await bancorNetwork.xConvertPrioritized3(
-                    path,                                               
-                    amount,                                     
-                    1,                                                      
-                    EOS_BLOCKCHAIN,                                           
-                    eosAddress,                                               
-                    0,                                                      
-                    [],
-                    affiliateAddress, affiliateFee,
-                    { from: accounts[5], value: amount }
-                )
-
-                assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
-                assert.equal((await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate).toString(10), expectedFee(retAmount, percent).toString(10))
             })
 
             it("should be able to xConvert2 from eth", async () => {
