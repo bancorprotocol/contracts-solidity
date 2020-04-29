@@ -17,7 +17,6 @@ contract ILegacyBancorConverter {
     function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256);
 }
 
-
 /**
   * @dev The BancorNetwork contract is the main entry point for Bancor token conversions.
   * It also allows for the conversion of any token in the Bancor Network to any other token in a single transaction by providing a conversion path.
