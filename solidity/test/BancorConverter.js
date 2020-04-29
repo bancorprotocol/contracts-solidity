@@ -511,19 +511,19 @@ contract('BancorConverter', accounts => {
         assert('_conversionFee' in saleRes.logs[0].args);
     });
 
-    it('should throw when attempting to get the return with an invalid from token adress', async () => {
+    it('should throw when attempting to get the return with an invalid source token adress', async () => {
         let converter = await initConverter(accounts, true);
 
         await utils.catchRevert(converter.getReturn.call(utils.zeroAddress, reserveToken2.address, 500));
     });
 
-    it('should throw when attempting to get the return with an invalid to token address', async () => {
+    it('should throw when attempting to get the return with an invalid target token address', async () => {
         let converter = await initConverter(accounts, true);
 
         await utils.catchRevert(converter.getReturn.call(reserveToken.address, utils.zeroAddress, 500));
     });
 
-    it('should throw when attempting to get the return with identical from/to addresses', async () => {
+    it('should throw when attempting to get the return with identical source/target addresses', async () => {
         let converter = await initConverter(accounts, true);
 
         await utils.catchRevert(converter.getReturn.call(tokenAddress, tokenAddress, 500));
@@ -595,21 +595,21 @@ contract('BancorConverter', accounts => {
         assert(purchaseAmount <= 500);
     });
 
-    it('should throw when attempting to convert with an invalid from token adress', async () => {
+    it('should throw when attempting to convert with an invalid source token adress', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
         await utils.catchRevert(converter.convert(utils.zeroAddress, reserveToken2.address, 500, 1));
     });
 
-    it('should throw when attempting to convert with an invalid to token address', async () => {
+    it('should throw when attempting to convert with an invalid target token address', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
         await utils.catchRevert(converter.convert(reserveToken.address, utils.zeroAddress, 500, 1));
     });
 
-    it('should throw when attempting to convert with identical from/to addresses', async () => {
+    it('should throw when attempting to convert with identical source/target addresses', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
@@ -1155,21 +1155,21 @@ contract('BancorConverter', accounts => {
         assert(purchaseAmount <= 500);
     });
 
-    it('should throw when attempting to convert2 with an invalid from token adress', async () => {
+    it('should throw when attempting to convert2 with an invalid source token adress', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
         await utils.catchRevert(converter.convert2(utils.zeroAddress, reserveToken2.address, 500, 1, utils.zeroAddress, 0));
     });
 
-    it('should throw when attempting to convert2 with an invalid to token address', async () => {
+    it('should throw when attempting to convert2 with an invalid target token address', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
         await utils.catchRevert(converter.convert2(reserveToken.address, utils.zeroAddress, 500, 1, utils.zeroAddress, 0));
     });
 
-    it('should throw when attempting to convert2 with identical from/to addresses', async () => {
+    it('should throw when attempting to convert2 with identical source/target addresses', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 

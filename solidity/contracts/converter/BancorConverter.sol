@@ -57,10 +57,10 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**
       * @dev triggered when a conversion between two tokens occurs
       * 
-      * @param _fromToken       ERC20 token converted from
-      * @param _toToken         ERC20 token converted to
+      * @param _fromToken       source ERC20 token
+      * @param _toToken         target ERC20 token
       * @param _trader          wallet that initiated the trade
-      * @param _amount          amount converted, in fromToken
+      * @param _amount          amount converted, in the source token
       * @param _return          amount returned, minus conversion fee
       * @param _conversionFee   conversion fee
     */
@@ -413,22 +413,22 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**
       * @dev calculates the expected return of converting a given amount of tokens
       * 
-      * @param _fromToken  contract address of the token to convert from
-      * @param _toToken    contract address of the token to convert to
+      * @param _sourceToken contract address of the source token
+      * @param _targetToken contract address of the target token
       * @param _amount     amount of tokens received from the user
       * 
       * @return amount of tokens that the user will receive
       * @return amount of tokens that the user will pay as fee
     */
-    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256, uint256) {
-        require(_fromToken != _toToken); // validate input
+    function getReturn(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256) {
+        require(_sourceToken != _targetToken); // validate input
 
-        if (_toToken == token)
-            return getPurchaseReturn(_fromToken, _amount);
-        else if (_fromToken == token)
-            return getSaleReturn(_toToken, _amount);
+        if (_targetToken == token)
+            return getPurchaseReturn(_sourceToken, _amount);
+        else if (_sourceToken == token)
+            return getSaleReturn(_targetToken, _amount);
         else
-            return getCrossReserveReturn(_fromToken, _toToken, _amount);
+            return getCrossReserveReturn(_sourceToken, _targetToken, _amount);
     }
 
     /**
@@ -523,18 +523,18 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     }
 
     /**
-      * @dev converts a specific amount of _fromToken to _toToken
+      * @dev converts a specific amount of _sourceToken to _targetToken
       * can only be called by the bancor network contract
       *
-      * @param _fromToken   ERC20 token to convert from
-      * @param _toToken     ERC20 token to convert to
+      * @param _sourceToken source ERC20 token
+      * @param _targetToken target ERC20 token
       * @param _amount      amount of tokens to convert (in units of the source token)
       * @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _beneficiary wallet to receive the conversion result
       *
       * @return amount of tokens received (in units of the target token)
     */
-    function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _beneficiary)
+    function convertInternal(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn, address _beneficiary)
         public
         payable
         protected
@@ -542,14 +542,14 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         greaterThanZero(_minReturn)
         returns (uint256)
     {
-        require(_fromToken != _toToken); // validate input
+        require(_sourceToken != _targetToken); // validate input
 
-        if (_toToken == token)
-            return buy(_fromToken, _amount, _minReturn, _beneficiary);
-        else if (_fromToken == token)
-            return sell(_toToken, _amount, _minReturn, _beneficiary);
+        if (_targetToken == token)
+            return buy(_sourceToken, _amount, _minReturn, _beneficiary);
+        else if (_sourceToken == token)
+            return sell(_targetToken, _amount, _minReturn, _beneficiary);
         else
-            return crossConvert(_fromToken, _toToken, _amount, _minReturn, _beneficiary);
+            return crossConvert(_sourceToken, _targetToken, _amount, _minReturn, _beneficiary);
     }
 
     /**
@@ -637,66 +637,66 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**
       * @dev converts one of the reserve tokens to the other
       * 
-      * @param _fromToken   source reserve token contract address
-      * @param _toToken     target reserve token contract address
+      * @param _sourceToken source reserve token contract address
+      * @param _targetToken target reserve token contract address
       * @param _amount      amount of tokens to convert (in units of the source reserve token)
       * @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _beneficiary wallet to receive the conversion result
       * 
       * @return amount of tokens received (in units of the target reserve token)
     */
-    function crossConvert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _beneficiary) internal returns (uint256) {
-        (uint256 amount, uint256 feeAmount) = getCrossReserveReturn(_fromToken, _toToken, _amount);
+    function crossConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn, address _beneficiary) internal returns (uint256) {
+        (uint256 amount, uint256 feeAmount) = getCrossReserveReturn(_sourceToken, _targetToken, _amount);
 
         // ensure the trade gives something in return and meets the minimum requested amount
         require(amount != 0 && amount >= _minReturn);
 
         // ensure that the trade won't deplete the reserve balance
-        uint256 toReserveBalance = reserveBalance(_toToken);
+        uint256 toReserveBalance = reserveBalance(_targetToken);
         assert(amount < toReserveBalance);
 
         // ensure that the input amount was already deposited
-        if (_fromToken == IERC20Token(0))
+        if (_sourceToken == IERC20Token(0))
             require(msg.value == _amount);
         else
-            require(msg.value == 0 && _fromToken.balanceOf(this).sub(reserveBalance(_fromToken)) >= _amount);
+            require(msg.value == 0 && _sourceToken.balanceOf(this).sub(reserveBalance(_sourceToken)) >= _amount);
 
         // sync the reserve balances
-        syncReserveBalance(_fromToken);
-        reserves[_toToken].balance = reserves[_toToken].balance.sub(amount);
+        syncReserveBalance(_sourceToken);
+        reserves[_targetToken].balance = reserves[_targetToken].balance.sub(amount);
 
         // transfer funds to the beneficiary in the to reserve token
-        if (_toToken == IERC20Token(0))
+        if (_targetToken == IERC20Token(0))
             _beneficiary.transfer(amount);
         else
-            safeTransfer(_toToken, _beneficiary, amount);
+            safeTransfer(_targetToken, _beneficiary, amount);
 
         // dispatch the conversion event
-        dispatchConversionEvent(_fromToken, _toToken, _amount, amount, feeAmount);
+        dispatchConversionEvent(_sourceToken, _targetToken, _amount, amount, feeAmount);
 
         // dispatch price data updates for the smart token / both reserves
-        emit PriceDataUpdate(_fromToken, token.totalSupply(), reserveBalance(_fromToken), reserves[_fromToken].weight);
-        emit PriceDataUpdate(_toToken, token.totalSupply(), reserveBalance(_toToken), reserves[_toToken].weight);
+        emit PriceDataUpdate(_sourceToken, token.totalSupply(), reserveBalance(_sourceToken), reserves[_sourceToken].weight);
+        emit PriceDataUpdate(_targetToken, token.totalSupply(), reserveBalance(_targetToken), reserves[_targetToken].weight);
 
         return amount;
     }
 
     /**
-      * @dev converts a specific amount of _fromToken to _toToken
+      * @dev converts a specific amount of _sourceToken to _targetToken
       * note that prior to version 16, you should use 'convert' instead
       * 
-      * @param _fromToken           ERC20 token to convert from
-      * @param _toToken             ERC20 token to convert to
-      * @param _amount              amount to convert, in fromToken
+      * @param _sourceToken         source ERC20 token
+      * @param _targetToken         target ERC20 token
+      * @param _amount              amount to convert, in the source token
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
       * 
       * @return conversion return amount
     */
-    function convert2(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
+    function convert2(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
         IERC20Token[] memory path = new IERC20Token[](3);
-        (path[0], path[1], path[2]) = (_fromToken, token, _toToken);
+        (path[0], path[1], path[2]) = (_sourceToken, token, _targetToken);
         return quickConvert2(path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
     }
 
@@ -901,25 +901,25 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**
       * @dev helper, dispatches the Conversion event
       * 
-      * @param _fromToken       ERC20 token to convert from
-      * @param _toToken         ERC20 token to convert to
+      * @param _sourceToken     source ERC20 token
+      * @param _targetToken     target ERC20 token
       * @param _amount          amount purchased/sold (in the source token)
       * @param _returnAmount    amount returned (in the target token)
     */
-    function dispatchConversionEvent(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _returnAmount, uint256 _feeAmount) private {
+    function dispatchConversionEvent(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _returnAmount, uint256 _feeAmount) private {
         // fee amount is converted to 255 bits -
         // negative amount means the fee is taken from the source token, positive amount means its taken from the target token
         // currently the fee is always taken from the target token
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
         assert(_feeAmount < 2 ** 255);
-        emit Conversion(_fromToken, _toToken, msg.sender, _amount, _returnAmount, int256(_feeAmount));
+        emit Conversion(_sourceToken, _targetToken, msg.sender, _amount, _returnAmount, int256(_feeAmount));
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        return convert2(_fromToken, _toToken, _amount, _minReturn, address(0), 0);
+    function convert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+        return convert2(_sourceToken, _targetToken, _amount, _minReturn, address(0), 0);
     }
 
     /**
