@@ -323,22 +323,22 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev searches for a liquidity pool with specific reserve tokens/ratios
+      * @dev searches for a liquidity pool with specific reserve tokens/weights
       * 
       * @param _reserveTokens   reserve tokens
-      * @param _reserveRatios   reserve ratios
+      * @param _reserveWeights  reserve weights
       * @return the liquidity pool, or zero if no such liquidity pool exists
     */
-    function getLiquidityPoolByReserveConfig(address[] memory _reserveTokens, uint[] memory _reserveRatios) public view returns (ISmartToken) {
+    function getLiquidityPoolByReserveConfig(address[] memory _reserveTokens, uint[] memory _reserveWeights) public view returns (ISmartToken) {
         // verify that the input parameters represent a valid liquidity pool
-        if (_reserveTokens.length == _reserveRatios.length && _reserveTokens.length > 1) {
+        if (_reserveTokens.length == _reserveWeights.length && _reserveTokens.length > 1) {
             // get the smart tokens of the least frequent token (optimization)
             address[] memory convertibleTokenSmartTokens = getLeastFrequentTokenSmartTokens(_reserveTokens);
             // search for a converter with an identical reserve-configuration
             for (uint i = 0; i < convertibleTokenSmartTokens.length; i++) {
                 ISmartToken smartToken = ISmartToken(convertibleTokenSmartTokens[i]);
                 IBancorConverter converter = IBancorConverter(smartToken.owner());
-                if (isConverterReserveConfigEqual(converter, _reserveTokens, _reserveRatios))
+                if (isConverterReserveConfigEqual(converter, _reserveTokens, _reserveWeights))
                     return smartToken;
             }
         }
@@ -347,25 +347,25 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
-      * @dev checks if a liquidity pool with given reserve tokens/ratios is already registered
+      * @dev checks if a liquidity pool with given reserve tokens/weights is already registered
       * 
-      * @param _converter converter with specific reserve tokens/ratios
-      * @return if a liquidity pool with the same reserve tokens/ratios is already registered
+      * @param _converter converter with specific reserve tokens/weights
+      * @return if a liquidity pool with the same reserve tokens/weights is already registered
     */
     function isSimilarLiquidityPoolRegistered(IBancorConverter _converter) internal view returns (bool) {
         uint reserveTokenCount = _converter.connectorTokenCount();
         address[] memory reserveTokens = new address[](reserveTokenCount);
-        uint[] memory reserveRatios = new uint[](reserveTokenCount);
+        uint[] memory reserveWeights = new uint[](reserveTokenCount);
 
         // get the reserve-configuration of the converter
         for (uint i = 0; i < reserveTokenCount; i++) {
             IERC20Token reserveToken = _converter.connectorTokens(i);
             reserveTokens[i] = reserveToken;
-            reserveRatios[i] = getReserveRatio(_converter, reserveToken);
+            reserveWeights[i] = getReserveWeight(_converter, reserveToken);
         }
 
-        // return if a liquidity pool with the same reserve tokens/ratios is already registered
-        return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) != ISmartToken(0);
+        // return if a liquidity pool with the same reserve tokens/weights is already registered
+        return getLiquidityPoolByReserveConfig(reserveTokens, reserveWeights) != ISmartToken(0);
     }
 
     /**
@@ -446,12 +446,12 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         return smartTokens;
     }
 
-    function isConverterReserveConfigEqual(IBancorConverter _converter, address[] memory _reserveTokens, uint[] memory _reserveRatios) private view returns (bool) {
+    function isConverterReserveConfigEqual(IBancorConverter _converter, address[] memory _reserveTokens, uint[] memory _reserveWeights) private view returns (bool) {
         if (_reserveTokens.length != _converter.connectorTokenCount())
             return false;
 
         for (uint i = 0; i < _reserveTokens.length; i++) {
-            if (_reserveRatios[i] != getReserveRatio(_converter, _reserveTokens[i]))
+            if (_reserveWeights[i] != getReserveWeight(_converter, _reserveTokens[i]))
                 return false;
         }
 
@@ -460,7 +460,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
 
     bytes4 private constant CONNECTORS_FUNC_SELECTOR = bytes4(uint256(keccak256("connectors(address)") >> (256 - 4 * 8)));
 
-    function getReserveRatio(address _converter, address _reserveToken) private view returns (uint256) {
+    function getReserveWeight(address _converter, address _reserveToken) private view returns (uint256) {
         uint256[2] memory ret;
         bytes memory data = abi.encodeWithSelector(CONNECTORS_FUNC_SELECTOR, _reserveToken);
 

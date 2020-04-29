@@ -1,5 +1,5 @@
 ONE = 1;
-MAX_RATIO = 1000000;
+MAX_WEIGHT = 1000000;
 MIN_PRECISION = 32;
 MAX_PRECISION = 127;
 
@@ -157,53 +157,53 @@ def constructor():
     maxExpArray[127] = 0x00857ddf0117efa215952912839f6473e6;
 
 '''
-    @dev given a token supply, reserve balance, ratio and a deposit amount (in the reserve token),
+    @dev given a token supply, reserve balance, weight and a deposit amount (in the reserve token),
     calculates the return for a given conversion (in the main token)
 
     Formula:
-    Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 1000000) - 1)
+    Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
 
     @param _supply              token total supply
     @param _reserveBalance      total reserve balance
-    @param _reserveRatio        reserve ratio, represented in ppm, 1-1000000
+    @param _reserveWeight       reserve weight, represented in ppm, 1-1000000
     @param _depositAmount       deposit amount, in reserve token
 
     @return purchase return amount
 '''
-def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmount):
+def calculatePurchaseReturn(_supply, _reserveBalance, _reserveWeight, _depositAmount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= MAX_RATIO);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveWeight > 0 and _reserveWeight <= MAX_WEIGHT);
 
     # special case for 0 deposit amount
     if (_depositAmount == 0):
         return 0;
 
-    # special case if the ratio = 100%
-    if (_reserveRatio == MAX_RATIO):
+    # special case if the weight = 100%
+    if (_reserveWeight == MAX_WEIGHT):
         return safeMul(_supply, _depositAmount) // _reserveBalance;
 
     baseN = safeAdd(_depositAmount, _reserveBalance);
-    (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_RATIO);
+    (result, precision) = power(baseN, _reserveBalance, _reserveWeight, MAX_WEIGHT);
     temp = safeMul(_supply, result) >> precision;
     return temp - _supply;
 
 '''
-    @dev given a token supply, reserve balance, ratio and a sell amount (in the main token),
+    @dev given a token supply, reserve balance, weight and a sell amount (in the main token),
     calculates the return for a given conversion (in the reserve token)
 
     Formula:
-    Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1000000 / _reserveRatio))
+    Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1000000 / _reserveWeight))
 
     @param _supply              token total supply
     @param _reserveBalance      total reserve
-    @param _reserveRatio        constant reserve Ratio, represented in ppm, 1-1000000
+    @param _reserveWeight       reserve weight, represented in ppm, 1-1000000
     @param _sellAmount          sell amount, in the token itself
 
     @return sale return amount
 '''
-def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
+def calculateSaleReturn(_supply, _reserveBalance, _reserveWeight, _sellAmount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= MAX_RATIO and _sellAmount <= _supply);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveWeight > 0 and _reserveWeight <= MAX_WEIGHT and _sellAmount <= _supply);
 
     # special case for 0 sell amount
     if (_sellAmount == 0):
@@ -213,94 +213,94 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
     if (_sellAmount == _supply):
         return _reserveBalance;
 
-    # special case if the ratio = 100%
-    if (_reserveRatio == MAX_RATIO):
+    # special case if the weight = 100%
+    if (_reserveWeight == MAX_WEIGHT):
         return safeMul(_reserveBalance, _sellAmount) // _supply;
 
     baseD = _supply - _sellAmount;
-    (result, precision) = power(_supply, baseD, MAX_RATIO, _reserveRatio);
+    (result, precision) = power(_supply, baseD, MAX_WEIGHT, _reserveWeight);
     temp1 = safeMul(_reserveBalance, result);
     temp2 = _reserveBalance << precision;
     return (temp1 - temp2) // result;
 
 '''
-    @dev given two reserve balances/ratios and a sell amount (in the first reserve token),
+    @dev given two reserve balances/weights and a sell amount (in the first reserve token),
     calculates the return for a conversion from the first reserve token to the second reserve token (in the second reserve token)
     note that prior to version 4, you should use 'calculateCrossConnectorReturn' instead
 
     Formula:
-    Return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveRatio / _toReserveRatio))
+    Return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveWeight / _toReserveWeight))
 
     @param _fromReserveBalance      input reserve balance
-    @param _fromReserveRatio        input reserve ratio, represented in ppm, 1-1000000
+    @param _fromReserveWeight       input reserve weight, represented in ppm, 1-1000000
     @param _toReserveBalance        output reserve balance
-    @param _toReserveRatio          output reserve ratio, represented in ppm, 1-1000000
+    @param _toReserveWeight         output reserve weight, represented in ppm, 1-1000000
     @param _amount                  input reserve amount
 
     @return second reserve amount
 '''
-def calculateCrossReserveReturn(_fromReserveBalance, _fromReserveRatio, _toReserveBalance, _toReserveRatio, _amount):
+def calculateCrossReserveReturn(_fromReserveBalance, _fromReserveWeight, _toReserveBalance, _toReserveWeight, _amount):
     # validate input
-    assert(_fromReserveBalance > 0 and _fromReserveRatio > 0 and _fromReserveRatio <= MAX_RATIO and _toReserveBalance > 0 and _toReserveRatio > 0 and _toReserveRatio <= MAX_RATIO);
+    assert(_fromReserveBalance > 0 and _fromReserveWeight > 0 and _fromReserveWeight <= MAX_WEIGHT and _toReserveBalance > 0 and _toReserveWeight > 0 and _toReserveWeight <= MAX_WEIGHT);
 
-    # special case for equal ratios
-    if (_fromReserveRatio == _toReserveRatio):
+    # special case for equal weights
+    if (_fromReserveWeight == _toReserveWeight):
         return safeMul(_toReserveBalance, _amount) // safeAdd(_fromReserveBalance, _amount);
 
     baseN = safeAdd(_fromReserveBalance, _amount);
-    (result, precision) = power(baseN, _fromReserveBalance, _fromReserveRatio, _toReserveRatio);
+    (result, precision) = power(baseN, _fromReserveBalance, _fromReserveWeight, _toReserveWeight);
     temp1 = safeMul(_toReserveBalance, result);
     temp2 = _toReserveBalance << precision;
     return (temp1 - temp2) // result;
 
 '''
-    @dev given a smart token supply, reserve balance, total ratio and an amount of requested smart tokens,
+    @dev given a smart token supply, reserve balance, reserve ratio and an amount of requested smart tokens,
     calculates the amount of reserve tokens required for purchasing the given amount of smart tokens
 
     Formula:
-    Return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_RATIO / _totalRatio) - 1)
+    Return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio) - 1)
 
     @param _supply              smart token supply
     @param _reserveBalance      reserve token balance
-    @param _totalRatio          total ratio, represented in ppm, 2-2000000
+    @param _reserveRatio        reserve ratio, represented in ppm, 2-2000000
     @param _amount              requested amount of smart tokens
 
     @return amount of reserve tokens
 '''
-def calculateFundCost(_supply, _reserveBalance, _totalRatio, _amount):
+def calculateFundCost(_supply, _reserveBalance, _reserveRatio, _amount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _totalRatio > 1 and _totalRatio <= MAX_RATIO * 2);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 1 and _reserveRatio <= MAX_WEIGHT * 2);
 
     # special case for 0 amount
     if (_amount == 0):
         return 0;
 
-    # special case if the total ratio = 100%
-    if (_totalRatio == MAX_RATIO):
+    # special case if the reserve ratio = 100%
+    if (_reserveRatio == MAX_WEIGHT):
         return (safeMul(_amount, _reserveBalance) - 1) // _supply + 1;
 
     baseN = safeAdd(_supply, _amount);
-    (result, precision) = power(baseN, _supply, MAX_RATIO, _totalRatio);
+    (result, precision) = power(baseN, _supply, MAX_WEIGHT, _reserveRatio);
     temp = ((safeMul(_reserveBalance, result) - 1) >> precision) + 1;
     return temp - _reserveBalance;
 
 '''
-    @dev given a smart token supply, reserve balance, total ratio and an amount of smart tokens to liquidate,
+    @dev given a smart token supply, reserve balance, reserve ratio and an amount of smart tokens to liquidate,
     calculates the amount of reserve tokens received for selling the given amount of smart tokens
 
     Formula:
-    Return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_RATIO / _totalRatio))
+    Return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio))
 
     @param _supply              smart token supply
     @param _reserveBalance      reserve token balance
-    @param _totalRatio          total ratio, represented in ppm, 2-2000000
+    @param _reserveRatio        reserve ratio, represented in ppm, 2-2000000
     @param _amount              amount of smart tokens to liquidate
 
     @return amount of reserve tokens
 '''
-def calculateLiquidateReturn(_supply, _reserveBalance, _totalRatio, _amount):
+def calculateLiquidateReturn(_supply, _reserveBalance, _reserveRatio, _amount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _totalRatio > 1 and _totalRatio <= MAX_RATIO * 2 and _amount <= _supply);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 1 and _reserveRatio <= MAX_WEIGHT * 2 and _amount <= _supply);
 
     # special case for 0 amount
     if (_amount == 0):
@@ -310,12 +310,12 @@ def calculateLiquidateReturn(_supply, _reserveBalance, _totalRatio, _amount):
     if (_amount == _supply):
         return _reserveBalance;
 
-    # special case if the total ratio = 100%
-    if (_totalRatio == MAX_RATIO):
+    # special case if the reserve ratio = 100%
+    if (_reserveRatio == MAX_WEIGHT):
         return safeMul(_amount, _reserveBalance) // _supply;
 
     baseD = _supply - _amount;
-    (result, precision) = power(_supply, baseD, MAX_RATIO, _totalRatio);
+    (result, precision) = power(_supply, baseD, MAX_WEIGHT, _reserveRatio);
     temp1 = safeMul(_reserveBalance, result);
     temp2 = _reserveBalance << precision;
     return (temp1 - temp2) // result;

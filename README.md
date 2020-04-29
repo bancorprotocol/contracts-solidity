@@ -12,19 +12,19 @@ Bancor is a decentralized liquidity protocol that provides tokens with constant 
 
 ## How Bancor Works
 
-Token conversions via the Bancor Protocol are executed against on-chain liquidity pools known as “Bancor Relays”. Each Relay holds reserves of both BNT (Bancor’s Network Token) and a base token (which could be any ERC20 or EOS-based token, with more blockchains to come). For instance, the base token for the ‘DAIBNT’ Relay is DAI.
+Token conversions via the Bancor Protocol are executed against on-chain liquidity pools known as “Bancor Liquidity Pools”. Each pool holds reserves of both BNT (Bancor’s Network Token) and a base token (which could be any ERC20 or EOS-based token, with more blockchains to come). For instance, the base token for the ‘DAIBNT’ pool is DAI.
 
-A Relay’s reserves receive and dispense tokens in order to fulfill trades and are autonomously rebalanced to determine prices. Selling BNT for the base token increases the size of the BNT reserve and decreases the size of the base token’s reserve. This shifts the reserve ratio, increasing the base token's price relative to BNT for subsequent transactions. The larger a trade relative to the total size of the reserves, the more price slippage will occur. 
+A liquidity pool’s reserves receive and dispense tokens in order to fulfill trades and are autonomously rebalanced to determine prices. Selling BNT for the base token increases the size of the BNT reserve and decreases the size of the base token’s reserve. This shifts the reserve weight, increasing the base token's price relative to BNT for subsequent transactions. The larger a trade relative to the total size of the reserves, the more price slippage will occur. 
 
-Since BNT is a common pair for all Relays, it can be used as an intermediary allowing direct token-token trades in a single transaction, including across different blockchains. Notably, traders never need to hold BNT to perform conversions via Bancor Protocol.
+Since BNT is a common pair for all liquidity pools, it can be used as an intermediary allowing direct token-token trades in a single transaction, including across different blockchains. Notably, traders never need to hold BNT to perform conversions via Bancor Protocol.
 
 ## Providing Liquidity on Bancor
 
-Anyone can become a liquidity provider to a Relay and contribute to its reserves. This is different than buying tokens on Bancor. It requires staking tokens in a Relay. Users can stake their tokens in a Relay by buying “Relay Tokens” on bancor.network, or through any third-party liquidity portal built atop the Bancor Protocol. Relay Tokens can be sold at any time to withdraw a proportional share of the Relay’s liquidity.    
+Anyone can become a liquidity provider to a liquidity pool and contribute to its reserves. This is different than buying tokens on Bancor. It requires staking tokens in a liquidity pool. Users can stake their tokens in a liquidity pool by buying “Pool Tokens” on bancor.network, or through any third-party liquidity portal built atop the Bancor Protocol. Pool Tokens can be sold at any time to withdraw a proportional share of the liquidity pool’s liquidity.    
 
-Each time a Relay processes a conversion, a small liquidity provider fee (usually 0.1-0.3%) is taken out of each trade and deposited into the Relay’s reserves. These fees function as an incentive for liquidity providers who can withdraw their proportional share of the reserves including the accumulated fees. The larger a Relay’s reserves, the lower the slippage costs incurred by traders transacting with the Relay, driving more conversion volume and, in turn, more fees for liquidity providers. 
+Each time a liquidiy pool processes a conversion, a small liquidity provider fee (usually 0.1-0.3%) is taken out of each trade and deposited into the liquidiy pool’s reserves. These fees function as an incentive for liquidity providers who can withdraw their proportional share of the reserves including the accumulated fees. The larger a liquidity pool’s reserves, the lower the slippage costs incurred by traders transacting with the pool, driving more conversion volume and, in turn, more fees for liquidity providers. 
 
-Currently, whoever initiates the Relay determines its fees, while in the future, liquidity providers will be able to vote on the Relay’s fee. Bancor takes no platform fee from trades.
+Currently, whoever initiates the liquidity pool can determine its fees, while in the future, liquidity providers will be able to vote on the pool’s fee. Bancor takes no platform fee from trades.
 
 ## Upgradeability
 
@@ -32,9 +32,9 @@ All smart contract functions are public and all upgrades are opt-in. If signific
 
 ## Language
 
-A “Smart Token” refers to tokens which utilize reserves to automate trading, including “Liquid Tokens” (one reserve), “Relay Tokens” (two reserves) and “Array Tokens” (three or more reserves). See Section 6 of the [Bancor Whitepaper](https://storage.googleapis.com/website-bancor/2018/04/01ba8253-bancor_protocol_whitepaper_en.pdf) (“Smart Token Configurations”) for more details.
+A “Smart Token” refers to tokens which utilize reserves to automate trading, including “Liquid Tokens” (one reserve), “Pool Tokens” (two reserves) and “Array Tokens” (three or more reserves). See Section 6 of the [Bancor Whitepaper](https://storage.googleapis.com/website-bancor/2018/04/01ba8253-bancor_protocol_whitepaper_en.pdf) (“Smart Token Configurations”) for more details.
 
-The terms “reserves” and “connectors” have the same meaning throughout Bancor’s smart contract code and documentation. “Reserve ratio” and “connector weight” are also used interchangeably. “Connector balance” refers to the token inventories held in a Smart Token’s reserve.
+The terms “reserves” and “connectors” have the same meaning throughout Bancor’s smart contract code and documentation. “Reserve weight” and “connector weight” are also used interchangeably. “Connector balance” refers to the token inventories held in a Smart Token’s reserve.
 
 ## Warning
 

@@ -18,9 +18,9 @@ MINIMUM_VALUE_BALANCE = 100
 MAXIMUM_VALUE_BALANCE = 10 ** 34
 SAMPLES_COUNT_BALANCE = 150
 
-MINIMUM_VALUE_RATIO = 100000
-MAXIMUM_VALUE_RATIO = 900000
-SAMPLES_COUNT_RATIO = 10
+MINIMUM_VALUE_WEIGHT = 100000
+MAXIMUM_VALUE_WEIGHT = 900000
+SAMPLES_COUNT_WEIGHT = 10
 
 MINIMUM_VALUE_AMOUNT = 1
 MAXIMUM_VALUE_AMOUNT = 10 ** 34
@@ -50,19 +50,19 @@ def Main():
 
 
 def TestAll(collection):
-    collection.ensure_index([(key, pymongo.ASCENDING) for key in ['supply', 'balance', 'ratio', 'amount']])
+    collection.ensure_index([(key, pymongo.ASCENDING) for key in ['supply', 'balance', 'weight', 'amount']])
     rangeSupply = InputGenerator.UniformDistribution(MINIMUM_VALUE_SUPPLY, MAXIMUM_VALUE_SUPPLY, SAMPLES_COUNT_SUPPLY)
     rangeBalance = InputGenerator.UniformDistribution(MINIMUM_VALUE_BALANCE, MAXIMUM_VALUE_BALANCE, SAMPLES_COUNT_BALANCE)
-    rangeRatio = InputGenerator.UniformDistribution(MINIMUM_VALUE_RATIO, MAXIMUM_VALUE_RATIO, SAMPLES_COUNT_RATIO)
+    rangeWeight = InputGenerator.UniformDistribution(MINIMUM_VALUE_WEIGHT, MAXIMUM_VALUE_WEIGHT, SAMPLES_COUNT_WEIGHT)
     rangeAmount = InputGenerator.UniformDistribution(MINIMUM_VALUE_AMOUNT, MAXIMUM_VALUE_AMOUNT, SAMPLES_COUNT_AMOUNT)
 
     for supply in rangeSupply:
         for balance in rangeBalance:
-            for ratio in rangeRatio:
+            for weight in rangeWeight:
                 for amount in rangeAmount:
                     if True:
-                        resultSolidityPort = Run(FormulaSolidityPort, supply, balance, ratio, amount)
-                        resultNativePython = Run(FormulaNativePython, supply, balance, ratio, amount)
+                        resultSolidityPort = Run(FormulaSolidityPort, supply, balance, weight, amount)
+                        resultNativePython = Run(FormulaNativePython, supply, balance, weight, amount)
                         if resultNativePython < 0:
                             status = TRANSACTION_INVALID
                             loss = {'absolute': 0, 'relative': 0}
@@ -78,7 +78,7 @@ def TestAll(collection):
                         filter = {
                             'supply': '{}'.format(supply),
                             'balance': '{}'.format(balance),
-                            'ratio': '{}'.format(ratio),
+                            'weight': '{}'.format(weight),
                             'amount': '{}'.format(amount),
                         }
                         update = {
@@ -88,12 +88,12 @@ def TestAll(collection):
                             'loss': loss,
                         }
                         document = collection.find_one_and_update(filter, {'$set': update}, upsert=True, return_document=pymongo.ReturnDocument.AFTER)
-                        print(', '.join('{}: {}'.format(field, document[field]) for field in ['supply', 'balance', 'ratio', 'amount', 'resultSolidityPort', 'resultNativePython', 'status', 'loss']))
+                        print(', '.join('{}: {}'.format(field, document[field]) for field in ['supply', 'balance', 'weight', 'amount', 'resultSolidityPort', 'resultNativePython', 'status', 'loss']))
 
 
-def Run(module, supply, balance, ratio, amount):
+def Run(module, supply, balance, weight, amount):
     try:
-        return module.calculatePurchaseReturn(supply, balance, ratio, amount)
+        return module.calculatePurchaseReturn(supply, balance, weight, amount)
     except:
         return -1
 

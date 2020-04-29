@@ -29,7 +29,7 @@ contract BancorConverterFactory is IBancorConverterFactory {
       * @param  _registry           address of a contract registry contract
       * @param  _maxConversionFee   maximum conversion fee, represented in ppm
       * @param  _reserveToken       optional, initial reserve, allows defining the first reserve at deployment time
-      * @param  _reserveRatio       optional, ratio for the initial reserve
+      * @param  _reserveWeight      optional, weight for the initial reserve
       * 
       * @return a new converter
     */
@@ -38,14 +38,14 @@ contract BancorConverterFactory is IBancorConverterFactory {
         IContractRegistry _registry,
         uint32 _maxConversionFee,
         IERC20Token _reserveToken,
-        uint32 _reserveRatio
+        uint32 _reserveWeight
     ) public returns(address converterAddress) {
         BancorConverter converter = new BancorConverter(
             _token,
             _registry,
             _maxConversionFee,
             _reserveToken,
-            _reserveRatio
+            _reserveWeight
         );
 
         converter.transferOwnership(msg.sender);

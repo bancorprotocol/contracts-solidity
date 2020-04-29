@@ -308,7 +308,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         uint256 fee;
         uint256 supply;
         uint256 balance;
-        uint32 ratio;
+        uint32 weight;
         IBancorConverter converter;
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
 
@@ -332,8 +332,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
                 // calculate the amount & the conversion fee
                 balance = converter.getConnectorBalance(fromToken);
-                (, ratio, , , ) = converter.connectors(fromToken);
-                amount = formula.calculatePurchaseReturn(supply, balance, ratio, amount);
+                (, weight, , , ) = converter.connectors(fromToken);
+                amount = formula.calculatePurchaseReturn(supply, balance, weight, amount);
                 fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
                 amount -= fee;
 
@@ -349,8 +349,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
                 // calculate the amount & the conversion fee
                 balance = converter.getConnectorBalance(toToken);
-                (, ratio, , , ) = converter.connectors(toToken);
-                amount = formula.calculateSaleReturn(supply, balance, ratio, amount);
+                (, weight, , , ) = converter.connectors(toToken);
+                amount = formula.calculateSaleReturn(supply, balance, weight, amount);
                 fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
                 amount -= fee;
 
