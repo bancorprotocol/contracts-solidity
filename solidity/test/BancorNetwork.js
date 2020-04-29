@@ -14,7 +14,9 @@ const ContractFeatures = artifacts.require('ContractFeatures');
 const EtherToken = artifacts.require('EtherToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
-const BancorConverterOld = require('./helpers/BancorConverter');
+const BancorConverterHelper = require('./helpers/BancorConverter');
+
+const OLD_CONVERTER_VERSION = 9;
 
 let bnt;
 let erc20Token1;
@@ -97,6 +99,13 @@ function initPaths(tokens, generatePaths) {
             'ERC2':     [smartToken2, smartToken2, bnt, smartToken3, erc20Token2],
             'SMART4':   [smartToken2, smartToken2, bnt, smartToken4, smartToken4]
         },
+        'SMART4': {
+            'ETH':      [smartToken4, smartToken4, bnt, smartToken1, ''],
+            'BNT':      [smartToken4, smartToken4, bnt],
+            'ERC1':     [smartToken4, smartToken4, bnt, smartToken2, erc20Token1],
+            'ERC2':     [smartToken4, smartToken4, bnt, smartToken3, erc20Token2],
+            'SMART3':   [smartToken4, smartToken4, bnt, smartToken3, smartToken3]
+        },
     };
 
     if (tokens.length <= 0)
@@ -160,7 +169,7 @@ async function initTokensAndConverters(accounts) {
     converter3 = await BancorConverter.new(smartToken3.address, contractRegistry.address, 0, bnt.address, 350000);
     await converter3.addReserve(erc20Token2.address, 100000);
 
-    converter4 = await BancorConverterOld.new(smartToken4.address, contractRegistry.address, 0, bnt.address, 220000, OLD_CONVERTER_VERSION);
+    converter4 = await BancorConverterHelper.new(smartToken4.address, contractRegistry.address, 0, bnt.address, 220000, OLD_CONVERTER_VERSION);
 
     await bnt.transfer(converter1.address, 40000);
     await bnt.transfer(converter2.address, 70000);
@@ -486,11 +495,11 @@ contract('BancorNetwork', accounts => {
         });
 
         it('verifies that claimAndConvertFor transfers the converted amount correctly when converter from an old converter to a new one', async () => {
-            let path = paths['SMART4']['SMART2'];
+            let path = paths['SMART4']['SMART3'];
             await smartToken4.approve(bancorNetwork.address, 10000);
-            let balanceBeforeTransfer = await smartToken2.balanceOf.call(accounts[1]);
+            let balanceBeforeTransfer = await smartToken3.balanceOf.call(accounts[1]);
             await bancorNetwork.claimAndConvertFor(path, 10000, 1, accounts[1]);
-            let balanceAfterTransfer = await smartToken2.balanceOf.call(accounts[1]);
+            let balanceAfterTransfer = await smartToken3.balanceOf.call(accounts[1]);
             assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
         });
 

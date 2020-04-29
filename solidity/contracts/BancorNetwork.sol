@@ -417,7 +417,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         bool isNewerConverter = isV27OrHigherConverter(firstConverter);
 
         // ETH
-        if (_sourceToken == address(0)) {
+        if (msg.value > 0) {
             // validate msg.value
             require(msg.value == _amount);
 
@@ -431,10 +431,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
         // EtherToken
         else if (etherTokens[_sourceToken]) {
-            // validate msg.value
-            require(msg.value == 0);
-
-            // claim the tokens
+            // claim the tokens - if the source token is address(0), this call will fail
+            // since in that case the transaction must be sent with msg.value
             safeTransferFrom(_sourceToken, msg.sender, this, _amount);
 
             // ETH converter - withdraw the ETH
@@ -443,9 +441,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
         // other ERC20 token
         else {
-            // validate msg.value
-            require(msg.value == 0);
-
             // newer converter - transfer the tokens from the sender directly to the converter
             // otherwise claim the tokens
             if (isNewerConverter)
