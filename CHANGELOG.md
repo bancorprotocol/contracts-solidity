@@ -1,3 +1,8 @@
+### 0.5.19 (2020-04-18)
+BancorConverter
+* Added re-entrancy protection
+
+
 ### 0.5.18 (2020-03-05)
 BancorConverterRegistry
 * Reverted the signature change of `getLiquidityPoolByReserveConfig` (logic is still intact)

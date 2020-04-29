@@ -56,6 +56,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
                                                     // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public conversionFee = 0;                // current conversion fee, represented in ppm, 0...maxConversionFee
     bool public conversionsEnabled = true;          // deprecated, backward compatibility
+    bool private locked = false;                    // re-entrancy protection
 
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
 
@@ -132,6 +133,14 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
 
         if (_reserveToken != address(0))
             addReserve(_reserveToken, _reserveRatio);
+    }
+
+    // protects a function against reentrancy attacks
+    modifier protected() {
+        require(!locked);
+        locked = true;
+        _;
+        locked = false;
     }
 
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
@@ -534,6 +543,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     */
     function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn)
         internal
+        protected
         only(BANCOR_NETWORK)
         greaterThanZero(_minReturn)
         returns (uint256)
@@ -802,6 +812,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     function fund(uint256 _amount)
         public
         payable
+        protected
         multipleReservesOnly
     {
         uint256 supply = token.totalSupply();
@@ -848,6 +859,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, ContractRegi
     */
     function liquidate(uint256 _amount)
         public
+        protected
         multipleReservesOnly
     {
         uint256 supply = token.totalSupply();
