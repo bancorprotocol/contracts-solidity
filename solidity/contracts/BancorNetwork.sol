@@ -64,6 +64,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * @param _registry    address of a contract registry contract
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
+        etherTokens[address(0)] = true;
+    }
+
+    /**
+      * @dev deposit ether
+    */
+    function() external payable {
     }
 
     /**
@@ -118,7 +125,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // handle msg.value
         if (etherTokens[_path[0]]) {
             require(msg.value == _amount);
-            IEtherToken(_path[0]).deposit.value(msg.value)();
+            if (!isOwnerAnETHConverter(_path[1]))
+                IEtherToken(_path[0]).deposit.value(msg.value)();
         }
         else {
             require(msg.value == 0);
@@ -131,8 +139,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // if the target token is an ether token, withdraw the tokens and send them as ETH
         // otherwise, transfer the tokens as is
         IERC20Token toToken = _path[_path.length - 1];
-        if (etherTokens[toToken])
-            IEtherToken(toToken).withdrawTo(_for, amount);
+        if (etherTokens[toToken]) {
+            if (isOwnerAnETHConverter(_path[_path.length - 2]))
+                _for.transfer(amount);
+            else
+                IEtherToken(toToken).withdrawTo(_for, amount);
+        }
         else {
             uint256 prevBalance = toToken.balanceOf(_for);
             INonStandardERC20(toToken).transfer(_for, amount);
@@ -183,7 +195,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // handle msg.value
         if (etherTokens[_path[0]]) {
             require(msg.value == _amount);
-            IEtherToken(_path[0]).deposit.value(msg.value)();
+            if (!isOwnerAnETHConverter(_path[1]))
+                IEtherToken(_path[0]).deposit.value(msg.value)();
         }
         else {
             require(msg.value == 0);
@@ -227,7 +240,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         address bntToken;
         if (address(_affiliateAccount) == 0) {
             require(_affiliateFee == 0);
-            bntToken = address(0);
+            bntToken = address(~0);
         }
         else {
             require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee);
@@ -239,18 +252,18 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             IBancorConverter converter = IBancorConverter(ISmartToken(_path[i - 1]).owner());
 
             // if the smart token isn't the source (from token), the converter doesn't have control over it and thus we need to approve the request
-            if (_path[i - 1] != _path[i - 2])
+            if (_path[i - 1] != _path[i - 2] && _path[i - 2] != IERC20Token(0))
                 ensureAllowance(_path[i - 2], converter, fromAmount);
 
             // make the conversion - if it's the last one, also provide the minimum return value
-            toAmount = converter.change(_path[i - 2], _path[i], fromAmount, i == lastIndex ? _minReturn : 1);
+            toAmount = change(converter, _path[i - 2], _path[i], fromAmount, i == lastIndex ? _minReturn : 1);
 
             // pay affiliate-fee if needed
             if (address(_path[i]) == bntToken) {
                 uint256 affiliateAmount = toAmount.mul(_affiliateFee).div(AFFILIATE_FEE_RESOLUTION);
                 require(_path[i].transfer(_affiliateAccount, affiliateAmount));
                 toAmount -= affiliateAmount;
-                bntToken = address(0);
+                bntToken = address(~0);
             }
 
             emit Conversion(_path[i - 1], _path[i - 2], _path[i], fromAmount, toAmount, msg.sender);
@@ -258,6 +271,24 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
 
         return toAmount;
+    }
+
+    function change(
+        IBancorConverter _converter,
+        IERC20Token _fromToken,
+        IERC20Token _toToken,
+        uint256 _amount,
+        uint256 _minReturn
+    ) private returns (uint256) {
+        if (etherTokens[_fromToken] || etherTokens[_toToken]) {
+            if (isETHConverter(_converter)) {
+                if (etherTokens[_fromToken])
+                    return _converter.change.value(msg.value)(IERC20Token(0), _toToken, _amount, _minReturn);
+                if (etherTokens[_toToken])
+                    return _converter.change(_fromToken, IERC20Token(0), _amount, _minReturn);
+            }
+        }
+        return _converter.change(_fromToken, _toToken, _amount, _minReturn);
     }
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(uint256(keccak256("getReturn(address,address,uint256)") >> (256 - 4 * 8)));
@@ -448,6 +479,15 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             }
         }
         return true;
+    }
+
+    function isOwnerAnETHConverter(IERC20Token _smartToken) private view returns (bool) {
+        return isETHConverter(IBancorConverter(ISmartToken(_smartToken).owner()));
+    }
+
+    function isETHConverter(IBancorConverter _converter) private view returns (bool) {
+        (, , , , bool isSet) = _converter.connectors(address(0));
+        return isSet;
     }
 
     /**

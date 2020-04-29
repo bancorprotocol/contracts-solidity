@@ -5,6 +5,7 @@ import './interfaces/IBancorConverterFactory.sol';
 import '../utility/ContractRegistryClient.sol';
 import '../utility/interfaces/IContractFeatures.sol';
 import '../utility/interfaces/IWhitelist.sol';
+import '../token/interfaces/IEtherToken.sol';
 import '../FeatureIds.sol';
 
 /*
@@ -18,9 +19,11 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function setConversionWhitelist(IWhitelist _whitelist) public;
     function transferTokenOwnership(address _newOwner) public;
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public;
+    function withdrawETH(address _to) public;
     function acceptTokenOwnership() public;
     function setConversionFee(uint32 _conversionFee) public;
     function addReserve(IERC20Token _token, uint32 _ratio) public;
+    function addETHReserve(uint32 _ratio) public;
     function updateReserveVirtualBalance(IERC20Token _reserveToken, uint256 _virtualBalance) public;
 }
 
@@ -40,7 +43,7 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
   * and then the upgrader 'upgrade' function should be executed directly.
 */
 contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryClient, FeatureIds {
-    string public version = '0.3';
+    IEtherToken etherToken;
 
     /**
       * @dev triggered when the contract accept a converter ownership
@@ -63,7 +66,8 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * 
       * @param _registry    address of a contract registry contract
     */
-    constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
+    constructor(IContractRegistry _registry, IEtherToken _etherToken) ContractRegistryClient(_registry) public {
+        etherToken = _etherToken;
     }
 
     /**
@@ -189,11 +193,20 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
             address connectorAddress = _oldConverter.connectorTokens(i);
             (uint256 virtualBalance, uint32 ratio, , , ) = _oldConverter.connectors(connectorAddress);
 
-            IERC20Token connectorToken = IERC20Token(connectorAddress);
-            _newConverter.addReserve(connectorToken, ratio);
-
+            // Ether reserve
+            if (connectorAddress == address(0)) {
+                _newConverter.addETHReserve(ratio);
+            }
+            // Ether reserve token
+            else if (connectorAddress == address(etherToken)) {
+                _newConverter.addETHReserve(ratio);
+            }
+            // ERC20 reserve token
+            else {
+                _newConverter.addReserve(IERC20Token(connectorAddress), ratio);
+            }
             if (virtualBalance > 0)
-                _newConverter.updateReserveVirtualBalance(connectorToken, virtualBalance);
+                _newConverter.updateReserveVirtualBalance(IERC20Token(connectorAddress), virtualBalance);
         }
     }
 
@@ -224,9 +237,22 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
 
         for (uint16 i = 0; i < connectorTokenCount; i++) {
             address connectorAddress = _oldConverter.connectorTokens(i);
-            IERC20Token connector = IERC20Token(connectorAddress);
-            connectorBalance = connector.balanceOf(_oldConverter);
-            _oldConverter.withdrawTokens(connector, address(_newConverter), connectorBalance);
+            // Ether reserve
+            if (connectorAddress == address(0)) {
+                _oldConverter.withdrawETH(address(_newConverter));
+            }
+            // Ether reserve token
+            else if (connectorAddress == address(etherToken)) {
+                connectorBalance = etherToken.balanceOf(_oldConverter);
+                _oldConverter.withdrawTokens(etherToken, address(this), connectorBalance);
+                etherToken.withdrawTo(address(_newConverter), connectorBalance);
+            }
+            // ERC20 reserve token
+            else {
+                IERC20Token connector = IERC20Token(connectorAddress);
+                connectorBalance = connector.balanceOf(_oldConverter);
+                _oldConverter.withdrawTokens(connector, address(_newConverter), connectorBalance);
+            }
         }
     }
 }
