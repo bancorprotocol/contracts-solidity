@@ -529,27 +529,25 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @param _sourceToken source ERC20 token
       * @param _targetToken target ERC20 token
       * @param _amount      amount of tokens to convert (in units of the source token)
-      * @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _beneficiary wallet to receive the conversion result
       *
       * @return amount of tokens received (in units of the target token)
     */
-    function convertInternal(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn, address _beneficiary)
+    function convertInternal(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _beneficiary)
         public
         payable
         protected
         only(BANCOR_NETWORK)
-        greaterThanZero(_minReturn)
         returns (uint256)
     {
         require(_sourceToken != _targetToken); // validate input
 
         if (_targetToken == token)
-            return buy(_sourceToken, _amount, _minReturn, _beneficiary);
+            return buy(_sourceToken, _amount, _beneficiary);
         else if (_sourceToken == token)
-            return sell(_targetToken, _amount, _minReturn, _beneficiary);
+            return sell(_targetToken, _amount, _beneficiary);
         else
-            return crossConvert(_sourceToken, _targetToken, _amount, _minReturn, _beneficiary);
+            return crossConvert(_sourceToken, _targetToken, _amount, _beneficiary);
     }
 
     /**
@@ -557,16 +555,15 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * 
       * @param _reserveToken    reserve token contract address
       * @param _depositAmount   amount of tokens to deposit (in units of the reserve token)
-      * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _beneficiary     wallet to receive the conversion result
       * 
       * @return amount of tokens received (in units of the smart token)
     */
-    function buy(IERC20Token _reserveToken, uint256 _depositAmount, uint256 _minReturn, address _beneficiary) internal returns (uint256) {
+    function buy(IERC20Token _reserveToken, uint256 _depositAmount, address _beneficiary) internal returns (uint256) {
         (uint256 amount, uint256 feeAmount) = getPurchaseReturn(_reserveToken, _depositAmount);
 
-        // ensure the trade gives something in return and meets the minimum requested amount
-        require(amount != 0 && amount >= _minReturn);
+        // ensure the trade gives something in return
+        require(amount != 0);
 
         // ensure that the input amount was already deposited
         if (_reserveToken == IERC20Token(0))
@@ -594,19 +591,18 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * 
       * @param _reserveToken    reserve token contract address
       * @param _sellAmount      amount of tokens to sell (in units of the smart token)
-      * @param _minReturn       if the conversion results in an amount smaller the minimum return - it is cancelled, must be nonzero
       * @param _beneficiary     wallet to receive the conversion result
       * 
       * @return amount of tokens received (in units of the reserve token)
     */
-    function sell(IERC20Token _reserveToken, uint256 _sellAmount, uint256 _minReturn, address _beneficiary) internal returns (uint256) {
+    function sell(IERC20Token _reserveToken, uint256 _sellAmount, address _beneficiary) internal returns (uint256) {
         // ensure that the input amount was already deposited
         require(_sellAmount <= token.balanceOf(this));
 
         (uint256 amount, uint256 feeAmount) = getSaleReturn(_reserveToken, _sellAmount);
 
-        // ensure the trade gives something in return and meets the minimum requested amount
-        require(amount != 0 && amount >= _minReturn);
+        // ensure the trade gives something in return
+        require(amount != 0);
 
         // ensure that the trade will only deplete the reserve balance if the total supply is depleted as well
         uint256 tokenSupply = token.totalSupply();
@@ -640,16 +636,15 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @param _sourceToken source reserve token contract address
       * @param _targetToken target reserve token contract address
       * @param _amount      amount of tokens to convert (in units of the source reserve token)
-      * @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _beneficiary wallet to receive the conversion result
       * 
       * @return amount of tokens received (in units of the target reserve token)
     */
-    function crossConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn, address _beneficiary) internal returns (uint256) {
+    function crossConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _beneficiary) internal returns (uint256) {
         (uint256 amount, uint256 feeAmount) = getCrossReserveReturn(_sourceToken, _targetToken, _amount);
 
-        // ensure the trade gives something in return and meets the minimum requested amount
-        require(amount != 0 && amount >= _minReturn);
+        // ensure the trade gives something in return
+        require(amount != 0);
 
         // ensure that the trade won't deplete the reserve balance
         uint256 toReserveBalance = reserveBalance(_targetToken);
