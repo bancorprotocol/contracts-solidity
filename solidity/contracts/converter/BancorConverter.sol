@@ -41,15 +41,16 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     */
     uint16 public version = 27;
 
-    IWhitelist public conversionWhitelist;                  // whitelist contract with list of addresses that are allowed to use the converter
-    IERC20Token[] public reserveTokens;                     // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
-    mapping (address => Reserve) public reserves;           // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
-    uint32 public totalReserveRatio = 0;                    // total ratio of all reservces, also used to efficiently prevent increasing
-                                                            // the total reserve ratio above 100%
-    uint32 public maxConversionFee = 0;                     // maximum conversion fee for the lifetime of the contract,
-                                                            // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
-    uint32 public conversionFee = 0;                        // current conversion fee, represented in ppm, 0...maxConversionFee
-    bool public conversionsEnabled = true;                  // deprecated, backward compatibility
+    IWhitelist public conversionWhitelist;          // whitelist contract with list of addresses that are allowed to use the converter
+    IERC20Token[] public reserveTokens;             // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
+    mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
+    uint32 public totalReserveRatio = 0;            // total ratio of all reservces, also used to efficiently prevent increasing
+                                                    // the total reserve ratio above 100%
+    uint32 public maxConversionFee = 0;             // maximum conversion fee for the lifetime of the contract,
+                                                    // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
+    uint32 public conversionFee = 0;                // current conversion fee, represented in ppm, 0...maxConversionFee
+    bool public conversionsEnabled = true;          // deprecated, backward compatibility
+    bool private locked = false;                    // true while protected code is being executed, false if not
 
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
 
@@ -126,6 +127,14 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
         if (_reserveToken != address(0))
             addReserve(_reserveToken, _reserveRatio);
+    }
+
+    // protects a function against reentrancy attacks
+    modifier protected() {
+        require(!locked);
+        locked = true;
+        _;
+        locked = false;
     }
 
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
@@ -528,6 +537,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _beneficiary)
         public
         payable
+        protected
         only(BANCOR_NETWORK)
         greaterThanZero(_minReturn)
         returns (uint256)
@@ -798,6 +808,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     function fund(uint256 _amount)
         public
         payable
+        protected
         multipleReservesOnly
     {
         uint256 supply = token.totalSupply();
@@ -846,6 +857,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     */
     function liquidate(uint256 _amount)
         public
+        protected
         multipleReservesOnly
     {
         uint256 supply = token.totalSupply();
