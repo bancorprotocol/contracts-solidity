@@ -14,6 +14,7 @@ const ContractFeatures = artifacts.require('ContractFeatures');
 const EtherToken = artifacts.require('EtherToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
+const BancorConverterOld = require('./helpers/BancorConverter');
 
 let bnt;
 let erc20Token1;
@@ -159,7 +160,7 @@ async function initTokensAndConverters(accounts) {
     converter3 = await BancorConverter.new(smartToken3.address, contractRegistry.address, 0, bnt.address, 350000);
     await converter3.addReserve(erc20Token2.address, 100000);
 
-    converter4 = await BancorConverter.new(smartToken4.address, contractRegistry.address, 0, bnt.address, 220000);
+    converter4 = await BancorConverterOld.new(smartToken4.address, contractRegistry.address, 0, bnt.address, 220000, OLD_CONVERTER_VERSION);
 
     await bnt.transfer(converter1.address, 40000);
     await bnt.transfer(converter2.address, 70000);
@@ -475,12 +476,21 @@ contract('BancorNetwork', accounts => {
             await utils.catchRevert(bancorNetwork.convert(longBuyPath, 10000, 1, { from: accounts[1], value: 10000 }));
         });
 
-        it('verifies that claimAndConvertFor transfers the converted amount correctly', async () => {
+        it('verifies that claimAndConvertFor transfers the converted amount correctly when converter from a new converter to an old one', async () => {
             let path = paths['SMART2']['SMART4'];
             await smartToken2.approve(bancorNetwork.address, 10000);
             let balanceBeforeTransfer = await smartToken4.balanceOf.call(accounts[1]);
             await bancorNetwork.claimAndConvertFor(path, 10000, 1, accounts[1]);
             let balanceAfterTransfer = await smartToken4.balanceOf.call(accounts[1]);
+            assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
+        });
+
+        it('verifies that claimAndConvertFor transfers the converted amount correctly when converter from an old converter to a new one', async () => {
+            let path = paths['SMART4']['SMART2'];
+            await smartToken4.approve(bancorNetwork.address, 10000);
+            let balanceBeforeTransfer = await smartToken2.balanceOf.call(accounts[1]);
+            await bancorNetwork.claimAndConvertFor(path, 10000, 1, accounts[1]);
+            let balanceAfterTransfer = await smartToken2.balanceOf.call(accounts[1]);
             assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
         });
 
