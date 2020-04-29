@@ -45,7 +45,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         IERC20Token targetToken;
         uint256 minReturn;
         address beneficiary;
-        bool isV27OrHigherConverter;
+        bool isV28OrHigherConverter;
         bool processAffiliateFee;
     }
 
@@ -235,7 +235,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             ConversionStep memory stepData = _data[i];
 
             // newer converter
-            if (stepData.isV27OrHigherConverter) {
+            if (stepData.isV28OrHigherConverter) {
                 // transfer the tokens to the converter only if the network contract currently holds the tokens
                 // not needed with ETH or if it's the first conversion step
                 if (i != 0 && _data[i - 1].beneficiary == address(this) && !etherTokens[stepData.sourceToken])
@@ -249,7 +249,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             }
 
             // do the conversion
-            if (!stepData.isV27OrHigherConverter)
+            if (!stepData.isV28OrHigherConverter)
                 toAmount = ILegacyBancorConverter(stepData.converter).change(stepData.sourceToken, stepData.targetToken, fromAmount, stepData.minReturn);
             else if (etherTokens[stepData.sourceToken])
                 toAmount = stepData.converter.convertInternal.value(msg.value)(stepData.sourceToken, stepData.targetToken, fromAmount, stepData.minReturn, stepData.beneficiary);
@@ -413,7 +413,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     */
     function handleSourceToken(IERC20Token _sourceToken, ISmartToken _smartToken, uint256 _amount) private {
         IBancorConverter firstConverter = IBancorConverter(_smartToken.owner());
-        bool isNewerConverter = isV27OrHigherConverter(firstConverter);
+        bool isNewerConverter = isV28OrHigherConverter(firstConverter);
 
         // ETH
         if (msg.value > 0) {
@@ -468,7 +468,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // ETH / EtherToken
         if (etherTokens[targetToken]) {
             // newer converter should send ETH directly to the beneficiary
-            assert(!stepData.isV27OrHigherConverter);
+            assert(!stepData.isV28OrHigherConverter);
 
             // EtherToken converter - withdraw the ETH and transfer to the beneficiary
             IEtherToken(targetToken).withdrawTo(_beneficiary, _amount);
@@ -524,7 +524,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 beneficiary: address(0),
 
                 // set flags
-                isV27OrHigherConverter: isV27OrHigherConverter(converter),
+                isV28OrHigherConverter: isV28OrHigherConverter(converter),
                 processAffiliateFee: processAffiliateFee
             });
         }
@@ -534,7 +534,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         ConversionStep memory stepData = data[0];
         if (etherTokens[stepData.sourceToken]) {
             // newer converter - replace the source token with address(0)
-            if (stepData.isV27OrHigherConverter)
+            if (stepData.isV28OrHigherConverter)
                 stepData.sourceToken = IERC20Token(0);
             // older converter - replace the source token with the EtherToken address used by the converter
             else
@@ -545,7 +545,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         stepData = data[data.length - 1];
         if (etherTokens[stepData.targetToken]) {
             // newer converter - replace the source token with address(0)
-            if (stepData.isV27OrHigherConverter)
+            if (stepData.isV28OrHigherConverter)
                 stepData.targetToken = IERC20Token(0);
             // older converter - replace the source token with the EtherToken address used by the converter
             else
@@ -557,7 +557,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             stepData = data[i];
 
             // first check if the converter in this step is newer as older converters don't even support the beneficiary argument
-            if (stepData.isV27OrHigherConverter) {
+            if (stepData.isV28OrHigherConverter) {
                 // if affiliate fee is processed in this step, beneficiary is the network contract
                 if (stepData.processAffiliateFee)
                     stepData.beneficiary = this;
@@ -565,7 +565,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 else if (i == data.length - 1)
                     stepData.beneficiary = _beneficiary;
                 // if the converter in the next step is newer, beneficiary is the next converter
-                else if (data[i + 1].isV27OrHigherConverter)
+                else if (data[i + 1].isV28OrHigherConverter)
                     stepData.beneficiary = data[i + 1].converter;
                 // the converter in the next step is older, beneficiary is the network contract
                 else
@@ -613,12 +613,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         return true;
     }
 
-    bytes4 private constant IS_V27_OR_HIGHER_FUNC_SELECTOR = bytes4(uint256(keccak256("isV27OrHigher()") >> (256 - 4 * 8)));
+    bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(uint256(keccak256("isV28OrHigher()") >> (256 - 4 * 8)));
 
-    function isV27OrHigherConverter(IBancorConverter _converter) public view returns (bool) {
+    function isV28OrHigherConverter(IBancorConverter _converter) public view returns (bool) {
         bool success;
         uint256[1] memory ret;
-        bytes memory data = abi.encodeWithSelector(IS_V27_OR_HIGHER_FUNC_SELECTOR);
+        bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);
 
         assembly {
             success := staticcall(

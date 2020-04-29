@@ -285,8 +285,8 @@ contract('BancorNetwork', accounts => {
             await initTokensAndConverters(accounts);
         });
 
-        it('verifies that isV27OrHigherConverter returns true', async () => {
-            assert.isTrue(await bancorNetwork.isV27OrHigherConverter.call(converter1.address));
+        it('verifies that isV28OrHigherConverter returns true', async () => {
+            assert.isTrue(await bancorNetwork.isV28OrHigherConverter.call(converter1.address));
         });
         
         for (let sourceSymbol in pathsTokens) {

@@ -61,8 +61,8 @@ contract('BancorNetworkWithOldConverter', accounts => {
         await converter.acceptTokenOwnership();
     });
 
-    it('verifies that isV27OrHigherConverter returns false', async () => {
-        assert.isFalse(await bancorNetwork.isV27OrHigherConverter.call(converter.address));
+    it('verifies that isV28OrHigherConverter returns false', async () => {
+        assert.isFalse(await bancorNetwork.isV28OrHigherConverter.call(converter.address));
     });
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting a reserve to the smart token', async () => {

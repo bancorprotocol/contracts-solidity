@@ -192,11 +192,11 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     }
 
     /**
-      * @dev checks whether or not the converter version is 27 or higher
+      * @dev checks whether or not the converter version is 28 or higher
       * 
-      * @return true, since the converter version is 27 or higher
+      * @return true, since the converter version is 28 or higher
     */
-    function isV27OrHigher() public pure returns (bool) {
+    function isV28OrHigher() public pure returns (bool) {
         return true;
     }
 
