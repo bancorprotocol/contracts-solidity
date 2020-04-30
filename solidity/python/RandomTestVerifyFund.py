@@ -21,8 +21,8 @@ if size == 0:
     size = int(input('How many test-cases would you like to execute? '))
 
 
-minWeight = Decimal('+inf')
-maxWeight = Decimal('-inf')
+minRatio = Decimal('+inf')
+maxRatio = Decimal('-inf')
 numOfFailures = 0
 
 
@@ -34,10 +34,10 @@ for n in range(size):
     weight2 = random.randrange(1, 1000000)
     amount0 = random.randrange(1, supply // 10)
     try:
-        weight = formulaTest(supply, balance1, weight1, balance2, weight2, amount0)
-        minWeight = min(minWeight, weight)
-        maxWeight = max(maxWeight, weight)
+        ratio = formulaTest(supply, balance1, weight1, balance2, weight2, amount0)
+        minRatio = min(minRatio, ratio)
+        maxRatio = max(maxRatio, ratio)
     except Exception as error:
-        weight = 0
+        ratio = 0
         numOfFailures += 1
-    print('Test #{}: weight = {:.24f}, minWeight = {:.24f}, maxWeight = {:.24f}, num of failures = {}'.format(n, weight, minWeight, maxWeight, numOfFailures))
+    print('Test #{}: ratio = {:.24f}, minRatio = {:.24f}, maxRatio = {:.24f}, num of failures = {}'.format(n, ratio, minRatio, maxRatio, numOfFailures))
