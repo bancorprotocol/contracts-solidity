@@ -93,28 +93,28 @@ Here is an example of the initial configuration file which should be provided to
     },
     "converter1Params": {
         "fee": 1000,
-        "ratio1": 500000,
+        "weight1": 500000,
         "reserve1": "7950000000000000000",
-        "ratio2": 500000,
+        "weight2": 500000,
         "reserve2": "12700000000000000"
     },
     "converter2Params": {
         "fee": 1000,
-        "ratio1": 500000,
+        "weight1": 500000,
         "reserve1": "340000000000000000",
-        "ratio2": 500000,
+        "weight2": 500000,
         "reserve2": "1040000000000000000"
     },
     "converter3Params": {
         "fee": 2000,
-        "ratio1": 500000,
+        "weight1": 500000,
         "reserve1": "369000000000000000",
-        "ratio2": 500000,
+        "weight2": 500000,
         "reserve2": "84800000000000000"
     },
     "converter4Params": {
         "fee": 3000,
-        "ratio1": 100000,
+        "weight1": 100000,
         "reserve1": "41100000000000000"
     }
 }
