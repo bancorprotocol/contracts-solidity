@@ -22,8 +22,8 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function withdrawETH(address _to) public;
     function acceptTokenOwnership() public;
     function setConversionFee(uint32 _conversionFee) public;
-    function addReserve(IERC20Token _token, uint32 _ratio) public;
-    function addETHReserve(uint32 _ratio) public;
+    function addReserve(IERC20Token _token, uint32 _weight) public;
+    function addETHReserve(uint32 _weight) public;
 }
 
 /**
@@ -190,19 +190,19 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
 
         for (uint16 i = 0; i < connectorTokenCount; i++) {
             address connectorAddress = _oldConverter.connectorTokens(i);
-            (, uint32 ratio, , , ) = _oldConverter.connectors(connectorAddress);
+            (, uint32 weight, , , ) = _oldConverter.connectors(connectorAddress);
 
             // Ether reserve
             if (connectorAddress == address(0)) {
-                _newConverter.addETHReserve(ratio);
+                _newConverter.addETHReserve(weight);
             }
             // Ether reserve token
             else if (connectorAddress == address(etherToken)) {
-                _newConverter.addETHReserve(ratio);
+                _newConverter.addETHReserve(weight);
             }
             // ERC20 reserve token
             else {
-                _newConverter.addReserve(IERC20Token(connectorAddress), ratio);
+                _newConverter.addReserve(IERC20Token(connectorAddress), weight);
             }
         }
     }

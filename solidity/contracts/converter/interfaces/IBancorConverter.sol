@@ -12,7 +12,7 @@ contract IBancorConverter {
     function quickConvert2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256);
     function conversionWhitelist() public view returns (IWhitelist) {this;}
     function conversionFee() public view returns (uint32) {this;}
-    function getReserveBalance(IERC20Token _reserveToken) public view returns (uint256);
+    function reserveBalance(IERC20Token _reserveToken) public view returns (uint256);
     function() external payable;
 
     // deprecated, backward compatibility

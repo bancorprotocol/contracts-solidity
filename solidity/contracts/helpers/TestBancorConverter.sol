@@ -7,9 +7,9 @@ contract TestBancorConverter is BancorConverter {
         IContractRegistry _registry,
         uint32 _maxConversionFee,
         IERC20Token _reserveToken,
-        uint32 _reserveRatio
+        uint32 _reserveWeight
     )
-        BancorConverter(_token, _registry, _maxConversionFee, _reserveToken, _reserveRatio)
+        BancorConverter(_token, _registry, _maxConversionFee, _reserveToken, _reserveWeight)
         public
     {
         etherToken = IEtherToken(0);
