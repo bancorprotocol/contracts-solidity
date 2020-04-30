@@ -14,7 +14,7 @@ import './bancorx/interfaces/IBancorX.sol';
 
 // interface of older converters for backward compatibility
 contract ILegacyBancorConverter {
-    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256);
+    function change(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn) public returns (uint256);
 }
 
 /**
@@ -25,12 +25,12 @@ contract ILegacyBancorConverter {
   * when the conversion cannot necessarily be done by a single converter and might require multiple 'hops'.
   * The path defines which converters should be used and what kind of conversion should be done in each step.
   * 
-  * The path format doesn't include complex structure; instead, it is represented by a single array in which each 'hop' is represented by a 2-tuple - smart token & to token.
+  * The path format doesn't include complex structure; instead, it is represented by a single array in which each 'hop' is represented by a 2-tuple - smart token & target token.
   * In addition, the first element is always the source token.
   * The smart token is only used as a pointer to a converter (since converter addresses are more likely to change as opposed to smart token addresses).
   * 
   * Format:
-  * [source token, smart token, to token, smart token, to token...]
+  * [source token, smart token, target token, smart token, target token...]
 */
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, FeatureIds {
     using SafeMath for uint256;
@@ -56,12 +56,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     /**
       * @dev triggered when a conversion between two tokens occurs
       * 
-      * @param _smartToken      smart token governed by the converter
-      * @param _fromToken       ERC20 token converted from
-      * @param _toToken         ERC20 token converted to
-      * @param _fromAmount      amount converted, in fromToken
-      * @param _toAmount        amount returned, minus conversion fee
-      * @param _trader          wallet that initiated the trade
+      * @param _smartToken  smart token governed by the converter
+      * @param _fromToken   source ERC20 token
+      * @param _toToken     target ERC20 token
+      * @param _fromAmount  amount converted, in the source token
+      * @param _toAmount    amount returned, minus conversion fee
+      * @param _trader      wallet that initiated the trade
     */
     event Conversion(
         address indexed _smartToken,
@@ -272,9 +272,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(uint256(keccak256("getReturn(address,address,uint256)") >> (256 - 4 * 8)));
 
-    function getReturn(address _dest, address _fromToken, address _toToken, uint256 _amount) internal view returns (uint256, uint256) {
+    function getReturn(address _dest, address _sourceToken, address _targetToken, uint256 _amount) internal view returns (uint256, uint256) {
         uint256[2] memory ret;
-        bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _fromToken, _toToken, _amount);
+        bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _sourceToken, _targetToken, _amount);
 
         assembly {
             let success := staticcall(
@@ -319,11 +319,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
         // iterate over the conversion path
         for (uint256 i = 2; i < _path.length; i += 2) {
-            IERC20Token fromToken = _path[i - 2];
+            IERC20Token sourceToken = _path[i - 2];
             IERC20Token smartToken = _path[i - 1];
-            IERC20Token toToken = _path[i];
+            IERC20Token targetToken = _path[i];
 
-            if (toToken == smartToken) { // buy the smart token
+            if (targetToken == smartToken) { // buy the smart token
                 // check if the current smart token has changed
                 if (i < 3 || smartToken != _path[i - 3]) {
                     supply = smartToken.totalSupply();
@@ -331,8 +331,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 }
 
                 // calculate the amount & the conversion fee
-                balance = converter.getConnectorBalance(fromToken);
-                (, weight, , , ) = converter.connectors(fromToken);
+                balance = converter.getConnectorBalance(sourceToken);
+                (, weight, , , ) = converter.connectors(sourceToken);
                 amount = formula.calculatePurchaseReturn(supply, balance, weight, amount);
                 fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
                 amount -= fee;
@@ -340,7 +340,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 // update the smart token supply for the next iteration
                 supply += amount;
             }
-            else if (fromToken == smartToken) { // sell the smart token
+            else if (sourceToken == smartToken) { // sell the smart token
                 // check if the current smart token has changed
                 if (i < 3 || smartToken != _path[i - 3]) {
                     supply = smartToken.totalSupply();
@@ -348,8 +348,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 }
 
                 // calculate the amount & the conversion fee
-                balance = converter.getConnectorBalance(toToken);
-                (, weight, , , ) = converter.connectors(toToken);
+                balance = converter.getConnectorBalance(targetToken);
+                (, weight, , , ) = converter.connectors(targetToken);
                 amount = formula.calculateSaleReturn(supply, balance, weight, amount);
                 fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
                 amount -= fee;
@@ -363,7 +363,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                     converter = IBancorConverter(ISmartToken(smartToken).owner());
                 }
 
-                (amount, fee) = getReturn(converter, fromToken, toToken, amount);
+                (amount, fee) = getReturn(converter, sourceToken, targetToken, amount);
             }
         }
 

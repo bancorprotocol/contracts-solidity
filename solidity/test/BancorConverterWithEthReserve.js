@@ -529,7 +529,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         assert(amount.equals(1175) && fee.equals(0));
     });
 
-    it('should throw when attempting to get the return with identical from/to addresses', async () => {
+    it('should throw when attempting to get the return with identical source/target addresses', async () => {
         let converter = await initConverter(accounts, true);
 
         await utils.catchRevert(converter.getReturn.call(tokenAddress, tokenAddress, 500));
@@ -616,7 +616,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         assert(response.logs[0].args._return.equals(1175) && response.logs[0].args._conversionFee.equals(0));
     });
 
-    it('should throw when attempting to convert with identical from/to addresses', async () => {
+    it('should throw when attempting to convert with identical source/target addresses', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
@@ -1177,7 +1177,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         assert(response.logs[0].args._return.equals(1175) && response.logs[0].args._conversionFee.equals(0));
     });
 
-    it('should throw when attempting to convert2 with identical from/to addresses', async () => {
+    it('should throw when attempting to convert2 with identical source/target addresses', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 

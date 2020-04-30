@@ -8,9 +8,9 @@ contract OldBancorConverter {
         amount = _amount;
     }
 
-    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) external view returns (uint256) {
-        _fromToken;
-        _toToken;
+    function getReturn(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) external view returns (uint256) {
+        _sourceToken;
+        _targetToken;
         _amount;
         return (amount);
     }
@@ -25,9 +25,9 @@ contract NewBancorConverter {
         fee = _fee;
     }
 
-    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) external view returns (uint256, uint256) {
-        _fromToken;
-        _toToken;
+    function getReturn(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) external view returns (uint256, uint256) {
+        _sourceToken;
+        _targetToken;
         _amount;
         return (amount, fee);
     }
