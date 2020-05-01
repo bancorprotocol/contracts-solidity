@@ -425,8 +425,8 @@ const initBancorNetwork = async accounts => {
     await erc20TokenConverter.acceptTokenOwnership()
 
     // settings paths for easy use
-    ethBntPath = [utils.zeroAddress, bntToken.address, bntToken.address]
-    bntEthPath = [bntToken.address, bntToken.address, utils.zeroAddress]
+    ethBntPath = [ETH_RESERVE, bntToken.address, bntToken.address]
+    bntEthPath = [bntToken.address, bntToken.address, ETH_RESERVE]
     erc20TokenBntPath = [erc20Token.address, relayToken.address, bntToken.address]
     bntErc20Path = [bntToken.address, relayToken.address, erc20Token.address]
 }
