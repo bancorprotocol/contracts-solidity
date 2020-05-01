@@ -11,7 +11,6 @@ const BancorConverter = artifacts.require('TestBancorConverter');
 const SmartToken = artifacts.require('SmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
-const ContractFeatures = artifacts.require('ContractFeatures');
 const ERC20Token = artifacts.require('ERC20Token');
 const EtherToken = artifacts.require('EtherToken');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
@@ -22,7 +21,6 @@ const weight10Percent = 100000;
 let token;
 let tokenAddress;
 let contractRegistry;
-let contractFeatures;
 let reserveToken;
 let etherToken;
 let reserveToken3;
@@ -71,9 +69,6 @@ contract('BancorConverterWithEthReserve', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
 
-        contractFeatures = await ContractFeatures.new();
-        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
-
         let bancorFormula = await BancorFormula.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
 
@@ -102,11 +97,6 @@ contract('BancorConverterWithEthReserve', accounts => {
         assert.equal(token, tokenAddress);
         let registry = await converter.registry.call();
         assert.equal(registry, contractRegistry.address);
-
-        let featureWhitelist = await converter.CONVERTER_CONVERSION_WHITELIST.call();
-        let isSupported = await contractFeatures.isSupported.call(converter.address, featureWhitelist);
-        assert(isSupported);
-
         let maxConversionFee = await converter.maxConversionFee.call();
         assert.equal(maxConversionFee, 0);
     });

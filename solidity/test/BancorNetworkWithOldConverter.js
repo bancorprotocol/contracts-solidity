@@ -9,7 +9,6 @@ const TestBancorNetwork = artifacts.require('TestBancorNetwork');
 const SmartToken = artifacts.require('SmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
-const ContractFeatures = artifacts.require('ContractFeatures');
 
 const OLD_CONVERTER_VERSION = 9;
 
@@ -32,9 +31,6 @@ Token network structure:
 contract('BancorNetworkWithOldConverter', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
-
-        let contractFeatures = await ContractFeatures.new();
-        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
 
         let bancorFormula = await BancorFormula.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);

@@ -122,7 +122,6 @@ async function run() {
     const converter4Params  = get().converter4Params ;
 
     const contractRegistry            = await web3Func(deploy, "contractRegistry"           , "ContractRegistry"           , []);
-    const contractFeatures            = await web3Func(deploy, "contractFeatures"           , "ContractFeatures"           , []);
     const bancorFormula               = await web3Func(deploy, "bancorFormula"              , "BancorFormula"              , []);
     const bancorNetwork               = await web3Func(deploy, "bancorNetwork"              , "BancorNetwork"              , [contractRegistry._address]);
     const bancorNetworkPathFinder     = await web3Func(deploy, "bancorNetworkPathFinder"    , "BancorNetworkPathFinder"    , [contractRegistry._address]);
@@ -162,7 +161,6 @@ async function run() {
     await execute(bancorConverter2.methods.addReserve(erc20TokenA._address, converter2Params.weight2));
     await execute(bancorConverter3.methods.addReserve(erc20TokenB._address, converter3Params.weight2));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractRegistry"           ), contractRegistry           ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractFeatures"           ), contractFeatures           ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"              ), bancorFormula              ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetwork"              ), bancorNetwork              ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetworkPathFinder"    ), bancorNetworkPathFinder    ._address));

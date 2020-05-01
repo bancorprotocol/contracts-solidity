@@ -1,13 +1,10 @@
 pragma solidity 0.4.26;
 import './IBancorNetwork.sol';
-import './FeatureIds.sol';
 import './converter/interfaces/IBancorConverter.sol';
 import './converter/interfaces/IBancorFormula.sol';
 import './utility/TokenHolder.sol';
 import './utility/SafeMath.sol';
 import './utility/ContractRegistryClient.sol';
-import './utility/interfaces/IContractFeatures.sol';
-import './utility/interfaces/IWhitelist.sol';
 import './token/interfaces/IEtherToken.sol';
 import './token/interfaces/ISmartToken.sol';
 import './bancorx/interfaces/IBancorX.sol';
@@ -32,7 +29,7 @@ contract ILegacyBancorConverter {
   * Format:
   * [source token, smart token, target token, smart token, target token...]
 */
-contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, FeatureIds {
+contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     using SafeMath for uint256;
 
     uint256 private constant CONVERSION_FEE_RESOLUTION = 1000000;
@@ -130,9 +127,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     {
         // verify that the path contrains at least a single 'hop' and that the number of elements is odd
         require(_path.length > 2 &&  _path.length % 2 == 1);
-
-        // verify that the account which should receive the conversion result is whitelisted
-        require(isWhitelisted(_path, _for));
 
         // validate msg.value and prepare the source token for the conversion
         handleSourceToken(_path[0], ISmartToken(_path[1]), _amount);
@@ -259,9 +253,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             if (!stepData.isV28OrHigherConverter)
                 toAmount = ILegacyBancorConverter(stepData.converter).change(stepData.sourceToken, stepData.targetToken, fromAmount, 1);
             else if (etherTokens[stepData.sourceToken])
-                toAmount = stepData.converter.convertInternal.value(msg.value)(stepData.sourceToken, stepData.targetToken, fromAmount, stepData.beneficiary);
+                toAmount = stepData.converter.convertInternal.value(msg.value)(stepData.sourceToken, stepData.targetToken, fromAmount, msg.sender, stepData.beneficiary);
             else
-                toAmount = stepData.converter.convertInternal(stepData.sourceToken, stepData.targetToken, fromAmount, stepData.beneficiary);
+                toAmount = stepData.converter.convertInternal(stepData.sourceToken, stepData.targetToken, fromAmount, msg.sender, stepData.beneficiary);
 
             // pay affiliate-fee if needed
             if (stepData.processAffiliateFee) {
@@ -602,19 +596,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 safeApprove(_token, _spender, 0);
             safeApprove(_token, _spender, _value);
         }
-    }
-
-    function isWhitelisted(IERC20Token[] _path, address _receiver) private view returns (bool) {
-        IContractFeatures features = IContractFeatures(addressOf(CONTRACT_FEATURES));
-        for (uint256 i = 1; i < _path.length; i += 2) {
-            IBancorConverter converter = IBancorConverter(ISmartToken(_path[i]).owner());
-            if (features.isSupported(converter, FeatureIds.CONVERTER_CONVERSION_WHITELIST)) {
-                IWhitelist whitelist = converter.conversionWhitelist();
-                if (whitelist != address(0) && !whitelist.isWhitelisted(_receiver))
-                    return false;
-            }
-        }
-        return true;
     }
 
     bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(uint256(keccak256("isV28OrHigher()") >> (256 - 4 * 8)));

@@ -5,12 +5,10 @@ const utils = require('./helpers/Utils');
 const BancorConverter = require('./helpers/BancorConverter');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
-const Whitelist = artifacts.require('Whitelist');
 const SmartToken = artifacts.require('SmartToken');
 const EtherToken = artifacts.require('EtherToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const ContractRegistry = artifacts.require('ContractRegistry');
-const ContractFeatures = artifacts.require('ContractFeatures');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
@@ -23,7 +21,6 @@ const TOKEN_TOTAL_SUPPLY = '20000';
 const versions = [9, 10, 11, 23];
 
 let contractRegistry;
-let contractFeatures;
 let converterFactory;
 
 async function initWithConnectors(deployer, version, active) {
@@ -169,9 +166,7 @@ contract('BancorConverterUpgrader', accounts => {
 
     before(async () => {
         contractRegistry = await ContractRegistry.new();
-        contractFeatures = await ContractFeatures.new();
         converterFactory = await BancorConverterFactory.new();
-        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY, converterFactory.address);
     });
 
@@ -184,10 +179,10 @@ contract('BancorConverterUpgrader', accounts => {
         describe(`${init.name}(version = ${version ? version : 'latest'}, active = ${active}):`, () => {
             it('upgrade should complete successfully', async () => {
                 const [upgrader, oldConverter] = await init(deployer, version, active);
-                const oldConverterInitialState = getConverterState(oldConverter);
+                const oldConverterInitialState = await getConverterState(oldConverter);
                 const newConverter = await upgradeConverter(upgrader, oldConverter, version);
-                const oldConverterCurrentState = getConverterState(oldConverter);
-                const newConverterCurrentState = getConverterState(newConverter);
+                const oldConverterCurrentState = await getConverterState(oldConverter);
+                const newConverterCurrentState = await getConverterState(newConverter);
                 assertEqual(oldConverterInitialState, {
                     owner: deployer,
                     newOwner: utils.zeroAddress,
@@ -227,32 +222,17 @@ contract('BancorConverterUpgrader', accounts => {
             });
             it('upgrade should fail if the transaction did not receive enough gas', async () => {
                 const [upgrader, oldConverter] = await init(deployer, version, active);
-                const oldConverterInitialState = getConverterState(oldConverter);
+                const oldConverterInitialState = await getConverterState(oldConverter);
                 await utils.catchRevert(upgradeConverter(upgrader, oldConverter, version, {gas: 2000000}));
-                const oldConverterCurrentState = getConverterState(oldConverter);
+                const oldConverterCurrentState = await getConverterState(oldConverter);
                 assertEqual(oldConverterInitialState, oldConverterCurrentState);
             });
             it('upgrade should fail if the upgrader did not receive ownership', async () => {
                 const [upgrader, oldConverter] = await init(deployer, version, active);
-                const oldConverterInitialState = getConverterState(oldConverter);
+                const oldConverterInitialState = await getConverterState(oldConverter);
                 await utils.catchRevert(upgrader.upgradeOld(oldConverter.address, web3.fromAscii('')));
-                const oldConverterCurrentState = getConverterState(oldConverter);
+                const oldConverterCurrentState = await getConverterState(oldConverter);
                 assertEqual(oldConverterInitialState, oldConverterCurrentState);
-            });
-            it('whitelist feature should be supported in the new converter', async () => {
-                const [upgrader, oldConverter] = await init(deployer, version, active);
-                const newConverter = await upgradeConverter(upgrader, oldConverter, version);
-                const featureWhitelist = await newConverter.CONVERTER_CONVERSION_WHITELIST.call();
-                const isSupported = await contractFeatures.isSupported.call(newConverter.address, featureWhitelist);
-                assert.isTrue(isSupported);
-            });
-            it('whitelist should be copied to the new converter', async () => {
-                const [upgrader, oldConverter] = await init(deployer, version, active);
-                const whitelist = await Whitelist.new();
-                await oldConverter.setConversionWhitelist(whitelist.address);
-                const newConverter = await upgradeConverter(upgrader, oldConverter, version);
-                const conversionWhitelist = await newConverter.conversionWhitelist.call();
-                assert.equal(whitelist.address, conversionWhitelist);
             });
         });
     }

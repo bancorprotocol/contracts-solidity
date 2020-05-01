@@ -3,11 +3,9 @@ import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorConverterUpgrader.sol';
 import './interfaces/IBancorFormula.sol';
 import '../IBancorNetwork.sol';
-import '../FeatureIds.sol';
 import '../utility/SafeMath.sol';
 import '../utility/TokenHandler.sol';
 import '../utility/ContractRegistryClient.sol';
-import '../utility/interfaces/IContractFeatures.sol';
 import '../token/SmartTokenController.sol';
 import '../token/interfaces/ISmartToken.sol';
 import '../token/interfaces/IEtherToken.sol';
@@ -22,18 +20,18 @@ import '../bancorx/interfaces/IBancorX.sol';
   * 
   * The converter is upgradable (just like any SmartTokenController) and all upgrades are opt-in. 
 */
-contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController, ContractRegistryClient, FeatureIds {
+contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController, ContractRegistryClient {
     using SafeMath for uint256;
 
     uint32 private constant WEIGHT_RESOLUTION = 1000000;
     uint64 private constant CONVERSION_FEE_RESOLUTION = 1000000;
 
     struct Reserve {
-        uint256 balance;        // reserve balance
-        uint32 weight;          // reserve weight, represented in ppm, 1-1000000
-        bool deprecated1;       // deprecated
-        bool deprecated2;       // deprecated
-        bool isSet;             // used to tell if the mapping element is defined
+        uint256 balance;    // reserve balance
+        uint32 weight;      // reserve weight, represented in ppm, 1-1000000
+        bool deprecated1;   // deprecated
+        bool deprecated2;   // deprecated
+        bool isSet;         // used to tell if the mapping element is defined
     }
 
     /**
@@ -116,12 +114,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         public
         validConversionFee(_maxConversionFee)
     {
-        IContractFeatures features = IContractFeatures(addressOf(CONTRACT_FEATURES));
-
-        // initialize supported features
-        if (features != address(0))
-            features.enableFeatures(FeatureIds.CONVERTER_CONVERSION_WHITELIST, true);
-
         maxConversionFee = _maxConversionFee;
 
         if (_reserveToken != address(0))
@@ -532,7 +524,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       *
       * @return amount of tokens received (in units of the target token)
     */
-    function convertInternal(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _beneficiary)
+    function convertInternal(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary)
         public
         payable
         protected
@@ -540,6 +532,10 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         returns (uint256)
     {
         require(_sourceToken != _targetToken); // validate input
+
+        // if a whitelist is set, verify that both and trader and the beneficiary are whitelisted
+        require(conversionWhitelist == address(0) ||
+                (conversionWhitelist.isWhitelisted(_trader) && conversionWhitelist.isWhitelisted(_beneficiary)));
 
         if (_targetToken == token)
             return buy(_sourceToken, _amount, _beneficiary);

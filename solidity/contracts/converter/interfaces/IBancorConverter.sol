@@ -7,7 +7,7 @@ import '../../utility/interfaces/IWhitelist.sol';
 */
 contract IBancorConverter {
     function getReturn(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256);
-    function convertInternal(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount,  address _beneficiary) public payable returns (uint256);
+    function convertInternal(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary) public payable returns (uint256);
     function convert2(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256);
     function quickConvert2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256);
     function conversionWhitelist() public view returns (IWhitelist) {this;}
