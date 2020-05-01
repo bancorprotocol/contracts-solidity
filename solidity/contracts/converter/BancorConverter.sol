@@ -27,7 +27,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     uint32 private constant WEIGHT_RESOLUTION = 1000000;
     uint64 private constant CONVERSION_FEE_RESOLUTION = 1000000;
-    IERC20Token private constant ETH_RESERVE = IERC20Token(0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee);
+    IERC20Token private constant ETH_RESERVE = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     struct Reserve {
         uint256 balance;        // reserve balance

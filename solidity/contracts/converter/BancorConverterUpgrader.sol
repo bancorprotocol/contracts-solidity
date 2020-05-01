@@ -41,7 +41,7 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
   * and then the upgrader 'upgrade' function should be executed directly.
 */
 contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryClient, FeatureIds {
-    IEtherToken private constant ETH_RESERVE = IEtherToken(0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee);
+    IEtherToken private constant ETH_RESERVE = IEtherToken(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     IEtherToken etherToken;
 
     /**
