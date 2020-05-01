@@ -451,17 +451,14 @@ contract('BancorNetwork', accounts => {
             await utils.catchRevert(bancorNetwork.convertFor.call(path, 20000, 1, accounts[1], { value: 10000 }));
         });
 
-        it('should throw when calling convertFor with invalid path', async () => {
+        it('should throw when calling convertFor with too-short path', async () => {
             let invalidPath = [ETH_RESERVE, smartToken1.address];
             await utils.catchRevert(bancorNetwork.convertFor(invalidPath, 10000, 1, accounts[1], { value: 10000 }));
         });
 
-        it('should throw when calling convertFor with invalid long path', async () => {
-            let longBuyPath = [];
-            for (let i = 0; i < 101; ++i)
-                longBuyPath.push(utils.zeroAddress);
-
-            await utils.catchRevert(bancorNetwork.convertFor(longBuyPath, 10000, 1, accounts[1], { value: 10000 }));
+        it('should throw when calling convertFor with even-length path', async () => {
+            let invalidPath = [ETH_RESERVE, smartToken1.address, smartToken2.address, smartToken3.address];
+            await utils.catchRevert(bancorNetwork.convertFor(invalidPath, 10000, 1, accounts[1], { value: 10000 }));
         });
 
         it('should throw when calling convert with ether token but without sending ether', async () => {
@@ -474,17 +471,14 @@ contract('BancorNetwork', accounts => {
             await utils.catchRevert(bancorNetwork.convert.call(path, 20000, 1, { from: accounts[1], value: 10000 }));
         });
 
-        it('should throw when calling convert with invalid path', async () => {
+        it('should throw when calling convert with too-short path', async () => {
             let invalidPath = [ETH_RESERVE, smartToken1.address];
             await utils.catchRevert(bancorNetwork.convert(invalidPath, 10000, 1, { from: accounts[1], value: 10000 }));
         });
 
-        it('should throw when calling convert with invalid long path', async () => {
-            let longBuyPath = [];
-            for (let i = 0; i < 101; ++i)
-                longBuyPath.push(utils.zeroAddress);
-
-            await utils.catchRevert(bancorNetwork.convert(longBuyPath, 10000, 1, { from: accounts[1], value: 10000 }));
+        it('should throw when calling convert with even-length path', async () => {
+            let invalidPath = [ETH_RESERVE, smartToken1.address, smartToken2.address, smartToken3.address];
+            await utils.catchRevert(bancorNetwork.convert(invalidPath, 10000, 1, { from: accounts[1], value: 10000 }));
         });
 
         it('verifies that claimAndConvertFor transfers the converted amount correctly when converter from a new converter to an old one', async () => {
@@ -580,14 +574,6 @@ contract('BancorNetwork', accounts => {
             await utils.catchRevert(bancorNetwork.getReturnByPath.call(invalidPath, 1000));
         });
 
-        it('should throw when attempting to get the return by path with invalid long path', async () => {
-            let longBuyPath = [];
-            for (let i = 0; i < 101; ++i)
-                longBuyPath.push(utils.zeroAddress);
-
-            await utils.catchRevert(bancorNetwork.getReturnByPath.call(longBuyPath, 1000));
-        });
-
         it('verifies that convertFor2 transfers the converted amount correctly', async () => {
             let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
             let path = paths['ETH']['SMART1'];
@@ -626,17 +612,14 @@ contract('BancorNetwork', accounts => {
             await utils.catchRevert(bancorNetwork.convertFor2.call(path, 20000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 }));
         });
 
-        it('should throw when calling convertFor2 with invalid path', async () => {
+        it('should throw when calling convertFor2 with too-short path', async () => {
             let invalidPath = [ETH_RESERVE, smartToken1.address];
             await utils.catchRevert(bancorNetwork.convertFor2(invalidPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 }));
         });
 
-        it('should throw when calling convertFor2 with invalid long path', async () => {
-            let longBuyPath = [];
-            for (let i = 0; i < 101; ++i)
-                longBuyPath.push(utils.zeroAddress);
-
-            await utils.catchRevert(bancorNetwork.convertFor2(longBuyPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 }));
+        it('should throw when calling convertFor2 with even-length path', async () => {
+            let invalidPath = [ETH_RESERVE, smartToken1.address, smartToken2.address, smartToken3.address];
+            await utils.catchRevert(bancorNetwork.convertFor2(invalidPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 }));
         });
 
         it('should throw when calling convert2 with ether token but without sending ether', async () => {
@@ -649,17 +632,14 @@ contract('BancorNetwork', accounts => {
             await utils.catchRevert(bancorNetwork.convert2.call(path, 20000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 }));
         });
 
-        it('should throw when calling convert2 with invalid path', async () => {
+        it('should throw when calling convert2 with too-short path', async () => {
             let invalidPath = [ETH_RESERVE, smartToken1.address];
             await utils.catchRevert(bancorNetwork.convert2(invalidPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 }));
         });
 
-        it('should throw when calling convert2 with invalid long path', async () => {
-            let longBuyPath = [];
-            for (let i = 0; i < 101; ++i)
-                longBuyPath.push(utils.zeroAddress);
-
-            await utils.catchRevert(bancorNetwork.convert2(longBuyPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 }));
+        it('should throw when calling convert2 with even-length path', async () => {
+            let invalidPath = [ETH_RESERVE, smartToken1.address, smartToken2.address, smartToken3.address];
+            await utils.catchRevert(bancorNetwork.convert2(invalidPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 }));
         });
 
         it('verifies that claimAndConvertFor2 transfers the converted amount correctly', async () => {
