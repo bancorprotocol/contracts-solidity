@@ -13,7 +13,7 @@ const BancorFormula = artifacts.require('BancorFormula');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const ERC20Token = artifacts.require('ERC20Token');
 
-const ETH_RESERVE = '0x'.padEnd(42, 'f');
+const ETH_RESERVE = '0x'.padEnd(42, 'e');
 
 const MAX_LOCK_LIMIT = '1000000000000000000000' // 1000 bnt
 const MAX_RELEASE_LIMIT = '1000000000000000000000' // 1000 bnt

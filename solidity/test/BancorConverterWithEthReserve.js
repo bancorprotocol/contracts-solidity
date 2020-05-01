@@ -17,7 +17,7 @@ const EtherToken = artifacts.require('EtherToken');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
-const ETH_RESERVE = '0x'.padEnd(42, 'f');
+const ETH_RESERVE = '0x'.padEnd(42, 'e');
 
 const weight10Percent = 100000;
 

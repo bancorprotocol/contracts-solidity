@@ -37,7 +37,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
     uint256 private constant CONVERSION_FEE_RESOLUTION = 1000000;
     uint256 private constant AFFILIATE_FEE_RESOLUTION = 1000000;
-    IEtherToken private constant ETH_RESERVE = IEtherToken(-1);
+    IEtherToken private constant ETH_RESERVE = IEtherToken(0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee);
 
     struct ConversionStep {
         IBancorConverter converter;

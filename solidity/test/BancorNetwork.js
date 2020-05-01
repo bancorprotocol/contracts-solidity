@@ -16,7 +16,7 @@ const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 const BancorConverterHelper = require('./helpers/BancorConverter');
 
-const ETH_RESERVE = '0x'.padEnd(42, 'f');
+const ETH_RESERVE = '0x'.padEnd(42, 'e');
 
 const OLD_CONVERTER_VERSION = 9;
 

@@ -14,7 +14,7 @@ const ContractFeatures = artifacts.require('ContractFeatures');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
-const ETH_RESERVE = '0x'.padEnd(42, 'f');
+const ETH_RESERVE = '0x'.padEnd(42, 'e');
 
 const CONVERSION_FEE     = '1000';
 const MAX_CONVERSION_FEE = '30000';
