@@ -172,7 +172,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * can only be called if the converter has an ETH-reserve
     */
     function() external payable {
-        require(reserves[address(0)].isSet); // require(hasETHReserve());
+        require(reserves[ETH_RESERVE].isSet); // require(hasETHReserve());
         // a workaround for a problem when running solidity-coverage
         // see https://github.com/sc-forks/solidity-coverage/issues/487
     }
@@ -352,7 +352,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @return true if the converter has an ETH reserve, false otherwise
     */
     function hasETHReserve() public view returns (bool) {
-        return reserves[address(0)].isSet;
+        return reserves[ETH_RESERVE].isSet;
     }
 
     /**
@@ -868,10 +868,10 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**	
       * @dev syncs the stored reserve balance for a given reserve with the real reserve balance
       *
-      * @param _reserveToken    address of the reserve token, or address(0) for ETH reserve
+      * @param _reserveToken    address of the reserve token, or ETH_RESERVE for ETH reserve
     */
     function syncReserveBalance(IERC20Token _reserveToken) internal validReserve(_reserveToken) {
-        if (_reserveToken == address(0))
+        if (_reserveToken == ETH_RESERVE)
             reserves[_reserveToken].balance = address(this).balance;
         else
             reserves[_reserveToken].balance = _reserveToken.balanceOf(this);
