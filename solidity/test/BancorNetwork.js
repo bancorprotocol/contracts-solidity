@@ -124,7 +124,7 @@ function initPaths(tokens, generatePaths) {
             let pathTokens = pathsTokens[sourceSymbol][targetSymbol];
             for (let i = 0; i < pathTokens.length; i++) {
                 if (pathTokens[i] == '')
-                    path[i] = utils.zeroAddress;
+                    path[i] = ETH_RESERVE;
                 else
                     path[i] = pathTokens[i]['address'];
             }
@@ -290,7 +290,7 @@ contract('BancorNetwork', accounts => {
         it('verifies that isV28OrHigherConverter returns true', async () => {
             assert.isTrue(await bancorNetwork.isV28OrHigherConverter.call(converter1.address));
         });
-        
+
         for (let sourceSymbol in pathsTokens) {
             for (let targetSymbol in pathsTokens[sourceSymbol]) {
                 it(`verifies that converting from ${sourceSymbol} to ${targetSymbol} succeeds`, async () => {
@@ -345,7 +345,7 @@ contract('BancorNetwork', accounts => {
         it('verifies that quick buy with minimum return equal to the full expected return amount results in the exact increase in balance for the buyer', async () => {
             let prevBalance = await smartToken2.balanceOf.call(accounts[0]);
             let path = paths['ETH']['SMART2'];
-            
+
             let token2Return = (await bancorNetwork.getReturnByPath(path, 100000))[0];
 
             await converter2.quickConvert(path, 100000, token2Return, { value: 100000 });
@@ -452,13 +452,13 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should throw when calling convertFor with invalid path', async () => {
-            let invalidPath = [utils.zeroAddress, smartToken1.address];
+            let invalidPath = [ETH_RESERVE, smartToken1.address];
             await utils.catchRevert(bancorNetwork.convertFor(invalidPath, 10000, 1, accounts[1], { value: 10000 }));
         });
 
         it('should throw when calling convertFor with invalid long path', async () => {
             let longBuyPath = [];
-            for (let i = 0; i < 100; ++i)
+            for (let i = 0; i < 101; ++i)
                 longBuyPath.push(utils.zeroAddress);
 
             await utils.catchRevert(bancorNetwork.convertFor(longBuyPath, 10000, 1, accounts[1], { value: 10000 }));
@@ -475,13 +475,13 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should throw when calling convert with invalid path', async () => {
-            let invalidPath = [utils.zeroAddress, smartToken1.address];
+            let invalidPath = [ETH_RESERVE, smartToken1.address];
             await utils.catchRevert(bancorNetwork.convert(invalidPath, 10000, 1, { from: accounts[1], value: 10000 }));
         });
 
         it('should throw when calling convert with invalid long path', async () => {
             let longBuyPath = [];
-            for (let i = 0; i < 100; ++i)
+            for (let i = 0; i < 101; ++i)
                 longBuyPath.push(utils.zeroAddress);
 
             await utils.catchRevert(bancorNetwork.convert(longBuyPath, 10000, 1, { from: accounts[1], value: 10000 }));
@@ -571,18 +571,18 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should throw when attempting to call getReturnByPath on a path with fewer than 3 elements', async () => {
-            let invalidPath = [utils.zeroAddress, smartToken1.address];
+            let invalidPath = [ETH_RESERVE, smartToken1.address];
             await utils.catchRevert(bancorNetwork.getReturnByPath.call(invalidPath, 1000));
         });
 
-        it('should throw when attempting to call getReturnByPath on a path with an odd number of elements', async () => {
-            let invalidPath = [utils.zeroAddress, smartToken1.address, smartToken2.address, smartToken3.address];
+        it('should throw when attempting to call getReturnByPath on a path with an even number of elements', async () => {
+            let invalidPath = [ETH_RESERVE, smartToken1.address, smartToken2.address, smartToken3.address];
             await utils.catchRevert(bancorNetwork.getReturnByPath.call(invalidPath, 1000));
         });
 
         it('should throw when attempting to get the return by path with invalid long path', async () => {
             let longBuyPath = [];
-            for (let i = 0; i < 103; ++i)
+            for (let i = 0; i < 101; ++i)
                 longBuyPath.push(utils.zeroAddress);
 
             await utils.catchRevert(bancorNetwork.getReturnByPath.call(longBuyPath, 1000));
@@ -627,13 +627,13 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should throw when calling convertFor2 with invalid path', async () => {
-            let invalidPath = [utils.zeroAddress, smartToken1.address];
+            let invalidPath = [ETH_RESERVE, smartToken1.address];
             await utils.catchRevert(bancorNetwork.convertFor2(invalidPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 }));
         });
 
         it('should throw when calling convertFor2 with invalid long path', async () => {
             let longBuyPath = [];
-            for (let i = 0; i < 100; ++i)
+            for (let i = 0; i < 101; ++i)
                 longBuyPath.push(utils.zeroAddress);
 
             await utils.catchRevert(bancorNetwork.convertFor2(longBuyPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 }));
@@ -650,13 +650,13 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should throw when calling convert2 with invalid path', async () => {
-            let invalidPath = [utils.zeroAddress, smartToken1.address];
+            let invalidPath = [ETH_RESERVE, smartToken1.address];
             await utils.catchRevert(bancorNetwork.convert2(invalidPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 }));
         });
 
         it('should throw when calling convert2 with invalid long path', async () => {
             let longBuyPath = [];
-            for (let i = 0; i < 100; ++i)
+            for (let i = 0; i < 101; ++i)
                 longBuyPath.push(utils.zeroAddress);
 
             await utils.catchRevert(bancorNetwork.convert2(longBuyPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 }));
@@ -739,7 +739,7 @@ contract('BancorNetwork', accounts => {
         it('verifies that quick buy with minimum return equal to the full expected return amount results in the exact increase in balance for the buyer', async () => {
             let path = paths['ETH']['SMART2'];
             let prevBalance = await smartToken2.balanceOf.call(accounts[0]);
-            
+
             let token2Return = (await bancorNetwork.getReturnByPath(path, 100000))[0];
 
             await converter2.quickConvert2(path, 100000, token2Return, utils.zeroAddress, 0, { value: 100000 });
