@@ -17,6 +17,8 @@ const EtherToken = artifacts.require('EtherToken');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
+const ETH_RESERVE = '0x'.padEnd(42, 'f');
+
 const weight10Percent = 100000;
 
 let token;
@@ -42,7 +44,7 @@ async function initConverter(accounts, activate, maxConversionFee = 0) {
     );
 
     await converter.setEtherToken(etherToken.address);
-    await converter.addETHReserve(150000);
+    await converter.addReserve(ETH_RESERVE, 150000);
 
     await token.issue(accounts[0], 20000);
     await reserveToken.transfer(converter.address, 5000);
@@ -160,7 +162,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let reserveRatio = await converter.reserveRatio.call();
         assert.equal(reserveTokenCount.toFixed(), '1');
         assert.equal(reserveRatio.toFixed(), '100000');
-        await converter.addETHReserve(200000);
+        await converter.addReserve(ETH_RESERVE, 200000);
         reserveTokenCount = await converter.reserveTokenCount.call();
         reserveRatio = await converter.reserveRatio.call();
         assert.equal(reserveTokenCount.toFixed(), '2');
@@ -269,7 +271,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         await converter.addReserve(reserveToken.address, weight10Percent);
         let reserve = await converter.reserves.call(reserveToken.address);
         verifyReserve(reserve, 0, weight10Percent, true);
-        await converter.addETHReserve(200000);
+        await converter.addReserve(ETH_RESERVE, 200000);
         reserve = await converter.reserves.call(utils.zeroAddress);
         verifyReserve(reserve, 0, 200000, true);
     });
@@ -339,7 +341,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         await converter.addReserve(reserveToken.address, 500000);
 
-        await utils.catchRevert(converter.addETHReserve(500001));
+        await utils.catchRevert(converter.addReserve(ETH_RESERVE, 500001));
     });
 
     it('verifies that the correct reserve weight is returned', async () => {

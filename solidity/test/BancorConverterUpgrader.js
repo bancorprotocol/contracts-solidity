@@ -14,6 +14,8 @@ const ContractFeatures = artifacts.require('ContractFeatures');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
+const ETH_RESERVE = '0x'.padEnd(42, 'f');
+
 const CONVERSION_FEE     = '1000';
 const MAX_CONVERSION_FEE = '30000';
 const CONNECTOR1_BALANCE = '5000';
@@ -96,7 +98,7 @@ async function initWithETHReserve(deployer, version, active) {
     const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
-    await converter.addETHReserve(500000);
+    await converter.addReserve(ETH_RESERVE, 500000);
     await converter.setConversionFee(CONVERSION_FEE);
     await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
     await connectorToken1.transfer(converter.address, CONNECTOR1_BALANCE);

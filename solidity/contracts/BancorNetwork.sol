@@ -37,6 +37,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
     uint256 private constant CONVERSION_FEE_RESOLUTION = 1000000;
     uint256 private constant AFFILIATE_FEE_RESOLUTION = 1000000;
+    IEtherToken private constant ETH_RESERVE = IEtherToken(-1);
 
     struct ConversionStep {
         IBancorConverter converter;
@@ -535,7 +536,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         if (etherTokens[stepData.sourceToken]) {
             // newer converter - replace the source token with address(0)
             if (stepData.isV28OrHigherConverter)
-                stepData.sourceToken = IERC20Token(0);
+                stepData.sourceToken = ETH_RESERVE;
             // older converter - replace the source token with the EtherToken address used by the converter
             else
                 stepData.sourceToken = getConverterEtherTokenAddress(stepData.converter);
@@ -546,7 +547,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         if (etherTokens[stepData.targetToken]) {
             // newer converter - replace the source token with address(0)
             if (stepData.isV28OrHigherConverter)
-                stepData.targetToken = IERC20Token(0);
+                stepData.targetToken = ETH_RESERVE;
             // older converter - replace the source token with the EtherToken address used by the converter
             else
                 stepData.targetToken = getConverterEtherTokenAddress(stepData.converter);
@@ -644,7 +645,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 return IEtherToken(reserveTokenAddress);
         }
 
-        return IEtherToken(0);
+        return ETH_RESERVE;
     }
 
     /**

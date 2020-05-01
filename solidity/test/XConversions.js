@@ -13,6 +13,8 @@ const BancorFormula = artifacts.require('BancorFormula');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const ERC20Token = artifacts.require('ERC20Token');
 
+const ETH_RESERVE = '0x'.padEnd(42, 'f');
+
 const MAX_LOCK_LIMIT = '1000000000000000000000' // 1000 bnt
 const MAX_RELEASE_LIMIT = '1000000000000000000000' // 1000 bnt
 const MIN_LIMIT = '1000000000000000000' // 1 bnt
@@ -366,7 +368,7 @@ const initBancorNetwork = async accounts => {
         '0'
     )
 
-    await bntConverter.addETHReserve('100000');
+    await bntConverter.addReserve(ETH_RESERVE, '100000');
 
     bancorX = await BancorX.new(
         MAX_LOCK_LIMIT,

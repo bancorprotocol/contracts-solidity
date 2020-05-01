@@ -16,6 +16,8 @@ const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 const BancorConverterHelper = require('./helpers/BancorConverter');
 
+const ETH_RESERVE = '0x'.padEnd(42, 'f');
+
 const OLD_CONVERTER_VERSION = 9;
 
 let bnt;
@@ -161,7 +163,7 @@ async function initTokensAndConverters(accounts) {
     await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, bnt.address);
 
     converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, bnt.address, 500000);
-    await converter1.addETHReserve(500000);
+    await converter1.addReserve(ETH_RESERVE, 500000);
 
     converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, bnt.address, 300000);
     await converter2.addReserve(erc20Token1.address, 150000);
