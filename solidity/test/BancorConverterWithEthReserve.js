@@ -17,6 +17,8 @@ const EtherToken = artifacts.require('EtherToken');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
+const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
+
 const weight10Percent = 100000;
 
 let token;
@@ -42,7 +44,7 @@ async function initConverter(accounts, activate, maxConversionFee = 0) {
     );
 
     await converter.setEtherToken(etherToken.address);
-    await converter.addETHReserve(150000);
+    await converter.addReserve(ETH_RESERVE_ADDRESS, 150000);
 
     await token.issue(accounts[0], 20000);
     await reserveToken.transfer(converter.address, 5000);
@@ -57,8 +59,8 @@ async function initConverter(accounts, activate, maxConversionFee = 0) {
     return converter;
 }
 
-function verifyReserve(reserve, virtualBalance, weight, isSet) {
-    assert.equal(reserve[0], virtualBalance);
+function verifyReserve(reserve, balance, weight, isSet) {
+    assert.equal(reserve[0], balance);
     assert.equal(reserve[1], weight);
     assert.equal(reserve[4], isSet);
 }
@@ -160,7 +162,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let reserveRatio = await converter.reserveRatio.call();
         assert.equal(reserveTokenCount.toFixed(), '1');
         assert.equal(reserveRatio.toFixed(), '100000');
-        await converter.addETHReserve(200000);
+        await converter.addReserve(ETH_RESERVE_ADDRESS, 200000);
         reserveTokenCount = await converter.reserveTokenCount.call();
         reserveRatio = await converter.reserveRatio.call();
         assert.equal(reserveTokenCount.toFixed(), '2');
@@ -269,8 +271,8 @@ contract('BancorConverterWithEthReserve', accounts => {
         await converter.addReserve(reserveToken.address, weight10Percent);
         let reserve = await converter.reserves.call(reserveToken.address);
         verifyReserve(reserve, 0, weight10Percent, true);
-        await converter.addETHReserve(200000);
-        reserve = await converter.reserves.call(utils.zeroAddress);
+        await converter.addReserve(ETH_RESERVE_ADDRESS, 200000);
+        reserve = await converter.reserves.call(ETH_RESERVE_ADDRESS);
         verifyReserve(reserve, 0, 200000, true);
     });
 
@@ -339,7 +341,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         await converter.addReserve(reserveToken.address, 500000);
 
-        await utils.catchRevert(converter.addETHReserve(500001));
+        await utils.catchRevert(converter.addReserve(ETH_RESERVE_ADDRESS, 500001));
     });
 
     it('verifies that the correct reserve weight is returned', async () => {
@@ -352,7 +354,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, utils.zeroAddress, 0);
         await converter.addReserve(reserveToken.address, weight10Percent);
 
-        await utils.catchRevert(converter.reserveBalance.call(utils.zeroAddress));
+        await utils.catchRevert(converter.reserveBalance.call(ETH_RESERVE_ADDRESS));
     });
 
     it('verifies that the owner can transfer the token ownership if the owner is the upgrader contract', async () => {
@@ -484,12 +486,12 @@ contract('BancorConverterWithEthReserve', accounts => {
 
     it('verifies that getReturn returns the same amount as buy -> sell when converting between 2 reserves', async () => {
         let converter = await initConverter(accounts, true);
-        let returnAmount = (await converter.getReturn.call(reserveToken.address, utils.zeroAddress, 500))[0];
+        let returnAmount = (await converter.getReturn.call(reserveToken.address, ETH_RESERVE_ADDRESS, 500))[0];
 
         await reserveToken.approve(converter.address, 500);
         let purchaseRes = await converter.convert(reserveToken.address, tokenAddress, 500, 1);
         let purchaseAmount = getConversionAmount(purchaseRes);
-        let saleRes = await converter.convert(tokenAddress, utils.zeroAddress, purchaseAmount, 1);
+        let saleRes = await converter.convert(tokenAddress, ETH_RESERVE_ADDRESS, purchaseAmount, 1);
         let saleAmount = getConversionAmount(saleRes);
 
         // converting directly between 2 tokens is more efficient than buying and then selling
@@ -518,14 +520,14 @@ contract('BancorConverterWithEthReserve', accounts => {
     it('should succeed when attempting to get the return from ETH reserve to token', async () => {
         let converter = await initConverter(accounts, true);
 
-        let [amount, fee] = await converter.getReturn.call(utils.zeroAddress, reserveToken.address, 500);
+        let [amount, fee] = await converter.getReturn.call(ETH_RESERVE_ADDRESS, reserveToken.address, 500);
         assert(amount.equals(178) && fee.equals(0));
     });
 
     it('should succeed when attempting to get the return from token to ETH reserve', async () => {
         let converter = await initConverter(accounts, true);
 
-        let [amount, fee] = await converter.getReturn.call(reserveToken.address, utils.zeroAddress, 500);
+        let [amount, fee] = await converter.getReturn.call(reserveToken.address, ETH_RESERVE_ADDRESS, 500);
         assert(amount.equals(1175) && fee.equals(0));
     });
 
@@ -575,7 +577,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let converter = await initConverter(accounts, true, 5000);
         await converter.setConversionFee(3000);
         await reserveToken.approve(converter.address, 500);
-        let response = await converter.convert(reserveToken.address, utils.zeroAddress, 500, 1);
+        let response = await converter.convert(reserveToken.address, ETH_RESERVE_ADDRESS, 500, 1);
         assert(response.logs.length > 0 && response.logs[0].event == 'Conversion');
         assert(response.logs[0].args._return.equals(1167), response.logs[0].args._conversionFee.equals(8));
     });
@@ -605,14 +607,14 @@ contract('BancorConverterWithEthReserve', accounts => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert(utils.zeroAddress, reserveToken.address, 500, 1));
+        await utils.catchRevert(converter.convert(ETH_RESERVE_ADDRESS, reserveToken.address, 500, 1));
     });
 
     it('should succeed when attempting to convert from token to ETH reserve', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        let response = await converter.convert(reserveToken.address, utils.zeroAddress, 500, 1);
+        let response = await converter.convert(reserveToken.address, ETH_RESERVE_ADDRESS, 500, 1);
         assert(response.logs[0].args._return.equals(1175) && response.logs[0].args._conversionFee.equals(0));
     });
 
@@ -627,14 +629,14 @@ contract('BancorConverterWithEthReserve', accounts => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert(reserveToken.address, utils.zeroAddress, 500, 0));
+        await utils.catchRevert(converter.convert(reserveToken.address, ETH_RESERVE_ADDRESS, 500, 0));
     });
 
     it('should throw when attempting to convert when the return is smaller than the minimum requested amount', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert(reserveToken.address, utils.zeroAddress, 500, 2000));
+        await utils.catchRevert(converter.convert(reserveToken.address, ETH_RESERVE_ADDRESS, 500, 2000));
     });
 
     it('verifies balances after buy', async () => {
@@ -742,10 +744,10 @@ contract('BancorConverterWithEthReserve', accounts => {
 
     it('verifies that getReturn returns the same amount as converting between 2 reserves', async () => {
         let converter = await initConverter(accounts, true);
-        let returnAmount = (await converter.getReturn.call(reserveToken.address, utils.zeroAddress, 500))[0];
+        let returnAmount = (await converter.getReturn.call(reserveToken.address, ETH_RESERVE_ADDRESS, 500))[0];
 
         await reserveToken.approve(converter.address, 500);
-        let convertRes = await converter.convert(reserveToken.address, utils.zeroAddress, 500, 1);
+        let convertRes = await converter.convert(reserveToken.address, ETH_RESERVE_ADDRESS, 500, 1);
         let returnAmount2 = getConversionAmount(convertRes);
 
         assert.equal(returnAmount.toNumber(), returnAmount2);
@@ -788,7 +790,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let supply = await token.totalSupply.call();
         let percentage = 100 / (supply / 19);
         let prevReserve1Balance = await converter.reserveBalance.call(reserveToken.address);
-        let prevReserve2Balance = await converter.reserveBalance.call(utils.zeroAddress);
+        let prevReserve2Balance = await converter.reserveBalance.call(ETH_RESERVE_ADDRESS);
         let prevReserve3Balance = await converter.reserveBalance.call(reserveToken3.address);
         let token1Amount = prevReserve1Balance * percentage / 100;
         let token2Amount = prevReserve2Balance * percentage / 100;
@@ -800,7 +802,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         await converter.fund(19, { from: accounts[9], value: 10 });
 
         let reserve1Balance = await converter.reserveBalance.call(reserveToken.address);
-        let reserve2Balance = await converter.reserveBalance.call(utils.zeroAddress);
+        let reserve2Balance = await converter.reserveBalance.call(ETH_RESERVE_ADDRESS);
         let reserve3Balance = await converter.reserveBalance.call(reserveToken3.address);
 
         assert.equal(reserve1Balance.toFixed(), prevReserve1Balance.plus(Math.ceil(token1Amount)).toFixed());
@@ -832,7 +834,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let supply = await token.totalSupply.call();
         let percentage = 100 / (supply / 140854);
         let prevReserve1Balance = await converter.reserveBalance.call(reserveToken.address);
-        let prevReserve2Balance = await converter.reserveBalance.call(utils.zeroAddress);
+        let prevReserve2Balance = await converter.reserveBalance.call(ETH_RESERVE_ADDRESS);
         let prevReserve3Balance = await converter.reserveBalance.call(reserveToken3.address);
         let token1Amount = prevReserve1Balance * percentage / 100;
         let token2Amount = prevReserve2Balance * percentage / 100;
@@ -844,7 +846,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         await converter.fund(140854, { from: accounts[9], value: 200000 });
 
         let reserve1Balance = await converter.reserveBalance.call(reserveToken.address);
-        let reserve2Balance = await converter.reserveBalance.call(utils.zeroAddress);
+        let reserve2Balance = await converter.reserveBalance.call(ETH_RESERVE_ADDRESS);
         let reserve3Balance = await converter.reserveBalance.call(reserveToken3.address);
 
         assert.equal(reserve1Balance.toFixed(), prevReserve1Balance.plus(Math.ceil(token1Amount)).toFixed());
@@ -921,7 +923,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let supply = await token.totalSupply.call();
         let percentage = 100 / (supply / 19);
         let reserve1Balance = await converter.reserveBalance.call(reserveToken.address);
-        //let reserve2Balance = await converter.reserveBalance.call(utils.zeroAddress);
+        //let reserve2Balance = await converter.reserveBalance.call(ETH_RESERVE_ADDRESS);
         let reserve3Balance = await converter.reserveBalance.call(reserveToken3.address);
         let token1Amount = reserve1Balance * percentage / 100;
         //let token2Amount = reserve2Balance * percentage / 100;
@@ -956,7 +958,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let supply = await token.totalSupply.call();
         let percentage = 100 / (supply / 14854);
         let reserve1Balance = await converter.reserveBalance.call(reserveToken.address);
-        //let reserve2Balance = await converter.reserveBalance.call(utils.zeroAddress);
+        //let reserve2Balance = await converter.reserveBalance.call(ETH_RESERVE_ADDRESS);
         let reserve3Balance = await converter.reserveBalance.call(reserveToken3.address);
         let token1Amount = reserve1Balance * percentage / 100;
         //let token2Amount = reserve2Balance * percentage / 100;
@@ -990,7 +992,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         await token.transfer(accounts[9], 20000);
 
         let reserve1Balance = await converter.reserveBalance.call(reserveToken.address);
-        //let reserve2Balance = await converter.reserveBalance.call(utils.zeroAddress);
+        //let reserve2Balance = await converter.reserveBalance.call(ETH_RESERVE_ADDRESS);
         let reserve3Balance = await converter.reserveBalance.call(reserveToken3.address);
 
         await converter.liquidate(20000, { from: accounts[9] });
@@ -1101,12 +1103,12 @@ contract('BancorConverterWithEthReserve', accounts => {
 
     it('verifies that getReturn returns the same amount as buy -> sell when converting between 2 reserves', async () => {
         let converter = await initConverter(accounts, true);
-        let returnAmount = (await converter.getReturn.call(reserveToken.address, utils.zeroAddress, 500))[0];
+        let returnAmount = (await converter.getReturn.call(reserveToken.address, ETH_RESERVE_ADDRESS, 500))[0];
 
         await reserveToken.approve(converter.address, 500);
         let purchaseRes = await converter.convert2(reserveToken.address, tokenAddress, 500, 1, utils.zeroAddress, 0);
         let purchaseAmount = getConversionAmount(purchaseRes);
-        let saleRes = await converter.convert2(tokenAddress, utils.zeroAddress, purchaseAmount, 1, utils.zeroAddress, 0);
+        let saleRes = await converter.convert2(tokenAddress, ETH_RESERVE_ADDRESS, purchaseAmount, 1, utils.zeroAddress, 0);
         let saleAmount = getConversionAmount(saleRes);
 
         // converting directly between 2 tokens is more efficient than buying and then selling
@@ -1136,7 +1138,7 @@ contract('BancorConverterWithEthReserve', accounts => {
         let converter = await initConverter(accounts, true, 5000);
         await converter.setConversionFee(3000);
         await reserveToken.approve(converter.address, 500);
-        let response = await converter.convert2(reserveToken.address, utils.zeroAddress, 500, 1, utils.zeroAddress, 0);
+        let response = await converter.convert2(reserveToken.address, ETH_RESERVE_ADDRESS, 500, 1, utils.zeroAddress, 0);
         assert(response.logs.length > 0 && response.logs[0].event == 'Conversion');
         assert(response.logs[0].args._return.equals(1167), response.logs[0].args._conversionFee.equals(8));
     });
@@ -1166,14 +1168,14 @@ contract('BancorConverterWithEthReserve', accounts => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert2(utils.zeroAddress, reserveToken.address, 500, 1, utils.zeroAddress, 0));
+        await utils.catchRevert(converter.convert2(ETH_RESERVE_ADDRESS, reserveToken.address, 500, 1, utils.zeroAddress, 0));
     });
 
     it('should succeed when attempting to convert2 from token to ETH reserve', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        let response = await converter.convert2(reserveToken.address, utils.zeroAddress, 500, 1, utils.zeroAddress, 0);
+        let response = await converter.convert2(reserveToken.address, ETH_RESERVE_ADDRESS, 500, 1, utils.zeroAddress, 0);
         assert(response.logs[0].args._return.equals(1175) && response.logs[0].args._conversionFee.equals(0));
     });
 
@@ -1188,14 +1190,14 @@ contract('BancorConverterWithEthReserve', accounts => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert2(reserveToken.address, utils.zeroAddress, 500, 0, utils.zeroAddress, 0));
+        await utils.catchRevert(converter.convert2(reserveToken.address, ETH_RESERVE_ADDRESS, 500, 0, utils.zeroAddress, 0));
     });
 
     it('should throw when attempting to convert2 when the return is smaller than the minimum requested amount', async () => {
         let converter = await initConverter(accounts, true);
         await reserveToken.approve(converter.address, 500);
 
-        await utils.catchRevert(converter.convert2(reserveToken.address, utils.zeroAddress, 500, 2000, utils.zeroAddress, 0));
+        await utils.catchRevert(converter.convert2(reserveToken.address, ETH_RESERVE_ADDRESS, 500, 2000, utils.zeroAddress, 0));
     });
 
     it('verifies balances after buy', async () => {
@@ -1291,10 +1293,10 @@ contract('BancorConverterWithEthReserve', accounts => {
 
     it('verifies that getReturn returns the same amount as converting between 2 reserves', async () => {
         let converter = await initConverter(accounts, true);
-        let returnAmount = (await converter.getReturn.call(reserveToken.address, utils.zeroAddress, 500))[0];
+        let returnAmount = (await converter.getReturn.call(reserveToken.address, ETH_RESERVE_ADDRESS, 500))[0];
 
         await reserveToken.approve(converter.address, 500);
-        let convertRes = await converter.convert2(reserveToken.address, utils.zeroAddress, 500, 1, utils.zeroAddress, 0);
+        let convertRes = await converter.convert2(reserveToken.address, ETH_RESERVE_ADDRESS, 500, 1, utils.zeroAddress, 0);
         let returnAmount2 = getConversionAmount(convertRes);
 
         assert.equal(returnAmount.toNumber(), returnAmount2);

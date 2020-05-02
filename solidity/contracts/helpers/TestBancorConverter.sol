@@ -12,7 +12,6 @@ contract TestBancorConverter is BancorConverter {
         BancorConverter(_token, _registry, _maxConversionFee, _reserveToken, _reserveWeight)
         public
     {
-        etherToken = IEtherToken(0);
     }
 
     function setEtherToken(IEtherToken _etherToken) public {
