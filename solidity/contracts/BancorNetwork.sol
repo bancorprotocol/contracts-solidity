@@ -532,7 +532,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // source is ETH
         ConversionStep memory stepData = data[0];
         if (etherTokens[stepData.sourceToken]) {
-            // newer converter - replace the source token with ETH reserve
+            // newer converter - replace the source token address with ETH reserve address
             if (stepData.isV28OrHigherConverter)
                 stepData.sourceToken = IERC20Token(ETH_RESERVE_ADDRESS);
             // older converter - replace the source token with the EtherToken address used by the converter
@@ -543,7 +543,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         // target is ETH
         stepData = data[data.length - 1];
         if (etherTokens[stepData.targetToken]) {
-            // newer converter - replace the target token with ETH reserve
+            // newer converter - replace the target token address with ETH reserve address
             if (stepData.isV28OrHigherConverter)
                 stepData.targetToken = IERC20Token(ETH_RESERVE_ADDRESS);
             // older converter - replace the target token with the EtherToken address used by the converter

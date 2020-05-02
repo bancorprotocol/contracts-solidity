@@ -169,7 +169,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     /**
       * @dev deposit ether
-      * can only be called if the converter has an ETH-reserve
+      * can only be called if the converter has an ETH reserve
     */
     function() external payable {
         require(reserves[ETH_RESERVE_ADDRESS].isSet); // require(hasETHReserve());
@@ -181,7 +181,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @dev withdraw ether
       * can only be called by the upgrader contract
       * can only be called after the upgrader contract has accepted the ownership of this contract
-      * can only be called if the converter has an ETH-reserve
+      * can only be called if the converter has an ETH reserve
     */
     function withdrawETH(address _to) public ownerOnly only(BANCOR_CONVERTER_UPGRADER) {
         require(hasETHReserve());
@@ -868,7 +868,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**	
       * @dev syncs the stored reserve balance for a given reserve with the real reserve balance
       *
-      * @param _reserveToken    address of the reserve token, or ETH_RESERVE_ADDRESS for ETH reserve
+      * @param _reserveToken    address of the reserve token
     */
     function syncReserveBalance(IERC20Token _reserveToken) internal validReserve(_reserveToken) {
         if (_reserveToken == ETH_RESERVE_ADDRESS)
