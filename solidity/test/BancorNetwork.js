@@ -16,7 +16,7 @@ const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 const BancorConverterHelper = require('./helpers/BancorConverter');
 
-const ETH_RESERVE = '0x'.padEnd(42, 'e');
+const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
 const OLD_CONVERTER_VERSION = 9;
 
@@ -124,7 +124,7 @@ function initPaths(tokens, generatePaths) {
             let pathTokens = pathsTokens[sourceSymbol][targetSymbol];
             for (let i = 0; i < pathTokens.length; i++) {
                 if (pathTokens[i] == '')
-                    path[i] = ETH_RESERVE;
+                    path[i] = ETH_RESERVE_ADDRESS;
                 else
                     path[i] = pathTokens[i]['address'];
             }
@@ -163,7 +163,7 @@ async function initTokensAndConverters(accounts) {
     await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, bnt.address);
 
     converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, bnt.address, 500000);
-    await converter1.addReserve(ETH_RESERVE, 500000);
+    await converter1.addReserve(ETH_RESERVE_ADDRESS, 500000);
 
     converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, bnt.address, 300000);
     await converter2.addReserve(erc20Token1.address, 150000);
@@ -452,12 +452,12 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should throw when calling convertFor with too-short path', async () => {
-            let invalidPath = [ETH_RESERVE, smartToken1.address];
+            let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address];
             await utils.catchRevert(bancorNetwork.convertFor(invalidPath, 10000, 1, accounts[1], { value: 10000 }));
         });
 
         it('should throw when calling convertFor with even-length path', async () => {
-            let invalidPath = [ETH_RESERVE, smartToken1.address, smartToken2.address, smartToken3.address];
+            let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken3.address];
             await utils.catchRevert(bancorNetwork.convertFor(invalidPath, 10000, 1, accounts[1], { value: 10000 }));
         });
 
@@ -472,12 +472,12 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should throw when calling convert with too-short path', async () => {
-            let invalidPath = [ETH_RESERVE, smartToken1.address];
+            let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address];
             await utils.catchRevert(bancorNetwork.convert(invalidPath, 10000, 1, { from: accounts[1], value: 10000 }));
         });
 
         it('should throw when calling convert with even-length path', async () => {
-            let invalidPath = [ETH_RESERVE, smartToken1.address, smartToken2.address, smartToken3.address];
+            let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken3.address];
             await utils.catchRevert(bancorNetwork.convert(invalidPath, 10000, 1, { from: accounts[1], value: 10000 }));
         });
 
@@ -565,12 +565,12 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should throw when attempting to call getReturnByPath on a path with fewer than 3 elements', async () => {
-            let invalidPath = [ETH_RESERVE, smartToken1.address];
+            let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address];
             await utils.catchRevert(bancorNetwork.getReturnByPath.call(invalidPath, 1000));
         });
 
         it('should throw when attempting to call getReturnByPath on a path with an even number of elements', async () => {
-            let invalidPath = [ETH_RESERVE, smartToken1.address, smartToken2.address, smartToken3.address];
+            let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken3.address];
             await utils.catchRevert(bancorNetwork.getReturnByPath.call(invalidPath, 1000));
         });
 
@@ -613,12 +613,12 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should throw when calling convertFor2 with too-short path', async () => {
-            let invalidPath = [ETH_RESERVE, smartToken1.address];
+            let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address];
             await utils.catchRevert(bancorNetwork.convertFor2(invalidPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 }));
         });
 
         it('should throw when calling convertFor2 with even-length path', async () => {
-            let invalidPath = [ETH_RESERVE, smartToken1.address, smartToken2.address, smartToken3.address];
+            let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken3.address];
             await utils.catchRevert(bancorNetwork.convertFor2(invalidPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 }));
         });
 
@@ -633,12 +633,12 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should throw when calling convert2 with too-short path', async () => {
-            let invalidPath = [ETH_RESERVE, smartToken1.address];
+            let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address];
             await utils.catchRevert(bancorNetwork.convert2(invalidPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 }));
         });
 
         it('should throw when calling convert2 with even-length path', async () => {
-            let invalidPath = [ETH_RESERVE, smartToken1.address, smartToken2.address, smartToken3.address];
+            let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken3.address];
             await utils.catchRevert(bancorNetwork.convert2(invalidPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 }));
         });
 
