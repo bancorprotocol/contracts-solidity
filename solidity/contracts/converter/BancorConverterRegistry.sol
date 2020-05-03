@@ -545,10 +545,10 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
 
     function getLeastFrequentTokenSmartTokens(IERC20Token[] memory _tokens) private view returns (address[] memory) {
         IBancorConverterRegistryData bancorConverterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
-
-        // find the token that has the smallest number of smart tokens
         uint minSmartTokenCount = bancorConverterRegistryData.getConvertibleTokenSmartTokenCount(_tokens[0]);
         address[] memory smartTokens = bancorConverterRegistryData.getConvertibleTokenSmartTokens(_tokens[0]);
+
+        // find the token which has the smallest number of smart tokens
         for (uint i = 1; i < _tokens.length; i++) {
             uint convertibleTokenSmartTokenCount = bancorConverterRegistryData.getConvertibleTokenSmartTokenCount(_tokens[i]);
             if (minSmartTokenCount > convertibleTokenSmartTokenCount) {
@@ -556,6 +556,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
                 smartTokens = bancorConverterRegistryData.getConvertibleTokenSmartTokens(_tokens[i]);
             }
         }
+
         return smartTokens;
     }
 
