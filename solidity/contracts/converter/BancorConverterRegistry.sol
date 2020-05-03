@@ -215,7 +215,10 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     */
     function removeConverter(IBancorConverter _converter) public {
         require(msg.sender == owner || !isConverterValid(_converter));
+        removeConverterInternal(_converter);
+    }
 
+    function removeConverterInternal(IBancorConverter _converter) private {
         IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_converter).token();
         uint reserveTokenCount = _converter.connectorTokenCount();
