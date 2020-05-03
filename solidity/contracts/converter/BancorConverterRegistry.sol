@@ -402,6 +402,28 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     /**
+      * @dev checks if a liquidity pool with given reserve tokens/ratios is already registered
+      * 
+      * @param _converter converter with specific reserve tokens/ratios
+      * @return if a liquidity pool with the same reserve tokens/ratios is already registered
+    */
+    function isSimilarLiquidityPoolRegistered(IBancorConverter _converter) public view returns (bool) {
+        uint reserveTokenCount = _converter.connectorTokenCount();
+        IERC20Token[] memory reserveTokens = new IERC20Token[](reserveTokenCount);
+        uint32[] memory reserveRatios = new uint32[](reserveTokenCount);
+
+        // get the reserve-configuration of the converter
+        for (uint i = 0; i < reserveTokenCount; i++) {
+            IERC20Token reserveToken = _converter.connectorTokens(i);
+            reserveTokens[i] = reserveToken;
+            reserveRatios[i] = getReserveRatio(_converter, reserveToken);
+        }
+
+        // return if a liquidity pool with the same reserve tokens/ratios is already registered
+        return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) != ISmartToken(0);
+    }
+
+    /**
       * @dev searches for a liquidity pool with specific reserve tokens/ratios
       * 
       * @param _reserveTokens   reserve tokens
@@ -423,28 +445,6 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         }
 
         return ISmartToken(0);
-    }
-
-    /**
-      * @dev checks if a liquidity pool with given reserve tokens/ratios is already registered
-      * 
-      * @param _converter converter with specific reserve tokens/ratios
-      * @return if a liquidity pool with the same reserve tokens/ratios is already registered
-    */
-    function isSimilarLiquidityPoolRegistered(IBancorConverter _converter) public view returns (bool) {
-        uint reserveTokenCount = _converter.connectorTokenCount();
-        IERC20Token[] memory reserveTokens = new IERC20Token[](reserveTokenCount);
-        uint32[] memory reserveRatios = new uint32[](reserveTokenCount);
-
-        // get the reserve-configuration of the converter
-        for (uint i = 0; i < reserveTokenCount; i++) {
-            IERC20Token reserveToken = _converter.connectorTokens(i);
-            reserveTokens[i] = reserveToken;
-            reserveRatios[i] = getReserveRatio(_converter, reserveToken);
-        }
-
-        // return if a liquidity pool with the same reserve tokens/ratios is already registered
-        return getLiquidityPoolByReserveConfig(reserveTokens, reserveRatios) != ISmartToken(0);
     }
 
     /**
