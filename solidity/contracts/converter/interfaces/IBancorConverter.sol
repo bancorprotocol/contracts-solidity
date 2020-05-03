@@ -7,11 +7,14 @@ import '../../utility/interfaces/IWhitelist.sol';
     Bancor Converter interface
 */
 contract IBancorConverter {
-    function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn, address _beneficiary) public payable returns (uint256);
+    function getReturn(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256);
+    function convertInternal(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn, address _beneficiary) public payable returns (uint256);
 
     function conversionWhitelist() public view returns (IWhitelist) {this;}
     function conversionFee() public view returns (uint32) {this;}
     function maxConversionFee() public view returns (uint32) {this;}
+    function reserveBalance(IERC20Token _reserveToken) public view returns (uint256);
+    function() external payable;
 
     function owner() public view returns (address);
     function transferOwnership(address _newOwner) public;
@@ -24,8 +27,6 @@ contract IBancorConverter {
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public;
     function withdrawETH(address _to) public;
     function addReserve(IERC20Token _token, uint32 _ratio) public;
-    function addETHReserve(uint32 _ratio) public;
-    function updateReserveVirtualBalance(IERC20Token _reserveToken, uint256 _virtualBalance) public;
     function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _supplyMinReturnAmount) public payable;
 
     // deprecated, backward compatibility

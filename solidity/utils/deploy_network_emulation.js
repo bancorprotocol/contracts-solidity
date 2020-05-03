@@ -136,10 +136,10 @@ async function run() {
     const smartToken4                 = await web3Func(deploy, "smartToken4"                , "SmartToken"                 , [smartToken4Params.name, smartToken4Params.symbol, smartToken4Params.decimals]);
     const erc20TokenA                 = await web3Func(deploy, "erc20TokenA"                , "ERC20Token"                 , [erc20TokenAParams.name, erc20TokenAParams.symbol, erc20TokenAParams.decimals, erc20TokenAParams.supply]);
     const erc20TokenB                 = await web3Func(deploy, "erc20TokenB"                , "ERC20Token"                 , [erc20TokenBParams.name, erc20TokenBParams.symbol, erc20TokenBParams.decimals, erc20TokenBParams.supply]);
-    const bancorConverter1            = await web3Func(deploy, "bancorConverter1"           , "BancorConverter"            , [smartToken1._address, contractRegistry._address, converter1Params.fee, smartToken0._address, converter1Params.ratio1]);
-    const bancorConverter2            = await web3Func(deploy, "bancorConverter2"           , "BancorConverter"            , [smartToken2._address, contractRegistry._address, converter2Params.fee, smartToken0._address, converter2Params.ratio1]);
-    const bancorConverter3            = await web3Func(deploy, "bancorConverter3"           , "BancorConverter"            , [smartToken3._address, contractRegistry._address, converter3Params.fee, smartToken0._address, converter3Params.ratio1]);
-    const bancorConverter4            = await web3Func(deploy, "bancorConverter4"           , "BancorConverter"            , [smartToken4._address, contractRegistry._address, converter4Params.fee, smartToken0._address, converter4Params.ratio1]);
+    const bancorConverter1            = await web3Func(deploy, "bancorConverter1"           , "BancorConverter"            , [smartToken1._address, contractRegistry._address, converter1Params.fee, smartToken0._address, converter1Params.weight1]);
+    const bancorConverter2            = await web3Func(deploy, "bancorConverter2"           , "BancorConverter"            , [smartToken2._address, contractRegistry._address, converter2Params.fee, smartToken0._address, converter2Params.weight1]);
+    const bancorConverter3            = await web3Func(deploy, "bancorConverter3"           , "BancorConverter"            , [smartToken3._address, contractRegistry._address, converter3Params.fee, smartToken0._address, converter3Params.weight1]);
+    const bancorConverter4            = await web3Func(deploy, "bancorConverter4"           , "BancorConverter"            , [smartToken4._address, contractRegistry._address, converter4Params.fee, smartToken0._address, converter4Params.weight1]);
 
     let phase = 0;
     if (get().phase == undefined)
@@ -158,9 +158,9 @@ async function run() {
     await execute(smartToken2.methods.issue(account.address, smartToken2Params.supply));
     await execute(smartToken3.methods.issue(account.address, smartToken3Params.supply));
     await execute(smartToken4.methods.issue(account.address, smartToken4Params.supply));
-    await execute(bancorConverter1.methods.addReserve(etherToken ._address, converter1Params.ratio2));
-    await execute(bancorConverter2.methods.addReserve(erc20TokenA._address, converter2Params.ratio2));
-    await execute(bancorConverter3.methods.addReserve(erc20TokenB._address, converter3Params.ratio2));
+    await execute(bancorConverter1.methods.addReserve(etherToken ._address, converter1Params.weight2));
+    await execute(bancorConverter2.methods.addReserve(erc20TokenA._address, converter2Params.weight2));
+    await execute(bancorConverter3.methods.addReserve(erc20TokenB._address, converter3Params.weight2));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractRegistry"           ), contractRegistry           ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractFeatures"           ), contractFeatures           ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"              ), bancorFormula              ._address));

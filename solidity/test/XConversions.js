@@ -7,12 +7,13 @@ const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 const BancorConverter = artifacts.require('BancorConverter');
 const BancorX = artifacts.require('BancorX');
 const SmartToken = artifacts.require('SmartToken');
-const EtherToken = artifacts.require('EtherToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const ERC20Token = artifacts.require('ERC20Token');
+
+const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
 const MAX_LOCK_LIMIT = '1000000000000000000000' // 1000 bnt
 const MAX_RELEASE_LIMIT = '1000000000000000000000' // 1000 bnt
@@ -27,7 +28,7 @@ const eosAddress = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c000000000000000000
 const EOS_BLOCKCHAIN = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c000000000000000000000000'
 
 // bancor network contracts
-let bancorX, bancorNetwork, bntConverter, bntToken, etherToken, erc20Token, erc20TokenConverter
+let bancorX, bancorNetwork, bntConverter, bntToken, erc20Token, erc20TokenConverter
 // paths
 let ethBntPath, bntEthPath, erc20TokenBntPath, bntErc20Path
 
@@ -37,74 +38,6 @@ contract("XConversions", accounts => {
     describe("basic testing:", () => {
         before(async () => {
             await initBancorNetwork(accounts)
-        })
-
-        it("should be able to xConvertPrioritized from eth", async () => {
-            const path = ethBntPath
-            const amount = web3.toWei(1)
-
-            const retAmount = await bancorNetwork.xConvertPrioritized.call(
-                path,                         
-                amount,               
-                1,                                
-                EOS_BLOCKCHAIN,                     
-                eosAddress,                         
-                0,                                
-                0,                                                    
-                0,                                                      
-                utils.zeroBytes32,                                                      
-                utils.zeroBytes32,                                                      
-                { from: accounts[5], value: amount }
-            )
-
-            const prevBalance = await bntToken.balanceOf(bancorX.address)
-
-            const res = await bancorNetwork.xConvertPrioritized(
-                path,                                               
-                amount,                                     
-                1,                                                      
-                EOS_BLOCKCHAIN,                                           
-                eosAddress,                                               
-                0,                                                      
-                0,                                                    
-                0,                                                      
-                utils.zeroBytes32,                                                      
-                utils.zeroBytes32,                                                      
-                { from: accounts[5], value: amount }
-            )
-
-            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
-        })
-
-        it("should be able to xConvertPrioritized2 from eth", async () => {
-            const path = ethBntPath
-            const amount = web3.toWei(1)
-
-            const retAmount = await bancorNetwork.xConvertPrioritized2.call(
-                path,                         
-                amount,               
-                1,                                
-                EOS_BLOCKCHAIN,                     
-                eosAddress,                         
-                0,                                
-                [],
-                { from: accounts[5], value: amount }
-            )
-
-            const prevBalance = await bntToken.balanceOf(bancorX.address)
-
-            const res = await bancorNetwork.xConvertPrioritized2(
-                path,                                               
-                amount,                                     
-                1,                                                      
-                EOS_BLOCKCHAIN,                                           
-                eosAddress,                                               
-                0,                                                      
-                [],
-                { from: accounts[5], value: amount }
-            )
-
-            assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalance).toString(10), retAmount.toString(10))
         })
 
         it("should be able to xConvert from eth", async () => {
@@ -332,41 +265,6 @@ contract("XConversions", accounts => {
                 await initBancorNetwork(accounts)
             })
 
-            it("should be able to xConvertPrioritized3 from eth", async () => {
-                const path = ethBntPath
-                const amount = web3.toWei(1)
-
-                const retAmount = await bancorNetwork.xConvertPrioritized3.call(
-                    path,                         
-                    amount,               
-                    1,                                
-                    EOS_BLOCKCHAIN,                     
-                    eosAddress,                         
-                    0,                                
-                    [],
-                    affiliateAddress, affiliateFee,
-                    { from: accounts[5], value: amount }
-                )
-
-                const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address)
-                const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress)
-
-                const res = await bancorNetwork.xConvertPrioritized3(
-                    path,                                               
-                    amount,                                     
-                    1,                                                      
-                    EOS_BLOCKCHAIN,                                           
-                    eosAddress,                                               
-                    0,                                                      
-                    [],
-                    affiliateAddress, affiliateFee,
-                    { from: accounts[5], value: amount }
-                )
-
-                assert.equal((await bntToken.balanceOf(bancorX.address)).minus(prevBalanceOfBancorX).toString(10), retAmount.toString(10))
-                assert.equal((await bntToken.balanceOf(affiliateAddress)).minus(prevBalanceAffiliate).toString(10), expectedFee(retAmount, percent).toString(10))
-            })
-
             it("should be able to xConvert2 from eth", async () => {
                 const path = ethBntPath
                 const amount = web3.toWei(1)
@@ -461,15 +359,16 @@ const initBancorNetwork = async accounts => {
     const contractRegistry = await ContractRegistry.new()
     const contractFeatures = await ContractFeatures.new()
         
-    etherToken = await EtherToken.new('Ether', 'ETH')
     bntToken = await SmartToken.new('Bancor', 'BNT', 18)
     bntConverter = await BancorConverter.new(
         bntToken.address,
         contractRegistry.address,
         '30000',
-        etherToken.address,
-        '100000'
+        utils.zeroAddress,
+        '0'
     )
+
+    await bntConverter.addReserve(ETH_RESERVE_ADDRESS, '100000');
 
     bancorX = await BancorX.new(
         MAX_LOCK_LIMIT,
@@ -486,11 +385,9 @@ const initBancorNetwork = async accounts => {
     await bancorX.setReporter(reporter2, true)
     await bancorX.setReporter(reporter3, true)
 
-    await etherToken.deposit({ value: BNT_RESERVE_AMOUNT });
-    await etherToken.transfer(bntConverter.address, BNT_RESERVE_AMOUNT);
+    await bntConverter.send(BNT_RESERVE_AMOUNT);
 
     bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-    await bancorNetwork.registerEtherToken(etherToken.address, true);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, bntToken.address)
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address)
@@ -528,8 +425,8 @@ const initBancorNetwork = async accounts => {
     await erc20TokenConverter.acceptTokenOwnership()
 
     // settings paths for easy use
-    ethBntPath = [etherToken.address, bntToken.address, bntToken.address]
-    bntEthPath = [bntToken.address, bntToken.address, etherToken.address]
+    ethBntPath = [ETH_RESERVE_ADDRESS, bntToken.address, bntToken.address]
+    bntEthPath = [bntToken.address, bntToken.address, ETH_RESERVE_ADDRESS]
     erc20TokenBntPath = [erc20Token.address, relayToken.address, bntToken.address]
     bntErc20Path = [bntToken.address, relayToken.address, erc20Token.address]
 }

@@ -8,17 +8,19 @@ const BancorFormula = artifacts.require('BancorFormula');
 const ContractFeatures = artifacts.require('ContractFeatures');
 const ContractRegistry = artifacts.require('ContractRegistry');
 
-async function initLiquidityPool(hasETH, ...ratios) {
+const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
+
+async function initLiquidityPool(hasETH, ...weights) {
     const smartToken = await SmartToken.new('name', 'symbol', 0);
     const converter = await BancorConverter.new(smartToken.address, contractRegistry.address, 0, utils.zeroAddress, 0);
 
-    for (let i = 0; i < ratios.length; i++) {
-        if (hasETH && i == ratios.length - 1) {
-            await converter.addETHReserve(ratios[i] * 10000);
+    for (let i = 0; i < weights.length; i++) {
+        if (hasETH && i == weights.length - 1) {
+            await converter.addReserve(ETH_RESERVE_ADDRESS, weights[i] * 10000);
         }
         else {
             const reserveToken = await ERC20Token.new('name', 'symbol', 0, -1);
-            await converter.addReserve(reserveToken.address, ratios[i] * 10000);
+            await converter.addReserve(reserveToken.address, weights[i] * 10000);
         }
     }
 
@@ -78,83 +80,83 @@ contract('BancorConverterLiquidity', accounts => {
     });
 
     describe('security assertion:', () => {
-        const ratios = [1, 2, 3, 4, 5];
-        const reserveAmounts = ratios.map(ratio => 1);
+        const weights = [1, 2, 3, 4, 5];
+        const reserveAmounts = weights.map(weight => 1);
 
         it('should revert if the number of input reserve tokens is not equal to the number of reserve tokens', async () => {
-            const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
-            const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            const [converter, smartToken] = await initLiquidityPool(false, ...weights);
+            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens(i)));
             await utils.catchRevert(converter.addLiquidity(reserveTokens.slice(0, -1), reserveAmounts, 1));
         });
 
         it('should revert if the number of input reserve amounts is not equal to the number of reserve tokens', async () => {
-            const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
-            const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            const [converter, smartToken] = await initLiquidityPool(false, ...weights);
+            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens(i)));
             await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts.slice(0, -1), 1));
         });
 
         it('should revert if any of the input reserve tokens is not one of the reserve tokens', async () => {
-            const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
-            const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            const [converter, smartToken] = await initLiquidityPool(false, ...weights);
+            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens(i)));
             await utils.catchRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), smartToken.address], reserveAmounts, 1));
         });
 
         it('should revert if any of the reserve tokens is not within the input reserve tokens', async () => {
-            const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
-            const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            const [converter, smartToken] = await initLiquidityPool(false, ...weights);
+            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens(i)));
             await utils.catchRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), reserveTokens[0]], reserveAmounts, 1));
         });
 
         it('should revert if the minimum-return is not larger than zero', async () => {
-            const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
-            const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            const [converter, smartToken] = await initLiquidityPool(false, ...weights);
+            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens(i)));
             await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, 0));
         });
 
         it('should revert if the minimum-return is larger than the return', async () => {
-            const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
-            const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            const [converter, smartToken] = await initLiquidityPool(false, ...weights);
+            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens(i)));
             await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i])));
             await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, -1));
         });
 
         it('should revert if any of the input reserve amounts is not larger than zero', async () => {
-            [converter, smartToken] = await initLiquidityPool(false, ...ratios);
-            reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            [converter, smartToken] = await initLiquidityPool(false, ...weights);
+            reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens(i)));
             await utils.catchRevert(converter.addLiquidity(reserveTokens, [...reserveAmounts.slice(0, -1), 0], 1));
         });
 
         it('should revert if the input value to a non-ether converter is larger than zero', async () => {
-            const [converter, smartToken] = await initLiquidityPool(false, ...ratios);
-            const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            const [converter, smartToken] = await initLiquidityPool(false, ...weights);
+            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens(i)));
             await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, 1, {value: reserveAmounts.slice(-1)[0]}));
         });
 
         it('should revert if the input value is not equal to the input amount of ether', async () => {
-            const [converter, smartToken] = await initLiquidityPool(true, ...ratios);
-            const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+            const [converter, smartToken] = await initLiquidityPool(true, ...weights);
+            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens(i)));
             await utils.catchRevert(converter.addLiquidity(reserveTokens, reserveAmounts, 1, {value: reserveAmounts.slice(-1)[0] + 1}));
         });
     });
 
     describe('functionality assertion:', () => {
         for (const hasETH of [false, true])
-            for (const ratio1 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
-                for (const ratio2 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
-                    if (ratio1 + ratio2 <= 100)
-                        test(hasETH, ratio1, ratio2);
+            for (const weight1 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
+                for (const weight2 of [10, 20, 30, 40, 50, 60, 70, 80, 90])
+                    if (weight1 + weight2 <= 100)
+                        test(hasETH, weight1, weight2);
 
         for (const hasETH of [false, true])
-            for (const ratio1 of [10, 20, 30, 40, 50, 60])
-                for (const ratio2 of [10, 20, 30, 40, 50, 60])
-                    for (const ratio3 of [10, 20, 30, 40, 50, 60])
-                        if (ratio1 + ratio2 + ratio3 <= 100)
-                            test(hasETH, ratio1, ratio2, ratio3);
+            for (const weight1 of [10, 20, 30, 40, 50, 60])
+                for (const weight2 of [10, 20, 30, 40, 50, 60])
+                    for (const weight3 of [10, 20, 30, 40, 50, 60])
+                        if (weight1 + weight2 + weight3 <= 100)
+                            test(hasETH, weight1, weight2, weight3);
 
-        function test(hasETH, ...ratios) {
-            it(`hasETH = ${hasETH}, ratios = [${ratios.join('%, ')}%]`, async () => {
-                const [converter, smartToken] = await initLiquidityPool(hasETH, ...ratios);
-                const reserveTokens = await Promise.all(ratios.map((ratio, i) => converter.reserveTokens(i)));
+        function test(hasETH, ...weights) {
+            it(`hasETH = ${hasETH}, weights = [${weights.join('%, ')}%]`, async () => {
+                const [converter, smartToken] = await initLiquidityPool(hasETH, ...weights);
+                const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens(i)));
 
                 const state = [];
                 let expected = [];
@@ -204,19 +206,19 @@ contract('BancorConverterLiquidity', accounts => {
     });
 
     async function approve(reserveToken, converter, amount) {
-        if (reserveToken != utils.zeroAddress)
+        if (reserveToken != ETH_RESERVE_ADDRESS)
             return await ERC20Token.at(reserveToken).approve(converter.address, amount);
         return {};
     }
 
     async function getAllowance(reserveToken, converter) {
-        if (reserveToken != utils.zeroAddress)
+        if (reserveToken != ETH_RESERVE_ADDRESS)
             return await ERC20Token.at(reserveToken).allowance(owner, converter.address);
         return web3.toBigNumber(0);
     }
 
     async function getBalance(reserveToken, converter) {
-        if (reserveToken != utils.zeroAddress)
+        if (reserveToken != ETH_RESERVE_ADDRESS)
             return await ERC20Token.at(reserveToken).balanceOf(converter.address);
         return await web3.eth.getBalance(converter.address);
     }
