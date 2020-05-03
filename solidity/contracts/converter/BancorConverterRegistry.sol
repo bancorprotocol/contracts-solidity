@@ -179,7 +179,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
 
     /**
       * @dev adds an existing converter to the registry
-      * only the owner can add an existing converter to the registry, as long as the converter is active and valid
+      * anyone can add an existing converter to the registry, as long as the converter is valid
       * note that a liquidity pool converter can be added only if no converter with the same reserve-configuration is already registered
       * 
       * @param _converter converter
@@ -191,7 +191,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
 
     /**
       * @dev removes a converter from the registry
-      * anyone can remove invalid or inactive converters from the registry
+      * anyone can remove an existing converter from the registry, as long as the converter is invalid
       * note that the owner can also remove valid converters
       * 
       * @param _converter converter
