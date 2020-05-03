@@ -886,7 +886,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             if (_reserveTokens[i] == ETH_RESERVE_ADDRESS)
                 msg.sender.transfer(reserveAmount);
             else
-                safeTransferFrom(_reserveTokens[i], this, msg.sender, reserveAmount);
+                safeTransfer(_reserveTokens[i], msg.sender, reserveAmount);
 
             emit PriceDataUpdate(_reserveTokens[i], _totalSupply - _supplyAmount, reserveBalances[i] - reserveAmount, reserves[_reserveTokens[i]].weight);
         }
