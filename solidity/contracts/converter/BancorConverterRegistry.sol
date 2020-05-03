@@ -189,23 +189,6 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         addConverterInternal(_converter);
     }
 
-    function addConverterInternal(IBancorConverter _converter) private {
-        IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
-        ISmartToken token = ISmartTokenController(_converter).token();
-        uint reserveTokenCount = _converter.connectorTokenCount();
-
-        // add the smart token
-        addSmartToken(converterRegistryData, token);
-        if (reserveTokenCount > 1)
-            addLiquidityPool(converterRegistryData, token);
-        else
-            addConvertibleToken(converterRegistryData, token, token);
-
-        // add all reserve tokens
-        for (uint i = 0; i < reserveTokenCount; i++)
-            addConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
-    }
-
     /**
       * @dev removes a converter from the registry
       * anyone can remove invalid or inactive converters from the registry
@@ -216,23 +199,6 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     function removeConverter(IBancorConverter _converter) public {
         require(msg.sender == owner || !isConverterValid(_converter));
         removeConverterInternal(_converter);
-    }
-
-    function removeConverterInternal(IBancorConverter _converter) private {
-        IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
-        ISmartToken token = ISmartTokenController(_converter).token();
-        uint reserveTokenCount = _converter.connectorTokenCount();
-
-        // remove the smart token
-        removeSmartToken(converterRegistryData, token);
-        if (reserveTokenCount > 1)
-            removeLiquidityPool(converterRegistryData, token);
-        else
-            removeConvertibleToken(converterRegistryData, token, token);
-
-        // remove all reserve tokens
-        for (uint i = 0; i < reserveTokenCount; i++)
-            removeConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
     }
 
     /**
@@ -541,6 +507,40 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     function removeConvertibleToken(IBancorConverterRegistryData _converterRegistryData, address _convertibleToken, address _smartToken) internal {
         _converterRegistryData.removeConvertibleToken(_convertibleToken, _smartToken);
         emit ConvertibleTokenRemoved(_convertibleToken, _smartToken);
+    }
+
+    function addConverterInternal(IBancorConverter _converter) private {
+        IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
+        ISmartToken token = ISmartTokenController(_converter).token();
+        uint reserveTokenCount = _converter.connectorTokenCount();
+
+        // add the smart token
+        addSmartToken(converterRegistryData, token);
+        if (reserveTokenCount > 1)
+            addLiquidityPool(converterRegistryData, token);
+        else
+            addConvertibleToken(converterRegistryData, token, token);
+
+        // add all reserve tokens
+        for (uint i = 0; i < reserveTokenCount; i++)
+            addConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
+    }
+
+    function removeConverterInternal(IBancorConverter _converter) private {
+        IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
+        ISmartToken token = ISmartTokenController(_converter).token();
+        uint reserveTokenCount = _converter.connectorTokenCount();
+
+        // remove the smart token
+        removeSmartToken(converterRegistryData, token);
+        if (reserveTokenCount > 1)
+            removeLiquidityPool(converterRegistryData, token);
+        else
+            removeConvertibleToken(converterRegistryData, token, token);
+
+        // remove all reserve tokens
+        for (uint i = 0; i < reserveTokenCount; i++)
+            removeConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
     }
 
     function getLeastFrequentTokenSmartTokens(IERC20Token[] memory _tokens) private view returns (address[] memory) {
