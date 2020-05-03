@@ -7,7 +7,6 @@ import '../../utility/interfaces/IWhitelist.sol';
     Bancor Converter interface
 */
 contract IBancorConverter {
-    function getReturn(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256);
     function convertInternal(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn, address _beneficiary) public payable returns (uint256);
 
     function conversionWhitelist() public view returns (IWhitelist) {this;}
