@@ -548,7 +548,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         uint minSmartTokenCount = bancorConverterRegistryData.getConvertibleTokenSmartTokenCount(_reserveTokens[0]);
         uint index = 0;
 
-        // find the token which has the smallest number of smart tokens
+        // find the reserve token which has the smallest number of smart tokens
         for (uint i = 1; i < _reserveTokens.length; i++) {
             uint convertibleTokenSmartTokenCount = bancorConverterRegistryData.getConvertibleTokenSmartTokenCount(_reserveTokens[i]);
             if (minSmartTokenCount > convertibleTokenSmartTokenCount) {
