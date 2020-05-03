@@ -546,18 +546,18 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     function getLeastFrequentTokenSmartTokens(IERC20Token[] memory _tokens) private view returns (address[] memory) {
         IBancorConverterRegistryData bancorConverterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
         uint minSmartTokenCount = bancorConverterRegistryData.getConvertibleTokenSmartTokenCount(_tokens[0]);
-        address[] memory smartTokens = bancorConverterRegistryData.getConvertibleTokenSmartTokens(_tokens[0]);
+        uint index = 0;
 
         // find the token which has the smallest number of smart tokens
         for (uint i = 1; i < _tokens.length; i++) {
             uint convertibleTokenSmartTokenCount = bancorConverterRegistryData.getConvertibleTokenSmartTokenCount(_tokens[i]);
             if (minSmartTokenCount > convertibleTokenSmartTokenCount) {
                 minSmartTokenCount = convertibleTokenSmartTokenCount;
-                smartTokens = bancorConverterRegistryData.getConvertibleTokenSmartTokens(_tokens[i]);
+                index = i;
             }
         }
 
-        return smartTokens;
+        return bancorConverterRegistryData.getConvertibleTokenSmartTokens(_tokens[index]);
     }
 
     function isConverterReserveConfigEqual(IBancorConverter _converter, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveRatios) private view returns (bool) {
