@@ -431,7 +431,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _converter converter with specific reserve tokens/ratios
       * @return if a liquidity pool with the same reserve tokens/ratios is already registered
     */
-    function isSimilarLiquidityPoolRegistered(IBancorConverter _converter) internal view returns (bool) {
+    function isSimilarLiquidityPoolRegistered(IBancorConverter _converter) public view returns (bool) {
         uint reserveTokenCount = _converter.connectorTokenCount();
         IERC20Token[] memory reserveTokens = new IERC20Token[](reserveTokenCount);
         uint32[] memory reserveRatios = new uint32[](reserveTokenCount);
