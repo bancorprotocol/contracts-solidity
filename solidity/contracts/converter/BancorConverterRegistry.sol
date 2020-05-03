@@ -105,7 +105,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
 
         converter.acceptOwnership();
 
-        if (_reserveToken != address(0)) {
+        if (_reserveToken != IERC20Token(0)) {
             require(msg.value == 0);
             converter.addReserve(_reserveToken, _reserveRatio);
             safeTransferFrom(_reserveToken, msg.sender, converter, _reserveAmount);
@@ -159,7 +159,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         converter.acceptOwnership();
 
         for (uint256 i = 0; i < length; i++) {
-            if (_reserveTokens[i] != address(0)) {
+            if (_reserveTokens[i] != IERC20Token(0)) {
                 converter.addReserve(_reserveTokens[i], _reserveRatios[i]);
                 safeTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
                 safeApprove(_reserveTokens[i], converter, _reserveAmounts[i]);
