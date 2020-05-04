@@ -271,10 +271,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         ownerOnly
     {
         super.acceptTokenOwnership();
-
-        // sync all reserve balances
-        for (uint256 i = 0; i < reserveTokens.length; i++)
-            syncReserveBalance(reserveTokens[i]);
+        syncReserveBalances();
     }
 
     /**
@@ -1080,6 +1077,14 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             reserves[_reserveToken].balance = address(this).balance;
         else
             reserves[_reserveToken].balance = _reserveToken.balanceOf(this);
+    }
+
+    /**	
+      * @dev syncs all stored reserve balances
+    */
+    function syncReserveBalances() internal {
+        for (uint256 i = 0; i < reserveTokens.length; i++)
+            syncReserveBalance(reserveTokens[i]);
     }
 
     /**
