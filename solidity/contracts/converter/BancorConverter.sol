@@ -771,6 +771,95 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     /**
       * @dev buys the token with all reserve tokens using the same percentage
+      * for example, if the caller increases the supply by 10%,
+      * then it will cost an amount equal to 10% of each reserve token balance
+      * note that the function cannot be called when the converter has only one reserve
+      * 
+      * @param _amount  amount to increase the supply by (in the smart token)
+    */
+    function fund(uint256 _amount)
+        public
+        payable
+        protected
+        multipleReservesOnly
+    {
+        uint256 supply = token.totalSupply();
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+
+        // iterate through the reserve tokens and transfer a percentage equal to the weight between
+        // _amount and the total supply in each reserve from the caller to the converter
+        for (uint256 i = 0; i < reserveTokens.length; i++) {
+            IERC20Token reserveToken = reserveTokens[i];
+            uint256 rsvBalance = reserveBalance(reserveToken);
+            uint256 reserveAmount = formula.calculateFundCost(supply, rsvBalance, reserveRatio, _amount);
+
+            // transfer funds from the caller in the reserve token
+            if (reserveToken == ETH_RESERVE_ADDRESS) {
+                if (msg.value > reserveAmount) {
+                    msg.sender.transfer(msg.value - reserveAmount);
+                }
+                else if (msg.value < reserveAmount) {
+                    require(msg.value == 0);
+                    safeTransferFrom(etherToken, msg.sender, this, reserveAmount);
+                    etherToken.withdraw(reserveAmount);
+                }
+            }
+            else {
+                safeTransferFrom(reserveToken, msg.sender, this, reserveAmount);
+            }
+
+            // sync the reserve balance
+            syncReserveBalance(reserveToken);
+
+            // dispatch price data update for the smart token/reserve
+            emit PriceDataUpdate(reserveToken, supply + _amount, rsvBalance + reserveAmount, reserves[reserveToken].weight);
+        }
+
+        // issue new funds to the caller in the smart token
+        token.issue(msg.sender, _amount);
+    }
+
+    /**
+      * @dev sells the token for all reserve tokens using the same percentage
+      * for example, if the holder sells 10% of the supply,
+      * then they will receive 10% of each reserve token balance in return
+      * note that the function cannot be called when the converter has only one reserve
+      * 
+      * @param _amount  amount to liquidate (in the smart token)
+    */
+    function liquidate(uint256 _amount)
+        public
+        protected
+        multipleReservesOnly
+    {
+        uint256 supply = token.totalSupply();
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+
+        // destroy _amount from the caller's balance in the smart token
+        token.destroy(msg.sender, _amount);
+
+        // iterate through the reserve tokens and send a percentage equal to the weight between
+        // _amount and the total supply from each reserve balance to the caller
+        for (uint256 i = 0; i < reserveTokens.length; i++) {
+            IERC20Token reserveToken = reserveTokens[i];
+            uint256 rsvBalance = reserveBalance(reserveToken);
+            uint256 reserveAmount = formula.calculateLiquidateReturn(supply, rsvBalance, reserveRatio, _amount);
+
+            reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
+
+            // transfer funds to the caller in the reserve token
+            if (reserveToken == ETH_RESERVE_ADDRESS)
+                msg.sender.transfer(reserveAmount);
+            else
+                safeTransfer(reserveToken, msg.sender, reserveAmount);
+
+            // dispatch price data update for the smart token/reserve
+            emit PriceDataUpdate(reserveToken, supply - _amount, rsvBalance - reserveAmount, reserves[reserveToken].weight);
+        }
+    }
+
+    /**
+      * @dev buys the token with all reserve tokens using the same percentage
       * note that the function cannot be called when the converter has only one reserve
       * 
       * @param _reserveTokens           address of each reserve token
@@ -952,95 +1041,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         for (uint256 i = 0; i < length; i++)
             numOfDigits += ceilLog(_values[i]);
         return uint256(10) ** (roundDiv(numOfDigits, length) - 1);
-    }
-
-    /**
-      * @dev buys the token with all reserve tokens using the same percentage
-      * for example, if the caller increases the supply by 10%,
-      * then it will cost an amount equal to 10% of each reserve token balance
-      * note that the function cannot be called when the converter has only one reserve
-      * 
-      * @param _amount  amount to increase the supply by (in the smart token)
-    */
-    function fund(uint256 _amount)
-        public
-        payable
-        protected
-        multipleReservesOnly
-    {
-        uint256 supply = token.totalSupply();
-        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-
-        // iterate through the reserve tokens and transfer a percentage equal to the weight between
-        // _amount and the total supply in each reserve from the caller to the converter
-        for (uint256 i = 0; i < reserveTokens.length; i++) {
-            IERC20Token reserveToken = reserveTokens[i];
-            uint256 rsvBalance = reserveBalance(reserveToken);
-            uint256 reserveAmount = formula.calculateFundCost(supply, rsvBalance, reserveRatio, _amount);
-
-            // transfer funds from the caller in the reserve token
-            if (reserveToken == ETH_RESERVE_ADDRESS) {
-                if (msg.value > reserveAmount) {
-                    msg.sender.transfer(msg.value - reserveAmount);
-                }
-                else if (msg.value < reserveAmount) {
-                    require(msg.value == 0);
-                    safeTransferFrom(etherToken, msg.sender, this, reserveAmount);
-                    etherToken.withdraw(reserveAmount);
-                }
-            }
-            else {
-                safeTransferFrom(reserveToken, msg.sender, this, reserveAmount);
-            }
-
-            // sync the reserve balance
-            syncReserveBalance(reserveToken);
-
-            // dispatch price data update for the smart token/reserve
-            emit PriceDataUpdate(reserveToken, supply + _amount, rsvBalance + reserveAmount, reserves[reserveToken].weight);
-        }
-
-        // issue new funds to the caller in the smart token
-        token.issue(msg.sender, _amount);
-    }
-
-    /**
-      * @dev sells the token for all reserve tokens using the same percentage
-      * for example, if the holder sells 10% of the supply,
-      * then they will receive 10% of each reserve token balance in return
-      * note that the function cannot be called when the converter has only one reserve
-      * 
-      * @param _amount  amount to liquidate (in the smart token)
-    */
-    function liquidate(uint256 _amount)
-        public
-        protected
-        multipleReservesOnly
-    {
-        uint256 supply = token.totalSupply();
-        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-
-        // destroy _amount from the caller's balance in the smart token
-        token.destroy(msg.sender, _amount);
-
-        // iterate through the reserve tokens and send a percentage equal to the weight between
-        // _amount and the total supply from each reserve balance to the caller
-        for (uint256 i = 0; i < reserveTokens.length; i++) {
-            IERC20Token reserveToken = reserveTokens[i];
-            uint256 rsvBalance = reserveBalance(reserveToken);
-            uint256 reserveAmount = formula.calculateLiquidateReturn(supply, rsvBalance, reserveRatio, _amount);
-
-            reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
-
-            // transfer funds to the caller in the reserve token
-            if (reserveToken == ETH_RESERVE_ADDRESS)
-                msg.sender.transfer(reserveAmount);
-            else
-                safeTransfer(reserveToken, msg.sender, reserveAmount);
-
-            // dispatch price data update for the smart token/reserve
-            emit PriceDataUpdate(reserveToken, supply - _amount, rsvBalance - reserveAmount, reserves[reserveToken].weight);
-        }
     }
 
     /**	
