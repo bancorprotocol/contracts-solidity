@@ -32,7 +32,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         uint32 weight;      // reserve weight, represented in ppm, 1-1000000
         bool deprecated1;   // deprecated
         bool deprecated2;   // deprecated
-        bool isSet;         // true if the reserve is valid, false if not
+        bool isSet;         // true if the reserve is valid, false otherwise
     }
 
     /**
@@ -48,7 +48,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
                                                     // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public conversionFee = 0;                // current conversion fee, represented in ppm, 0...maxConversionFee
     bool public conversionsEnabled = true;          // deprecated, backward compatibility
-    bool private locked = false;                    // true while protected code is being executed, false if not
+    bool private locked = false;                    // true while protected code is being executed, false otherwise
 
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
 
