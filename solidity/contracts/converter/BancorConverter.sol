@@ -89,6 +89,40 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     );
 
     /**
+      * @dev triggered after liquidity is added
+      * 
+      * @param  _provider   liquidity provider
+      * @param  _reserve    reserve token address
+      * @param  _amount     reserve token amount
+      * @param  _newBalance reserve token new balance
+      * @param  _newSupply  smart token new supply
+    */
+    event LiquidityAdded(
+        address indexed _provider,
+        address indexed _reserve,
+        uint256 _amount,
+        uint256 _newBalance,
+        uint256 _newSupply
+    );
+
+    /**
+      * @dev triggered after liquidity is removed
+      * 
+      * @param  _provider   liquidity provider
+      * @param  _reserve    reserve token address
+      * @param  _amount     reserve token amount
+      * @param  _newBalance reserve token new balance
+      * @param  _newSupply  smart token new supply
+    */
+    event LiquidityRemoved(
+        address indexed _provider,
+        address indexed _reserve,
+        uint256 _amount,
+        uint256 _newBalance,
+        uint256 _newSupply
+    );
+
+    /**
       * @dev triggered when the conversion fee is updated
       * 
       * @param  _prevFee    previous fee percentage, represented in ppm
@@ -811,8 +845,8 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             // sync the reserve balance
             syncReserveBalance(reserveToken);
 
-            // dispatch price data update for the smart token/reserve
-            emit PriceDataUpdate(reserveToken, supply + _amount, rsvBalance + reserveAmount, reserves[reserveToken].weight);
+            // dispatch liquidity update for the smart token/reserve
+            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, rsvBalance + reserveAmount, supply + _amount);
         }
 
         // issue new funds to the caller in the smart token
@@ -853,8 +887,8 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             else
                 safeTransfer(reserveToken, msg.sender, reserveAmount);
 
-            // dispatch price data update for the smart token/reserve
-            emit PriceDataUpdate(reserveToken, supply - _amount, rsvBalance - reserveAmount, reserves[reserveToken].weight);
+            // dispatch liquidity update for the smart token/reserve
+            emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, rsvBalance - reserveAmount, supply - _amount);
         }
     }
 
@@ -947,7 +981,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             if (_reserveTokens[i] != ETH_RESERVE_ADDRESS)
                 safeTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
-            emit PriceDataUpdate(_reserveTokens[i], supplyAmount, _reserveAmounts[i], reserves[_reserveTokens[i]].weight);
+            emit LiquidityAdded(msg.sender, _reserveTokens[i], _reserveAmounts[i], _reserveAmounts[i], supplyAmount);
         }
 
         return supplyAmount;
@@ -971,7 +1005,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             else if (_reserveAmounts[i] > reserveAmount)
                 msg.sender.transfer(_reserveAmounts[i] - reserveAmount);
 
-            emit PriceDataUpdate(_reserveTokens[i], _totalSupply + supplyAmount, reserveBalances[i] + reserveAmount, reserves[_reserveTokens[i]].weight);
+            emit LiquidityAdded(msg.sender, _reserveTokens[i], reserveAmount, reserveBalances[i] + reserveAmount, _totalSupply + supplyAmount);
         }
 
         return supplyAmount;
@@ -993,7 +1027,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             else
                 safeTransfer(_reserveTokens[i], msg.sender, reserveAmount);
 
-            emit PriceDataUpdate(_reserveTokens[i], _totalSupply - _supplyAmount, reserveBalances[i] - reserveAmount, reserves[_reserveTokens[i]].weight);
+            emit LiquidityRemoved(msg.sender, _reserveTokens[i], reserveAmount, reserveBalances[i] - reserveAmount, _totalSupply - _supplyAmount);
         }
     }
 
