@@ -906,10 +906,9 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         if (msg.value > 0)
             require(reserves[ETH_RESERVE_ADDRESS].isSet);
 
-        uint256 totalSupply = token.totalSupply();
-        uint256 supplyAmount = addLiquidityToPool(_reserveTokens, _reserveAmounts, totalSupply);
-
+        uint256 supplyAmount = addLiquidityToPool(_reserveTokens, _reserveAmounts, token.totalSupply());
         require(supplyAmount >= _supplyMinReturnAmount);
+
         token.issue(msg.sender, supplyAmount);
     }
 
@@ -937,10 +936,9 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     {
         verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _supplyAmount);
 
-        uint256 totalSupply = token.totalSupply();
         token.destroy(msg.sender, _supplyAmount);
 
-        removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _supplyAmount);
+        removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, token.totalSupply(), _supplyAmount);
     }
 
     function verifyLiquidityInput(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _supplyAmount)
