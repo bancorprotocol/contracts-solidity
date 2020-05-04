@@ -912,15 +912,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         token.issue(msg.sender, supplyAmount);
     }
 
-    function addLiquidityToPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
-        private
-        returns (uint256)
-    {
-        if (_totalSupply == 0)
-            return addLiquidityToEmptyPool(_reserveTokens, _reserveAmounts);
-        return addLiquidityToNonEmptyPool(_reserveTokens, _reserveAmounts, _totalSupply);
-    }
-
     /**
       * @dev sells the token for all reserve tokens using the same percentage
       * note that the function cannot be called when the converter has only one reserve
@@ -963,6 +954,15 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         }
 
         require(_supplyAmount > 0);
+    }
+
+    function addLiquidityToPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
+        private
+        returns (uint256)
+    {
+        if (_totalSupply == 0)
+            return addLiquidityToEmptyPool(_reserveTokens, _reserveAmounts);
+        return addLiquidityToNonEmptyPool(_reserveTokens, _reserveAmounts, _totalSupply);
     }
 
     function addLiquidityToEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)
