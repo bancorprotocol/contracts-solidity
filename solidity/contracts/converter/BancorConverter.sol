@@ -271,10 +271,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         ownerOnly
     {
         super.acceptTokenOwnership();
-
-        // sync all reserve balances
-        for (uint256 i = 0; i < reserveTokens.length; i++)
-            syncReserveBalance(reserveTokens[i]);
+        syncReserveBalances();
     }
 
     /**
@@ -835,12 +832,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             require(reserves[ETH_RESERVE_ADDRESS].isSet);
 
         uint256 totalSupply = token.totalSupply();
-        uint256 supplyAmount;
-
-        if (totalSupply == 0)
-            supplyAmount = addLiquidityToEmptyPool(_reserveTokens, _reserveAmounts);
-        else
-            supplyAmount = addLiquidityToNonEmptyPool(_reserveTokens, _reserveAmounts, totalSupply);
+        uint256 supplyAmount = addLiquidityToPool(_reserveTokens, _reserveAmounts, totalSupply);
 
         require(supplyAmount >= _supplyMinReturnAmount);
         token.issue(msg.sender, supplyAmount);
@@ -889,6 +881,15 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         }
 
         require(_supplyAmount > 0);
+    }
+
+    function addLiquidityToPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
+        private
+        returns (uint256)
+    {
+        if (_totalSupply == 0)
+            return addLiquidityToEmptyPool(_reserveTokens, _reserveAmounts);
+        return addLiquidityToNonEmptyPool(_reserveTokens, _reserveAmounts, _totalSupply);
     }
 
     function addLiquidityToEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)
@@ -1006,6 +1007,14 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             reserves[_reserveToken].balance = address(this).balance;
         else
             reserves[_reserveToken].balance = _reserveToken.balanceOf(this);
+    }
+
+    /**	
+      * @dev syncs all stored reserve balances
+    */
+    function syncReserveBalances() internal {
+        for (uint256 i = 0; i < reserveTokens.length; i++)
+            syncReserveBalance(reserveTokens[i]);
     }
 
     /**
