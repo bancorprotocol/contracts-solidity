@@ -769,6 +769,14 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         return bancorNetwork.claimAndConvertFor2(_path, amount, _minReturn, msg.sender, address(0), 0);
     }
 
+    /**
+      * @dev buys the token with all reserve tokens using the same percentage
+      * note that the function cannot be called when the converter has only one reserve
+      * 
+      * @param _reserveTokens           address of each reserve token
+      * @param _reserveAmounts          amount of each reserve token
+      * @param _supplyMinReturnAmount   token minimum return-amount
+    */
     function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _supplyMinReturnAmount)
         public
         payable
@@ -796,6 +804,14 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         token.issue(msg.sender, supplyAmount);
     }
 
+    /**
+      * @dev sells the token for all reserve tokens using the same percentage
+      * note that the function cannot be called when the converter has only one reserve
+      * 
+      * @param _reserveTokens           address of each reserve token
+      * @param _reserveMinReturnAmounts minimum return-amount of each reserve token
+      * @param _supplyAmount            token amount
+    */
     function removeLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _supplyAmount)
         public
         protected
@@ -942,7 +958,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @dev buys the token with all reserve tokens using the same percentage
       * for example, if the caller increases the supply by 10%,
       * then it will cost an amount equal to 10% of each reserve token balance
-      * note that the function can be called only when conversions are enabled
+      * note that the function cannot be called when the converter has only one reserve
       * 
       * @param _amount  amount to increase the supply by (in the smart token)
     */
@@ -992,7 +1008,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @dev sells the token for all reserve tokens using the same percentage
       * for example, if the holder sells 10% of the supply,
       * then they will receive 10% of each reserve token balance in return
-      * note that the function can be called also when conversions are disabled
+      * note that the function cannot be called when the converter has only one reserve
       * 
       * @param _amount  amount to liquidate (in the smart token)
     */
