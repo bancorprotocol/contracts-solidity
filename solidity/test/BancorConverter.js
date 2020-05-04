@@ -5,13 +5,12 @@ const fs = require('fs');
 
 const utils = require('./helpers/Utils');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
-
 const BancorNetwork = artifacts.require('BancorNetwork');
 const BancorConverter = artifacts.require('BancorConverter');
 const SmartToken = artifacts.require('SmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
-const ContractFeatures = artifacts.require('ContractFeatures');
+const Whitelist = artifacts.require('Whitelist');
 const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 const BancorConverterFactory = artifacts.require('BancorConverterFactory');
@@ -19,10 +18,10 @@ const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
 const weight10Percent = 100000;
 
+let bancorNetwork;
 let token;
 let tokenAddress;
 let contractRegistry;
-let contractFeatures;
 let reserveToken;
 let reserveToken2;
 let reserveToken3;
@@ -69,13 +68,10 @@ contract('BancorConverter', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
 
-        contractFeatures = await ContractFeatures.new();
-        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
-
         let bancorFormula = await BancorFormula.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
 
-        let bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+        bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
 
         let factory = await BancorConverterFactory.new();
@@ -98,11 +94,6 @@ contract('BancorConverter', accounts => {
         assert.equal(token, tokenAddress);
         let registry = await converter.registry.call();
         assert.equal(registry, contractRegistry.address);
-
-        let featureWhitelist = await converter.CONVERTER_CONVERSION_WHITELIST.call();
-        let isSupported = await contractFeatures.isSupported.call(converter.address, featureWhitelist);
-        assert(isSupported);
-
         let maxConversionFee = await converter.maxConversionFee.call();
         assert.equal(maxConversionFee, 0);
     });
@@ -719,6 +710,40 @@ contract('BancorConverter', accounts => {
         let converter = await initConverter(accounts, true);
 
         await utils.catchRevert(converter.convert(tokenAddress, reserveToken.address, 30000, 1));
+    });
+
+    it('verifies that convert is allowed for a whitelisted account', async () => {
+        let converter = await initConverter(accounts, true);
+        let whitelist = await Whitelist.new();
+        await whitelist.addAddress(converter.address);
+        await whitelist.addAddress(accounts[1]);
+        await converter.setConversionWhitelist(whitelist.address);
+        await reserveToken.transfer(accounts[1], 1000);
+        await reserveToken.approve(converter.address, 500, { from: accounts[1] });
+
+        await converter.convert(reserveToken.address, tokenAddress, 500, 1, { from: accounts[1] })
+    });
+
+    it('should throw when calling convert from a non whitelisted account', async () => {
+        let converter = await initConverter(accounts, true);
+        let whitelist = await Whitelist.new();
+        await whitelist.addAddress(converter.address);
+        await converter.setConversionWhitelist(whitelist.address);
+        await reserveToken.transfer(accounts[1], 1000);
+        await reserveToken.approve(converter.address, 500, { from: accounts[1] });
+
+        await utils.catchRevert(converter.convert(reserveToken.address, tokenAddress, 500, 1, { from: accounts[1] }));
+    });
+
+    it('should throw when calling convert while the beneficiary is not whitelisted', async () => {
+        let converter = await initConverter(accounts, true);
+        let whitelist = await Whitelist.new();
+        await whitelist.addAddress(accounts[1]);
+        await converter.setConversionWhitelist(whitelist.address);
+        await reserveToken.transfer(accounts[1], 1000);
+        await reserveToken.approve(converter.address, 500, { from: accounts[1] });
+
+        await utils.catchRevert(converter.convert(reserveToken.address, tokenAddress, 500, 1, { from: accounts[1] }));
     });
 
     it('should throw when attempting to execute fund on a single-reserve converter', async () => {

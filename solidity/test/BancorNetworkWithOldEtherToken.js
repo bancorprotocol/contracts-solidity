@@ -5,12 +5,10 @@ const utils = require('./helpers/Utils');
 const BancorConverter = require('./helpers/BancorConverter');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
-const Whitelist = artifacts.require('Whitelist');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const SmartToken = artifacts.require('SmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
-const ContractFeatures = artifacts.require('ContractFeatures');
 const EtherToken = artifacts.require('EtherToken');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 
@@ -55,9 +53,6 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
 
     before(async () => {
         contractRegistry = await ContractRegistry.new();
-
-        let contractFeatures = await ContractFeatures.new();
-        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
 
         let bancorFormula = await BancorFormula.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
@@ -395,27 +390,6 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
         await utils.catchRevert(bancorNetwork.claimAndConvert(smartToken3BuyPath, 10000, 1));
     });
 
-    it('verifies that convertFor is allowed for a whitelisted account', async () => {
-        let whitelist = await Whitelist.new();
-        await whitelist.addAddress(accounts[1]);
-        await converter1.setConversionWhitelist(whitelist.address);
-
-        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
-        await bancorNetwork.convertFor(smartToken1BuyPath, 10000, 1, accounts[1], { value: 10000 });
-        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
-        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
-
-        await converter1.setConversionWhitelist(utils.zeroAddress);
-    });
-
-    it('should throw when calling convertFor with a non whitelisted account', async () => {
-        let whitelist = await Whitelist.new();
-        await converter1.setConversionWhitelist(whitelist.address);
-
-        await utils.catchRevert(bancorNetwork.convertFor(smartToken1BuyPath, 10000, 1, accounts[1], { value: 10000 }));
-        await converter1.setConversionWhitelist(utils.zeroAddress);
-    });
-
     it('verifies that getReturnByPath returns the correct amount for buying the smart token', async () => {
         let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1BuyPath, 10000))[0];
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
@@ -430,27 +404,6 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
         await bancorNetwork.convertFor(smartToken2BuyPath, 10000, 1, accounts[1], { value: 10000 });
         let balanceAfterTransfer = await smartToken2.balanceOf.call(accounts[1]);
         assert.equal(returnByPath, balanceAfterTransfer - balanceBeforeTransfer);
-    });
-
-    it('verifies that convert is allowed for a whitelisted account', async () => {
-        let whitelist = await Whitelist.new();
-        await whitelist.addAddress(accounts[1]);
-        await converter1.setConversionWhitelist(whitelist.address);
-
-        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
-        await bancorNetwork.convert(smartToken1BuyPath, 10000, 1, { from: accounts[1], value: 10000 });
-        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
-        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
-
-        await converter1.setConversionWhitelist(utils.zeroAddress);
-    });
-
-    it('should throw when calling convert with a non whitelisted account', async () => {
-        let whitelist = await Whitelist.new();
-        await converter1.setConversionWhitelist(whitelist.address);
-
-        await utils.catchRevert(bancorNetwork.convert(smartToken1BuyPath, 10000, 1, { from: accounts[1], value: 10000 }));
-        await converter1.setConversionWhitelist(utils.zeroAddress);
     });
 
     it('verifies that getReturnByPath returns the correct amount for buying the smart token', async () => {
@@ -658,27 +611,6 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
         await utils.catchRevert(bancorNetwork.claimAndConvert2(smartToken3BuyPath, 10000, 1, utils.zeroAddress, 0));
     });
 
-    it('verifies that convertFor2 is allowed for a whitelisted account', async () => {
-        let whitelist = await Whitelist.new();
-        await whitelist.addAddress(accounts[1]);
-        await converter1.setConversionWhitelist(whitelist.address);
-
-        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
-        await bancorNetwork.convertFor2(smartToken1BuyPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 });
-        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
-        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
-
-        await converter1.setConversionWhitelist(utils.zeroAddress);
-    });
-
-    it('should throw when calling convertFor2 with a non whitelisted account', async () => {
-        let whitelist = await Whitelist.new();
-        await converter1.setConversionWhitelist(whitelist.address);
-
-        await utils.catchRevert(bancorNetwork.convertFor2(smartToken1BuyPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 }));
-        await converter1.setConversionWhitelist(utils.zeroAddress);
-    });
-
     it('verifies that getReturnByPath returns the correct amount for buying the smart token', async () => {
         let returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1BuyPath, 10000))[0];
         let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
@@ -693,27 +625,6 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
         await bancorNetwork.convertFor2(smartToken2BuyPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 });
         let balanceAfterTransfer = await smartToken2.balanceOf.call(accounts[1]);
         assert.equal(returnByPath, balanceAfterTransfer - balanceBeforeTransfer);
-    });
-
-    it('verifies that convert2 is allowed for a whitelisted account', async () => {
-        let whitelist = await Whitelist.new();
-        await whitelist.addAddress(accounts[1]);
-        await converter1.setConversionWhitelist(whitelist.address);
-
-        let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
-        await bancorNetwork.convert2(smartToken1BuyPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 });
-        let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
-        assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
-
-        await converter1.setConversionWhitelist(utils.zeroAddress);
-    });
-
-    it('should throw when calling convert2 with a non whitelisted account', async () => {
-        let whitelist = await Whitelist.new();
-        await converter1.setConversionWhitelist(whitelist.address);
-
-        await utils.catchRevert(bancorNetwork.convert2(smartToken1BuyPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 }));
-        await converter1.setConversionWhitelist(utils.zeroAddress);
     });
 
     it('verifies that getReturnByPath returns the correct amount for buying the smart token', async () => {

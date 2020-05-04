@@ -1,13 +1,10 @@
 pragma solidity 0.4.26;
 import './IBancorNetwork.sol';
-import './FeatureIds.sol';
 import './converter/interfaces/IBancorConverter.sol';
 import './converter/interfaces/IBancorFormula.sol';
 import './utility/TokenHolder.sol';
 import './utility/SafeMath.sol';
 import './utility/ContractRegistryClient.sol';
-import './utility/interfaces/IContractFeatures.sol';
-import './utility/interfaces/IWhitelist.sol';
 import './token/interfaces/IEtherToken.sol';
 import './token/interfaces/ISmartToken.sol';
 import './bancorx/interfaces/IBancorX.sol';
@@ -32,7 +29,7 @@ contract ILegacyBancorConverter {
   * Format:
   * [source token, smart token, target token, smart token, target token...]
 */
-contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, FeatureIds {
+contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     using SafeMath for uint256;
 
     uint256 private constant CONVERSION_FEE_RESOLUTION = 1000000;
@@ -44,7 +41,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         ISmartToken smartToken;
         IERC20Token sourceToken;
         IERC20Token targetToken;
-        uint256 minReturn;
         address beneficiary;
         bool isV28OrHigherConverter;
         bool processAffiliateFee;
@@ -117,19 +113,21 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _for                 account that will receive the conversion result
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
       * 
       * @return tokens issued in return
     */
-    function convertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
+    function convertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee)
+        public
+        payable
+        greaterThanZero(_minReturn)
+        returns (uint256)
+    {
         // verify that the path contrains at least a single 'hop' and that the number of elements is odd
         require(_path.length > 2 &&  _path.length % 2 == 1);
-
-        // verify that the account which should receive the conversion result is whitelisted
-        require(isWhitelisted(_path, _for));
 
         // validate msg.value and prepare the source token for the conversion
         handleSourceToken(_path[0], ISmartToken(_path[1]), _amount);
@@ -144,8 +142,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
 
         // convert and get the resulting amount
-        ConversionStep[] memory data = createConversionData(_path, _minReturn, _for, affiliateFeeEnabled);
-        uint256 amount = doConversion(data, _amount, _affiliateAccount, _affiliateFee);
+        ConversionStep[] memory data = createConversionData(_path, _for, affiliateFeeEnabled);
+        uint256 amount = doConversion(data, _amount, _minReturn, _affiliateAccount, _affiliateFee);
 
         // handle the conversion target tokens
         handleTargetToken(data, amount, _for);
@@ -161,7 +159,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _toBlockchain        blockchain BNT will be issued on
       * @param _to                  address/account on _toBlockchain to send the BNT to
       * @param _conversionId        pre-determined unique (if non zero) id which refers to this transaction 
@@ -182,6 +180,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     )
         public
         payable
+        greaterThanZero(_minReturn)
         returns (uint256)
     {
         // verify that the path contrains at least a single 'hop' and that the number of elements is odd
@@ -203,8 +202,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
         }
 
         // convert and get the resulting amount
-        ConversionStep[] memory data = createConversionData(_path, _minReturn, this, affiliateFeeEnabled);
-        uint256 amount = doConversion(data, _amount, _affiliateAccount, _affiliateFee);
+        ConversionStep[] memory data = createConversionData(_path, this, affiliateFeeEnabled);
+        uint256 amount = doConversion(data, _amount, _minReturn, _affiliateAccount, _affiliateFee);
 
         // transfer the resulting amount to BancorX
         IBancorX(addressOf(BANCOR_X)).xTransfer(_toBlockchain, _to, amount, _conversionId);
@@ -217,6 +216,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * 
       * @param _data                conversion data, see ConversionStep struct above
       * @param _amount              amount to convert from, in the source token
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
       * 
@@ -225,6 +225,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
     function doConversion(
         ConversionStep[] _data,
         uint256 _amount,
+        uint256 _minReturn,
         address _affiliateAccount,
         uint256 _affiliateFee
     ) private returns (uint256) {
@@ -251,11 +252,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
 
             // do the conversion
             if (!stepData.isV28OrHigherConverter)
-                toAmount = ILegacyBancorConverter(stepData.converter).change(stepData.sourceToken, stepData.targetToken, fromAmount, stepData.minReturn);
+                toAmount = ILegacyBancorConverter(stepData.converter).change(stepData.sourceToken, stepData.targetToken, fromAmount, 1);
             else if (etherTokens[stepData.sourceToken])
-                toAmount = stepData.converter.convertInternal.value(msg.value)(stepData.sourceToken, stepData.targetToken, fromAmount, stepData.minReturn, stepData.beneficiary);
+                toAmount = stepData.converter.convertInternal.value(msg.value)(stepData.sourceToken, stepData.targetToken, fromAmount, msg.sender, stepData.beneficiary);
             else
-                toAmount = stepData.converter.convertInternal(stepData.sourceToken, stepData.targetToken, fromAmount, stepData.minReturn, stepData.beneficiary);
+                toAmount = stepData.converter.convertInternal(stepData.sourceToken, stepData.targetToken, fromAmount, msg.sender, stepData.beneficiary);
 
             // pay affiliate-fee if needed
             if (stepData.processAffiliateFee) {
@@ -267,6 +268,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             emit Conversion(stepData.smartToken, stepData.sourceToken, stepData.targetToken, fromAmount, toAmount, msg.sender);
             fromAmount = toAmount;
         }
+
+        // ensure the trade meets the minimum requested amount
+        require(toAmount >= _minReturn);
 
         return toAmount;
     }
@@ -378,7 +382,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
       * 
@@ -395,7 +399,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
       * 
@@ -482,13 +486,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
       * @dev creates a memory cache of all conversion steps data to minimize logic and external calls during conversions
       * 
       * @param _conversionPath      conversion path, see conversion path format above
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
       * @param _beneficiary         wallet to receive the conversion result
       * @param _affiliateFeeEnabled true if affiliate fee was requested by the sender, false if not
       * 
       * @return cached conversion data to be ingested later on by the conversion flow
     */
-    function createConversionData(IERC20Token[] _conversionPath, uint256 _minReturn, address _beneficiary, bool _affiliateFeeEnabled) private view returns (ConversionStep[]) {
+    function createConversionData(IERC20Token[] _conversionPath, address _beneficiary, bool _affiliateFeeEnabled) private view returns (ConversionStep[]) {
         ConversionStep[] memory data = new ConversionStep[](_conversionPath.length / 2);
 
         bool affiliateFeeProcessed = false;
@@ -515,9 +518,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 // set the source/target tokens
                 sourceToken: _conversionPath[i],
                 targetToken: targetToken,
-
-                // set the minimum return
-                minReturn: 1,
 
                 // requires knowledge about the next step, so initialize in the next phase
                 beneficiary: address(0),
@@ -576,8 +576,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
             }
         }
 
-        // the last conversion step is the only one that should check the minimum return
-        data[data.length - 1].minReturn = _minReturn;
         return data;
     }
 
@@ -597,19 +595,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, F
                 safeApprove(_token, _spender, 0);
             safeApprove(_token, _spender, _value);
         }
-    }
-
-    function isWhitelisted(IERC20Token[] _path, address _receiver) private view returns (bool) {
-        IContractFeatures features = IContractFeatures(addressOf(CONTRACT_FEATURES));
-        for (uint256 i = 1; i < _path.length; i += 2) {
-            IBancorConverter converter = IBancorConverter(ISmartToken(_path[i]).owner());
-            if (features.isSupported(converter, FeatureIds.CONVERTER_CONVERSION_WHITELIST)) {
-                IWhitelist whitelist = converter.conversionWhitelist();
-                if (whitelist != address(0) && !whitelist.isWhitelisted(_receiver))
-                    return false;
-            }
-        }
-        return true;
     }
 
     bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(uint256(keccak256("isV28OrHigher()") >> (256 - 4 * 8)));
