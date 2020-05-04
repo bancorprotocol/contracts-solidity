@@ -21,7 +21,6 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
     function acceptTokenOwnership() public;
     function setConversionFee(uint32 _conversionFee) public;
     function addReserve(IERC20Token _token, uint32 _weight) public;
-    function addETHReserve(uint32 _weight) public;
 }
 
 /**
@@ -40,6 +39,7 @@ contract IBancorConverterExtended is IBancorConverter, IOwned {
   * and then the upgrader 'upgrade' function should be executed directly.
 */
 contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryClient {
+    address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     IEtherToken etherToken;
 
     /**
@@ -180,12 +180,12 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
             (, uint32 weight, , , ) = _oldConverter.connectors(connectorAddress);
 
             // Ether reserve
-            if (connectorAddress == address(0)) {
-                _newConverter.addETHReserve(weight);
+            if (connectorAddress == ETH_RESERVE_ADDRESS) {
+                _newConverter.addReserve(IERC20Token(ETH_RESERVE_ADDRESS), weight);
             }
             // Ether reserve token
             else if (connectorAddress == address(etherToken)) {
-                _newConverter.addETHReserve(weight);
+                _newConverter.addReserve(IERC20Token(ETH_RESERVE_ADDRESS), weight);
             }
             // ERC20 reserve token
             else {
@@ -222,7 +222,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
         for (uint16 i = 0; i < connectorTokenCount; i++) {
             address connectorAddress = _oldConverter.connectorTokens(i);
             // Ether reserve
-            if (connectorAddress == address(0)) {
+            if (connectorAddress == ETH_RESERVE_ADDRESS) {
                 _oldConverter.withdrawETH(address(_newConverter));
             }
             // Ether reserve token

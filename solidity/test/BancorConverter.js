@@ -54,8 +54,8 @@ async function initConverter(accounts, activate, maxConversionFee = 0) {
     return converter;
 }
 
-function verifyReserve(reserve, virtualBalance, weight, isSet) {
-    assert.equal(reserve[0], virtualBalance);
+function verifyReserve(reserve, balance, weight, isSet) {
+    assert.equal(reserve[0], balance);
     assert.equal(reserve[1], weight);
     assert.equal(reserve[4], isSet);
 }

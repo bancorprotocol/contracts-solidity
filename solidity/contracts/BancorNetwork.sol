@@ -34,6 +34,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
 
     uint256 private constant CONVERSION_FEE_RESOLUTION = 1000000;
     uint256 private constant AFFILIATE_FEE_RESOLUTION = 1000000;
+    address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     struct ConversionStep {
         IBancorConverter converter;
@@ -74,7 +75,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * @param _registry    address of a contract registry contract
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
-        etherTokens[address(0)] = true;
+        etherTokens[ETH_RESERVE_ADDRESS] = true;
     }
 
     /**
@@ -427,14 +428,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
             // EtherToken converter - deposit the ETH into the EtherToken
             // note that it can still be a non ETH converter if the path is wrong
             // but such conversion will simply revert
-            if (!isNewerConverter) {
-                IEtherToken etherToken = getConverterEtherTokenAddress(firstConverter);
-                IEtherToken(etherToken).deposit.value(msg.value)();
-            }
+            if (!isNewerConverter)
+                IEtherToken(getConverterEtherTokenAddress(firstConverter)).deposit.value(msg.value)();
         }
         // EtherToken
         else if (etherTokens[_sourceToken]) {
-            // claim the tokens - if the source token is address(0), this call will fail
+            // claim the tokens - if the source token is ETH reserve, this call will fail
             // since in that case the transaction must be sent with msg.value
             safeTransferFrom(_sourceToken, msg.sender, this, _amount);
 
@@ -533,23 +532,23 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         // source is ETH
         ConversionStep memory stepData = data[0];
         if (etherTokens[stepData.sourceToken]) {
-            // newer converter - replace the source token with address(0)
+            // newer converter - replace the source token address with ETH reserve address
             if (stepData.isV28OrHigherConverter)
-                stepData.sourceToken = IERC20Token(0);
+                stepData.sourceToken = IERC20Token(ETH_RESERVE_ADDRESS);
             // older converter - replace the source token with the EtherToken address used by the converter
             else
-                stepData.sourceToken = getConverterEtherTokenAddress(stepData.converter);
+                stepData.sourceToken = IERC20Token(getConverterEtherTokenAddress(stepData.converter));
         }
 
         // target is ETH
         stepData = data[data.length - 1];
         if (etherTokens[stepData.targetToken]) {
-            // newer converter - replace the source token with address(0)
+            // newer converter - replace the target token address with ETH reserve address
             if (stepData.isV28OrHigherConverter)
-                stepData.targetToken = IERC20Token(0);
-            // older converter - replace the source token with the EtherToken address used by the converter
+                stepData.targetToken = IERC20Token(ETH_RESERVE_ADDRESS);
+            // older converter - replace the target token with the EtherToken address used by the converter
             else
-                stepData.targetToken = getConverterEtherTokenAddress(stepData.converter);
+                stepData.targetToken = IERC20Token(getConverterEtherTokenAddress(stepData.converter));
         }
 
         // set the beneficiary for each step
@@ -620,16 +619,15 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     }
 
     // legacy - returns the address of an EtherToken used by the converter
-    function getConverterEtherTokenAddress(IBancorConverter _converter) private view returns (IEtherToken) {
-        uint16 reserveCount = _converter.connectorTokenCount();
-        IERC20Token reserveTokenAddress;
-        for (uint16 i = 0; i < reserveCount; i++) {
-            reserveTokenAddress = _converter.connectorTokens(i);
+    function getConverterEtherTokenAddress(IBancorConverter _converter) private view returns (address) {
+        uint256 reserveCount = _converter.connectorTokenCount();
+        for (uint256 i = 0; i < reserveCount; i++) {
+            address reserveTokenAddress = _converter.connectorTokens(i);
             if (etherTokens[reserveTokenAddress])
-                return IEtherToken(reserveTokenAddress);
+                return reserveTokenAddress;
         }
 
-        return IEtherToken(0);
+        return ETH_RESERVE_ADDRESS;
     }
 
     /**
