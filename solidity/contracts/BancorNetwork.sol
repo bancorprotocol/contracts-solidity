@@ -113,7 +113,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _for                 account that will receive the conversion result
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
@@ -159,7 +159,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _toBlockchain        blockchain BNT will be issued on
       * @param _to                  address/account on _toBlockchain to send the BNT to
       * @param _conversionId        pre-determined unique (if non zero) id which refers to this transaction 
@@ -216,7 +216,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * 
       * @param _data                conversion data, see ConversionStep struct above
       * @param _amount              amount to convert from, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
       * 
@@ -382,7 +382,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
       * 
@@ -399,7 +399,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
       * 
