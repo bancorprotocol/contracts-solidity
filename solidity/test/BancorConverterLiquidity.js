@@ -5,7 +5,6 @@ const BancorConverter = artifacts.require('BancorConverter');
 const SmartToken = artifacts.require('SmartToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const BancorFormula = artifacts.require('BancorFormula');
-const ContractFeatures = artifacts.require('ContractFeatures');
 const ContractRegistry = artifacts.require('ContractRegistry');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
@@ -35,11 +34,8 @@ contract('BancorConverterLiquidity', accounts => {
 
     before(async () => {
         bancorFormula = await BancorFormula.new();
-        contractFeatures = await ContractFeatures.new();
         contractRegistry = await ContractRegistry.new();
-
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
     });
 
     describe('auxiliary functions:', () => {
