@@ -1,4 +1,3 @@
-module.exports.CONTRACT_FEATURES              = web3.fromAscii("ContractFeatures");
 module.exports.CONTRACT_REGISTRY              = web3.fromAscii("ContractRegistry");
 module.exports.BANCOR_NETWORK                 = web3.fromAscii("BancorNetwork");
 module.exports.BANCOR_FORMULA                 = web3.fromAscii("BancorFormula");

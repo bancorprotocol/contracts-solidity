@@ -7,7 +7,6 @@ import './interfaces/IContractRegistry.sol';
   * @dev Base contract for ContractRegistry clients
 */
 contract ContractRegistryClient is Owned, Utils {
-    bytes32 internal constant CONTRACT_FEATURES = "ContractFeatures";
     bytes32 internal constant CONTRACT_REGISTRY = "ContractRegistry";
     bytes32 internal constant BANCOR_NETWORK = "BancorNetwork";
     bytes32 internal constant BANCOR_FORMULA = "BancorFormula";

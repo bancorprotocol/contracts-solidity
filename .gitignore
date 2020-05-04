@@ -31,12 +31,8 @@ solidity/build/TestBancorFormula.abi
 solidity/build/TestBancorFormula.bin
 solidity/build/TestBancorNetwork.abi
 solidity/build/TestBancorNetwork.bin
-solidity/build/TestCrowdsaleController.abi
-solidity/build/TestCrowdsaleController.bin
 solidity/build/TestERC20Token.abi
 solidity/build/TestERC20Token.bin
-solidity/build/TestFeatures.abi
-solidity/build/TestFeatures.bin
 solidity/build/TestNonStandardERC20Token.abi
 solidity/build/TestNonStandardERC20Token.bin
 solidity/build/TestNonStandardToken.abi

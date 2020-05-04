@@ -389,8 +389,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         // verify that the converter holds balance in each of its reserves
         uint reserveTokenCount = _converter.connectorTokenCount();
         for (uint i = 0; i < reserveTokenCount; i++) {
-            IERC20Token reserveToken = _converter.connectorTokens(i);
-            if (_converter.getConnectorBalance(reserveToken) == 0)
+            if (_converter.getConnectorBalance(_converter.connectorTokens(i)) == 0)
                 return false;
         }
 

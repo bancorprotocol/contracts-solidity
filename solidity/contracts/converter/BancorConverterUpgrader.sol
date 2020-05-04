@@ -3,10 +3,8 @@ import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorConverterUpgrader.sol';
 import './interfaces/IBancorConverterFactory.sol';
 import '../utility/ContractRegistryClient.sol';
-import '../utility/interfaces/IContractFeatures.sol';
 import '../utility/interfaces/IWhitelist.sol';
 import '../token/interfaces/IEtherToken.sol';
-import '../FeatureIds.sol';
 
 /**
   * @dev Bancor Converter Upgrader
@@ -23,7 +21,7 @@ import '../FeatureIds.sol';
   * be transferred manually to the ConverterUpgrader contract using the 'transferOwnership' function
   * and then the upgrader 'upgrade' function should be executed directly.
 */
-contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryClient, FeatureIds {
+contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryClient {
     address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     IEtherToken etherToken;
 
@@ -131,7 +129,6 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * @return the new converter  new converter contract address
     */
     function createConverter(IBancorConverter _oldConverter) private returns(IBancorConverter) {
-        IWhitelist whitelist;
         ISmartToken token = _oldConverter.token();
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
 
@@ -146,16 +143,6 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
 
         IBancorConverter converter = IBancorConverter(converterAddress);
         converter.acceptOwnership();
-
-        // get the contract features address from the registry
-        IContractFeatures features = IContractFeatures(addressOf(CONTRACT_FEATURES));
-
-        if (features.isSupported(_oldConverter, FeatureIds.CONVERTER_CONVERSION_WHITELIST)) {
-            whitelist = _oldConverter.conversionWhitelist();
-            if (whitelist != address(0))
-                converter.setConversionWhitelist(whitelist);
-        }
-
         return converter;
     }
 
