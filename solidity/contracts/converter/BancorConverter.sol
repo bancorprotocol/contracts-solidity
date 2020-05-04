@@ -32,7 +32,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         uint32 weight;      // reserve weight, represented in ppm, 1-1000000
         bool deprecated1;   // deprecated
         bool deprecated2;   // deprecated
-        bool isSet;         // used to tell if the mapping element is defined
+        bool isSet;         // true if the reserve is valid, false if not
     }
 
     /**
