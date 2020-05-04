@@ -531,7 +531,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       *
       * @return amount of tokens received (in units of the target token)
     */
-    function convertInternal(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary)
+    function convert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary)
         public
         payable
         protected
@@ -676,78 +676,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         emit PriceDataUpdate(_targetToken, token.totalSupply(), reserveBalance(_targetToken), reserves[_targetToken].weight);
 
         return amount;
-    }
-
-    /**
-      * @dev converts a specific amount of _sourceToken to _targetToken
-      * note that prior to version 16, you should use 'convert' instead
-      * 
-      * @param _sourceToken         source ERC20 token
-      * @param _targetToken         target ERC20 token
-      * @param _amount              amount to convert, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-      * @param _affiliateAccount    affiliate account
-      * @param _affiliateFee        affiliate fee in PPM
-      * 
-      * @return conversion return amount
-    */
-    function convert2(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
-        IERC20Token[] memory path = new IERC20Token[](3);
-        (path[0], path[1], path[2]) = (_sourceToken, token, _targetToken);
-        return quickConvert2(path, _amount, _minReturn, _affiliateAccount, _affiliateFee);
-    }
-
-    /**
-      * @dev converts the token to any other token in the bancor network by following a predefined conversion path
-      * note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
-      * note that prior to version 16, you should use 'quickConvert' instead
-      * 
-      * @param _path                conversion path, see conversion path format in the BancorNetwork contract
-      * @param _amount              amount to convert from (in the initial source token)
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-      * @param _affiliateAccount    affiliate account
-      * @param _affiliateFee        affiliate fee in PPM
-      * 
-      * @return tokens issued in return
-    */
-    function quickConvert2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
-        public
-        payable
-        returns (uint256)
-    {
-        IBancorNetwork bancorNetwork = IBancorNetwork(addressOf(BANCOR_NETWORK));
-
-        // we need to transfer the source tokens from the caller to the converter contract,
-        // so it can execute the conversion on behalf of the caller
-        if (_path[0] == ETH_RESERVE_ADDRESS) {
-            // ETH - execute the conversion and pass on the ETH with the call
-            return bancorNetwork.convertFor2.value(msg.value)(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
-        }
-        else {
-            // not ETH, claim the tokens
-            require(msg.value == 0);
-
-            // if the token is the smart token, no allowance is required - destroy
-            // the tokens from the caller and issue them to the converter contract
-            if (_path[0] == token) {
-                token.destroy(msg.sender, _amount); // destroy _amount tokens from the caller's balance in the smart token
-                token.issue(this, _amount); // issue _amount new tokens to the converter contract
-            }
-            // otherwise, we assume we already have allowance, claim the tokens
-            else {
-                safeTransferFrom(_path[0], msg.sender, this, _amount);
-            }
-
-            // grant allowance to the network
-            uint256 allowance = _path[0].allowance(this, bancorNetwork);
-            if (allowance < _amount) {
-                if (allowance > 0)
-                    safeApprove(_path[0], bancorNetwork, 0);
-                safeApprove(_path[0], bancorNetwork, _amount);
-            }
-
-            return bancorNetwork.claimAndConvertFor2(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
-        }
     }
 
     /**
@@ -1095,20 +1023,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
         assert(_feeAmount < 2 ** 255);
         emit Conversion(_sourceToken, _targetToken, msg.sender, _amount, _returnAmount, int256(_feeAmount));
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function convert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
-        return convert2(_sourceToken, _targetToken, _amount, _minReturn, address(0), 0);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function quickConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256) {
-        return quickConvert2(_path, _amount, _minReturn, address(0), 0);
     }
 
     /**
