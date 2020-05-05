@@ -725,7 +725,7 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(bancorNetwork.convert([tokenAddress, tokenAddress, reserveToken.address], 1, 1));
     });
 
-    it('should throw when attempting to sell with amount greater then the seller balance', async () => {
+    it('should throw when attempting to sell with amount greater than the seller balance', async () => {
         let converter = await initConverter(accounts, true);
         await approve(token, accounts[0], bancorNetwork.address, 30000);
 
@@ -1321,24 +1321,28 @@ contract('BancorConverter', accounts => {
 
     it('should throw when attempting to sell while the converter is not active', async () => {
         let converter = await initConverter(accounts, false);
+        await approve(token, accounts[0], bancorNetwork.address, 500);
 
         await utils.catchRevert(bancorNetwork.convert2([tokenAddress, tokenAddress, reserveToken.address], 500, 1, utils.zeroAddress, 0));
     });
 
     it('should throw when attempting to sell with a non reserve address', async () => {
         let converter = await initConverter(accounts, true);
+        await approve(token, accounts[0], bancorNetwork.address, 500);
 
         await utils.catchRevert(bancorNetwork.convert2([tokenAddress, tokenAddress, tokenAddress], 500, 1, utils.zeroAddress, 0));
     });
 
     it('should throw when attempting to sell while the sale yields 0 return', async () => {
         let converter = await initConverter(accounts, true);
+        await approve(token, accounts[0], bancorNetwork.address, 1);
 
         await utils.catchRevert(bancorNetwork.convert2([tokenAddress, tokenAddress, reserveToken.address], 0, 1, utils.zeroAddress, 0));
     });
 
-    it('should throw when attempting to sell with amount greater then the seller balance', async () => {
+    it('should throw when attempting to sell with amount greater than the seller balance', async () => {
         let converter = await initConverter(accounts, true);
+        await approve(token, accounts[0], bancorNetwork.address, 3000);
 
         await utils.catchRevert(bancorNetwork.convert2([tokenAddress, tokenAddress, reserveToken.address], 30000, 1, utils.zeroAddress, 0));
     });
