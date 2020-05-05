@@ -629,7 +629,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         return ETH_RESERVE_ADDRESS;
     }
 
-    bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(uint256(keccak256("getReturn(address,address,uint256)") >> (256 - 4 * 8)));
+    bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
 
     function getReturn(address _dest, address _sourceToken, address _targetToken, uint256 _amount) internal view returns (uint256, uint256) {
         uint256[2] memory ret;
@@ -652,7 +652,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         return (ret[0], ret[1]);
     }
 
-    bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(uint256(keccak256("isV28OrHigher()") >> (256 - 4 * 8)));
+    bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
 
     function isV28OrHigherConverter(IBancorConverter _converter) internal view returns (bool) {
         bool success;
