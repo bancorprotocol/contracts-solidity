@@ -805,6 +805,9 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         protected
         multipleReservesOnly
     {
+        syncReserveBalances();
+        reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
+
         uint256 supply = token.totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
 
@@ -812,7 +815,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         // _amount and the total supply in each reserve from the caller to the converter
         for (uint256 i = 0; i < reserveTokens.length; i++) {
             IERC20Token reserveToken = reserveTokens[i];
-            uint256 rsvBalance = reserveBalance(reserveToken);
+            uint256 rsvBalance = reserves[reserveToken].balance;
             uint256 reserveAmount = formula.calculateFundCost(supply, rsvBalance, reserveRatio, _amount);
 
             // transfer funds from the caller in the reserve token
@@ -831,7 +834,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             }
 
             // sync the reserve balance
-            syncReserveBalance(reserveToken);
+            reserves[reserveToken].balance = reserves[reserveToken].balance.add(reserveAmount);
 
             // dispatch liquidity update for the smart token/reserve
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, rsvBalance + reserveAmount, supply + _amount);
@@ -854,6 +857,8 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         protected
         multipleReservesOnly
     {
+        syncReserveBalances();
+
         uint256 supply = token.totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
 
@@ -864,9 +869,10 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         // _amount and the total supply from each reserve balance to the caller
         for (uint256 i = 0; i < reserveTokens.length; i++) {
             IERC20Token reserveToken = reserveTokens[i];
-            uint256 rsvBalance = reserveBalance(reserveToken);
+            uint256 rsvBalance = reserves[reserveToken].balance;
             uint256 reserveAmount = formula.calculateLiquidateReturn(supply, rsvBalance, reserveRatio, _amount);
 
+            // sync the reserve balance
             reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
 
             // transfer funds to the caller in the reserve token
@@ -973,6 +979,9 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             if (_reserveTokens[i] != ETH_RESERVE_ADDRESS)
                 safeTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
+
+            reserves[_reserveTokens[i]].balance = _reserveAmounts[i];
+
             emit LiquidityAdded(msg.sender, _reserveTokens[i], _reserveAmounts[i], _reserveAmounts[i], supplyAmount);
         }
 
@@ -983,21 +992,27 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         private
         returns (uint256)
     {
-        uint256[] memory reserveBalances = getBalances(_reserveTokens);
+        syncReserveBalances();
+        reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
+
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-        uint256 supplyAmount = getMinShare(_totalSupply, reserveBalances, _reserveAmounts);
+        uint256 supplyAmount = getMinShare(_totalSupply, _reserveTokens, _reserveAmounts);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
-            uint256 reserveAmount = formula.calculateFundCost(_totalSupply, reserveBalances[i], reserveRatio, supplyAmount);
+            IERC20Token reserveToken = _reserveTokens[i];
+            uint256 rsvBalance = reserves[reserveToken].balance;
+            uint256 reserveAmount = formula.calculateFundCost(_totalSupply, rsvBalance, reserveRatio, supplyAmount);
             require(reserveAmount > 0);
             assert(reserveAmount <= _reserveAmounts[i]);
 
-            if (_reserveTokens[i] != ETH_RESERVE_ADDRESS)
-                safeTransferFrom(_reserveTokens[i], msg.sender, this, reserveAmount);
+            if (reserveToken != ETH_RESERVE_ADDRESS)
+                safeTransferFrom(reserveToken, msg.sender, this, reserveAmount);
             else if (_reserveAmounts[i] > reserveAmount)
                 msg.sender.transfer(_reserveAmounts[i] - reserveAmount);
 
-            emit LiquidityAdded(msg.sender, _reserveTokens[i], reserveAmount, reserveBalances[i] + reserveAmount, _totalSupply + supplyAmount);
+            reserves[reserveToken].balance = reserves[reserveToken].balance.add(reserveAmount);
+
+            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, rsvBalance + reserveAmount, _totalSupply + supplyAmount);
         }
 
         return supplyAmount;
@@ -1007,37 +1022,31 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         public
         multipleReservesOnly
     {
-        uint256[] memory reserveBalances = getBalances(_reserveTokens);
+        syncReserveBalances();
+
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
-            uint256 reserveAmount = formula.calculateLiquidateReturn(_totalSupply, reserveBalances[i], reserveRatio, _supplyAmount);
+            IERC20Token reserveToken = _reserveTokens[i];
+            uint256 rsvBalance = reserves[reserveToken].balance;
+            uint256 reserveAmount = formula.calculateLiquidateReturn(_totalSupply, rsvBalance, reserveRatio, _supplyAmount);
             require(reserveAmount >= _reserveMinReturnAmounts[i]);
 
-            if (_reserveTokens[i] == ETH_RESERVE_ADDRESS)
+            reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
+
+            if (reserveToken == ETH_RESERVE_ADDRESS)
                 msg.sender.transfer(reserveAmount);
             else
-                safeTransfer(_reserveTokens[i], msg.sender, reserveAmount);
+                safeTransfer(reserveToken, msg.sender, reserveAmount);
 
-            emit LiquidityRemoved(msg.sender, _reserveTokens[i], reserveAmount, reserveBalances[i] - reserveAmount, _totalSupply - _supplyAmount);
+            emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, rsvBalance - reserveAmount, _totalSupply - _supplyAmount);
         }
     }
 
-    function getBalances(IERC20Token[] memory _tokens) private view returns (uint256[] memory) {
-        uint256[] memory balances = new uint256[](_tokens.length);
-        for (uint256 i = 0; i < _tokens.length; i++) {
-            if (_tokens[i] != ETH_RESERVE_ADDRESS)
-                balances[i] = _tokens[i].balanceOf(this);
-            else
-                balances[i] = address(this).balance - msg.value;
-        }
-        return balances;
-    }
-
-    function getMinShare(uint256 _supply, uint256[] memory _balances, uint256[] memory _amounts) private view returns (uint256) {
-        uint256 minShare = getShare(_supply, _balances[0], _amounts[0]);
-        for (uint256 i = 1; i < _balances.length; i++) {
-            uint256 share = getShare(_supply, _balances[i], _amounts[i]);
+    function getMinShare(uint256 _supply, IERC20Token[] memory _tokens, uint256[] memory _amounts) private view returns (uint256) {
+        uint256 minShare = getShare(_supply, reserves[_tokens[0]].balance, _amounts[0]);
+        for (uint256 i = 1; i < _tokens.length; i++) {
+            uint256 share = getShare(_supply, reserves[_tokens[i]].balance, _amounts[i]);
             if (minShare > share)
                 minShare = share;
         }
