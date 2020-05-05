@@ -567,7 +567,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         return true;
     }
 
-    bytes4 private constant CONNECTORS_FUNC_SELECTOR = bytes4(uint256(keccak256("connectors(address)") >> (256 - 4 * 8)));
+    bytes4 private constant CONNECTORS_FUNC_SELECTOR = bytes4(keccak256("connectors(address)"));
 
     function getReserveWeight(address _converter, address _reserveToken) private view returns (uint32) {
         uint256[2] memory ret;
