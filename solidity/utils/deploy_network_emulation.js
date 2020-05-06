@@ -135,7 +135,7 @@ async function run() {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistryData"), bancorConverterRegistryData._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterFactory"     ), bancorConverterFactory     ._address));
 
-    const addresses = ["0x".padEnd(42, "e")];
+    const addresses = {ETH: "0x".padEnd(42, "e")};
     for (const reserve of get().reserves) {
         const name     = reserve.name;
         const symbol   = reserve.symbol;
@@ -147,7 +147,7 @@ async function run() {
             await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"), token._address));
             await execute(bancorNetworkPathFinder.methods.setAnchorToken(token._address));
         }
-        addresses.push(token._address);
+        addresses[reserve.symbol] = token._address;
     }
 
     for (const converter of get().converters) {
@@ -155,14 +155,15 @@ async function run() {
         const symbol   = converter.symbol;
         const decimals = converter.decimals;
         const fee      = converter.fee;
-        const tokens   = converter.reserves.map(reserve => addresses[reserve.id + 1]);
+        const tokens   = converter.reserves.map(reserve => addresses[reserve.symbol]);
         const weights  = converter.reserves.map(reserve => reserve.weight);
         const amounts  = converter.reserves.map(reserve => reserve.balance);
-        const value    = [...converter.reserves.filter(reserve => reserve.id == -1), {balance: "0"}][0].balance;
+        const value    = [...converter.reserves.filter(reserve => reserve.symbol == "ETH"), {balance: "0"}][0].balance;
         if (converter.reserves.length == 1)
             await execute(bancorConverterRegistry.methods.newLiquidToken(name, symbol, decimals, fee, tokens[0], weights[0], amounts[0]), value);
         else
             await execute(bancorConverterRegistry.methods.newLiquidityPool(name, symbol, decimals, fee, tokens, weights, amounts), value);
+        addresses[converter.symbol] = (await bancorConverterRegistry.methods.getSmartTokens().call()).slice(-1)[0];
     }
 
     const smartTokens = await bancorConverterRegistry.methods.getSmartTokens().call();
