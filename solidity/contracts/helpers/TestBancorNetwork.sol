@@ -42,6 +42,10 @@ contract TestBancorNetwork is BancorNetwork {
         newBancorConverter = new NewBancorConverter(_amount, _fee);
     }
 
+    function isV28OrHigherConverterExternal(IBancorConverter _converter) external view returns (bool) {
+        return super.isV28OrHigherConverter(_converter);
+    }
+
     function getReturnOld() external view returns (uint256, uint256) {
         return getReturn(address(oldBancorConverter), IERC20Token(0), IERC20Token(0), uint256(0));
     }

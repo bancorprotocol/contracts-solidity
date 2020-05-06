@@ -6,23 +6,6 @@ import '../utility/ContractRegistryClient.sol';
 import '../utility/interfaces/IWhitelist.sol';
 import '../token/interfaces/IEtherToken.sol';
 
-/*
-    Bancor converter dedicated interface
-*/
-contract IBancorConverterExtended is IBancorConverter, IOwned {
-    function token() public view returns (ISmartToken);
-    function maxConversionFee() public view returns (uint32);
-    function connectorTokenCount() public view returns (uint16);
-    function connectorTokens(uint256 _index) public view returns (IERC20Token);
-    function setConversionWhitelist(IWhitelist _whitelist) public;
-    function transferTokenOwnership(address _newOwner) public;
-    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public;
-    function withdrawETH(address _to) public;
-    function acceptTokenOwnership() public;
-    function setConversionFee(uint32 _conversionFee) public;
-    function addReserve(IERC20Token _token, uint32 _weight) public;
-}
-
 /**
   * @dev Bancor Converter Upgrader
   * 
@@ -104,10 +87,10 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
     */
     function upgradeOld(IBancorConverter _converter, bytes32 _version) public {
         _version;
-        IBancorConverterExtended converter = IBancorConverterExtended(_converter);
+        IBancorConverter converter = IBancorConverter(_converter);
         address prevOwner = converter.owner();
         acceptConverterOwnership(converter);
-        IBancorConverterExtended newConverter = createConverter(converter);
+        IBancorConverter newConverter = createConverter(converter);
         copyConnectors(converter, newConverter);
         copyConversionFee(converter, newConverter);
         transferConnectorsBalances(converter, newConverter);                
@@ -132,7 +115,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * 
       * @param _oldConverter       converter to accept ownership of
     */
-    function acceptConverterOwnership(IBancorConverterExtended _oldConverter) private {
+    function acceptConverterOwnership(IBancorConverter _oldConverter) private {
         _oldConverter.acceptOwnership();
         emit ConverterOwned(_oldConverter, this);
     }
@@ -145,7 +128,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * 
       * @return the new converter  new converter contract address
     */
-    function createConverter(IBancorConverterExtended _oldConverter) private returns(IBancorConverterExtended) {
+    function createConverter(IBancorConverter _oldConverter) private returns(IBancorConverter) {
         ISmartToken token = _oldConverter.token();
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
 
@@ -158,7 +141,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
             0
         );
 
-        IBancorConverterExtended converter = IBancorConverterExtended(converterAddress);
+        IBancorConverter converter = IBancorConverter(converterAddress);
         converter.acceptOwnership();
         return converter;
     }
@@ -170,7 +153,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */
-    function copyConnectors(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter)
+    function copyConnectors(IBancorConverter _oldConverter, IBancorConverter _newConverter)
         private
     {
         uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
@@ -200,7 +183,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */
-    function copyConversionFee(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter) private {
+    function copyConversionFee(IBancorConverter _oldConverter, IBancorConverter _newConverter) private {
         uint32 conversionFee = _oldConverter.conversionFee();
         _newConverter.setConversionFee(conversionFee);
     }
@@ -213,7 +196,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */
-    function transferConnectorsBalances(IBancorConverterExtended _oldConverter, IBancorConverterExtended _newConverter)
+    function transferConnectorsBalances(IBancorConverter _oldConverter, IBancorConverter _newConverter)
         private
     {
         uint256 connectorBalance;
