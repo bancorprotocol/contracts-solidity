@@ -107,20 +107,97 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     }
 
     /**
+      * @dev returns the expected rate of converting a given amount on a given path
+      * note that there is no support for circular paths
+      * 
+      * @param _path        conversion path (see conversion path format above)
+      * @param _amount      amount of _path[0] tokens received from the sender
+      * 
+      * @return expected rate
+    */
+    function rateByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256) {
+        uint256 amount;
+        uint256 fee;
+        uint256 supply;
+        uint256 balance;
+        uint32 weight;
+        IBancorConverter converter;
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+
+        amount = _amount;
+
+        // verify that the number of elements is larger than 2 and odd
+        require(_path.length > 2 && _path.length % 2 == 1);
+
+        // iterate over the conversion path
+        for (uint256 i = 2; i < _path.length; i += 2) {
+            IERC20Token sourceToken = _path[i - 2];
+            IERC20Token smartToken = _path[i - 1];
+            IERC20Token targetToken = _path[i];
+
+            if (targetToken == smartToken) { // buy the smart token
+                // check if the current smart token has changed
+                if (i < 3 || smartToken != _path[i - 3]) {
+                    supply = smartToken.totalSupply();
+                    converter = IBancorConverter(ISmartToken(smartToken).owner());
+                }
+
+                // get the amount & the conversion fee
+                balance = converter.getConnectorBalance(sourceToken);
+                (, weight, , , ) = converter.connectors(sourceToken);
+                amount = formula.purchaseRate(supply, balance, weight, amount);
+                fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
+                amount -= fee;
+
+                // update the smart token supply for the next iteration
+                supply += amount;
+            }
+            else if (sourceToken == smartToken) { // sell the smart token
+                // check if the current smart token has changed
+                if (i < 3 || smartToken != _path[i - 3]) {
+                    supply = smartToken.totalSupply();
+                    converter = IBancorConverter(ISmartToken(smartToken).owner());
+                }
+
+                // get the amount & the conversion fee
+                balance = converter.getConnectorBalance(targetToken);
+                (, weight, , , ) = converter.connectors(targetToken);
+                amount = formula.saleRate(supply, balance, weight, amount);
+                fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
+                amount -= fee;
+
+                // update the smart token supply for the next iteration
+                supply -= amount;
+            }
+            else { // cross reserve conversion
+                // check if the current smart token has changed
+                if (i < 3 || smartToken != _path[i - 3]) {
+                    converter = IBancorConverter(ISmartToken(smartToken).owner());
+                }
+
+                (amount, fee) = getReturn(converter, sourceToken, targetToken, amount);
+            }
+        }
+
+        return amount;
+    }
+
+    /**
       * @dev converts the token to any other token in the bancor network by following
       * a predefined conversion path and transfers the result tokens to a target account
-      * note that the network should already own the source tokens
+      * affiliate account/fee can also be passed in to receive a conversion fee (on top of the liquidity provider fees)
+      * note that the network should already have been given allowance of the source token (if not ETH)
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
-      * @param _for                 account that will receive the conversion result
-      * @param _affiliateAccount    affiliate account
-      * @param _affiliateFee        affiliate fee in PPM
+      * @param _beneficiary         account that will receive the conversion result or 0x0 to send the result to the sender account
+      * @param _affiliateAccount    wallet address to receive the affiliate fee or 0x0 to disable affiliate fee
+      * @param _affiliateFee        affiliate fee in PPM or 0 to disable affiliate fee
       * 
-      * @return tokens issued in return
+      * @return amount of tokens received from the conversion
     */
-    function convertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee)
+    function convertByPath(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary, address _affiliateAccount, uint256 _affiliateFee)
         public
         payable
         greaterThanZero(_minReturn)
@@ -132,6 +209,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         // validate msg.value and prepare the source token for the conversion
         handleSourceToken(_path[0], ISmartToken(_path[1]), _amount);
 
+        // check if affiliate fee is enabled
         bool affiliateFeeEnabled = false;
         if (address(_affiliateAccount) == 0) {
             require(_affiliateFee == 0);
@@ -141,27 +219,60 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
             affiliateFeeEnabled = true;
         }
 
+        // check if beneficiary is set
+        address beneficiary = msg.sender;
+        if (_beneficiary != address(0))
+            beneficiary = _beneficiary;
+
         // convert and get the resulting amount
-        ConversionStep[] memory data = createConversionData(_path, _for, affiliateFeeEnabled);
+        ConversionStep[] memory data = createConversionData(_path, beneficiary, affiliateFeeEnabled);
         uint256 amount = doConversion(data, _amount, _minReturn, _affiliateAccount, _affiliateFee);
 
         // handle the conversion target tokens
-        handleTargetToken(data, amount, _for);
+        handleTargetToken(data, amount, beneficiary);
 
         return amount;
     }
 
     /**
-      * @dev converts any other token to BNT in the bancor network
-      * by following a predefined conversion path and transfers the resulting
-      * tokens to BancorX.
+      * @dev converts any other token to BNT in the bancor network by following
+      a predefined conversion path and transfers the result to an account on a different blockchain
       * note that the network should already have been given allowance of the source token (if not ETH)
       * 
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
-      * @param _toBlockchain        blockchain BNT will be issued on
-      * @param _to                  address/account on _toBlockchain to send the BNT to
+      * @param _targetBlockchain    blockchain BNT will be issued on
+      * @param _targetAccount       address/account on the target blockchain to send the BNT to
+      * @param _conversionId        pre-determined unique (if non zero) id which refers to this transaction 
+      * 
+      * @return the amount of BNT received from this conversion
+    */
+    function xConvert(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        bytes32 _targetBlockchain,
+        bytes32 _targetAccount,
+        uint256 _conversionId
+    )
+        public
+        payable
+        returns (uint256)
+    {
+        return xConvert2(_path, _amount, _minReturn, _targetBlockchain, _targetAccount, _conversionId, address(0), 0);
+    }
+
+    /**
+      * @dev converts any other token to BNT in the bancor network by following
+      a predefined conversion path and transfers the result to an account on a different blockchain
+      * note that the network should already have been given allowance of the source token (if not ETH)
+      * 
+      * @param _path                conversion path, see conversion path format above
+      * @param _amount              amount to convert from, in the source token
+      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
+      * @param _targetBlockchain    blockchain BNT will be issued on
+      * @param _targetAccount       address/account on the target blockchain to send the BNT to
       * @param _conversionId        pre-determined unique (if non zero) id which refers to this transaction 
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
@@ -172,8 +283,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         IERC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
-        bytes32 _toBlockchain,
-        bytes32 _to,
+        bytes32 _targetBlockchain,
+        bytes32 _targetAccount,
         uint256 _conversionId,
         address _affiliateAccount,
         uint256 _affiliateFee
@@ -206,7 +317,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         uint256 amount = doConversion(data, _amount, _minReturn, _affiliateAccount, _affiliateFee);
 
         // transfer the resulting amount to BancorX
-        IBancorX(addressOf(BANCOR_X)).xTransfer(_toBlockchain, _to, amount, _conversionId);
+        IBancorX(addressOf(BANCOR_X)).xTransfer(_targetBlockchain, _targetAccount, amount, _conversionId);
 
         return amount;
     }
@@ -220,7 +331,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
       * 
-      * @return amount of tokens issued
+      * @return amount of tokens received from the conversion
     */
     function doConversion(
         ConversionStep[] _data,
@@ -254,9 +365,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
             if (!stepData.isV28OrHigherConverter)
                 toAmount = ILegacyBancorConverter(stepData.converter).change(stepData.sourceToken, stepData.targetToken, fromAmount, 1);
             else if (etherTokens[stepData.sourceToken])
-                toAmount = stepData.converter.convertInternal.value(msg.value)(stepData.sourceToken, stepData.targetToken, fromAmount, msg.sender, stepData.beneficiary);
+                toAmount = stepData.converter.convert.value(msg.value)(stepData.sourceToken, stepData.targetToken, fromAmount, msg.sender, stepData.beneficiary);
             else
-                toAmount = stepData.converter.convertInternal(stepData.sourceToken, stepData.targetToken, fromAmount, msg.sender, stepData.beneficiary);
+                toAmount = stepData.converter.convert(stepData.sourceToken, stepData.targetToken, fromAmount, msg.sender, stepData.beneficiary);
 
             // pay affiliate-fee if needed
             if (stepData.processAffiliateFee) {
@@ -273,140 +384,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         require(toAmount >= _minReturn);
 
         return toAmount;
-    }
-
-    bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
-
-    function getReturn(address _dest, address _sourceToken, address _targetToken, uint256 _amount) internal view returns (uint256, uint256) {
-        uint256[2] memory ret;
-        bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _sourceToken, _targetToken, _amount);
-
-        assembly {
-            let success := staticcall(
-                gas,           // gas remaining
-                _dest,         // destination address
-                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
-                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
-                ret,           // output buffer
-                64             // output length
-            )
-            if iszero(success) {
-                revert(0, 0)
-            }
-        }
-
-        return (ret[0], ret[1]);
-    }
-
-    /**
-      * @dev calculates the expected return of converting a given amount on a given path
-      * note that there is no support for circular paths
-      * 
-      * @param _path        conversion path (see conversion path format above)
-      * @param _amount      amount of _path[0] tokens received from the sender
-      * 
-      * @return amount of _path[_path.length - 1] tokens that the sender will receive
-      * @return amount of _path[_path.length - 1] tokens that the sender will pay as fee
-    */
-    function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
-        uint256 amount;
-        uint256 fee;
-        uint256 supply;
-        uint256 balance;
-        uint32 weight;
-        IBancorConverter converter;
-        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-
-        amount = _amount;
-
-        // verify that the number of elements is larger than 2 and odd
-        require(_path.length > 2 && _path.length % 2 == 1);
-
-        // iterate over the conversion path
-        for (uint256 i = 2; i < _path.length; i += 2) {
-            IERC20Token sourceToken = _path[i - 2];
-            IERC20Token smartToken = _path[i - 1];
-            IERC20Token targetToken = _path[i];
-
-            if (targetToken == smartToken) { // buy the smart token
-                // check if the current smart token has changed
-                if (i < 3 || smartToken != _path[i - 3]) {
-                    supply = smartToken.totalSupply();
-                    converter = IBancorConverter(ISmartToken(smartToken).owner());
-                }
-
-                // calculate the amount & the conversion fee
-                balance = converter.getConnectorBalance(sourceToken);
-                (, weight, , , ) = converter.connectors(sourceToken);
-                amount = formula.calculatePurchaseReturn(supply, balance, weight, amount);
-                fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
-                amount -= fee;
-
-                // update the smart token supply for the next iteration
-                supply += amount;
-            }
-            else if (sourceToken == smartToken) { // sell the smart token
-                // check if the current smart token has changed
-                if (i < 3 || smartToken != _path[i - 3]) {
-                    supply = smartToken.totalSupply();
-                    converter = IBancorConverter(ISmartToken(smartToken).owner());
-                }
-
-                // calculate the amount & the conversion fee
-                balance = converter.getConnectorBalance(targetToken);
-                (, weight, , , ) = converter.connectors(targetToken);
-                amount = formula.calculateSaleReturn(supply, balance, weight, amount);
-                fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
-                amount -= fee;
-
-                // update the smart token supply for the next iteration
-                supply -= amount;
-            }
-            else { // cross reserve conversion
-                // check if the current smart token has changed
-                if (i < 3 || smartToken != _path[i - 3]) {
-                    converter = IBancorConverter(ISmartToken(smartToken).owner());
-                }
-
-                (amount, fee) = getReturn(converter, sourceToken, targetToken, amount);
-            }
-        }
-
-        return (amount, fee);
-    }
-
-    /**
-      * @dev converts the token to any other token in the bancor network by following
-      * a predefined conversion path and transfers the result tokens back to the sender
-      * note that the network should already own the source tokens
-      * 
-      * @param _path                conversion path, see conversion path format above
-      * @param _amount              amount to convert from, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
-      * @param _affiliateAccount    affiliate account
-      * @param _affiliateFee        affiliate fee in PPM
-      * 
-      * @return tokens issued in return
-    */
-    function convert2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public payable returns (uint256) {
-        return convertFor2(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
-    }
-
-    /**
-      * @dev claims the caller's tokens, converts them to any other token in the bancor network
-      * by following a predefined conversion path and transfers the result tokens back to the sender
-      * note that allowance must be set beforehand
-      * 
-      * @param _path                conversion path, see conversion path format above
-      * @param _amount              amount to convert from, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
-      * @param _affiliateAccount    affiliate account
-      * @param _affiliateFee        affiliate fee in PPM
-      * 
-      * @return tokens issued in return
-    */
-    function claimAndConvert2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
-        return claimAndConvertFor2(_path, _amount, _minReturn, msg.sender, _affiliateAccount, _affiliateFee);
     }
 
     /**
@@ -597,9 +574,44 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         }
     }
 
+    // legacy - returns the address of an EtherToken used by the converter
+    function getConverterEtherTokenAddress(IBancorConverter _converter) private view returns (address) {
+        uint256 reserveCount = _converter.connectorTokenCount();
+        for (uint256 i = 0; i < reserveCount; i++) {
+            address reserveTokenAddress = _converter.connectorTokens(i);
+            if (etherTokens[reserveTokenAddress])
+                return reserveTokenAddress;
+        }
+
+        return ETH_RESERVE_ADDRESS;
+    }
+
+    bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
+
+    function getReturn(address _dest, address _sourceToken, address _targetToken, uint256 _amount) internal view returns (uint256, uint256) {
+        uint256[2] memory ret;
+        bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _sourceToken, _targetToken, _amount);
+
+        assembly {
+            let success := staticcall(
+                gas,           // gas remaining
+                _dest,         // destination address
+                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
+                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
+                ret,           // output buffer
+                64             // output length
+            )
+            if iszero(success) {
+                revert(0, 0)
+            }
+        }
+
+        return (ret[0], ret[1]);
+    }
+
     bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
 
-    function isV28OrHigherConverter(IBancorConverter _converter) public view returns (bool) {
+    function isV28OrHigherConverter(IBancorConverter _converter) internal view returns (bool) {
         bool success;
         uint256[1] memory ret;
         bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);
@@ -618,90 +630,107 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         return success;
     }
 
-    // legacy - returns the address of an EtherToken used by the converter
-    function getConverterEtherTokenAddress(IBancorConverter _converter) private view returns (address) {
-        uint256 reserveCount = _converter.connectorTokenCount();
-        for (uint256 i = 0; i < reserveCount; i++) {
-            address reserveTokenAddress = _converter.connectorTokens(i);
-            if (etherTokens[reserveTokenAddress])
-                return reserveTokenAddress;
-        }
-
-        return ETH_RESERVE_ADDRESS;
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
+        return (rateByPath(_path, _amount), 0);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function convert(
-        IERC20Token[] _path,
-        uint256 _amount,
-        uint256 _minReturn
-    ) public payable returns (uint256)
-    {
-        return convert2(_path, _amount, _minReturn, address(0), 0);
+    function convert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256) {
+        return convertByPath(_path, _amount, _minReturn, address(0), address(0), 0);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function claimAndConvert(
-        IERC20Token[] _path,
-        uint256 _amount,
-        uint256 _minReturn
-    ) public returns (uint256)
-    {
-        return claimAndConvert2(_path, _amount, _minReturn, address(0), 0);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function convertFor(
+    function convert2(
         IERC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
-        address _for
-    ) public payable returns (uint256)
-    {
-        return convertFor2(_path, _amount, _minReturn, _for, address(0), 0);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function claimAndConvertFor(
-        IERC20Token[] _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        address _for
-    ) public returns (uint256)
-    {
-        return claimAndConvertFor2(_path, _amount, _minReturn, _for, address(0), 0);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function claimAndConvertFor2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, address _affiliateAccount, uint256 _affiliateFee) public returns (uint256) {
-        return convertFor2(_path, _amount, _minReturn, _for, _affiliateAccount, _affiliateFee);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function xConvert(
-        IERC20Token[] _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        bytes32 _toBlockchain,
-        bytes32 _to,
-        uint256 _conversionId
+        address _affiliateAccount,
+        uint256 _affiliateFee
     )
         public
         payable
         returns (uint256)
     {
-        return xConvert2(_path, _amount, _minReturn, _toBlockchain, _to, _conversionId, address(0), 0);
+        return convertByPath(_path, _amount, _minReturn, address(0), _affiliateAccount, _affiliateFee);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function convertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary) public payable returns (uint256) {
+        return convertByPath(_path, _amount, _minReturn, _beneficiary, address(0), 0);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function convertFor2(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _beneficiary,
+        address _affiliateAccount,
+        uint256 _affiliateFee
+    )
+        public
+        payable
+        greaterThanZero(_minReturn)
+        returns (uint256)
+    {
+        return convertByPath(_path, _amount, _minReturn, _beneficiary, _affiliateAccount, _affiliateFee);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function claimAndConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+        return convertByPath(_path, _amount, _minReturn, address(0), address(0), 0);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function claimAndConvert2(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _affiliateAccount,
+        uint256 _affiliateFee
+    )
+        public
+        returns (uint256)
+    {
+        return convertByPath(_path, _amount, _minReturn, address(0), _affiliateAccount, _affiliateFee);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function claimAndConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary ) public returns (uint256) {
+        return convertByPath(_path, _amount, _minReturn, _beneficiary, address(0), 0);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function claimAndConvertFor2(
+        IERC20Token[] _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address _beneficiary,
+        address _affiliateAccount,
+        uint256 _affiliateFee
+    )
+        public
+        returns (uint256)
+    {
+        return convertByPath(_path, _amount, _minReturn, _beneficiary, _affiliateAccount, _affiliateFee);
     }
 }

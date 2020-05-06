@@ -58,7 +58,8 @@ contract('BancorNetworkWithOldConverter', accounts => {
     });
 
     it('verifies that isV28OrHigherConverter returns false', async () => {
-        assert.isFalse(await bancorNetwork.isV28OrHigherConverter.call(converter.address));
+        let network = await TestBancorNetwork.new(0, 0);
+        assert.isFalse(await network.isV28OrHigherConverterExternal.call(converter.address));
     });
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting a reserve to the smart token', async () => {
