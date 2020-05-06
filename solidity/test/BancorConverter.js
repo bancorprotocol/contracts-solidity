@@ -70,6 +70,10 @@ async function approve(token, from, to, amount) {
     return await token.approve(to, amount, { from });
 }
 
+async function convert(path, amount, minReturn, options) {
+    return bancorNetwork.convertByPath(path, amount, minReturn, utils.zeroAddress, utils.zeroAddress, 0, options);
+}
+
 contract('BancorConverter', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
@@ -327,6 +331,11 @@ contract('BancorConverter', accounts => {
         await utils.catchRevert(converter.addReserve(reserveToken2.address, 500001));
     });
 
+    it('verifies that sending ether to the converter fails if it has no ETH reserve', async () => {
+        let converter = await initConverter(accounts, true);
+        await utils.catchRevert(converter.send(100));
+    });
+
     it('verifies that the correct reserve weight is returned', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, reserveToken.address, weight10Percent);
         let reserveWeight = await converter.reserveWeight(reserveToken.address);
@@ -473,10 +482,10 @@ contract('BancorConverter', accounts => {
         let returnAmount = (await converter.getReturn.call(reserveToken.address, reserveToken2.address, 500))[0];
 
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
-        await bancorNetwork.convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1);
+        await convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1);
         let purchaseAmount = await getConversionAmount(watcher);
         await approve(token, accounts[0], bancorNetwork.address, purchaseAmount);
-        await bancorNetwork.convert([tokenAddress, tokenAddress, reserveToken2.address], purchaseAmount, 1);
+        await convert([tokenAddress, tokenAddress, reserveToken2.address], purchaseAmount, 1);
         let saleAmount = await getConversionAmount(watcher);
 
         // converting directly between 2 tokens is more efficient than buying and then selling
@@ -489,7 +498,7 @@ contract('BancorConverter', accounts => {
         let watcher = converter.Conversion();
         await converter.setConversionFee(3000);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
-        await bancorNetwork.convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1);
+        await convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1);
         let events = await watcher.get();
         assert(events.length > 0);
         assert('_conversionFee' in events[0].args);
@@ -500,7 +509,7 @@ contract('BancorConverter', accounts => {
         let watcher = converter.Conversion();
         await converter.setConversionFee(3000);
         await approve(token, accounts[0], bancorNetwork.address, 500);
-        await bancorNetwork.convert([tokenAddress, tokenAddress, reserveToken.address], 500, 1);
+        await convert([tokenAddress, tokenAddress, reserveToken.address], 500, 1);
         let events = await watcher.get();
         assert(events.length > 0);
         assert('_conversionFee' in events[0].args);
@@ -547,7 +556,7 @@ contract('BancorConverter', accounts => {
         let watcher = converter.Conversion();
         await converter.setConversionFee(3000);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
-        await bancorNetwork.convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1);
+        await convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1);
         let events = await watcher.get();
         assert(events.length > 0);
         assert(events[0].args._return.equals(480), events[0].args._conversionFee.equals(2));
@@ -558,7 +567,7 @@ contract('BancorConverter', accounts => {
         let watcher = converter.Conversion();
         await converter.setConversionFee(3000);
         await approve(token, accounts[0], bancorNetwork.address, 500);
-        await bancorNetwork.convert([tokenAddress, tokenAddress, reserveToken.address], 500, 1);
+        await convert([tokenAddress, tokenAddress, reserveToken.address], 500, 1);
         let events = await watcher.get();
         assert(events.length > 0);
         assert(events[0].args._return.equals(479), events[0].args._conversionFee.equals(2));
@@ -569,7 +578,7 @@ contract('BancorConverter', accounts => {
         let watcher = converter.Conversion();
         await converter.setConversionFee(3000);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
-        await bancorNetwork.convert([reserveToken.address, tokenAddress, reserveToken2.address], 500, 1);
+        await convert([reserveToken.address, tokenAddress, reserveToken2.address], 500, 1);
         let events = await watcher.get();
         assert(events.length > 0);
         assert(events[0].args._return.equals(1167), events[0].args._conversionFee.equals(8));
@@ -579,10 +588,10 @@ contract('BancorConverter', accounts => {
         let converter = await initConverter(accounts, true);
         let watcher = converter.Conversion();
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
-        await bancorNetwork.convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1);
+        await convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1);
         let purchaseAmount = await getConversionAmount(watcher);
         await approve(token, accounts[0], bancorNetwork.address, purchaseAmount);
-        await bancorNetwork.convert([tokenAddress, tokenAddress, reserveToken.address], purchaseAmount, 1);
+        await convert([tokenAddress, tokenAddress, reserveToken.address], purchaseAmount, 1);
         let saleAmount = await getConversionAmount(watcher);
         assert(saleAmount <= 500);
     });
@@ -591,10 +600,10 @@ contract('BancorConverter', accounts => {
         let converter = await initConverter(accounts, true);
         let watcher = converter.Conversion();
         await approve(token, accounts[0], bancorNetwork.address, 500);
-        await bancorNetwork.convert([tokenAddress, tokenAddress, reserveToken.address], 500, 1);
+        await convert([tokenAddress, tokenAddress, reserveToken.address], 500, 1);
         let saleAmount = await getConversionAmount(watcher);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
-        await bancorNetwork.convert([reserveToken.address, tokenAddress, tokenAddress], saleAmount, 1);
+        await convert([reserveToken.address, tokenAddress, tokenAddress], saleAmount, 1);
         let purchaseAmount = await getConversionAmount(watcher);
 
         assert(purchaseAmount <= 500);
@@ -602,35 +611,35 @@ contract('BancorConverter', accounts => {
 
     it('should throw when attempting to convert with an invalid source token adress', async () => {
         let converter = await initConverter(accounts, true);
-        await utils.catchRevert(bancorNetwork.convert([utils.zeroAddress, tokenAddress, reserveToken2.address], 500, 1));
+        await utils.catchRevert(convert([utils.zeroAddress, tokenAddress, reserveToken2.address], 500, 1));
     });
 
     it('should throw when attempting to convert with an invalid target token address', async () => {
         let converter = await initConverter(accounts, true);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
 
-        await utils.catchRevert(bancorNetwork.convert([reserveToken.address, tokenAddress, utils.zeroAddress], 500, 1));
+        await utils.catchRevert(convert([reserveToken.address, tokenAddress, utils.zeroAddress], 500, 1));
     });
 
     it('should throw when attempting to convert with identical source/target addresses', async () => {
         let converter = await initConverter(accounts, true);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
 
-        await utils.catchRevert(bancorNetwork.convert([reserveToken.address, tokenAddress, reserveToken.address], 500, 1));
+        await utils.catchRevert(convert([reserveToken.address, tokenAddress, reserveToken.address], 500, 1));
     });
 
     it('should throw when attempting to convert with 0 minimum requested amount', async () => {
         let converter = await initConverter(accounts, true);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
 
-        await utils.catchRevert(bancorNetwork.convert([reserveToken.address, tokenAddress, reserveToken2.address], 500, 0));
+        await utils.catchRevert(convert([reserveToken.address, tokenAddress, reserveToken2.address], 500, 0));
     });
 
     it('should throw when attempting to convert when the return is smaller than the minimum requested amount', async () => {
         let converter = await initConverter(accounts, true);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
 
-        await utils.catchRevert(bancorNetwork.convert([reserveToken.address, tokenAddress, reserveToken2.address], 500, 2000));
+        await utils.catchRevert(convert([reserveToken.address, tokenAddress, reserveToken2.address], 500, 2000));
     });
 
     it('verifies balances after buy', async () => {
@@ -641,7 +650,7 @@ contract('BancorConverter', accounts => {
         let reserveTokenPrevBalance = await reserveToken.balanceOf.call(accounts[0]);
 
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
-        await bancorNetwork.convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1);
+        await convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1);
         let purchaseAmount = await getConversionAmount(watcher);
 
         let reserveTokenNewBalance = await reserveToken.balanceOf.call(accounts[0]);
@@ -655,35 +664,35 @@ contract('BancorConverter', accounts => {
         let converter = await initConverter(accounts, false);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
 
-        await utils.catchRevert(bancorNetwork.convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1));
+        await utils.catchRevert(convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1));
     });
 
     it('should throw when attempting to buy with a non reserve address', async () => {
         let converter = await initConverter(accounts, true);
         await approve(token, accounts[0], bancorNetwork.address, 500);
 
-        await utils.catchRevert(bancorNetwork.convert([tokenAddress, tokenAddress, tokenAddress], 500, 1));
+        await utils.catchRevert(convert([tokenAddress, tokenAddress, tokenAddress], 500, 1));
     });
 
     it('should throw when attempting to buy while the purchase yields 0 return', async () => {
         let converter = await initConverter(accounts, true);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
 
-        await utils.catchRevert(bancorNetwork.convert([reserveToken.address, tokenAddress, tokenAddress], 0, 1));
+        await utils.catchRevert(convert([reserveToken.address, tokenAddress, tokenAddress], 0, 1));
     });
 
     it('should throw when attempting to buy with 0 minimum requested amount', async () => {
         let converter = await initConverter(accounts, true);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
 
-        await utils.catchRevert(bancorNetwork.convert([reserveToken.address, tokenAddress, tokenAddress], 500, 0));
+        await utils.catchRevert(convert([reserveToken.address, tokenAddress, tokenAddress], 500, 0));
     });
 
     it('should throw when attempting to buy without first approving the network to transfer from the buyer account in the reserve contract', async () => {
         let converter = await initConverter(accounts, true);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 0);
 
-        await utils.catchRevert(bancorNetwork.convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1));
+        await utils.catchRevert(convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1));
     });
 
     it('verifies balances after sell', async () => {
@@ -694,7 +703,7 @@ contract('BancorConverter', accounts => {
         let reserveTokenPrevBalance = await reserveToken.balanceOf.call(accounts[0]);
 
         await approve(token, accounts[0], bancorNetwork.address, 500);
-        await bancorNetwork.convert([tokenAddress, tokenAddress, reserveToken.address], 500, 1);
+        await convert([tokenAddress, tokenAddress, reserveToken.address], 500, 1);
         let saleAmount = await getConversionAmount(watcher);
 
         let reserveTokenNewBalance = await reserveToken.balanceOf.call(accounts[0]);
@@ -708,28 +717,28 @@ contract('BancorConverter', accounts => {
         let converter = await initConverter(accounts, false);
         await approve(token, accounts[0], bancorNetwork.address, 500);
 
-        await utils.catchRevert(bancorNetwork.convert([tokenAddress, tokenAddress, reserveToken.address], 500, 1));
+        await utils.catchRevert(convert([tokenAddress, tokenAddress, reserveToken.address], 500, 1));
     });
 
     it('should throw when attempting to sell with a non reserve address', async () => {
         let converter = await initConverter(accounts, true);
         await approve(token, accounts[0], bancorNetwork.address, 500);
 
-        await utils.catchRevert(bancorNetwork.convert([tokenAddress, tokenAddress, tokenAddress], 500, 1));
+        await utils.catchRevert(convert([tokenAddress, tokenAddress, tokenAddress], 500, 1));
     });
 
     it('should throw when attempting to sell while the sale yields 0 return', async () => {
         let converter = await initConverter(accounts, true);
         await approve(token, accounts[0], bancorNetwork.address, 1);
 
-        await utils.catchRevert(bancorNetwork.convert([tokenAddress, tokenAddress, reserveToken.address], 1, 1));
+        await utils.catchRevert(convert([tokenAddress, tokenAddress, reserveToken.address], 1, 1));
     });
 
     it('should throw when attempting to sell with amount greater than the seller balance', async () => {
         let converter = await initConverter(accounts, true);
         await approve(token, accounts[0], bancorNetwork.address, 30000);
 
-        await utils.catchRevert(bancorNetwork.convert([tokenAddress, tokenAddress, reserveToken.address], 30000, 1));
+        await utils.catchRevert(convert([tokenAddress, tokenAddress, reserveToken.address], 30000, 1));
     });
 
     it('verifies that convert is allowed for a whitelisted account', async () => {
@@ -741,7 +750,7 @@ contract('BancorConverter', accounts => {
         await reserveToken.transfer(accounts[1], 1000);
         await approve(reserveToken, accounts[1], bancorNetwork.address, 500, { from: accounts[1] });
 
-        await bancorNetwork.convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1, { from: accounts[1] })
+        await convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1, { from: accounts[1] })
     });
 
     it('should throw when calling convert from a non whitelisted account', async () => {
@@ -752,7 +761,7 @@ contract('BancorConverter', accounts => {
         await reserveToken.transfer(accounts[1], 1000);
         await approve(reserveToken, accounts[1], bancorNetwork.address, 500, { from: accounts[1] });
 
-        await utils.catchRevert(bancorNetwork.convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1, { from: accounts[1] }));
+        await utils.catchRevert(convert([reserveToken.address, tokenAddress, tokenAddress], 500, 1, { from: accounts[1] }));
     });
 
     it('should throw when calling convert while the beneficiary is not whitelisted', async () => {
@@ -763,7 +772,7 @@ contract('BancorConverter', accounts => {
         await reserveToken.transfer(accounts[1], 1000);
         await approve(reserveToken, accounts[1], bancorNetwork.address, 500, { from: accounts[1] });
 
-        await utils.catchRevert(bancorNetwork.convertFor([reserveToken.address, tokenAddress, tokenAddress], 500, 1, accounts[2], { from: accounts[1] }));
+        await utils.catchRevert(bancorNetwork.convertByPath([reserveToken.address, tokenAddress, tokenAddress], 500, 1, accounts[2], utils.zeroAddress, 0, { from: accounts[1] }));
     });
 
     it('should throw when attempting to execute fund on a single-reserve converter', async () => {
@@ -784,7 +793,7 @@ contract('BancorConverter', accounts => {
         let returnAmount = (await converter.getReturn.call(reserveToken.address, reserveToken2.address, 500))[0];
 
         await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
-        await bancorNetwork.convert([reserveToken.address, tokenAddress, reserveToken2.address], 500, 1);
+        await convert([reserveToken.address, tokenAddress, reserveToken2.address], 500, 1);
         let returnAmount2 = await getConversionAmount(watcher);
 
         assert.equal(returnAmount.toNumber(), returnAmount2);

@@ -275,13 +275,6 @@ contract('BancorNetwork', accounts => {
         });
     });
 
-    /*
-    TODO: should move to converter tests
-    it('verifies that sending ether to the converter fails if it has no ETH reserve', async () => {
-        await utils.catchRevert(converter2.send(100));
-    });
-    */
-
     describe('Conversions', () => {
         before(async () => {
             await initTokensAndConverters(accounts);
@@ -305,14 +298,51 @@ contract('BancorNetwork', accounts => {
                         await approve(sourceToken, accounts[0], bancorNetwork.address, 1000);
 
                     let prevBalance = await getBalance(targetToken, targetSymbol, accounts[0]);
-                    let res = await bancorNetwork.convert(paths[sourceSymbol][targetSymbol], 1000, 1, { value });
+                    let res = await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 1000, 1, utils.zeroAddress, utils.zeroAddress, 0, { value });
                     let postBalance = await getBalance(targetToken, targetSymbol, accounts[0]);
 
                     let transactionCost = 0;
                     if (targetSymbol == 'ETH')
                         transactionCost = await getTransactionCost(res);
 
-                    assert(postBalance.greaterThan(prevBalance.minus(transactionCost)), "new balance isn't higher than previous balance");
+                    assert(postBalance.greaterThan(prevBalance.minus(transactionCost)), "sender balance isn't higher than previous balance");
+                });
+
+                it(`verifies that converting from ${sourceSymbol} to ${targetSymbol} with a beneficiary succeeds`, async () => {
+                    let pathTokens = pathsTokens[sourceSymbol][targetSymbol];
+                    let sourceToken = pathTokens[0];
+                    let targetToken = pathTokens[pathTokens.length - 1];
+                    let value = 0;
+                    if (sourceSymbol == 'ETH')
+                        value = 1000;
+                    else
+                        await approve(sourceToken, accounts[0], bancorNetwork.address, 1000);
+
+                    let prevBalance = await getBalance(targetToken, targetSymbol, accounts[1]);
+                    await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 1000, 1, accounts[1], utils.zeroAddress, 0, { value });
+                    let postBalance = await getBalance(targetToken, targetSymbol, accounts[1]);
+
+                    assert(postBalance.greaterThan(prevBalance), "beneficiary balance isn't higher than previous balance");
+                });
+
+                it(`verifies that converting from ${sourceSymbol} to ${targetSymbol} with an affiliate fee succeeds`, async () => {
+                    let pathTokens = pathsTokens[sourceSymbol][targetSymbol];
+                    let sourceToken = pathTokens[0];
+                    let value = 0;
+                    if (sourceSymbol == 'ETH')
+                        value = 10000;
+                    else
+                        await approve(sourceToken, accounts[0], bancorNetwork.address, 10000);
+
+                    let prevBalance = await getBalance(bnt, 'BNT', accounts[2]);
+                    await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 10000, 1, utils.zeroAddress, accounts[2], 10000, { value });
+                    let postBalance = await getBalance(bnt, 'BNT', accounts[2]);
+
+                    // affiliate fee is only taken when converting to BNT, so BNT must exist and not be the first token in the path
+                    if (pathTokens.indexOf(bnt) > 0)
+                        assert(postBalance.greaterThan(prevBalance), "affiliate account balance isn't higher than previous balance");
+                    else
+                        assert(postBalance.equals(prevBalance), "affiliate account balance changed");
                 });
 
                 it(`verifies that converting from ${sourceSymbol} to ${targetSymbol} returns the same amount returned by getReturnByPath`, async () => {
@@ -327,7 +357,7 @@ contract('BancorNetwork', accounts => {
 
                     let expectedReturn = (await bancorNetwork.getReturnByPath(paths[sourceSymbol][targetSymbol], 1000))[0];
                     let prevBalance = await getBalance(targetToken, targetSymbol, accounts[0]);
-                    let res = await bancorNetwork.convert(paths[sourceSymbol][targetSymbol], 1000, 1, { value });
+                    let res = await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 1000, 1, utils.zeroAddress, utils.zeroAddress, 0, { value });
                     let postBalance = await getBalance(targetToken, targetSymbol, accounts[0]);
 
                     let transactionCost = 0;
@@ -347,36 +377,14 @@ contract('BancorNetwork', accounts => {
                         await approve(sourceToken, accounts[0], bancorNetwork.address, 1000);
 
                     let expectedReturn = (await bancorNetwork.getReturnByPath(paths[sourceSymbol][targetSymbol], 1000))[0];
-                    await utils.catchRevert(bancorNetwork.convert(paths[sourceSymbol][targetSymbol], 1000, expectedReturn.plus(1), { value }));
+                    await utils.catchRevert(bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 1000, expectedReturn.plus(1), utils.zeroAddress, utils.zeroAddress, 0, { value }));
                 });
             }
         }
 
         it('should throw when attempting to convert and passing an amount higher than the ETH amount sent with the request', async () => {
             let path = paths['ETH']['SMART2'];
-            await utils.catchRevert(bancorNetwork.convert(path, 100001, 1, { from: accounts[1], value: 100000 }));
-        });
-
-        it('verifies that convertFor transfers the converted amount correctly', async () => {
-            let path = paths['ETH']['SMART1'];
-            let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
-            await bancorNetwork.convertFor(path, 10000, 1, accounts[1], { value: 10000 });
-            let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
-            assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
-        });
-
-        it('verifies that convert transfers the converted amount correctly', async () => {
-            let path = paths['ETH']['SMART1'];
-            let balanceBeforeTransfer = await smartToken1.balanceOf.call(accounts[1]);
-            await bancorNetwork.convert(path, 10000, 1, { from: accounts[1], value: 10000 });
-            let balanceAfterTransfer = await smartToken1.balanceOf.call(accounts[1]);
-            assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
-        });
-
-        it('verifies that convertFor returns a valid amount when buying the smart token', async () => {
-            let path = paths['ETH']['SMART1'];
-            let amount = await bancorNetwork.convertFor.call(path, 10000, 1, accounts[1], { value: 10000 });
-            assert.isAbove(amount.toNumber(), 0, 'amount converted');
+            await utils.catchRevert(bancorNetwork.convertByPath(path, 100001, 1, utils.zeroAddress, utils.zeroAddress, 0, { from: accounts[1], value: 100000 }));
         });
 
         it('verifies that convert returns a valid amount when buying the smart token', async () => {
