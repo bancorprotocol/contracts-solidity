@@ -108,6 +108,8 @@ async function run() {
     const account  = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
     const web3Func = (func, ...args) => func(web3, account, gasPrice, ...args);
 
+    const addresses = {ETH: Web3.utils.toChecksumAddress("0x".padEnd(42, "e"))};
+
     let phase = 0;
     if (get().phase == undefined)
         set({phase});
@@ -135,7 +137,6 @@ async function run() {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistryData"), bancorConverterRegistryData._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterFactory"     ), bancorConverterFactory     ._address));
 
-    const addresses = {ETH: "0x".padEnd(42, "e")};
     for (const reserve of get().reserves) {
         const name     = reserve.symbol + " ERC20 Token";
         const symbol   = reserve.symbol;
@@ -143,10 +144,6 @@ async function run() {
         const supply   = reserve.supply;
         const token    = await web3Func(deploy, "erc20Token" + symbol, "ERC20Token", [name, symbol, decimals, supply]);
         await execute(token.methods.approve(bancorConverterRegistry._address, supply));
-        if (symbol == "BNT") {
-            await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"), token._address));
-            await execute(bancorNetworkPathFinder.methods.setAnchorToken(token._address));
-        }
         addresses[reserve.symbol] = token._address;
     }
 
@@ -172,6 +169,9 @@ async function run() {
     const bancorConverters = await Promise.all(smartTokens.map(smartToken => deployed(web3, "SmartToken", smartToken).methods.owner().call()));
     for (const bancorConverter of bancorConverters)
         await execute(deployed(web3, "BancorConverter", bancorConverter).methods.acceptOwnership());
+
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"), addresses.BNT));
+    await execute(bancorNetworkPathFinder.methods.setAnchorToken(addresses.BNT));
 
     if (web3.currentProvider.constructor.name == "WebsocketProvider")
         web3.currentProvider.connection.close();
