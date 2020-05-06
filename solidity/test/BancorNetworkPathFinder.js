@@ -16,52 +16,52 @@ const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
 const layout = {
-    "reserves": [
-        {"symbol": "AAA", "decimals": 18, "supply": "1e24"},
-        {"symbol": "BBB", "decimals": 18, "supply": "1e24"},
-        {"symbol": "CCC", "decimals": 18, "supply": "1e24"},
-        {"symbol": "DDD", "decimals": 18, "supply": "1e24"},
+    'reserves': [
+        {'symbol': 'AAA', 'decimals': 18, 'supply': '1e24'},
+        {'symbol': 'BBB', 'decimals': 18, 'supply': '1e24'},
+        {'symbol': 'CCC', 'decimals': 18, 'supply': '1e24'},
+        {'symbol': 'DDD', 'decimals': 18, 'supply': '1e24'},
     ],
-    "converters": [
+    'converters': [
         {
-            "symbol": "BNT", "decimals": 18, "fee": 1000, "reserves": [
-                {"symbol": "ETH", "weight": 500000, "balance": "1e24"},
+            'symbol': 'BNT', 'decimals': 18, 'fee': 1000, 'reserves': [
+                {'symbol': 'ETH', 'weight': 500000, 'balance': '1e24'},
             ]
         },
         {
-            "symbol": "AAABNT", "decimals": 18, "fee": 1000, "reserves": [
-                {"symbol": "AAA", "weight": 500000, "balance": "1e21"},
-                {"symbol": "BNT", "weight": 500000, "balance": "1e21"},
+            'symbol': 'AAABNT', 'decimals': 18, 'fee': 1000, 'reserves': [
+                {'symbol': 'AAA', 'weight': 500000, 'balance': '1e21'},
+                {'symbol': 'BNT', 'weight': 500000, 'balance': '1e21'},
             ]
         },
         {
-            "symbol": "BBBBNT", "decimals": 18, "fee": 1000, "reserves": [
-                {"symbol": "BBB", "weight": 500000, "balance": "1e21"},
-                {"symbol": "BNT", "weight": 500000, "balance": "1e21"},
+            'symbol': 'BBBBNT', 'decimals': 18, 'fee': 1000, 'reserves': [
+                {'symbol': 'BBB', 'weight': 500000, 'balance': '1e21'},
+                {'symbol': 'BNT', 'weight': 500000, 'balance': '1e21'},
             ]
         },
         {
-            "symbol": "CCCBNT", "decimals": 18, "fee": 1000, "reserves": [
-                {"symbol": "CCC", "weight": 500000, "balance": "1e21"},
-                {"symbol": "BNT", "weight": 500000, "balance": "1e21"},
+            'symbol': 'CCCBNT', 'decimals': 18, 'fee': 1000, 'reserves': [
+                {'symbol': 'CCC', 'weight': 500000, 'balance': '1e21'},
+                {'symbol': 'BNT', 'weight': 500000, 'balance': '1e21'},
             ]
         },
         {
-            "symbol": "AAABNTBNT", "decimals": 18, "fee": 1000, "reserves": [
-                {"symbol": "AAABNT", "weight": 500000, "balance": "1e18"},
-                {"symbol": "BNT", "weight": 500000, "balance": "1e21"},
+            'symbol': 'AAABNTBNT', 'decimals': 18, 'fee': 1000, 'reserves': [
+                {'symbol': 'AAABNT', 'weight': 500000, 'balance': '1e18'},
+                {'symbol': 'BNT', 'weight': 500000, 'balance': '1e21'},
             ]
         },
         {
-            "symbol": "BBBBNTBNT", "decimals": 18, "fee": 1000, "reserves": [
-                {"symbol": "BBBBNT", "weight": 500000, "balance": "1e18"},
-                {"symbol": "BNT", "weight": 500000, "balance": "1e21"},
+            'symbol': 'BBBBNTBNT', 'decimals': 18, 'fee': 1000, 'reserves': [
+                {'symbol': 'BBBBNT', 'weight': 500000, 'balance': '1e18'},
+                {'symbol': 'BNT', 'weight': 500000, 'balance': '1e21'},
             ]
         },
         {
-            "symbol": "DDDAAABNTBNT", "decimals": 18, "fee": 1000, "reserves": [
-                {"symbol": "DDD", "weight": 500000, "balance": "1e21"},
-                {"symbol": "AAABNTBNT", "weight": 500000, "balance": "1e15"},
+            'symbol': 'DDDAAABNTBNT', 'decimals': 18, 'fee': 1000, 'reserves': [
+                {'symbol': 'DDD', 'weight': 500000, 'balance': '1e21'},
+                {'symbol': 'AAABNTBNT', 'weight': 500000, 'balance': '1e15'},
             ]
         },
     ]
@@ -160,7 +160,7 @@ contract('BancorNetworkPathFinder', accounts => {
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
         for (const reserve of layout.reserves) {
-            const name     = reserve.symbol + " ERC20 Token";
+            const name     = reserve.symbol + ' ERC20 Token';
             const symbol   = reserve.symbol;
             const decimals = reserve.decimals;
             const supply   = reserve.supply;
@@ -170,14 +170,14 @@ contract('BancorNetworkPathFinder', accounts => {
         }
 
         for (const converter of layout.converters) {
-            const name     = converter.symbol + " Smart Token";
+            const name     = converter.symbol + ' Smart Token';
             const symbol   = converter.symbol;
             const decimals = converter.decimals;
             const fee      = converter.fee;
             const tokens   = converter.reserves.map(reserve => addresses[reserve.symbol]);
             const weights  = converter.reserves.map(reserve => reserve.weight);
             const amounts  = converter.reserves.map(reserve => reserve.balance);
-            const value    = [...converter.reserves.filter(reserve => reserve.symbol == "ETH"), {balance: "0"}][0].balance;
+            const value    = [...converter.reserves.filter(reserve => reserve.symbol == 'ETH'), {balance: '0'}][0].balance;
             if (converter.reserves.length == 1)
                 await converterRegistry.newLiquidToken(name, symbol, decimals, fee, tokens[0], weights[0], amounts[0], {value: value});
             else
@@ -214,9 +214,9 @@ contract('BancorNetworkPathFinder', accounts => {
         assert.equal(actual + expected, []);
     });
 
-    const allSymbol = [...layout.reserves, ...layout.converters].map(record => record.symbol);
-    for (const sourceSymbol of allSymbol) {
-        for (const targetSymbol of allSymbol) {
+    const allSymbols = [...layout.reserves, ...layout.converters].map(record => record.symbol);
+    for (const sourceSymbol of allSymbols) {
+        for (const targetSymbol of allSymbols) {
             it(`from ${sourceSymbol} to ${targetSymbol}`, async () => {
                 const sourceToken = addresses[sourceSymbol];
                 const targetToken = addresses[targetSymbol];
