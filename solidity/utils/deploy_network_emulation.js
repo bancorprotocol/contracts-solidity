@@ -137,7 +137,7 @@ async function run() {
 
     const addresses = {ETH: "0x".padEnd(42, "e")};
     for (const reserve of get().reserves) {
-        const name     = reserve.name;
+        const name     = reserve.symbol + " ERC20 Token";
         const symbol   = reserve.symbol;
         const decimals = reserve.decimals;
         const supply   = reserve.supply;
@@ -151,7 +151,7 @@ async function run() {
     }
 
     for (const converter of get().converters) {
-        const name     = converter.name;
+        const name     = converter.symbol + " Smart Token";
         const symbol   = converter.symbol;
         const decimals = converter.decimals;
         const fee      = converter.fee;

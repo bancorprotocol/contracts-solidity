@@ -46,19 +46,16 @@ Here is an example of the initial configuration file which should be provided to
 {
     "reserves": [
         {
-            "name": "XXX Standard Token",
             "symbol": "XXX",
             "decimals": 18,
             "supply": "1000000000000000000000"
         },
         {
-            "name": "YYY Standard Token",
             "symbol": "YYY",
             "decimals": 18,
             "supply": "36000000000000000000"
         },
         {
-            "name": "Bancor Network Token",
             "symbol": "BNT",
             "decimals": 18,
             "supply": "69100000000000000000"
@@ -66,67 +63,63 @@ Here is an example of the initial configuration file which should be provided to
     ],
     "converters": [
         {
-            "name": "ETH/BNT Relay Token",
             "symbol": "ETHBNT",
             "decimals": 18,
             "fee": 1000,
             "reserves": [
                 {
-                    "id": -1,
+                    "symbol": "ETH",
                     "weight": 500000,
                     "balance": "7950000000000000000"
                 },
                 {
-                    "id": 2,
+                    "symbol": "BNT",
                     "weight": 500000,
                     "balance": "12700000000000000"
                 }
             ]
         },
         {
-            "name": "XXX/BNT Relay Token",
             "symbol": "XXXBNT",
             "decimals": 18,
             "fee": 1000,
             "reserves": [
                 {
-                    "id": 0,
+                    "symbol": "XXX",
                     "weight": 500000,
                     "balance": "340000000000000000"
                 },
                 {
-                    "id": 2,
+                    "symbol": "BNT",
                     "weight": 500000,
                     "balance": "1040000000000000000"
                 }
             ]
         },
         {
-            "name": "YYY/BNT Relay Token",
             "symbol": "YYYBNT",
             "decimals": 18,
             "fee": 2000,
             "reserves": [
                 {
-                    "id": 1,
+                    "symbol": "YYY",
                     "weight": 500000,
                     "balance": "369000000000000000"
                 },
                 {
-                    "id": 2,
+                    "symbol": "BNT",
                     "weight": 500000,
                     "balance": "84800000000000000"
                 }
             ]
         },
         {
-            "name": "Smart Token Of Chayot",
-            "symbol": "STC",
+            "symbol": "ZZZ",
             "decimals": 18,
             "fee": 3000,
             "reserves": [
                 {
-                    "id": 2,
+                    "symbol": "BNT",
                     "weight": 100000,
                     "balance": "41100000000000000"
                 }
