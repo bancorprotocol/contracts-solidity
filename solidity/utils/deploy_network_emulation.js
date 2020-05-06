@@ -142,7 +142,7 @@ async function run() {
         const decimals = reserve.decimals;
         const supply   = reserve.supply;
         const token    = await web3Func(deploy, "erc20Token" + symbol, "ERC20Token", [name, symbol, decimals, supply]);
-        await execute(token.methods.approve(bancorConverterRegistry._address, "0x".padEnd(66, "f")));
+        await execute(token.methods.approve(bancorConverterRegistry._address, supply));
         if (symbol == "BNT") {
             await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"), token._address));
             await execute(bancorNetworkPathFinder.methods.setAnchorToken(token._address));
@@ -163,7 +163,9 @@ async function run() {
             await execute(bancorConverterRegistry.methods.newLiquidToken(name, symbol, decimals, fee, tokens[0], weights[0], amounts[0]), value);
         else
             await execute(bancorConverterRegistry.methods.newLiquidityPool(name, symbol, decimals, fee, tokens, weights, amounts), value);
-        addresses[converter.symbol] = (await bancorConverterRegistry.methods.getSmartTokens().call()).slice(-1)[0];
+        const token = deployed(web3, "ERC20Token", (await bancorConverterRegistry.methods.getSmartTokens().call()).slice(-1)[0]);
+        await execute(token.methods.approve(bancorConverterRegistry._address, await token.methods.totalSupply().call()));
+        addresses[converter.symbol] = token._address;
     }
 
     const smartTokens = await bancorConverterRegistry.methods.getSmartTokens().call();
