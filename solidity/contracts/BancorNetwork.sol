@@ -107,16 +107,15 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     }
 
     /**
-      * @dev calculates the expected return of converting a given amount on a given path
+      * @dev returns the expected rate of converting a given amount on a given path
       * note that there is no support for circular paths
       * 
       * @param _path        conversion path (see conversion path format above)
       * @param _amount      amount of _path[0] tokens received from the sender
       * 
-      * @return amount of _path[_path.length - 1] tokens that the sender will receive
-      * @return amount of _path[_path.length - 1] tokens that the sender will pay as fee
+      * @return expected rate
     */
-    function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
+    function rateByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256) {
         uint256 amount;
         uint256 fee;
         uint256 supply;
@@ -143,10 +142,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
                     converter = IBancorConverter(ISmartToken(smartToken).owner());
                 }
 
-                // calculate the amount & the conversion fee
+                // get the amount & the conversion fee
                 balance = converter.getConnectorBalance(sourceToken);
                 (, weight, , , ) = converter.connectors(sourceToken);
-                amount = formula.calculatePurchaseReturn(supply, balance, weight, amount);
+                amount = formula.purchaseRate(supply, balance, weight, amount);
                 fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
                 amount -= fee;
 
@@ -160,10 +159,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
                     converter = IBancorConverter(ISmartToken(smartToken).owner());
                 }
 
-                // calculate the amount & the conversion fee
+                // get the amount & the conversion fee
                 balance = converter.getConnectorBalance(targetToken);
                 (, weight, , , ) = converter.connectors(targetToken);
-                amount = formula.calculateSaleReturn(supply, balance, weight, amount);
+                amount = formula.saleRate(supply, balance, weight, amount);
                 fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
                 amount -= fee;
 
@@ -180,7 +179,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
             }
         }
 
-        return (amount, fee);
+        return amount;
     }
 
     /**
@@ -629,6 +628,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         }
 
         return success;
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
+        return (rateByPath(_path, _amount), 0);
     }
 
     /**
