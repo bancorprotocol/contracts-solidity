@@ -202,16 +202,18 @@ contract('BancorNetworkPathFinder', accounts => {
     });
 
     it('should return an empty path if the source-token has no path to the anchor-token', async () => {
-        const token = accounts[0];
-        const expected = await generatePath(token, anchorToken, anchorToken, converterRegistry);
-        const actual = await pathFinder.generatePath(token, anchorToken);
+        const sourceToken = accounts[0];
+        const targetToken = anchorToken;
+        const expected = await generatePath(sourceToken, targetToken, anchorToken, converterRegistry);
+        const actual = await pathFinder.generatePath(sourceToken, targetToken);
         assert.equal(actual + expected, []);
     });
 
     it('should return an empty path if the target-token has no path to the anchor-token', async () => {
-        const token = accounts[0];
-        const expected = await generatePath(anchorToken, token, anchorToken, converterRegistry);
-        const actual = await pathFinder.generatePath(anchorToken, token);
+        const sourceToken = anchorToken;
+        const targetToken = accounts[0];
+        const expected = await generatePath(sourceToken, targetToken, anchorToken, converterRegistry);
+        const actual = await pathFinder.generatePath(sourceToken, targetToken);
         assert.equal(actual + expected, []);
     });
 
