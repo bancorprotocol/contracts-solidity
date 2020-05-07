@@ -882,20 +882,24 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         uint256 j;
 
         uint256 length = reserveTokens.length;
-        require(length == _reserveTokens.length); // verify that the number of input tokens is equal to the number of reserve tokens
-        require(length == _reserveAmounts.length); // verify that the number of input amounts is equal to the number of reserve tokens
+        require(length == _reserveTokens.length);
+        require(length == _reserveAmounts.length);
 
         for (i = 0; i < length; i++) {
-            require(reserves[_reserveTokens[i]].isSet); // verify that every input token is one of the reserve tokens
+            // verify that every input reserve token is included in the reserve tokens
+            require(reserves[_reserveTokens[i]].isSet);
             for (j = 0; j < length; j++) {
                 if (reserveTokens[i] == _reserveTokens[j])
                     break;
             }
-            require(j < length); // verify that every reserve token is included in the input tokens
-            require(_reserveAmounts[i] > 0); // verify that every input amount is larger than zero
+            // verify that every reserve token is included in the input reserve tokens
+            require(j < length);
+            // verify that every input reserve amount is larger than zero
+            require(_reserveAmounts[i] > 0);
         }
 
-        require(_supplyAmount > 0); // verify that the input supply amount is larger than zero
+        // verify that the input supply amount is larger than zero
+        require(_supplyAmount > 0);
     }
 
     function addLiquidityToPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
