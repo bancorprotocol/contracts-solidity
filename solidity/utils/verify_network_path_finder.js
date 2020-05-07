@@ -106,9 +106,9 @@ async function symbol(web3, token) {
     return token;
 }
 
-function print(convertibleTokens, i, j, sourceSymbol, targetSymbol, path) {
-    const total = convertibleTokens.length ** 2;
-    const count = convertibleTokens.length * i + j;
+function print(tokens, i, j, sourceSymbol, targetSymbol, path) {
+    const total = tokens.length ** 2;
+    const count = tokens.length * i + j;
     console.log(`path ${count} out of ${total} (from ${sourceSymbol} to ${targetSymbol}): ${path}`);
 }
 
@@ -119,16 +119,18 @@ async function run() {
     const converterRegistry = new web3.eth.Contract(CONVERTER_REGISTRY_ABI, await rpc(contractRegistry.methods.addressOf(Web3.utils.asciiToHex("BancorConverterRegistry"))));
 
     const anchorToken = await rpc(pathFinder.methods.anchorToken());
+    const smartTokens = await rpc(converterRegistry.methods.getSmartTokens());
     const convertibleTokens = await rpc(converterRegistry.methods.getConvertibleTokens());
 
-    for (let i = 0; i < convertibleTokens.length; i++) {
-        const sourceSymbol = await symbol(web3, convertibleTokens[i]);
-        for (let j = 0; j < convertibleTokens.length; j++) {
-            const targetSymbol = await symbol(web3, convertibleTokens[j]);
-            const expected = await generatePath(web3, convertibleTokens[i], convertibleTokens[j], anchorToken, converterRegistry);
-            const actual = await rpc(pathFinder.methods.generatePath(convertibleTokens[i], convertibleTokens[j]));
+    const tokens = [...smartTokens, ...convertibleTokens];
+    for (let i = 0; i < tokens.length; i++) {
+        const sourceSymbol = await symbol(web3, tokens[i]);
+        for (let j = 0; j < tokens.length; j++) {
+            const targetSymbol = await symbol(web3, tokens[j]);
+            const expected = await generatePath(web3, tokens[i], tokens[j], anchorToken, converterRegistry);
+            const actual = await rpc(pathFinder.methods.generatePath(tokens[i], tokens[j]));
             const path = await Promise.all(actual.map(token => symbol(web3, token)));
-            print(convertibleTokens, i, j, sourceSymbol, targetSymbol, path);
+            print(tokens, i, j, sourceSymbol, targetSymbol, path);
             assert.equal(`${actual}`, `${expected}`);
         }
     }
