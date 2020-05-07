@@ -15,6 +15,8 @@ const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
+const ANCHOR_TOKEN_SYMBOL = 'ETH';
+
 const layout = {
     'reserves': [
         {'symbol': 'AAA', 'decimals': 18, 'supply': '1e24'},
@@ -192,7 +194,7 @@ contract('BancorNetworkPathFinder', accounts => {
         const bancorConverters = await Promise.all(smartTokens.map(smartToken => SmartToken.at(smartToken).owner()));
         await Promise.all(bancorConverters.map(bancorConverter => BancorConverter.at(bancorConverter).acceptOwnership()));
 
-        anchorToken = addresses.ETH;
+        anchorToken = addresses[ANCHOR_TOKEN_SYMBOL];
         await pathFinder.setAnchorToken(anchorToken);
     });
 
