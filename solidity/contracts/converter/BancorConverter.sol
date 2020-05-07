@@ -1000,7 +1000,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @param _x   value (assumed positive)
       * @return the number of decimal digits in the given value
     */
-    function ceilLog(uint256 _x) public pure returns (uint256) {
+    function decimalLength(uint256 _x) public pure returns (uint256) {
         uint256 y = 0;
         while (_x > 0) {
             _x /= 10;
@@ -1030,7 +1030,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         uint256 numOfDigits = 0;
         uint256 length = _values.length;
         for (uint256 i = 0; i < length; i++)
-            numOfDigits += ceilLog(_values[i]);
+            numOfDigits += decimalLength(_values[i]);
         return uint256(10) ** (roundDiv(numOfDigits, length) - 1);
     }
 
