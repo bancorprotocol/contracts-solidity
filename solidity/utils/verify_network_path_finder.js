@@ -106,10 +106,10 @@ async function symbol(web3, token) {
     return token;
 }
 
-function print(tokens, i, j, sourceSymbol, targetSymbol, path) {
+function print(tokens, i, j, source, target, path) {
     const total = tokens.length ** 2;
     const count = tokens.length * i + j;
-    console.log(`path ${count} out of ${total} (from ${sourceSymbol} to ${targetSymbol}): ${path}`);
+    console.log(`path ${count} out of ${total} (from ${source} to ${target}): ${path}`);
 }
 
 async function run() {
@@ -124,13 +124,13 @@ async function run() {
 
     const tokens = [...smartTokens, ...convertibleTokens];
     for (let i = 0; i < tokens.length; i++) {
-        const sourceSymbol = await symbol(web3, tokens[i]);
+        const source = await symbol(web3, tokens[i]);
         for (let j = 0; j < tokens.length; j++) {
-            const targetSymbol = await symbol(web3, tokens[j]);
+            const target = await symbol(web3, tokens[j]);
             const expected = await generatePath(web3, tokens[i], tokens[j], anchorToken, converterRegistry);
             const actual = await rpc(pathFinder.methods.generatePath(tokens[i], tokens[j]));
             const path = await Promise.all(actual.map(token => symbol(web3, token)));
-            print(tokens, i, j, sourceSymbol, targetSymbol, path);
+            print(tokens, i, j, source, target, path);
             assert.equal(`${actual}`, `${expected}`);
         }
     }
