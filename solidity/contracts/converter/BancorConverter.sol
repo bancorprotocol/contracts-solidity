@@ -866,6 +866,14 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _supplyAmount);
     }
 
+    /**
+      * @dev verifies that a given array of tokens is identical to the converter's array of reserve tokens
+      * we take this input in order to allow specifying the corresponding reserve amounts in any order
+      * 
+      * @param _reserveTokens   array of reserve tokens
+      * @param _reserveAmounts  array of reserve amounts
+      * @param _supplyAmount    supply amount
+    */
     function verifyLiquidityInput(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _supplyAmount)
         private
         view
@@ -874,20 +882,20 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         uint256 j;
 
         uint256 length = reserveTokens.length;
-        require(length == _reserveTokens.length);
-        require(length == _reserveAmounts.length);
+        require(length == _reserveTokens.length); // verify that the number of input tokens is equal to the number of reserve tokens
+        require(length == _reserveAmounts.length); // verify that the number of input amounts is equal to the number of reserve tokens
 
         for (i = 0; i < length; i++) {
-            require(reserves[_reserveTokens[i]].isSet);
+            require(reserves[_reserveTokens[i]].isSet); // verify that every input token is one of the reserve tokens
             for (j = 0; j < length; j++) {
                 if (reserveTokens[i] == _reserveTokens[j])
                     break;
             }
-            require(j < length);
-            require(_reserveAmounts[i] > 0);
+            require(j < length); // verify that every reserve token is included in the input tokens
+            require(_reserveAmounts[i] > 0); // verify that every input amount is larger than zero
         }
 
-        require(_supplyAmount > 0);
+        require(_supplyAmount > 0); // verify that the input supply amount is larger than zero
     }
 
     function addLiquidityToPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
@@ -986,6 +994,12 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         return _supply.mul(_amount).mul(reserveRatio).div(_balance.add(_amount).mul(WEIGHT_RESOLUTION));
     }
 
+    /**
+      * @dev calculates the number of decimal digits in a given value
+      * 
+      * @param _x   value (assumed positive)
+      * @return the number of decimal digits in the given value
+    */
     function ceilLog(uint256 _x) public pure returns (uint256) {
         uint256 y = 0;
         while (_x > 0) {
@@ -995,10 +1009,23 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         return y;
     }
 
+    /**
+      * @dev calculates the nearest integer to a given quotient
+      * 
+      * @param _n   quotient numerator
+      * @param _d   quotient denominator
+      * @return the nearest integer to the given quotient
+    */
     function roundDiv(uint256 _n, uint256 _d) public pure returns (uint256) {
         return (_n + _d / 2) / _d;
     }
 
+    /**
+      * @dev calculates the average number of decimal digits in a given list of values
+      * 
+      * @param _values  list of values (each of which assumed positive)
+      * @return the average number of decimal digits in the given list of values
+    */
     function geometricMean(uint256[] memory _values) public pure returns (uint256) {
         uint256 numOfDigits = 0;
         uint256 length = _values.length;
