@@ -1,9 +1,9 @@
 pragma solidity 0.4.26;
 
 contract TokenHandler {
-    bytes4 private constant APPROVE_FUNC_SELECTOR       = bytes4(uint256(keccak256("approve(address,uint256)")              >> (256 - 4 * 8)));
-    bytes4 private constant TRANSFER_FUNC_SELECTOR      = bytes4(uint256(keccak256("transfer(address,uint256)")             >> (256 - 4 * 8)));
-    bytes4 private constant TRANSFER_FROM_FUNC_SELECTOR = bytes4(uint256(keccak256("transferFrom(address,address,uint256)") >> (256 - 4 * 8)));
+    bytes4 private constant APPROVE_FUNC_SELECTOR = bytes4(keccak256("approve(address,uint256)"));
+    bytes4 private constant TRANSFER_FUNC_SELECTOR = bytes4(keccak256("transfer(address,uint256)"));
+    bytes4 private constant TRANSFER_FROM_FUNC_SELECTOR = bytes4(keccak256("transferFrom(address,address,uint256)"));
 
     function safeApprove(address _token, address _spender, uint256 _value) public {
        execute(_token, abi.encodeWithSelector(APPROVE_FUNC_SELECTOR, _spender, _value));
