@@ -144,6 +144,7 @@ contract('BancorNetworkPathFinder', accounts => {
     let converterRegistry;
     let converterRegistryData;
     let pathFinder;
+    let anchorToken;
 
     const addresses = {ETH: ETH_RESERVE_ADDRESS};
 
@@ -191,36 +192,36 @@ contract('BancorNetworkPathFinder', accounts => {
         const bancorConverters = await Promise.all(smartTokens.map(smartToken => SmartToken.at(smartToken).owner()));
         await Promise.all(bancorConverters.map(bancorConverter => BancorConverter.at(bancorConverter).acceptOwnership()));
 
-        await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, addresses.BNT);
-        await pathFinder.setAnchorToken(addresses.BNT);
+        anchorToken = addresses.ETH;
+        await pathFinder.setAnchorToken(anchorToken);
     });
 
     it('should throw when a non owner tries to update the anchor token', async () => {
         await utils.catchRevert(pathFinder.setAnchorToken(accounts[0], {from: accounts[1]}));
-        assert.equal(await pathFinder.anchorToken(), addresses.BNT);
+        assert.equal(await pathFinder.anchorToken(), anchorToken);
     });
 
     it('should return an empty path if the source-token has no path to the anchor-token', async () => {
         const token = accounts[0];
-        const expected = await generatePath(token, addresses.BNT, addresses.BNT, converterRegistry);
-        const actual = await pathFinder.generatePath(token, addresses.BNT);
+        const expected = await generatePath(token, anchorToken, anchorToken, converterRegistry);
+        const actual = await pathFinder.generatePath(token, anchorToken);
         assert.equal(actual + expected, []);
     });
 
     it('should return an empty path if the target-token has no path to the anchor-token', async () => {
         const token = accounts[0];
-        const expected = await generatePath(addresses.BNT, token, addresses.BNT, converterRegistry);
-        const actual = await pathFinder.generatePath(addresses.BNT, token);
+        const expected = await generatePath(anchorToken, token, anchorToken, converterRegistry);
+        const actual = await pathFinder.generatePath(anchorToken, token);
         assert.equal(actual + expected, []);
     });
 
-    const allSymbols = [...layout.reserves, ...layout.converters].map(record => record.symbol);
+    const allSymbols = ['ETH', ...[...layout.reserves, ...layout.converters].map(record => record.symbol)];
     for (const sourceSymbol of allSymbols) {
         for (const targetSymbol of allSymbols) {
             it(`from ${sourceSymbol} to ${targetSymbol}`, async () => {
                 const sourceToken = addresses[sourceSymbol];
                 const targetToken = addresses[targetSymbol];
-                const expected = await generatePath(sourceToken, targetToken, addresses.BNT, converterRegistry);
+                const expected = await generatePath(sourceToken, targetToken, anchorToken, converterRegistry);
                 const actual = await pathFinder.generatePath(sourceToken, targetToken);
                 assert.equal(`${actual}`, `${expected}`);
                 await printPath(sourceToken, targetToken, actual);
