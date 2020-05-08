@@ -12,18 +12,9 @@ import '../utility/TokenHolder.sol';
 contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     using SafeMath for uint256;
 
+    uint16 public version = 4;
 
-    string public version = '0.3';
-
-    bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
-
-    /**
-      * @dev triggered when a smart token is deployed
-      * the _token address is defined for forward compatibility, in case the event is trigger by a factory
-      * 
-      * @param _token  new smart token address
-    */
-    event NewSmartToken(address _token);
+    bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false otherwise
 
     /**
       * @dev triggered when the total supply is increased
@@ -50,7 +41,6 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
         public
         ERC20Token(_name, _symbol, _decimals, 0)
     {
-        emit NewSmartToken(address(this));
     }
 
     // allows execution only when transfers aren't disabled
@@ -70,11 +60,11 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     }
 
     /**
-      * @dev increases the token supply and sends the new tokens to an account
+      * @dev increases the token supply and sends the new tokens to the given account
       * can only be called by the contract owner
       * 
-      * @param _to         account to receive the new amount
-      * @param _amount     amount to increase the supply by
+      * @param _to      account to receive the new amount
+      * @param _amount  amount to increase the supply by
     */
     function issue(address _to, uint256 _amount)
         public
@@ -90,15 +80,13 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     }
 
     /**
-      * @dev removes tokens from an account and decreases the token supply
-      * can be called by the contract owner to destroy tokens from any account or by any holder to destroy tokens from his/her own account
+      * @dev removes tokens from the given account and decreases the token supply
+      * can only be called by the contract owner
       * 
-      * @param _from       account to remove the amount from
-      * @param _amount     amount to decrease the supply by
+      * @param _from    account to remove the amount from
+      * @param _amount  amount to decrease the supply by
     */
-    function destroy(address _from, uint256 _amount) public {
-        require(msg.sender == _from || msg.sender == owner); // validate input
-
+    function destroy(address _from, uint256 _amount) public ownerOnly {
         balanceOf[_from] = balanceOf[_from].sub(_amount);
         totalSupply = totalSupply.sub(_amount);
 
