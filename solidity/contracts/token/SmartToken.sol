@@ -43,9 +43,9 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     {
     }
 
-    // allows execution only when transfers aren't disabled
+    // allows execution only when transfers are enabled
     modifier transfersAllowed {
-        assert(transfersEnabled);
+        require(transfersEnabled);
         _;
     }
 
