@@ -819,17 +819,17 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @dev buys the token with all reserve tokens using the same percentage
       * note that the function cannot be called when the converter has only one reserve
       * 
-      * @param _reserveTokens           address of each reserve token
-      * @param _reserveAmounts          amount of each reserve token
-      * @param _supplyMinReturnAmount   token minimum return-amount
+      * @param _reserveTokens   address of each reserve token
+      * @param _reserveAmounts  amount of each reserve token
+      * @param _minReturn       token minimum return-amount
     */
-    function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _supplyMinReturnAmount)
+    function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _minReturn)
         public
         payable
         protected
         multipleReservesOnly
     {
-        verifyLiquidityInput(_reserveTokens, _reserveAmounts, _supplyMinReturnAmount);
+        verifyLiquidityInput(_reserveTokens, _reserveAmounts, _minReturn);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++)
             if (_reserveTokens[i] == ETH_RESERVE_ADDRESS)
@@ -839,31 +839,31 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             require(reserves[ETH_RESERVE_ADDRESS].isSet);
 
         uint256 totalSupply = token.totalSupply();
-        uint256 supplyAmount = addLiquidityToPool(_reserveTokens, _reserveAmounts, totalSupply);
+        uint256 amount = addLiquidityToPool(_reserveTokens, _reserveAmounts, totalSupply);
 
-        require(supplyAmount >= _supplyMinReturnAmount);
-        token.issue(msg.sender, supplyAmount);
+        require(amount >= _minReturn);
+        token.issue(msg.sender, amount);
     }
 
     /**
       * @dev sells the token for all reserve tokens using the same percentage
       * note that the function cannot be called when the converter has only one reserve
       * 
-      * @param _supplyAmount            token amount
+      * @param _amount                  token amount
       * @param _reserveTokens           address of each reserve token
       * @param _reserveMinReturnAmounts minimum return-amount of each reserve token
     */
-    function removeLiquidity(uint256 _supplyAmount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
+    function removeLiquidity(uint256 _amount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
         public
         protected
         multipleReservesOnly
     {
-        verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _supplyAmount);
+        verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
 
         uint256 totalSupply = token.totalSupply();
-        token.destroy(msg.sender, _supplyAmount);
+        token.destroy(msg.sender, _amount);
 
-        removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _supplyAmount);
+        removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _amount);
     }
 
     /**
@@ -872,9 +872,9 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * 
       * @param _reserveTokens   array of reserve tokens
       * @param _reserveAmounts  array of reserve amounts
-      * @param _supplyAmount    supply amount
+      * @param _amount          token amount
     */
-    function verifyLiquidityInput(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _supplyAmount)
+    function verifyLiquidityInput(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _amount)
         private
         view
     {
@@ -894,12 +894,12 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             }
             // verify that every reserve token is included in the input reserve tokens
             require(j < length);
-            // verify that every input reserve amount is larger than zero
+            // verify that every input reserve token amount is larger than zero
             require(_reserveAmounts[i] > 0);
         }
 
-        // verify that the input supply amount is larger than zero
-        require(_supplyAmount > 0);
+        // verify that the input token amount is larger than zero
+        require(_amount > 0);
     }
 
     function addLiquidityToPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
@@ -915,7 +915,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         private
         returns (uint256)
     {
-        uint256 supplyAmount = geometricMean(_reserveAmounts);
+        uint256 amount = geometricMean(_reserveAmounts);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             if (_reserveTokens[i] != ETH_RESERVE_ADDRESS)
@@ -923,10 +923,10 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
             reserves[_reserveTokens[i]].balance = _reserveAmounts[i];
 
-            emit LiquidityAdded(msg.sender, _reserveTokens[i], _reserveAmounts[i], _reserveAmounts[i], supplyAmount);
+            emit LiquidityAdded(msg.sender, _reserveTokens[i], _reserveAmounts[i], _reserveAmounts[i], amount);
         }
 
-        return supplyAmount;
+        return amount;
     }
 
     function addLiquidityToNonEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
@@ -937,12 +937,12 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
 
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-        uint256 supplyAmount = getMinShare(_totalSupply, _reserveTokens, _reserveAmounts);
+        uint256 amount = getMinShare(_totalSupply, _reserveTokens, _reserveAmounts);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
-            uint256 reserveAmount = formula.calculateFundCost(_totalSupply, rsvBalance, reserveRatio, supplyAmount);
+            uint256 reserveAmount = formula.calculateFundCost(_totalSupply, rsvBalance, reserveRatio, amount);
             require(reserveAmount > 0);
             assert(reserveAmount <= _reserveAmounts[i]);
 
@@ -953,13 +953,13 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
             reserves[reserveToken].balance = reserves[reserveToken].balance.add(reserveAmount);
 
-            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, rsvBalance + reserveAmount, _totalSupply + supplyAmount);
+            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, rsvBalance + reserveAmount, _totalSupply + amount);
         }
 
-        return supplyAmount;
+        return amount;
     }
 
-    function removeLiquidityFromPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _totalSupply, uint256 _supplyAmount)
+    function removeLiquidityFromPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _totalSupply, uint256 _amount)
         public
         multipleReservesOnly
     {
@@ -970,7 +970,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
-            uint256 reserveAmount = formula.calculateLiquidateReturn(_totalSupply, rsvBalance, reserveRatio, _supplyAmount);
+            uint256 reserveAmount = formula.calculateLiquidateReturn(_totalSupply, rsvBalance, reserveRatio, _amount);
             require(reserveAmount >= _reserveMinReturnAmounts[i]);
 
             reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
@@ -980,7 +980,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             else
                 safeTransfer(reserveToken, msg.sender, reserveAmount);
 
-            emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, rsvBalance - reserveAmount, _totalSupply - _supplyAmount);
+            emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, rsvBalance - reserveAmount, _totalSupply - _amount);
         }
     }
 
