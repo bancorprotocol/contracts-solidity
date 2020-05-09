@@ -175,6 +175,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         converter.acceptTokenOwnership();
         converter.addLiquidity.value(msg.value)(_reserveTokens, _reserveAmounts, 1);
         converter.transferOwnership(msg.sender);
+        token.transfer(msg.sender, token.totalSupply());
 
         addConverterInternal(converter);
     }

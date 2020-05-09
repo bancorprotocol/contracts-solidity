@@ -48,9 +48,9 @@ contract('BancorConverterLiquidity', accounts => {
         for (let n = 1; n <= 77; n++) {
             for (const k of [-1, 0, +1]) {
                 const input = web3.toBigNumber(10).pow(n).add(k);
-                it(`ceilLog(${input.toFixed()})`, async () => {
+                it(`decimalLength(${input.toFixed()})`, async () => {
                     const expected = input.toFixed().length;
-                    const actual = await converter.ceilLog(input);
+                    const actual = await converter.decimalLength(input);
                     assert(actual.equals(expected), `expected ${expected} but got ${actual}`);
                 });
             }
@@ -184,7 +184,7 @@ contract('BancorConverterLiquidity', accounts => {
 
                 for (let n = state.length - 1; n > 0; n--) {
                     const supplyAmount = state[n].supply.sub(state[n - 1].supply);
-                    await converter.removeLiquidity(reserveTokens, reserveTokens.map(reserveTokens => 1), supplyAmount);
+                    await converter.removeLiquidity(supplyAmount, reserveTokens, reserveTokens.map(reserveTokens => 1));
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                     for (let i = 0; i < balances.length; i++) {
                         const diff = state[n - 1].balances[i].div(balances[i]);
@@ -193,7 +193,7 @@ contract('BancorConverterLiquidity', accounts => {
                 }
 
                 const supplyAmount = state[0].supply;
-                await converter.removeLiquidity(reserveTokens, reserveTokens.map(reserveTokens => 1), supplyAmount);
+                await converter.removeLiquidity(supplyAmount, reserveTokens, reserveTokens.map(reserveTokens => 1));
                 const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                 for (let i = 0; i < balances.length; i++)
                     assert(balances[i].equals(0), `balance #${i + 1} is ${balances[i].toFixed()} instead of 0`);
