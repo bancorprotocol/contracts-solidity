@@ -984,10 +984,10 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         }
     }
 
-    function getMinShare(uint256 _totalSupply, IERC20Token[] memory _tokens, uint256[] memory _amounts) private view returns (uint256) {
-        uint256 minShare = getShare(_totalSupply, reserves[_tokens[0]].balance, _amounts[0]);
-        for (uint256 i = 1; i < _tokens.length; i++) {
-            uint256 share = getShare(_totalSupply, reserves[_tokens[i]].balance, _amounts[i]);
+    function getMinShare(uint256 _totalSupply, IERC20Token[] memory _reserveTokens, uint256[] memory _amounts) private view returns (uint256) {
+        uint256 minShare = getShare(_totalSupply, reserves[_reserveTokens[0]].balance, _amounts[0]);
+        for (uint256 i = 1; i < _reserveTokens.length; i++) {
+            uint256 share = getShare(_totalSupply, reserves[_reserveTokens[i]].balance, _amounts[i]);
             if (minShare > share)
                 minShare = share;
         }
