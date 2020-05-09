@@ -82,6 +82,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     /**
       * @dev creates a liquid-token converter and adds it to the registry
       * 
+      * @param _type                converter type, see BancorConverter contract main doc
       * @param _smartTokenName      token name
       * @param _smartTokenSymbol    token symbol
       * @param _smartTokenDecimals  token decimals
@@ -91,6 +92,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _reserveAmount       reserve amount
     */
     function newLiquidToken(
+        uint8 _type,
         string _smartTokenName,
         string _smartTokenSymbol,
         uint8 _smartTokenDecimals,
@@ -101,6 +103,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     )
     public payable
     {
+        _type; // forward compatibility
         IBancorConverterFactory factory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
         SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
         IBancorConverter converter = IBancorConverter(factory.createConverter(token, registry, _maxConversionFee, IERC20Token(0), 0));
@@ -129,6 +132,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     /**
       * @dev creates a liquidity-pool converter and adds it to the registry
       * 
+      * @param _type                converter type, see BancorConverter contract main doc
       * @param _smartTokenName      token name
       * @param _smartTokenSymbol    token symbol
       * @param _smartTokenDecimals  token decimals
@@ -138,6 +142,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _reserveAmounts      reserve amounts
     */
     function newLiquidityPool(
+        uint8 _type,
         string _smartTokenName,
         string _smartTokenSymbol,
         uint8 _smartTokenDecimals,
@@ -148,6 +153,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     )
     public payable
     {
+        _type; // forward compatibility
         uint256 length = _reserveTokens.length;
         require(length == _reserveWeights.length);
         require(length == _reserveAmounts.length);

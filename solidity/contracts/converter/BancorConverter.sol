@@ -19,6 +19,15 @@ import '../bancorx/interfaces/IBancorX.sol';
   * This mechanism opens the possibility to create different financial tools (for example, lower slippage in conversions).
   * 
   * The converter is upgradable (just like any SmartTokenController) and all upgrades are opt-in. 
+  *
+  * Converter types (defined as uint8 type):
+  * Liquid Tokens:
+  * 0 - v1, classic
+  *
+  * Liquidity Pools:
+  * 0 - v1, classic
+  * 1 - v2
+  *
 */
 contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController, ContractRegistryClient {
     using SafeMath for uint256;
@@ -195,6 +204,15 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         require(reserves[ETH_RESERVE_ADDRESS].isSet); // require(hasETHReserve());
         // a workaround for a problem when running solidity-coverage
         // see https://github.com/sc-forks/solidity-coverage/issues/487
+    }
+
+    /**
+      * @dev returns the converter type
+      *
+      * @return see the converter types in the the main contract doc
+    */
+    function converterType() public pure returns (uint8) {
+        return 0;
     }
 
     /**
