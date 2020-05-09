@@ -994,8 +994,8 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         return minShare;
     }
 
-    function getShare(uint256 _totalSupply, uint256 _balance, uint256 _reserveAmount) private view returns (uint256) {
-        return _totalSupply.mul(_reserveAmount).mul(reserveRatio).div(_balance.add(_reserveAmount).mul(WEIGHT_RESOLUTION));
+    function getShare(uint256 _totalSupply, uint256 _reserveBalance, uint256 _reserveAmount) private view returns (uint256) {
+        return _totalSupply.mul(_reserveAmount).mul(reserveRatio).div(_reserveBalance.add(_reserveAmount).mul(WEIGHT_RESOLUTION));
     }
 
     /**
