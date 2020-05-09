@@ -849,11 +849,11 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @dev sells the token for all reserve tokens using the same percentage
       * note that the function cannot be called when the converter has only one reserve
       * 
+      * @param _supplyAmount            token amount
       * @param _reserveTokens           address of each reserve token
       * @param _reserveMinReturnAmounts minimum return-amount of each reserve token
-      * @param _supplyAmount            token amount
     */
-    function removeLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _supplyAmount)
+    function removeLiquidity(uint256 _supplyAmount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
         public
         protected
         multipleReservesOnly
