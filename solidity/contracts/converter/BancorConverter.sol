@@ -984,18 +984,18 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         }
     }
 
-    function getMinShare(uint256 _totalSupply, IERC20Token[] memory _reserveTokens, uint256[] memory _amounts) private view returns (uint256) {
-        uint256 minShare = getShare(_totalSupply, reserves[_reserveTokens[0]].balance, _amounts[0]);
+    function getMinShare(uint256 _totalSupply, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts) private view returns (uint256) {
+        uint256 minShare = getShare(_totalSupply, reserves[_reserveTokens[0]].balance, _reserveAmounts[0]);
         for (uint256 i = 1; i < _reserveTokens.length; i++) {
-            uint256 share = getShare(_totalSupply, reserves[_reserveTokens[i]].balance, _amounts[i]);
+            uint256 share = getShare(_totalSupply, reserves[_reserveTokens[i]].balance, _reserveAmounts[i]);
             if (minShare > share)
                 minShare = share;
         }
         return minShare;
     }
 
-    function getShare(uint256 _totalSupply, uint256 _balance, uint256 _amount) private view returns (uint256) {
-        return _totalSupply.mul(_amount).mul(reserveRatio).div(_balance.add(_amount).mul(WEIGHT_RESOLUTION));
+    function getShare(uint256 _totalSupply, uint256 _balance, uint256 _reserveAmount) private view returns (uint256) {
+        return _totalSupply.mul(_reserveAmount).mul(reserveRatio).div(_balance.add(_reserveAmount).mul(WEIGHT_RESOLUTION));
     }
 
     /**
