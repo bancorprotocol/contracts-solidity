@@ -1,4 +1,5 @@
 pragma solidity 0.4.26;
+import './IBancorConverter.sol';
 import '../../token/interfaces/IERC20Token.sol';
 import '../../token/interfaces/ISmartToken.sol';
 import '../../utility/interfaces/IContractRegistry.sol';
@@ -8,11 +9,10 @@ import '../../utility/interfaces/IContractRegistry.sol';
 */
 contract IBancorConverterFactory {
     function createConverter(
+        uint8 _type,
         ISmartToken _token,
         IContractRegistry _registry,
-        uint32 _maxConversionFee,
-        IERC20Token _reserveToken,
-        uint32 _reserveWeight
+        uint32 _maxConversionFee
     )
-    public returns (address);
+    public returns (IBancorConverter);
 }

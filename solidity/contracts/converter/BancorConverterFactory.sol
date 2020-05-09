@@ -25,33 +25,24 @@ contract BancorConverterFactory is IBancorConverterFactory {
       * @dev creates a new converter with the given arguments and transfers
       * the ownership and management to the sender.
       * 
-      * @param  _token              smart token governed by the converter
-      * @param  _registry           address of a contract registry contract
-      * @param  _maxConversionFee   maximum conversion fee, represented in ppm
-      * @param  _reserveToken       optional, initial reserve, allows defining the first reserve at deployment time
-      * @param  _reserveWeight      optional, weight for the initial reserve
+      * @param _type              converter type, see BancorConverter contract main doc
+      * @param _token             smart token governed by the converter
+      * @param _registry          address of a contract registry contract
+      * @param _maxConversionFee  maximum conversion fee, represented in ppm
       * 
       * @return a new converter
     */
     function createConverter(
+        uint8 _type,
         ISmartToken _token,
         IContractRegistry _registry,
-        uint32 _maxConversionFee,
-        IERC20Token _reserveToken,
-        uint32 _reserveWeight
-    ) public returns(address converterAddress) {
-        BancorConverter converter = new BancorConverter(
-            _token,
-            _registry,
-            _maxConversionFee,
-            _reserveToken,
-            _reserveWeight
-        );
-
+        uint32 _maxConversionFee
+    ) public returns(IBancorConverter) {
+        _type; // forward compatibility
+        BancorConverter converter = new BancorConverter(_token, _registry, _maxConversionFee, IERC20Token(0), 0);
         converter.transferOwnership(msg.sender);
 
-        address _converterAddress = address(converter);
-        emit NewConverter(_converterAddress, msg.sender);
-        return _converterAddress;
+        emit NewConverter(converter, msg.sender);
+        return converter;
     }
 }
