@@ -103,10 +103,9 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     )
     public payable
     {
-        _type; // forward compatibility
         IBancorConverterFactory factory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
         SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
-        IBancorConverter converter = IBancorConverter(factory.createConverter(token, registry, _maxConversionFee, IERC20Token(0), 0));
+        IBancorConverter converter = IBancorConverter(factory.createConverter(_type, token, registry, _maxConversionFee));
 
         converter.acceptOwnership();
 
@@ -153,7 +152,6 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     )
     public payable
     {
-        _type; // forward compatibility
         uint256 length = _reserveTokens.length;
         require(length == _reserveWeights.length);
         require(length == _reserveAmounts.length);
@@ -162,7 +160,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
 
         IBancorConverterFactory factory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
         SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
-        IBancorConverter converter = IBancorConverter(factory.createConverter(token, registry, _maxConversionFee, IERC20Token(0), 0));
+        IBancorConverter converter = IBancorConverter(factory.createConverter(_type, token, registry, _maxConversionFee));
 
         converter.acceptOwnership();
 
