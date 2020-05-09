@@ -133,15 +133,8 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
 
         IBancorConverterFactory converterFactory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
-        address converterAddress = converterFactory.createConverter(
-            token,
-            registry,
-            maxConversionFee,
-            IERC20Token(address(0)),
-            0
-        );
+        IBancorConverter converter = converterFactory.createConverter(0, token, registry, maxConversionFee);
 
-        IBancorConverter converter = IBancorConverter(converterAddress);
         converter.acceptOwnership();
         return converter;
     }
