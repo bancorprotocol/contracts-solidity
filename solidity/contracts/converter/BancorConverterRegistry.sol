@@ -188,13 +188,12 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
 
     /**
       * @dev adds an existing converter to the registry
-      * anyone can add an existing converter to the registry, as long as the converter is valid
-      * note that a liquidity pool converter can be added only if no converter with the same reserve-configuration is already registered
+      * can only be called by the owner
       * 
       * @param _converter converter
     */
-    function addConverter(IBancorConverter _converter) public {
-        require(isConverterValid(_converter) && !isSimilarLiquidityPoolRegistered(_converter));
+    function addConverter(IBancorConverter _converter) public ownerOnly {
+        require(isConverterValid(_converter));
         addConverterInternal(_converter);
     }
 
@@ -390,15 +389,8 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     function isConverterValid(IBancorConverter _converter) public view returns (bool) {
         // verify the the smart token has a supply and that the converter is active
         ISmartToken token = ISmartTokenController(_converter).token();
-        if (token.totalSupply() == 0 || token.owner() != address(_converter))
+        if (token.owner() != address(_converter))
             return false;
-
-        // verify that the converter holds balance in each of its reserves
-        uint reserveTokenCount = _converter.connectorTokenCount();
-        for (uint i = 0; i < reserveTokenCount; i++) {
-            if (_converter.getConnectorBalance(_converter.connectorTokens(i)) == 0)
-                return false;
-        }
 
         return true;
     }
