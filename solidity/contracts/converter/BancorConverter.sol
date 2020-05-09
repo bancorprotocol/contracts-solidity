@@ -1006,10 +1006,8 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     */
     function decimalLength(uint256 _x) public pure returns (uint256) {
         uint256 y = 0;
-        while (_x > 0) {
-            _x /= 10;
-            y += 1;
-        }
+        for (uint256 x = _x; x > 0; x /= 10)
+            y++;
         return y;
     }
 
