@@ -172,14 +172,14 @@ contract BancorFormula is IBancorFormula, Utils {
       * calculates the rate for a given conversion (in the main token)
       * 
       * Formula:
-      * rate = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
+      * return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
       * 
-      * @param _supply              token total supply
+      * @param _supply              smart token supply
       * @param _reserveBalance      total reserve balance
       * @param _reserveWeight       reserve weight, represented in ppm, 1-1000000
       * @param _depositAmount       deposit amount, in reserve token
       * 
-      * @return purchase rate amount
+      * @return smart token amount
     */
     function purchaseRate(uint256 _supply, uint256 _reserveBalance, uint32 _reserveWeight, uint256 _depositAmount) public view returns (uint256) {
         // validate input
@@ -206,14 +206,14 @@ contract BancorFormula is IBancorFormula, Utils {
       * calculates the rate for a given conversion (in the reserve token)
       * 
       * Formula:
-      * rate = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1000000 / _reserveWeight))
+      * return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1000000 / _reserveWeight))
       * 
-      * @param _supply              token total supply
+      * @param _supply              smart token supply
       * @param _reserveBalance      total reserve
       * @param _reserveWeight       reserve weight, represented in ppm, 1-1000000
       * @param _sellAmount          sell amount, in the token itself
       * 
-      * @return sale rate amount
+      * @return reserve token amount
     */
     function saleRate(uint256 _supply, uint256 _reserveBalance, uint32 _reserveWeight, uint256 _sellAmount) public view returns (uint256) {
         // validate input
@@ -245,7 +245,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * calculates the rate for a conversion from the first reserve token to the second reserve token (in the second reserve token)
       * 
       * Formula:
-      * rate = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveWeight / _toReserveWeight))
+      * return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveWeight / _toReserveWeight))
       * 
       * @param _fromReserveBalance      input reserve balance
       * @param _fromReserveWeight       input reserve weight, represented in ppm, 1-1000000
@@ -253,7 +253,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * @param _toReserveWeight         output reserve weight, represented in ppm, 1-1000000
       * @param _amount                  input reserve amount
       * 
-      * @return second reserve amount
+      * @return output reserve amount
     */
     function crossReserveRate(uint256 _fromReserveBalance, uint32 _fromReserveWeight, uint256 _toReserveBalance, uint32 _toReserveWeight, uint256 _amount) public view returns (uint256) {
         // validate input
@@ -284,7 +284,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * @param _reserveRatio        reserve ratio, represented in ppm, 2-2000000
       * @param _amount              requested amount of smart tokens
       * 
-      * @return amount of reserve tokens
+      * @return reserve token amount
     */
     function fundCost(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
         // validate input
@@ -318,7 +318,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * @param _reserveRatio        reserve ratio, represented in ppm, 2-2000000
       * @param _amount              amount of smart tokens to liquidate
       * 
-      * @return amount of reserve tokens
+      * @return reserve token amount
     */
     function liquidateRate(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
         // validate input
