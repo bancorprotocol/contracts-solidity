@@ -20,13 +20,8 @@ import '../bancorx/interfaces/IBancorX.sol';
   * 
   * The converter is upgradable (just like any SmartTokenController) and all upgrades are opt-in. 
   *
-  * Converter types (defined as uint8 type):
-  * Liquid Tokens:
-  * 0 - v1, classic
-  *
-  * Liquidity Pools:
-  * 0 - v1, classic
-  * 1 - v2
+  * Converter types (defined as uint8 type) - currently there's only a single converter type
+  * 0 = classic bancor converter
   *
 */
 contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController, ContractRegistryClient {
