@@ -159,10 +159,21 @@ async function run() {
         const weights  = converter.reserves.map(reserve => reserve.weight);
         const amounts  = converter.reserves.map(reserve => reserve.balance);
         const value    = [...converter.reserves.filter(reserve => reserve.symbol == "ETH"), {balance: "0"}][0].balance;
-        if (converter.reserves.length == 1)
+        if (converter.reserves.length == 1) {
             await execute(bancorConverterRegistry.methods.newLiquidToken(LIQUID_TOKEN_TYPE_CLASSIC, name, symbol, decimals, fee, tokens[0], weights[0], amounts[0]), value);
-        else
-            await execute(bancorConverterRegistry.methods.newLiquidityPool(LIQUIDITY_POOL_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights, amounts), value);
+        }
+        else {
+            await execute(bancorConverterRegistry.methods.newLiquidityPool(LIQUIDITY_POOL_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights));
+
+            const token = ERC20Token.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
+            const converterAddress = await token.owner();
+
+            for (let i = 0 ; i < tokens.length; i++)
+                await ERC20Token.at(tokens[i]).approve(converterAddress, amounts[i]);
+
+            await execute(BancorConverter.at(converterAddress).methods.addLiquidity(tokens, amounts, 1), value);
+        }
+        
         const token = deployed(web3, "ERC20Token", (await bancorConverterRegistry.methods.getSmartTokens().call()).slice(-1)[0]);
         await execute(token.methods.approve(bancorConverterRegistry._address, await token.methods.totalSupply().call()));
         addresses[converter.symbol] = token._address;
