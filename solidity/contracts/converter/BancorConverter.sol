@@ -16,7 +16,7 @@ import '../bancorx/interfaces/IBancorX.sol';
   * 
   * The Bancor converter allows for conversions between a Smart Token and other ERC20 tokens and between different ERC20 tokens and themselves. 
   * 
-  * This mechanism opens the possibility to create different financial tools (for example, lower slippage in conversions).
+  * This mechanism allows creating different financial tools (for example, lower slippage in conversions).
   * 
   * The converter is upgradable (just like any SmartTokenController) and all upgrades are opt-in. 
   *
