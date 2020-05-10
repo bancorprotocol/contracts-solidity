@@ -960,8 +960,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     }
 
     function removeLiquidityFromPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _totalSupply, uint256 _amount)
-        public
-        multipleReservesOnly
+        private
     {
         syncReserveBalances();
 
