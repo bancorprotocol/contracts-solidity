@@ -15,8 +15,7 @@ const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
-const LIQUID_TOKEN_TYPE_CLASSIC = 0;
-const LIQUIDITY_POOL_TYPE_CLASSIC = 0;
+const CONVERTER_TYPE_CLASSIC = 0;
 
 const ANCHOR_TOKEN_SYMBOL = 'ETH';
 
@@ -185,9 +184,9 @@ contract('BancorNetworkPathFinder', accounts => {
             const amounts  = converter.reserves.map(reserve => reserve.balance);
             const value    = [...converter.reserves.filter(reserve => reserve.symbol == 'ETH'), {balance: '0'}][0].balance;
             if (converter.reserves.length == 1)
-                await converterRegistry.newLiquidToken(LIQUID_TOKEN_TYPE_CLASSIC, name, symbol, decimals, fee, tokens[0], weights[0], amounts[0], {value: value});
+                await converterRegistry.newLiquidToken(CONVERTER_TYPE_CLASSIC, name, symbol, decimals, fee, tokens[0], weights[0], amounts[0], {value: value});
             else
-                await converterRegistry.newLiquidityPool(LIQUIDITY_POOL_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights);
+                await converterRegistry.newLiquidityPool(CONVERTER_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights);
             const token = SmartToken.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
             await token.approve(converterRegistry.address, await token.totalSupply());
 

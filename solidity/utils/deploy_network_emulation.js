@@ -9,9 +9,6 @@ const ARTIFACTS_DIR = __dirname + "/../build/";
 
 const MIN_GAS_LIMIT = 100000;
 
-const LIQUID_TOKEN_TYPE_CLASSIC = 0;
-const LIQUIDITY_POOL_TYPE_CLASSIC = 0;
-
 function get() {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, {encoding: "utf8"}));
 }
@@ -160,10 +157,10 @@ async function run() {
         const amounts  = converter.reserves.map(reserve => reserve.balance);
         const value    = [...converter.reserves.filter(reserve => reserve.symbol == "ETH"), {balance: "0"}][0].balance;
         if (converter.reserves.length == 1) {
-            await execute(bancorConverterRegistry.methods.newLiquidToken(LIQUID_TOKEN_TYPE_CLASSIC, name, symbol, decimals, fee, tokens[0], weights[0], amounts[0]), value);
+            await execute(bancorConverterRegistry.methods.newLiquidToken(CONVERTER_TYPE_CLASSIC, name, symbol, decimals, fee, tokens[0], weights[0], amounts[0]), value);
         }
         else {
-            await execute(bancorConverterRegistry.methods.newLiquidityPool(LIQUIDITY_POOL_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights));
+            await execute(bancorConverterRegistry.methods.newLiquidityPool(CONVERTER_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights));
 
             const token = ERC20Token.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
             const converterAddress = await token.owner();
