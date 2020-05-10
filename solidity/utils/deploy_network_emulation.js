@@ -8,6 +8,7 @@ const PRIVATE_KEY   = process.argv[4];
 const ARTIFACTS_DIR = __dirname + "/../build/";
 
 const MIN_GAS_LIMIT = 100000;
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 function get() {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, {encoding: "utf8"}));
@@ -156,15 +157,17 @@ async function run() {
         const weights  = converter.reserves.map(reserve => reserve.weight);
         const amounts  = converter.reserves.map(reserve => reserve.balance);
         const value    = [...converter.reserves.filter(reserve => reserve.symbol == "ETH"), {balance: "0"}][0].balance;
+
+        await execute(bancorConverterRegistry.methods.newConverter(CONVERTER_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights));
+
+        const token = ERC20Token.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
+        const converterAddress = await token.owner();
+
         if (converter.reserves.length == 1) {
-            await execute(bancorConverterRegistry.methods.newLiquidToken(CONVERTER_TYPE_CLASSIC, name, symbol, decimals, fee, tokens[0], weights[0], amounts[0]), value);
+            await ERC20Token.at(tokens[0]).approve(bancorNetwork.address, amounts[0]);
+            await execute(bancorNetwork.methods.convertByPath([tokens[0], token.address, token.address], amounts[0], 1, ZERO_ADDRESS, ZERO_ADDRESS, 0), value);
         }
         else {
-            await execute(bancorConverterRegistry.methods.newLiquidityPool(CONVERTER_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights));
-
-            const token = ERC20Token.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
-            const converterAddress = await token.owner();
-
             for (let i = 0 ; i < tokens.length; i++)
                 await ERC20Token.at(tokens[i]).approve(converterAddress, amounts[i]);
 

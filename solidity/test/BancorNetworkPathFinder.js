@@ -181,24 +181,9 @@ contract('BancorNetworkPathFinder', accounts => {
             const fee      = converter.fee;
             const tokens   = converter.reserves.map(reserve => addresses[reserve.symbol]);
             const weights  = converter.reserves.map(reserve => reserve.weight);
-            const amounts  = converter.reserves.map(reserve => reserve.balance);
-            const value    = [...converter.reserves.filter(reserve => reserve.symbol == 'ETH'), {balance: '0'}][0].balance;
-            if (converter.reserves.length == 1)
-                await converterRegistry.newLiquidToken(CONVERTER_TYPE_CLASSIC, name, symbol, decimals, fee, tokens[0], weights[0], amounts[0], {value: value});
-            else
-                await converterRegistry.newLiquidityPool(CONVERTER_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights);
+
+            await converterRegistry.newConverter(CONVERTER_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights);
             const token = SmartToken.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
-            await token.approve(converterRegistry.address, await token.totalSupply());
-
-            if (converter.reserves.length > 1) {
-                const converterAddress = await token.owner();
-
-                for (let i = 0 ; i < tokens.length; i++)
-                    await ERC20Token.at(tokens[i]).approve(converterAddress, amounts[i]);
-
-                await BancorConverter.at(converterAddress).addLiquidity(tokens, amounts, 1, {value: value});
-            }
-
             addresses[converter.symbol] = token.address;
         }
 
