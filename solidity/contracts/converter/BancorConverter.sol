@@ -525,8 +525,13 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         validReserve(_reserveToken)
         returns (uint256, uint256)
     {
+        uint256 totalSupply = token.totalSupply();
+
+        if (totalSupply == 0)
+            return (_depositAmount, 0);
+
         uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).purchaseRate(
-            token.totalSupply(),
+            totalSupply,
             reserveBalance(_reserveToken),
             reserves[_reserveToken].weight,
             _depositAmount
@@ -554,8 +559,13 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         validReserve(_reserveToken)
         returns (uint256, uint256)
     {
+        uint256 totalSupply = token.totalSupply();
+
+        if (totalSupply == _sellAmount)
+            return (reserveBalance(_reserveToken), 0);
+
         uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).saleRate(
-            token.totalSupply(),
+            totalSupply,
             reserveBalance(_reserveToken),
             reserves[_reserveToken].weight,
             _sellAmount
