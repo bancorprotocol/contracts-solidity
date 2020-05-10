@@ -839,7 +839,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             require(reserves[ETH_RESERVE_ADDRESS].isSet);
 
         uint256 totalSupply = token.totalSupply();
-        uint256 amount = addLiquidityToPool(_reserveTokens, _reserveAmounts, totalSupply);
+        uint256 amount = addLiquidityToConverter(_reserveTokens, _reserveAmounts, totalSupply);
 
         require(amount >= _minReturn);
         token.issue(msg.sender, amount);
@@ -863,7 +863,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         uint256 totalSupply = token.totalSupply();
         token.destroy(msg.sender, _amount);
 
-        removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _amount);
+        removeLiquidityFromConverter(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _amount);
     }
 
     /**
@@ -902,16 +902,16 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         require(_amount > 0);
     }
 
-    function addLiquidityToPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
+    function addLiquidityToConverter(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
         private
         returns (uint256)
     {
         if (_totalSupply == 0)
-            return addLiquidityToEmptyPool(_reserveTokens, _reserveAmounts);
-        return addLiquidityToNonEmptyPool(_reserveTokens, _reserveAmounts, _totalSupply);
+            return addLiquidityToEmptyConverter(_reserveTokens, _reserveAmounts);
+        return addLiquidityToNonEmptyConverter(_reserveTokens, _reserveAmounts, _totalSupply);
     }
 
-    function addLiquidityToEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)
+    function addLiquidityToEmptyConverter(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)
         private
         returns (uint256)
     {
@@ -929,7 +929,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         return amount;
     }
 
-    function addLiquidityToNonEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
+    function addLiquidityToNonEmptyConverter(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
         private
         returns (uint256)
     {
@@ -959,7 +959,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         return amount;
     }
 
-    function removeLiquidityFromPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _totalSupply, uint256 _amount)
+    function removeLiquidityFromConverter(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _totalSupply, uint256 _amount)
         private
     {
         syncReserveBalances();
