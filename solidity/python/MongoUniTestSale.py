@@ -93,7 +93,7 @@ def TestAll(collection):
 
 def Run(module, supply, balance, weight, amount):
     try:
-        return module.calculateSaleReturn(supply, balance, weight, amount)
+        return module.saleRate(supply, balance, weight, amount)
     except:
         return -1
 

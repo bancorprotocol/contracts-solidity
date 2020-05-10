@@ -10,12 +10,12 @@ getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits f
 
 def formulaTest(supply, balance1, weight1, balance2, weight2, amount1):
     try:
-        amount0 = FormulaSolidityPort.calculatePurchaseReturn(supply, balance1, weight1, amount1)
-        resultL = FormulaSolidityPort.calculateSaleReturn(supply + amount0, balance2, weight2, amount0)
+        amount0 = FormulaSolidityPort.purchaseRate(supply, balance1, weight1, amount1)
+        resultL = FormulaSolidityPort.saleRate(supply + amount0, balance2, weight2, amount0)
     except:
         resultL = -1
     try:
-        resultH = FormulaSolidityPort.calculateCrossReserveReturn(balance1, weight1, balance2, weight2, amount1)
+        resultH = FormulaSolidityPort.crossReserveRate(balance1, weight1, balance2, weight2, amount1)
     except:
         resultH = -1
     if resultL > resultH or resultL * resultH < 0:

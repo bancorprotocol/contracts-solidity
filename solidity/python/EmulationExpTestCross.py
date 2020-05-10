@@ -50,7 +50,7 @@ def Main():
 
 def Run(module, balance1, weight1, balance2, weight2, amount):
     try:
-        return module.calculateCrossReserveReturn(balance1, weight1, balance2, weight2, amount)
+        return module.crossReserveRate(balance1, weight1, balance2, weight2, amount)
     except:
         return -1
 

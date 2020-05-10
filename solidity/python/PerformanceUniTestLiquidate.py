@@ -41,7 +41,7 @@ def Main():
                     testNum += 1
                     if amount <= supply:
                         try:
-                            gas = tester.calculateLiquidateReturn(supply, balance, weights, amount)
+                            gas = tester.liquidateRate(supply, balance, weights, amount)
                             minGas = min(minGas, gas)
                             maxGas = max(maxGas, gas)
                             totalGas += gas

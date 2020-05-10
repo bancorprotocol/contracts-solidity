@@ -5,8 +5,8 @@ import FormulaNativePython
 
 
 def formulaTest(supply, balance, weight, amount):
-    resultSolidityPort = FormulaSolidityPort.calculateSaleReturn(supply, balance, weight, amount)
-    resultNativePython = FormulaNativePython.calculateSaleReturn(supply, balance, weight, amount)
+    resultSolidityPort = FormulaSolidityPort.saleRate(supply, balance, weight, amount)
+    resultNativePython = FormulaNativePython.saleRate(supply, balance, weight, amount)
     if resultSolidityPort > resultNativePython:
         error = ['Implementation Error:']
         error.append('supply             = {}'.format(supply))

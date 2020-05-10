@@ -9,11 +9,11 @@ getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits f
 
 
 def formulaTest(supply, balance1, weight1, balance2, weight2, amount0):
-    amount1 = FormulaSolidityPort.calculateFundCost(supply, balance1, weight1 + weight2, amount0)
-    amount2 = FormulaSolidityPort.calculateFundCost(supply, balance2, weight1 + weight2, amount0)
-    amount3 = FormulaSolidityPort.calculateSaleReturn(supply + amount0, balance1 + amount1, weight1, amount0)
-    amount4 = FormulaSolidityPort.calculatePurchaseReturn(supply, balance1 + amount1 - amount3, weight1, amount3 - amount1)
-    amount5 = FormulaSolidityPort.calculateSaleReturn(supply + amount4, balance2 + amount2, weight2, amount4)
+    amount1 = FormulaSolidityPort.fundCost(supply, balance1, weight1 + weight2, amount0)
+    amount2 = FormulaSolidityPort.fundCost(supply, balance2, weight1 + weight2, amount0)
+    amount3 = FormulaSolidityPort.saleRate(supply + amount0, balance1 + amount1, weight1, amount0)
+    amount4 = FormulaSolidityPort.purchaseRate(supply, balance1 + amount1 - amount3, weight1, amount3 - amount1)
+    amount5 = FormulaSolidityPort.saleRate(supply + amount4, balance2 + amount2, weight2, amount4)
     before, after = amount2, amount5
     if after > before:
         error = ['Implementation Error:']

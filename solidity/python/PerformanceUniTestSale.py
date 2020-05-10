@@ -41,7 +41,7 @@ def Main():
                     testNum += 1
                     if amount <= supply:
                         try:
-                            gas = tester.calculateSaleReturn(supply, balance, weight, amount)
+                            gas = tester.saleRate(supply, balance, weight, amount)
                             minGas = min(minGas, gas)
                             maxGas = max(maxGas, gas)
                             totalGas += gas

@@ -9,10 +9,10 @@ getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits f
 
 
 def formulaTest(supply, balance1, weight1, balance2, weight2, amount0):
-    amount1 = FormulaSolidityPort.calculateFundCost(supply, balance1, weight1 + weight2, amount0)
-    amount2 = FormulaSolidityPort.calculateFundCost(supply, balance2, weight1 + weight2, amount0)
-    amount3 = FormulaSolidityPort.calculatePurchaseReturn(supply, balance1, weight1, amount1)
-    amount4 = FormulaSolidityPort.calculatePurchaseReturn(supply + amount3, balance2, weight2, amount2)
+    amount1 = FormulaSolidityPort.fundCost(supply, balance1, weight1 + weight2, amount0)
+    amount2 = FormulaSolidityPort.fundCost(supply, balance2, weight1 + weight2, amount0)
+    amount3 = FormulaSolidityPort.purchaseRate(supply, balance1, weight1, amount1)
+    amount4 = FormulaSolidityPort.purchaseRate(supply + amount3, balance2, weight2, amount2)
     return Decimal(amount0) / Decimal(amount3 + amount4)
 
 

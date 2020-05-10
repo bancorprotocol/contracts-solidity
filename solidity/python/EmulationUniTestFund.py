@@ -51,7 +51,7 @@ def Main():
 
 def Run(module, supply, balance, weights, amount):
     try:
-        return module.calculateFundCost(supply, balance, weights, amount)
+        return module.fundCost(supply, balance, weights, amount)
     except:
         return -1
 
