@@ -277,7 +277,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * calculates the amount of reserve tokens required for purchasing the given amount of smart tokens
       * 
       * Formula:
-      * Return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio) - 1)
+      * return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio) - 1)
       * 
       * @param _supply              smart token supply
       * @param _reserveBalance      reserve token balance
@@ -311,7 +311,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * calculates the amount of reserve tokens received for selling the given amount of smart tokens
       * 
       * Formula:
-      * Return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio))
+      * return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio))
       * 
       * @param _supply              smart token supply
       * @param _reserveBalance      reserve token balance
