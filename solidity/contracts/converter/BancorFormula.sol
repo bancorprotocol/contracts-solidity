@@ -287,7 +287,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * 
       * @return amount of reserve tokens
     */
-    function calculateFundCost(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
+    function fundCost(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
         // validate input
         require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2);
 
@@ -321,7 +321,7 @@ contract BancorFormula is IBancorFormula, Utils {
       * 
       * @return amount of reserve tokens
     */
-    function calculateLiquidateReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
+    function liquidateRate(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
         // validate input
         require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2 && _amount <= _supply);
 
@@ -629,6 +629,20 @@ contract BancorFormula is IBancorFormula, Utils {
       * @dev deprecated, backward compatibility
     */
     function calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount) public view returns (uint256) {
-        return calculateCrossReserveReturn(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount);
+        return crossReserveRate(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function calculateFundCost(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
+        return fundCost(_supply, _reserveBalance, _reserveRatio, _amount);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function calculateLiquidateReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
+        return liquidateRate(_supply, _reserveBalance, _reserveRatio, _amount);
     }
 }

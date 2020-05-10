@@ -745,7 +745,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         for (uint256 i = 0; i < reserveTokens.length; i++) {
             IERC20Token reserveToken = reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
-            uint256 reserveAmount = formula.calculateFundCost(supply, rsvBalance, reserveRatio, _amount);
+            uint256 reserveAmount = formula.fundCost(supply, rsvBalance, reserveRatio, _amount);
 
             // transfer funds from the caller in the reserve token
             if (reserveToken == ETH_RESERVE_ADDRESS) {
@@ -799,7 +799,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         for (uint256 i = 0; i < reserveTokens.length; i++) {
             IERC20Token reserveToken = reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
-            uint256 reserveAmount = formula.calculateLiquidateReturn(supply, rsvBalance, reserveRatio, _amount);
+            uint256 reserveAmount = formula.liquidateRate(supply, rsvBalance, reserveRatio, _amount);
 
             // sync the reserve balance
             reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
@@ -942,7 +942,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
-            uint256 reserveAmount = formula.calculateFundCost(_totalSupply, rsvBalance, reserveRatio, amount);
+            uint256 reserveAmount = formula.fundCost(_totalSupply, rsvBalance, reserveRatio, amount);
             require(reserveAmount > 0);
             assert(reserveAmount <= _reserveAmounts[i]);
 
@@ -969,7 +969,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
-            uint256 reserveAmount = formula.calculateLiquidateReturn(_totalSupply, rsvBalance, reserveRatio, _amount);
+            uint256 reserveAmount = formula.liquidateRate(_totalSupply, rsvBalance, reserveRatio, _amount);
             require(reserveAmount >= _reserveMinReturnAmounts[i]);
 
             reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
