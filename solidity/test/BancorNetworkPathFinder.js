@@ -129,8 +129,8 @@ contract('BancorNetworkPathFinder', accounts => {
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
         for (const reserve of layout.reserves) {
-            const token = await ERC20Token.new('name', reserve.symbol, 0, 0);
-            addresses[reserve.symbol] = token.address;
+            const erc20Token = await ERC20Token.new('name', reserve.symbol, 0, 0);
+            addresses[reserve.symbol] = erc20Token.address;
         }
 
         for (const converter of layout.converters) {
