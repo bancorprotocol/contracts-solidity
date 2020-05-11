@@ -87,36 +87,6 @@ contract('BancorConverterRegistry', function(accounts) {
             await converter6.addReserve(smartToken1.address, 0x6100);
             await converter7.addReserve(smartToken2.address, 0x7200);
 
-            await etherToken.deposit({value: 1000000});
-            await smartToken1.issue(accounts[0], 1000000);
-            await smartToken2.issue(accounts[0], 1000000);
-            await smartToken3.issue(accounts[0], 1000000);
-            await smartToken4.issue(accounts[0], 1000000);
-            await smartToken5.issue(accounts[0], 1000000);
-            await smartToken6.issue(accounts[0], 1000000);
-            await smartToken7.issue(accounts[0], 1000000);
-            await smartToken8.issue(accounts[0], 1000000);
-            await smartToken9.issue(accounts[0], 1000000);
-            await smartTokenA.issue(accounts[0], 1000000);
-            await smartTokenB.issue(accounts[0], 1000000);
-            await smartTokenC.issue(accounts[0], 1000000);
-            await smartTokenD.issue(accounts[0], 1000000);
-            await smartTokenE.issue(accounts[0], 1000000);
-
-            await etherToken .transfer(converter1.address, 1000);
-            await smartToken4.transfer(converter2.address, 1000);
-            await smartToken6.transfer(converter3.address, 1000);
-            await smartToken8.transfer(converter4.address, 1000);
-            await smartTokenA.transfer(converter5.address, 1000);
-            await smartTokenC.transfer(converter6.address, 1000);
-            await smartTokenE.transfer(converter7.address, 1000);
-            await smartToken1.transfer(converter2.address, 1000);
-            await smartToken1.transfer(converter3.address, 1000);
-            await smartToken1.transfer(converter4.address, 1000);
-            await smartToken1.transfer(converter5.address, 1000);
-            await smartToken1.transfer(converter6.address, 1000);
-            await smartToken2.transfer(converter7.address, 1000);
-
             await smartToken1.transferOwnership(converter1.address);
             await smartToken2.transferOwnership(converter2.address);
             await smartToken3.transferOwnership(converter3.address);
@@ -241,13 +211,12 @@ contract('BancorConverterRegistry', function(accounts) {
             erc20Token1 = await ERC20Token.new('ERC20Token1', 'ET1', 18, 1000000000);
             erc20Token2 = await ERC20Token.new('ERC20Token2', 'ET2', 18, 1000000000);
 
-            await converterRegistry.newConverter(CONVERTER_TYPE_CLASSIC, 'SmartToken1', 'ST1', 18, 0, [ETH_RESERVE_ADDRESS                     ], [0x1000        ]);
-            await converterRegistry.newConverter(CONVERTER_TYPE_CLASSIC, 'SmartToken2', 'ST2', 18, 0, [erc20Token1.address                     ], [0x2100        ]);
-            await converterRegistry.newConverter(CONVERTER_TYPE_CLASSIC, 'SmartToken2', 'ST3', 18, 0, [erc20Token2.address                     ], [0x3200        ]);
-
-            await converterRegistry.newConverter(CONVERTER_TYPE_CLASSIC, 'SmartToken3', 'ST4', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]);
-            await converterRegistry.newConverter(CONVERTER_TYPE_CLASSIC, 'SmartToken4', 'ST5', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]);
-            await converterRegistry.newConverter(CONVERTER_TYPE_CLASSIC, 'SmartToken5', 'ST6', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]);
+            await converterRegistry.newConverter(0, 'SmartToken1', 'ST1', 18, 0, [ETH_RESERVE_ADDRESS                     ], [0x1000        ]);
+            await converterRegistry.newConverter(0, 'SmartToken2', 'ST2', 18, 0, [erc20Token1.address                     ], [0x2100        ]);
+            await converterRegistry.newConverter(0, 'SmartToken2', 'ST3', 18, 0, [erc20Token2.address                     ], [0x3200        ]);
+            await converterRegistry.newConverter(0, 'SmartToken3', 'ST4', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]);
+            await converterRegistry.newConverter(0, 'SmartToken4', 'ST5', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]);
+            await converterRegistry.newConverter(0, 'SmartToken5', 'ST6', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]);
 
             smartTokens = await converterRegistry.getSmartTokens();
             converters = await Promise.all(smartTokens.map(smartToken => SmartToken.at(smartToken).owner()));
