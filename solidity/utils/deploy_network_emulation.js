@@ -8,7 +8,6 @@ const PRIVATE_KEY   = process.argv[4];
 const ARTIFACTS_DIR = __dirname + "/../build/";
 
 const MIN_GAS_LIMIT = 100000;
-const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 function get() {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, {encoding: "utf8"}));
@@ -158,25 +157,16 @@ async function run() {
         const amounts  = converter.reserves.map(reserve => reserve.balance);
         const value    = [...converter.reserves.filter(reserve => reserve.symbol == "ETH"), {balance: "0"}][0].balance;
 
-        await execute(bancorConverterRegistry.methods.newConverter(CONVERTER_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights));
+        await execute(bancorConverterRegistry.methods.newConverter(0, name, symbol, decimals, fee, tokens, weights));
+        const smartTokens = await bancorConverterRegistry.methods.getSmartTokens().call();
+        addresses[converter.symbol] = smartTokens[smartTokens.length - 1];
 
-        const token = ERC20Token.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
-        const converterAddress = await token.owner();
-
-        if (converter.reserves.length == 1) {
-            await ERC20Token.at(tokens[0]).approve(bancorNetwork.address, amounts[0]);
-            await execute(bancorNetwork.methods.convertByPath([tokens[0], token.address, token.address], amounts[0], 1, ZERO_ADDRESS, ZERO_ADDRESS, 0), value);
+        if (converter.reserves.length > 1) {
+            const converterAddress = await deployed(web3, "SmartToken", addresses[converter.symbol]).methods.owner().call();
+            for (let i = 0; i < converter.reserves.length; i++)
+                await execute(deployed(web3, "ERC20Token", tokens[i]).methods.approve(converterAddress, amounts[i]));
+            await execute(deployed(web3, "BancorConverter", converterAddress).methods.addLiquidity(tokens, amounts, 1), value);
         }
-        else {
-            for (let i = 0 ; i < tokens.length; i++)
-                await ERC20Token.at(tokens[i]).approve(converterAddress, amounts[i]);
-
-            await execute(BancorConverter.at(converterAddress).methods.addLiquidity(tokens, amounts, 1), value);
-        }
-        
-        const token = deployed(web3, "ERC20Token", (await bancorConverterRegistry.methods.getSmartTokens().call()).slice(-1)[0]);
-        await execute(token.methods.approve(bancorConverterRegistry._address, await token.methods.totalSupply().call()));
-        addresses[converter.symbol] = token._address;
     }
 
     const smartTokens = await bancorConverterRegistry.methods.getSmartTokens().call();
