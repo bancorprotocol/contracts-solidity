@@ -105,7 +105,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     {
         uint256 length = _reserveTokens.length;
         require(length == _reserveWeights.length); 
-        require(getLiquidityPoolByReserveConfig(_reserveTokens, _reserveWeights) == ISmartToken(0));
+        require(getLiquidityPoolByReserveConfig(_type, _reserveTokens, _reserveWeights) == ISmartToken(0));
 
         IBancorConverterFactory factory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
         SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
@@ -348,17 +348,18 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         }
 
         // return if a liquidity pool with the same reserve tokens/weights is already registered
-        return getLiquidityPoolByReserveConfig(reserveTokens, reserveWeights) != ISmartToken(0);
+        return getLiquidityPoolByReserveConfig(_converter.converterType(), reserveTokens, reserveWeights) != ISmartToken(0);
     }
 
     /**
       * @dev searches for a liquidity pool with specific reserve tokens/weights
       * 
+      * @param _type            converter type, see BancorConverter contract main doc
       * @param _reserveTokens   reserve tokens
       * @param _reserveWeights  reserve weights
       * @return the liquidity pool, or zero if no such liquidity pool exists
     */
-    function getLiquidityPoolByReserveConfig(IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) public view returns (ISmartToken) {
+    function getLiquidityPoolByReserveConfig(uint8 _type, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) public view returns (ISmartToken) {
         // verify that the input parameters represent a valid liquidity pool
         if (_reserveTokens.length == _reserveWeights.length && _reserveTokens.length > 1) {
             // get the smart tokens of the least frequent token (optimization)
@@ -367,7 +368,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
             for (uint i = 0; i < convertibleTokenSmartTokens.length; i++) {
                 ISmartToken smartToken = ISmartToken(convertibleTokenSmartTokens[i]);
                 IBancorConverter converter = IBancorConverter(smartToken.owner());
-                if (isConverterReserveConfigEqual(converter, _reserveTokens, _reserveWeights))
+                if (isConverterReserveConfigEqual(converter, _type, _reserveTokens, _reserveWeights))
                     return smartToken;
             }
         }
@@ -488,7 +489,10 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         return bancorConverterRegistryData.getConvertibleTokenSmartTokens(_reserveTokens[index]);
     }
 
-    function isConverterReserveConfigEqual(IBancorConverter _converter, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) private view returns (bool) {
+    function isConverterReserveConfigEqual(IBancorConverter _converter, uint8 _type, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) private view returns (bool) {
+        if (_type != _converter.converterType())
+            return false;
+
         if (_reserveTokens.length != _converter.connectorTokenCount())
             return false;
 
