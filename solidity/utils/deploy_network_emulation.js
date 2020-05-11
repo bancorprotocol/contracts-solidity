@@ -154,7 +154,7 @@ async function run() {
         const tokens   = converter.reserves.map(reserve => addresses[reserve.symbol]);
         const weights  = converter.reserves.map(reserve => reserve.weight);
         const amounts  = converter.reserves.map(reserve => reserve.balance);
-        const value    = [...converter.reserves.filter(reserve => reserve.symbol == "ETH"), {balance: 0}][0].balance;
+        const value    = [...converter.reserves.filter(reserve => reserve.symbol == "ETH"), {}][0].balance;
 
         await execute(bancorConverterRegistry.methods.newConverter(0, name, symbol, decimals, fee, tokens, weights));
         const smartToken = deployed(web3, "SmartToken", (await bancorConverterRegistry.methods.getSmartTokens().call()).slice(-1)[0]);
