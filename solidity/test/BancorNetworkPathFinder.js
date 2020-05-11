@@ -136,14 +136,11 @@ contract('BancorNetworkPathFinder', accounts => {
         for (const converter of layout.converters) {
             const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
             await converterRegistry.newConverter(0, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
-            const smartTokens = await converterRegistry.getSmartTokens();
-            const token = SmartToken.at(smartTokens.slice(-1)[0]);
-            addresses[converter.symbol] = token.address;
+            const smartToken = SmartToken.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
+            const bancorConverter = BancorConverter.at(await smartToken.owner());
+            await bancorConverter.acceptOwnership();
+            addresses[converter.symbol] = smartToken.address;
         }
-
-        const smartTokens = await converterRegistry.getSmartTokens();
-        const bancorConverters = await Promise.all(smartTokens.map(smartToken => SmartToken.at(smartToken).owner()));
-        await Promise.all(bancorConverters.map(bancorConverter => BancorConverter.at(bancorConverter).acceptOwnership()));
 
         anchorToken = addresses[ANCHOR_TOKEN_SYMBOL];
         await pathFinder.setAnchorToken(anchorToken);
