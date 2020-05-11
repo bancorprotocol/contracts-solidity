@@ -143,7 +143,6 @@ async function run() {
         const decimals = reserve.decimals;
         const supply   = reserve.supply;
         const token    = await web3Func(deploy, "erc20Token" + symbol, "ERC20Token", [name, symbol, decimals, supply]);
-        await execute(token.methods.approve(bancorConverterRegistry._address, supply));
         addresses[reserve.symbol] = token._address;
     }
 
@@ -158,21 +157,20 @@ async function run() {
         const value    = [...converter.reserves.filter(reserve => reserve.symbol == "ETH"), {balance: "0"}][0].balance;
 
         await execute(bancorConverterRegistry.methods.newConverter(0, name, symbol, decimals, fee, tokens, weights));
-        const smartTokens = await bancorConverterRegistry.methods.getSmartTokens().call();
-        addresses[converter.symbol] = smartTokens[smartTokens.length - 1];
+        const smartToken = deployed(web3, "SmartToken", (await bancorConverterRegistry.methods.getSmartTokens().call()).slice(-1)[0]);
+        const bancorConverter = deployed(web3, "BancorConverter", await smartToken.methods.owner().call());
+        await execute(bancorConverter.methods.acceptOwnership());
 
         if (converter.reserves.length > 1) {
-            const converterAddress = await deployed(web3, "SmartToken", addresses[converter.symbol]).methods.owner().call();
-            for (let i = 0; i < converter.reserves.length; i++)
-                await execute(deployed(web3, "ERC20Token", tokens[i]).methods.approve(converterAddress, amounts[i]));
-            await execute(deployed(web3, "BancorConverter", converterAddress).methods.addLiquidity(tokens, amounts, 1), value);
+            for (let i = 0; i < converter.reserves.length; i++) {
+                if (converter.reserves.symbol != "ETH")
+                    await execute(deployed(web3, "ERC20Token", tokens[i]).methods.approve(bancorConverter._address, amounts[i]));
+            }
+            await execute(bancorConverter.methods.addLiquidity(tokens, amounts, 1), value);
         }
-    }
 
-    const smartTokens = await bancorConverterRegistry.methods.getSmartTokens().call();
-    const bancorConverters = await Promise.all(smartTokens.map(smartToken => deployed(web3, "SmartToken", smartToken).methods.owner().call()));
-    for (const bancorConverter of bancorConverters)
-        await execute(deployed(web3, "BancorConverter", bancorConverter).methods.acceptOwnership());
+        addresses[converter.symbol] = smartToken._address;
+    }
 
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"), addresses.BNT));
     await execute(bancorNetworkPathFinder.methods.setAnchorToken(addresses.BNT));
