@@ -15,59 +15,23 @@ const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
-const CONVERTER_TYPE_CLASSIC = 0;
-
 const ANCHOR_TOKEN_SYMBOL = 'ETH';
 
 const layout = {
     'reserves': [
-        {'symbol': 'AAA', 'decimals': 18, 'supply': '1e24'},
-        {'symbol': 'BBB', 'decimals': 18, 'supply': '1e24'},
-        {'symbol': 'CCC', 'decimals': 18, 'supply': '1e24'},
-        {'symbol': 'DDD', 'decimals': 18, 'supply': '1e24'},
+        {'symbol': 'AAA'},
+        {'symbol': 'BBB'},
+        {'symbol': 'CCC'},
+        {'symbol': 'DDD'},
     ],
     'converters': [
-        {
-            'symbol': 'BNT', 'decimals': 18, 'fee': 1000, 'reserves': [
-                {'symbol': 'ETH', 'weight': 500000, 'balance': '1e24'},
-            ]
-        },
-        {
-            'symbol': 'AAABNT', 'decimals': 18, 'fee': 1000, 'reserves': [
-                {'symbol': 'AAA', 'weight': 500000, 'balance': '1e21'},
-                {'symbol': 'BNT', 'weight': 500000, 'balance': '1e21'},
-            ]
-        },
-        {
-            'symbol': 'BBBBNT', 'decimals': 18, 'fee': 1000, 'reserves': [
-                {'symbol': 'BBB', 'weight': 500000, 'balance': '1e21'},
-                {'symbol': 'BNT', 'weight': 500000, 'balance': '1e21'},
-            ]
-        },
-        {
-            'symbol': 'CCCBNT', 'decimals': 18, 'fee': 1000, 'reserves': [
-                {'symbol': 'CCC', 'weight': 500000, 'balance': '1e21'},
-                {'symbol': 'BNT', 'weight': 500000, 'balance': '1e21'},
-            ]
-        },
-        {
-            'symbol': 'AAABNTBNT', 'decimals': 18, 'fee': 1000, 'reserves': [
-                {'symbol': 'AAABNT', 'weight': 500000, 'balance': '1e18'},
-                {'symbol': 'BNT', 'weight': 500000, 'balance': '1e21'},
-            ]
-        },
-        {
-            'symbol': 'BBBBNTBNT', 'decimals': 18, 'fee': 1000, 'reserves': [
-                {'symbol': 'BBBBNT', 'weight': 500000, 'balance': '1e18'},
-                {'symbol': 'BNT', 'weight': 500000, 'balance': '1e21'},
-            ]
-        },
-        {
-            'symbol': 'DDDAAABNTBNT', 'decimals': 18, 'fee': 1000, 'reserves': [
-                {'symbol': 'DDD', 'weight': 500000, 'balance': '1e21'},
-                {'symbol': 'AAABNTBNT', 'weight': 500000, 'balance': '1e15'},
-            ]
-        },
+        {'symbol': 'BNT'         , 'reserves': [{'symbol': 'ETH'   }                        ]},
+        {'symbol': 'AAABNT'      , 'reserves': [{'symbol': 'AAA'   },{'symbol': 'BNT'      }]},
+        {'symbol': 'BBBBNT'      , 'reserves': [{'symbol': 'BBB'   },{'symbol': 'BNT'      }]},
+        {'symbol': 'CCCBNT'      , 'reserves': [{'symbol': 'CCC'   },{'symbol': 'BNT'      }]},
+        {'symbol': 'AAABNTBNT'   , 'reserves': [{'symbol': 'AAABNT'},{'symbol': 'BNT'      }]},
+        {'symbol': 'BBBBNTBNT'   , 'reserves': [{'symbol': 'BBBBNT'},{'symbol': 'BNT'      }]},
+        {'symbol': 'DDDAAABNTBNT', 'reserves': [{'symbol': 'DDD'   },{'symbol': 'AAABNTBNT'}]},
     ]
 };
 
@@ -165,25 +129,15 @@ contract('BancorNetworkPathFinder', accounts => {
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
         for (const reserve of layout.reserves) {
-            const name     = reserve.symbol + ' ERC20 Token';
-            const symbol   = reserve.symbol;
-            const decimals = reserve.decimals;
-            const supply   = reserve.supply;
-            const token    = await ERC20Token.new(name, symbol, decimals, supply);
-            await token.approve(converterRegistry.address, supply);
+            const token = await ERC20Token.new('name', reserve.symbol, 0, 0);
             addresses[reserve.symbol] = token.address;
         }
 
         for (const converter of layout.converters) {
-            const name     = converter.symbol + ' Smart Token';
-            const symbol   = converter.symbol;
-            const decimals = converter.decimals;
-            const fee      = converter.fee;
-            const tokens   = converter.reserves.map(reserve => addresses[reserve.symbol]);
-            const weights  = converter.reserves.map(reserve => reserve.weight);
-
-            await converterRegistry.newConverter(CONVERTER_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights);
-            const token = SmartToken.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
+            const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
+            await converterRegistry.newConverter(0, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
+            const smartTokens = await converterRegistry.getSmartTokens();
+            const token = SmartToken.at(smartTokens.slice(-1)[0]);
             addresses[converter.symbol] = token.address;
         }
 
