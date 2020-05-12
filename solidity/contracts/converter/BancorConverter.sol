@@ -748,6 +748,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * for example, if the caller increases the supply by 10%,
       * then it will cost an amount equal to 10% of each reserve token balance
       * note that the function cannot be called when the converter has only one reserve
+      * note that starting from version 28, you should use 'addLiquidity' instead
       * 
       * @param _amount  amount to increase the supply by (in the smart token)
     */
@@ -801,6 +802,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * for example, if the holder sells 10% of the supply,
       * then they will receive 10% of each reserve token balance in return
       * note that the function cannot be called when the converter has only one reserve
+      * note that starting from version 28, you should use 'removeLiquidity' instead
       * 
       * @param _amount  amount to liquidate (in the smart token)
     */
@@ -824,6 +826,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**
       * @dev buys the token with all reserve tokens using the same percentage
       * note that the function cannot be called when the converter has only one reserve
+      * note that prior to version 28, you should use 'fund' instead
       * 
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
@@ -835,25 +838,35 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         protected
         multipleReservesOnly
     {
+        // verify the user input
         verifyLiquidityInput(_reserveTokens, _reserveAmounts, _minReturn);
 
+        // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
         for (uint256 i = 0; i < _reserveTokens.length; i++)
             if (_reserveTokens[i] == ETH_RESERVE_ADDRESS)
                 require(_reserveAmounts[i] == msg.value);
 
+        // if the input value of ETH is larger than zero, then verify that one of the reserves is ETH
         if (msg.value > 0)
             require(reserves[ETH_RESERVE_ADDRESS].isSet);
 
+        // get the total supply
         uint256 totalSupply = token.totalSupply();
+
+        // transfer from the user an equally-worth amount of each one of the reserve tokens
         uint256 amount = addLiquidityToPool(_reserveTokens, _reserveAmounts, totalSupply);
 
+        // verify that the equivalent amount of tokens is equal to or larger than the user's expectation
         require(amount >= _minReturn);
+
+        // issue the tokens to the user
         token.issue(msg.sender, amount);
     }
 
     /**
       * @dev sells the token for all reserve tokens using the same percentage
       * note that the function cannot be called when the converter has only one reserve
+      * note that prior to version 28, you should use 'liquidate' instead
       * 
       * @param _amount                  token amount
       * @param _reserveTokens           address of each reserve token
@@ -864,11 +877,16 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         protected
         multipleReservesOnly
     {
+        // verify the user input
         verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
 
+        // get the total supply BEFORE destroying the user tokens
         uint256 totalSupply = token.totalSupply();
+
+        // destroy the user tokens
         token.destroy(msg.sender, _amount);
 
+        // transfer to the user an equivalent amount of each one of the reserve tokens
         removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _amount);
     }
 
@@ -908,6 +926,13 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         require(_amount > 0);
     }
 
+    /**
+      * @dev adds liquidity (reserve) to the pool
+      * 
+      * @param _reserveTokens   address of each reserve token
+      * @param _reserveAmounts  amount of each reserve token
+      * @param _totalSupply     token total supply
+    */
     function addLiquidityToPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
         private
         returns (uint256)
@@ -917,14 +942,22 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         return addLiquidityToNonEmptyPool(_reserveTokens, _reserveAmounts, _totalSupply);
     }
 
+    /**
+      * @dev adds liquidity (reserve) to the pool when it's empty
+      * 
+      * @param _reserveTokens   address of each reserve token
+      * @param _reserveAmounts  amount of each reserve token
+    */
     function addLiquidityToEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)
         private
         returns (uint256)
     {
+        // calculate the geometric-mean of the reserve amounts approved by the user
         uint256 amount = geometricMean(_reserveAmounts);
 
+        // transfer each one of the reserve amounts from the user to the pool
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
-            if (_reserveTokens[i] != ETH_RESERVE_ADDRESS)
+            if (_reserveTokens[i] != ETH_RESERVE_ADDRESS) // ETH has already been transferred as part of the transaction
                 safeTransferFrom(_reserveTokens[i], msg.sender, this, _reserveAmounts[i]);
 
             reserves[_reserveTokens[i]].balance = _reserveAmounts[i];
@@ -935,6 +968,13 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         return amount;
     }
 
+    /**
+      * @dev adds liquidity (reserve) to the pool when it's not empty
+      * 
+      * @param _reserveTokens   address of each reserve token
+      * @param _reserveAmounts  amount of each reserve token
+      * @param _totalSupply     token total supply
+    */
     function addLiquidityToNonEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
         private
         returns (uint256)
@@ -952,9 +992,10 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             require(reserveAmount > 0);
             assert(reserveAmount <= _reserveAmounts[i]);
 
-            if (reserveToken != ETH_RESERVE_ADDRESS)
+            // transfer each one of the reserve amounts from the user to the pool
+            if (reserveToken != ETH_RESERVE_ADDRESS) // ETH has already been transferred as part of the transaction
                 safeTransferFrom(reserveToken, msg.sender, this, reserveAmount);
-            else if (_reserveAmounts[i] > reserveAmount)
+            else if (_reserveAmounts[i] > reserveAmount) // transfer the extra amount of ETH back to the user
                 msg.sender.transfer(_reserveAmounts[i] - reserveAmount);
 
             reserves[reserveToken].balance = reserves[reserveToken].balance.add(reserveAmount);
@@ -965,6 +1006,14 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         return amount;
     }
 
+    /**
+      * @dev removes liquidity (reserve) from the pool
+      * 
+      * @param _reserveTokens           address of each reserve token
+      * @param _reserveMinReturnAmounts minimum return-amount of each reserve token
+      * @param _totalSupply             token total supply
+      * @param _amount                  token amount
+    */
     function removeLiquidityFromPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _totalSupply, uint256 _amount)
         private
     {
@@ -980,6 +1029,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
             reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
 
+            // transfer each one of the reserve amounts from the pool to the user
             if (reserveToken == ETH_RESERVE_ADDRESS)
                 msg.sender.transfer(reserveAmount);
             else
