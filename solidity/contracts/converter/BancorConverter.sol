@@ -809,33 +809,16 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         protected
         multipleReservesOnly
     {
-        syncReserveBalances();
+        require(_amount > 0);
 
-        uint256 supply = token.totalSupply();
-        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-
-        // destroy _amount from the caller's balance in the smart token
+        uint256 totalSupply = token.totalSupply();
         token.destroy(msg.sender, _amount);
 
-        // iterate through the reserve tokens and send a percentage equal to the weight between
-        // _amount and the total supply from each reserve balance to the caller
-        for (uint256 i = 0; i < reserveTokens.length; i++) {
-            IERC20Token reserveToken = reserveTokens[i];
-            uint256 rsvBalance = reserves[reserveToken].balance;
-            uint256 reserveAmount = formula.liquidateRate(supply, rsvBalance, reserveRatio, _amount);
+        uint256[] memory reserveMinReturnAmounts = new uint256[](reserveTokens.length);
+        for (uint256 i = 0; i < reserveMinReturnAmounts.length; i++)
+            reserveMinReturnAmounts[i] = 1;
 
-            // sync the reserve balance
-            reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
-
-            // transfer funds to the caller in the reserve token
-            if (reserveToken == ETH_RESERVE_ADDRESS)
-                msg.sender.transfer(reserveAmount);
-            else
-                safeTransfer(reserveToken, msg.sender, reserveAmount);
-
-            // dispatch liquidity update for the smart token/reserve
-            emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, rsvBalance - reserveAmount, supply - _amount);
-        }
+        removeLiquidityFromPool(reserveTokens, reserveMinReturnAmounts, totalSupply, _amount);
     }
 
     /**
