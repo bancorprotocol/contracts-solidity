@@ -325,8 +325,8 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return true if the given converter is valid, false if not
     */
     function isConverterValid(IBancorConverter _converter) public view returns (bool) {
-        // verify the the smart token has a supply and that the converter is active
-        return ISmartTokenController(_converter).token().owner() == address(_converter);
+        // verify that the converter is active
+        return _converter.token().owner() == address(_converter);
     }
 
     /**
