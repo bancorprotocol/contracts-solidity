@@ -55,6 +55,6 @@ contract('TokenHandler', async accounts => {
     }
 
     async function test(state, transaction) {
-        await state ? transaction : utils.catchRevert(transaction);
+        await (state ? transaction : utils.catchRevert(transaction));
     }
 });
