@@ -9,9 +9,6 @@ const ARTIFACTS_DIR = __dirname + "/../build/";
 
 const MIN_GAS_LIMIT = 100000;
 
-const LIQUID_TOKEN_TYPE_CLASSIC = 0;
-const LIQUIDITY_POOL_TYPE_CLASSIC = 0;
-
 function get() {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, {encoding: "utf8"}));
 }
@@ -146,7 +143,6 @@ async function run() {
         const decimals = reserve.decimals;
         const supply   = reserve.supply;
         const token    = await web3Func(deploy, "erc20Token" + symbol, "ERC20Token", [name, symbol, decimals, supply]);
-        await execute(token.methods.approve(bancorConverterRegistry._address, supply));
         addresses[reserve.symbol] = token._address;
     }
 
@@ -158,31 +154,23 @@ async function run() {
         const tokens   = converter.reserves.map(reserve => addresses[reserve.symbol]);
         const weights  = converter.reserves.map(reserve => reserve.weight);
         const amounts  = converter.reserves.map(reserve => reserve.balance);
-        const value    = [...converter.reserves.filter(reserve => reserve.symbol == "ETH"), {balance: "0"}][0].balance;
-        if (converter.reserves.length == 1) {
-            await execute(bancorConverterRegistry.methods.newLiquidToken(LIQUID_TOKEN_TYPE_CLASSIC, name, symbol, decimals, fee, tokens[0], weights[0], amounts[0]), value);
+        const value    = [...converter.reserves.filter(reserve => reserve.symbol == "ETH"), {}][0].balance;
+
+        await execute(bancorConverterRegistry.methods.newConverter(0, name, symbol, decimals, fee, tokens, weights));
+        const smartToken = deployed(web3, "SmartToken", (await bancorConverterRegistry.methods.getSmartTokens().call()).slice(-1)[0]);
+        const bancorConverter = deployed(web3, "BancorConverter", await smartToken.methods.owner().call());
+        await execute(bancorConverter.methods.acceptOwnership());
+
+        if (converter.reserves.length > 1) {
+            for (let i = 0; i < converter.reserves.length; i++) {
+                if (converter.reserves.symbol != "ETH")
+                    await execute(deployed(web3, "ERC20Token", tokens[i]).methods.approve(bancorConverter._address, amounts[i]));
+            }
+            await execute(bancorConverter.methods.addLiquidity(tokens, amounts, 1), value);
         }
-        else {
-            await execute(bancorConverterRegistry.methods.newLiquidityPool(LIQUIDITY_POOL_TYPE_CLASSIC, name, symbol, decimals, fee, tokens, weights));
 
-            const token = ERC20Token.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
-            const converterAddress = await token.owner();
-
-            for (let i = 0 ; i < tokens.length; i++)
-                await ERC20Token.at(tokens[i]).approve(converterAddress, amounts[i]);
-
-            await execute(BancorConverter.at(converterAddress).methods.addLiquidity(tokens, amounts, 1), value);
-        }
-        
-        const token = deployed(web3, "ERC20Token", (await bancorConverterRegistry.methods.getSmartTokens().call()).slice(-1)[0]);
-        await execute(token.methods.approve(bancorConverterRegistry._address, await token.methods.totalSupply().call()));
-        addresses[converter.symbol] = token._address;
+        addresses[converter.symbol] = smartToken._address;
     }
-
-    const smartTokens = await bancorConverterRegistry.methods.getSmartTokens().call();
-    const bancorConverters = await Promise.all(smartTokens.map(smartToken => deployed(web3, "SmartToken", smartToken).methods.owner().call()));
-    for (const bancorConverter of bancorConverters)
-        await execute(deployed(web3, "BancorConverter", bancorConverter).methods.acceptOwnership());
 
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"), addresses.BNT));
     await execute(bancorNetworkPathFinder.methods.setAnchorToken(addresses.BNT));
