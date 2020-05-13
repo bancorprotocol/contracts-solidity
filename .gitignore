@@ -31,8 +31,6 @@ solidity/build/TestBancorFormula.abi
 solidity/build/TestBancorFormula.bin
 solidity/build/TestBancorNetwork.abi
 solidity/build/TestBancorNetwork.bin
-solidity/build/TestERC20Token.abi
-solidity/build/TestERC20Token.bin
 solidity/build/TestNonStandardERC20Token.abi
 solidity/build/TestNonStandardERC20Token.bin
 solidity/build/TestNonStandardToken.abi
