@@ -212,6 +212,8 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * can only be called by the contract owner
     */
     function acceptTokenOwnership() public ownerOnly {
+        // verify the the converter has at least one reserve
+        require(reserveTokenCount() > 0);
         super.acceptTokenOwnership();
         syncReserveBalances();
     }

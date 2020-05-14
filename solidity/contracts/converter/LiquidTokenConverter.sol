@@ -59,16 +59,6 @@ contract LiquidTokenConverter is BancorConverter {
     }
 
     /**
-      * @dev activates the converter
-      * can only be called by the contract owner
-    */
-    function acceptTokenOwnership() public {
-        // verify that the converter has 1 reserve
-        require(reserveTokenCount() == 1);
-        super.acceptTokenOwnership();
-    }
-
-    /**
       * @dev defines the reserve token for the converter
       * can only be called by the owner while the converter is inactive and the
       * reserve wasn't defined yet
