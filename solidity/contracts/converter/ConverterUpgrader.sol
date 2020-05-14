@@ -1,15 +1,15 @@
 pragma solidity 0.4.26;
 import './interfaces/IBancorConverter.sol';
-import './interfaces/IBancorConverterUpgrader.sol';
+import './interfaces/IConverterUpgrader.sol';
 import './interfaces/IConverterFactory.sol';
 import '../utility/ContractRegistryClient.sol';
 import '../utility/interfaces/IWhitelist.sol';
 import '../token/interfaces/IEtherToken.sol';
 
 /**
-  * @dev Bancor Converter Upgrader
+  * @dev Converter Upgrader
   * 
-  * The Bancor converter upgrader contract allows upgrading an older Bancor converter contract (0.4 and up)
+  * The converter upgrader contract allows upgrading an older Bancor converter contract (0.4 and up)
   * to the latest version.
   * To begin the upgrade process, simply execute the 'upgrade' function.
   * At the end of the process, the ownership of the newly upgraded converter will be transferred
@@ -21,7 +21,7 @@ import '../token/interfaces/IEtherToken.sol';
   * be transferred manually to the ConverterUpgrader contract using the 'transferOwnership' function
   * and then the upgrader 'upgrade' function should be executed directly.
 */
-contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryClient {
+contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     IEtherToken etherToken;
 
@@ -42,7 +42,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
     event ConverterUpgrade(address indexed _oldConverter, address indexed _newConverter);
 
     /**
-      * @dev initializes a new BancorConverterUpgrader instance
+      * @dev initializes a new ConverterUpgrader instance
       * 
       * @param _registry    address of a contract registry contract
     */

@@ -14,7 +14,7 @@ const Whitelist = artifacts.require('Whitelist');
 const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
 const ConverterFactory = artifacts.require('ConverterFactory');
-const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
+const ConverterUpgrader = artifacts.require('ConverterUpgrader');
 
 const weight10Percent = 100000;
 
@@ -87,7 +87,7 @@ contract('BancorConverter', accounts => {
         let factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY, factory.address);
 
-        upgrader = await BancorConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
+        upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
 
         let token = await SmartToken.new('Token1', 'TKN1', 2); 

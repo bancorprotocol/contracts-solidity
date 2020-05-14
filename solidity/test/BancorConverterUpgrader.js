@@ -10,7 +10,7 @@ const EtherToken = artifacts.require('EtherToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ConverterFactory = artifacts.require('ConverterFactory');
-const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
+const ConverterUpgrader = artifacts.require('ConverterUpgrader');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
@@ -30,7 +30,7 @@ async function initWithConnectors(deployer, version, active) {
     const connectorToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, CONNECTOR1_BALANCE);
     const connectorToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, CONNECTOR2_BALANCE);
     const converter = await BancorConverter.new(smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, connectorToken1.address, 500000, version);
-    const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
+    const upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
     await converter.addReserve(connectorToken2.address, 500000, false);
@@ -50,7 +50,7 @@ async function initWithConnectors(deployer, version, active) {
 async function initWithoutConnectors(deployer, version, active) {
     const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
     const converter = await BancorConverter.new(smartToken.address, contractRegistry.address, 0, utils.zeroAddress, 0, version);
-    const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
+    const upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
 
@@ -66,7 +66,7 @@ async function initWithEtherConnector(deployer, version, active) {
     const connectorToken1 = await EtherToken.new('Ether Token', 'ETH');
     const connectorToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, CONNECTOR2_BALANCE);
     const converter = await BancorConverter.new(smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, connectorToken1.address, 500000, version);
-    const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, connectorToken1.address);
+    const upgrader = await ConverterUpgrader.new(contractRegistry.address, connectorToken1.address);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
     await converter.addReserve(connectorToken2.address, 500000, false);
@@ -92,7 +92,7 @@ async function initWithETHReserve(deployer, version, active) {
     const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
     const connectorToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, CONNECTOR1_BALANCE);
     const converter = await BancorConverter.new(smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, connectorToken1.address, 500000);
-    const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
+    const upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
     await converter.addReserve(ETH_RESERVE_ADDRESS, 500000);
@@ -163,7 +163,7 @@ async function assertEqual(actual, expected) {
     }
 }
 
-contract('BancorConverterUpgrader', accounts => {
+contract('ConverterUpgrader', accounts => {
     const deployer = accounts[0];
 
     before(async () => {

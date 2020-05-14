@@ -5,7 +5,7 @@ import './interfaces/ITypedConverterFactory.sol';
 import '../utility/interfaces/IContractRegistry.sol';
 
 /*
-    Bancor Converter Factory
+    Converter Factory
 */
 contract ConverterFactory is IConverterFactory, Owned {
     /**

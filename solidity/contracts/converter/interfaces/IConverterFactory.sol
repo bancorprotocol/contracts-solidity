@@ -4,7 +4,7 @@ import '../../token/interfaces/ISmartToken.sol';
 import '../../utility/interfaces/IContractRegistry.sol';
 
 /*
-    Bancor Converter Factory interface
+    Converter Factory interface
 */
 contract IConverterFactory {
     function createConverter(

@@ -1,6 +1,6 @@
 pragma solidity 0.4.26;
 import './interfaces/IBancorConverter.sol';
-import './interfaces/IBancorConverterUpgrader.sol';
+import './interfaces/IConverterUpgrader.sol';
 import './interfaces/IBancorFormula.sol';
 import '../IBancorNetwork.sol';
 import '../utility/SafeMath.sol';
@@ -259,7 +259,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * note that the owner needs to call acceptOwnership on the new converter after the upgrade
     */
     function upgrade() public ownerOnly {
-        IBancorConverterUpgrader converterUpgrader = IBancorConverterUpgrader(addressOf(BANCOR_CONVERTER_UPGRADER));
+        IConverterUpgrader converterUpgrader = IConverterUpgrader(addressOf(BANCOR_CONVERTER_UPGRADER));
 
         transferOwnership(converterUpgrader);
         converterUpgrader.upgrade(version);
