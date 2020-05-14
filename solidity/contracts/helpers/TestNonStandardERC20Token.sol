@@ -27,7 +27,7 @@ contract TestNonStandardERC20Token is Utils {
       * @param _supply      initial supply
     */
     constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply)
-        public
+        internal
     {
         name = _name;
         symbol = _symbol;
@@ -45,8 +45,8 @@ contract TestNonStandardERC20Token is Utils {
       * 
       * @return true if the transfer was successful, false if it wasn't
     */
-    function transfer(address _to, uint256 _value)
-        public
+    function _transfer(address _to, uint256 _value)
+        internal
         validAddress(_to)
     {
         balanceOf[msg.sender] = balanceOf[msg.sender].sub(_value);
@@ -64,8 +64,8 @@ contract TestNonStandardERC20Token is Utils {
       * 
       * @return true if the transfer was successful, false if it wasn't
     */
-    function transferFrom(address _from, address _to, uint256 _value)
-        public
+    function _transferFrom(address _from, address _to, uint256 _value)
+        internal
         validAddress(_from)
         validAddress(_to)
     {
@@ -88,8 +88,8 @@ contract TestNonStandardERC20Token is Utils {
       * 
       * @return true if the approval was successful, false if it wasn't
     */
-    function approve(address _spender, uint256 _value)
-        public
+    function _approve(address _spender, uint256 _value)
+        internal
         validAddress(_spender)
     {
         // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal

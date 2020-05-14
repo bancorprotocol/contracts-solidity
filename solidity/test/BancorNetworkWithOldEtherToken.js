@@ -10,7 +10,7 @@ const SmartToken = artifacts.require('SmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const EtherToken = artifacts.require('EtherToken');
-const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
+const TestNonStandardToken = artifacts.require('TestNonStandardToken');
 
 const OLD_CONVERTER_VERSION = 23;
 
@@ -79,7 +79,7 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
 
         await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, smartToken1.address);
 
-        erc20Token = await TestNonStandardERC20Token.new('ERC20Token', 'ERC5', 2, 1000000);
+        erc20Token = await TestNonStandardToken.new('ERC20Token', 'ERC5', 2, 1000000);
 
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000, OLD_CONVERTER_VERSION);
 

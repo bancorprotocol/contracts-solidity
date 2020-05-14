@@ -1,9 +1,14 @@
 pragma solidity 0.4.26;
+import './TestNonStandardERC20Token.sol';
 
-contract TestStandardToken {
-    bool private ok;
-    bool private ret;
-    mapping (address => uint256) private dummy;
+contract TestStandardToken is TestNonStandardERC20Token {
+    bool public ok;
+    bool public ret;
+
+    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
+        TestNonStandardERC20Token(_name, _symbol, _decimals, _supply) {
+        set(true, true);
+    }
 
     function set(bool _ok, bool _ret) public {
         ok = _ok;
@@ -12,20 +17,19 @@ contract TestStandardToken {
 
     function approve(address _spender, uint256 _value) public returns (bool) {
         require(ok);
-        dummy[_spender] = _value;
+        _approve(_spender, _value);
         return ret;
     }
 
     function transfer(address _to, uint256 _value) public returns (bool) {
         require(ok);
-        dummy[_to] = _value;
+        _transfer(_to, _value);
         return ret;
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         require(ok);
-        dummy[_from] = _value;
-        dummy[_to] = _value;
+        _transferFrom(_from, _to, _value);
         return ret;
     }
 }
