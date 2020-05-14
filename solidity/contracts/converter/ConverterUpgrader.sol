@@ -131,9 +131,19 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     function createConverter(IBancorConverter _oldConverter) private returns(IBancorConverter) {
         ISmartToken token = _oldConverter.token();
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
+        uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
+
+        // determine new converter type
+        uint8 newType = 0;
+        // new converter - get the type from the converter itself
+        if (isV28OrHigherConverter(_oldConverter))
+            newType = _oldConverter.converterType();
+        // old converter - if it has 1 reserve token, the type is a liquid token, otherwise the type liquidity pool
+        else if (connectorTokenCount > 1)
+            newType = 1;
 
         IConverterFactory converterFactory = IConverterFactory(addressOf(CONVERTER_FACTORY));
-        IBancorConverter converter = converterFactory.createConverter(0, token, registry, maxConversionFee);
+        IBancorConverter converter = converterFactory.createConverter(newType, token, registry, maxConversionFee);
 
         converter.acceptOwnership();
         return converter;
@@ -214,5 +224,26 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
                 _oldConverter.withdrawTokens(connector, address(_newConverter), connectorBalance);
             }
         }
+    }
+
+    bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
+
+    function isV28OrHigherConverter(IBancorConverter _converter) internal view returns (bool) {
+        bool success;
+        uint256[1] memory ret;
+        bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);
+
+        assembly {
+            success := staticcall(
+                gas,           // gas remaining
+                _converter,    // destination address
+                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
+                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
+                ret,           // output buffer
+                32             // output length
+            )
+        }
+
+        return success;
     }
 }
