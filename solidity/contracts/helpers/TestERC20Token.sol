@@ -5,7 +5,7 @@ import '../utility/SafeMath.sol';
 /**
   * ERC20 Non-Standard Token implementation
 */
-contract TestNonStandardERC20Token is Utils {
+contract NonStandardToken is Utils {
     using SafeMath for uint256;
 
     string public name;
@@ -19,7 +19,7 @@ contract TestNonStandardERC20Token is Utils {
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     /**
-      * @dev initializes a new TestNonStandardERC20Token instance
+      * @dev initializes a new NonStandardToken instance
       * 
       * @param _name        token name
       * @param _symbol      token symbol
@@ -100,11 +100,11 @@ contract TestNonStandardERC20Token is Utils {
     }
 }
 
-contract TestNonStandardToken is TestNonStandardERC20Token {
+contract TestNonStandardToken is NonStandardToken {
     bool public ok;
 
     constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
-        TestNonStandardERC20Token(_name, _symbol, _decimals, _supply) {
+        NonStandardToken(_name, _symbol, _decimals, _supply) {
         set(true);
     }
 
@@ -128,12 +128,12 @@ contract TestNonStandardToken is TestNonStandardERC20Token {
     }
 }
 
-contract TestStandardToken is TestNonStandardERC20Token {
+contract TestStandardToken is NonStandardToken {
     bool public ok;
     bool public ret;
 
     constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
-        TestNonStandardERC20Token(_name, _symbol, _decimals, _supply) {
+        NonStandardToken(_name, _symbol, _decimals, _supply) {
         set(true, true);
     }
 

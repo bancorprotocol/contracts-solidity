@@ -23,6 +23,8 @@ solidity/build/Migrations.abi
 solidity/build/Migrations.bin
 solidity/build/NewBancorConverter.abi
 solidity/build/NewBancorConverter.bin
+solidity/build/NonStandardToken.abi
+solidity/build/NonStandardToken.bin
 solidity/build/OldBancorConverter.abi
 solidity/build/OldBancorConverter.bin
 solidity/build/TestBancorConverter.abi
@@ -31,8 +33,6 @@ solidity/build/TestBancorFormula.abi
 solidity/build/TestBancorFormula.bin
 solidity/build/TestBancorNetwork.abi
 solidity/build/TestBancorNetwork.bin
-solidity/build/TestNonStandardERC20Token.abi
-solidity/build/TestNonStandardERC20Token.bin
 solidity/build/TestNonStandardToken.abi
 solidity/build/TestNonStandardToken.bin
 solidity/build/TestSafeMath.abi
