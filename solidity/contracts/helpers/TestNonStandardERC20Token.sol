@@ -99,3 +99,64 @@ contract TestNonStandardERC20Token is Utils {
         emit Approval(msg.sender, _spender, _value);
     }
 }
+
+contract TestNonStandardToken is TestNonStandardERC20Token {
+    bool public ok;
+
+    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
+        TestNonStandardERC20Token(_name, _symbol, _decimals, _supply) {
+        set(true);
+    }
+
+    function set(bool _ok) public {
+        ok = _ok;
+    }
+
+    function approve(address _spender, uint256 _value) public {
+        _approve(_spender, _value);
+        require(ok);
+    }
+
+    function transfer(address _to, uint256 _value) public {
+        _transfer(_to, _value);
+        require(ok);
+    }
+
+    function transferFrom(address _from, address _to, uint256 _value) public {
+        _transferFrom(_from, _to, _value);
+        require(ok);
+    }
+}
+
+contract TestStandardToken is TestNonStandardERC20Token {
+    bool public ok;
+    bool public ret;
+
+    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
+        TestNonStandardERC20Token(_name, _symbol, _decimals, _supply) {
+        set(true, true);
+    }
+
+    function set(bool _ok, bool _ret) public {
+        ok = _ok;
+        ret = _ret;
+    }
+
+    function approve(address _spender, uint256 _value) public returns (bool) {
+        _approve(_spender, _value);
+        require(ok);
+        return ret;
+    }
+
+    function transfer(address _to, uint256 _value) public returns (bool) {
+        _transfer(_to, _value);
+        require(ok);
+        return ret;
+    }
+
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+        _transferFrom(_from, _to, _value);
+        require(ok);
+        return ret;
+    }
+}
