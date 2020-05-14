@@ -9,7 +9,7 @@ const SmartToken = artifacts.require('SmartToken');
 const EtherToken = artifacts.require('EtherToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const ContractRegistry = artifacts.require('ContractRegistry');
-const BancorConverterFactory = artifacts.require('BancorConverterFactory');
+const ConverterFactory = artifacts.require('ConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
@@ -168,8 +168,8 @@ contract('BancorConverterUpgrader', accounts => {
 
     before(async () => {
         contractRegistry = await ContractRegistry.new();
-        converterFactory = await BancorConverterFactory.new();
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY, converterFactory.address);
+        converterFactory = await ConverterFactory.new();
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY, converterFactory.address);
     });
 
     const f = (a, b) => [].concat(...a.map(d => b.map(e => [].concat(d, e))));

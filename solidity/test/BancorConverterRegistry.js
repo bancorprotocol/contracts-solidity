@@ -9,7 +9,7 @@ const EtherToken = artifacts.require('EtherToken');
 const SmartToken = artifacts.require('SmartToken');
 const BancorConverter = artifacts.require('BancorConverter');
 const ContractRegistry = artifacts.require('ContractRegistry');
-const BancorConverterFactory = artifacts.require('BancorConverterFactory');
+const ConverterFactory = artifacts.require('ConverterFactory');
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
 
@@ -23,10 +23,10 @@ contract('BancorConverterRegistry', function(accounts) {
 
     before(async function() {
         contractRegistry = await ContractRegistry.new();
-        converterFactory = await BancorConverterFactory.new();
+        converterFactory = await ConverterFactory.new();
         converterRegistry = await BancorConverterRegistry.new(contractRegistry.address);
         converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY      , converterFactory     .address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY             , converterFactory     .address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
     });

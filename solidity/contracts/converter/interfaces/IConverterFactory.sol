@@ -6,7 +6,7 @@ import '../../utility/interfaces/IContractRegistry.sol';
 /*
     Bancor Converter Factory interface
 */
-contract IBancorConverterFactory {
+contract IConverterFactory {
     function createConverter(
         uint8 _type,
         ISmartToken _token,

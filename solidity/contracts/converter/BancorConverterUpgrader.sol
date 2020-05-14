@@ -1,7 +1,7 @@
 pragma solidity 0.4.26;
 import './interfaces/IBancorConverter.sol';
 import './interfaces/IBancorConverterUpgrader.sol';
-import './interfaces/IBancorConverterFactory.sol';
+import './interfaces/IConverterFactory.sol';
 import '../utility/ContractRegistryClient.sol';
 import '../utility/interfaces/IWhitelist.sol';
 import '../token/interfaces/IEtherToken.sol';
@@ -132,7 +132,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
         ISmartToken token = _oldConverter.token();
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
 
-        IBancorConverterFactory converterFactory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
+        IConverterFactory converterFactory = IConverterFactory(addressOf(CONVERTER_FACTORY));
         IBancorConverter converter = converterFactory.createConverter(0, token, registry, maxConversionFee);
 
         converter.acceptOwnership();

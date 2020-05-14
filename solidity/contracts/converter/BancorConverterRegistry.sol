@@ -1,7 +1,7 @@
 pragma solidity 0.4.26;
 import '../utility/TokenHandler.sol';
 import '../utility/ContractRegistryClient.sol';
-import './interfaces/IBancorConverterFactory.sol';
+import './interfaces/IConverterFactory.sol';
 import './interfaces/IBancorConverterRegistry.sol';
 import './interfaces/IBancorConverterRegistryData.sol';
 import '../token/interfaces/ISmartTokenController.sol';
@@ -107,7 +107,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         require(length == _reserveWeights.length); 
         require(getLiquidityPoolByConfig(_type, _reserveTokens, _reserveWeights) == ISmartToken(0));
 
-        IBancorConverterFactory factory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
+        IConverterFactory factory = IConverterFactory(addressOf(CONVERTER_FACTORY));
         SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
         IBancorConverter converter = IBancorConverter(factory.createConverter(_type, token, registry, _maxConversionFee));
 

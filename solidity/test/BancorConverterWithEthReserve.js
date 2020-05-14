@@ -13,7 +13,7 @@ const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ERC20Token = artifacts.require('ERC20Token');
 const EtherToken = artifacts.require('EtherToken');
-const BancorConverterFactory = artifacts.require('BancorConverterFactory');
+const ConverterFactory = artifacts.require('ConverterFactory');
 const BancorConverterUpgrader = artifacts.require('BancorConverterUpgrader');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
@@ -84,8 +84,8 @@ contract('BancorConverterWithEthReserve', accounts => {
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
 
-        let factory = await BancorConverterFactory.new();
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY, factory.address);
+        let factory = await ConverterFactory.new();
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY, factory.address);
 
         upgrader = await BancorConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);

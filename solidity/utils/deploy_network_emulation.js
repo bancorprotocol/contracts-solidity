@@ -127,7 +127,7 @@ async function run() {
     const bancorNetworkPathFinder     = await web3Func(deploy, "bancorNetworkPathFinder"    , "BancorNetworkPathFinder"    , [contractRegistry._address]);
     const bancorConverterRegistry     = await web3Func(deploy, "bancorConverterRegistry"    , "BancorConverterRegistry"    , [contractRegistry._address]);
     const bancorConverterRegistryData = await web3Func(deploy, "bancorConverterRegistryData", "BancorConverterRegistryData", [contractRegistry._address]);
-    const bancorConverterFactory      = await web3Func(deploy, "bancorConverterFactory"     , "BancorConverterFactory"     , []);
+    const ConverterFactory            = await web3Func(deploy, "ConverterFactory"           , "ConverterFactory"           , []);
 
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractRegistry"           ), contractRegistry           ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"              ), bancorFormula              ._address));
@@ -135,7 +135,7 @@ async function run() {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetworkPathFinder"    ), bancorNetworkPathFinder    ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistry"    ), bancorConverterRegistry    ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistryData"), bancorConverterRegistryData._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterFactory"     ), bancorConverterFactory     ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConverterFactory"           ), ConverterFactory           ._address));
 
     for (const reserve of get().reserves) {
         const name     = reserve.symbol + " ERC20 Token";

@@ -8,7 +8,7 @@ const ERC20Token = artifacts.require('ERC20Token');
 const SmartToken = artifacts.require('SmartToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorConverter = artifacts.require('BancorConverter');
-const BancorConverterFactory = artifacts.require('BancorConverterFactory');
+const ConverterFactory = artifacts.require('ConverterFactory');
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
 const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
@@ -119,12 +119,12 @@ contract('BancorNetworkPathFinder', accounts => {
     before(async function() {
         contractRegistry = await ContractRegistry.new();
 
-        converterFactory      = await BancorConverterFactory     .new();
+        converterFactory      = await ConverterFactory           .new();
         converterRegistry     = await BancorConverterRegistry    .new(contractRegistry.address);
         converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
         pathFinder            = await BancorNetworkPathFinder    .new(contractRegistry.address);
 
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY      , converterFactory     .address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY             , converterFactory     .address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 

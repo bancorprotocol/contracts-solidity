@@ -1,13 +1,13 @@
 pragma solidity 0.4.26;
 import './BancorConverter.sol';
-import './interfaces/IBancorConverterFactory.sol';
+import './interfaces/IConverterFactory.sol';
 import './interfaces/ITypedConverterFactory.sol';
 import '../utility/interfaces/IContractRegistry.sol';
 
 /*
     Bancor Converter Factory
 */
-contract BancorConverterFactory is IBancorConverterFactory, Owned {
+contract ConverterFactory is IConverterFactory, Owned {
     /**
       * @dev triggered when a new converter is created
       * 
@@ -19,7 +19,7 @@ contract BancorConverterFactory is IBancorConverterFactory, Owned {
     mapping (uint8 => ITypedConverterFactory) public factories;
 
     /**
-      * @dev initializes a new BancorConverterFactory instance
+      * @dev initializes a new ConverterFactory instance
     */
     constructor() public {
     }
