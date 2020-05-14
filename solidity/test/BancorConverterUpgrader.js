@@ -33,7 +33,7 @@ async function initWithConnectors(deployer, version, active) {
     const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
-    await converter.addConnector(connectorToken2.address, 500000, false);
+    await converter.addReserve(connectorToken2.address, 500000, false);
     await converter.setConversionFee(CONVERSION_FEE);
     await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
     await connectorToken1.transfer(converter.address, CONNECTOR1_BALANCE);
@@ -69,7 +69,7 @@ async function initWithEtherConnector(deployer, version, active) {
     const upgrader = await BancorConverterUpgrader.new(contractRegistry.address, connectorToken1.address);
 
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
-    await converter.addConnector(connectorToken2.address, 500000, false);
+    await converter.addReserve(connectorToken2.address, 500000, false);
     await converter.setConversionFee(CONVERSION_FEE);
     await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
     await connectorToken1.deposit({value: CONNECTOR1_BALANCE});

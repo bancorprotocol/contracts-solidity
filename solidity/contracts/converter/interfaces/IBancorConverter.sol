@@ -9,6 +9,8 @@ import '../../utility/interfaces/IWhitelist.sol';
 contract IBancorConverter {
     function converterType() public pure returns (uint8);
 
+    function rateAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256);
+
     function convert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary) public payable returns (uint256);
     function conversionWhitelist() public view returns (IWhitelist) {this;}
     function conversionFee() public view returns (uint32) {this;}
@@ -27,7 +29,6 @@ contract IBancorConverter {
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public;
     function withdrawETH(address _to) public;
     function addReserve(IERC20Token _token, uint32 _ratio) public;
-    function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _supplyMinReturnAmount) public payable;
 
     // deprecated, backward compatibility
     function connectors(address _address) public view returns (uint256, uint32, bool, bool, bool);

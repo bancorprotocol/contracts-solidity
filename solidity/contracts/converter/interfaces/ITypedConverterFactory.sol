@@ -4,11 +4,10 @@ import '../../token/interfaces/ISmartToken.sol';
 import '../../utility/interfaces/IContractRegistry.sol';
 
 /*
-    Bancor Converter Factory interface
+    Typed Converter Factory interface
 */
-contract IBancorConverterFactory {
+contract ITypedConverterFactory {
     function createConverter(
-        uint8 _type,
         ISmartToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee
