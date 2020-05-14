@@ -10,7 +10,7 @@ const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const EtherToken = artifacts.require('EtherToken');
 const ERC20Token = artifacts.require('ERC20Token');
-const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
+const TestNonStandardToken = artifacts.require('TestNonStandardToken');
 const BancorConverterHelper = require('./helpers/BancorConverter');
 const TestBancorNetwork = artifacts.require('./helpers/TestBancorNetwork');
 
@@ -141,7 +141,7 @@ async function initTokensAndConverters(accounts) {
 
     bnt = await ERC20Token.new('BNT', 'BNT', 2, 10000000);
     erc20Token1 = await ERC20Token.new('ERC20Token', 'ERC1', 2, 1000000);
-    erc20Token2 = await TestNonStandardERC20Token.new('ERC20Token', 'ERC2', 2, 2000000);
+    erc20Token2 = await TestNonStandardToken.new('ERC20Token', 'ERC2', 2, 2000000);
 
     smartToken1 = await SmartToken.new('Smart1', 'SMART1', 2);
     await smartToken1.issue(accounts[0], 1000000);

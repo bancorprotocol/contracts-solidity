@@ -12,7 +12,7 @@ const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const Whitelist = artifacts.require('Whitelist');
 const ERC20Token = artifacts.require('ERC20Token');
-const TestNonStandardERC20Token = artifacts.require('TestNonStandardERC20Token');
+const TestNonStandardToken = artifacts.require('TestNonStandardToken');
 const ConverterFactory = artifacts.require('ConverterFactory');
 const ConverterUpgrader = artifacts.require('ConverterUpgrader');
 
@@ -94,7 +94,7 @@ contract('BancorConverter', accounts => {
         tokenAddress = token.address;
 
         reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
-        reserveToken2 = await TestNonStandardERC20Token.new('ERC Token 2', 'ERC2', 0, 2000000000);
+        reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 0, 2000000000);
         reserveToken3 = await ERC20Token.new('ERC Token 3', 'ERC3', 0, 1500000000);
     });
 

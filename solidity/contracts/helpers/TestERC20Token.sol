@@ -5,7 +5,7 @@ import '../utility/SafeMath.sol';
 /**
   * ERC20 Non-Standard Token implementation
 */
-contract TestNonStandardERC20Token is Utils {
+contract NonStandardToken is Utils {
     using SafeMath for uint256;
 
     string public name;
@@ -19,7 +19,7 @@ contract TestNonStandardERC20Token is Utils {
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     /**
-      * @dev initializes a new TestNonStandardERC20Token instance
+      * @dev initializes a new NonStandardToken instance
       * 
       * @param _name        token name
       * @param _symbol      token symbol
@@ -27,7 +27,7 @@ contract TestNonStandardERC20Token is Utils {
       * @param _supply      initial supply
     */
     constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply)
-        public
+        internal
     {
         name = _name;
         symbol = _symbol;
@@ -45,8 +45,8 @@ contract TestNonStandardERC20Token is Utils {
       * 
       * @return true if the transfer was successful, false if it wasn't
     */
-    function transfer(address _to, uint256 _value)
-        public
+    function _transfer(address _to, uint256 _value)
+        internal
         validAddress(_to)
     {
         balanceOf[msg.sender] = balanceOf[msg.sender].sub(_value);
@@ -64,8 +64,8 @@ contract TestNonStandardERC20Token is Utils {
       * 
       * @return true if the transfer was successful, false if it wasn't
     */
-    function transferFrom(address _from, address _to, uint256 _value)
-        public
+    function _transferFrom(address _from, address _to, uint256 _value)
+        internal
         validAddress(_from)
         validAddress(_to)
     {
@@ -88,8 +88,8 @@ contract TestNonStandardERC20Token is Utils {
       * 
       * @return true if the approval was successful, false if it wasn't
     */
-    function approve(address _spender, uint256 _value)
-        public
+    function _approve(address _spender, uint256 _value)
+        internal
         validAddress(_spender)
     {
         // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal
@@ -97,5 +97,66 @@ contract TestNonStandardERC20Token is Utils {
 
         allowance[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
+    }
+}
+
+contract TestNonStandardToken is NonStandardToken {
+    bool public ok;
+
+    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
+        NonStandardToken(_name, _symbol, _decimals, _supply) {
+        set(true);
+    }
+
+    function set(bool _ok) public {
+        ok = _ok;
+    }
+
+    function approve(address _spender, uint256 _value) public {
+        _approve(_spender, _value);
+        require(ok);
+    }
+
+    function transfer(address _to, uint256 _value) public {
+        _transfer(_to, _value);
+        require(ok);
+    }
+
+    function transferFrom(address _from, address _to, uint256 _value) public {
+        _transferFrom(_from, _to, _value);
+        require(ok);
+    }
+}
+
+contract TestStandardToken is NonStandardToken {
+    bool public ok;
+    bool public ret;
+
+    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
+        NonStandardToken(_name, _symbol, _decimals, _supply) {
+        set(true, true);
+    }
+
+    function set(bool _ok, bool _ret) public {
+        ok = _ok;
+        ret = _ret;
+    }
+
+    function approve(address _spender, uint256 _value) public returns (bool) {
+        _approve(_spender, _value);
+        require(ok);
+        return ret;
+    }
+
+    function transfer(address _to, uint256 _value) public returns (bool) {
+        _transfer(_to, _value);
+        require(ok);
+        return ret;
+    }
+
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+        _transferFrom(_from, _to, _value);
+        require(ok);
+        return ret;
     }
 }
