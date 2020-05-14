@@ -531,6 +531,6 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @dev deprecated, backward compatibility
     */
     function getLiquidityPoolByReserveConfig(IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) public view returns (ISmartToken) {
-        return getLiquidityPoolByConfig(0, _reserveTokens, _reserveWeights);
+        return getLiquidityPoolByConfig(1, _reserveTokens, _reserveWeights);
     }
 }

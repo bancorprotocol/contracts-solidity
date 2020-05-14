@@ -53,6 +53,7 @@ contract ConverterFactory is IConverterFactory, Owned {
         uint32 _maxConversionFee
     ) public returns(IBancorConverter) {
         IBancorConverter converter = factories[_type].createConverter(_token, _registry, _maxConversionFee);
+        converter.acceptOwnership();
         converter.transferOwnership(msg.sender);
 
         emit NewConverter(converter, msg.sender);
