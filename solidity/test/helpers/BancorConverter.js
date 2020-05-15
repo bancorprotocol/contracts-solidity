@@ -1,6 +1,8 @@
 const fs = require('fs');
 const truffleContract = require('truffle-contract');
 const BancorConverter = artifacts.require('BancorConverter');
+const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
+const utils = require('./Utils');
 
 module.exports.new = async function(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight, version) {
     if (version) {
@@ -12,7 +14,10 @@ module.exports.new = async function(tokenAddress, registryAddress, maxConversion
         bancorConverter.defaults({from: web3.eth.accounts[0], gas: block.gasLimit});
         return await bancorConverter.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
     }
-    return await BancorConverter.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
+    let converter = await LiquidityPoolV1Converter.new(tokenAddress, registryAddress, maxConversionFee);
+    if (reserveTokenAddress != utils.zeroAddress)
+        await converter.addReserve(reserveTokenAddress, weight);
+    return converter;
 }
 
 module.exports.at = function(address, version) {
