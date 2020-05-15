@@ -713,7 +713,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     /**
       * @dev deprecated, backward compatibility
     */
-    function claimAndConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary ) public returns (uint256) {
+    function claimAndConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary) public returns (uint256) {
         return convertByPath(_path, _amount, _minReturn, _beneficiary, address(0), 0);
     }
 
