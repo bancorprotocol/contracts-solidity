@@ -1,10 +1,11 @@
 const fs = require('fs');
 const truffleContract = require('truffle-contract');
 const BancorConverter = artifacts.require('BancorConverter');
+const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const utils = require('./Utils');
 
-module.exports.new = async function(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight, version) {
+module.exports.new = async function(type, tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight, version) {
     if (version) {
         const abi = fs.readFileSync(__dirname + `/../bin/bancor_converter_v${version}.abi`);
         const bin = fs.readFileSync(__dirname + `/../bin/bancor_converter_v${version}.bin`);
@@ -14,7 +15,11 @@ module.exports.new = async function(tokenAddress, registryAddress, maxConversion
         bancorConverter.defaults({from: web3.eth.accounts[0], gas: block.gasLimit});
         return await bancorConverter.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
     }
-    let converter = await LiquidityPoolV1Converter.new(tokenAddress, registryAddress, maxConversionFee);
+    let converter;
+    if (type == 0)
+        converter = await LiquidTokenConverter.new(tokenAddress, registryAddress, maxConversionFee);
+    else if (type == 1)
+        converter = await LiquidityPoolV1Converter.new(tokenAddress, registryAddress, maxConversionFee);
     if (reserveTokenAddress != utils.zeroAddress)
         await converter.addReserve(reserveTokenAddress, weight);
     return converter;
