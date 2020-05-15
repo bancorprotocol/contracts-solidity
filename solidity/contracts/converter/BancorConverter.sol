@@ -155,12 +155,19 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     /**
       * @dev withdraw ether
-      * can only be called by the upgrader contract
+      * can only be called by the owner if the converter is inactive or by upgrader contract
       * can only be called after the upgrader contract has accepted the ownership of this contract
       * can only be called if the converter has an ETH reserve
     */
-    function withdrawETH(address _to) public ownerOnly only(BANCOR_CONVERTER_UPGRADER) {
-        require(hasETHReserve());
+    function withdrawETH(address _to)
+        public
+        ownerOnly
+        validReserve(IERC20Token(ETH_RESERVE_ADDRESS))
+    {
+        address converterUpgrader = addressOf(BANCOR_CONVERTER_UPGRADER);
+
+        // verify that the converter is inactive or that the owner is the upgrader contract
+        require(token.owner() != address(this) || owner == converterUpgrader);
         _to.transfer(address(this).balance);
 
         // sync the ETH reserve balance	
