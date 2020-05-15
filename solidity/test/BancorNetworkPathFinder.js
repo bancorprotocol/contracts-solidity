@@ -9,6 +9,8 @@ const SmartToken = artifacts.require('SmartToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorConverter = artifacts.require('BancorConverter');
 const ConverterFactory = artifacts.require('ConverterFactory');
+const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
+const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
 const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
@@ -124,6 +126,9 @@ contract('BancorNetworkPathFinder', accounts => {
         converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
         pathFinder            = await BancorNetworkPathFinder    .new(contractRegistry.address);
 
+        await converterFactory.setTypedConverterFactory(0, (await LiquidTokenConverterFactory.new()).address);
+        await converterFactory.setTypedConverterFactory(1, (await LiquidityPoolV1ConverterFactory.new()).address);
+
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY             , converterFactory     .address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
@@ -135,7 +140,7 @@ contract('BancorNetworkPathFinder', accounts => {
 
         for (const converter of layout.converters) {
             const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
-            await converterRegistry.newConverter(0, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
+            await converterRegistry.newConverter(tokens.length == 1 ? 0 : 1, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
             const smartToken = SmartToken.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
             const bancorConverter = BancorConverter.at(await smartToken.owner());
             await bancorConverter.acceptOwnership();
