@@ -4,7 +4,8 @@
 const utils = require('./helpers/Utils');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
-const BancorConverter = artifacts.require('BancorConverter');
+const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
+const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const BancorX = artifacts.require('BancorX');
 const SmartToken = artifacts.require('SmartToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
@@ -358,14 +359,7 @@ const initBancorNetwork = async accounts => {
     const contractRegistry = await ContractRegistry.new()
         
     bntToken = await SmartToken.new('Bancor', 'BNT', 18)
-    bntConverter = await BancorConverter.new(
-        bntToken.address,
-        contractRegistry.address,
-        '30000',
-        utils.zeroAddress,
-        '0'
-    )
-
+    bntConverter = await LiquidTokenConverter.new(bntToken.address, contractRegistry.address, '30000');
     await bntConverter.addReserve(ETH_RESERVE_ADDRESS, '100000');
 
     bancorX = await BancorX.new(
@@ -404,13 +398,9 @@ const initBancorNetwork = async accounts => {
     const relayToken = await SmartToken.new('Relay Token', 'RLY', 18)
 
     erc20Token = await ERC20Token.new('Test Token', 'TST', 0, web3.toWei('100'))
-    erc20TokenConverter = await BancorConverter.new(
-        relayToken.address,
-        contractRegistry.address,
-        '30000',
-        bntToken.address,
-        '500000' // 100% reserve ratio
-    )
+    erc20TokenConverter = await LiquidityPoolV1Converter.new(relayToken.address, contractRegistry.address, '30000');
+
+    await erc20TokenConverter.addReserve(bntToken.address, '500000')
 
     await relayToken.issue(accounts[0], web3.toWei('200'))
     await erc20Token.transfer(erc20TokenConverter.address, web3.toWei('50'))
