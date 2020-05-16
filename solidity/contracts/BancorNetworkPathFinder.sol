@@ -31,12 +31,12 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
     }
 
     /**
-      * @dev generates and returns the conversion path between a given token pair in the Bancor Network
+      * @dev generates a conversion path between a given pair of tokens in the Bancor Network
       * 
       * @param _sourceToken address of the source token
       * @param _targetToken address of the target token
       * 
-      * @return path from the source token to the target token
+      * @return a path from the source token to the target token
     */
     function generatePath(address _sourceToken, address _targetToken) public view returns (address[] memory) {
         IBancorConverterRegistry converterRegistry = IBancorConverterRegistry(addressOf(BANCOR_CONVERTER_REGISTRY));
@@ -46,12 +46,12 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
     }
 
     /**
-      * @dev generates and returns the conversion path between a given token and the anchor token
+      * @dev generates a conversion path between a given token and the anchor token
       * 
       * @param _token               address of the token
       * @param _converterRegistry   address of the converter registry
       * 
-      * @return path from the input token to the anchor token
+      * @return a path from the input token to the anchor token
     */
     function getPath(address _token, IBancorConverterRegistry _converterRegistry) private view returns (address[] memory) {
         if (_token == anchorToken)
