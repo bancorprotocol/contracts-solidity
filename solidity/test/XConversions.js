@@ -73,6 +73,7 @@ contract("XConversions", accounts => {
             const path = erc20TokenBntPath
             const amount = web3.toWei(1)
 
+            await erc20Token.approve(bancorNetwork.address, 0, { from: accounts[5] })
             await erc20Token.approve(bancorNetwork.address, amount, { from: accounts[5] })
 
             const retAmount = await bancorNetwork.xConvert.call(
@@ -111,17 +112,10 @@ contract("XConversions", accounts => {
 
             const prevBalance = await web3.eth.getBalance(accounts[5])
 
-            const res = await bntConverter.completeXConversion(
-                path,
-                1,
-                xTransferId,
-                0,
-                0,
-                utils.zeroBytes32,
-                utils.zeroBytes32,
-                { from: accounts[5] }
-            )
-
+            await bntToken.approve(bancorNetwork.address, 0, { from: accounts[5] })
+            await bntToken.approve(bancorNetwork.address, amount, { from: accounts[5] })
+            await bancorNetwork.completeXConversion(path, bancorX.address, xTransferId, 1, accounts[5], { from: accounts[5] })
+            
             const currBalance = await web3.eth.getBalance(accounts[5])
 
             assert(currBalance.greaterThan(prevBalance))
@@ -137,27 +131,10 @@ contract("XConversions", accounts => {
 
             const prevBalance = await erc20Token.balanceOf(accounts[5])
 
-            const retAmount = await bntConverter.completeXConversion.call(
-                path,                                              
-                1,                                               
-                xTransferId,                                       
-                0,                                                    
-                0,                                                      
-                utils.zeroBytes32,                                                      
-                utils.zeroBytes32,                                                      
-                { from: accounts[5] }
-            )
-
-            const res = await bntConverter.completeXConversion(
-                path,                                              
-                1,                                               
-                xTransferId,                                       
-                0,                                                    
-                0,                                                      
-                utils.zeroBytes32,                                                      
-                utils.zeroBytes32,                                                      
-                { from: accounts[5] }
-            )
+            await bntToken.approve(bancorNetwork.address, 0, { from: accounts[5] })
+            await bntToken.approve(bancorNetwork.address, amount, { from: accounts[5] })
+            const retAmount = await bancorNetwork.completeXConversion.call(path, bancorX.address, xTransferId, 1, accounts[5], { from: accounts[5] })
+            await bancorNetwork.completeXConversion(path, bancorX.address, xTransferId, 1, accounts[5], { from: accounts[5] })
 
             const currBalance = await erc20Token.balanceOf(accounts[5])
 
@@ -175,87 +152,12 @@ contract("XConversions", accounts => {
             await reportAndRelease(accounts[5], amount, txId1, EOS_BLOCKCHAIN, xTransferId1)
             await reportAndRelease(accounts[4], amount, txId2, EOS_BLOCKCHAIN, xTransferId2)
 
-            await utils.catchRevert(bntConverter.completeXConversion(
-                path,                                              
-                1,                                               
-                xTransferId2,                                       
-                0,                                                    
-                0,                                                      
-                utils.zeroBytes32,                                                      
-                utils.zeroBytes32,                                                      
-                { from: accounts[5] }
-            ))
+            await bntToken.approve(bancorNetwork.address, 0, { from: accounts[5] })
+            await bntToken.approve(bancorNetwork.address, amount, { from: accounts[5] })
+
+            await utils.catchRevert(bancorNetwork.completeXConversion(path, bancorX.address, xTransferId2, 1, accounts[5], { from: accounts[5] }))
         })
 
-        it("should be able to completeXConversion2 to eth", async () => {
-            const txId = getId()
-            const xTransferId = getId()
-            const amount = web3.toWei('10') // releasing 10 BNT
-            const path = bntEthPath
-
-            await reportAndRelease(accounts[5], amount, txId, EOS_BLOCKCHAIN, xTransferId)
-
-            const prevBalance = await web3.eth.getBalance(accounts[5])
-
-            const res = await bntConverter.completeXConversion2(
-                path,
-                1,
-                xTransferId,
-                { from: accounts[5] }
-            )
-
-            const currBalance = await web3.eth.getBalance(accounts[5])
-
-            assert(currBalance.greaterThan(prevBalance))
-        })
-
-        it("should be able to completeXConversion2 to an ERC20", async () => {
-            const txId = getId()
-            const xTransferId = getId()
-            const amount = web3.toWei('10') // releasing 10 BNT
-            const path = bntErc20Path
-
-            await reportAndRelease(accounts[5], amount, txId, EOS_BLOCKCHAIN, xTransferId)
-
-            const prevBalance = await erc20Token.balanceOf(accounts[5])
-
-            const retAmount = await bntConverter.completeXConversion2.call(
-                path,                                              
-                1,                                               
-                xTransferId,                                       
-                { from: accounts[5] }
-            )
-
-            const res = await bntConverter.completeXConversion2(
-                path,                                              
-                1,                                               
-                xTransferId,                                       
-                { from: accounts[5] }
-            )
-
-            const currBalance = await erc20Token.balanceOf(accounts[5])
-
-            assert.equal(currBalance.minus(prevBalance).toString(10), retAmount.toString(10))
-        })
-
-        it("shouldn't be able to completeXConversion2 to an ERC20 with a different xTransferId", async () => {
-            const txId1 = getId()
-            const xTransferId1 = getId()
-            const txId2 = getId()
-            const xTransferId2 = getId()
-            const amount = web3.toWei('10') // releasing 10 BNT
-            const path = bntErc20Path
-
-            await reportAndRelease(accounts[5], amount, txId1, EOS_BLOCKCHAIN, xTransferId1)
-            await reportAndRelease(accounts[4], amount, txId2, EOS_BLOCKCHAIN, xTransferId2)
-
-            await utils.catchRevert(bntConverter.completeXConversion2(
-                path,                                              
-                1,                                               
-                xTransferId2,                                       
-                { from: accounts[5] }
-            ))
-        })
     })
 
     for (const percent of ["0.5", "1.0", "1.5", "2.0", "3.0"]) {

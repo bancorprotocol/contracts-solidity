@@ -323,6 +323,34 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     }
 
     /**
+      * @dev allows a user to convert a token that was sent from another blockchain into any other
+      * token on the BancorNetwork
+      * ideally this transaction is created before the previous conversion is even complete, so
+      * so the input amount isn't known at that point - the amount is actually take from the
+      * BancorX contract directly by specifying the conversion id
+      *
+      * @param _path            conversion path
+      * @param _bancorX         address of the BancorX contract for the source token
+      * @param _conversionId    pre-determined unique (if non zero) id which refers to this conversion
+      * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _beneficiary     wallet to receive the conversion result
+      *
+      * @return amount of tokens received from the conversion
+    */
+    function completeXConversion(IERC20Token[] _path, IBancorX _bancorX, uint256 _conversionId, uint256 _minReturn, address _beneficiary)
+        public returns (uint256)
+    {
+        // verify that the source token is the BancorX token
+        require(_path[0] == _bancorX.token());
+
+        // get conversion amount from BancorX contract
+        uint256 amount = _bancorX.getXTransferAmount(_conversionId, msg.sender);
+
+        // perform the conversion
+        return convertByPath(_path, amount, _minReturn, _beneficiary, address(0), 0);
+    }
+
+    /**
       * @dev executes the actual conversion by following the conversion path
       * 
       * @param _data                conversion data, see ConversionStep struct above
