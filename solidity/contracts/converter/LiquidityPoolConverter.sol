@@ -58,7 +58,7 @@ contract LiquidityPoolConverter is BancorConverter {
         uint32 _maxConversionFee
     )
         BancorConverter(_token, _registry, _maxConversionFee)
-        public
+        internal
     {
     }
 
