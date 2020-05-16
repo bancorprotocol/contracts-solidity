@@ -160,7 +160,7 @@ contract('BancorNetworkPathFinder', accounts => {
         const sourceToken = accounts[0];
         const targetToken = anchorToken;
         const expected = await generatePath(sourceToken, targetToken, anchorToken, converterRegistry);
-        const actual = await pathFinder.generatePath(sourceToken, targetToken);
+        const actual = await pathFinder.findPath(sourceToken, targetToken);
         assert.equal(actual + expected, []);
     });
 
@@ -168,7 +168,7 @@ contract('BancorNetworkPathFinder', accounts => {
         const sourceToken = anchorToken;
         const targetToken = accounts[0];
         const expected = await generatePath(sourceToken, targetToken, anchorToken, converterRegistry);
-        const actual = await pathFinder.generatePath(sourceToken, targetToken);
+        const actual = await pathFinder.findPath(sourceToken, targetToken);
         assert.equal(actual + expected, []);
     });
 
@@ -179,7 +179,7 @@ contract('BancorNetworkPathFinder', accounts => {
                 const sourceToken = addresses[sourceSymbol];
                 const targetToken = addresses[targetSymbol];
                 const expected = await generatePath(sourceToken, targetToken, anchorToken, converterRegistry);
-                const actual = await pathFinder.generatePath(sourceToken, targetToken);
+                const actual = await pathFinder.findPath(sourceToken, targetToken);
                 assert.equal(`${actual}`, `${expected}`);
                 await printPath(sourceToken, targetToken, actual);
             });

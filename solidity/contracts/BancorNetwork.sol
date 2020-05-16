@@ -1,5 +1,6 @@
 pragma solidity 0.4.26;
 import './IBancorNetwork.sol';
+import './IBancorNetworkPathFinder.sol';
 import './converter/interfaces/IBancorConverter.sol';
 import './converter/interfaces/IBancorFormula.sol';
 import './utility/TokenHolder.sol';
@@ -104,6 +105,20 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         notThis(_token)
     {
         etherTokens[_token] = _register;
+    }
+
+    /**
+      * @dev returns the conversion path between two tokens in the network
+      * note that this method is quite expensive in terms of gas and should generally be called off-chain
+      * 
+      * @param _sourceToken source token address
+      * @param _targetToken target token address
+      *
+      * @return conversion path between the two tokens
+    */
+    function conversionPath(IERC20Token _sourceToken, IERC20Token _targetToken) public view returns (address[]) {
+        IBancorNetworkPathFinder pathFinder = IBancorNetworkPathFinder(addressOf(CONVERSION_PATH_FINDER));
+        return pathFinder.findPath(_sourceToken, _targetToken);
     }
 
     /**

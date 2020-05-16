@@ -9,6 +9,9 @@ const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const SmartToken = artifacts.require('SmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
+const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
+const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
+const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
 const EtherToken = artifacts.require('EtherToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardToken = artifacts.require('TestNonStandardToken');
@@ -122,6 +125,14 @@ async function initTokensAndConverters(accounts) {
     bancorNetwork = await BancorNetwork.new(contractRegistry.address);
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
 
+    let converterRegistry = await BancorConverterRegistry.new(contractRegistry.address);
+    let converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
+    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY, converterRegistry.address);
+    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+
+    let pathFinder = await BancorNetworkPathFinder.new(contractRegistry.address);
+    await contractRegistry.registerAddress(ContractRegistryClient.CONVERSION_PATH_FINDER, pathFinder.address);
+
     bnt = await ERC20Token.new('BNT', 'BNT', 2, 10000000);
     erc20Token1 = await ERC20Token.new('ERC20Token', 'ERC1', 2, 1000000);
     erc20Token2 = await TestNonStandardToken.new('ERC20Token', 'ERC2', 2, 2000000);
@@ -174,6 +185,13 @@ async function initTokensAndConverters(accounts) {
 
     await smartToken4.transferOwnership(converter4.address);
     await converter4.acceptTokenOwnership();
+
+    await pathFinder.setAnchorToken(bnt.address);
+
+    await converterRegistry.addConverter(converter1.address);
+    await converterRegistry.addConverter(converter2.address);
+    await converterRegistry.addConverter(converter3.address);
+    await converterRegistry.addConverter(converter4.address);
 
     initPaths([bnt, erc20Token1, erc20Token2, smartToken1, smartToken2, smartToken3, smartToken4]);
 };
@@ -367,6 +385,16 @@ contract('BancorNetwork', accounts => {
                 });
             }
         }
+
+        it('verifies that conversionPath returns the correct path', async () => {
+            let conversionPath = await bancorNetwork.conversionPath.call(erc20Token2.address, ETH_RESERVE_ADDRESS);
+            let expectedPath = paths['ERC2']['ETH'];
+
+            assert(conversionPath.length > 0);
+            assert.equal(conversionPath.length, expectedPath.length);
+            for (let i = 0; i < conversionPath.length; i++)
+                assert.equal(conversionPath[i], expectedPath[i]);
+        });
 
         it('should throw when attempting to convert and passing an amount higher than the ETH amount sent with the request', async () => {
             let path = paths['ETH']['SMART4'];
