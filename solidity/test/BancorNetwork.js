@@ -22,7 +22,7 @@ const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
 const OLD_CONVERTER_VERSION = 9;
 
-let bnt;
+let bntToken;
 let erc20Token1;
 let erc20Token2;
 let smartToken1;
@@ -53,7 +53,7 @@ Token network structure:
 */
 
 function initPaths(tokens, generatePaths) {
-    let bnt         = tokens[0];
+    let bntToken    = tokens[0];
     let erc20Token1 = tokens[1];
     let erc20Token2 = tokens[2];
     let smartToken1 = tokens[3];
@@ -63,34 +63,34 @@ function initPaths(tokens, generatePaths) {
 
     pathsTokens = {
         'ETH': {
-            'BNT':      ['', smartToken1, bnt],
-            'ERC1':     ['', smartToken1, bnt, smartToken2, erc20Token1],
-            'ERC2':     ['', smartToken1, bnt, smartToken3, erc20Token2],
-            'SMART4':   ['', smartToken1, bnt, smartToken4, smartToken4]
+            'BNT':      ['', smartToken1, bntToken],
+            'ERC1':     ['', smartToken1, bntToken, smartToken2, erc20Token1],
+            'ERC2':     ['', smartToken1, bntToken, smartToken3, erc20Token2],
+            'SMART4':   ['', smartToken1, bntToken, smartToken4, smartToken4]
         },
         'BNT': {
-            'ETH':      [bnt, smartToken1, ''],
-            'ERC1':     [bnt, smartToken2, erc20Token1],
-            'ERC2':     [bnt, smartToken3, erc20Token2],
-            'SMART4':   [bnt, smartToken4, smartToken4]
+            'ETH':      [bntToken, smartToken1, ''],
+            'ERC1':     [bntToken, smartToken2, erc20Token1],
+            'ERC2':     [bntToken, smartToken3, erc20Token2],
+            'SMART4':   [bntToken, smartToken4, smartToken4]
         },
         'ERC1': {
-            'ETH':      [erc20Token1, smartToken2, bnt, smartToken1, ''],
-            'BNT':      [erc20Token1, smartToken2, bnt],
-            'ERC2':     [erc20Token1, smartToken2, bnt, smartToken3, erc20Token2],
-            'SMART4':   [erc20Token1, smartToken2, bnt, smartToken4, smartToken4]
+            'ETH':      [erc20Token1, smartToken2, bntToken, smartToken1, ''],
+            'BNT':      [erc20Token1, smartToken2, bntToken],
+            'ERC2':     [erc20Token1, smartToken2, bntToken, smartToken3, erc20Token2],
+            'SMART4':   [erc20Token1, smartToken2, bntToken, smartToken4, smartToken4]
         },
         'ERC2': {
-            'ETH':      [erc20Token2, smartToken3, bnt, smartToken1, ''],
-            'BNT':      [erc20Token2, smartToken3, bnt],
-            'ERC1':     [erc20Token2, smartToken3, bnt, smartToken2, erc20Token1],
-            'SMART4':   [erc20Token2, smartToken3, bnt, smartToken4, smartToken4]
+            'ETH':      [erc20Token2, smartToken3, bntToken, smartToken1, ''],
+            'BNT':      [erc20Token2, smartToken3, bntToken],
+            'ERC1':     [erc20Token2, smartToken3, bntToken, smartToken2, erc20Token1],
+            'SMART4':   [erc20Token2, smartToken3, bntToken, smartToken4, smartToken4]
         },
         'SMART4': {
-            'ETH':      [smartToken4, smartToken4, bnt, smartToken1, ''],
-            'BNT':      [smartToken4, smartToken4, bnt],
-            'ERC1':     [smartToken4, smartToken4, bnt, smartToken2, erc20Token1],
-            'ERC2':     [smartToken4, smartToken4, bnt, smartToken3, erc20Token2]
+            'ETH':      [smartToken4, smartToken4, bntToken, smartToken1, ''],
+            'BNT':      [smartToken4, smartToken4, bntToken],
+            'ERC1':     [smartToken4, smartToken4, bntToken, smartToken2, erc20Token1],
+            'ERC2':     [smartToken4, smartToken4, bntToken, smartToken3, erc20Token2]
         },
     };
 
@@ -133,7 +133,7 @@ async function initTokensAndConverters(accounts) {
     let pathFinder = await BancorNetworkPathFinder.new(contractRegistry.address);
     await contractRegistry.registerAddress(ContractRegistryClient.CONVERSION_PATH_FINDER, pathFinder.address);
 
-    bnt = await ERC20Token.new('BNT', 'BNT', 2, 10000000);
+    bntToken = await ERC20Token.new('BNT', 'BNT', 2, 10000000);
     erc20Token1 = await ERC20Token.new('ERC20Token', 'ERC1', 2, 1000000);
     erc20Token2 = await TestNonStandardToken.new('ERC20Token', 'ERC2', 2, 2000000);
 
@@ -149,26 +149,26 @@ async function initTokensAndConverters(accounts) {
     smartToken4 = await SmartToken.new('Smart4', 'SMART4', 2);
     await smartToken4.issue(accounts[0], 2500000);
 
-    await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, bnt.address);
+    await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, bntToken.address);
 
     converter1 = await LiquidityPoolV1Converter.new(smartToken1.address, contractRegistry.address, 0);
-    await converter1.addReserve(bnt.address, 500000);
+    await converter1.addReserve(bntToken.address, 500000);
     await converter1.addReserve(ETH_RESERVE_ADDRESS, 500000);
 
     converter2 = await LiquidityPoolV1Converter.new(smartToken2.address, contractRegistry.address, 0);
-    await converter2.addReserve(bnt.address, 300000);
+    await converter2.addReserve(bntToken.address, 300000);
     await converter2.addReserve(erc20Token1.address, 150000);
 
-    converter3 = await BancorConverterHelper.new(1, smartToken3.address, contractRegistry.address, 0, bnt.address, 350000, OLD_CONVERTER_VERSION);
+    converter3 = await BancorConverterHelper.new(1, smartToken3.address, contractRegistry.address, 0, bntToken.address, 350000, OLD_CONVERTER_VERSION);
     await converter3.addConnector(erc20Token2.address, 100000, false);
 
     converter4 = await LiquidTokenConverter.new(smartToken4.address, contractRegistry.address, 0);
-    await converter4.addReserve(bnt.address, 220000);
+    await converter4.addReserve(bntToken.address, 220000);
 
-    await bnt.transfer(converter1.address, 40000);
-    await bnt.transfer(converter2.address, 70000);
-    await bnt.transfer(converter3.address, 110000);
-    await bnt.transfer(converter4.address, 130000);
+    await bntToken.transfer(converter1.address, 40000);
+    await bntToken.transfer(converter2.address, 70000);
+    await bntToken.transfer(converter3.address, 110000);
+    await bntToken.transfer(converter4.address, 130000);
 
     await web3.eth.sendTransaction({from: accounts[0], to: converter1.address, value: 50000});
     await erc20Token1.transfer(converter2.address, 25000);
@@ -186,14 +186,14 @@ async function initTokensAndConverters(accounts) {
     await smartToken4.transferOwnership(converter4.address);
     await converter4.acceptTokenOwnership();
 
-    await pathFinder.setAnchorToken(bnt.address);
+    await pathFinder.setAnchorToken(bntToken.address);
 
     await converterRegistry.addConverter(converter1.address);
     await converterRegistry.addConverter(converter2.address);
     await converterRegistry.addConverter(converter3.address);
     await converterRegistry.addConverter(converter4.address);
 
-    initPaths([bnt, erc20Token1, erc20Token2, smartToken1, smartToken2, smartToken3, smartToken4]);
+    initPaths([bntToken, erc20Token1, erc20Token2, smartToken1, smartToken2, smartToken3, smartToken4]);
 };
 
 async function approve(token, from, to, amount) {
@@ -338,12 +338,12 @@ contract('BancorNetwork', accounts => {
                     else
                         await approve(sourceToken, accounts[0], bancorNetwork.address, 10000);
 
-                    let prevBalance = await getBalance(bnt, 'BNT', accounts[2]);
+                    let prevBalance = await getBalance(bntToken, 'BNT', accounts[2]);
                     await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 10000, 1, utils.zeroAddress, accounts[2], 10000, { value });
-                    let postBalance = await getBalance(bnt, 'BNT', accounts[2]);
+                    let postBalance = await getBalance(bntToken, 'BNT', accounts[2]);
 
                     // affiliate fee is only taken when converting to BNT, so BNT must exist and not be the first token in the path
-                    if (pathTokens.indexOf(bnt) > 0)
+                    if (pathTokens.indexOf(bntToken) > 0)
                         assert(postBalance.greaterThan(prevBalance), "affiliate account balance isn't higher than previous balance");
                     else
                         assert(postBalance.equals(prevBalance), "affiliate account balance changed");
@@ -597,35 +597,35 @@ contract('BancorNetwork', accounts => {
 
         it('verifies that convertFor2 transfers the affiliate fee correctly', async () => {
             let path = paths['ETH']['ERC1'];
-            let balanceBeforeTransfer = await bnt.balanceOf.call(accounts[2]);
+            let balanceBeforeTransfer = await bntToken.balanceOf.call(accounts[2]);
             await bancorNetwork.convertFor2(path, 10000, 1, accounts[1], accounts[2], 10000, { value: 10000 });
-            let balanceAfterTransfer = await bnt.balanceOf.call(accounts[2]);
+            let balanceAfterTransfer = await bntToken.balanceOf.call(accounts[2]);
             assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
         });
 
         it('verifies that convert2 transfers the affiliate fee correctly', async () => {
             let path = paths['ETH']['ERC1'];
-            let balanceBeforeTransfer = await bnt.balanceOf.call(accounts[2]);
+            let balanceBeforeTransfer = await bntToken.balanceOf.call(accounts[2]);
             await bancorNetwork.convert2(path, 10000, 1, accounts[2], 10000, { from: accounts[1], value: 10000 });
-            let balanceAfterTransfer = await bnt.balanceOf.call(accounts[2]);
+            let balanceAfterTransfer = await bntToken.balanceOf.call(accounts[2]);
             assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
         });
 
         it('verifies that claimAndConvert2 transfers the affiliate fee correctly', async () => {
             await approve(erc20Token2, accounts[0], bancorNetwork.address, 10000);
-            let balanceBeforeTransfer = await bnt.balanceOf.call(accounts[2]);
+            let balanceBeforeTransfer = await bntToken.balanceOf.call(accounts[2]);
             let path = paths['ERC2']['ETH'];
             await bancorNetwork.claimAndConvert2(path, 10000, 1, accounts[2], 10000);
-            let balanceAfterTransfer = await bnt.balanceOf.call(accounts[2]);
+            let balanceAfterTransfer = await bntToken.balanceOf.call(accounts[2]);
             assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
         });
 
         it('verifies that claimAndConvertFor2 transfers the affiliate fee correctly', async () => {
             await approve(erc20Token2, accounts[0], bancorNetwork.address, 10000);
-            let balanceBeforeTransfer = await bnt.balanceOf.call(accounts[2]);
+            let balanceBeforeTransfer = await bntToken.balanceOf.call(accounts[2]);
             let path = paths['ERC2']['ETH'];
             await bancorNetwork.claimAndConvertFor2(path, 10000, 1, accounts[1], accounts[2], 10000);
-            let balanceAfterTransfer = await bnt.balanceOf.call(accounts[2]);
+            let balanceAfterTransfer = await bntToken.balanceOf.call(accounts[2]);
             assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
         });
     });
