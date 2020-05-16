@@ -111,7 +111,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     )
         SmartTokenController(_token)
         ContractRegistryClient(_registry)
-        public
+        internal
         validConversionFee(_maxConversionFee)
     {
         maxConversionFee = _maxConversionFee;
