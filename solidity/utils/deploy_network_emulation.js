@@ -138,8 +138,8 @@ async function run() {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetworkPathFinder"    ), bancorNetworkPathFinder    ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistry"    ), bancorConverterRegistry    ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistryData"), bancorConverterRegistryData._address));
-    await execute(converterFactory.methods.setTypedConverterFactory(0, liquidTokenConverterFactory    ._address));
-    await execute(converterFactory.methods.setTypedConverterFactory(1, liquidityPoolV1ConverterFactory._address));
+    await execute(converterFactory.methods.registerTypedFactory(liquidTokenConverterFactory    ._address));
+    await execute(converterFactory.methods.registerTypedFactory(liquidityPoolV1ConverterFactory._address));
 
     for (const reserve of get().reserves) {
         const name     = reserve.symbol + " ERC20 Token";
