@@ -121,13 +121,13 @@ async function run() {
         }
     };
 
-    const contractRegistry            = await web3Func(deploy, "contractRegistry"           , "ContractRegistry"           , []);
-    const converterFactory            = await web3Func(deploy, "converterFactory"           , "ConverterFactory"           , []);
-    const bancorFormula               = await web3Func(deploy, "bancorFormula"              , "BancorFormula"              , []);
-    const bancorNetwork               = await web3Func(deploy, "bancorNetwork"              , "BancorNetwork"              , [contractRegistry._address]);
-    const bancorNetworkPathFinder     = await web3Func(deploy, "bancorNetworkPathFinder"    , "BancorNetworkPathFinder"    , [contractRegistry._address]);
-    const bancorConverterRegistry     = await web3Func(deploy, "bancorConverterRegistry"    , "BancorConverterRegistry"    , [contractRegistry._address]);
-    const bancorConverterRegistryData = await web3Func(deploy, "bancorConverterRegistryData", "BancorConverterRegistryData", [contractRegistry._address]);
+    const contractRegistry                = await web3Func(deploy, "contractRegistry"               , "ContractRegistry"               , []);
+    const converterFactory                = await web3Func(deploy, "converterFactory"               , "ConverterFactory"               , []);
+    const bancorFormula                   = await web3Func(deploy, "bancorFormula"                  , "BancorFormula"                  , []);
+    const bancorNetwork                   = await web3Func(deploy, "bancorNetwork"                  , "BancorNetwork"                  , [contractRegistry._address]);
+    const bancorNetworkPathFinder         = await web3Func(deploy, "bancorNetworkPathFinder"        , "BancorNetworkPathFinder"        , [contractRegistry._address]);
+    const bancorConverterRegistry         = await web3Func(deploy, "bancorConverterRegistry"        , "BancorConverterRegistry"        , [contractRegistry._address]);
+    const bancorConverterRegistryData     = await web3Func(deploy, "bancorConverterRegistryData"    , "BancorConverterRegistryData"    , [contractRegistry._address]);
     const liquidTokenConverterFactory     = await web3Func(deploy, "liquidTokenConverterFactory"    , "LiquidTokenConverterFactory"    , []);
     const liquidityPoolV1ConverterFactory = await web3Func(deploy, "liquidityPoolV1ConverterFactory", "LiquidityPoolV1ConverterFactory", []);
 
