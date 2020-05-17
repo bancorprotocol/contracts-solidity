@@ -11,7 +11,7 @@ const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
 let bancorFormula;
 let contractRegistry;
-let erc20Tokens = [];
+let erc20Tokens;
 
 async function initLiquidityPool(hasETH, ...weights) {
     const smartToken = await SmartToken.new('name', 'symbol', 0);
@@ -36,8 +36,7 @@ contract('BancorConverterLiquidity', accounts => {
     before(async () => {
         bancorFormula = await BancorFormula.new();
         contractRegistry = await ContractRegistry.new();
-        for (let i = 0; i < 5; i++)
-            erc20Tokens[i] = await ERC20Token.new('name', 'symbol', 0, -1);
+        erc20Tokens = await Promise.all([...Array(5).keys()].map(i => ERC20Token.new('name', 'symbol', 0, -1)));
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
     });
 
