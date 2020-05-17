@@ -9,7 +9,9 @@ const ContractRegistry = artifacts.require('ContractRegistry');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
-let reserves = [];
+let bancorFormula;
+let contractRegistry;
+let erc20Tokens = [];
 
 async function initLiquidityPool(hasETH, ...weights) {
     const smartToken = await SmartToken.new('name', 'symbol', 0);
@@ -19,7 +21,7 @@ async function initLiquidityPool(hasETH, ...weights) {
         if (hasETH && i == weights.length - 1)
             await converter.addReserve(ETH_RESERVE_ADDRESS, weights[i] * 10000);
         else
-            await converter.addReserve(reserves[i].address, weights[i] * 10000);
+            await converter.addReserve(erc20Tokens[i].address, weights[i] * 10000);
     }
 
     await smartToken.transferOwnership(converter.address);
@@ -34,10 +36,9 @@ contract('BancorConverterLiquidity', accounts => {
     before(async () => {
         bancorFormula = await BancorFormula.new();
         contractRegistry = await ContractRegistry.new();
+        for (let i = 0; i < 5; i++)
+            erc20Tokens[i] = await ERC20Token.new('name', 'symbol', 0, -1);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
-
-        for (let i = 0; i < 5; i++ )
-            reserves[i] = await ERC20Token.new('name', 'symbol', 0, -1);
     });
 
     describe('auxiliary functions:', () => {
