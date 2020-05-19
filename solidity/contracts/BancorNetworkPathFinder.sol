@@ -1,4 +1,5 @@
 pragma solidity 0.4.26;
+import './IBancorNetworkPathFinder.sol';
 import './utility/ContractRegistryClient.sol';
 import './converter/interfaces/IBancorConverterRegistry.sol';
 import './converter/interfaces/IBancorConverter.sol';
@@ -10,7 +11,7 @@ import './token/interfaces/ISmartToken.sol';
   *
   * See the BancorNetwork contract for conversion path format.
 */
-contract BancorNetworkPathFinder is ContractRegistryClient {
+contract BancorNetworkPathFinder is IBancorNetworkPathFinder, ContractRegistryClient {
     address public anchorToken;
 
     /**
@@ -38,7 +39,7 @@ contract BancorNetworkPathFinder is ContractRegistryClient {
       * 
       * @return a path from the source token to the target token
     */
-    function generatePath(address _sourceToken, address _targetToken) public view returns (address[] memory) {
+    function findPath(address _sourceToken, address _targetToken) public view returns (address[] memory) {
         IBancorConverterRegistry converterRegistry = IBancorConverterRegistry(addressOf(BANCOR_CONVERTER_REGISTRY));
         address[] memory sourcePath = getPath(_sourceToken, converterRegistry);
         address[] memory targetPath = getPath(_targetToken, converterRegistry);
