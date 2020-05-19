@@ -4,7 +4,7 @@
 const utils = require('./helpers/Utils');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
-const BancorConverter = artifacts.require('BancorConverter');
+const SmartTokenController = artifacts.require('SmartTokenController');
 const BancorX = artifacts.require('BancorX');
 const SmartToken = artifacts.require('SmartToken');
 const EtherToken = artifacts.require('EtherToken');
@@ -32,13 +32,7 @@ async function initBancorX(accounts, isSmartToken) {
     const etherToken = await EtherToken.new('Ether', 'ETH')
     const contractRegistry = await ContractRegistry.new()
     const smartToken = await SmartToken.new('Bancor', 'BNT', 18)
-    const bancorConverter = await BancorConverter.new(
-        smartToken.address,
-        contractRegistry.address,
-        '100000',
-        etherToken.address,
-        '100000'
-    )
+    const controller = await SmartTokenController.new(smartToken.address);
 
     const bancorX = await BancorX.new(
         MAX_LOCK_LIMIT,
@@ -60,9 +54,9 @@ async function initBancorX(accounts, isSmartToken) {
     // set bancorx address for bnt converter
 
     if (isSmartToken) {
-        await smartToken.transferOwnership(bancorConverter.address)
-        await bancorConverter.acceptTokenOwnership()
-        await bancorConverter.setBancorX(bancorX.address)
+        await smartToken.transferOwnership(controller.address)
+        await controller.acceptTokenOwnership()
+        await controller.setBancorX(bancorX.address)
     }
     else {
         await smartToken.approve(bancorX.address, SUPPLY_AMOUNT)

@@ -1,7 +1,8 @@
 module.exports.CONTRACT_REGISTRY              = web3.fromAscii("ContractRegistry");
 module.exports.BANCOR_NETWORK                 = web3.fromAscii("BancorNetwork");
 module.exports.BANCOR_FORMULA                 = web3.fromAscii("BancorFormula");
-module.exports.BANCOR_CONVERTER_FACTORY       = web3.fromAscii("BancorConverterFactory");
+module.exports.CONVERTER_FACTORY              = web3.fromAscii("ConverterFactory");
+module.exports.CONVERSION_PATH_FINDER         = web3.fromAscii("ConversionPathFinder");
 module.exports.BANCOR_CONVERTER_UPGRADER      = web3.fromAscii("BancorConverterUpgrader");
 module.exports.BANCOR_CONVERTER_REGISTRY      = web3.fromAscii("BancorConverterRegistry");
 module.exports.BANCOR_CONVERTER_REGISTRY_DATA = web3.fromAscii("BancorConverterRegistryData");

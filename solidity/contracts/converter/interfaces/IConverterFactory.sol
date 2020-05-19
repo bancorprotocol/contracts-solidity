@@ -1,13 +1,12 @@
 pragma solidity 0.4.26;
 import './IBancorConverter.sol';
-import '../../token/interfaces/IERC20Token.sol';
 import '../../token/interfaces/ISmartToken.sol';
 import '../../utility/interfaces/IContractRegistry.sol';
 
 /*
-    Bancor Converter Factory interface
+    Converter Factory interface
 */
-contract IBancorConverterFactory {
+contract IConverterFactory {
     function createConverter(
         uint8 _type,
         ISmartToken _token,

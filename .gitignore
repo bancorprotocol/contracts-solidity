@@ -27,12 +27,12 @@ solidity/build/NonStandardToken.abi
 solidity/build/NonStandardToken.bin
 solidity/build/OldBancorConverter.abi
 solidity/build/OldBancorConverter.bin
-solidity/build/TestBancorConverter.abi
-solidity/build/TestBancorConverter.bin
 solidity/build/TestBancorFormula.abi
 solidity/build/TestBancorFormula.bin
 solidity/build/TestBancorNetwork.abi
 solidity/build/TestBancorNetwork.bin
+solidity/build/TestLiquidityPoolConverter.abi
+solidity/build/TestLiquidityPoolConverter.bin
 solidity/build/TestNonStandardToken.abi
 solidity/build/TestNonStandardToken.bin
 solidity/build/TestSafeMath.abi

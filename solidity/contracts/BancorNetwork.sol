@@ -1,5 +1,6 @@
 pragma solidity 0.4.26;
 import './IBancorNetwork.sol';
+import './IBancorNetworkPathFinder.sol';
 import './converter/interfaces/IBancorConverter.sol';
 import './converter/interfaces/IBancorFormula.sol';
 import './utility/TokenHolder.sol';
@@ -104,6 +105,20 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         notThis(_token)
     {
         etherTokens[_token] = _register;
+    }
+
+    /**
+      * @dev returns the conversion path between two tokens in the network
+      * note that this method is quite expensive in terms of gas and should generally be called off-chain
+      * 
+      * @param _sourceToken source token address
+      * @param _targetToken target token address
+      *
+      * @return conversion path between the two tokens
+    */
+    function conversionPath(IERC20Token _sourceToken, IERC20Token _targetToken) public view returns (address[]) {
+        IBancorNetworkPathFinder pathFinder = IBancorNetworkPathFinder(addressOf(CONVERSION_PATH_FINDER));
+        return pathFinder.findPath(_sourceToken, _targetToken);
     }
 
     /**
@@ -320,6 +335,34 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         IBancorX(addressOf(BANCOR_X)).xTransfer(_targetBlockchain, _targetAccount, amount, _conversionId);
 
         return amount;
+    }
+
+    /**
+      * @dev allows a user to convert a token that was sent from another blockchain into any other
+      * token on the BancorNetwork
+      * ideally this transaction is created before the previous conversion is even complete, so
+      * so the input amount isn't known at that point - the amount is actually take from the
+      * BancorX contract directly by specifying the conversion id
+      *
+      * @param _path            conversion path
+      * @param _bancorX         address of the BancorX contract for the source token
+      * @param _conversionId    pre-determined unique (if non zero) id which refers to this conversion
+      * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+      * @param _beneficiary     wallet to receive the conversion result
+      *
+      * @return amount of tokens received from the conversion
+    */
+    function completeXConversion(IERC20Token[] _path, IBancorX _bancorX, uint256 _conversionId, uint256 _minReturn, address _beneficiary)
+        public returns (uint256)
+    {
+        // verify that the source token is the BancorX token
+        require(_path[0] == _bancorX.token());
+
+        // get conversion amount from BancorX contract
+        uint256 amount = _bancorX.getXTransferAmount(_conversionId, msg.sender);
+
+        // perform the conversion
+        return convertByPath(_path, amount, _minReturn, _beneficiary, address(0), 0);
     }
 
     /**
@@ -713,7 +756,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     /**
       * @dev deprecated, backward compatibility
     */
-    function claimAndConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary ) public returns (uint256) {
+    function claimAndConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary) public returns (uint256) {
         return convertByPath(_path, _amount, _minReturn, _beneficiary, address(0), 0);
     }
 

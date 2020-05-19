@@ -7,9 +7,13 @@ const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 const ERC20Token = artifacts.require('ERC20Token');
 const EtherToken = artifacts.require('EtherToken');
 const SmartToken = artifacts.require('SmartToken');
-const BancorConverter = artifacts.require('BancorConverter');
 const ContractRegistry = artifacts.require('ContractRegistry');
-const BancorConverterFactory = artifacts.require('BancorConverterFactory');
+const ConverterFactory = artifacts.require('ConverterFactory');
+const BancorConverter = artifacts.require('BancorConverter');
+const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
+const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
+const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
+const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
 
@@ -23,10 +27,12 @@ contract('BancorConverterRegistry', function(accounts) {
 
     before(async function() {
         contractRegistry = await ContractRegistry.new();
-        converterFactory = await BancorConverterFactory.new();
+        converterFactory = await ConverterFactory.new();
+        await converterFactory.registerTypedFactory((await LiquidTokenConverterFactory.new()).address);
+        await converterFactory.registerTypedFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         converterRegistry = await BancorConverterRegistry.new(contractRegistry.address);
         converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_FACTORY      , converterFactory     .address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY             , converterFactory     .address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
     });
@@ -72,13 +78,21 @@ contract('BancorConverterRegistry', function(accounts) {
             smartTokenD = await SmartToken.new('TokenD', 'TKND', 18);
             smartTokenE = await SmartToken.new('TokenE', 'TKNE', 18);
 
-            converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken .address, 0x1000);
-            converter2 = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken4.address, 0x2400);
-            converter3 = await BancorConverter.new(smartToken3.address, contractRegistry.address, 0, smartToken6.address, 0x3600);
-            converter4 = await BancorConverter.new(smartToken4.address, contractRegistry.address, 0, smartToken8.address, 0x4800);
-            converter5 = await BancorConverter.new(smartToken5.address, contractRegistry.address, 0, smartTokenA.address, 0x5A00);
-            converter6 = await BancorConverter.new(smartToken6.address, contractRegistry.address, 0, smartTokenC.address, 0x6C00);
-            converter7 = await BancorConverter.new(smartToken7.address, contractRegistry.address, 0, smartTokenE.address, 0x7E00);
+            converter1 = await LiquidTokenConverter.new(smartToken1.address, contractRegistry.address, 0);
+            converter2 = await LiquidityPoolV1Converter.new(smartToken2.address, contractRegistry.address, 0);
+            converter3 = await LiquidityPoolV1Converter.new(smartToken3.address, contractRegistry.address, 0);
+            converter4 = await LiquidityPoolV1Converter.new(smartToken4.address, contractRegistry.address, 0);
+            converter5 = await LiquidityPoolV1Converter.new(smartToken5.address, contractRegistry.address, 0);
+            converter6 = await LiquidityPoolV1Converter.new(smartToken6.address, contractRegistry.address, 0);
+            converter7 = await LiquidityPoolV1Converter.new(smartToken7.address, contractRegistry.address, 0);
+
+            await converter1.addReserve(etherToken.address, 0x1000);
+            await converter2.addReserve(smartToken4.address, 0x2400);
+            await converter3.addReserve(smartToken6.address, 0x3600);
+            await converter4.addReserve(smartToken8.address, 0x4800);
+            await converter5.addReserve(smartTokenA.address, 0x5A00);
+            await converter6.addReserve(smartTokenC.address, 0x6C00);
+            await converter7.addReserve(smartTokenE.address, 0x7E00);
 
             await converter2.addReserve(smartToken1.address, 0x2100);
             await converter3.addReserve(smartToken1.address, 0x3100);
@@ -94,6 +108,7 @@ contract('BancorConverterRegistry', function(accounts) {
             await smartToken5.transferOwnership(converter5.address);
             await smartToken6.transferOwnership(converter6.address);
             await smartToken7.transferOwnership(converter7.address);
+
             await converter1.acceptTokenOwnership();
             await converter2.acceptTokenOwnership();
             await converter3.acceptTokenOwnership();
@@ -213,10 +228,10 @@ contract('BancorConverterRegistry', function(accounts) {
 
             await converterRegistry.newConverter(0, 'SmartToken1', 'ST1', 18, 0, [ETH_RESERVE_ADDRESS                     ], [0x1000        ]);
             await converterRegistry.newConverter(0, 'SmartToken2', 'ST2', 18, 0, [erc20Token1.address                     ], [0x2100        ]);
-            await converterRegistry.newConverter(0, 'SmartToken2', 'ST3', 18, 0, [erc20Token2.address                     ], [0x3200        ]);
-            await converterRegistry.newConverter(0, 'SmartToken3', 'ST4', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]);
-            await converterRegistry.newConverter(0, 'SmartToken4', 'ST5', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]);
-            await converterRegistry.newConverter(0, 'SmartToken5', 'ST6', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]);
+            await converterRegistry.newConverter(0, 'SmartToken3', 'ST3', 18, 0, [erc20Token2.address                     ], [0x3200        ]);
+            await converterRegistry.newConverter(1, 'SmartToken4', 'ST4', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]);
+            await converterRegistry.newConverter(1, 'SmartToken5', 'ST5', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]);
+            await converterRegistry.newConverter(1, 'SmartToken6', 'ST6', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]);
 
             smartTokens = await converterRegistry.getSmartTokens();
             converters = await Promise.all(smartTokens.map(smartToken => SmartToken.at(smartToken).owner()));

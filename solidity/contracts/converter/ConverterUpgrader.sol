@@ -1,15 +1,15 @@
 pragma solidity 0.4.26;
 import './interfaces/IBancorConverter.sol';
-import './interfaces/IBancorConverterUpgrader.sol';
-import './interfaces/IBancorConverterFactory.sol';
+import './interfaces/IConverterUpgrader.sol';
+import './interfaces/IConverterFactory.sol';
 import '../utility/ContractRegistryClient.sol';
 import '../utility/interfaces/IWhitelist.sol';
 import '../token/interfaces/IEtherToken.sol';
 
 /**
-  * @dev Bancor Converter Upgrader
+  * @dev Converter Upgrader
   * 
-  * The Bancor converter upgrader contract allows upgrading an older Bancor converter contract (0.4 and up)
+  * The converter upgrader contract allows upgrading an older Bancor converter contract (0.4 and up)
   * to the latest version.
   * To begin the upgrade process, simply execute the 'upgrade' function.
   * At the end of the process, the ownership of the newly upgraded converter will be transferred
@@ -21,7 +21,7 @@ import '../token/interfaces/IEtherToken.sol';
   * be transferred manually to the ConverterUpgrader contract using the 'transferOwnership' function
   * and then the upgrader 'upgrade' function should be executed directly.
 */
-contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryClient {
+contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     IEtherToken etherToken;
 
@@ -42,7 +42,7 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
     event ConverterUpgrade(address indexed _oldConverter, address indexed _newConverter);
 
     /**
-      * @dev initializes a new BancorConverterUpgrader instance
+      * @dev initializes a new ConverterUpgrader instance
       * 
       * @param _registry    address of a contract registry contract
     */
@@ -131,9 +131,19 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
     function createConverter(IBancorConverter _oldConverter) private returns(IBancorConverter) {
         ISmartToken token = _oldConverter.token();
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
+        uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
 
-        IBancorConverterFactory converterFactory = IBancorConverterFactory(addressOf(BANCOR_CONVERTER_FACTORY));
-        IBancorConverter converter = converterFactory.createConverter(0, token, registry, maxConversionFee);
+        // determine new converter type
+        uint8 newType = 0;
+        // new converter - get the type from the converter itself
+        if (isV28OrHigherConverter(_oldConverter))
+            newType = _oldConverter.converterType();
+        // old converter - if it has 1 reserve token, the type is a liquid token, otherwise the type liquidity pool
+        else if (connectorTokenCount > 1)
+            newType = 1;
+
+        IConverterFactory converterFactory = IConverterFactory(addressOf(CONVERTER_FACTORY));
+        IBancorConverter converter = converterFactory.createConverter(newType, token, registry, maxConversionFee);
 
         converter.acceptOwnership();
         return converter;
@@ -214,5 +224,26 @@ contract BancorConverterUpgrader is IBancorConverterUpgrader, ContractRegistryCl
                 _oldConverter.withdrawTokens(connector, address(_newConverter), connectorBalance);
             }
         }
+    }
+
+    bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
+
+    function isV28OrHigherConverter(IBancorConverter _converter) internal view returns (bool) {
+        bool success;
+        uint256[1] memory ret;
+        bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);
+
+        assembly {
+            success := staticcall(
+                gas,           // gas remaining
+                _converter,    // destination address
+                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
+                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
+                ret,           // output buffer
+                32             // output length
+            )
+        }
+
+        return success;
     }
 }

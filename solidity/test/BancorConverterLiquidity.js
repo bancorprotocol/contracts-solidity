@@ -1,7 +1,7 @@
 const utils = require('./helpers/Utils');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
-const BancorConverter = artifacts.require('BancorConverter');
+const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const SmartToken = artifacts.require('SmartToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const BancorFormula = artifacts.require('BancorFormula');
@@ -9,18 +9,19 @@ const ContractRegistry = artifacts.require('ContractRegistry');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
+let bancorFormula;
+let contractRegistry;
+let erc20Tokens;
+
 async function initLiquidityPool(hasETH, ...weights) {
     const smartToken = await SmartToken.new('name', 'symbol', 0);
-    const converter = await BancorConverter.new(smartToken.address, contractRegistry.address, 0, utils.zeroAddress, 0);
+    const converter = await LiquidityPoolV1Converter.new(smartToken.address, contractRegistry.address, 0);
 
     for (let i = 0; i < weights.length; i++) {
-        if (hasETH && i == weights.length - 1) {
+        if (hasETH && i == weights.length - 1)
             await converter.addReserve(ETH_RESERVE_ADDRESS, weights[i] * 10000);
-        }
-        else {
-            const reserveToken = await ERC20Token.new('name', 'symbol', 0, -1);
-            await converter.addReserve(reserveToken.address, weights[i] * 10000);
-        }
+        else
+            await converter.addReserve(erc20Tokens[i].address, weights[i] * 10000);
     }
 
     await smartToken.transferOwnership(converter.address);
@@ -35,6 +36,7 @@ contract('BancorConverterLiquidity', accounts => {
     before(async () => {
         bancorFormula = await BancorFormula.new();
         contractRegistry = await ContractRegistry.new();
+        erc20Tokens = await Promise.all([...Array(5).keys()].map(i => ERC20Token.new('name', 'symbol', 0, -1)));
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
     });
 
@@ -42,7 +44,7 @@ contract('BancorConverterLiquidity', accounts => {
         let converter;
 
         before(async () => {
-            converter = await BancorConverter.new('0x'.padEnd(42, '1'), contractRegistry.address, 0, utils.zeroAddress, 0);
+            converter = await LiquidityPoolV1Converter.new('0x'.padEnd(42, '1'), contractRegistry.address, 0);
         });
 
         for (let n = 1; n <= 77; n++) {
