@@ -1,7 +1,7 @@
 pragma solidity 0.4.26;
-import './Owned.sol';
-import './Utils.sol';
-import './interfaces/IContractRegistry.sol';
+import "./Owned.sol";
+import "./Utils.sol";
+import "./interfaces/IContractRegistry.sol";
 
 /**
   * @dev Base contract for ContractRegistry clients
@@ -25,7 +25,7 @@ contract ContractRegistryClient is Owned, Utils {
 
     /**
       * @dev verifies that the caller is mapped to the given contract name
-      * 
+      *
       * @param _contractName    contract name
     */
     modifier only(bytes32 _contractName) {
@@ -40,7 +40,7 @@ contract ContractRegistryClient is Owned, Utils {
 
     /**
       * @dev initializes a new ContractRegistryClient instance
-      * 
+      *
       * @param  _registry   address of a contract-registry contract
     */
     constructor(IContractRegistry _registry) internal validAddress(_registry) {
@@ -81,19 +81,19 @@ contract ContractRegistryClient is Owned, Utils {
 
     /**
       * @dev restricts the permission to update the contract-registry
-      * 
+      *
       * @param _onlyOwnerCanUpdateRegistry  indicates whether or not permission is restricted to owner only
     */
-    function restrictRegistryUpdate(bool _onlyOwnerCanUpdateRegistry) ownerOnly public {
+    function restrictRegistryUpdate(bool _onlyOwnerCanUpdateRegistry) public ownerOnly {
         // change the permission to update the contract-registry
         onlyOwnerCanUpdateRegistry = _onlyOwnerCanUpdateRegistry;
     }
 
     /**
       * @dev returns the address associated with the given contract name
-      * 
+      *
       * @param _contractName    contract name
-      * 
+      *
       * @return contract address
     */
     function addressOf(bytes32 _contractName) internal view returns (address) {

@@ -1,14 +1,14 @@
 pragma solidity 0.4.26;
-import './IBancorNetwork.sol';
-import './IBancorNetworkPathFinder.sol';
-import './converter/interfaces/IBancorConverter.sol';
-import './converter/interfaces/IBancorFormula.sol';
-import './utility/TokenHolder.sol';
-import './utility/SafeMath.sol';
-import './utility/ContractRegistryClient.sol';
-import './token/interfaces/IEtherToken.sol';
-import './token/interfaces/ISmartToken.sol';
-import './bancorx/interfaces/IBancorX.sol';
+import "./IBancorNetwork.sol";
+import "./IBancorNetworkPathFinder.sol";
+import "./converter/interfaces/IBancorConverter.sol";
+import "./converter/interfaces/IBancorFormula.sol";
+import "./utility/TokenHolder.sol";
+import "./utility/SafeMath.sol";
+import "./utility/ContractRegistryClient.sol";
+import "./token/interfaces/IEtherToken.sol";
+import "./token/interfaces/ISmartToken.sol";
+import "./bancorx/interfaces/IBancorX.sol";
 
 // interface of older converters for backward compatibility
 contract ILegacyBancorConverter {
@@ -18,15 +18,15 @@ contract ILegacyBancorConverter {
 /**
   * @dev The BancorNetwork contract is the main entry point for Bancor token conversions.
   * It also allows for the conversion of any token in the Bancor Network to any other token in a single transaction by providing a conversion path.
-  * 
+  *
   * A note on Conversion Path: Conversion path is a data structure that is used when converting a token to another token in the Bancor Network,
   * when the conversion cannot necessarily be done by a single converter and might require multiple 'hops'.
   * The path defines which converters should be used and what kind of conversion should be done in each step.
-  * 
+  *
   * The path format doesn't include complex structure; instead, it is represented by a single array in which each 'hop' is represented by a 2-tuple - smart token & target token.
   * In addition, the first element is always the source token.
   * The smart token is only used as a pointer to a converter (since converter addresses are more likely to change as opposed to smart token addresses).
-  * 
+  *
   * Format:
   * [source token, smart token, target token, smart token, target token...]
 */
@@ -53,7 +53,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev triggered when a conversion between two tokens occurs
-      * 
+      *
       * @param _smartToken  smart token governed by the converter
       * @param _fromToken   source ERC20 token
       * @param _toToken     target ERC20 token
@@ -72,7 +72,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev initializes a new BancorNetwork instance
-      * 
+      *
       * @param _registry    address of a contract registry contract
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
@@ -81,7 +81,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev allows the owner to update the maximum affiliate-fee
-      * 
+      *
       * @param _maxAffiliateFee   maximum affiliate-fee
     */
     function setMaxAffiliateFee(uint256 _maxAffiliateFee)
@@ -94,7 +94,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev allows the owner to register/unregister ether tokens
-      * 
+      *
       * @param _token       ether token contract address
       * @param _register    true to register, false to unregister
     */
@@ -110,7 +110,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     /**
       * @dev returns the conversion path between two tokens in the network
       * note that this method is quite expensive in terms of gas and should generally be called off-chain
-      * 
+      *
       * @param _sourceToken source token address
       * @param _targetToken target token address
       *
@@ -124,10 +124,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     /**
       * @dev returns the expected rate of converting a given amount on a given path
       * note that there is no support for circular paths
-      * 
+      *
       * @param _path        conversion path (see conversion path format above)
       * @param _amount      amount of _path[0] tokens received from the sender
-      * 
+      *
       * @return expected rate
     */
     function rateByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256) {
@@ -202,14 +202,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * a predefined conversion path and transfers the result tokens to a target account
       * affiliate account/fee can also be passed in to receive a conversion fee (on top of the liquidity provider fees)
       * note that the network should already have been given allowance of the source token (if not ETH)
-      * 
+      *
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _beneficiary         account that will receive the conversion result or 0x0 to send the result to the sender account
       * @param _affiliateAccount    wallet address to receive the affiliate fee or 0x0 to disable affiliate fee
       * @param _affiliateFee        affiliate fee in PPM or 0 to disable affiliate fee
-      * 
+      *
       * @return amount of tokens received from the conversion
     */
     function convertByPath(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary, address _affiliateAccount, uint256 _affiliateFee)
@@ -253,14 +253,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * @dev converts any other token to BNT in the bancor network by following
       a predefined conversion path and transfers the result to an account on a different blockchain
       * note that the network should already have been given allowance of the source token (if not ETH)
-      * 
+      *
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _targetBlockchain    blockchain BNT will be issued on
       * @param _targetAccount       address/account on the target blockchain to send the BNT to
-      * @param _conversionId        pre-determined unique (if non zero) id which refers to this transaction 
-      * 
+      * @param _conversionId        pre-determined unique (if non zero) id which refers to this transaction
+      *
       * @return the amount of BNT received from this conversion
     */
     function xConvert(
@@ -282,16 +282,16 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * @dev converts any other token to BNT in the bancor network by following
       a predefined conversion path and transfers the result to an account on a different blockchain
       * note that the network should already have been given allowance of the source token (if not ETH)
-      * 
+      *
       * @param _path                conversion path, see conversion path format above
       * @param _amount              amount to convert from, in the source token
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _targetBlockchain    blockchain BNT will be issued on
       * @param _targetAccount       address/account on the target blockchain to send the BNT to
-      * @param _conversionId        pre-determined unique (if non zero) id which refers to this transaction 
+      * @param _conversionId        pre-determined unique (if non zero) id which refers to this transaction
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
-      * 
+      *
       * @return the amount of BNT received from this conversion
     */
     function xConvert2(
@@ -310,7 +310,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         returns (uint256)
     {
         // verify that the path contrains at least a single 'hop' and that the number of elements is odd
-        require(_path.length > 2 &&  _path.length % 2 == 1, "BANCOR_ERR_INVALID_PATH");
+        require(_path.length > 2 && _path.length % 2 == 1, "BANCOR_ERR_INVALID_PATH");
 
         // verify that the destination token is BNT
         require(_path[_path.length - 1] == addressOf(BNT_TOKEN), "BANCOR_ERR_INVALID_TARGET_TOKEN");
@@ -367,13 +367,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev executes the actual conversion by following the conversion path
-      * 
+      *
       * @param _data                conversion data, see ConversionStep struct above
       * @param _amount              amount to convert from, in the source token
       * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
       * @param _affiliateAccount    affiliate account
       * @param _affiliateFee        affiliate fee in PPM
-      * 
+      *
       * @return amount of tokens received from the conversion
     */
     function doConversion(
@@ -431,7 +431,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev validates msg.value and prepares the conversion source token for the conversion
-      * 
+      *
       * @param _sourceToken source token of the first conversion step
       * @param _smartToken  smart token of the first conversion step
       * @param _amount      amount to convert from, in the source token
@@ -474,7 +474,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev handles the conversion target token if the network still holds it at the end of the conversion
-      * 
+      *
       * @param _data        conversion data, see ConversionStep struct above
       * @param _amount      conversion return amount, in the target token
       * @param _beneficiary wallet to receive the conversion result
@@ -504,11 +504,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev creates a memory cache of all conversion steps data to minimize logic and external calls during conversions
-      * 
+      *
       * @param _conversionPath      conversion path, see conversion path format above
       * @param _beneficiary         wallet to receive the conversion result
       * @param _affiliateFeeEnabled true if affiliate fee was requested by the sender, false if not
-      * 
+      *
       * @return cached conversion data to be ingested later on by the conversion flow
     */
     function createConversionData(IERC20Token[] _conversionPath, address _beneficiary, bool _affiliateFeeEnabled) private view returns (ConversionStep[]) {
@@ -603,7 +603,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't.
       * Note that we use the non standard erc-20 interface in which `approve` has no return value so that
       * this function will work for both standard and non standard tokens
-      * 
+      *
       * @param _token   token to check the allowance in
       * @param _spender approved address
       * @param _value   allowance amount

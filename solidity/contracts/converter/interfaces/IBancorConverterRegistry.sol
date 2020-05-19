@@ -1,5 +1,5 @@
 pragma solidity 0.4.26;
-import './IBancorConverter.sol';
+import "./IBancorConverter.sol";
 
 interface IBancorConverterRegistry {
     function getSmartTokenCount() external view returns (uint);

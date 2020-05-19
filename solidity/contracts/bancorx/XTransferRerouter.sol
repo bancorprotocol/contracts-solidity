@@ -1,5 +1,4 @@
 pragma solidity 0.4.26;
-
 import "../utility/Owned.sol";
 
 contract XTransferRerouter is Owned {
@@ -14,15 +13,15 @@ contract XTransferRerouter is Owned {
 
     /**
       * @dev initializes a new XTransferRerouter instance
-      * 
-      * @param _reroutingEnabled    intializes transactions routing to enabled/disabled   
+      *
+      * @param _reroutingEnabled    intializes transactions routing to enabled/disabled
      */
     constructor(bool _reroutingEnabled) public {
         reroutingEnabled = _reroutingEnabled;
     }
     /**
       * @dev allows the owner to disable/enable rerouting
-      * 
+      *
       * @param _enable     true to enable, false to disable
      */
     function enableRerouting(bool _enable) public ownerOnly {
@@ -42,7 +41,7 @@ contract XTransferRerouter is Owned {
 
     /**
       * @dev    allows a user to reroute a transaction to a new blockchain/target address
-      * 
+      *
       * @param _txId        the original transaction id
       * @param _blockchain  the new blockchain name
       * @param _to          the new target address/account

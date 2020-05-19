@@ -1,5 +1,5 @@
 pragma solidity 0.4.26;
-import './IERC20Token.sol';
+import "./IERC20Token.sol";
 
 /*
     Ether Token interface

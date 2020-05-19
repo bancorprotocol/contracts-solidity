@@ -1,5 +1,5 @@
 pragma solidity 0.4.26;
-import '../BancorNetwork.sol';
+import "../BancorNetwork.sol";
 
 contract OldBancorConverter {
     uint256 private amount;

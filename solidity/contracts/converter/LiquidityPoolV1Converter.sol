@@ -1,6 +1,6 @@
 pragma solidity 0.4.26;
-import './LiquidityPoolConverter.sol';
-import './interfaces/ITypedConverterFactory.sol';
+import "./LiquidityPoolConverter.sol";
+import "./interfaces/ITypedConverterFactory.sol";
 
 /*
     LiquidityPoolV1Converter Factory
@@ -8,7 +8,7 @@ import './interfaces/ITypedConverterFactory.sol';
 contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
     /**
       * @dev returns the converter type the factory is associated with
-      * 
+      *
       * @return converter type
     */
     function converterType() public pure returns (uint8) {
@@ -18,11 +18,11 @@ contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
     /**
       * @dev creates a new converter with the given arguments and transfers
       * the ownership to the caller
-      * 
+      *
       * @param _token             smart token governed by the converter
       * @param _registry          address of a contract registry contract
       * @param _maxConversionFee  maximum conversion fee, represented in ppm
-      * 
+      *
       * @return a new converter
     */
     function createConverter(ISmartToken _token, IContractRegistry _registry, uint32 _maxConversionFee) public returns(IBancorConverter) {
@@ -34,7 +34,7 @@ contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
 
 /**
   * @dev Liquidity Pool v1 Converter
-  * 
+  *
   * The liquidity pool v1 converter is a specialized version of a converter that manages
   * a classic bancor liquidity pool.
   *
@@ -47,7 +47,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev initializes a new LiquidityPoolV1Converter instance
-      * 
+      *
       * @param  _token              pool token governed by the converter
       * @param  _registry           address of a contract registry contract
       * @param  _maxConversionFee   maximum conversion fee, represented in ppm
@@ -73,11 +73,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev returns the expected rate of converting one reserve to another along with the fee
-      * 
+      *
       * @param _sourceToken contract address of the source reserve token
       * @param _targetToken contract address of the target reserve token
       * @param _amount      amount of tokens received from the user
-      * 
+      *
       * @return expected rate
       * @return expected fee
     */
@@ -165,7 +165,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @dev buys the token with all reserve tokens using the same percentage
       * note that the function cannot be called when the converter has only one reserve
       * note that prior to version 28, you should use 'fund' instead
-      * 
+      *
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
       * @param _minReturn       token minimum return-amount
@@ -204,7 +204,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @dev sells the token for all reserve tokens using the same percentage
       * note that the function cannot be called when the converter has only one reserve
       * note that prior to version 28, you should use 'liquidate' instead
-      * 
+      *
       * @param _amount                  token amount
       * @param _reserveTokens           address of each reserve token
       * @param _reserveMinReturnAmounts minimum return-amount of each reserve token
@@ -232,7 +232,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * then it will cost an amount equal to 10% of each reserve token balance
       * note that the function cannot be called when the converter has only one reserve
       * note that starting from version 28, you should use 'addLiquidity' instead
-      * 
+      *
       * @param _amount  amount to increase the supply by (in the smart token)
     */
     function fund(uint256 _amount) public payable protected {
@@ -281,7 +281,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * then they will receive 10% of each reserve token balance in return
       * note that the function cannot be called when the converter has only one reserve
       * note that starting from version 28, you should use 'removeLiquidity' instead
-      * 
+      *
       * @param _amount  amount to liquidate (in the smart token)
     */
     function liquidate(uint256 _amount) public protected {
@@ -300,7 +300,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     /**
       * @dev verifies that a given array of tokens is identical to the converter's array of reserve tokens
       * we take this input in order to allow specifying the corresponding reserve amounts in any order
-      * 
+      *
       * @param _reserveTokens   array of reserve tokens
       * @param _reserveAmounts  array of reserve amounts
       * @param _amount          token amount
@@ -332,7 +332,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev adds liquidity (reserve) to the pool
-      * 
+      *
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
       * @param _totalSupply     token total supply
@@ -348,7 +348,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev adds liquidity (reserve) to the pool when it's empty
-      * 
+      *
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
     */
@@ -374,7 +374,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev adds liquidity (reserve) to the pool when it's not empty
-      * 
+      *
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
       * @param _totalSupply     token total supply
@@ -412,7 +412,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev removes liquidity (reserve) from the pool
-      * 
+      *
       * @param _reserveTokens           address of each reserve token
       * @param _reserveMinReturnAmounts minimum return-amount of each reserve token
       * @param _totalSupply             token total supply
@@ -459,7 +459,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev calculates the number of decimal digits in a given value
-      * 
+      *
       * @param _x   value (assumed positive)
       * @return the number of decimal digits in the given value
     */
@@ -472,7 +472,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev calculates the nearest integer to a given quotient
-      * 
+      *
       * @param _n   quotient numerator
       * @param _d   quotient denominator
       * @return the nearest integer to the given quotient
@@ -483,7 +483,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev calculates the average number of decimal digits in a given list of values
-      * 
+      *
       * @param _values  list of values (each of which assumed positive)
       * @return the average number of decimal digits in the given list of values
     */
