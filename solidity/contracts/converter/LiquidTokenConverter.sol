@@ -93,14 +93,13 @@ contract LiquidTokenConverter is BancorConverter {
       * @return expected fee
     */
     function rateAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256) {
-        // validate input
-        require((_sourceToken == token && reserves[_targetToken].isSet) ||
-                (_targetToken == token && reserves[_sourceToken].isSet));
-
-        if (_targetToken == token)
+        if (_targetToken == token && reserves[_sourceToken].isSet)
             return purchaseRate(_amount);
+        if (_sourceToken == token && reserves[_targetToken].isSet)
+            return saleRate(_amount);
 
-        return saleRate(_amount);
+        // invalid input
+        revert();
     }
 
     /**
@@ -122,9 +121,9 @@ contract LiquidTokenConverter is BancorConverter {
         // call the parent to verify input
         super.convert(_sourceToken, _targetToken, _amount, _trader, _beneficiary);
 
-        if (_targetToken == token)
+        if (_targetToken == token && reserves[_sourceToken].isSet)
             return buy(_amount, _beneficiary);
-        if (_sourceToken == token)
+        if (_sourceToken == token && reserves[_targetToken].isSet)
             return sell(_amount, _beneficiary);
 
         // invalid input
