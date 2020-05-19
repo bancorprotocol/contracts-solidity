@@ -99,7 +99,7 @@ contract LiquidTokenConverter is BancorConverter {
             return saleRate(_amount);
 
         // invalid input
-        revert();
+        revert("BANCOR_ERR_INVALID_TOKEN");
     }
 
     /**
@@ -127,7 +127,7 @@ contract LiquidTokenConverter is BancorConverter {
             return sell(_amount, _beneficiary);
 
         // invalid input
-        revert();
+        revert("BANCOR_ERR_INVALID_TOKEN");
     }
 
     /**
