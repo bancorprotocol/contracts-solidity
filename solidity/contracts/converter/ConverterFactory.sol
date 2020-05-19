@@ -28,11 +28,10 @@ contract ConverterFactory is IConverterFactory, Owned {
       * @dev initializes the factory with a specific typed factory
       * can only be called by the owner
       * 
-      * @param _type              converter type, see BancorConverter contract main doc
-      * @param _factory           typed factory
+      * @param _factory typed factory
     */
-    function setTypedConverterFactory(uint8 _type, ITypedConverterFactory _factory) public ownerOnly {
-        factories[_type] = _factory;
+    function registerTypedFactory(ITypedConverterFactory _factory) public ownerOnly {
+        factories[_factory.converterType()] = _factory;
     }
 
     /**

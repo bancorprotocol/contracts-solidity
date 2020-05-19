@@ -28,8 +28,8 @@ contract('BancorConverterRegistry', function(accounts) {
     before(async function() {
         contractRegistry = await ContractRegistry.new();
         converterFactory = await ConverterFactory.new();
-        await converterFactory.setTypedConverterFactory(0, (await LiquidTokenConverterFactory.new()).address);
-        await converterFactory.setTypedConverterFactory(1, (await LiquidityPoolV1ConverterFactory.new()).address);
+        await converterFactory.registerTypedFactory((await LiquidTokenConverterFactory.new()).address);
+        await converterFactory.registerTypedFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         converterRegistry = await BancorConverterRegistry.new(contractRegistry.address);
         converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY             , converterFactory     .address);
