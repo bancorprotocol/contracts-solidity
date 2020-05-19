@@ -377,50 +377,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     }
 
     /**
-      * @dev allows a user to convert BNT that was sent from another blockchain into any other
-      * token on the BancorNetwork without specifying the amount of BNT to be converted, but
-      * rather by providing the xTransferId which allows us to get the amount from BancorX.
-      * note that prior to version 16, you should use 'completeXConversion' instead
-      * 
-      * @param _path            conversion path, see conversion path format in the BancorNetwork contract
-      * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-      * @param _conversionId    pre-determined unique (if non zero) id which refers to this transaction 
-      * 
-      * @return tokens issued in return
-    */
-    function completeXConversion2(
-        IERC20Token[] _path,
-        uint256 _minReturn,
-        uint256 _conversionId
-    )
-        public
-        returns (uint256)
-    {
-        IBancorX bancorX = IBancorX(addressOf(BANCOR_X));
-        IBancorNetwork bancorNetwork = IBancorNetwork(addressOf(BANCOR_NETWORK));
-
-        // verify that the first token in the path is BNT
-        require(_path[0] == addressOf(BNT_TOKEN));
-
-        // get conversion amount from BancorX contract
-        uint256 amount = bancorX.getXTransferAmount(_conversionId, msg.sender);
-
-        // send BNT from msg.sender to the converter contract
-        token.destroy(msg.sender, amount);
-        token.issue(this, amount);
-
-        // grant allowance to the network
-        uint256 allowance = token.allowance(this, bancorNetwork);
-        if (allowance < amount) {
-            if (allowance > 0)
-                safeApprove(token, bancorNetwork, 0);
-            safeApprove(token, bancorNetwork, amount);
-        }
-
-        return bancorNetwork.claimAndConvertFor2(_path, amount, _minReturn, msg.sender, address(0), 0);
-    }
-
-    /**
       * @dev given a return amount, returns the amount minus the conversion fee
       * 
       * @param _amount      return amount
@@ -467,13 +423,6 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
         assert(_feeAmount < 2 ** 255);
         emit Conversion(_sourceToken, _targetToken, msg.sender, _amount, _returnAmount, int256(_feeAmount));
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function completeXConversion(IERC20Token[] _path, uint256 _minReturn, uint256 _conversionId, uint256, uint8, bytes32, bytes32) public returns (uint256) {
-        return completeXConversion2(_path, _minReturn, _conversionId);
     }
 
     /**
