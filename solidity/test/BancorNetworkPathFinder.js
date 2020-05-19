@@ -126,8 +126,8 @@ contract('BancorNetworkPathFinder', accounts => {
         converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
         pathFinder            = await BancorNetworkPathFinder    .new(contractRegistry.address);
 
-        await converterFactory.setTypedConverterFactory(0, (await LiquidTokenConverterFactory.new()).address);
-        await converterFactory.setTypedConverterFactory(1, (await LiquidityPoolV1ConverterFactory.new()).address);
+        await converterFactory.registerTypedFactory((await LiquidTokenConverterFactory.new()).address);
+        await converterFactory.registerTypedFactory((await LiquidityPoolV1ConverterFactory.new()).address);
 
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY             , converterFactory     .address);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);

@@ -110,7 +110,7 @@ contract('LiquidityPoolConverter', accounts => {
         factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY, factory.address);
 
-        await factory.setTypedConverterFactory(1, (await LiquidityPoolV1ConverterFactory.new()).address);
+        await factory.registerTypedFactory((await LiquidityPoolV1ConverterFactory.new()).address);
 
         upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);

@@ -7,6 +7,15 @@ import './interfaces/ITypedConverterFactory.sol';
 */
 contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
     /**
+      * @dev returns the converter type the factory is associated with
+      * 
+      * @return converter type
+    */
+    function converterType() public pure returns (uint8) {
+        return 1;
+    }
+
+    /**
       * @dev creates a new converter with the given arguments and transfers
       * the ownership to the caller
       * 

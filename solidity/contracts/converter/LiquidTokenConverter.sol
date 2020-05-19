@@ -7,6 +7,15 @@ import './interfaces/ITypedConverterFactory.sol';
 */
 contract LiquidTokenConverterFactory is ITypedConverterFactory {
     /**
+      * @dev returns the converter type the factory is associated with
+      * 
+      * @return converter type
+    */
+    function converterType() public pure returns (uint8) {
+        return 0;
+    }
+
+    /**
       * @dev creates a new converter with the given arguments and transfers
       * the ownership to the caller
       * 
@@ -84,11 +93,9 @@ contract LiquidTokenConverter is BancorConverter {
       * @return expected fee
     */
     function rateAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256) {
-        require(_sourceToken != _targetToken); // validate input
-
-        if (_targetToken == token)
+        if (_targetToken == token && reserves[_sourceToken].isSet)
             return purchaseRate(_amount);
-        if (_sourceToken == token)
+        if (_sourceToken == token && reserves[_targetToken].isSet)
             return saleRate(_amount);
 
         // invalid input
@@ -114,9 +121,9 @@ contract LiquidTokenConverter is BancorConverter {
         // call the parent to verify input
         super.convert(_sourceToken, _targetToken, _amount, _trader, _beneficiary);
 
-        if (_targetToken == token)
+        if (_targetToken == token && reserves[_sourceToken].isSet)
             return buy(_amount, _beneficiary);
-        if (_sourceToken == token)
+        if (_sourceToken == token && reserves[_targetToken].isSet)
             return sell(_amount, _beneficiary);
 
         // invalid input

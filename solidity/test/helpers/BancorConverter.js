@@ -15,11 +15,8 @@ module.exports.new = async function(type, tokenAddress, registryAddress, maxConv
         bancorConverter.defaults({from: web3.eth.accounts[0], gas: block.gasLimit});
         return await bancorConverter.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
     }
-    let converter;
-    if (type == 0)
-        converter = await LiquidTokenConverter.new(tokenAddress, registryAddress, maxConversionFee);
-    else if (type == 1)
-        converter = await LiquidityPoolV1Converter.new(tokenAddress, registryAddress, maxConversionFee);
+    const converterType = [LiquidTokenConverter, LiquidityPoolV1Converter][type];
+    const converter = await converterType.new(tokenAddress, registryAddress, maxConversionFee);
     if (reserveTokenAddress != utils.zeroAddress)
         await converter.addReserve(reserveTokenAddress, weight);
     return converter;
