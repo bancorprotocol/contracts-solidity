@@ -99,8 +99,8 @@ contract LiquidTokenConverter is BancorConverter {
 
         if (_targetToken == token)
             return purchaseRate(_amount);
-        if (_sourceToken == token)
-            return saleRate(_amount);
+
+        return saleRate(_amount);
     }
 
     /**
