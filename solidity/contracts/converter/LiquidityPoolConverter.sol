@@ -68,7 +68,7 @@ contract LiquidityPoolConverter is BancorConverter {
     */
     function acceptTokenOwnership() public {
         // verify that the converter has at least 2 reserves
-        require(reserveTokenCount() > 1);
+        require(reserveTokenCount() > 1, "BANCOR_ERR_INVALID_RESERVE_COUNT");
         super.acceptTokenOwnership();
     }
 }

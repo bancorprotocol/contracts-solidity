@@ -25,8 +25,13 @@ contract Owned is IOwned {
 
     // allows execution by the owner only
     modifier ownerOnly {
-        require(msg.sender == owner);
+        _ownerOnly();
         _;
+    }
+
+    // error message binary size optimization
+    function _ownerOnly() internal view {
+        require(msg.sender == owner, "ERR_ACCESS_DENIED");
     }
 
     /**
@@ -37,7 +42,7 @@ contract Owned is IOwned {
       * @param _newOwner    new contract owner
     */
     function transferOwnership(address _newOwner) public ownerOnly {
-        require(_newOwner != owner);
+        require(_newOwner != owner, "ERR_SAME_OWNER");
         newOwner = _newOwner;
     }
 
@@ -45,7 +50,7 @@ contract Owned is IOwned {
       * @dev used by a new owner to accept an ownership transfer
     */
     function acceptOwnership() public {
-        require(msg.sender == newOwner);
+        require(msg.sender == newOwner, "ERR_ACCESS_DENIED");
         emit OwnerUpdate(owner, newOwner);
         owner = newOwner;
         newOwner = address(0);

@@ -10,22 +10,36 @@ contract Utils {
     constructor() public {
     }
 
-    // verifies that an amount is greater than zero
-    modifier greaterThanZero(uint256 _amount) {
-        require(_amount > 0);
+    // verifies that a value is greater than zero
+    modifier greaterThanZero(uint256 _value) {
+        _greaterThanZero(_value);
         _;
+    }
+
+    // error message binary size optimization
+    function _greaterThanZero(uint256 _value) internal pure {
+        require(_value > 0, "ERR_ZERO_VALUE");
     }
 
     // validates an address - currently only checks that it isn't null
     modifier validAddress(address _address) {
-        require(_address != address(0));
+        _validAddress(_address);
         _;
+    }
+
+    // error message binary size optimization
+    function _validAddress(address _address) internal pure {
+        require(_address != address(0), "ERR_INVALID_ADDRESS");
     }
 
     // verifies that the address is different than this contract address
     modifier notThis(address _address) {
-        require(_address != address(this));
+        _notThis(_address);
         _;
     }
 
+    // error message binary size optimization
+    function _notThis(address _address) internal view {
+        require(_address != address(this), "ERR_ADDRESS_IS_SELF");
+    }
 }

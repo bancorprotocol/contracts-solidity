@@ -88,7 +88,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         public
         ownerOnly
     {
-        require(_maxAffiliateFee <= AFFILIATE_FEE_RESOLUTION);
+        require(_maxAffiliateFee <= AFFILIATE_FEE_RESOLUTION, "BANCOR_ERR_INVALID_AFFILIATE_FEE");
         maxAffiliateFee = _maxAffiliateFee;
     }
 
@@ -142,7 +142,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         amount = _amount;
 
         // verify that the number of elements is larger than 2 and odd
-        require(_path.length > 2 && _path.length % 2 == 1);
+        require(_path.length > 2 && _path.length % 2 == 1, "BANCOR_ERR_INVALID_PATH");
 
         // iterate over the conversion path
         for (uint256 i = 2; i < _path.length; i += 2) {
@@ -219,7 +219,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         returns (uint256)
     {
         // verify that the path contrains at least a single 'hop' and that the number of elements is odd
-        require(_path.length > 2 &&  _path.length % 2 == 1);
+        require(_path.length > 2 && _path.length % 2 == 1, "BANCOR_ERR_INVALID_PATH");
 
         // validate msg.value and prepare the source token for the conversion
         handleSourceToken(_path[0], ISmartToken(_path[1]), _amount);
@@ -227,10 +227,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         // check if affiliate fee is enabled
         bool affiliateFeeEnabled = false;
         if (address(_affiliateAccount) == 0) {
-            require(_affiliateFee == 0);
+            require(_affiliateFee == 0, "BANCOR_ERR_INVALID_AFFILIATE_FEE");
         }
         else {
-            require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee);
+            require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee, "BANCOR_ERR_INVALID_AFFILIATE_FEE");
             affiliateFeeEnabled = true;
         }
 
@@ -310,20 +310,20 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         returns (uint256)
     {
         // verify that the path contrains at least a single 'hop' and that the number of elements is odd
-        require(_path.length > 2 &&  _path.length % 2 == 1);
+        require(_path.length > 2 &&  _path.length % 2 == 1, "BANCOR_ERR_INVALID_PATH");
 
         // verify that the destination token is BNT
-        require(_path[_path.length - 1] == addressOf(BNT_TOKEN));
+        require(_path[_path.length - 1] == addressOf(BNT_TOKEN), "BANCOR_ERR_INVALID_TARGET_TOKEN");
 
         // validate msg.value and prepare the source token for the conversion
         handleSourceToken(_path[0], ISmartToken(_path[1]), _amount);
 
         bool affiliateFeeEnabled = false;
         if (address(_affiliateAccount) == 0) {
-            require(_affiliateFee == 0);
+            require(_affiliateFee == 0, "BANCOR_ERR_INVALID_AFFILIATE_FEE");
         }
         else {
-            require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee);
+            require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee, "BANCOR_ERR_INVALID_AFFILIATE_FEE");
             affiliateFeeEnabled = true;
         }
 
@@ -356,7 +356,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         public returns (uint256)
     {
         // verify that the source token is the BancorX token
-        require(_path[0] == _bancorX.token());
+        require(_path[0] == _bancorX.token(), "BANCOR_ERR_INVALID_SOURCE_TOKEN");
 
         // get conversion amount from BancorX contract
         uint256 amount = _bancorX.getXTransferAmount(_conversionId, msg.sender);
@@ -415,7 +415,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
             // pay affiliate-fee if needed
             if (stepData.processAffiliateFee) {
                 uint256 affiliateAmount = toAmount.mul(_affiliateFee).div(AFFILIATE_FEE_RESOLUTION);
-                require(stepData.targetToken.transfer(_affiliateAccount, affiliateAmount));
+                require(stepData.targetToken.transfer(_affiliateAccount, affiliateAmount), "BANCOR_ERR_FEE_TRANSFER_FAILED");
                 toAmount -= affiliateAmount;
             }
 
@@ -424,7 +424,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         }
 
         // ensure the trade meets the minimum requested amount
-        require(toAmount >= _minReturn);
+        require(toAmount >= _minReturn, "BANCOR_ERR_RATE_TOO_LOW");
 
         return toAmount;
     }
@@ -443,7 +443,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         // ETH
         if (msg.value > 0) {
             // validate msg.value
-            require(msg.value == _amount);
+            require(msg.value == _amount, "BANCOR_ERR_AMOUNTS_MISMATCH");
 
             // EtherToken converter - deposit the ETH into the EtherToken
             // note that it can still be a non ETH converter if the path is wrong

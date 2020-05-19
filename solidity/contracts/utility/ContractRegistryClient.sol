@@ -29,8 +29,13 @@ contract ContractRegistryClient is Owned, Utils {
       * @param _contractName    contract name
     */
     modifier only(bytes32 _contractName) {
-        require(msg.sender == addressOf(_contractName));
+        _only(_contractName);
         _;
+    }
+
+    // error message binary size optimization
+    function _only(bytes32 _contractName) internal view {
+        require(msg.sender == addressOf(_contractName), "ERR_ACCESS_DENIED");
     }
 
     /**
@@ -48,16 +53,16 @@ contract ContractRegistryClient is Owned, Utils {
      */
     function updateRegistry() public {
         // verify that this function is permitted
-        require(msg.sender == owner || !onlyOwnerCanUpdateRegistry);
+        require(msg.sender == owner || !onlyOwnerCanUpdateRegistry, "ERR_ACCESS_DENIED");
 
         // get the new contract-registry
         address newRegistry = addressOf(CONTRACT_REGISTRY);
 
         // verify that the new contract-registry is different and not zero
-        require(newRegistry != address(registry) && newRegistry != address(0));
+        require(newRegistry != address(registry) && newRegistry != address(0), "ERR_INVALID_REGISTRY");
 
         // verify that the new contract-registry is pointing to a non-zero contract-registry
-        require(IContractRegistry(newRegistry).addressOf(CONTRACT_REGISTRY) != address(0));
+        require(IContractRegistry(newRegistry).addressOf(CONTRACT_REGISTRY) != address(0), "ERR_INVALID_REGISTRY");
 
         // save a backup of the current contract-registry before replacing it
         prevRegistry = registry;

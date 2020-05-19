@@ -89,7 +89,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         validReserve(_targetToken)
         returns (uint256, uint256)
     {
-        require(_sourceToken != _targetToken); // validate input
+        require(_sourceToken != _targetToken, "BANCOR_ERR_SAME_SOURCE_TARGET"); // validate input
 
         uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).crossReserveRate(
             reserveBalance(_sourceToken),
@@ -129,7 +129,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         (uint256 amount, uint256 fee) = rateAndFee(_sourceToken, _targetToken, _amount);
 
         // ensure the trade gives something in return
-        require(amount != 0);
+        require(amount != 0, "BANCOR_ERR_ZERO_RATE");
 
         // ensure that the trade won't deplete the reserve balance
         uint256 toReserveBalance = reserveBalance(_targetToken);
@@ -137,9 +137,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         // ensure that the input amount was already deposited
         if (_sourceToken == ETH_RESERVE_ADDRESS)
-            require(msg.value == _amount);
+            require(msg.value == _amount, "BANCOR_ERR_AMOUNTS_MISMATCH");
         else
-            require(msg.value == 0 && _sourceToken.balanceOf(this).sub(reserveBalance(_sourceToken)) >= _amount);
+            require(msg.value == 0 && _sourceToken.balanceOf(this).sub(reserveBalance(_sourceToken)) >= _amount, "BANCOR_ERR_INVALID_AMOUNT");
 
         // sync the reserve balances
         syncReserveBalance(_sourceToken);
@@ -181,11 +181,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
         for (uint256 i = 0; i < _reserveTokens.length; i++)
             if (_reserveTokens[i] == ETH_RESERVE_ADDRESS)
-                require(_reserveAmounts[i] == msg.value);
+                require(_reserveAmounts[i] == msg.value, "BANCOR_ERR_AMOUNTS_MISMATCH");
 
         // if the input value of ETH is larger than zero, then verify that one of the reserves is ETH
         if (msg.value > 0)
-            require(reserves[ETH_RESERVE_ADDRESS].isSet);
+            require(reserves[ETH_RESERVE_ADDRESS].isSet, "BANCOR_ERR_NO_ETH_RESERVE");
 
         // get the total supply
         uint256 totalSupply = token.totalSupply();
@@ -194,7 +194,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint256 amount = addLiquidityToPool(_reserveTokens, _reserveAmounts, totalSupply);
 
         // verify that the equivalent amount of tokens is equal to or larger than the user's expectation
-        require(amount >= _minReturn);
+        require(amount >= _minReturn, "BANCOR_ERR_RATE_TOO_LOW");
 
         // issue the tokens to the user
         token.issue(msg.sender, amount);
@@ -255,7 +255,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
                     msg.sender.transfer(msg.value - reserveAmount);
                 }
                 else if (msg.value < reserveAmount) {
-                    require(msg.value == 0);
+                    require(msg.value == 0, "BANCOR_ERR_INVALID_ETH_VALUE");
                     safeTransferFrom(etherToken, msg.sender, this, reserveAmount);
                     etherToken.withdraw(reserveAmount);
                 }
@@ -285,7 +285,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param _amount  amount to liquidate (in the smart token)
     */
     function liquidate(uint256 _amount) public protected {
-        require(_amount > 0);
+        require(_amount > 0, "BANCOR_ERR_ZERO_AMOUNT");
 
         uint256 totalSupply = token.totalSupply();
         token.destroy(msg.sender, _amount);
@@ -310,24 +310,24 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint256 j;
 
         uint256 length = reserveTokens.length;
-        require(length == _reserveTokens.length);
-        require(length == _reserveAmounts.length);
+        require(length == _reserveTokens.length, "BANCOR_ERR_INVALID_RESERVE");
+        require(length == _reserveAmounts.length, "BANCOR_ERR_INVALID_AMOUNT");
 
         for (i = 0; i < length; i++) {
             // verify that every input reserve token is included in the reserve tokens
-            require(reserves[_reserveTokens[i]].isSet);
+            require(reserves[_reserveTokens[i]].isSet, "BANCOR_ERR_INVALID_RESERVE");
             for (j = 0; j < length; j++) {
                 if (reserveTokens[i] == _reserveTokens[j])
                     break;
             }
             // verify that every reserve token is included in the input reserve tokens
-            require(j < length);
+            require(j < length, "BANCOR_ERR_INVALID_RESERVE");
             // verify that every input reserve token amount is larger than zero
-            require(_reserveAmounts[i] > 0);
+            require(_reserveAmounts[i] > 0, "BANCOR_ERR_INVALID_AMOUNT");
         }
 
         // verify that the input token amount is larger than zero
-        require(_amount > 0);
+        require(_amount > 0, "BANCOR_ERR_ZERO_AMOUNT");
     }
 
     /**
@@ -393,7 +393,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
             uint256 reserveAmount = formula.fundCost(_totalSupply, rsvBalance, reserveRatio, amount);
-            require(reserveAmount > 0);
+            require(reserveAmount > 0, "BANCOR_ERR_ZERO_RATE");
             assert(reserveAmount <= _reserveAmounts[i]);
 
             // transfer each one of the reserve amounts from the user to the pool
@@ -429,7 +429,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
             uint256 reserveAmount = formula.liquidateRate(_totalSupply, rsvBalance, reserveRatio, _amount);
-            require(reserveAmount >= _reserveMinReturnAmounts[i]);
+            require(reserveAmount >= _reserveMinReturnAmounts[i], "BANCOR_ERR_ZERO_RATE");
 
             reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
 

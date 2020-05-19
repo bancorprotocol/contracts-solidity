@@ -30,9 +30,14 @@ contract XTransferRerouter is Owned {
     }
 
     // allows execution only when rerouting enabled
-    modifier whenReroutingEnabled {
-        require(reroutingEnabled);
+    modifier reroutingAllowed {
+        _reroutingAllowed();
         _;
+    }
+
+    // error message binary size optimization
+    function _reroutingAllowed() internal view {
+        require(reroutingEnabled, "BANCOR_ERR_DISABLED");
     }
 
     /**
@@ -42,15 +47,7 @@ contract XTransferRerouter is Owned {
       * @param _blockchain  the new blockchain name
       * @param _to          the new target address/account
      */
-    function rerouteTx(
-        uint256 _txId,
-        bytes32 _blockchain,
-        bytes32 _to
-    )
-        public
-        whenReroutingEnabled 
-    {
+    function rerouteTx(uint256 _txId, bytes32 _blockchain, bytes32 _to) public reroutingAllowed {
         emit TxReroute(_txId, _blockchain, _to);
     }
-
 }

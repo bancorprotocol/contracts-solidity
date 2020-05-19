@@ -44,7 +44,8 @@ contract ERC20Token is IERC20Token, Utils {
       * @param _totalSupply total supply of token units
     */
     constructor(string _name, string _symbol, uint8 _decimals, uint256 _totalSupply) public {
-        require(bytes(_name).length > 0 && bytes(_symbol).length > 0); // validate input
+        require(bytes(_name).length > 0, "ERR_INVALID_NAME"); // validate input
+        require(bytes(_symbol).length > 0, "ERR_INVALID_SYMBOL"); // validate input
 
         name = _name;
         symbol = _symbol;
@@ -115,7 +116,7 @@ contract ERC20Token is IERC20Token, Utils {
         returns (bool success)
     {
         // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal
-        require(_value == 0 || allowance[msg.sender][_spender] == 0);
+        require(_value == 0 || allowance[msg.sender][_spender] == 0, "ERR_INVALID_AMOUNT");
 
         allowance[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);

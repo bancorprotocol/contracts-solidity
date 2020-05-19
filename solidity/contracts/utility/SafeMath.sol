@@ -14,7 +14,7 @@ library SafeMath {
     */
     function add(uint256 _x, uint256 _y) internal pure returns (uint256) {
         uint256 z = _x + _y;
-        require(z >= _x);
+        require(z >= _x, "ERR_OVERFLOW");
         return z;
     }
 
@@ -27,7 +27,7 @@ library SafeMath {
       * @return difference
     */
     function sub(uint256 _x, uint256 _y) internal pure returns (uint256) {
-        require(_x >= _y);
+        require(_x >= _y, "ERR_UNDERFLOW");
         return _x - _y;
     }
 
@@ -45,7 +45,7 @@ library SafeMath {
             return 0;
 
         uint256 z = _x * _y;
-        require(z / _x == _y);
+        require(z / _x == _y, "ERR_OVERFLOW");
         return z;
     }
 
@@ -58,9 +58,8 @@ library SafeMath {
         * eturn quotient
     */
     function div(uint256 _x, uint256 _y) internal pure returns (uint256) {
-        require(_y > 0);
+        require(_y > 0, "ERR_DIVIDE_BY_ZERO");
         uint256 c = _x / _y;
-
         return c;
     }
 }
