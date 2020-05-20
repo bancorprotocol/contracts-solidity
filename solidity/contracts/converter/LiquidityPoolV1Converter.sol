@@ -99,11 +99,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             _amount
         );
 
-        // using a magnitude of 2 because this operation is equivalent to 2 conversions (to/from the smart token)
-        uint256 finalAmount = deductFee(amount, 2);
-
         // return the amount minus the conversion fee and the conversion fee
-        return (finalAmount, amount - finalAmount);
+        uint256 amountMinusFee = deductFee(amount);
+        return (amountMinusFee, amount - amountMinusFee);
     }
 
     /**

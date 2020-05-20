@@ -403,13 +403,12 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**
       * @dev given a return amount, returns the amount minus the conversion fee
       *
-      * @param _amount      return amount
-      * @param _magnitude   1 for standard conversion, 2 for cross reserve conversion
+      * @param _amount  return amount
       *
       * @return return amount minus conversion fee
     */
-    function deductFee(uint256 _amount, uint8 _magnitude) internal view returns (uint256) {
-        return _amount.mul((CONVERSION_FEE_RESOLUTION - conversionFee) ** _magnitude).div(CONVERSION_FEE_RESOLUTION ** _magnitude);
+    function deductFee(uint256 _amount) internal view returns (uint256) {
+        return _amount.mul((CONVERSION_FEE_RESOLUTION - conversionFee)).div(CONVERSION_FEE_RESOLUTION);
     }
 
     /**
@@ -483,12 +482,5 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     */
     function getReturn(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256) {
         return rateAndFee(_sourceToken, _targetToken, _amount);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function getFinalAmount(uint256 _amount, uint8 _magnitude) public view returns (uint256) {
-        return deductFee(_amount, _magnitude);
     }
 }

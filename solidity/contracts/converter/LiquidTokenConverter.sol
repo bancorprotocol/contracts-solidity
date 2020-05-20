@@ -158,16 +158,15 @@ contract LiquidTokenConverter is BancorConverter {
             _depositAmount
         );
 
-        uint256 finalAmount = deductFee(amount, 1);
-
         // return the amount minus the conversion fee and the conversion fee
-        return (finalAmount, amount - finalAmount);
+        uint256 amountMinusFee = deductFee(amount);
+        return (amountMinusFee, amount - amountMinusFee);
     }
 
     /**
       * @dev returns the expected return of selling a given amount of tokens
       *
-      * @param _sellAmount      amount of supply-tokens received from the user
+      * @param _sellAmount  amount of supply-tokens received from the user
       *
       * @return expected reserve tokens
       * @return expected fee
@@ -193,10 +192,9 @@ contract LiquidTokenConverter is BancorConverter {
             _sellAmount
         );
 
-        uint256 finalAmount = deductFee(amount, 1);
-
         // return the amount minus the conversion fee and the conversion fee
-        return (finalAmount, amount - finalAmount);
+        uint256 amountMinusFee = deductFee(amount);
+        return (amountMinusFee, amount - amountMinusFee);
     }
 
     /**
