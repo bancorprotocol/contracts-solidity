@@ -424,7 +424,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         }
 
         // ensure the trade meets the minimum requested amount
-        require(toAmount >= _minReturn, "BANCOR_ERR_RATE_TOO_LOW");
+        require(toAmount >= _minReturn, "BANCOR_ERR_RATE_TOO_HIGH");
 
         return toAmount;
     }
