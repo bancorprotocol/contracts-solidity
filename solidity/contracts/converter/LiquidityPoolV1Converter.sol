@@ -194,7 +194,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint256 amount = addLiquidityToPool(_reserveTokens, _reserveAmounts, totalSupply);
 
         // verify that the equivalent amount of tokens is equal to or larger than the user's expectation
-        require(amount >= _minReturn, "BANCOR_ERR_RATE_TOO_HIGH");
+        require(amount >= _minReturn, "BANCOR_ERR_RETURN_TOO_LOW");
 
         // issue the tokens to the user
         token.issue(msg.sender, amount);
