@@ -1,6 +1,6 @@
 pragma solidity 0.4.26;
-import '../utility/Utils.sol';
-import '../utility/SafeMath.sol';
+import "../utility/Utils.sol";
+import "../utility/SafeMath.sol";
 
 /**
   * ERC20 Non-Standard Token implementation
@@ -20,7 +20,7 @@ contract NonStandardToken is Utils {
 
     /**
       * @dev initializes a new NonStandardToken instance
-      * 
+      *
       * @param _name        token name
       * @param _symbol      token symbol
       * @param _decimals    decimal points
@@ -39,10 +39,10 @@ contract NonStandardToken is Utils {
     /**
       * @dev send coins
       * throws on any error rather then return a false flag to minimize user errors
-      * 
+      *
       * @param _to      target address
       * @param _value   transfer amount
-      * 
+      *
       * @return true if the transfer was successful, false if it wasn't
     */
     function _transfer(address _to, uint256 _value)
@@ -57,11 +57,11 @@ contract NonStandardToken is Utils {
     /**
       * @dev an account/contract attempts to get the coins
       * throws on any error rather then return a false flag to minimize user errors
-      * 
+      *
       * @param _from    source address
       * @param _to      target address
       * @param _value   transfer amount
-      * 
+      *
       * @return true if the transfer was successful, false if it wasn't
     */
     function _transferFrom(address _from, address _to, uint256 _value)
@@ -78,14 +78,14 @@ contract NonStandardToken is Utils {
     /**
       * @dev allow another account/contract to spend some tokens on your behalf
       * throws on any error rather then return a false flag to minimize user errors
-      * 
+      *
       * also, to minimize the risk of the approve/transferFrom attack vector
       * (see https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), approve has to be called twice
       * in 2 separate transactions - once to change the allowance to 0 and secondly to change it to the new allowance value
-      * 
+      *
       * @param _spender approved address
       * @param _value   allowance amount
-      * 
+      *
       * @return true if the approval was successful, false if it wasn't
     */
     function _approve(address _spender, uint256 _value)

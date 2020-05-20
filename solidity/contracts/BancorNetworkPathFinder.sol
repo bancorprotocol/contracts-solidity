@@ -1,9 +1,9 @@
 pragma solidity 0.4.26;
-import './IBancorNetworkPathFinder.sol';
-import './utility/ContractRegistryClient.sol';
-import './converter/interfaces/IBancorConverterRegistry.sol';
-import './converter/interfaces/IBancorConverter.sol';
-import './token/interfaces/ISmartToken.sol';
+import "./IBancorNetworkPathFinder.sol";
+import "./utility/ContractRegistryClient.sol";
+import "./converter/interfaces/IBancorConverterRegistry.sol";
+import "./converter/interfaces/IBancorConverter.sol";
+import "./token/interfaces/ISmartToken.sol";
 
 /**
   * @dev The BancorNetworkPathFinder contract allows generating a conversion path between any token pair in the Bancor Network.
@@ -16,7 +16,7 @@ contract BancorNetworkPathFinder is IBancorNetworkPathFinder, ContractRegistryCl
 
     /**
       * @dev initializes a new BancorNetworkPathFinder instance
-      * 
+      *
       * @param _registry address of a contract registry contract
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
@@ -24,7 +24,7 @@ contract BancorNetworkPathFinder is IBancorNetworkPathFinder, ContractRegistryCl
 
     /**
       * @dev updates the anchor token
-      * 
+      *
       * @param _anchorToken address of the anchor token
     */
     function setAnchorToken(address _anchorToken) public ownerOnly {
@@ -33,10 +33,10 @@ contract BancorNetworkPathFinder is IBancorNetworkPathFinder, ContractRegistryCl
 
     /**
       * @dev generates a conversion path between a given pair of tokens in the Bancor Network
-      * 
+      *
       * @param _sourceToken address of the source token
       * @param _targetToken address of the target token
-      * 
+      *
       * @return a path from the source token to the target token
     */
     function findPath(address _sourceToken, address _targetToken) public view returns (address[] memory) {
@@ -48,10 +48,10 @@ contract BancorNetworkPathFinder is IBancorNetworkPathFinder, ContractRegistryCl
 
     /**
       * @dev generates a conversion path between a given token and the anchor token
-      * 
+      *
       * @param _token               address of the token
       * @param _converterRegistry   address of the converter registry
-      * 
+      *
       * @return a path from the input token to the anchor token
     */
     function getPath(address _token, IBancorConverterRegistry _converterRegistry) private view returns (address[] memory) {
@@ -82,10 +82,10 @@ contract BancorNetworkPathFinder is IBancorNetworkPathFinder, ContractRegistryCl
 
     /**
       * @dev merges two paths with a common suffix into one
-      * 
+      *
       * @param _sourcePath address of the source path
       * @param _targetPath address of the target path
-      * 
+      *
       * @return merged path
     */
     function getShortestPath(address[] memory _sourcePath, address[] memory _targetPath) private pure returns (address[] memory) {
@@ -120,9 +120,9 @@ contract BancorNetworkPathFinder is IBancorNetworkPathFinder, ContractRegistryCl
 
     /**
       * @dev creates a new array containing a single item
-      * 
+      *
       * @param _item item
-      * 
+      *
       * @return initial array
     */
     function getInitialArray(address _item) private pure returns (address[] memory) {
@@ -133,11 +133,11 @@ contract BancorNetworkPathFinder is IBancorNetworkPathFinder, ContractRegistryCl
 
     /**
       * @dev prepends two items to the beginning of an array
-      * 
+      *
       * @param _item0 first item
       * @param _item1 second item
       * @param _array initial array
-      * 
+      *
       * @return extended array
     */
     function getExtendedArray(address _item0, address _item1, address[] memory _array) private pure returns (address[] memory) {
@@ -151,10 +151,10 @@ contract BancorNetworkPathFinder is IBancorNetworkPathFinder, ContractRegistryCl
 
     /**
       * @dev extracts the prefix of a given array
-      * 
+      *
       * @param _array given array
       * @param _length prefix length
-      * 
+      *
       * @return partial array
     */
     function getPartialArray(address[] memory _array, uint256 _length) private pure returns (address[] memory) {

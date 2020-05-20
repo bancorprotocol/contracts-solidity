@@ -1,20 +1,19 @@
 pragma solidity 0.4.26;
-
-import './interfaces/IBancorXUpgrader.sol';
-import './interfaces/IBancorX.sol';
-import '../token/interfaces/ISmartTokenController.sol';
-import '../utility/ContractRegistryClient.sol';
-import '../utility/SafeMath.sol';
-import '../utility/TokenHolder.sol';
-import '../token/interfaces/ISmartToken.sol';
+import "./interfaces/IBancorXUpgrader.sol";
+import "./interfaces/IBancorX.sol";
+import "../token/interfaces/ISmartTokenController.sol";
+import "../utility/ContractRegistryClient.sol";
+import "../utility/SafeMath.sol";
+import "../utility/TokenHolder.sol";
+import "../token/interfaces/ISmartToken.sol";
 
 /**
   * @dev The BancorX contract allows cross chain token transfers.
-  * 
+  *
   * There are two processes that take place in the contract -
   * - Initiate a cross chain transfer to a target blockchain (locks tokens from the caller account on Ethereum)
   * - Report a cross chain transfer initiated on a source blockchain (releases tokens to an account on Ethereum)
-  * 
+  *
   * Reporting cross chain transfers works similar to standard multisig contracts, meaning that multiple
   * callers are required to report a transfer before tokens are released to the target account.
 */
@@ -41,7 +40,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
     uint256 public prevLockBlockNumber;     // the block number of the last lock transaction
     uint256 public prevReleaseBlockNumber;  // the block number of the last release transaction
     uint256 public minRequiredReports;      // minimum number of required reports to release tokens
-    
+
     IERC20Token public token;               // erc20 token or smart token
     bool public isSmartToken;               // false - erc20 token; true - smart token
 
@@ -62,7 +61,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev triggered when tokens are locked in smart contract
-      * 
+      *
       * @param _from    wallet address that the tokens are locked from
       * @param _amount  amount locked
     */
@@ -73,7 +72,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev triggered when tokens are released by the smart contract
-      * 
+      *
       * @param _to      wallet address that the tokens are released to
       * @param _amount  amount released
     */
@@ -84,7 +83,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev triggered when xTransfer is successfully called
-      * 
+      *
       * @param _from            wallet address that initiated the xtransfer
       * @param _toBlockchain    target blockchain
       * @param _to              target wallet
@@ -101,7 +100,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev triggered when report is successfully submitted
-      * 
+      *
       * @param _reporter        reporter wallet
       * @param _fromBlockchain  source blockchain
       * @param _txId            tx id on the source blockchain
@@ -120,7 +119,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev triggered when final report is successfully submitted
-      * 
+      *
       * @param _to  target wallet
       * @param _id  xtransfer id
     */
@@ -131,7 +130,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev initializes a new BancorX instance
-      * 
+      *
       * @param _maxLockLimit          maximum amount of tokens that can be locked in one transaction
       * @param _maxReleaseLimit       maximum amount of tokens that can be released in one transaction
       * @param _minLimit              minimum amount of tokens that can be transferred in one transaction
@@ -205,25 +204,25 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev setter
-      * 
+      *
       * @param _maxLockLimit    new maxLockLimit
      */
     function setMaxLockLimit(uint256 _maxLockLimit) public ownerOnly {
         maxLockLimit = _maxLockLimit;
     }
-    
+
     /**
       * @dev setter
-      * 
+      *
       * @param _maxReleaseLimit    new maxReleaseLimit
      */
     function setMaxReleaseLimit(uint256 _maxReleaseLimit) public ownerOnly {
         maxReleaseLimit = _maxReleaseLimit;
     }
-    
+
     /**
       * @dev setter
-      * 
+      *
       * @param _minLimit    new minLimit
      */
     function setMinLimit(uint256 _minLimit) public ownerOnly {
@@ -232,7 +231,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev setter
-      * 
+      *
       * @param _limitIncPerBlock    new limitIncPerBlock
      */
     function setLimitIncPerBlock(uint256 _limitIncPerBlock) public ownerOnly {
@@ -241,7 +240,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev setter
-      * 
+      *
       * @param _minRequiredReports    new minRequiredReports
      */
     function setMinRequiredReports(uint256 _minRequiredReports) public ownerOnly {
@@ -250,7 +249,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev allows the owner to set/remove reporters
-      * 
+      *
       * @param _reporter    reporter whos status is to be set
       * @param _active      true if the reporter is approved, false otherwise
      */
@@ -260,7 +259,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev allows the owner enable/disable the xTransfer method
-      * 
+      *
       * @param _enable     true to enable, false to disable
      */
     function enableXTransfers(bool _enable) public ownerOnly {
@@ -269,7 +268,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev allows the owner enable/disable the reportTransaction method
-      * 
+      *
       * @param _enable     true to enable, false to disable
      */
     function enableReporting(bool _enable) public ownerOnly {
@@ -280,7 +279,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
       * @dev upgrades the contract to the latest version
       * can only be called by the owner
       * note that the owner needs to call acceptOwnership on the new contract after the upgrade
-      * 
+      *
       * @param _reporters    new list of reporters
     */
     function upgrade(address[] _reporters) public ownerOnly {
@@ -293,7 +292,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev claims tokens from msg.sender to be converted to tokens on another blockchain
-      * 
+      *
       * @param _toBlockchain    blockchain on which tokens will be issued
       * @param _to              address to send the tokens to
       * @param _amount          the amount of tokens to transfer
@@ -304,7 +303,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
         // verify lock limit
         require(_amount >= minLimit && _amount <= currentLockLimit, "ERR_AMOUNT_TOO_HIGH");
-        
+
         lockTokens(_amount);
 
         // set the previous lock limit and block number
@@ -317,11 +316,11 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev claims tokens from msg.sender to be converted to tokens on another blockchain
-      * 
+      *
       * @param _toBlockchain    blockchain on which tokens will be issued
       * @param _to              address to send the tokens to
       * @param _amount          the amount of tokens to transfer
-      * @param _id              pre-determined unique (if non zero) id which refers to this transaction 
+      * @param _id              pre-determined unique (if non zero) id which refers to this transaction
      */
     function xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount, uint256 _id) public xTransfersAllowed {
         // get the current lock limit
@@ -329,7 +328,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
         // require that; minLimit <= _amount <= currentLockLimit
         require(_amount >= minLimit && _amount <= currentLockLimit, "ERR_AMOUNT_TOO_HIGH");
-        
+
         lockTokens(_amount);
 
         // set the previous lock limit and block number
@@ -342,7 +341,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev allows reporter to report transaction which occured on another blockchain
-      * 
+      *
       * @param _fromBlockchain  blockchain in which tokens were destroyed
       * @param _txId            transactionId of transaction thats being reported
       * @param _to              address to receive tokens
@@ -354,7 +353,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         uint256 _txId,
         address _to,
         uint256 _amount,
-        uint256 _xTransferId 
+        uint256 _xTransferId
     )
         public
         reporterOnly
@@ -382,11 +381,11 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         } else {
             // otherwise, verify transaction details
             require(txn.to == _to && txn.amount == _amount && txn.fromBlockchain == _fromBlockchain, "ERR_TX_MISMATCH");
-            
+
             if (_xTransferId != 0)
                 require(transactionIds[_xTransferId] == _txId, "ERR_TX_ALREADY_EXISTS");
         }
-        
+
         // increment the number of reports
         txn.numOfReports++;
 
@@ -407,10 +406,10 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev gets x transfer amount by xTransferId (not txId)
-      * 
+      *
       * @param _xTransferId    unique (if non zero) pre-determined id (unlike _txId which is determined after the transactions been broadcasted)
       * @param _for            address corresponding to xTransferId
-      * 
+      *
       * @return amount that was sent in xTransfer corresponding to _xTransferId
     */
     function getXTransferAmount(uint256 _xTransferId, address _for) public view returns (uint256) {
@@ -425,7 +424,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev method for calculating current lock limit
-      * 
+      *
       * @return the current maximum limit of tokens that can be locked
      */
     function getCurrentLockLimit() public view returns (uint256) {
@@ -435,10 +434,10 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
             return maxLockLimit;
         return currentLockLimit;
     }
- 
+
     /**
       * @dev method for calculating current release limit
-      * 
+      *
       * @return the current maximum limit of tokens that can be released
      */
     function getCurrentReleaseLimit() public view returns (uint256) {
@@ -451,7 +450,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev claims and locks tokens from msg.sender to be converted to tokens on another blockchain
-      * 
+      *
       * @param _amount  the amount of tokens to lock
      */
     function lockTokens(uint256 _amount) private {
@@ -464,7 +463,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     /**
       * @dev private method to release tokens held by the contract
-      * 
+      *
       * @param _to      the address to release tokens to
       * @param _amount  the amount of tokens to release
      */
@@ -473,7 +472,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         uint256 currentReleaseLimit = getCurrentReleaseLimit();
 
         require(_amount >= minLimit && _amount <= currentReleaseLimit, "ERR_AMOUNT_TOO_HIGH");
-        
+
         // update the previous release limit and block number
         prevReleaseLimit = currentReleaseLimit.sub(_amount);
         prevReleaseBlockNumber = block.number;

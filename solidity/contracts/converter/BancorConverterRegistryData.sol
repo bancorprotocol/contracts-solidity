@@ -1,6 +1,6 @@
 pragma solidity 0.4.26;
-import '../utility/ContractRegistryClient.sol';
-import './interfaces/IBancorConverterRegistryData.sol';
+import "../utility/ContractRegistryClient.sol";
+import "./interfaces/IBancorConverterRegistryData.sol";
 
 /**
   * @dev The BancorConverterRegistryData contract is an integral part of the Bancor converter registry
@@ -40,7 +40,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev initializes a new BancorConverterRegistryData instance
-      * 
+      *
       * @param _registry address of a contract registry contract
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
@@ -48,7 +48,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev adds a smart token
-      * 
+      *
       * @param _smartToken smart token
     */
     function addSmartToken(address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
@@ -57,7 +57,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev removes a smart token
-      * 
+      *
       * @param _smartToken smart token
     */
     function removeSmartToken(address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
@@ -66,7 +66,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev adds a liquidity pool
-      * 
+      *
       * @param _liquidityPool liquidity pool
     */
     function addLiquidityPool(address _liquidityPool) external only(BANCOR_CONVERTER_REGISTRY) {
@@ -75,7 +75,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev removes a liquidity pool
-      * 
+      *
       * @param _liquidityPool liquidity pool
     */
     function removeLiquidityPool(address _liquidityPool) external only(BANCOR_CONVERTER_REGISTRY) {
@@ -84,7 +84,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev adds a convertible token
-      * 
+      *
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
@@ -98,7 +98,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev removes a convertible token
-      * 
+      *
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
@@ -116,7 +116,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev returns the number of smart tokens
-      * 
+      *
       * @return number of smart tokens
     */
     function getSmartTokenCount() external view returns (uint) {
@@ -125,7 +125,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev returns the list of smart tokens
-      * 
+      *
       * @return list of smart tokens
     */
     function getSmartTokens() external view returns (address[]) {
@@ -134,7 +134,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev returns the smart token at a given index
-      * 
+      *
       * @param _index index
       * @return smart token at the given index
     */
@@ -144,7 +144,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev checks whether or not a given value is a smart token
-      * 
+      *
       * @param _value value
       * @return true if the given value is a smart token, false if not
     */
@@ -154,7 +154,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev returns the number of liquidity pools
-      * 
+      *
       * @return number of liquidity pools
     */
     function getLiquidityPoolCount() external view returns (uint) {
@@ -163,7 +163,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev returns the list of liquidity pools
-      * 
+      *
       * @return list of liquidity pools
     */
     function getLiquidityPools() external view returns (address[]) {
@@ -172,7 +172,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev returns the liquidity pool at a given index
-      * 
+      *
       * @param _index index
       * @return liquidity pool at the given index
     */
@@ -182,7 +182,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev checks whether or not a given value is a liquidity pool
-      * 
+      *
       * @param _value value
       * @return true if the given value is a liquidity pool, false if not
     */
@@ -192,7 +192,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev returns the number of convertible tokens
-      * 
+      *
       * @return number of convertible tokens
     */
     function getConvertibleTokenCount() external view returns (uint) {
@@ -201,7 +201,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev returns the list of convertible tokens
-      * 
+      *
       * @return list of convertible tokens
     */
     function getConvertibleTokens() external view returns (address[]) {
@@ -210,7 +210,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev returns the convertible token at a given index
-      * 
+      *
       * @param _index index
       * @return convertible token at the given index
     */
@@ -220,7 +220,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev checks whether or not a given value is a convertible token
-      * 
+      *
       * @param _value value
       * @return true if the given value is a convertible token, false if not
     */
@@ -230,7 +230,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev returns the number of smart tokens associated with a given convertible token
-      * 
+      *
       * @param _convertibleToken convertible token
       * @return number of smart tokens associated with the given convertible token
     */
@@ -240,7 +240,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev returns the list of smart tokens associated with a given convertible token
-      * 
+      *
       * @param _convertibleToken convertible token
       * @return list of smart tokens associated with the given convertible token
     */
@@ -250,7 +250,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev returns the smart token associated with a given convertible token at a given index
-      * 
+      *
       * @param _index index
       * @return smart token associated with the given convertible token at the given index
     */
@@ -260,7 +260,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev checks whether or not a given value is a smart token of a given convertible token
-      * 
+      *
       * @param _convertibleToken convertible token
       * @param _value value
       * @return true if the given value is a smart token of the given convertible token, false it not
@@ -271,7 +271,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev adds an item to a list of items
-      * 
+      *
       * @param _items list of items
       * @param _value item's value
     */
@@ -285,7 +285,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
 
     /**
       * @dev removes an item from a list of items
-      * 
+      *
       * @param _items list of items
       * @param _value item's value
     */

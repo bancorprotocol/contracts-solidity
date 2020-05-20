@@ -1,5 +1,5 @@
 pragma solidity 0.4.26;
-import './interfaces/IOwned.sol';
+import "./interfaces/IOwned.sol";
 
 /**
   * @dev Provides support and utilities for contract ownership
@@ -10,7 +10,7 @@ contract Owned is IOwned {
 
     /**
       * @dev triggered when the owner is updated
-      * 
+      *
       * @param _prevOwner previous owner
       * @param _newOwner  new owner
     */
@@ -38,7 +38,7 @@ contract Owned is IOwned {
       * @dev allows transferring the contract ownership
       * the new owner still needs to accept the transfer
       * can only be called by the contract owner
-      * 
+      *
       * @param _newOwner    new contract owner
     */
     function transferOwnership(address _newOwner) public ownerOnly {
