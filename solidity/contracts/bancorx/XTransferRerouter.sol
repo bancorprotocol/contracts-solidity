@@ -1,5 +1,4 @@
 pragma solidity 0.4.26;
-
 import "../utility/Owned.sol";
 
 contract XTransferRerouter is Owned {
@@ -14,15 +13,15 @@ contract XTransferRerouter is Owned {
 
     /**
       * @dev initializes a new XTransferRerouter instance
-      * 
-      * @param _reroutingEnabled    intializes transactions routing to enabled/disabled   
+      *
+      * @param _reroutingEnabled    intializes transactions routing to enabled/disabled
      */
     constructor(bool _reroutingEnabled) public {
         reroutingEnabled = _reroutingEnabled;
     }
     /**
       * @dev allows the owner to disable/enable rerouting
-      * 
+      *
       * @param _enable     true to enable, false to disable
      */
     function enableRerouting(bool _enable) public ownerOnly {
@@ -30,27 +29,24 @@ contract XTransferRerouter is Owned {
     }
 
     // allows execution only when rerouting enabled
-    modifier whenReroutingEnabled {
-        require(reroutingEnabled);
+    modifier reroutingAllowed {
+        _reroutingAllowed();
         _;
+    }
+
+    // error message binary size optimization
+    function _reroutingAllowed() internal view {
+        require(reroutingEnabled, "ERR_DISABLED");
     }
 
     /**
       * @dev    allows a user to reroute a transaction to a new blockchain/target address
-      * 
+      *
       * @param _txId        the original transaction id
       * @param _blockchain  the new blockchain name
       * @param _to          the new target address/account
      */
-    function rerouteTx(
-        uint256 _txId,
-        bytes32 _blockchain,
-        bytes32 _to
-    )
-        public
-        whenReroutingEnabled 
-    {
+    function rerouteTx(uint256 _txId, bytes32 _blockchain, bytes32 _to) public reroutingAllowed {
         emit TxReroute(_txId, _blockchain, _to);
     }
-
 }

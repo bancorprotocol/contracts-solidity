@@ -1,7 +1,7 @@
 pragma solidity 0.4.26;
-import './interfaces/IBancorFormula.sol';
-import '../utility/SafeMath.sol';
-import '../utility/Utils.sol';
+import "./interfaces/IBancorFormula.sol";
+import "../utility/SafeMath.sol";
+import "../utility/Utils.sol";
 
 contract BancorFormula is IBancorFormula, Utils {
     using SafeMath for uint256;
@@ -170,20 +170,27 @@ contract BancorFormula is IBancorFormula, Utils {
     /**
       * @dev given a token supply, reserve balance, weight and a deposit amount (in the reserve token),
       * calculates the rate for a given conversion (in the main token)
-      * 
+      *
       * Formula:
       * return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
-      * 
+      *
       * @param _supply              smart token supply
       * @param _reserveBalance      total reserve balance
       * @param _reserveWeight       reserve weight, represented in ppm, 1-1000000
       * @param _depositAmount       deposit amount, in reserve token
-      * 
+      *
       * @return smart token amount
     */
-    function purchaseRate(uint256 _supply, uint256 _reserveBalance, uint32 _reserveWeight, uint256 _depositAmount) public view returns (uint256) {
+    function purchaseRate(uint256 _supply,
+                          uint256 _reserveBalance,
+                          uint32 _reserveWeight,
+                          uint256 _depositAmount)
+                          public view returns (uint256)
+    {
         // validate input
-        require(_supply > 0 && _reserveBalance > 0 && _reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT);
+        require(_supply > 0, "ERR_INVALID_SUPPLY");
+        require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
 
         // special case for 0 deposit amount
         if (_depositAmount == 0)
@@ -204,20 +211,28 @@ contract BancorFormula is IBancorFormula, Utils {
     /**
       * @dev given a token supply, reserve balance, weight and a sell amount (in the main token),
       * calculates the rate for a given conversion (in the reserve token)
-      * 
+      *
       * Formula:
       * return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1000000 / _reserveWeight))
-      * 
+      *
       * @param _supply              smart token supply
       * @param _reserveBalance      total reserve
       * @param _reserveWeight       reserve weight, represented in ppm, 1-1000000
       * @param _sellAmount          sell amount, in the token itself
-      * 
+      *
       * @return reserve token amount
     */
-    function saleRate(uint256 _supply, uint256 _reserveBalance, uint32 _reserveWeight, uint256 _sellAmount) public view returns (uint256) {
+    function saleRate(uint256 _supply,
+                      uint256 _reserveBalance,
+                      uint32 _reserveWeight,
+                      uint256 _sellAmount)
+                      public view returns (uint256)
+    {
         // validate input
-        require(_supply > 0 && _reserveBalance > 0 && _reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT && _sellAmount <= _supply);
+        require(_supply > 0, "ERR_INVALID_SUPPLY");
+        require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
+        require(_sellAmount <= _supply, "ERR_INVALID_AMOUNT");
 
         // special case for 0 sell amount
         if (_sellAmount == 0)
@@ -242,53 +257,63 @@ contract BancorFormula is IBancorFormula, Utils {
 
     /**
       * @dev given two reserve balances/weights and a sell amount (in the first reserve token),
-      * calculates the rate for a conversion from the first reserve token to the second reserve token (in the second reserve token)
-      * 
+      * calculates the rate for a conversion from the source reserve token to the target reserve token
+      *
       * Formula:
-      * return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveWeight / _toReserveWeight))
-      * 
-      * @param _fromReserveBalance      input reserve balance
-      * @param _fromReserveWeight       input reserve weight, represented in ppm, 1-1000000
-      * @param _toReserveBalance        output reserve balance
-      * @param _toReserveWeight         output reserve weight, represented in ppm, 1-1000000
+      * return = _targetReserveBalance * (1 - (_sourceReserveBalance / (_sourceReserveBalance + _amount)) ^ (_sourceReserveWeight / _targetReserveWeight))
+      *
+      * @param _sourceReserveBalance    input reserve balance
+      * @param _sourceReserveWeight     input reserve weight, represented in ppm, 1-1000000
+      * @param _targetReserveBalance    output reserve balance
+      * @param _targetReserveWeight     output reserve weight, represented in ppm, 1-1000000
       * @param _amount                  input reserve amount
-      * 
+      *
       * @return output reserve amount
     */
-    function crossReserveRate(uint256 _fromReserveBalance, uint32 _fromReserveWeight, uint256 _toReserveBalance, uint32 _toReserveWeight, uint256 _amount) public view returns (uint256) {
+    function crossReserveRate(uint256 _sourceReserveBalance,
+                              uint32 _sourceReserveWeight,
+                              uint256 _targetReserveBalance,
+                              uint32 _targetReserveWeight,
+                              uint256 _amount)
+                              public view returns (uint256)
+    {
         // validate input
-        require(_fromReserveBalance > 0 && _fromReserveWeight > 0 && _fromReserveWeight <= MAX_WEIGHT && _toReserveBalance > 0 && _toReserveWeight > 0 && _toReserveWeight <= MAX_WEIGHT);
+        require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_sourceReserveWeight > 0 && _sourceReserveWeight <= MAX_WEIGHT &&
+                _targetReserveWeight > 0 && _targetReserveWeight <= MAX_WEIGHT, "ERR_RESERVE_WEIGHT");
 
         // special case for equal weights
-        if (_fromReserveWeight == _toReserveWeight)
-            return _toReserveBalance.mul(_amount) / _fromReserveBalance.add(_amount);
+        if (_sourceReserveWeight == _targetReserveWeight)
+            return _targetReserveBalance.mul(_amount) / _sourceReserveBalance.add(_amount);
 
         uint256 result;
         uint8 precision;
-        uint256 baseN = _fromReserveBalance.add(_amount);
-        (result, precision) = power(baseN, _fromReserveBalance, _fromReserveWeight, _toReserveWeight);
-        uint256 temp1 = _toReserveBalance.mul(result);
-        uint256 temp2 = _toReserveBalance << precision;
+        uint256 baseN = _sourceReserveBalance.add(_amount);
+        (result, precision) = power(baseN, _sourceReserveBalance, _sourceReserveWeight, _targetReserveWeight);
+        uint256 temp1 = _targetReserveBalance.mul(result);
+        uint256 temp2 = _targetReserveBalance << precision;
         return (temp1 - temp2) / result;
     }
 
     /**
       * @dev given a smart token supply, reserve balance, reserve ratio and an amount of requested smart tokens,
       * calculates the amount of reserve tokens required for purchasing the given amount of smart tokens
-      * 
+      *
       * Formula:
       * return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio) - 1)
-      * 
+      *
       * @param _supply              smart token supply
       * @param _reserveBalance      reserve token balance
       * @param _reserveRatio        reserve ratio, represented in ppm, 2-2000000
       * @param _amount              requested amount of smart tokens
-      * 
+      *
       * @return reserve token amount
     */
     function fundCost(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
         // validate input
-        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2);
+        require(_supply > 0, "ERR_INVALID_SUPPLY");
+        require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
 
         // special case for 0 amount
         if (_amount == 0)
@@ -309,20 +334,23 @@ contract BancorFormula is IBancorFormula, Utils {
     /**
       * @dev given a smart token supply, reserve balance, reserve ratio and an amount of smart tokens to liquidate,
       * calculates the amount of reserve tokens received for selling the given amount of smart tokens
-      * 
+      *
       * Formula:
       * return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio))
-      * 
+      *
       * @param _supply              smart token supply
       * @param _reserveBalance      reserve token balance
       * @param _reserveRatio        reserve ratio, represented in ppm, 2-2000000
       * @param _amount              amount of smart tokens to liquidate
-      * 
+      *
       * @return reserve token amount
     */
     function liquidateRate(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
         // validate input
-        require(_supply > 0 && _reserveBalance > 0 && _reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2 && _amount <= _supply);
+        require(_supply > 0, "ERR_INVALID_SUPPLY");
+        require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
+        require(_amount <= _supply, "ERR_INVALID_AMOUNT");
 
         // special case for 0 amount
         if (_amount == 0)
@@ -350,7 +378,7 @@ contract BancorFormula is IBancorFormula, Utils {
       *     Determine a value of precision.
       *     Calculate an integer approximation of (_baseN / _baseD) ^ (_expN / _expD) * 2 ^ precision.
       *     Return the result along with the precision used.
-      * 
+      *
       * Detailed Description:
       *     Instead of calculating "base ^ exp", we calculate "e ^ (log(base) * exp)".
       *     The value of "log(base)" is represented with an integer slightly smaller than "log(base) * 2 ^ precision".
@@ -606,42 +634,74 @@ contract BancorFormula is IBancorFormula, Utils {
     /**
       * @dev deprecated, backward compatibility
     */
-    function calculatePurchaseReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveWeight, uint256 _depositAmount) public view returns (uint256) {
+    function calculatePurchaseReturn(uint256 _supply,
+                                     uint256 _reserveBalance,
+                                     uint32 _reserveWeight,
+                                     uint256 _depositAmount)
+                                     public view returns (uint256)
+    {
         return purchaseRate(_supply, _reserveBalance, _reserveWeight, _depositAmount);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function calculateSaleReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveWeight, uint256 _sellAmount) public view returns (uint256) {
+    function calculateSaleReturn(uint256 _supply,
+                                 uint256 _reserveBalance,
+                                 uint32 _reserveWeight,
+                                 uint256 _sellAmount)
+                                 public view returns (uint256)
+    {
         return saleRate(_supply, _reserveBalance, _reserveWeight, _sellAmount);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function calculateCrossReserveReturn(uint256 _fromReserveBalance, uint32 _fromReserveWeight, uint256 _toReserveBalance, uint32 _toReserveWeight, uint256 _amount) public view returns (uint256) {
-        return crossReserveRate(_fromReserveBalance, _fromReserveWeight, _toReserveBalance, _toReserveWeight, _amount);
+    function calculateCrossReserveReturn(uint256 _sourceReserveBalance,
+                                         uint32 _sourceReserveWeight,
+                                         uint256 _targetReserveBalance,
+                                         uint32 _targetReserveWeight,
+                                         uint256 _amount)
+                                         public view returns (uint256)
+    {
+        return crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function calculateCrossConnectorReturn(uint256 _fromConnectorBalance, uint32 _fromConnectorWeight, uint256 _toConnectorBalance, uint32 _toConnectorWeight, uint256 _amount) public view returns (uint256) {
-        return crossReserveRate(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount);
+    function calculateCrossConnectorReturn(uint256 _sourceReserveBalance,
+                                           uint32 _sourceReserveWeight,
+                                           uint256 _targetReserveBalance,
+                                           uint32 _targetReserveWeight,
+                                           uint256 _amount)
+                                           public view returns (uint256)
+    {
+        return crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function calculateFundCost(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
+    function calculateFundCost(uint256 _supply,
+                               uint256 _reserveBalance,
+                               uint32 _reserveRatio,
+                               uint256 _amount)
+                               public view returns (uint256)
+    {
         return fundCost(_supply, _reserveBalance, _reserveRatio, _amount);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function calculateLiquidateReturn(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
+    function calculateLiquidateReturn(uint256 _supply,
+                                      uint256 _reserveBalance,
+                                      uint32 _reserveRatio,
+                                      uint256 _amount)
+                                      public view returns (uint256)
+    {
         return liquidateRate(_supply, _reserveBalance, _reserveRatio, _amount);
     }
 }

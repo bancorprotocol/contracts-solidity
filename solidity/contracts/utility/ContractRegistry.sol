@@ -1,17 +1,17 @@
 pragma solidity 0.4.26;
-import './Owned.sol';
-import './Utils.sol';
-import './interfaces/IContractRegistry.sol';
+import "./Owned.sol";
+import "./Utils.sol";
+import "./interfaces/IContractRegistry.sol";
 
 /**
   * @dev Contract Registry
-  * 
+  *
   * The contract registry keeps contract addresses by name.
   * The owner can update contract addresses so that a contract name always points to the latest version
   * of the given contract.
   * Other contracts can query the registry to get updated addresses instead of depending on specific
   * addresses.
-  * 
+  *
   * Note that contract names are limited to 32 bytes UTF8 encoded ASCII strings to optimize gas costs
 */
 contract ContractRegistry is IContractRegistry, Owned, Utils {
@@ -25,7 +25,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
     /**
       * @dev triggered when an address pointed to by a contract name is modified
-      * 
+      *
       * @param _contractName    contract name
       * @param _contractAddress new contract address
     */
@@ -33,7 +33,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
     /**
       * @dev returns the number of items in the registry
-      * 
+      *
       * @return number of items
     */
     function itemCount() public view returns (uint256) {
@@ -42,9 +42,9 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
     /**
       * @dev returns the address associated with the given contract name
-      * 
+      *
       * @param _contractName    contract name
-      * 
+      *
       * @return contract address
     */
     function addressOf(bytes32 _contractName) public view returns (address) {
@@ -53,7 +53,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
     /**
       * @dev registers a new address for the contract name in the registry
-      * 
+      *
       * @param _contractName     contract name
       * @param _contractAddress  contract address
     */
@@ -62,7 +62,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
         ownerOnly
         validAddress(_contractAddress)
     {
-        require(_contractName.length > 0); // validate input
+        require(_contractName.length > 0, "ERR_INVALID_NAME"); // validate input
 
         if (items[_contractName].contractAddress == address(0)) {
             // add the contract name to the name list
@@ -80,12 +80,12 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
     /**
       * @dev removes an existing contract address from the registry
-      * 
+      *
       * @param _contractName contract name
     */
     function unregisterAddress(bytes32 _contractName) public ownerOnly {
-        require(_contractName.length > 0); // validate input
-        require(items[_contractName].contractAddress != address(0));
+        require(_contractName.length > 0, "ERR_INVALID_NAME"); // validate input
+        require(items[_contractName].contractAddress != address(0), "ERR_INVALID_NAME");
 
         // remove the address from the registry
         items[_contractName].contractAddress = address(0);
@@ -114,7 +114,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
     /**
       * @dev utility, converts bytes32 to a string
       * note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
-      * 
+      *
       * @return string representation of the given bytes32 argument
     */
     function bytes32ToString(bytes32 _bytes) private pure returns (string) {
@@ -129,7 +129,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
     /**
       * @dev utility, converts string to bytes32
       * note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
-      * 
+      *
       * @return string representation of the given bytes32 argument
     */
     function stringToBytes32(string memory _string) private pure returns (bytes32) {

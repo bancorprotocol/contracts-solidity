@@ -1,22 +1,22 @@
 pragma solidity 0.4.26;
-import './interfaces/IBancorConverter.sol';
-import './interfaces/IConverterUpgrader.sol';
-import './interfaces/IConverterFactory.sol';
-import '../utility/ContractRegistryClient.sol';
-import '../utility/interfaces/IWhitelist.sol';
-import '../token/interfaces/IEtherToken.sol';
+import "./interfaces/IBancorConverter.sol";
+import "./interfaces/IConverterUpgrader.sol";
+import "./interfaces/IConverterFactory.sol";
+import "../utility/ContractRegistryClient.sol";
+import "../utility/interfaces/IWhitelist.sol";
+import "../token/interfaces/IEtherToken.sol";
 
 /**
   * @dev Converter Upgrader
-  * 
+  *
   * The converter upgrader contract allows upgrading an older Bancor converter contract (0.4 and up)
   * to the latest version.
   * To begin the upgrade process, simply execute the 'upgrade' function.
   * At the end of the process, the ownership of the newly upgraded converter will be transferred
   * back to the original owner and the original owner will need to execute the 'acceptOwnership' function.
-  * 
+  *
   * The address of the new converter is available in the ConverterUpgrade event.
-  * 
+  *
   * Note that for older converters that don't yet have the 'upgrade' function, ownership should first
   * be transferred manually to the ConverterUpgrader contract using the 'transferOwnership' function
   * and then the upgrader 'upgrade' function should be executed directly.
@@ -27,7 +27,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
 
     /**
       * @dev triggered when the contract accept a converter ownership
-      * 
+      *
       * @param _converter   converter address
       * @param _owner       new owner - local upgrader address
     */
@@ -35,7 +35,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
 
     /**
       * @dev triggered when the upgrading process is done
-      * 
+      *
       * @param _oldConverter    old converter address
       * @param _newConverter    new converter address
     */
@@ -43,7 +43,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
 
     /**
       * @dev initializes a new ConverterUpgrader instance
-      * 
+      *
       * @param _registry    address of a contract registry contract
     */
     constructor(IContractRegistry _registry, IEtherToken _etherToken) ContractRegistryClient(_registry) public {
@@ -56,7 +56,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * ownership of the new converter will be transferred back to the original owner.
       * fires the ConverterUpgrade event upon success.
       * can only be called by a converter
-      * 
+      *
       * @param _version old converter version
     */
     function upgrade(bytes32 _version) public {
@@ -69,7 +69,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * ownership of the new converter will be transferred back to the original owner.
       * fires the ConverterUpgrade event upon success.
       * can only be called by a converter
-      * 
+      *
       * @param _version old converter version
     */
     function upgrade(uint16 _version) public {
@@ -81,7 +81,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * will throw if ownership wasn't transferred to the upgrader before calling this function.
       * ownership of the new converter will be transferred back to the original owner.
       * fires the ConverterUpgrade event upon success.
-      * 
+      *
       * @param _converter   old converter contract address
       * @param _version     old converter version
     */
@@ -93,7 +93,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         IBancorConverter newConverter = createConverter(converter);
         copyConnectors(converter, newConverter);
         copyConversionFee(converter, newConverter);
-        transferConnectorsBalances(converter, newConverter);                
+        transferConnectorsBalances(converter, newConverter);
         ISmartToken token = converter.token();
 
         if (token.owner() == address(converter)) {
@@ -112,7 +112,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * the upgrader contract then needs to accept the ownership transfer before initiating
       * the upgrade process.
       * fires the ConverterOwned event upon success
-      * 
+      *
       * @param _oldConverter       converter to accept ownership of
     */
     function acceptConverterOwnership(IBancorConverter _oldConverter) private {
@@ -123,9 +123,9 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     /**
       * @dev creates a new converter with same basic data as the original old converter
       * the newly created converter will have no reserves at this step.
-      * 
+      *
       * @param _oldConverter    old converter contract address
-      * 
+      *
       * @return the new converter  new converter contract address
     */
     function createConverter(IBancorConverter _oldConverter) private returns(IBancorConverter) {
@@ -152,7 +152,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     /**
       * @dev copies the reserves from the old converter to the new one.
       * note that this will not work for an unlimited number of reserves due to block gas limit constraints.
-      * 
+      *
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */
@@ -182,7 +182,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
 
     /**
       * @dev copies the conversion fee from the old converter to the new one
-      * 
+      *
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */
@@ -195,7 +195,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @dev transfers the balance of each connector in the old converter to the new one.
       * note that the function assumes that the new converter already has the exact same number of
       * also, this will not work for an unlimited number of reserves due to block gas limit constraints.
-      * 
+      *
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */

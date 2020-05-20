@@ -35,6 +35,6 @@ contract TokenHandler {
             }
         }
 
-        require(ret[0] != 0);
+        require(ret[0] != 0, "ERR_TRANSFER_FAILED");
     }
 }

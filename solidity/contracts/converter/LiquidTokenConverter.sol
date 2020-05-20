@@ -1,6 +1,6 @@
 pragma solidity 0.4.26;
-import './BancorConverter.sol';
-import './interfaces/ITypedConverterFactory.sol';
+import "./BancorConverter.sol";
+import "./interfaces/ITypedConverterFactory.sol";
 
 /*
     LiquidTokenConverter Factory
@@ -8,7 +8,7 @@ import './interfaces/ITypedConverterFactory.sol';
 contract LiquidTokenConverterFactory is ITypedConverterFactory {
     /**
       * @dev returns the converter type the factory is associated with
-      * 
+      *
       * @return converter type
     */
     function converterType() public pure returns (uint8) {
@@ -18,11 +18,11 @@ contract LiquidTokenConverterFactory is ITypedConverterFactory {
     /**
       * @dev creates a new converter with the given arguments and transfers
       * the ownership to the caller
-      * 
+      *
       * @param _token             smart token governed by the converter
       * @param _registry          address of a contract registry contract
       * @param _maxConversionFee  maximum conversion fee, represented in ppm
-      * 
+      *
       * @return a new converter
     */
     function createConverter(ISmartToken _token, IContractRegistry _registry, uint32 _maxConversionFee) public returns(IBancorConverter) {
@@ -34,7 +34,7 @@ contract LiquidTokenConverterFactory is ITypedConverterFactory {
 
 /**
   * @dev Liquid Token Converter
-  * 
+  *
   * The liquid token converter is a specialized version of a converter that manages a liquid token.
   *
   * The converters govern a token with a single reserve and allow converting between the two.
@@ -43,7 +43,7 @@ contract LiquidTokenConverterFactory is ITypedConverterFactory {
 contract LiquidTokenConverter is BancorConverter {
     /**
       * @dev initializes a new LiquidTokenConverter instance
-      * 
+      *
       * @param  _token              liquid token governed by the converter
       * @param  _registry           address of a contract registry contract
       * @param  _maxConversionFee   maximum conversion fee, represented in ppm
@@ -71,24 +71,24 @@ contract LiquidTokenConverter is BancorConverter {
       * @dev defines the reserve token for the converter
       * can only be called by the owner while the converter is inactive and the
       * reserve wasn't defined yet
-      * 
+      *
       * @param _token   address of the reserve token
       * @param _weight  reserve weight, represented in ppm, 1-1000000
     */
     function addReserve(IERC20Token _token, uint32 _weight) public {
         // verify that the converter doesn't have a reserve yet
-        require(reserveTokenCount() == 0);
+        require(reserveTokenCount() == 0, "ERR_INVALID_RESERVE_COUNT");
         super.addReserve(_token, _weight);
     }
 
     /**
       * @dev returns the expected rate of converting the source token to the
       * target token along with the fee
-      * 
+      *
       * @param _sourceToken contract address of the source token
       * @param _targetToken contract address of the target token
       * @param _amount      amount of tokens received from the user
-      * 
+      *
       * @return expected rate
       * @return expected fee
     */
@@ -99,7 +99,7 @@ contract LiquidTokenConverter is BancorConverter {
             return saleRate(_amount);
 
         // invalid input
-        revert();
+        revert("ERR_INVALID_TOKEN");
     }
 
     /**
@@ -127,14 +127,14 @@ contract LiquidTokenConverter is BancorConverter {
             return sell(_amount, _beneficiary);
 
         // invalid input
-        revert();
+        revert("ERR_INVALID_TOKEN");
     }
 
     /**
       * @dev returns the expected return of buying with a given amount of tokens
-      * 
+      *
       * @param _depositAmount   amount of reserve-tokens received from the user
-      * 
+      *
       * @return amount of supply-tokens that the user will receive
       * @return amount of supply-tokens that the user will pay as fee
     */
@@ -166,9 +166,9 @@ contract LiquidTokenConverter is BancorConverter {
 
     /**
       * @dev returns the expected return of selling a given amount of tokens
-      * 
+      *
       * @param _sellAmount      amount of supply-tokens received from the user
-      * 
+      *
       * @return expected reserve tokens
       * @return expected fee
     */
@@ -201,10 +201,10 @@ contract LiquidTokenConverter is BancorConverter {
 
     /**
       * @dev buys the liquid token by depositing in its reserve
-      * 
+      *
       * @param _depositAmount   amount of tokens to deposit (in units of the reserve token)
       * @param _beneficiary     wallet to receive the conversion result
-      * 
+      *
       * @return amount of liquid tokens received
     */
     function buy(uint256 _depositAmount, address _beneficiary) internal returns (uint256) {
@@ -212,15 +212,15 @@ contract LiquidTokenConverter is BancorConverter {
         (uint256 amount, uint256 fee) = purchaseRate(_depositAmount);
 
         // ensure the trade gives something in return
-        require(amount != 0);
+        require(amount != 0, "ERR_ZERO_RATE");
 
         IERC20Token reserveToken = reserveTokens[0];
 
         // ensure that the input amount was already deposited
         if (reserveToken == ETH_RESERVE_ADDRESS)
-            require(msg.value == _depositAmount);
+            require(msg.value == _depositAmount, "ERR_ETH_AMOUNT_MISMATCH");
         else
-            require(msg.value == 0 && reserveToken.balanceOf(this).sub(reserveBalance(reserveToken)) >= _depositAmount);
+            require(msg.value == 0 && reserveToken.balanceOf(this).sub(reserveBalance(reserveToken)) >= _depositAmount, "ERR_INVALID_AMOUNT");
 
         // sync the reserve balance
         syncReserveBalance(reserveToken);
@@ -239,21 +239,21 @@ contract LiquidTokenConverter is BancorConverter {
 
     /**
       * @dev sells the liquid token by withdrawing from its reserve
-      * 
+      *
       * @param _sellAmount      amount of tokens to sell (in units of the smart token)
       * @param _beneficiary     wallet to receive the conversion result
-      * 
+      *
       * @return amount of reserve tokens received
     */
     function sell(uint256 _sellAmount, address _beneficiary) internal returns (uint256) {
         // ensure that the input amount was already deposited
-        require(_sellAmount <= token.balanceOf(this));
+        require(_sellAmount <= token.balanceOf(this), "ERR_INVALID_AMOUNT");
 
         // get expected rate and fee
         (uint256 amount, uint256 fee) = saleRate(_sellAmount);
 
         // ensure the trade gives something in return
-        require(amount != 0);
+        require(amount != 0, "ERR_ZERO_RATE");
 
         IERC20Token reserveToken = reserveTokens[0];
 

@@ -1,5 +1,5 @@
 pragma solidity 0.4.26;
-import '../utility/SafeMath.sol';
+import "../utility/SafeMath.sol";
 
 /*
     Utils test helper that exposes the safe math functions

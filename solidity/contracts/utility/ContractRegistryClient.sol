@@ -1,7 +1,7 @@
 pragma solidity 0.4.26;
-import './Owned.sol';
-import './Utils.sol';
-import './interfaces/IContractRegistry.sol';
+import "./Owned.sol";
+import "./Utils.sol";
+import "./interfaces/IContractRegistry.sol";
 
 /**
   * @dev Base contract for ContractRegistry clients
@@ -25,17 +25,22 @@ contract ContractRegistryClient is Owned, Utils {
 
     /**
       * @dev verifies that the caller is mapped to the given contract name
-      * 
+      *
       * @param _contractName    contract name
     */
     modifier only(bytes32 _contractName) {
-        require(msg.sender == addressOf(_contractName));
+        _only(_contractName);
         _;
+    }
+
+    // error message binary size optimization
+    function _only(bytes32 _contractName) internal view {
+        require(msg.sender == addressOf(_contractName), "ERR_ACCESS_DENIED");
     }
 
     /**
       * @dev initializes a new ContractRegistryClient instance
-      * 
+      *
       * @param  _registry   address of a contract-registry contract
     */
     constructor(IContractRegistry _registry) internal validAddress(_registry) {
@@ -48,16 +53,16 @@ contract ContractRegistryClient is Owned, Utils {
      */
     function updateRegistry() public {
         // verify that this function is permitted
-        require(msg.sender == owner || !onlyOwnerCanUpdateRegistry);
+        require(msg.sender == owner || !onlyOwnerCanUpdateRegistry, "ERR_ACCESS_DENIED");
 
         // get the new contract-registry
         address newRegistry = addressOf(CONTRACT_REGISTRY);
 
         // verify that the new contract-registry is different and not zero
-        require(newRegistry != address(registry) && newRegistry != address(0));
+        require(newRegistry != address(registry) && newRegistry != address(0), "ERR_INVALID_REGISTRY");
 
         // verify that the new contract-registry is pointing to a non-zero contract-registry
-        require(IContractRegistry(newRegistry).addressOf(CONTRACT_REGISTRY) != address(0));
+        require(IContractRegistry(newRegistry).addressOf(CONTRACT_REGISTRY) != address(0), "ERR_INVALID_REGISTRY");
 
         // save a backup of the current contract-registry before replacing it
         prevRegistry = registry;
@@ -76,19 +81,19 @@ contract ContractRegistryClient is Owned, Utils {
 
     /**
       * @dev restricts the permission to update the contract-registry
-      * 
+      *
       * @param _onlyOwnerCanUpdateRegistry  indicates whether or not permission is restricted to owner only
     */
-    function restrictRegistryUpdate(bool _onlyOwnerCanUpdateRegistry) ownerOnly public {
+    function restrictRegistryUpdate(bool _onlyOwnerCanUpdateRegistry) public ownerOnly {
         // change the permission to update the contract-registry
         onlyOwnerCanUpdateRegistry = _onlyOwnerCanUpdateRegistry;
     }
 
     /**
       * @dev returns the address associated with the given contract name
-      * 
+      *
       * @param _contractName    contract name
-      * 
+      *
       * @return contract address
     */
     function addressOf(bytes32 _contractName) internal view returns (address) {

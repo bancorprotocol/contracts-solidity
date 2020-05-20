@@ -1,9 +1,9 @@
 pragma solidity 0.4.26;
-import './BancorConverter.sol';
+import "./BancorConverter.sol";
 
 /**
   * @dev Liquidity Pool Converter
-  * 
+  *
   * The liquidity pool converter is the parent contract for specific types of converters that
   * manage liquidity pools.
   *
@@ -13,7 +13,7 @@ contract LiquidityPoolConverter is BancorConverter {
 
     /**
       * @dev triggered after liquidity is added
-      * 
+      *
       * @param  _provider   liquidity provider
       * @param  _reserve    reserve token address
       * @param  _amount     reserve token amount
@@ -30,7 +30,7 @@ contract LiquidityPoolConverter is BancorConverter {
 
     /**
       * @dev triggered after liquidity is removed
-      * 
+      *
       * @param  _provider   liquidity provider
       * @param  _reserve    reserve token address
       * @param  _amount     reserve token amount
@@ -47,7 +47,7 @@ contract LiquidityPoolConverter is BancorConverter {
 
     /**
       * @dev initializes a new LiquidityPoolConverter instance
-      * 
+      *
       * @param  _token              pool token governed by the converter
       * @param  _registry           address of a contract registry contract
       * @param  _maxConversionFee   maximum conversion fee, represented in ppm
@@ -68,7 +68,7 @@ contract LiquidityPoolConverter is BancorConverter {
     */
     function acceptTokenOwnership() public {
         // verify that the converter has at least 2 reserves
-        require(reserveTokenCount() > 1);
+        require(reserveTokenCount() > 1, "ERR_INVALID_RESERVE_COUNT");
         super.acceptTokenOwnership();
     }
 }

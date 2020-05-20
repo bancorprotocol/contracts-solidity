@@ -1,24 +1,24 @@
 pragma solidity 0.4.26;
-import './interfaces/IBancorConverter.sol';
-import './interfaces/IConverterUpgrader.sol';
-import './interfaces/IBancorFormula.sol';
-import '../IBancorNetwork.sol';
-import '../utility/SafeMath.sol';
-import '../utility/TokenHandler.sol';
-import '../utility/ContractRegistryClient.sol';
-import '../token/SmartTokenController.sol';
-import '../token/interfaces/ISmartToken.sol';
-import '../token/interfaces/IEtherToken.sol';
-import '../bancorx/interfaces/IBancorX.sol';
+import "./interfaces/IBancorConverter.sol";
+import "./interfaces/IConverterUpgrader.sol";
+import "./interfaces/IBancorFormula.sol";
+import "../IBancorNetwork.sol";
+import "../utility/SafeMath.sol";
+import "../utility/TokenHandler.sol";
+import "../utility/ContractRegistryClient.sol";
+import "../token/SmartTokenController.sol";
+import "../token/interfaces/ISmartToken.sol";
+import "../token/interfaces/IEtherToken.sol";
+import "../bancorx/interfaces/IBancorX.sol";
 
 /**
   * @dev Bancor Converter
-  * 
-  * The Bancor converter allows for conversions between a Smart Token and other ERC20 tokens and between different ERC20 tokens and themselves. 
-  * 
+  *
+  * The Bancor converter allows for conversions between a Smart Token and other ERC20 tokens and between different ERC20 tokens and themselves.
+  *
   * This mechanism allows creating different financial tools (for example, lower slippage in conversions).
-  * 
-  * The converter is upgradable (just like any SmartTokenController) and all upgrades are opt-in. 
+  *
+  * The converter is upgradable (just like any SmartTokenController) and all upgrades are opt-in.
   *
   * Converter types (defined as uint8 type) -
   * 0 = liquid token converter
@@ -27,6 +27,8 @@ import '../bancorx/interfaces/IBancorX.sol';
 */
 contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController, ContractRegistryClient {
     using SafeMath for uint256;
+
+    // error messages
 
     uint32 internal constant WEIGHT_RESOLUTION = 1000000;
     uint64 internal constant CONVERSION_FEE_RESOLUTION = 1000000;
@@ -57,7 +59,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     /**
       * @dev triggered when a conversion between two tokens occurs
-      * 
+      *
       * @param _fromToken       source ERC20 token
       * @param _toToken         target ERC20 token
       * @param _trader          wallet that initiated the trade
@@ -76,7 +78,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     /**
       * @dev triggered after a conversion with new price data
-      * 
+      *
       * @param  _connectorToken     reserve token
       * @param  _tokenSupply        smart token supply
       * @param  _connectorBalance   reserve balance
@@ -91,7 +93,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     /**
       * @dev triggered when the conversion fee is updated
-      * 
+      *
       * @param  _prevFee    previous fee percentage, represented in ppm
       * @param  _newFee     new fee percentage, represented in ppm
     */
@@ -99,7 +101,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     /**
       * @dev initializes a new BancorConverter instance
-      * 
+      *
       * @param  _token              smart token governed by the converter
       * @param  _registry           address of a contract registry contract
       * @param  _maxConversionFee   maximum conversion fee, represented in ppm
@@ -119,28 +121,48 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     // protects a function against reentrancy attacks
     modifier protected() {
-        require(!locked);
+        _protected();
         locked = true;
         _;
         locked = false;
     }
 
+    // error message binary size optimization
+    function _protected() internal view {
+        require(!locked, "ERR_REENTRANCY");
+    }
+
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
     modifier validReserve(IERC20Token _address) {
-        require(reserves[_address].isSet);
+        _validReserve(_address);
         _;
+    }
+
+    // error message binary size optimization
+    function _validReserve(IERC20Token _address) internal view {
+        require(reserves[_address].isSet, "ERR_INVALID_RESERVE");
     }
 
     // validates conversion fee
     modifier validConversionFee(uint32 _conversionFee) {
-        require(_conversionFee >= 0 && _conversionFee <= CONVERSION_FEE_RESOLUTION);
+        _validConversionFee(_conversionFee);
         _;
+    }
+
+    // error message binary size optimization
+    function _validConversionFee(uint32 _conversionFee) internal pure {
+        require(_conversionFee >= 0 && _conversionFee <= CONVERSION_FEE_RESOLUTION, "ERR_INVALID_CONVERSION_FEE");
     }
 
     // validates reserve weight
     modifier validReserveWeight(uint32 _weight) {
-        require(_weight > 0 && _weight <= WEIGHT_RESOLUTION);
+        _validReserveWeight(_weight);
         _;
+    }
+
+    // error message binary size optimization
+    function _validReserveWeight(uint32 _weight) internal pure {
+        require(_weight > 0 && _weight <= WEIGHT_RESOLUTION, "ERR_INVALID_RESERVE_WEIGHT");
     }
 
     /**
@@ -148,7 +170,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * can only be called if the converter has an ETH reserve
     */
     function() external payable {
-        require(reserves[ETH_RESERVE_ADDRESS].isSet); // require(hasETHReserve());
+        require(reserves[ETH_RESERVE_ADDRESS].isSet, "ERR_INVALID_RESERVE"); // require(hasETHReserve(), "ERR_INVALID_RESERVE");
         // a workaround for a problem when running solidity-coverage
         // see https://github.com/sc-forks/solidity-coverage/issues/487
     }
@@ -167,16 +189,16 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         address converterUpgrader = addressOf(BANCOR_CONVERTER_UPGRADER);
 
         // verify that the converter is inactive or that the owner is the upgrader contract
-        require(token.owner() != address(this) || owner == converterUpgrader);
+        require(token.owner() != address(this) || owner == converterUpgrader, "ERR_ACCESS_DENIED");
         _to.transfer(address(this).balance);
 
-        // sync the ETH reserve balance	
+        // sync the ETH reserve balance
         syncReserveBalance(IERC20Token(ETH_RESERVE_ADDRESS));
     }
 
     /**
       * @dev checks whether or not the converter version is 28 or higher
-      * 
+      *
       * @return true, since the converter version is 28 or higher
     */
     function isV28OrHigher() public pure returns (bool) {
@@ -187,7 +209,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @dev allows the owner to update & enable the conversion whitelist contract address
       * when set, only addresses that are whitelisted are actually allowed to use the converter
       * note that the whitelist check is actually done by the BancorNetwork contract
-      * 
+      *
       * @param _whitelist    address of a whitelist contract
     */
     function setConversionWhitelist(IWhitelist _whitelist)
@@ -203,7 +225,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * the new owner needs to accept the transfer
       * can only be called by the contract owner
       * note that token ownership can only be transferred while the owner is the converter upgrader contract
-      * 
+      *
       * @param _newOwner    new token owner
     */
     function transferTokenOwnership(address _newOwner)
@@ -220,7 +242,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     */
     function acceptTokenOwnership() public ownerOnly {
         // verify the the converter has at least one reserve
-        require(reserveTokenCount() > 0);
+        require(reserveTokenCount() > 0, "ERR_INVALID_RESERVE_COUNT");
         super.acceptTokenOwnership();
         syncReserveBalances();
     }
@@ -228,11 +250,11 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**
       * @dev updates the current conversion fee
       * can only be called by the contract owner
-      * 
+      *
       * @param _conversionFee new conversion fee, represented in ppm
     */
     function setConversionFee(uint32 _conversionFee) public ownerOnly {
-        require(_conversionFee >= 0 && _conversionFee <= maxConversionFee);
+        require(_conversionFee >= 0 && _conversionFee <= maxConversionFee, "ERR_INVALID_CONVERSION_FEE");
         emit ConversionFeeUpdate(conversionFee, _conversionFee);
         conversionFee = _conversionFee;
     }
@@ -242,7 +264,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * can only be called by the owner
       * note that reserve tokens can only be withdrawn by the owner while the converter is inactive
       * unless the owner is the converter upgrader contract
-      * 
+      *
       * @param _token   ERC20 token contract address
       * @param _to      account to receive the new amount
       * @param _amount  amount to withdraw
@@ -252,7 +274,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
         // if the token is not a reserve token, allow withdrawal
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
-        require(!reserves[_token].isSet || token.owner() != address(this) || owner == converterUpgrader);
+        require(!reserves[_token].isSet || token.owner() != address(this) || owner == converterUpgrader, "ERR_ACCESS_DENIED");
         super.withdrawTokens(_token, _to, _amount);
 
         // if the token is a reserve token, sync the reserve balance
@@ -276,7 +298,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**
       * @dev returns the number of reserve tokens defined
       * note that prior to version 17, you should use 'connectorTokenCount' instead
-      * 
+      *
       * @return number of reserve tokens
     */
     function reserveTokenCount() public view returns (uint16) {
@@ -286,7 +308,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**
       * @dev defines a new reserve token for the converter
       * can only be called by the owner while the converter is inactive
-      * 
+      *
       * @param _token   address of the reserve token
       * @param _weight  reserve weight, represented in ppm, 1-1000000
     */
@@ -298,7 +320,8 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         notThis(_token)
         validReserveWeight(_weight)
     {
-        require(_token != token && !reserves[_token].isSet && reserveRatio + _weight <= WEIGHT_RESOLUTION); // validate input
+        require(_token != token && !reserves[_token].isSet, "ERR_INVALID_RESERVE"); // validate input
+        require(reserveRatio + _weight <= WEIGHT_RESOLUTION, "ERR_INVALID_RESERVE_WEIGHT"); // validate input
 
         reserves[_token].balance = 0;
         reserves[_token].weight = _weight;
@@ -310,9 +333,9 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**
       * @dev returns the reserve's weight
       * added in version 28
-      * 
+      *
       * @param _reserveToken    reserve token contract address
-      * 
+      *
       * @return reserve weight
     */
     function reserveWeight(IERC20Token _reserveToken)
@@ -327,9 +350,9 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     /**
       * @dev returns the reserve's balance
       * note that prior to version 17, you should use 'getConnectorBalance' instead
-      * 
+      *
       * @param _reserveToken    reserve token contract address
-      * 
+      *
       * @return reserve balance
     */
     function reserveBalance(IERC20Token _reserveToken)
@@ -343,7 +366,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     /**
       * @dev checks whether or not the converter has an ETH reserve
-      * 
+      *
       * @return true if the converter has an ETH reserve, false otherwise
     */
     function hasETHReserve() public view returns (bool) {
@@ -369,26 +392,27 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         returns (uint256)
     {
         _amount; // remove unused parameter warning
-        require(_sourceToken != _targetToken); // validate input
+        require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET"); // validate input
 
         // if a whitelist is set, verify that both and trader and the beneficiary are whitelisted
         require(conversionWhitelist == address(0) ||
-                (conversionWhitelist.isWhitelisted(_trader) && conversionWhitelist.isWhitelisted(_beneficiary)));
+                (conversionWhitelist.isWhitelisted(_trader) && conversionWhitelist.isWhitelisted(_beneficiary)),
+                "ERR_NOT_WHITELISTED");
     }
 
     /**
       * @dev given a return amount, returns the amount minus the conversion fee
-      * 
+      *
       * @param _amount      return amount
       * @param _magnitude   1 for standard conversion, 2 for cross reserve conversion
-      * 
+      *
       * @return return amount minus conversion fee
     */
     function deductFee(uint256 _amount, uint8 _magnitude) internal view returns (uint256) {
         return _amount.mul((CONVERSION_FEE_RESOLUTION - conversionFee) ** _magnitude).div(CONVERSION_FEE_RESOLUTION ** _magnitude);
     }
 
-    /**	
+    /**
       * @dev syncs the stored reserve balance for a given reserve with the real reserve balance
       *
       * @param _reserveToken    address of the reserve token
@@ -400,7 +424,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
             reserves[_reserveToken].balance = _reserveToken.balanceOf(this);
     }
 
-    /**	
+    /**
       * @dev syncs all stored reserve balances
     */
     function syncReserveBalances() internal {
@@ -410,7 +434,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     /**
       * @dev helper, dispatches the Conversion event
-      * 
+      *
       * @param _sourceToken     source ERC20 token
       * @param _targetToken     target ERC20 token
       * @param _amount          amount purchased/sold (in the source token)

@@ -1,6 +1,6 @@
 pragma solidity 0.4.26;
-import './LiquidityPoolConverter.sol';
-import './interfaces/ITypedConverterFactory.sol';
+import "./LiquidityPoolConverter.sol";
+import "./interfaces/ITypedConverterFactory.sol";
 
 /*
     LiquidityPoolV1Converter Factory
@@ -8,7 +8,7 @@ import './interfaces/ITypedConverterFactory.sol';
 contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
     /**
       * @dev returns the converter type the factory is associated with
-      * 
+      *
       * @return converter type
     */
     function converterType() public pure returns (uint8) {
@@ -18,11 +18,11 @@ contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
     /**
       * @dev creates a new converter with the given arguments and transfers
       * the ownership to the caller
-      * 
+      *
       * @param _token             smart token governed by the converter
       * @param _registry          address of a contract registry contract
       * @param _maxConversionFee  maximum conversion fee, represented in ppm
-      * 
+      *
       * @return a new converter
     */
     function createConverter(ISmartToken _token, IContractRegistry _registry, uint32 _maxConversionFee) public returns(IBancorConverter) {
@@ -34,7 +34,7 @@ contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
 
 /**
   * @dev Liquidity Pool v1 Converter
-  * 
+  *
   * The liquidity pool v1 converter is a specialized version of a converter that manages
   * a classic bancor liquidity pool.
   *
@@ -47,7 +47,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev initializes a new LiquidityPoolV1Converter instance
-      * 
+      *
       * @param  _token              pool token governed by the converter
       * @param  _registry           address of a contract registry contract
       * @param  _maxConversionFee   maximum conversion fee, represented in ppm
@@ -73,11 +73,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev returns the expected rate of converting one reserve to another along with the fee
-      * 
+      *
       * @param _sourceToken contract address of the source reserve token
       * @param _targetToken contract address of the target reserve token
       * @param _amount      amount of tokens received from the user
-      * 
+      *
       * @return expected rate
       * @return expected fee
     */
@@ -89,7 +89,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         validReserve(_targetToken)
         returns (uint256, uint256)
     {
-        require(_sourceToken != _targetToken); // validate input
+        require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET"); // validate input
 
         uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).crossReserveRate(
             reserveBalance(_sourceToken),
@@ -129,7 +129,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         (uint256 amount, uint256 fee) = rateAndFee(_sourceToken, _targetToken, _amount);
 
         // ensure the trade gives something in return
-        require(amount != 0);
+        require(amount != 0, "ERR_ZERO_RATE");
 
         // ensure that the trade won't deplete the reserve balance
         uint256 toReserveBalance = reserveBalance(_targetToken);
@@ -137,9 +137,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         // ensure that the input amount was already deposited
         if (_sourceToken == ETH_RESERVE_ADDRESS)
-            require(msg.value == _amount);
+            require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
         else
-            require(msg.value == 0 && _sourceToken.balanceOf(this).sub(reserveBalance(_sourceToken)) >= _amount);
+            require(msg.value == 0 && _sourceToken.balanceOf(this).sub(reserveBalance(_sourceToken)) >= _amount, "ERR_INVALID_AMOUNT");
 
         // sync the reserve balances
         syncReserveBalance(_sourceToken);
@@ -165,7 +165,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @dev buys the token with all reserve tokens using the same percentage
       * note that the function cannot be called when the converter has only one reserve
       * note that prior to version 28, you should use 'fund' instead
-      * 
+      *
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
       * @param _minReturn       token minimum return-amount
@@ -181,11 +181,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
         for (uint256 i = 0; i < _reserveTokens.length; i++)
             if (_reserveTokens[i] == ETH_RESERVE_ADDRESS)
-                require(_reserveAmounts[i] == msg.value);
+                require(_reserveAmounts[i] == msg.value, "ERR_ETH_AMOUNT_MISMATCH");
 
         // if the input value of ETH is larger than zero, then verify that one of the reserves is ETH
         if (msg.value > 0)
-            require(reserves[ETH_RESERVE_ADDRESS].isSet);
+            require(reserves[ETH_RESERVE_ADDRESS].isSet, "ERR_NO_ETH_RESERVE");
 
         // get the total supply
         uint256 totalSupply = token.totalSupply();
@@ -194,7 +194,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint256 amount = addLiquidityToPool(_reserveTokens, _reserveAmounts, totalSupply);
 
         // verify that the equivalent amount of tokens is equal to or larger than the user's expectation
-        require(amount >= _minReturn);
+        require(amount >= _minReturn, "ERR_RETURN_TOO_LOW");
 
         // issue the tokens to the user
         token.issue(msg.sender, amount);
@@ -204,7 +204,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @dev sells the token for all reserve tokens using the same percentage
       * note that the function cannot be called when the converter has only one reserve
       * note that prior to version 28, you should use 'liquidate' instead
-      * 
+      *
       * @param _amount                  token amount
       * @param _reserveTokens           address of each reserve token
       * @param _reserveMinReturnAmounts minimum return-amount of each reserve token
@@ -232,7 +232,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * then it will cost an amount equal to 10% of each reserve token balance
       * note that the function cannot be called when the converter has only one reserve
       * note that starting from version 28, you should use 'addLiquidity' instead
-      * 
+      *
       * @param _amount  amount to increase the supply by (in the smart token)
     */
     function fund(uint256 _amount) public payable protected {
@@ -255,7 +255,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
                     msg.sender.transfer(msg.value - reserveAmount);
                 }
                 else if (msg.value < reserveAmount) {
-                    require(msg.value == 0);
+                    require(msg.value == 0, "ERR_INVALID_ETH_VALUE");
                     safeTransferFrom(etherToken, msg.sender, this, reserveAmount);
                     etherToken.withdraw(reserveAmount);
                 }
@@ -281,11 +281,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * then they will receive 10% of each reserve token balance in return
       * note that the function cannot be called when the converter has only one reserve
       * note that starting from version 28, you should use 'removeLiquidity' instead
-      * 
+      *
       * @param _amount  amount to liquidate (in the smart token)
     */
     function liquidate(uint256 _amount) public protected {
-        require(_amount > 0);
+        require(_amount > 0, "ERR_ZERO_AMOUNT");
 
         uint256 totalSupply = token.totalSupply();
         token.destroy(msg.sender, _amount);
@@ -300,7 +300,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     /**
       * @dev verifies that a given array of tokens is identical to the converter's array of reserve tokens
       * we take this input in order to allow specifying the corresponding reserve amounts in any order
-      * 
+      *
       * @param _reserveTokens   array of reserve tokens
       * @param _reserveAmounts  array of reserve amounts
       * @param _amount          token amount
@@ -310,29 +310,29 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint256 j;
 
         uint256 length = reserveTokens.length;
-        require(length == _reserveTokens.length);
-        require(length == _reserveAmounts.length);
+        require(length == _reserveTokens.length, "ERR_INVALID_RESERVE");
+        require(length == _reserveAmounts.length, "ERR_INVALID_AMOUNT");
 
         for (i = 0; i < length; i++) {
             // verify that every input reserve token is included in the reserve tokens
-            require(reserves[_reserveTokens[i]].isSet);
+            require(reserves[_reserveTokens[i]].isSet, "ERR_INVALID_RESERVE");
             for (j = 0; j < length; j++) {
                 if (reserveTokens[i] == _reserveTokens[j])
                     break;
             }
             // verify that every reserve token is included in the input reserve tokens
-            require(j < length);
+            require(j < length, "ERR_INVALID_RESERVE");
             // verify that every input reserve token amount is larger than zero
-            require(_reserveAmounts[i] > 0);
+            require(_reserveAmounts[i] > 0, "ERR_INVALID_AMOUNT");
         }
 
         // verify that the input token amount is larger than zero
-        require(_amount > 0);
+        require(_amount > 0, "ERR_ZERO_AMOUNT");
     }
 
     /**
       * @dev adds liquidity (reserve) to the pool
-      * 
+      *
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
       * @param _totalSupply     token total supply
@@ -348,7 +348,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev adds liquidity (reserve) to the pool when it's empty
-      * 
+      *
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
     */
@@ -374,7 +374,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev adds liquidity (reserve) to the pool when it's not empty
-      * 
+      *
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
       * @param _totalSupply     token total supply
@@ -393,7 +393,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
             uint256 reserveAmount = formula.fundCost(_totalSupply, rsvBalance, reserveRatio, amount);
-            require(reserveAmount > 0);
+            require(reserveAmount > 0, "ERR_ZERO_RATE");
             assert(reserveAmount <= _reserveAmounts[i]);
 
             // transfer each one of the reserve amounts from the user to the pool
@@ -412,7 +412,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev removes liquidity (reserve) from the pool
-      * 
+      *
       * @param _reserveTokens           address of each reserve token
       * @param _reserveMinReturnAmounts minimum return-amount of each reserve token
       * @param _totalSupply             token total supply
@@ -429,7 +429,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
             uint256 reserveAmount = formula.liquidateRate(_totalSupply, rsvBalance, reserveRatio, _amount);
-            require(reserveAmount >= _reserveMinReturnAmounts[i]);
+            require(reserveAmount >= _reserveMinReturnAmounts[i], "ERR_ZERO_RATE");
 
             reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
 
@@ -459,7 +459,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev calculates the number of decimal digits in a given value
-      * 
+      *
       * @param _x   value (assumed positive)
       * @return the number of decimal digits in the given value
     */
@@ -472,7 +472,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev calculates the nearest integer to a given quotient
-      * 
+      *
       * @param _n   quotient numerator
       * @param _d   quotient denominator
       * @return the nearest integer to the given quotient
@@ -483,7 +483,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev calculates the average number of decimal digits in a given list of values
-      * 
+      *
       * @param _values  list of values (each of which assumed positive)
       * @return the average number of decimal digits in the given list of values
     */
