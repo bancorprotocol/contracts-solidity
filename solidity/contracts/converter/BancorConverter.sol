@@ -129,7 +129,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     // error message binary size optimization
     function _protected() internal view {
-        require(!locked, "BANCOR_ERR_LOCKED");
+        require(!locked, "BANCOR_ERR_REENTRANCY");
     }
 
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
