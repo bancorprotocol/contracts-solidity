@@ -51,7 +51,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
 
     // error message binary size optimization
     function _transfersAllowed() internal view {
-        require(transfersEnabled, "BANCOR_ERR_TRANSFERS_DISABLED");
+        require(transfersEnabled, "ERR_TRANSFERS_DISABLED");
     }
 
     /**

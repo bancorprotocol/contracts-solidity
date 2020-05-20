@@ -37,7 +37,7 @@ contract XTransferRerouter is Owned {
 
     // error message binary size optimization
     function _reroutingAllowed() internal view {
-        require(reroutingEnabled, "BANCOR_ERR_DISABLED");
+        require(reroutingEnabled, "ERR_DISABLED");
     }
 
     /**

@@ -183,9 +183,9 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     function purchaseRate(uint256 _supply, uint256 _reserveBalance, uint32 _reserveWeight, uint256 _depositAmount) public view returns (uint256) {
         // validate input
-        require(_supply > 0, "BANCOR_ERR_INVALID_SUPPLY");
-        require(_reserveBalance > 0, "BANCOR_ERR_INVALID_RESERVE_BALANCE");
-        require(_reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT, "BANCOR_ERR_INVALID_RESERVE_WEIGHT");
+        require(_supply > 0, "ERR_INVALID_SUPPLY");
+        require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
 
         // special case for 0 deposit amount
         if (_depositAmount == 0)
@@ -219,10 +219,10 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     function saleRate(uint256 _supply, uint256 _reserveBalance, uint32 _reserveWeight, uint256 _sellAmount) public view returns (uint256) {
         // validate input
-        require(_supply > 0, "BANCOR_ERR_INVALID_SUPPLY");
-        require(_reserveBalance > 0, "BANCOR_ERR_INVALID_RESERVE_BALANCE");
-        require(_reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT, "BANCOR_ERR_INVALID_RESERVE_WEIGHT");
-        require(_sellAmount <= _supply, "BANCOR_ERR_INVALID_AMOUNT");
+        require(_supply > 0, "ERR_INVALID_SUPPLY");
+        require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
+        require(_sellAmount <= _supply, "ERR_INVALID_AMOUNT");
 
         // special case for 0 sell amount
         if (_sellAmount == 0)
@@ -262,8 +262,8 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     function crossReserveRate(uint256 _sourceReserveBalance, uint32 _sourceReserveWeight, uint256 _targetReserveBalance, uint32 _targetReserveWeight, uint256 _amount) public view returns (uint256) {
         // validate input
-        require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "BANCOR_ERR_INVALID_RESERVE_BALANCE");
-        require(_sourceReserveWeight > 0 && _sourceReserveWeight <= MAX_WEIGHT && _targetReserveWeight > 0 && _targetReserveWeight <= MAX_WEIGHT, "BANCOR_ERR_RESERVE_WEIGHT");
+        require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_sourceReserveWeight > 0 && _sourceReserveWeight <= MAX_WEIGHT && _targetReserveWeight > 0 && _targetReserveWeight <= MAX_WEIGHT, "ERR_RESERVE_WEIGHT");
 
         // special case for equal weights
         if (_sourceReserveWeight == _targetReserveWeight)
@@ -294,9 +294,9 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     function fundCost(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
         // validate input
-        require(_supply > 0, "BANCOR_ERR_INVALID_SUPPLY");
-        require(_reserveBalance > 0, "BANCOR_ERR_INVALID_RESERVE_BALANCE");
-        require(_reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2, "BANCOR_ERR_INVALID_RESERVE_RATIO");
+        require(_supply > 0, "ERR_INVALID_SUPPLY");
+        require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
 
         // special case for 0 amount
         if (_amount == 0)
@@ -330,10 +330,10 @@ contract BancorFormula is IBancorFormula, Utils {
     */
     function liquidateRate(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
         // validate input
-        require(_supply > 0, "BANCOR_ERR_INVALID_SUPPLY");
-        require(_reserveBalance > 0, "BANCOR_ERR_INVALID_RESERVE_BALANCE");
-        require(_reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2, "BANCOR_ERR_INVALID_RESERVE_RATIO");
-        require(_amount <= _supply, "BANCOR_ERR_INVALID_AMOUNT");
+        require(_supply > 0, "ERR_INVALID_SUPPLY");
+        require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
+        require(_amount <= _supply, "ERR_INVALID_AMOUNT");
 
         // special case for 0 amount
         if (_amount == 0)

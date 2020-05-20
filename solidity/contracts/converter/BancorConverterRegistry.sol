@@ -104,8 +104,8 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     public returns (IBancorConverter)
     {
         uint256 length = _reserveTokens.length;
-        require(length == _reserveWeights.length, "BANCOR_ERR_INVALID_RESERVES"); 
-        require(getLiquidityPoolByConfig(_type, _reserveTokens, _reserveWeights) == ISmartToken(0), "BANCOR_ERR_ALREADY_EXISTS");
+        require(length == _reserveWeights.length, "ERR_INVALID_RESERVES"); 
+        require(getLiquidityPoolByConfig(_type, _reserveTokens, _reserveWeights) == ISmartToken(0), "ERR_ALREADY_EXISTS");
 
         IConverterFactory factory = IConverterFactory(addressOf(CONVERTER_FACTORY));
         SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
@@ -131,7 +131,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _converter converter
     */
     function addConverter(IBancorConverter _converter) public ownerOnly {
-        require(isConverterValid(_converter), "BANCOR_ERR_INVALID_CONVERTER");
+        require(isConverterValid(_converter), "ERR_INVALID_CONVERTER");
         addConverterInternal(_converter);
     }
 
@@ -143,7 +143,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _converter converter
     */
     function removeConverter(IBancorConverter _converter) public {
-        require(msg.sender == owner || !isConverterValid(_converter), "BANCOR_ERR_ACCESS_DENIED");
+        require(msg.sender == owner || !isConverterValid(_converter), "ERR_ACCESS_DENIED");
         removeConverterInternal(_converter);
     }
 

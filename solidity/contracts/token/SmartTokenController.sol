@@ -43,7 +43,7 @@ contract SmartTokenController is ISmartTokenController, TokenHolder {
 
     // error message binary size optimization
     function _active() internal view {
-        require(token.owner() == address(this), "BANCOR_ERR_INACTIVE");
+        require(token.owner() == address(this), "ERR_INACTIVE");
     }
 
     // ensures that the controller is not the token's owner
@@ -54,7 +54,7 @@ contract SmartTokenController is ISmartTokenController, TokenHolder {
 
     // error message binary size optimization
     function _inactive() internal view {
-        require(token.owner() != address(this), "BANCOR_ERR_ACTIVE");
+        require(token.owner() != address(this), "ERR_ACTIVE");
     }
 
     /**
@@ -97,7 +97,7 @@ contract SmartTokenController is ISmartTokenController, TokenHolder {
      */
     function claimTokens(address _from, uint256 _amount) public {
         // only the associated BancorX contract may call this method
-        require(msg.sender == bancorX, "BANCOR_ERR_ACCESS_DENIED");
+        require(msg.sender == bancorX, "ERR_ACCESS_DENIED");
 
         // destroy the tokens belonging to _from, and issue the same amount to bancorX
         token.destroy(_from, _amount);

@@ -129,7 +129,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     // error message binary size optimization
     function _protected() internal view {
-        require(!locked, "BANCOR_ERR_REENTRANCY");
+        require(!locked, "ERR_REENTRANCY");
     }
 
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
@@ -140,7 +140,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     // error message binary size optimization
     function _validReserve(IERC20Token _address) internal view {
-        require(reserves[_address].isSet, "BANCOR_ERR_INVALID_RESERVE");
+        require(reserves[_address].isSet, "ERR_INVALID_RESERVE");
     }
 
     // validates conversion fee
@@ -151,7 +151,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     // error message binary size optimization
     function _validConversionFee(uint32 _conversionFee) internal pure {
-        require(_conversionFee >= 0 && _conversionFee <= CONVERSION_FEE_RESOLUTION, "BANCOR_ERR_INVALID_CONVERSION_FEE");
+        require(_conversionFee >= 0 && _conversionFee <= CONVERSION_FEE_RESOLUTION, "ERR_INVALID_CONVERSION_FEE");
     }
 
     // validates reserve weight
@@ -162,7 +162,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
     // error message binary size optimization
     function _validReserveWeight(uint32 _weight) internal pure {
-        require(_weight > 0 && _weight <= WEIGHT_RESOLUTION, "BANCOR_ERR_INVALID_RESERVE_WEIGHT");
+        require(_weight > 0 && _weight <= WEIGHT_RESOLUTION, "ERR_INVALID_RESERVE_WEIGHT");
     }
 
     /**
@@ -170,7 +170,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * can only be called if the converter has an ETH reserve
     */
     function() external payable {
-        require(reserves[ETH_RESERVE_ADDRESS].isSet, "BANCOR_ERR_INVALID_RESERVE"); // require(hasETHReserve(), "BANCOR_ERR_INVALID_RESERVE");
+        require(reserves[ETH_RESERVE_ADDRESS].isSet, "ERR_INVALID_RESERVE"); // require(hasETHReserve(), "ERR_INVALID_RESERVE");
         // a workaround for a problem when running solidity-coverage
         // see https://github.com/sc-forks/solidity-coverage/issues/487
     }
@@ -189,7 +189,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         address converterUpgrader = addressOf(BANCOR_CONVERTER_UPGRADER);
 
         // verify that the converter is inactive or that the owner is the upgrader contract
-        require(token.owner() != address(this) || owner == converterUpgrader, "BANCOR_ERR_ACCESS_DENIED");
+        require(token.owner() != address(this) || owner == converterUpgrader, "ERR_ACCESS_DENIED");
         _to.transfer(address(this).balance);
 
         // sync the ETH reserve balance	
@@ -242,7 +242,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     */
     function acceptTokenOwnership() public ownerOnly {
         // verify the the converter has at least one reserve
-        require(reserveTokenCount() > 0, "BANCOR_ERR_INVALID_RESERVE_COUNT");
+        require(reserveTokenCount() > 0, "ERR_INVALID_RESERVE_COUNT");
         super.acceptTokenOwnership();
         syncReserveBalances();
     }
@@ -254,7 +254,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @param _conversionFee new conversion fee, represented in ppm
     */
     function setConversionFee(uint32 _conversionFee) public ownerOnly {
-        require(_conversionFee >= 0 && _conversionFee <= maxConversionFee, "BANCOR_ERR_INVALID_CONVERSION_FEE");
+        require(_conversionFee >= 0 && _conversionFee <= maxConversionFee, "ERR_INVALID_CONVERSION_FEE");
         emit ConversionFeeUpdate(conversionFee, _conversionFee);
         conversionFee = _conversionFee;
     }
@@ -274,7 +274,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
 
         // if the token is not a reserve token, allow withdrawal
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
-        require(!reserves[_token].isSet || token.owner() != address(this) || owner == converterUpgrader, "BANCOR_ERR_ACCESS_DENIED");
+        require(!reserves[_token].isSet || token.owner() != address(this) || owner == converterUpgrader, "ERR_ACCESS_DENIED");
         super.withdrawTokens(_token, _to, _amount);
 
         // if the token is a reserve token, sync the reserve balance
@@ -320,8 +320,8 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         notThis(_token)
         validReserveWeight(_weight)
     {
-        require(_token != token && !reserves[_token].isSet, "BANCOR_ERR_INVALID_RESERVE"); // validate input
-        require(reserveRatio + _weight <= WEIGHT_RESOLUTION, "BANCOR_ERR_INVALID_RESERVE_WEIGHT"); // validate input
+        require(_token != token && !reserves[_token].isSet, "ERR_INVALID_RESERVE"); // validate input
+        require(reserveRatio + _weight <= WEIGHT_RESOLUTION, "ERR_INVALID_RESERVE_WEIGHT"); // validate input
 
         reserves[_token].balance = 0;
         reserves[_token].weight = _weight;
@@ -392,12 +392,12 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         returns (uint256)
     {
         _amount; // remove unused parameter warning
-        require(_sourceToken != _targetToken, "BANCOR_ERR_SAME_SOURCE_TARGET"); // validate input
+        require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET"); // validate input
 
         // if a whitelist is set, verify that both and trader and the beneficiary are whitelisted
         require(conversionWhitelist == address(0) ||
                 (conversionWhitelist.isWhitelisted(_trader) && conversionWhitelist.isWhitelisted(_beneficiary)),
-                "BANCOR_ERR_NOT_WHITELISTED");
+                "ERR_NOT_WHITELISTED");
     }
 
     /**

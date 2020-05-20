@@ -178,7 +178,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     // error message binary size optimization
     function _reporterOnly() internal view {
-        require(reporters[msg.sender], "BANCOR_ERR_ACCESS_DENIED");
+        require(reporters[msg.sender], "ERR_ACCESS_DENIED");
     }
 
     // allows execution only when x transfers are enabled
@@ -189,7 +189,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     // error message binary size optimization
     function _xTransfersAllowed() internal view {
-        require(xTransfersEnabled, "BANCOR_ERR_DISABLED");
+        require(xTransfersEnabled, "ERR_DISABLED");
     }
 
     // allows execution only when reporting is enabled
@@ -200,7 +200,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
     // error message binary size optimization
     function _reportingAllowed() internal view {
-        require(reportingEnabled, "BANCOR_ERR_DISABLED");
+        require(reportingEnabled, "ERR_DISABLED");
     }
 
     /**
@@ -303,7 +303,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         uint256 currentLockLimit = getCurrentLockLimit();
 
         // verify lock limit
-        require(_amount >= minLimit && _amount <= currentLockLimit, "BANCOR_ERR_AMOUNT_TOO_HIGH");
+        require(_amount >= minLimit && _amount <= currentLockLimit, "ERR_AMOUNT_TOO_HIGH");
         
         lockTokens(_amount);
 
@@ -328,7 +328,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         uint256 currentLockLimit = getCurrentLockLimit();
 
         // require that; minLimit <= _amount <= currentLockLimit
-        require(_amount >= minLimit && _amount <= currentLockLimit, "BANCOR_ERR_AMOUNT_TOO_HIGH");
+        require(_amount >= minLimit && _amount <= currentLockLimit, "ERR_AMOUNT_TOO_HIGH");
         
         lockTokens(_amount);
 
@@ -361,7 +361,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         reportingAllowed
     {
         // require that the transaction has not been reported yet by the reporter
-        require(!reportedTxs[_txId][msg.sender], "BANCOR_ERR_ALREADY_REPORTED");
+        require(!reportedTxs[_txId][msg.sender], "ERR_ALREADY_REPORTED");
 
         // set reported as true
         reportedTxs[_txId][msg.sender] = true;
@@ -376,15 +376,15 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
             if (_xTransferId != 0) {
                 // verify uniqueness of xTransfer id to prevent overwriting
-                require(transactionIds[_xTransferId] == 0, "BANCOR_ERR_TX_ALREADY_EXISTS");
+                require(transactionIds[_xTransferId] == 0, "ERR_TX_ALREADY_EXISTS");
                 transactionIds[_xTransferId] = _txId;
             }
         } else {
             // otherwise, verify transaction details
-            require(txn.to == _to && txn.amount == _amount && txn.fromBlockchain == _fromBlockchain, "BANCOR_ERR_TX_MISMATCH");
+            require(txn.to == _to && txn.amount == _amount && txn.fromBlockchain == _fromBlockchain, "ERR_TX_MISMATCH");
             
             if (_xTransferId != 0)
-                require(transactionIds[_xTransferId] == _txId, "BANCOR_ERR_TX_ALREADY_EXISTS");
+                require(transactionIds[_xTransferId] == _txId, "ERR_TX_ALREADY_EXISTS");
         }
         
         // increment the number of reports
@@ -394,7 +394,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
         // if theres enough reports, try to release tokens
         if (txn.numOfReports >= minRequiredReports) {
-            require(!transactions[_txId].completed, "BANCOR_ERR_TX_ALREADY_COMPLETED");
+            require(!transactions[_txId].completed, "ERR_TX_ALREADY_COMPLETED");
 
             // set the transaction as completed
             transactions[_txId].completed = true;
@@ -418,7 +418,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         Transaction storage transaction = transactions[transactionIds[_xTransferId]];
 
         // verify that the xTransferId is for _for
-        require(transaction.to == _for, "BANCOR_ERR_TX_MISMATCH");
+        require(transaction.to == _for, "ERR_TX_MISMATCH");
 
         return transaction.amount;
     }
@@ -472,7 +472,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         // get the current release limit
         uint256 currentReleaseLimit = getCurrentReleaseLimit();
 
-        require(_amount >= minLimit && _amount <= currentReleaseLimit, "BANCOR_ERR_AMOUNT_TOO_HIGH");
+        require(_amount >= minLimit && _amount <= currentReleaseLimit, "ERR_AMOUNT_TOO_HIGH");
         
         // update the previous release limit and block number
         prevReleaseLimit = currentReleaseLimit.sub(_amount);
