@@ -443,7 +443,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         // ETH
         if (msg.value > 0) {
             // validate msg.value
-            require(msg.value == _amount, "BANCOR_ERR_AMOUNTS_MISMATCH");
+            require(msg.value == _amount, "BANCOR_ERR_ETH_AMOUNT_MISMATCH");
 
             // EtherToken converter - deposit the ETH into the EtherToken
             // note that it can still be a non ETH converter if the path is wrong

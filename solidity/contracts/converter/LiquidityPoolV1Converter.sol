@@ -137,7 +137,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         // ensure that the input amount was already deposited
         if (_sourceToken == ETH_RESERVE_ADDRESS)
-            require(msg.value == _amount, "BANCOR_ERR_AMOUNTS_MISMATCH");
+            require(msg.value == _amount, "BANCOR_ERR_ETH_AMOUNT_MISMATCH");
         else
             require(msg.value == 0 && _sourceToken.balanceOf(this).sub(reserveBalance(_sourceToken)) >= _amount, "BANCOR_ERR_INVALID_AMOUNT");
 
@@ -181,7 +181,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
         for (uint256 i = 0; i < _reserveTokens.length; i++)
             if (_reserveTokens[i] == ETH_RESERVE_ADDRESS)
-                require(_reserveAmounts[i] == msg.value, "BANCOR_ERR_AMOUNTS_MISMATCH");
+                require(_reserveAmounts[i] == msg.value, "BANCOR_ERR_ETH_AMOUNT_MISMATCH");
 
         // if the input value of ETH is larger than zero, then verify that one of the reserves is ETH
         if (msg.value > 0)

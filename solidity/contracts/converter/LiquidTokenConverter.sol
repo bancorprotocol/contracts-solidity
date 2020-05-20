@@ -218,7 +218,7 @@ contract LiquidTokenConverter is BancorConverter {
 
         // ensure that the input amount was already deposited
         if (reserveToken == ETH_RESERVE_ADDRESS)
-            require(msg.value == _depositAmount, "BANCOR_ERR_AMOUNTS_MISMATCH");
+            require(msg.value == _depositAmount, "BANCOR_ERR_ETH_AMOUNT_MISMATCH");
         else
             require(msg.value == 0 && reserveToken.balanceOf(this).sub(reserveBalance(reserveToken)) >= _depositAmount, "BANCOR_ERR_INVALID_AMOUNT");
 
