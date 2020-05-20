@@ -77,7 +77,7 @@ contract LiquidTokenConverter is BancorConverter {
     */
     function addReserve(IERC20Token _token, uint32 _weight) public {
         // verify that the converter doesn't have a reserve yet
-        require(reserveTokenCount() == 0, "BANCOR_ERR_INVALID_RESERVE_COUNT");
+        require(reserveTokenCount() == 0, "ERR_INVALID_RESERVE_COUNT");
         super.addReserve(_token, _weight);
     }
 
@@ -99,7 +99,7 @@ contract LiquidTokenConverter is BancorConverter {
             return saleRate(_amount);
 
         // invalid input
-        revert("BANCOR_ERR_INVALID_TOKEN");
+        revert("ERR_INVALID_TOKEN");
     }
 
     /**
@@ -127,7 +127,7 @@ contract LiquidTokenConverter is BancorConverter {
             return sell(_amount, _beneficiary);
 
         // invalid input
-        revert("BANCOR_ERR_INVALID_TOKEN");
+        revert("ERR_INVALID_TOKEN");
     }
 
     /**
@@ -212,15 +212,15 @@ contract LiquidTokenConverter is BancorConverter {
         (uint256 amount, uint256 fee) = purchaseRate(_depositAmount);
 
         // ensure the trade gives something in return
-        require(amount != 0, "BANCOR_ERR_ZERO_RATE");
+        require(amount != 0, "ERR_ZERO_RATE");
 
         IERC20Token reserveToken = reserveTokens[0];
 
         // ensure that the input amount was already deposited
         if (reserveToken == ETH_RESERVE_ADDRESS)
-            require(msg.value == _depositAmount, "BANCOR_ERR_AMOUNTS_MISMATCH");
+            require(msg.value == _depositAmount, "ERR_ETH_AMOUNT_MISMATCH");
         else
-            require(msg.value == 0 && reserveToken.balanceOf(this).sub(reserveBalance(reserveToken)) >= _depositAmount, "BANCOR_ERR_INVALID_AMOUNT");
+            require(msg.value == 0 && reserveToken.balanceOf(this).sub(reserveBalance(reserveToken)) >= _depositAmount, "ERR_INVALID_AMOUNT");
 
         // sync the reserve balance
         syncReserveBalance(reserveToken);
@@ -247,13 +247,13 @@ contract LiquidTokenConverter is BancorConverter {
     */
     function sell(uint256 _sellAmount, address _beneficiary) internal returns (uint256) {
         // ensure that the input amount was already deposited
-        require(_sellAmount <= token.balanceOf(this), "BANCOR_ERR_INVALID_AMOUNT");
+        require(_sellAmount <= token.balanceOf(this), "ERR_INVALID_AMOUNT");
 
         // get expected rate and fee
         (uint256 amount, uint256 fee) = saleRate(_sellAmount);
 
         // ensure the trade gives something in return
-        require(amount != 0, "BANCOR_ERR_ZERO_RATE");
+        require(amount != 0, "ERR_ZERO_RATE");
 
         IERC20Token reserveToken = reserveTokens[0];
 
