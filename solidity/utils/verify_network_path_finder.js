@@ -5,7 +5,7 @@ const assert = require("assert");
 const NODE_ADDRESS        = process.argv[2];
 const PATH_FINDER_ADDRESS = process.argv[3];
 
-const PATH_FINDER_ABI        = JSON.parse(fs.readFileSync(__dirname + "/../build/BancorNetworkPathFinder.abi"));
+const PATH_FINDER_ABI        = JSON.parse(fs.readFileSync(__dirname + "/../build/ConversionPathFinder.abi"   ));
 const CONTRACT_REGISTRY_ABI  = JSON.parse(fs.readFileSync(__dirname + "/../build/ContractRegistry.abi"       ));
 const CONVERTER_REGISTRY_ABI = JSON.parse(fs.readFileSync(__dirname + "/../build/BancorConverterRegistry.abi"));
 const SMART_TOKEN_ABI        = JSON.parse(fs.readFileSync(__dirname + "/../build/SmartToken.abi"             ));

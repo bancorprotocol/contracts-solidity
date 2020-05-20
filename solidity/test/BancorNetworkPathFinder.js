@@ -13,7 +13,7 @@ const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFacto
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
-const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
+const ConversionPathFinder = artifacts.require('ConversionPathFinder');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
@@ -108,7 +108,7 @@ function getShortestPath(sourcePath, targetPath) {
     return [];
 }
 
-contract('BancorNetworkPathFinder', accounts => {
+contract('ConversionPathFinder', accounts => {
     let contractRegistry
     let converterFactory;
     let converterRegistry;
@@ -124,7 +124,7 @@ contract('BancorNetworkPathFinder', accounts => {
         converterFactory      = await ConverterFactory           .new();
         converterRegistry     = await BancorConverterRegistry    .new(contractRegistry.address);
         converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
-        pathFinder            = await BancorNetworkPathFinder    .new(contractRegistry.address);
+        pathFinder            = await ConversionPathFinder       .new(contractRegistry.address);
 
         await converterFactory.registerTypedFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedFactory((await LiquidityPoolV1ConverterFactory.new()).address);

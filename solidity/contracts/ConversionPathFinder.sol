@@ -1,21 +1,21 @@
 pragma solidity 0.4.26;
-import "./IBancorNetworkPathFinder.sol";
+import "./IConversionPathFinder.sol";
 import "./utility/ContractRegistryClient.sol";
 import "./converter/interfaces/IBancorConverterRegistry.sol";
 import "./converter/interfaces/IBancorConverter.sol";
 import "./token/interfaces/ISmartToken.sol";
 
 /**
-  * @dev The BancorNetworkPathFinder contract allows generating a conversion path between any token pair in the Bancor Network.
+  * @dev The ConversionPathFinder contract allows generating a conversion path between any token pair in the Bancor Network.
   * The path can then be used in various functions in the BancorNetwork contract.
   *
   * See the BancorNetwork contract for conversion path format.
 */
-contract BancorNetworkPathFinder is IBancorNetworkPathFinder, ContractRegistryClient {
+contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
     address public anchorToken;
 
     /**
-      * @dev initializes a new BancorNetworkPathFinder instance
+      * @dev initializes a new ConversionPathFinder instance
       *
       * @param _registry address of a contract registry contract
     */

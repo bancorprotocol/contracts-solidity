@@ -1,6 +1,6 @@
 pragma solidity 0.4.26;
 import "./IBancorNetwork.sol";
-import "./IBancorNetworkPathFinder.sol";
+import "./IConversionPathFinder.sol";
 import "./converter/interfaces/IBancorConverter.sol";
 import "./converter/interfaces/IBancorFormula.sol";
 import "./utility/TokenHolder.sol";
@@ -117,7 +117,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * @return conversion path between the two tokens
     */
     function conversionPath(IERC20Token _sourceToken, IERC20Token _targetToken) public view returns (address[]) {
-        IBancorNetworkPathFinder pathFinder = IBancorNetworkPathFinder(addressOf(CONVERSION_PATH_FINDER));
+        IConversionPathFinder pathFinder = IConversionPathFinder(addressOf(CONVERSION_PATH_FINDER));
         return pathFinder.findPath(_sourceToken, _targetToken);
     }
 

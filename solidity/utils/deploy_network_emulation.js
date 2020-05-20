@@ -125,7 +125,7 @@ async function run() {
     const converterFactory                = await web3Func(deploy, "converterFactory"               , "ConverterFactory"               , []);
     const bancorFormula                   = await web3Func(deploy, "bancorFormula"                  , "BancorFormula"                  , []);
     const bancorNetwork                   = await web3Func(deploy, "bancorNetwork"                  , "BancorNetwork"                  , [contractRegistry._address]);
-    const bancorNetworkPathFinder         = await web3Func(deploy, "bancorNetworkPathFinder"        , "BancorNetworkPathFinder"        , [contractRegistry._address]);
+    const conversionPathFinder            = await web3Func(deploy, "conversionPathFinder"           , "ConversionPathFinder"           , [contractRegistry._address]);
     const bancorConverterRegistry         = await web3Func(deploy, "bancorConverterRegistry"        , "BancorConverterRegistry"        , [contractRegistry._address]);
     const bancorConverterRegistryData     = await web3Func(deploy, "bancorConverterRegistryData"    , "BancorConverterRegistryData"    , [contractRegistry._address]);
     const liquidTokenConverterFactory     = await web3Func(deploy, "liquidTokenConverterFactory"    , "LiquidTokenConverterFactory"    , []);
@@ -135,7 +135,7 @@ async function run() {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConverterFactory"           ), converterFactory           ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"              ), bancorFormula              ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetwork"              ), bancorNetwork              ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetworkPathFinder"    ), bancorNetworkPathFinder    ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConversionPathFinder"       ), conversionPathFinder       ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistry"    ), bancorConverterRegistry    ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistryData"), bancorConverterRegistryData._address));
     await execute(converterFactory.methods.registerTypedFactory(liquidTokenConverterFactory    ._address));
@@ -178,7 +178,7 @@ async function run() {
     }
 
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BNTToken"), addresses.BNT));
-    await execute(bancorNetworkPathFinder.methods.setAnchorToken(addresses.BNT));
+    await execute(conversionPathFinder.methods.setAnchorToken(addresses.BNT));
 
     if (web3.currentProvider.constructor.name == "WebsocketProvider")
         web3.currentProvider.connection.close();

@@ -11,7 +11,7 @@ const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
 const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
-const BancorNetworkPathFinder = artifacts.require('BancorNetworkPathFinder');
+const ConversionPathFinder = artifacts.require('ConversionPathFinder');
 const EtherToken = artifacts.require('EtherToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardToken = artifacts.require('TestNonStandardToken');
@@ -130,7 +130,7 @@ async function initTokensAndConverters(accounts) {
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY, converterRegistry.address);
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
-    let pathFinder = await BancorNetworkPathFinder.new(contractRegistry.address);
+    let pathFinder = await ConversionPathFinder.new(contractRegistry.address);
     await contractRegistry.registerAddress(ContractRegistryClient.CONVERSION_PATH_FINDER, pathFinder.address);
 
     bntToken = await ERC20Token.new('BNT', 'BNT', 2, 10000000);

@@ -9,7 +9,7 @@
 ```bash
 node verify_network_path_finder.js
     Ethereum node address
-    BancorNetworkPathFinder contract address
+    ConversionPathFinder contract address
 ```
 
 ### Migrate Converter Registry
