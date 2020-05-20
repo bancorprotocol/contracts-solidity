@@ -394,7 +394,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
         // if theres enough reports, try to release tokens
         if (txn.numOfReports >= minRequiredReports) {
-            require(!transactions[_txId].completed, "BANCOR_ERR_TX_ALREADY_RELEASED");
+            require(!transactions[_txId].completed, "BANCOR_ERR_TX_ALREADY_COMPLETED");
 
             // set the transaction as completed
             transactions[_txId].completed = true;
