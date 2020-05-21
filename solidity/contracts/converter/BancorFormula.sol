@@ -1,9 +1,8 @@
 pragma solidity 0.4.26;
 import "./interfaces/IBancorFormula.sol";
 import "../utility/SafeMath.sol";
-import "../utility/Utils.sol";
 
-contract BancorFormula is IBancorFormula, Utils {
+contract BancorFormula is IBancorFormula {
     using SafeMath for uint256;
 
     uint16 public version = 6;
