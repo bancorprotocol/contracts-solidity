@@ -267,7 +267,7 @@ contract BancorFormula is IBancorFormula {
       * @param _targetReserveWeight     target reserve weight, represented in ppm, 1-1000000
       * @param _amount                  source reserve amount
       *
-      * @return output reserve amount
+      * @return target reserve amount
     */
     function crossReserveRate(uint256 _sourceReserveBalance,
                               uint32 _sourceReserveWeight,
@@ -416,22 +416,22 @@ contract BancorFormula is IBancorFormula {
       * @dev computes log(x / FIXED_1) * FIXED_1.
       * This functions assumes that "x >= FIXED_1", because the output would be negative otherwise.
     */
-    function generalLog(uint256 x) internal pure returns (uint256) {
+    function generalLog(uint256 _x) internal pure returns (uint256) {
         uint256 res = 0;
 
         // If x >= 2, then we compute the integer part of log2(x), which is larger than 0.
-        if (x >= FIXED_2) {
-            uint8 count = floorLog2(x / FIXED_1);
-            x >>= count; // now x < 2
+        if (_x >= FIXED_2) {
+            uint8 count = floorLog2(_x / FIXED_1);
+            _x >>= count; // now x < 2
             res = count * FIXED_1;
         }
 
         // If x > 1, then we compute the fraction part of log2(x), which is larger than 0.
-        if (x > FIXED_1) {
+        if (_x > FIXED_1) {
             for (uint8 i = MAX_PRECISION; i > 0; --i) {
-                x = (x * x) / FIXED_1; // now 1 < x < 4
-                if (x >= FIXED_2) {
-                    x >>= 1; // now 1 < x < 2
+                _x = (_x * _x) / FIXED_1; // now 1 < x < 4
+                if (_x >= FIXED_2) {
+                    _x >>= 1; // now 1 < x < 2
                     res += ONE << (i - 1);
                 }
             }
