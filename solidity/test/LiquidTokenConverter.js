@@ -102,7 +102,7 @@ contract('LiquidTokenConverter', accounts => {
         await factory.registerTypedFactory((await LiquidTokenConverterFactory.new()).address);
 
         upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
 
         let token = await SmartToken.new('Token1', 'TKN1', 2); 
         tokenAddress = token.address;

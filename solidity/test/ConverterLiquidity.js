@@ -30,7 +30,7 @@ async function initLiquidityPool(hasETH, ...weights) {
     return [converter, smartToken];
 }
 
-contract('BancorConverterLiquidity', accounts => {
+contract('ConverterLiquidity', accounts => {
     const owner = accounts[0];
 
     before(async () => {

@@ -2,7 +2,7 @@
 /* eslint-disable prefer-reflect */
 
 const utils = require('./helpers/Utils');
-const BancorConverter = require('./helpers/BancorConverter');
+const Converter = require('./helpers/Converter');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const BancorNetwork = artifacts.require('BancorNetwork');
@@ -81,14 +81,14 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
 
         erc20Token = await TestNonStandardToken.new('ERC20Token', 'ERC5', 2, 1000000);
 
-        converter1 = await BancorConverter.new(0, smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000, OLD_CONVERTER_VERSION);
+        converter1 = await Converter.new(0, smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000, OLD_CONVERTER_VERSION);
 
-        converter2 = await BancorConverter.new(1, smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000, OLD_CONVERTER_VERSION);
+        converter2 = await Converter.new(1, smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000, OLD_CONVERTER_VERSION);
         await converter2.addReserve(smartToken3.address, 150000);
 
-        converter3 = await BancorConverter.new(0, smartToken3.address, contractRegistry.address, 0, smartToken4.address, 350000, OLD_CONVERTER_VERSION);
+        converter3 = await Converter.new(0, smartToken3.address, contractRegistry.address, 0, smartToken4.address, 350000, OLD_CONVERTER_VERSION);
 
-        converter4 = await BancorConverter.new(1, smartToken4.address, contractRegistry.address, 0, etherToken.address, 150000, OLD_CONVERTER_VERSION);
+        converter4 = await Converter.new(1, smartToken4.address, contractRegistry.address, 0, etherToken.address, 150000, OLD_CONVERTER_VERSION);
         await converter4.addReserve(erc20Token.address, 220000);
 
         await etherToken.transfer(converter1.address, 50000);

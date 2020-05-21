@@ -25,8 +25,8 @@ contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
       *
       * @return a new converter
     */
-    function createConverter(ISmartToken _token, IContractRegistry _registry, uint32 _maxConversionFee) public returns(IBancorConverter) {
-        BancorConverter converter = new LiquidityPoolV1Converter(_token, _registry, _maxConversionFee);
+    function createConverter(ISmartToken _token, IContractRegistry _registry, uint32 _maxConversionFee) public returns(IConverter) {
+        ConverterBase converter = new LiquidityPoolV1Converter(_token, _registry, _maxConversionFee);
         converter.transferOwnership(msg.sender);
         return converter;
     }

@@ -1,7 +1,7 @@
 pragma solidity 0.4.26;
 import "./IBancorNetwork.sol";
 import "./IConversionPathFinder.sol";
-import "./converter/interfaces/IBancorConverter.sol";
+import "./converter/interfaces/IConverter.sol";
 import "./converter/interfaces/IBancorFormula.sol";
 import "./utility/TokenHolder.sol";
 import "./utility/SafeMath.sol";
@@ -11,7 +11,7 @@ import "./token/interfaces/ISmartToken.sol";
 import "./bancorx/interfaces/IBancorX.sol";
 
 // interface of older converters for backward compatibility
-contract ILegacyBancorConverter {
+contract ILegacyConverter {
     function change(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn) public returns (uint256);
 }
 
@@ -38,7 +38,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     struct ConversionStep {
-        IBancorConverter converter;
+        IConverter converter;
         ISmartToken smartToken;
         IERC20Token sourceToken;
         IERC20Token targetToken;
@@ -136,7 +136,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         uint256 supply;
         uint256 balance;
         uint32 weight;
-        IBancorConverter converter;
+        IConverter converter;
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
 
         amount = _amount;
@@ -154,7 +154,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
                 // check if the current smart token has changed
                 if (i < 3 || smartToken != _path[i - 3]) {
                     supply = smartToken.totalSupply();
-                    converter = IBancorConverter(ISmartToken(smartToken).owner());
+                    converter = IConverter(ISmartToken(smartToken).owner());
                 }
 
                 // get the amount & the conversion fee
@@ -171,7 +171,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
                 // check if the current smart token has changed
                 if (i < 3 || smartToken != _path[i - 3]) {
                     supply = smartToken.totalSupply();
-                    converter = IBancorConverter(ISmartToken(smartToken).owner());
+                    converter = IConverter(ISmartToken(smartToken).owner());
                 }
 
                 // get the amount & the conversion fee
@@ -187,7 +187,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
             else { // cross reserve conversion
                 // check if the current smart token has changed
                 if (i < 3 || smartToken != _path[i - 3]) {
-                    converter = IBancorConverter(ISmartToken(smartToken).owner());
+                    converter = IConverter(ISmartToken(smartToken).owner());
                 }
 
                 (amount, fee) = getReturn(converter, sourceToken, targetToken, amount);
@@ -406,7 +406,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
 
             // do the conversion
             if (!stepData.isV28OrHigherConverter)
-                toAmount = ILegacyBancorConverter(stepData.converter).change(stepData.sourceToken, stepData.targetToken, fromAmount, 1);
+                toAmount = ILegacyConverter(stepData.converter).change(stepData.sourceToken, stepData.targetToken, fromAmount, 1);
             else if (etherTokens[stepData.sourceToken])
                 toAmount = stepData.converter.convert.value(msg.value)(stepData.sourceToken, stepData.targetToken, fromAmount, msg.sender, stepData.beneficiary);
             else
@@ -437,7 +437,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * @param _amount      amount to convert from, in the source token
     */
     function handleSourceToken(IERC20Token _sourceToken, ISmartToken _smartToken, uint256 _amount) private {
-        IBancorConverter firstConverter = IBancorConverter(_smartToken.owner());
+        IConverter firstConverter = IConverter(_smartToken.owner());
         bool isNewerConverter = isV28OrHigherConverter(firstConverter);
 
         // ETH
@@ -520,7 +520,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         uint256 i;
         for (i = 0; i < _conversionPath.length - 1; i += 2) {
             ISmartToken smartToken = ISmartToken(_conversionPath[i + 1]);
-            IBancorConverter converter = IBancorConverter(smartToken.owner());
+            IConverter converter = IConverter(smartToken.owner());
             IERC20Token targetToken = _conversionPath[i + 2];
 
             // check if the affiliate fee should be processed in this step
@@ -618,7 +618,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     }
 
     // legacy - returns the address of an EtherToken used by the converter
-    function getConverterEtherTokenAddress(IBancorConverter _converter) private view returns (address) {
+    function getConverterEtherTokenAddress(IConverter _converter) private view returns (address) {
         uint256 reserveCount = _converter.connectorTokenCount();
         for (uint256 i = 0; i < reserveCount; i++) {
             address reserveTokenAddress = _converter.connectorTokens(i);
@@ -654,7 +654,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
 
     bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
 
-    function isV28OrHigherConverter(IBancorConverter _converter) internal view returns (bool) {
+    function isV28OrHigherConverter(IConverter _converter) internal view returns (bool) {
         bool success;
         uint256[1] memory ret;
         bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);

@@ -1,7 +1,7 @@
 pragma solidity 0.4.26;
 import "../BancorNetwork.sol";
 
-contract OldBancorConverter {
+contract OldConverter {
     uint256 private amount;
 
     constructor(uint256 _amount) public {
@@ -16,7 +16,7 @@ contract OldBancorConverter {
     }
 }
 
-contract NewBancorConverter {
+contract NewConverter {
     uint256 private amount;
     uint256 private fee;
 
@@ -34,23 +34,23 @@ contract NewBancorConverter {
 }
 
 contract TestBancorNetwork is BancorNetwork {
-    OldBancorConverter private oldBancorConverter;
-    NewBancorConverter private newBancorConverter;
+    OldConverter private oldConverter;
+    NewConverter private newConverter;
 
     constructor(uint256 _amount, uint256 _fee) public BancorNetwork(IContractRegistry(address(1))) {
-        oldBancorConverter = new OldBancorConverter(_amount);
-        newBancorConverter = new NewBancorConverter(_amount, _fee);
+        oldConverter = new OldConverter(_amount);
+        newConverter = new NewConverter(_amount, _fee);
     }
 
-    function isV28OrHigherConverterExternal(IBancorConverter _converter) external view returns (bool) {
+    function isV28OrHigherConverterExternal(IConverter _converter) external view returns (bool) {
         return super.isV28OrHigherConverter(_converter);
     }
 
     function getReturnOld() external view returns (uint256, uint256) {
-        return getReturn(address(oldBancorConverter), IERC20Token(0), IERC20Token(0), uint256(0));
+        return getReturn(address(oldConverter), IERC20Token(0), IERC20Token(0), uint256(0));
     }
 
     function getReturnNew() external view returns (uint256, uint256) {
-        return getReturn(address(newBancorConverter), IERC20Token(0), IERC20Token(0), uint256(0));
+        return getReturn(address(newConverter), IERC20Token(0), IERC20Token(0), uint256(0));
     }
 }

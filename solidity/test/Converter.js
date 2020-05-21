@@ -106,7 +106,7 @@ contract('Converter:', accounts => {
         await factory.registerTypedFactory((await LiquidityPoolV1ConverterFactory.new()).address);
 
         upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
 
         let token = await SmartToken.new('Token1', 'TKN1', 2); 
         tokenAddress = token.address;
@@ -316,11 +316,11 @@ contract('Converter:', accounts => {
                 it('verifies that the owner can transfer the token ownership if the owner is the upgrader contract', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
 
-                    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, accounts[0]);
+                    await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, accounts[0]);
 
                     await converter.transferTokenOwnership(accounts[1]);
 
-                    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
+                    await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
                     let tokenAddress = await converter.token.call();
                     let contract = await web3.eth.contract(JSON.parse(fs.readFileSync(__dirname + '/../build/SmartToken.abi')));
                     let token = await contract.at(tokenAddress);
@@ -342,10 +342,10 @@ contract('Converter:', accounts => {
 
                 it('should throw when a the upgrader contract attempts to transfer the token ownership while the upgrader is not the owner', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
-                    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, accounts[2]);
+                    await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, accounts[2]);
 
                     await utils.catchRevert(converter.transferTokenOwnership(accounts[1], { from: accounts[2] }));
-                    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
+                    await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
                 });
 
                 it('verifies that the owner can withdraw a non reserve token from the converter while the converter is not active', async () => {

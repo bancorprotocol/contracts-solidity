@@ -126,18 +126,18 @@ async function run() {
     const bancorFormula                   = await web3Func(deploy, "bancorFormula"                  , "BancorFormula"                  , []);
     const bancorNetwork                   = await web3Func(deploy, "bancorNetwork"                  , "BancorNetwork"                  , [contractRegistry._address]);
     const conversionPathFinder            = await web3Func(deploy, "conversionPathFinder"           , "ConversionPathFinder"           , [contractRegistry._address]);
-    const bancorConverterRegistry         = await web3Func(deploy, "bancorConverterRegistry"        , "BancorConverterRegistry"        , [contractRegistry._address]);
-    const bancorConverterRegistryData     = await web3Func(deploy, "bancorConverterRegistryData"    , "BancorConverterRegistryData"    , [contractRegistry._address]);
+    const converterRegistry               = await web3Func(deploy, "converterRegistry"              , "ConverterRegistry"              , [contractRegistry._address]);
+    const converterRegistryData           = await web3Func(deploy, "converterRegistryData"          , "ConverterRegistryData"          , [contractRegistry._address]);
     const liquidTokenConverterFactory     = await web3Func(deploy, "liquidTokenConverterFactory"    , "LiquidTokenConverterFactory"    , []);
     const liquidityPoolV1ConverterFactory = await web3Func(deploy, "liquidityPoolV1ConverterFactory", "LiquidityPoolV1ConverterFactory", []);
 
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractRegistry"           ), contractRegistry           ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConverterFactory"           ), converterFactory           ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"              ), bancorFormula              ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetwork"              ), bancorNetwork              ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConversionPathFinder"       ), conversionPathFinder       ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistry"    ), bancorConverterRegistry    ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistryData"), bancorConverterRegistryData._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractRegistry"     ), contractRegistry     ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConverterFactory"     ), converterFactory     ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"        ), bancorFormula        ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetwork"        ), bancorNetwork        ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConversionPathFinder" ), conversionPathFinder ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConverterRegistry"    ), converterRegistry    ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConverterRegistryData"), converterRegistryData._address));
     await execute(converterFactory.methods.registerTypedFactory(liquidTokenConverterFactory    ._address));
     await execute(converterFactory.methods.registerTypedFactory(liquidityPoolV1ConverterFactory._address));
 
@@ -161,17 +161,17 @@ async function run() {
         const amounts  = converter.reserves.map(reserve => reserve.balance);
         const value    = [...converter.reserves.filter(reserve => reserve.symbol == "ETH"), {}][0].balance;
 
-        await execute(bancorConverterRegistry.methods.newConverter(type, name, symbol, decimals, fee, tokens, weights));
-        const smartToken = deployed(web3, "SmartToken", (await bancorConverterRegistry.methods.getSmartTokens().call()).slice(-1)[0]);
-        const bancorConverter = deployed(web3, "BancorConverter", await smartToken.methods.owner().call());
-        await execute(bancorConverter.methods.acceptOwnership());
+        await execute(converterRegistry.methods.newConverter(type, name, symbol, decimals, fee, tokens, weights));
+        const smartToken = deployed(web3, "SmartToken", (await converterRegistry.methods.getSmartTokens().call()).slice(-1)[0]);
+        const converter = deployed(web3, "ConverterBase", await smartToken.methods.owner().call());
+        await execute(converter.methods.acceptOwnership());
 
         if (type == 1) {
             for (let i = 0; i < converter.reserves.length; i++) {
                 if (converter.reserves.symbol != "ETH")
-                    await execute(deployed(web3, "ERC20Token", tokens[i]).methods.approve(bancorConverter._address, amounts[i]));
+                    await execute(deployed(web3, "ERC20Token", tokens[i]).methods.approve(converter._address, amounts[i]));
             }
-            await execute(deployed(web3, "LiquidityPoolV1Converter", bancorConverter._address).methods.addLiquidity(tokens, amounts, 1), value);
+            await execute(deployed(web3, "LiquidityPoolV1Converter", converter._address).methods.addLiquidity(tokens, amounts, 1), value);
         }
 
         addresses[converter.symbol] = smartToken._address;

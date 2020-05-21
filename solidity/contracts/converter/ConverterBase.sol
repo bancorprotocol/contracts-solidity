@@ -1,5 +1,5 @@
 pragma solidity 0.4.26;
-import "./interfaces/IBancorConverter.sol";
+import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IBancorFormula.sol";
 import "../IBancorNetwork.sol";
@@ -12,11 +12,9 @@ import "../token/interfaces/IEtherToken.sol";
 import "../bancorx/interfaces/IBancorX.sol";
 
 /**
-  * @dev Bancor Converter
+  * @dev ConverterBase
   *
-  * The Bancor converter allows for conversions between a Smart Token and other ERC20 tokens and between different ERC20 tokens and themselves.
-  *
-  * This mechanism allows creating different financial tools (for example, lower slippage in conversions).
+  * The converter contains the main logic for conversions between different ERC20 tokens.
   *
   * The converter is upgradable (just like any SmartTokenController) and all upgrades are opt-in.
   *
@@ -25,7 +23,7 @@ import "../bancorx/interfaces/IBancorX.sol";
   * 1 = liquidity pool v1 converter
   *
 */
-contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController, ContractRegistryClient {
+contract ConverterBase is IConverter, TokenHandler, SmartTokenController, ContractRegistryClient {
     using SafeMath for uint256;
 
     // error messages
@@ -100,7 +98,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     event ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee);
 
     /**
-      * @dev initializes a new BancorConverter instance
+      * @dev used by sub-contracts to initialize a new converter
       *
       * @param  _token              smart token governed by the converter
       * @param  _registry           address of a contract registry contract
@@ -186,7 +184,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
         ownerOnly
         validReserve(IERC20Token(ETH_RESERVE_ADDRESS))
     {
-        address converterUpgrader = addressOf(BANCOR_CONVERTER_UPGRADER);
+        address converterUpgrader = addressOf(CONVERTER_UPGRADER);
 
         // verify that the converter is inactive or that the owner is the upgrader contract
         require(token.owner() != address(this) || owner == converterUpgrader, "ERR_ACCESS_DENIED");
@@ -231,7 +229,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
     function transferTokenOwnership(address _newOwner)
         public
         ownerOnly
-        only(BANCOR_CONVERTER_UPGRADER)
+        only(CONVERTER_UPGRADER)
     {
         super.transferTokenOwnership(_newOwner);
     }
@@ -270,7 +268,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @param _amount  amount to withdraw
     */
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public {
-        address converterUpgrader = addressOf(BANCOR_CONVERTER_UPGRADER);
+        address converterUpgrader = addressOf(CONVERTER_UPGRADER);
 
         // if the token is not a reserve token, allow withdrawal
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
@@ -288,7 +286,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * note that the owner needs to call acceptOwnership on the new converter after the upgrade
     */
     function upgrade() public ownerOnly {
-        IConverterUpgrader converterUpgrader = IConverterUpgrader(addressOf(BANCOR_CONVERTER_UPGRADER));
+        IConverterUpgrader converterUpgrader = IConverterUpgrader(addressOf(CONVERTER_UPGRADER));
 
         transferOwnership(converterUpgrader);
         converterUpgrader.upgrade(version);
@@ -460,7 +458,7 @@ contract BancorConverter is IBancorConverter, TokenHandler, SmartTokenController
       * @dev deprecated, backward compatibility
     */
     function connectorTokens(uint256 _index) public view returns (IERC20Token) {
-        return BancorConverter.reserveTokens[_index];
+        return ConverterBase.reserveTokens[_index];
     }
 
     /**

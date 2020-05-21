@@ -2,7 +2,7 @@
 /* eslint-disable prefer-reflect */
 
 const utils = require('./helpers/Utils');
-const BancorConverter = require('./helpers/BancorConverter');
+const Converter = require('./helpers/Converter');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const SmartToken = artifacts.require('SmartToken');
@@ -30,10 +30,10 @@ let converterFactory;
 async function initWith1Reserve(deployer, version, active) {
     const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
     const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, RESERVE1_BALANCE);
-    const converter = await BancorConverter.new(0, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, reserveToken1.address, 500000, version);
+    const converter = await Converter.new(0, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, reserveToken1.address, 500000, version);
     const upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
 
-    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
+    await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
 
     await converter.setConversionFee(CONVERSION_FEE);
     await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
@@ -51,10 +51,10 @@ async function initWith2Reserves(deployer, version, active) {
     const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
     const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, RESERVE1_BALANCE);
     const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, RESERVE2_BALANCE);
-    const converter = await BancorConverter.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, reserveToken1.address, 500000, version);
+    const converter = await Converter.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, reserveToken1.address, 500000, version);
     const upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
 
-    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
+    await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
     if (version)
         await converter.addConnector(reserveToken2.address, 500000, false);
     else
@@ -75,10 +75,10 @@ async function initWith2Reserves(deployer, version, active) {
 
 async function initWithoutReserves(deployer, version, active) {
     const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
-    const converter = await BancorConverter.new(0, smartToken.address, contractRegistry.address, 0, utils.zeroAddress, 0, version);
+    const converter = await Converter.new(0, smartToken.address, contractRegistry.address, 0, utils.zeroAddress, 0, version);
     const upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
 
-    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
+    await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
 
     if (active) {
         throw new Error("converter with no reserves cannot be active");
@@ -91,10 +91,10 @@ async function initWithEtherReserve(deployer, version, active) {
     const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
     const reserveToken1 = await EtherToken.new('Ether Token', 'ETH');
     const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, RESERVE2_BALANCE);
-    const converter = await BancorConverter.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, reserveToken1.address, 500000, version);
+    const converter = await Converter.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, reserveToken1.address, 500000, version);
     const upgrader = await ConverterUpgrader.new(contractRegistry.address, reserveToken1.address);
 
-    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
+    await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
     if (version)
         await converter.addConnector(reserveToken2.address, 500000, false);
     else
@@ -121,10 +121,10 @@ async function initWithETHReserve(deployer, version, active) {
 
     const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
     const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, RESERVE1_BALANCE);
-    const converter = await BancorConverter.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, reserveToken1.address, 500000);
+    const converter = await Converter.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, reserveToken1.address, 500000);
     const upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
 
-    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_UPGRADER, upgrader.address);
+    await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
     await converter.addReserve(ETH_RESERVE_ADDRESS, 500000);
     await converter.setConversionFee(CONVERSION_FEE);
     await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
@@ -157,7 +157,7 @@ async function upgradeConverter(upgrader, converter, version, options = {}) {
     const logs = response.logs.filter(log => log.event == 'ConverterUpgrade');
     assert.isAtMost(logs.length, 1);
     if (logs.length == 1)
-        return BancorConverter.at(logs[0].args._newConverter);
+        return Converter.at(logs[0].args._newConverter);
 
     const newConverterAddress = await new Promise((resolve, reject) => {
         upgrader.ConverterUpgrade({fromBlock: response.receipt.blockNumber, toBlock: response.receipt.blockNumber}).get((error, logs) => {
@@ -167,7 +167,7 @@ async function upgradeConverter(upgrader, converter, version, options = {}) {
         });
     });
 
-    return BancorConverter.at(newConverterAddress);
+    return Converter.at(newConverterAddress);
 }
 
 async function getConverterState(converter) {

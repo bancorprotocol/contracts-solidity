@@ -1,9 +1,9 @@
 pragma solidity 0.4.26;
 import "../utility/ContractRegistryClient.sol";
-import "./interfaces/IBancorConverterRegistryData.sol";
+import "./interfaces/IConverterRegistryData.sol";
 
 /**
-  * @dev The BancorConverterRegistryData contract is an integral part of the Bancor converter registry
+  * @dev The ConverterRegistryData contract is an integral part of the converter registry
   * as it serves as the database contract that holds all registry data.
   *
   * The registry is separated into two different contracts for upgradability - the data contract
@@ -13,7 +13,7 @@ import "./interfaces/IBancorConverterRegistryData.sol";
   * For that same reason, the data contract is simple and contains no logic beyond the basic data
   * access utilities that it exposes.
 */
-contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRegistryClient {
+contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient {
     struct Item {
         bool valid;
         uint index;
@@ -39,7 +39,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
     Lists convertibleTokens;
 
     /**
-      * @dev initializes a new BancorConverterRegistryData instance
+      * @dev initializes a new ConverterRegistryData instance
       *
       * @param _registry address of a contract registry contract
     */
@@ -51,7 +51,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       *
       * @param _smartToken smart token
     */
-    function addSmartToken(address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
+    function addSmartToken(address _smartToken) external only(CONVERTER_REGISTRY) {
         addItem(smartTokens, _smartToken);
     }
 
@@ -60,7 +60,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       *
       * @param _smartToken smart token
     */
-    function removeSmartToken(address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
+    function removeSmartToken(address _smartToken) external only(CONVERTER_REGISTRY) {
         removeItem(smartTokens, _smartToken);
     }
 
@@ -69,7 +69,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       *
       * @param _liquidityPool liquidity pool
     */
-    function addLiquidityPool(address _liquidityPool) external only(BANCOR_CONVERTER_REGISTRY) {
+    function addLiquidityPool(address _liquidityPool) external only(CONVERTER_REGISTRY) {
         addItem(liquidityPools, _liquidityPool);
     }
 
@@ -78,7 +78,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       *
       * @param _liquidityPool liquidity pool
     */
-    function removeLiquidityPool(address _liquidityPool) external only(BANCOR_CONVERTER_REGISTRY) {
+    function removeLiquidityPool(address _liquidityPool) external only(CONVERTER_REGISTRY) {
         removeItem(liquidityPools, _liquidityPool);
     }
 
@@ -88,7 +88,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
-    function addConvertibleToken(address _convertibleToken, address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
+    function addConvertibleToken(address _convertibleToken, address _smartToken) external only(CONVERTER_REGISTRY) {
         List storage list = convertibleTokens.table[_convertibleToken];
         if (list.items.array.length == 0) {
             list.index = convertibleTokens.array.push(_convertibleToken) - 1;
@@ -102,7 +102,7 @@ contract BancorConverterRegistryData is IBancorConverterRegistryData, ContractRe
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
-    function removeConvertibleToken(address _convertibleToken, address _smartToken) external only(BANCOR_CONVERTER_REGISTRY) {
+    function removeConvertibleToken(address _convertibleToken, address _smartToken) external only(CONVERTER_REGISTRY) {
         List storage list = convertibleTokens.table[_convertibleToken];
         removeItem(list.items, _smartToken);
         if (list.items.array.length == 0) {

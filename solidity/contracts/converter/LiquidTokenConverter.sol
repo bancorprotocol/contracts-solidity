@@ -1,5 +1,5 @@
 pragma solidity 0.4.26;
-import "./BancorConverter.sol";
+import "./ConverterBase.sol";
 import "./interfaces/ITypedConverterFactory.sol";
 
 /*
@@ -25,8 +25,8 @@ contract LiquidTokenConverterFactory is ITypedConverterFactory {
       *
       * @return a new converter
     */
-    function createConverter(ISmartToken _token, IContractRegistry _registry, uint32 _maxConversionFee) public returns(IBancorConverter) {
-        BancorConverter converter = new LiquidTokenConverter(_token, _registry, _maxConversionFee);
+    function createConverter(ISmartToken _token, IContractRegistry _registry, uint32 _maxConversionFee) public returns(IConverter) {
+        ConverterBase converter = new LiquidTokenConverter(_token, _registry, _maxConversionFee);
         converter.transferOwnership(msg.sender);
         return converter;
     }
@@ -40,7 +40,7 @@ contract LiquidTokenConverterFactory is ITypedConverterFactory {
   * The converters govern a token with a single reserve and allow converting between the two.
   * Liquid tokens usually have fractional reserve (reserve ratio smaller than 100%).
 */
-contract LiquidTokenConverter is BancorConverter {
+contract LiquidTokenConverter is ConverterBase {
     /**
       * @dev initializes a new LiquidTokenConverter instance
       *
@@ -53,7 +53,7 @@ contract LiquidTokenConverter is BancorConverter {
         IContractRegistry _registry,
         uint32 _maxConversionFee
     )
-        BancorConverter(_token, _registry, _maxConversionFee)
+        ConverterBase(_token, _registry, _maxConversionFee)
         public
     {
     }

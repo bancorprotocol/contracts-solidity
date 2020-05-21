@@ -4,9 +4,9 @@ import "../../token/interfaces/ISmartToken.sol";
 import "../../utility/interfaces/IWhitelist.sol";
 
 /*
-    Bancor Converter interface
+    Converter interface
 */
-contract IBancorConverter {
+contract IConverter {
     function converterType() public pure returns (uint8);
 
     function rateAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256);

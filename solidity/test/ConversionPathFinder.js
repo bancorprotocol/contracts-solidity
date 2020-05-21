@@ -7,12 +7,12 @@ const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 const ERC20Token = artifacts.require('ERC20Token');
 const SmartToken = artifacts.require('SmartToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
-const BancorConverter = artifacts.require('BancorConverter');
+const ConverterBase = artifacts.require('ConverterBase');
 const ConverterFactory = artifacts.require('ConverterFactory');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
-const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
-const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
+const ConverterRegistry = artifacts.require('ConverterRegistry');
+const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConversionPathFinder = artifacts.require('ConversionPathFinder');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
@@ -63,7 +63,7 @@ async function getPath(token, anchorToken, converterRegistry) {
     const isSmartToken = await converterRegistry.isSmartToken(token);
     const smartTokens = isSmartToken ? [token] : await converterRegistry.getConvertibleTokenSmartTokens(token);
     for (const smartToken of smartTokens) {
-        const converter = BancorConverter.at(await SmartToken.at(smartToken).owner());
+        const converter = ConverterBase.at(await SmartToken.at(smartToken).owner());
         const connectorTokenCount = await converter.connectorTokenCount();
         for (let i = 0; i < connectorTokenCount; i++) {
             const connectorToken = await converter.connectorTokens(i);
@@ -121,17 +121,17 @@ contract('ConversionPathFinder', accounts => {
     before(async function() {
         contractRegistry = await ContractRegistry.new();
 
-        converterFactory      = await ConverterFactory           .new();
-        converterRegistry     = await BancorConverterRegistry    .new(contractRegistry.address);
-        converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
-        pathFinder            = await ConversionPathFinder       .new(contractRegistry.address);
+        converterFactory      = await ConverterFactory     .new();
+        converterRegistry     = await ConverterRegistry    .new(contractRegistry.address);
+        converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
+        pathFinder            = await ConversionPathFinder .new(contractRegistry.address);
 
         await converterFactory.registerTypedFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedFactory((await LiquidityPoolV1ConverterFactory.new()).address);
 
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY             , converterFactory     .address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY      , converterFactory     .address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY     , converterRegistry    .address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
         for (const reserve of layout.reserves) {
             const erc20Token = await ERC20Token.new('name', reserve.symbol, 0, 0);
@@ -142,8 +142,8 @@ contract('ConversionPathFinder', accounts => {
             const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
             await converterRegistry.newConverter(tokens.length == 1 ? 0 : 1, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
             const smartToken = SmartToken.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
-            const bancorConverter = BancorConverter.at(await smartToken.owner());
-            await bancorConverter.acceptOwnership();
+            const newConverter = ConverterBase.at(await smartToken.owner());
+            await newConverter.acceptOwnership();
             addresses[converter.symbol] = smartToken.address;
         }
 

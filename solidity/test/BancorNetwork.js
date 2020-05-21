@@ -9,13 +9,13 @@ const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const SmartToken = artifacts.require('SmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
-const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
-const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
+const ConverterRegistry = artifacts.require('ConverterRegistry');
+const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConversionPathFinder = artifacts.require('ConversionPathFinder');
 const EtherToken = artifacts.require('EtherToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardToken = artifacts.require('TestNonStandardToken');
-const BancorConverterHelper = require('./helpers/BancorConverter');
+const ConverterHelper = require('./helpers/Converter');
 const TestBancorNetwork = artifacts.require('./helpers/TestBancorNetwork');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
@@ -125,10 +125,10 @@ async function initTokensAndConverters(accounts) {
     bancorNetwork = await BancorNetwork.new(contractRegistry.address);
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
 
-    let converterRegistry = await BancorConverterRegistry.new(contractRegistry.address);
-    let converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
-    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY, converterRegistry.address);
-    await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+    let converterRegistry = await ConverterRegistry.new(contractRegistry.address);
+    let converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
+    await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY, converterRegistry.address);
+    await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
     let pathFinder = await ConversionPathFinder.new(contractRegistry.address);
     await contractRegistry.registerAddress(ContractRegistryClient.CONVERSION_PATH_FINDER, pathFinder.address);
@@ -159,7 +159,7 @@ async function initTokensAndConverters(accounts) {
     await converter2.addReserve(bntToken.address, 300000);
     await converter2.addReserve(erc20Token1.address, 150000);
 
-    converter3 = await BancorConverterHelper.new(1, smartToken3.address, contractRegistry.address, 0, bntToken.address, 350000, OLD_CONVERTER_VERSION);
+    converter3 = await ConverterHelper.new(1, smartToken3.address, contractRegistry.address, 0, bntToken.address, 350000, OLD_CONVERTER_VERSION);
     await converter3.addConnector(erc20Token2.address, 100000, false);
 
     converter4 = await LiquidTokenConverter.new(smartToken4.address, contractRegistry.address, 0);

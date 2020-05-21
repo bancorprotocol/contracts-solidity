@@ -1,5 +1,5 @@
 pragma solidity 0.4.26;
-import "./interfaces/IBancorConverter.sol";
+import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IConverterFactory.sol";
 import "../utility/ContractRegistryClient.sol";
@@ -9,7 +9,7 @@ import "../token/interfaces/IEtherToken.sol";
 /**
   * @dev Converter Upgrader
   *
-  * The converter upgrader contract allows upgrading an older Bancor converter contract (0.4 and up)
+  * The converter upgrader contract allows upgrading an older converter contract (0.4 and up)
   * to the latest version.
   * To begin the upgrade process, simply execute the 'upgrade' function.
   * At the end of the process, the ownership of the newly upgraded converter will be transferred
@@ -60,7 +60,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _version old converter version
     */
     function upgrade(bytes32 _version) public {
-        upgradeOld(IBancorConverter(msg.sender), _version);
+        upgradeOld(IConverter(msg.sender), _version);
     }
 
     /**
@@ -73,7 +73,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _version old converter version
     */
     function upgrade(uint16 _version) public {
-        upgradeOld(IBancorConverter(msg.sender), bytes32(_version));
+        upgradeOld(IConverter(msg.sender), bytes32(_version));
     }
 
     /**
@@ -85,12 +85,12 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _converter   old converter contract address
       * @param _version     old converter version
     */
-    function upgradeOld(IBancorConverter _converter, bytes32 _version) public {
+    function upgradeOld(IConverter _converter, bytes32 _version) public {
         _version;
-        IBancorConverter converter = IBancorConverter(_converter);
+        IConverter converter = IConverter(_converter);
         address prevOwner = converter.owner();
         acceptConverterOwnership(converter);
-        IBancorConverter newConverter = createConverter(converter);
+        IConverter newConverter = createConverter(converter);
         copyConnectors(converter, newConverter);
         copyConversionFee(converter, newConverter);
         transferConnectorsBalances(converter, newConverter);
@@ -115,7 +115,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       *
       * @param _oldConverter       converter to accept ownership of
     */
-    function acceptConverterOwnership(IBancorConverter _oldConverter) private {
+    function acceptConverterOwnership(IConverter _oldConverter) private {
         _oldConverter.acceptOwnership();
         emit ConverterOwned(_oldConverter, this);
     }
@@ -128,7 +128,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       *
       * @return the new converter  new converter contract address
     */
-    function createConverter(IBancorConverter _oldConverter) private returns(IBancorConverter) {
+    function createConverter(IConverter _oldConverter) private returns(IConverter) {
         ISmartToken token = _oldConverter.token();
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
         uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
@@ -143,7 +143,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
             newType = 1;
 
         IConverterFactory converterFactory = IConverterFactory(addressOf(CONVERTER_FACTORY));
-        IBancorConverter converter = converterFactory.createConverter(newType, token, registry, maxConversionFee);
+        IConverter converter = converterFactory.createConverter(newType, token, registry, maxConversionFee);
 
         converter.acceptOwnership();
         return converter;
@@ -156,7 +156,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */
-    function copyConnectors(IBancorConverter _oldConverter, IBancorConverter _newConverter)
+    function copyConnectors(IConverter _oldConverter, IConverter _newConverter)
         private
     {
         uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
@@ -186,7 +186,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */
-    function copyConversionFee(IBancorConverter _oldConverter, IBancorConverter _newConverter) private {
+    function copyConversionFee(IConverter _oldConverter, IConverter _newConverter) private {
         uint32 conversionFee = _oldConverter.conversionFee();
         _newConverter.setConversionFee(conversionFee);
     }
@@ -199,7 +199,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */
-    function transferConnectorsBalances(IBancorConverter _oldConverter, IBancorConverter _newConverter)
+    function transferConnectorsBalances(IConverter _oldConverter, IConverter _newConverter)
         private
     {
         uint256 connectorBalance;
@@ -228,7 +228,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
 
     bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
 
-    function isV28OrHigherConverter(IBancorConverter _converter) internal view returns (bool) {
+    function isV28OrHigherConverter(IConverter _converter) internal view returns (bool) {
         bool success;
         uint256[1] memory ret;
         bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);

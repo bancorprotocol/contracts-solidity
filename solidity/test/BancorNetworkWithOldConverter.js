@@ -1,7 +1,7 @@
 /* global artifacts, contract, before, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
-const BancorConverter = require('./helpers/BancorConverter');
+const Converter = require('./helpers/Converter');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const BancorNetwork = artifacts.require('BancorNetwork');
@@ -47,7 +47,7 @@ contract('BancorNetworkWithOldConverter', accounts => {
         smartToken3 = await SmartToken.new('Token3', 'TKN3', 2);
         await smartToken3.issue(accounts[0], 3000000);
 
-        converter = await BancorConverter.new(1, smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000, OLD_CONVERTER_VERSION);
+        converter = await Converter.new(1, smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000, OLD_CONVERTER_VERSION);
         await converter.addConnector(smartToken3.address, 150000, false);
 
         await smartToken1.transfer(converter.address, 40000);

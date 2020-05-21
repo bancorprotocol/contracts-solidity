@@ -1,5 +1,5 @@
 pragma solidity 0.4.26;
-import "./BancorConverter.sol";
+import "./ConverterBase.sol";
 
 /**
   * @dev Liquidity Pool Converter
@@ -9,7 +9,7 @@ import "./BancorConverter.sol";
   *
   * Liquidity pools have 2 reserves or more and they allow converting between them.
 */
-contract LiquidityPoolConverter is BancorConverter {
+contract LiquidityPoolConverter is ConverterBase {
 
     /**
       * @dev triggered after liquidity is added
@@ -57,7 +57,7 @@ contract LiquidityPoolConverter is BancorConverter {
         IContractRegistry _registry,
         uint32 _maxConversionFee
     )
-        BancorConverter(_token, _registry, _maxConversionFee)
+        ConverterBase(_token, _registry, _maxConversionFee)
         internal
     {
     }

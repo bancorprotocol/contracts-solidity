@@ -1,7 +1,7 @@
 const utils = require('./helpers/Utils');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
-contract('BancorConverterRegistryData', function(accounts) {
+contract('ConverterRegistryData', function(accounts) {
     let contractRegistry
     let converterRegistry;
 
@@ -11,8 +11,8 @@ contract('BancorConverterRegistryData', function(accounts) {
 
     before(async function() {
         contractRegistry = await artifacts.require('ContractRegistry').new();
-        converterRegistry = await artifacts.require('BancorConverterRegistryData').new(contractRegistry.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY, accounts[0]);
+        converterRegistry = await artifacts.require('ConverterRegistryData').new(contractRegistry.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY, accounts[0]);
     });
 
     describe('security assertion:', function() {

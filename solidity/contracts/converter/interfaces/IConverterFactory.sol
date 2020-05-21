@@ -1,5 +1,5 @@
 pragma solidity 0.4.26;
-import './IBancorConverter.sol';
+import './IConverter.sol';
 import '../../token/interfaces/ISmartToken.sol';
 import '../../utility/interfaces/IContractRegistry.sol';
 
@@ -13,5 +13,5 @@ contract IConverterFactory {
         IContractRegistry _registry,
         uint32 _maxConversionFee
     )
-    public returns (IBancorConverter);
+    public returns (IConverter);
 }

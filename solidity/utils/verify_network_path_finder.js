@@ -5,11 +5,11 @@ const assert = require("assert");
 const NODE_ADDRESS        = process.argv[2];
 const PATH_FINDER_ADDRESS = process.argv[3];
 
-const PATH_FINDER_ABI        = JSON.parse(fs.readFileSync(__dirname + "/../build/ConversionPathFinder.abi"   ));
-const CONTRACT_REGISTRY_ABI  = JSON.parse(fs.readFileSync(__dirname + "/../build/ContractRegistry.abi"       ));
-const CONVERTER_REGISTRY_ABI = JSON.parse(fs.readFileSync(__dirname + "/../build/BancorConverterRegistry.abi"));
-const SMART_TOKEN_ABI        = JSON.parse(fs.readFileSync(__dirname + "/../build/SmartToken.abi"             ));
-const CONVERTER_ABI          = JSON.parse(fs.readFileSync(__dirname + "/../build/BancorConverter.abi"        ));
+const PATH_FINDER_ABI        = JSON.parse(fs.readFileSync(__dirname + "/../build/ConversionPathFinder.abi"));
+const CONTRACT_REGISTRY_ABI  = JSON.parse(fs.readFileSync(__dirname + "/../build/ContractRegistry.abi"    ));
+const CONVERTER_REGISTRY_ABI = JSON.parse(fs.readFileSync(__dirname + "/../build/ConverterRegistry.abi"   ));
+const SMART_TOKEN_ABI        = JSON.parse(fs.readFileSync(__dirname + "/../build/SmartToken.abi"          ));
+const CONVERTER_ABI          = JSON.parse(fs.readFileSync(__dirname + "/../build/Converter.abi"           ));
 
 async function generatePath(web3, sourceToken, targetToken, anchorToken, converterRegistry) {
     const sourcePath = await getPath(web3, sourceToken, anchorToken, converterRegistry);
@@ -116,7 +116,7 @@ async function run() {
     const web3 = new Web3(NODE_ADDRESS);
     const pathFinder = new web3.eth.Contract(PATH_FINDER_ABI, PATH_FINDER_ADDRESS);
     const contractRegistry = new web3.eth.Contract(CONTRACT_REGISTRY_ABI, await rpc(pathFinder.methods.registry()));
-    const converterRegistry = new web3.eth.Contract(CONVERTER_REGISTRY_ABI, await rpc(contractRegistry.methods.addressOf(Web3.utils.asciiToHex("BancorConverterRegistry"))));
+    const converterRegistry = new web3.eth.Contract(CONVERTER_REGISTRY_ABI, await rpc(contractRegistry.methods.addressOf(Web3.utils.asciiToHex("ConverterRegistry"))));
 
     const anchorToken = await rpc(pathFinder.methods.anchorToken());
     const smartTokens = await rpc(converterRegistry.methods.getSmartTokens());

@@ -2,13 +2,13 @@ pragma solidity 0.4.26;
 import "../utility/TokenHandler.sol";
 import "../utility/ContractRegistryClient.sol";
 import "./interfaces/IConverterFactory.sol";
-import "./interfaces/IBancorConverterRegistry.sol";
-import "./interfaces/IBancorConverterRegistryData.sol";
+import "./interfaces/IConverterRegistry.sol";
+import "./interfaces/IConverterRegistryData.sol";
 import "../token/interfaces/ISmartTokenController.sol";
 import "../token/SmartToken.sol";
 
 /**
-  * @dev The BancorConverterRegistry maintains a list of all active converters in the Bancor Network.
+  * @dev The ConverterRegistry maintains a list of all active converters in the Bancor Network.
   *
   * Since converters can be upgraded and thus their address can change, the registry actually keeps smart tokens internally and not the converters themselves.
   * The active converter for each smart token can be easily accessed by querying the smart token owner.
@@ -24,7 +24,7 @@ import "../token/SmartToken.sol";
   *
   * The contract is upgradable.
 */
-contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryClient, TokenHandler {
+contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenHandler {
     address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /**
@@ -72,7 +72,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     event ConvertibleTokenRemoved(address indexed _convertibleToken, address indexed _smartToken);
 
     /**
-      * @dev initializes a new BancorConverterRegistry instance
+      * @dev initializes a new ConverterRegistry instance
       *
       * @param _registry address of a contract registry contract
     */
@@ -82,7 +82,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     /**
       * @dev creates a zero supply liquid token / empty liquidity pool and adds its converter to the registry
       *
-      * @param _type                converter type, see BancorConverter contract main doc
+      * @param _type                converter type, see ConverterBase contract main doc
       * @param _smartTokenName      token / pool name
       * @param _smartTokenSymbol    token / pool symbol
       * @param _smartTokenDecimals  token / pool decimals
@@ -101,7 +101,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
         IERC20Token[] memory _reserveTokens,
         uint32[] memory _reserveWeights
     )
-    public returns (IBancorConverter)
+    public returns (IConverter)
     {
         uint256 length = _reserveTokens.length;
         require(length == _reserveWeights.length, "ERR_INVALID_RESERVES");
@@ -109,7 +109,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
 
         IConverterFactory factory = IConverterFactory(addressOf(CONVERTER_FACTORY));
         SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
-        IBancorConverter converter = IBancorConverter(factory.createConverter(_type, token, registry, _maxConversionFee));
+        IConverter converter = IConverter(factory.createConverter(_type, token, registry, _maxConversionFee));
 
         converter.acceptOwnership();
 
@@ -130,7 +130,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       *
       * @param _converter converter
     */
-    function addConverter(IBancorConverter _converter) public ownerOnly {
+    function addConverter(IConverter _converter) public ownerOnly {
         require(isConverterValid(_converter), "ERR_INVALID_CONVERTER");
         addConverterInternal(_converter);
     }
@@ -142,7 +142,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       *
       * @param _converter converter
     */
-    function removeConverter(IBancorConverter _converter) public {
+    function removeConverter(IConverter _converter) public {
         require(msg.sender == owner || !isConverterValid(_converter), "ERR_ACCESS_DENIED");
         removeConverterInternal(_converter);
     }
@@ -153,7 +153,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return number of smart tokens
     */
     function getSmartTokenCount() external view returns (uint) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokenCount();
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getSmartTokenCount();
     }
 
     /**
@@ -162,7 +162,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return list of smart tokens
     */
     function getSmartTokens() external view returns (address[]) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartTokens();
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getSmartTokens();
     }
 
     /**
@@ -172,7 +172,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return smart token at the given index
     */
     function getSmartToken(uint _index) external view returns (address) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getSmartToken(_index);
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getSmartToken(_index);
     }
 
     /**
@@ -182,7 +182,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return true if the given value is a smart token, false if not
     */
     function isSmartToken(address _value) external view returns (bool) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isSmartToken(_value);
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).isSmartToken(_value);
     }
 
     /**
@@ -191,7 +191,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return number of liquidity pools
     */
     function getLiquidityPoolCount() external view returns (uint) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPoolCount();
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getLiquidityPoolCount();
     }
 
     /**
@@ -200,7 +200,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return list of liquidity pools
     */
     function getLiquidityPools() external view returns (address[]) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPools();
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getLiquidityPools();
     }
 
     /**
@@ -210,7 +210,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return liquidity pool at the given index
     */
     function getLiquidityPool(uint _index) external view returns (address) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getLiquidityPool(_index);
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getLiquidityPool(_index);
     }
 
     /**
@@ -220,7 +220,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return true if the given value is a liquidity pool, false if not
     */
     function isLiquidityPool(address _value) external view returns (bool) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isLiquidityPool(_value);
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).isLiquidityPool(_value);
     }
 
     /**
@@ -229,7 +229,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return number of convertible tokens
     */
     function getConvertibleTokenCount() external view returns (uint) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenCount();
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokenCount();
     }
 
     /**
@@ -238,7 +238,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return list of convertible tokens
     */
     function getConvertibleTokens() external view returns (address[]) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokens();
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokens();
     }
 
     /**
@@ -248,7 +248,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return convertible token at the given index
     */
     function getConvertibleToken(uint _index) external view returns (address) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleToken(_index);
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleToken(_index);
     }
 
     /**
@@ -258,7 +258,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return true if the given value is a convertible token, false if not
     */
     function isConvertibleToken(address _value) external view returns (bool) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isConvertibleToken(_value);
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).isConvertibleToken(_value);
     }
 
     /**
@@ -268,7 +268,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return number of smart tokens associated with the given convertible token
     */
     function getConvertibleTokenSmartTokenCount(address _convertibleToken) external view returns (uint) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokenCount(_convertibleToken);
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokenCount(_convertibleToken);
     }
 
     /**
@@ -278,7 +278,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return list of smart tokens associated with the given convertible token
     */
     function getConvertibleTokenSmartTokens(address _convertibleToken) external view returns (address[]) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokens(_convertibleToken);
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokens(_convertibleToken);
     }
 
     /**
@@ -288,7 +288,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return smart token associated with the given convertible token at the given index
     */
     function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartToken(_convertibleToken, _index);
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartToken(_convertibleToken, _index);
     }
 
     /**
@@ -299,7 +299,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @return true if the given value is a smart token of the given convertible token, false if not
     */
     function isConvertibleTokenSmartToken(address _convertibleToken, address _value) external view returns (bool) {
-        return IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA)).isConvertibleTokenSmartToken(_convertibleToken, _value);
+        return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).isConvertibleTokenSmartToken(_convertibleToken, _value);
     }
 
     /**
@@ -324,7 +324,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _converter converter
       * @return true if the given converter is valid, false if not
     */
-    function isConverterValid(IBancorConverter _converter) public view returns (bool) {
+    function isConverterValid(IConverter _converter) public view returns (bool) {
         // verify that the converter is active
         return _converter.token().owner() == address(_converter);
     }
@@ -335,7 +335,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _converter converter with specific configuration
       * @return if a liquidity pool with the same configuration is already registered
     */
-    function isSimilarLiquidityPoolRegistered(IBancorConverter _converter) public view returns (bool) {
+    function isSimilarLiquidityPoolRegistered(IConverter _converter) public view returns (bool) {
         uint reserveTokenCount = _converter.connectorTokenCount();
         IERC20Token[] memory reserveTokens = new IERC20Token[](reserveTokenCount);
         uint32[] memory reserveWeights = new uint32[](reserveTokenCount);
@@ -354,7 +354,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     /**
       * @dev searches for a liquidity pool with specific configuration
       *
-      * @param _type            converter type, see BancorConverter contract main doc
+      * @param _type            converter type, see ConverterBase contract main doc
       * @param _reserveTokens   reserve tokens
       * @param _reserveWeights  reserve weights
       * @return the liquidity pool, or zero if no such liquidity pool exists
@@ -367,7 +367,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
             // search for a converter with the same configuration
             for (uint i = 0; i < convertibleTokenSmartTokens.length; i++) {
                 ISmartToken smartToken = ISmartToken(convertibleTokenSmartTokens[i]);
-                IBancorConverter converter = IBancorConverter(smartToken.owner());
+                IConverter converter = IConverter(smartToken.owner());
                 if (isConverterReserveConfigEqual(converter, _type, _reserveTokens, _reserveWeights))
                     return smartToken;
             }
@@ -381,7 +381,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       *
       * @param _smartToken smart token
     */
-    function addSmartToken(IBancorConverterRegistryData _converterRegistryData, address _smartToken) internal {
+    function addSmartToken(IConverterRegistryData _converterRegistryData, address _smartToken) internal {
         _converterRegistryData.addSmartToken(_smartToken);
         emit SmartTokenAdded(_smartToken);
     }
@@ -391,7 +391,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       *
       * @param _smartToken smart token
     */
-    function removeSmartToken(IBancorConverterRegistryData _converterRegistryData, address _smartToken) internal {
+    function removeSmartToken(IConverterRegistryData _converterRegistryData, address _smartToken) internal {
         _converterRegistryData.removeSmartToken(_smartToken);
         emit SmartTokenRemoved(_smartToken);
     }
@@ -401,7 +401,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       *
       * @param _liquidityPool liquidity pool
     */
-    function addLiquidityPool(IBancorConverterRegistryData _converterRegistryData, address _liquidityPool) internal {
+    function addLiquidityPool(IConverterRegistryData _converterRegistryData, address _liquidityPool) internal {
         _converterRegistryData.addLiquidityPool(_liquidityPool);
         emit LiquidityPoolAdded(_liquidityPool);
     }
@@ -411,7 +411,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       *
       * @param _liquidityPool liquidity pool
     */
-    function removeLiquidityPool(IBancorConverterRegistryData _converterRegistryData, address _liquidityPool) internal {
+    function removeLiquidityPool(IConverterRegistryData _converterRegistryData, address _liquidityPool) internal {
         _converterRegistryData.removeLiquidityPool(_liquidityPool);
         emit LiquidityPoolRemoved(_liquidityPool);
     }
@@ -422,7 +422,7 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
-    function addConvertibleToken(IBancorConverterRegistryData _converterRegistryData, address _convertibleToken, address _smartToken) internal {
+    function addConvertibleToken(IConverterRegistryData _converterRegistryData, address _convertibleToken, address _smartToken) internal {
         _converterRegistryData.addConvertibleToken(_convertibleToken, _smartToken);
         emit ConvertibleTokenAdded(_convertibleToken, _smartToken);
     }
@@ -433,13 +433,13 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
-    function removeConvertibleToken(IBancorConverterRegistryData _converterRegistryData, address _convertibleToken, address _smartToken) internal {
+    function removeConvertibleToken(IConverterRegistryData _converterRegistryData, address _convertibleToken, address _smartToken) internal {
         _converterRegistryData.removeConvertibleToken(_convertibleToken, _smartToken);
         emit ConvertibleTokenRemoved(_convertibleToken, _smartToken);
     }
 
-    function addConverterInternal(IBancorConverter _converter) private {
-        IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
+    function addConverterInternal(IConverter _converter) private {
+        IConverterRegistryData converterRegistryData = IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_converter).token();
         uint reserveTokenCount = _converter.connectorTokenCount();
 
@@ -455,8 +455,8 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
             addConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
     }
 
-    function removeConverterInternal(IBancorConverter _converter) private {
-        IBancorConverterRegistryData converterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
+    function removeConverterInternal(IConverter _converter) private {
+        IConverterRegistryData converterRegistryData = IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA));
         ISmartToken token = ISmartTokenController(_converter).token();
         uint reserveTokenCount = _converter.connectorTokenCount();
 
@@ -473,23 +473,23 @@ contract BancorConverterRegistry is IBancorConverterRegistry, ContractRegistryCl
     }
 
     function getLeastFrequentTokenSmartTokens(IERC20Token[] memory _reserveTokens) private view returns (address[] memory) {
-        IBancorConverterRegistryData bancorConverterRegistryData = IBancorConverterRegistryData(addressOf(BANCOR_CONVERTER_REGISTRY_DATA));
-        uint minSmartTokenCount = bancorConverterRegistryData.getConvertibleTokenSmartTokenCount(_reserveTokens[0]);
+        IConverterRegistryData converterRegistryData = IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA));
+        uint minSmartTokenCount = converterRegistryData.getConvertibleTokenSmartTokenCount(_reserveTokens[0]);
         uint index = 0;
 
         // find the reserve token which has the smallest number of smart tokens
         for (uint i = 1; i < _reserveTokens.length; i++) {
-            uint convertibleTokenSmartTokenCount = bancorConverterRegistryData.getConvertibleTokenSmartTokenCount(_reserveTokens[i]);
+            uint convertibleTokenSmartTokenCount = converterRegistryData.getConvertibleTokenSmartTokenCount(_reserveTokens[i]);
             if (minSmartTokenCount > convertibleTokenSmartTokenCount) {
                 minSmartTokenCount = convertibleTokenSmartTokenCount;
                 index = i;
             }
         }
 
-        return bancorConverterRegistryData.getConvertibleTokenSmartTokens(_reserveTokens[index]);
+        return converterRegistryData.getConvertibleTokenSmartTokens(_reserveTokens[index]);
     }
 
-    function isConverterReserveConfigEqual(IBancorConverter _converter, uint8 _type, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) private view returns (bool) {
+    function isConverterReserveConfigEqual(IConverter _converter, uint8 _type, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) private view returns (bool) {
         if (_type != _converter.converterType())
             return false;
 

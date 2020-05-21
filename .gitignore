@@ -21,12 +21,12 @@ solidity/scTopics
 # npm run build
 solidity/build/Migrations.abi
 solidity/build/Migrations.bin
-solidity/build/NewBancorConverter.abi
-solidity/build/NewBancorConverter.bin
+solidity/build/NewConverter.abi
+solidity/build/NewConverter.bin
 solidity/build/NonStandardToken.abi
 solidity/build/NonStandardToken.bin
-solidity/build/OldBancorConverter.abi
-solidity/build/OldBancorConverter.bin
+solidity/build/OldConverter.abi
+solidity/build/OldConverter.bin
 solidity/build/TestBancorFormula.abi
 solidity/build/TestBancorFormula.bin
 solidity/build/TestBancorNetwork.abi

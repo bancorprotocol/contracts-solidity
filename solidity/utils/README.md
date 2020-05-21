@@ -18,8 +18,8 @@ node verify_network_path_finder.js
 node migrate_converter_registry.js
     Ethereum node address
     Account private key
-    Old BancorConverterRegistry contract address
-    New BancorConverterRegistry contract address
+    Old ConverterRegistry contract address
+    New ConverterRegistry contract address
 ```
 
 ### Deploy Network Emulation

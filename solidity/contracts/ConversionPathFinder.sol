@@ -1,8 +1,8 @@
 pragma solidity 0.4.26;
 import "./IConversionPathFinder.sol";
 import "./utility/ContractRegistryClient.sol";
-import "./converter/interfaces/IBancorConverterRegistry.sol";
-import "./converter/interfaces/IBancorConverter.sol";
+import "./converter/interfaces/IConverter.sol";
+import "./converter/interfaces/IConverterRegistry.sol";
 import "./token/interfaces/ISmartToken.sol";
 
 /**
@@ -40,7 +40,7 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
       * @return a path from the source token to the target token
     */
     function findPath(address _sourceToken, address _targetToken) public view returns (address[] memory) {
-        IBancorConverterRegistry converterRegistry = IBancorConverterRegistry(addressOf(BANCOR_CONVERTER_REGISTRY));
+        IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
         address[] memory sourcePath = getPath(_sourceToken, converterRegistry);
         address[] memory targetPath = getPath(_targetToken, converterRegistry);
         return getShortestPath(sourcePath, targetPath);
@@ -54,7 +54,7 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
       *
       * @return a path from the input token to the anchor token
     */
-    function getPath(address _token, IBancorConverterRegistry _converterRegistry) private view returns (address[] memory) {
+    function getPath(address _token, IConverterRegistry _converterRegistry) private view returns (address[] memory) {
         if (_token == anchorToken)
             return getInitialArray(_token);
 
@@ -65,7 +65,7 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
             smartTokens = _converterRegistry.getConvertibleTokenSmartTokens(_token);
 
         for (uint256 n = 0; n < smartTokens.length; n++) {
-            IBancorConverter converter = IBancorConverter(ISmartToken(smartTokens[n]).owner());
+            IConverter converter = IConverter(ISmartToken(smartTokens[n]).owner());
             uint256 connectorTokenCount = converter.connectorTokenCount();
             for (uint256 i = 0; i < connectorTokenCount; i++) {
                 address connectorToken = converter.connectorTokens(i);

@@ -9,17 +9,17 @@ const EtherToken = artifacts.require('EtherToken');
 const SmartToken = artifacts.require('SmartToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ConverterFactory = artifacts.require('ConverterFactory');
-const BancorConverter = artifacts.require('BancorConverter');
+const ConverterBase = artifacts.require('ConverterBase');
 const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
-const BancorConverterRegistry = artifacts.require('BancorConverterRegistry');
-const BancorConverterRegistryData = artifacts.require('BancorConverterRegistryData');
+const ConverterRegistry = artifacts.require('ConverterRegistry');
+const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
-contract('BancorConverterRegistry', function(accounts) {
+contract('ConverterRegistry', function(accounts) {
     let contractRegistry
     let converterFactory;
     let converterRegistry;
@@ -30,11 +30,11 @@ contract('BancorConverterRegistry', function(accounts) {
         converterFactory = await ConverterFactory.new();
         await converterFactory.registerTypedFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedFactory((await LiquidityPoolV1ConverterFactory.new()).address);
-        converterRegistry = await BancorConverterRegistry.new(contractRegistry.address);
-        converterRegistryData = await BancorConverterRegistryData.new(contractRegistry.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY             , converterFactory     .address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY     , converterRegistry    .address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+        converterRegistry = await ConverterRegistry.new(contractRegistry.address);
+        converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY      , converterFactory     .address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY     , converterRegistry    .address);
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
     });
 
     describe('create converters externally:', function() {
@@ -235,12 +235,12 @@ contract('BancorConverterRegistry', function(accounts) {
 
             smartTokens = await converterRegistry.getSmartTokens();
             converters = await Promise.all(smartTokens.map(smartToken => SmartToken.at(smartToken).owner()));
-            await Promise.all(converters.map(converter => BancorConverter.at(converter).acceptOwnership()));
+            await Promise.all(converters.map(converter => ConverterBase.at(converter).acceptOwnership()));
         });
 
         it('function addConverter', async function() {
             for (const converter of converters)
-                await utils.catchRevert(test(converterRegistry.addConverter, BancorConverter.at(converter), ''));
+                await utils.catchRevert(test(converterRegistry.addConverter, ConverterBase.at(converter), ''));
         });
 
         it('function getLiquidityPoolByReserveConfig', async function() {
@@ -254,9 +254,9 @@ contract('BancorConverterRegistry', function(accounts) {
 
         it('function removeConverter', async function() {
             for (const converter of converters)
-                await test(converterRegistry.removeConverter, BancorConverter.at(converter), 'Removed');
+                await test(converterRegistry.removeConverter, ConverterBase.at(converter), 'Removed');
             for (const converter of converters)
-                await utils.catchRevert(test(converterRegistry.removeConverter, BancorConverter.at(converter), ''));
+                await utils.catchRevert(test(converterRegistry.removeConverter, ConverterBase.at(converter), ''));
         });
 
         it('function getLiquidityPoolByReserveConfig', async function() {
