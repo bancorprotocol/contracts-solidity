@@ -261,11 +261,11 @@ contract BancorFormula is IBancorFormula {
       * Formula:
       * return = _targetReserveBalance * (1 - (_sourceReserveBalance / (_sourceReserveBalance + _amount)) ^ (_sourceReserveWeight / _targetReserveWeight))
       *
-      * @param _sourceReserveBalance    input reserve balance
-      * @param _sourceReserveWeight     input reserve weight, represented in ppm, 1-1000000
-      * @param _targetReserveBalance    output reserve balance
-      * @param _targetReserveWeight     output reserve weight, represented in ppm, 1-1000000
-      * @param _amount                  input reserve amount
+      * @param _sourceReserveBalance    source reserve balance
+      * @param _sourceReserveWeight     source reserve weight, represented in ppm, 1-1000000
+      * @param _targetReserveBalance    target reserve balance
+      * @param _targetReserveWeight     target reserve weight, represented in ppm, 1-1000000
+      * @param _amount                  source reserve amount
       *
       * @return output reserve amount
     */
@@ -279,7 +279,7 @@ contract BancorFormula is IBancorFormula {
         // validate input
         require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
         require(_sourceReserveWeight > 0 && _sourceReserveWeight <= MAX_WEIGHT &&
-                _targetReserveWeight > 0 && _targetReserveWeight <= MAX_WEIGHT, "ERR_RESERVE_WEIGHT");
+                _targetReserveWeight > 0 && _targetReserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
 
         // special case for equal weights
         if (_sourceReserveWeight == _targetReserveWeight)
