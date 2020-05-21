@@ -133,12 +133,12 @@ contract LiquidTokenConverter is ConverterBase {
     /**
       * @dev returns the expected return of buying with a given amount of tokens
       *
-      * @param _depositAmount   amount of reserve-tokens received from the user
+      * @param _amount  amount of reserve tokens to get the rate for
       *
       * @return amount of supply-tokens that the user will receive
       * @return amount of supply-tokens that the user will pay as fee
     */
-    function purchaseRate(uint256 _depositAmount)
+    function purchaseRate(uint256 _amount)
         internal
         view
         active
@@ -148,14 +148,14 @@ contract LiquidTokenConverter is ConverterBase {
 
         // special case for buying the initial supply
         if (totalSupply == 0)
-            return (_depositAmount, 0);
+            return (_amount, 0);
 
         IERC20Token reserveToken = reserveTokens[0];
         uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).purchaseRate(
             totalSupply,
             reserveBalance(reserveToken),
             reserves[reserveToken].weight,
-            _depositAmount
+            _amount
         );
 
         // return the amount minus the conversion fee and the conversion fee
@@ -166,12 +166,12 @@ contract LiquidTokenConverter is ConverterBase {
     /**
       * @dev returns the expected return of selling a given amount of tokens
       *
-      * @param _sellAmount  amount of supply-tokens received from the user
+      * @param _amount  amount of liquid tokens to get the rate for
       *
       * @return expected reserve tokens
       * @return expected fee
     */
-    function saleRate(uint256 _sellAmount)
+    function saleRate(uint256 _amount)
         internal
         view
         active
@@ -182,14 +182,14 @@ contract LiquidTokenConverter is ConverterBase {
         IERC20Token reserveToken = reserveTokens[0];
 
         // special case for selling the entire supply - return the entire reserve
-        if (totalSupply == _sellAmount)
+        if (totalSupply == _amount)
             return (reserveBalance(reserveToken), 0);
 
         uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).saleRate(
             totalSupply,
             reserveBalance(reserveToken),
             reserves[reserveToken].weight,
-            _sellAmount
+            _amount
         );
 
         // return the amount minus the conversion fee and the conversion fee
@@ -200,14 +200,14 @@ contract LiquidTokenConverter is ConverterBase {
     /**
       * @dev buys the liquid token by depositing in its reserve
       *
-      * @param _depositAmount   amount of tokens to deposit (in units of the reserve token)
-      * @param _beneficiary     wallet to receive the conversion result
+      * @param _amount      amount of reserve token to buy the token for
+      * @param _beneficiary wallet to receive the conversion result
       *
       * @return amount of liquid tokens received
     */
-    function buy(uint256 _depositAmount, address _beneficiary) internal returns (uint256) {
+    function buy(uint256 _amount, address _beneficiary) internal returns (uint256) {
         // get expected rate and fee
-        (uint256 amount, uint256 fee) = purchaseRate(_depositAmount);
+        (uint256 amount, uint256 fee) = purchaseRate(_amount);
 
         // ensure the trade gives something in return
         require(amount != 0, "ERR_ZERO_RATE");
@@ -216,9 +216,9 @@ contract LiquidTokenConverter is ConverterBase {
 
         // ensure that the input amount was already deposited
         if (reserveToken == ETH_RESERVE_ADDRESS)
-            require(msg.value == _depositAmount, "ERR_ETH_AMOUNT_MISMATCH");
+            require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
         else
-            require(msg.value == 0 && reserveToken.balanceOf(this).sub(reserveBalance(reserveToken)) >= _depositAmount, "ERR_INVALID_AMOUNT");
+            require(msg.value == 0 && reserveToken.balanceOf(this).sub(reserveBalance(reserveToken)) >= _amount, "ERR_INVALID_AMOUNT");
 
         // sync the reserve balance
         syncReserveBalance(reserveToken);
@@ -227,7 +227,7 @@ contract LiquidTokenConverter is ConverterBase {
         token.issue(_beneficiary, amount);
 
         // dispatch the conversion event
-        dispatchConversionEvent(reserveToken, token, _depositAmount, amount, fee);
+        dispatchConversionEvent(reserveToken, token, _amount, amount, fee);
 
         // dispatch price data update for the smart token/reserve
         emit PriceDataUpdate(reserveToken, token.totalSupply(), reserveBalance(reserveToken), reserves[reserveToken].weight);
@@ -238,17 +238,17 @@ contract LiquidTokenConverter is ConverterBase {
     /**
       * @dev sells the liquid token by withdrawing from its reserve
       *
-      * @param _sellAmount      amount of tokens to sell (in units of the smart token)
-      * @param _beneficiary     wallet to receive the conversion result
+      * @param _amount      amount of liquid tokens to sell
+      * @param _beneficiary wallet to receive the conversion result
       *
       * @return amount of reserve tokens received
     */
-    function sell(uint256 _sellAmount, address _beneficiary) internal returns (uint256) {
+    function sell(uint256 _amount, address _beneficiary) internal returns (uint256) {
         // ensure that the input amount was already deposited
-        require(_sellAmount <= token.balanceOf(this), "ERR_INVALID_AMOUNT");
+        require(_amount <= token.balanceOf(this), "ERR_INVALID_AMOUNT");
 
         // get expected rate and fee
-        (uint256 amount, uint256 fee) = saleRate(_sellAmount);
+        (uint256 amount, uint256 fee) = saleRate(_amount);
 
         // ensure the trade gives something in return
         require(amount != 0, "ERR_ZERO_RATE");
@@ -258,10 +258,10 @@ contract LiquidTokenConverter is ConverterBase {
         // ensure that the trade will only deplete the reserve balance if the total supply is depleted as well
         uint256 tokenSupply = token.totalSupply();
         uint256 rsvBalance = reserveBalance(reserveToken);
-        assert(amount < rsvBalance || (amount == rsvBalance && _sellAmount == tokenSupply));
+        assert(amount < rsvBalance || (amount == rsvBalance && _amount == tokenSupply));
 
-        // destroy _sellAmount from the converter balance in the smart token
-        token.destroy(this, _sellAmount);
+        // destroy the tokens from the converter balance in the smart token
+        token.destroy(this, _amount);
 
         // update the reserve balance
         reserves[reserveToken].balance = reserves[reserveToken].balance.sub(amount);
@@ -273,7 +273,7 @@ contract LiquidTokenConverter is ConverterBase {
             safeTransfer(reserveToken, _beneficiary, amount);
 
         // dispatch the conversion event
-        dispatchConversionEvent(token, reserveToken, _sellAmount, amount, fee);
+        dispatchConversionEvent(token, reserveToken, _amount, amount, fee);
 
         // dispatch price data update for the smart token/reserve
         emit PriceDataUpdate(reserveToken, token.totalSupply(), reserveBalance(reserveToken), reserves[reserveToken].weight);
