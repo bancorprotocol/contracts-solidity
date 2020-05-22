@@ -171,19 +171,19 @@ contract BancorFormula is IBancorFormula {
       * calculates the rate for a given conversion (in the main token)
       *
       * Formula:
-      * return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
+      * return = _supply * ((1 + _amount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
       *
-      * @param _supply              smart token supply
-      * @param _reserveBalance      total reserve balance
-      * @param _reserveWeight       reserve weight, represented in ppm, 1-1000000
-      * @param _depositAmount       deposit amount, in reserve token
+      * @param _supply          smart token supply
+      * @param _reserveBalance  total reserve balance
+      * @param _reserveWeight   reserve weight, represented in ppm, 1-1000000
+      * @param _amount          amount of reserve tokens to get the rate for
       *
       * @return smart token amount
     */
     function purchaseRate(uint256 _supply,
                           uint256 _reserveBalance,
                           uint32 _reserveWeight,
-                          uint256 _depositAmount)
+                          uint256 _amount)
                           public view returns (uint256)
     {
         // validate input
@@ -192,16 +192,16 @@ contract BancorFormula is IBancorFormula {
         require(_reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
 
         // special case for 0 deposit amount
-        if (_depositAmount == 0)
+        if (_amount == 0)
             return 0;
 
         // special case if the weight = 100%
         if (_reserveWeight == MAX_WEIGHT)
-            return _supply.mul(_depositAmount) / _reserveBalance;
+            return _supply.mul(_amount) / _reserveBalance;
 
         uint256 result;
         uint8 precision;
-        uint256 baseN = _depositAmount.add(_reserveBalance);
+        uint256 baseN = _amount.add(_reserveBalance);
         (result, precision) = power(baseN, _reserveBalance, _reserveWeight, MAX_WEIGHT);
         uint256 temp = _supply.mul(result) >> precision;
         return temp - _supply;
@@ -212,42 +212,42 @@ contract BancorFormula is IBancorFormula {
       * calculates the rate for a given conversion (in the reserve token)
       *
       * Formula:
-      * return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1000000 / _reserveWeight))
+      * return = _reserveBalance * (1 - (1 - _amount / _supply) ^ (1000000 / _reserveWeight))
       *
-      * @param _supply              smart token supply
-      * @param _reserveBalance      total reserve
-      * @param _reserveWeight       reserve weight, represented in ppm, 1-1000000
-      * @param _sellAmount          sell amount, in the token itself
+      * @param _supply          smart token supply
+      * @param _reserveBalance  total reserve
+      * @param _reserveWeight   reserve weight, represented in ppm, 1-1000000
+      * @param _amount          amount of tokens to get the rate for
       *
       * @return reserve token amount
     */
     function saleRate(uint256 _supply,
                       uint256 _reserveBalance,
                       uint32 _reserveWeight,
-                      uint256 _sellAmount)
+                      uint256 _amount)
                       public view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
         require(_reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
-        require(_sellAmount <= _supply, "ERR_INVALID_AMOUNT");
+        require(_amount <= _supply, "ERR_INVALID_AMOUNT");
 
         // special case for 0 sell amount
-        if (_sellAmount == 0)
+        if (_amount == 0)
             return 0;
 
         // special case for selling the entire supply
-        if (_sellAmount == _supply)
+        if (_amount == _supply)
             return _reserveBalance;
 
         // special case if the weight = 100%
         if (_reserveWeight == MAX_WEIGHT)
-            return _reserveBalance.mul(_sellAmount) / _supply;
+            return _reserveBalance.mul(_amount) / _supply;
 
         uint256 result;
         uint8 precision;
-        uint256 baseD = _supply - _sellAmount;
+        uint256 baseD = _supply - _amount;
         (result, precision) = power(_supply, baseD, MAX_WEIGHT, _reserveWeight);
         uint256 temp1 = _reserveBalance.mul(result);
         uint256 temp2 = _reserveBalance << precision;
@@ -636,10 +636,10 @@ contract BancorFormula is IBancorFormula {
     function calculatePurchaseReturn(uint256 _supply,
                                      uint256 _reserveBalance,
                                      uint32 _reserveWeight,
-                                     uint256 _depositAmount)
+                                     uint256 _amount)
                                      public view returns (uint256)
     {
-        return purchaseRate(_supply, _reserveBalance, _reserveWeight, _depositAmount);
+        return purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount);
     }
 
     /**
@@ -648,10 +648,10 @@ contract BancorFormula is IBancorFormula {
     function calculateSaleReturn(uint256 _supply,
                                  uint256 _reserveBalance,
                                  uint32 _reserveWeight,
-                                 uint256 _sellAmount)
+                                 uint256 _amount)
                                  public view returns (uint256)
     {
-        return saleRate(_supply, _reserveBalance, _reserveWeight, _sellAmount);
+        return saleRate(_supply, _reserveBalance, _reserveWeight, _amount);
     }
 
     /**

@@ -135,8 +135,8 @@ contract LiquidTokenConverter is ConverterBase {
       *
       * @param _amount  amount of reserve tokens to get the rate for
       *
-      * @return amount of supply-tokens that the user will receive
-      * @return amount of supply-tokens that the user will pay as fee
+      * @return amount of liquid tokens that the user will receive
+      * @return amount of liquid tokens that the user will pay as fee
     */
     function purchaseRate(uint256 _amount)
         internal
