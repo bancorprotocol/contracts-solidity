@@ -172,7 +172,9 @@ def constructor():
 '''
 def purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveWeight > 0 and _reserveWeight <= MAX_WEIGHT);
+    require(_supply > 0, "ERR_INVALID_SUPPLY");
+    require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+    require(_reserveWeight > 0 and _reserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
 
     # special case for 0 deposit amount
     if (_amount == 0):
@@ -203,7 +205,10 @@ def purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount):
 '''
 def saleRate(_supply, _reserveBalance, _reserveWeight, _amount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveWeight > 0 and _reserveWeight <= MAX_WEIGHT and _amount <= _supply);
+    require(_supply > 0, "ERR_INVALID_SUPPLY");
+    require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+    require(_reserveWeight > 0 and _reserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
+    require(_amount <= _supply, "ERR_INVALID_AMOUNT");
 
     # special case for 0 sell amount
     if (_amount == 0):
@@ -225,7 +230,7 @@ def saleRate(_supply, _reserveBalance, _reserveWeight, _amount):
 
 '''
     @dev given two reserve balances/weights and a sell amount (in the first reserve token),
-    calculates the rate for a conversion from the first reserve token to the second reserve token (in the second reserve token)
+    calculates the rate for a conversion from the source reserve token to the target reserve token
 
     Formula:
     return = _targetReserveBalance * (1 - (_sourceReserveBalance / (_sourceReserveBalance + _amount)) ^ (_sourceReserveWeight / _targetReserveWeight))
@@ -240,7 +245,9 @@ def saleRate(_supply, _reserveBalance, _reserveWeight, _amount):
 '''
 def crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount):
     # validate input
-    assert(_sourceReserveBalance > 0 and _sourceReserveWeight > 0 and _sourceReserveWeight <= MAX_WEIGHT and _targetReserveBalance > 0 and _targetReserveWeight > 0 and _targetReserveWeight <= MAX_WEIGHT);
+    require(_sourceReserveBalance > 0 and _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+    require(_sourceReserveWeight > 0 and _sourceReserveWeight <= MAX_WEIGHT and
+            _targetReserveWeight > 0 and _targetReserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
 
     # special case for equal weights
     if (_sourceReserveWeight == _targetReserveWeight):
@@ -268,7 +275,9 @@ def crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserve
 '''
 def fundCost(_supply, _reserveBalance, _reserveRatio, _amount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 1 and _reserveRatio <= MAX_WEIGHT * 2);
+    require(_supply > 0, "ERR_INVALID_SUPPLY");
+    require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+    require(_reserveRatio > 1 and _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
 
     # special case for 0 amount
     if (_amount == 0):
@@ -299,7 +308,10 @@ def fundCost(_supply, _reserveBalance, _reserveRatio, _amount):
 '''
 def liquidateRate(_supply, _reserveBalance, _reserveRatio, _amount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 1 and _reserveRatio <= MAX_WEIGHT * 2 and _amount <= _supply);
+    require(_supply > 0, "ERR_INVALID_SUPPLY");
+    require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+    require(_reserveRatio > 1 and _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
+    require(_amount <= _supply, "ERR_INVALID_AMOUNT");
 
     # special case for 0 amount
     if (_amount == 0):
@@ -338,7 +350,7 @@ def liquidateRate(_supply, _reserveBalance, _reserveRatio, _amount):
         Since we rely on unsigned-integer arithmetic and "base < 1" ==> "log(base) < 0", this function does not support "_baseN < _baseD".
 '''
 def power(_baseN, _baseD, _expN, _expD):
-    assert(_baseN < MAX_NUM);
+    require(_baseN < MAX_NUM);
 
     base = _baseN * FIXED_1 // _baseD;
     if (base < OPT_LOG_MAX_VAL):
@@ -417,7 +429,7 @@ def findPositionInMaxExpArray(_x):
     if (maxExpArray[lo] >= _x):
         return lo;
 
-    assert(False);
+    require(False);
     return 0;
 
 '''
@@ -569,8 +581,8 @@ def calculateCrossReserveReturn(_sourceReserveBalance, _sourceReserveWeight, _ta
 '''
     @dev deprecated, backward compatibility
 '''
-def calculateCrossConnectorReturn(_sourceConnectorBalance, _sourceConnectorWeight, _targetConnectorBalance, _targetConnectorWeight, _amount):
-    return crossReserveRate(_sourceConnectorBalance, _sourceConnectorWeight, _targetConnectorBalance, _targetConnectorWeight, _amount);
+def calculateCrossConnectorReturn(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount):
+    return crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
 
 '''
     @dev deprecated, backward compatibility
@@ -593,6 +605,10 @@ def safeAdd(x,y):
 def safeMul(x,y):
     assert x * y < (1 << 256)
     return x * y
+
+
+def require(cond,msg=''):
+    assert cond,msg
 
 
 constructor()
