@@ -161,28 +161,28 @@ def constructor():
     calculates the rate for a given conversion (in the main token)
 
     Formula:
-    return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
+    return = _supply * ((1 + _amount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
 
-    @param _supply              smart token supply
-    @param _reserveBalance      total reserve balance
-    @param _reserveWeight       reserve weight, represented in ppm, 1-1000000
-    @param _depositAmount       deposit amount, in reserve token
+    @param _supply          smart token supply
+    @param _reserveBalance  total reserve balance
+    @param _reserveWeight   reserve weight, represented in ppm, 1-1000000
+    @param _amount          amount of reserve tokens to get the rate for
 
     @return smart token amount
 '''
-def purchaseRate(_supply, _reserveBalance, _reserveWeight, _depositAmount):
+def purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount):
     # validate input
     assert(_supply > 0 and _reserveBalance > 0 and _reserveWeight > 0 and _reserveWeight <= MAX_WEIGHT);
 
     # special case for 0 deposit amount
-    if (_depositAmount == 0):
+    if (_amount == 0):
         return 0;
 
     # special case if the weight = 100%
     if (_reserveWeight == MAX_WEIGHT):
-        return safeMul(_supply, _depositAmount) // _reserveBalance;
+        return safeMul(_supply, _amount) // _reserveBalance;
 
-    baseN = safeAdd(_depositAmount, _reserveBalance);
+    baseN = safeAdd(_amount, _reserveBalance);
     (result, precision) = power(baseN, _reserveBalance, _reserveWeight, MAX_WEIGHT);
     temp = safeMul(_supply, result) >> precision;
     return temp - _supply;
@@ -192,32 +192,32 @@ def purchaseRate(_supply, _reserveBalance, _reserveWeight, _depositAmount):
     calculates the rate for a given conversion (in the reserve token)
 
     Formula:
-    return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1000000 / _reserveWeight))
+    return = _reserveBalance * (1 - (1 - _amount / _supply) ^ (1000000 / _reserveWeight))
 
-    @param _supply              smart token supply
-    @param _reserveBalance      total reserve
-    @param _reserveWeight       reserve weight, represented in ppm, 1-1000000
-    @param _sellAmount          sell amount, in the token itself
+    @param _supply          smart token supply
+    @param _reserveBalance  total reserve
+    @param _reserveWeight   reserve weight, represented in ppm, 1-1000000
+    @param _amount          amount of tokens to get the rate for
 
     @return reserve token amount
 '''
-def saleRate(_supply, _reserveBalance, _reserveWeight, _sellAmount):
+def saleRate(_supply, _reserveBalance, _reserveWeight, _amount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveWeight > 0 and _reserveWeight <= MAX_WEIGHT and _sellAmount <= _supply);
+    assert(_supply > 0 and _reserveBalance > 0 and _reserveWeight > 0 and _reserveWeight <= MAX_WEIGHT and _amount <= _supply);
 
     # special case for 0 sell amount
-    if (_sellAmount == 0):
+    if (_amount == 0):
         return 0;
 
     # special case for selling the entire supply
-    if (_sellAmount == _supply):
+    if (_amount == _supply):
         return _reserveBalance;
 
     # special case if the weight = 100%
     if (_reserveWeight == MAX_WEIGHT):
-        return safeMul(_reserveBalance, _sellAmount) // _supply;
+        return safeMul(_reserveBalance, _amount) // _supply;
 
-    baseD = _supply - _sellAmount;
+    baseD = _supply - _amount;
     (result, precision) = power(_supply, baseD, MAX_WEIGHT, _reserveWeight);
     temp1 = safeMul(_reserveBalance, result);
     temp2 = _reserveBalance << precision;
@@ -551,14 +551,14 @@ def optimalExp(x):
 '''
     @dev deprecated, backward compatibility
 '''
-def calculatePurchaseReturn(_supply, _reserveBalance, _reserveWeight, _depositAmount):
-    return purchaseRate(_supply, _reserveBalance, _reserveWeight, _depositAmount);
+def calculatePurchaseReturn(_supply, _reserveBalance, _reserveWeight, _amount):
+    return purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount);
 
 '''
     @dev deprecated, backward compatibility
 '''
-def calculateSaleReturn(_supply, _reserveBalance, _reserveWeight, _sellAmount):
-    return saleRate(_supply, _reserveBalance, _reserveWeight, _sellAmount);
+def calculateSaleReturn(_supply, _reserveBalance, _reserveWeight, _amount):
+    return saleRate(_supply, _reserveBalance, _reserveWeight, _amount);
 
 '''
     @dev deprecated, backward compatibility
