@@ -228,28 +228,28 @@ def saleRate(_supply, _reserveBalance, _reserveWeight, _sellAmount):
     calculates the rate for a conversion from the first reserve token to the second reserve token (in the second reserve token)
 
     Formula:
-    return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveWeight / _toReserveWeight))
+    return = _targetReserveBalance * (1 - (_sourceReserveBalance / (_sourceReserveBalance + _amount)) ^ (_sourceReserveWeight / _targetReserveWeight))
 
-    @param _fromReserveBalance      input reserve balance
-    @param _fromReserveWeight       input reserve weight, represented in ppm, 1-1000000
-    @param _toReserveBalance        output reserve balance
-    @param _toReserveWeight         output reserve weight, represented in ppm, 1-1000000
-    @param _amount                  input reserve amount
+    @param _sourceReserveBalance    source reserve balance
+    @param _sourceReserveWeight     source reserve weight, represented in ppm, 1-1000000
+    @param _targetReserveBalance    target reserve balance
+    @param _targetReserveWeight     target reserve weight, represented in ppm, 1-1000000
+    @param _amount                  source reserve amount
 
-    @return output reserve amount
+    @return target reserve amount
 '''
-def crossReserveRate(_fromReserveBalance, _fromReserveWeight, _toReserveBalance, _toReserveWeight, _amount):
+def crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount):
     # validate input
-    assert(_fromReserveBalance > 0 and _fromReserveWeight > 0 and _fromReserveWeight <= MAX_WEIGHT and _toReserveBalance > 0 and _toReserveWeight > 0 and _toReserveWeight <= MAX_WEIGHT);
+    assert(_sourceReserveBalance > 0 and _sourceReserveWeight > 0 and _sourceReserveWeight <= MAX_WEIGHT and _targetReserveBalance > 0 and _targetReserveWeight > 0 and _targetReserveWeight <= MAX_WEIGHT);
 
     # special case for equal weights
-    if (_fromReserveWeight == _toReserveWeight):
-        return safeMul(_toReserveBalance, _amount) // safeAdd(_fromReserveBalance, _amount);
+    if (_sourceReserveWeight == _targetReserveWeight):
+        return safeMul(_targetReserveBalance, _amount) // safeAdd(_sourceReserveBalance, _amount);
 
-    baseN = safeAdd(_fromReserveBalance, _amount);
-    (result, precision) = power(baseN, _fromReserveBalance, _fromReserveWeight, _toReserveWeight);
-    temp1 = safeMul(_toReserveBalance, result);
-    temp2 = _toReserveBalance << precision;
+    baseN = safeAdd(_sourceReserveBalance, _amount);
+    (result, precision) = power(baseN, _sourceReserveBalance, _sourceReserveWeight, _targetReserveWeight);
+    temp1 = safeMul(_targetReserveBalance, result);
+    temp2 = _targetReserveBalance << precision;
     return (temp1 - temp2) // result;
 
 '''
@@ -563,14 +563,14 @@ def calculateSaleReturn(_supply, _reserveBalance, _reserveWeight, _sellAmount):
 '''
     @dev deprecated, backward compatibility
 '''
-def calculateCrossReserveReturn(_fromReserveBalance, _fromReserveWeight, _toReserveBalance, _toReserveWeight, _amount):
-    return crossReserveRate(_fromReserveBalance, _fromReserveWeight, _toReserveBalance, _toReserveWeight, _amount);
+def calculateCrossReserveReturn(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount):
+    return crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
 
 '''
     @dev deprecated, backward compatibility
 '''
-def calculateCrossConnectorReturn(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount):
-    return crossReserveRate(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount);
+def calculateCrossConnectorReturn(_sourceConnectorBalance, _sourceConnectorWeight, _targetConnectorBalance, _targetConnectorWeight, _amount):
+    return crossReserveRate(_sourceConnectorBalance, _sourceConnectorWeight, _targetConnectorBalance, _targetConnectorWeight, _amount);
 
 '''
     @dev deprecated, backward compatibility

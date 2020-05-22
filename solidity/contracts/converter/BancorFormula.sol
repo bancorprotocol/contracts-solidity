@@ -267,7 +267,7 @@ contract BancorFormula is IBancorFormula {
       * @param _targetReserveWeight     target reserve weight, represented in ppm, 1-1000000
       * @param _amount                  source reserve amount
       *
-      * @return output reserve amount
+      * @return target reserve amount
     */
     function crossReserveRate(uint256 _sourceReserveBalance,
                               uint32 _sourceReserveWeight,
