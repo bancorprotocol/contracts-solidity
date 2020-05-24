@@ -174,8 +174,8 @@ contract BancorFormula is IBancorFormula {
       * return = _supply * ((1 + _amount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
       *
       * @param _supply          smart token supply
-      * @param _reserveBalance  total reserve balance
-      * @param _reserveWeight   reserve weight, represented in ppm, 1-1000000
+      * @param _reserveBalance  reserve balance
+      * @param _reserveWeight   reserve weight, represented in ppm (1-1000000)
       * @param _amount          amount of reserve tokens to get the rate for
       *
       * @return smart token amount
@@ -215,9 +215,9 @@ contract BancorFormula is IBancorFormula {
       * return = _reserveBalance * (1 - (1 - _amount / _supply) ^ (1000000 / _reserveWeight))
       *
       * @param _supply          smart token supply
-      * @param _reserveBalance  total reserve
-      * @param _reserveWeight   reserve weight, represented in ppm, 1-1000000
-      * @param _amount          amount of tokens to get the rate for
+      * @param _reserveBalance  reserve balance
+      * @param _reserveWeight   reserve weight, represented in ppm (1-1000000)
+      * @param _amount          amount of smart tokens to get the rate for
       *
       * @return reserve token amount
     */
@@ -262,9 +262,9 @@ contract BancorFormula is IBancorFormula {
       * return = _targetReserveBalance * (1 - (_sourceReserveBalance / (_sourceReserveBalance + _amount)) ^ (_sourceReserveWeight / _targetReserveWeight))
       *
       * @param _sourceReserveBalance    source reserve balance
-      * @param _sourceReserveWeight     source reserve weight, represented in ppm, 1-1000000
+      * @param _sourceReserveWeight     source reserve weight, represented in ppm (1-1000000)
       * @param _targetReserveBalance    target reserve balance
-      * @param _targetReserveWeight     target reserve weight, represented in ppm, 1-1000000
+      * @param _targetReserveWeight     target reserve weight, represented in ppm (1-1000000)
       * @param _amount                  source reserve amount
       *
       * @return target reserve amount
@@ -301,14 +301,19 @@ contract BancorFormula is IBancorFormula {
       * Formula:
       * return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio) - 1)
       *
-      * @param _supply              smart token supply
-      * @param _reserveBalance      reserve token balance
-      * @param _reserveRatio        reserve ratio, represented in ppm, 2-2000000
-      * @param _amount              requested amount of smart tokens
+      * @param _supply          smart token supply
+      * @param _reserveBalance  reserve balance
+      * @param _reserveRatio    reserve ratio, represented in ppm (2-2000000)
+      * @param _amount          requested amount of smart tokens
       *
       * @return reserve token amount
     */
-    function fundCost(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
+    function fundCost(uint256 _supply,
+                      uint256 _reserveBalance,
+                      uint32 _reserveRatio,
+                      uint256 _amount)
+                      public view returns (uint256)
+    {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -337,14 +342,19 @@ contract BancorFormula is IBancorFormula {
       * Formula:
       * return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio))
       *
-      * @param _supply              smart token supply
-      * @param _reserveBalance      reserve token balance
-      * @param _reserveRatio        reserve ratio, represented in ppm, 2-2000000
-      * @param _amount              amount of smart tokens to liquidate
+      * @param _supply          smart token supply
+      * @param _reserveBalance  reserve balance
+      * @param _reserveRatio    reserve ratio, represented in ppm (2-2000000)
+      * @param _amount          amount of smart tokens to liquidate
       *
       * @return reserve token amount
     */
-    function liquidateRate(uint256 _supply, uint256 _reserveBalance, uint32 _reserveRatio, uint256 _amount) public view returns (uint256) {
+    function liquidateRate(uint256 _supply,
+                           uint256 _reserveBalance,
+                           uint32 _reserveRatio,
+                           uint256 _amount)
+                           public view returns (uint256)
+    {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");

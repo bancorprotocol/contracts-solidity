@@ -5,6 +5,10 @@ let constants = require('./helpers/FormulaConstants');
 let catchRevert = require('./helpers/Utils').catchRevert;
 let TestBancorFormula = artifacts.require('./helpers/TestBancorFormula');
 
+let Decimal = require("decimal.js");
+Decimal.set({precision: 100, rounding: Decimal.ROUND_DOWN});
+web3.BigNumber.config({DECIMAL_PLACES: 100, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+
 contract('BancorFormula', () => {
     let formula;
     before(async () => {
@@ -156,10 +160,6 @@ contract('BancorFormula', () => {
             });
         }
     }
-
-    let Decimal = require("decimal.js");
-    Decimal.set({precision: 100, rounding: Decimal.ROUND_DOWN});
-    web3.BigNumber.config({DECIMAL_PLACES: 100, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
 
     let LOG_MIN = 1;
     let EXP_MIN = 0;

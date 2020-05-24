@@ -164,8 +164,8 @@ def constructor():
     return = _supply * ((1 + _amount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
 
     @param _supply          smart token supply
-    @param _reserveBalance  total reserve balance
-    @param _reserveWeight   reserve weight, represented in ppm, 1-1000000
+    @param _reserveBalance  reserve balance
+    @param _reserveWeight   reserve weight, represented in ppm (1-1000000)
     @param _amount          amount of reserve tokens to get the rate for
 
     @return smart token amount
@@ -197,9 +197,9 @@ def purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount):
     return = _reserveBalance * (1 - (1 - _amount / _supply) ^ (1000000 / _reserveWeight))
 
     @param _supply          smart token supply
-    @param _reserveBalance  total reserve
-    @param _reserveWeight   reserve weight, represented in ppm, 1-1000000
-    @param _amount          amount of tokens to get the rate for
+    @param _reserveBalance  reserve balance
+    @param _reserveWeight   reserve weight, represented in ppm (1-1000000)
+    @param _amount          amount of smart tokens to get the rate for
 
     @return reserve token amount
 '''
@@ -236,9 +236,9 @@ def saleRate(_supply, _reserveBalance, _reserveWeight, _amount):
     return = _targetReserveBalance * (1 - (_sourceReserveBalance / (_sourceReserveBalance + _amount)) ^ (_sourceReserveWeight / _targetReserveWeight))
 
     @param _sourceReserveBalance    source reserve balance
-    @param _sourceReserveWeight     source reserve weight, represented in ppm, 1-1000000
+    @param _sourceReserveWeight     source reserve weight, represented in ppm (1-1000000)
     @param _targetReserveBalance    target reserve balance
-    @param _targetReserveWeight     target reserve weight, represented in ppm, 1-1000000
+    @param _targetReserveWeight     target reserve weight, represented in ppm (1-1000000)
     @param _amount                  source reserve amount
 
     @return target reserve amount
@@ -266,10 +266,10 @@ def crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserve
     Formula:
     return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio) - 1)
 
-    @param _supply              smart token supply
-    @param _reserveBalance      reserve token balance
-    @param _reserveRatio        reserve ratio, represented in ppm, 2-2000000
-    @param _amount              requested amount of smart tokens
+    @param _supply          smart token supply
+    @param _reserveBalance  reserve balance
+    @param _reserveRatio    reserve ratio, represented in ppm (2-2000000)
+    @param _amount          requested amount of smart tokens
 
     @return reserve token amount
 '''
@@ -299,10 +299,10 @@ def fundCost(_supply, _reserveBalance, _reserveRatio, _amount):
     Formula:
     return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio))
 
-    @param _supply              smart token supply
-    @param _reserveBalance      reserve token balance
-    @param _reserveRatio        reserve ratio, represented in ppm, 2-2000000
-    @param _amount              amount of smart tokens to liquidate
+    @param _supply          smart token supply
+    @param _reserveBalance  reserve balance
+    @param _reserveRatio    reserve ratio, represented in ppm (2-2000000)
+    @param _amount          amount of smart tokens to liquidate
 
     @return reserve token amount
 '''
