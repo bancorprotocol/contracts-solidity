@@ -163,15 +163,15 @@ async function run() {
 
         await execute(converterRegistry.methods.newConverter(type, name, symbol, decimals, fee, tokens, weights));
         const smartToken = deployed(web3, "SmartToken", (await converterRegistry.methods.getSmartTokens().call()).slice(-1)[0]);
-        const converter = deployed(web3, "ConverterBase", await smartToken.methods.owner().call());
-        await execute(converter.methods.acceptOwnership());
+        const converterBase = deployed(web3, "ConverterBase", await smartToken.methods.owner().call());
+        await execute(converterBase.methods.acceptOwnership());
 
-        if (type == 1) {
+        if (type == 1 && amounts.every(amount => amount > 0)) {
             for (let i = 0; i < converter.reserves.length; i++) {
                 if (converter.reserves.symbol != "ETH")
-                    await execute(deployed(web3, "ERC20Token", tokens[i]).methods.approve(converter._address, amounts[i]));
+                    await execute(deployed(web3, "ERC20Token", tokens[i]).methods.approve(converterBase._address, amounts[i]));
             }
-            await execute(deployed(web3, "LiquidityPoolV1Converter", converter._address).methods.addLiquidity(tokens, amounts, 1), value);
+            await execute(deployed(web3, "LiquidityPoolV1Converter", converterBase._address).methods.addLiquidity(tokens, amounts, 1), value);
         }
 
         addresses[converter.symbol] = smartToken._address;
