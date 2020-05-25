@@ -4,7 +4,7 @@ import FormulaSolidityPort
 import FormulaNativePython
 
 
-def powerTest(baseN, baseD, expN, expD):
+def formulaTest(baseN, baseD, expN, expD):
     resultSolidityPort, precision = FormulaSolidityPort.power(baseN, baseD, expN, expD)
     resultNativePython = FormulaNativePython.power(baseN, baseD, expN, expD, precision)
     if resultSolidityPort > resultNativePython:
@@ -34,7 +34,7 @@ for n in range(size):
     expN = random.randrange(1, 1000000)
     expD = random.randrange(expN, 1000001)
     try:
-        accuracy = powerTest(baseN, baseD, expN, expD)
+        accuracy = formulaTest(baseN, baseD, expN, expD)
         worstAccuracy = min(worstAccuracy, accuracy)
     except Exception as error:
         accuracy = 0
