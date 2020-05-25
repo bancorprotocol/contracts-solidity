@@ -182,11 +182,11 @@ def purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount):
 
     # special case if the weight = 100%
     if (_reserveWeight == MAX_WEIGHT):
-        return safeMul(_supply, _amount) // _reserveBalance;
+        return mul(_supply, _amount) // _reserveBalance;
 
-    baseN = safeAdd(_amount, _reserveBalance);
+    baseN = add(_amount, _reserveBalance);
     (result, precision) = power(baseN, _reserveBalance, _reserveWeight, MAX_WEIGHT);
-    temp = safeMul(_supply, result) >> precision;
+    temp = mul(_supply, result) >> precision;
     return temp - _supply;
 
 '''
@@ -220,11 +220,11 @@ def saleRate(_supply, _reserveBalance, _reserveWeight, _amount):
 
     # special case if the weight = 100%
     if (_reserveWeight == MAX_WEIGHT):
-        return safeMul(_reserveBalance, _amount) // _supply;
+        return mul(_reserveBalance, _amount) // _supply;
 
     baseD = _supply - _amount;
     (result, precision) = power(_supply, baseD, MAX_WEIGHT, _reserveWeight);
-    temp1 = safeMul(_reserveBalance, result);
+    temp1 = mul(_reserveBalance, result);
     temp2 = _reserveBalance << precision;
     return (temp1 - temp2) // result;
 
@@ -251,11 +251,11 @@ def crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserve
 
     # special case for equal weights
     if (_sourceReserveWeight == _targetReserveWeight):
-        return safeMul(_targetReserveBalance, _amount) // safeAdd(_sourceReserveBalance, _amount);
+        return mul(_targetReserveBalance, _amount) // add(_sourceReserveBalance, _amount);
 
-    baseN = safeAdd(_sourceReserveBalance, _amount);
+    baseN = add(_sourceReserveBalance, _amount);
     (result, precision) = power(baseN, _sourceReserveBalance, _sourceReserveWeight, _targetReserveWeight);
-    temp1 = safeMul(_targetReserveBalance, result);
+    temp1 = mul(_targetReserveBalance, result);
     temp2 = _targetReserveBalance << precision;
     return (temp1 - temp2) // result;
 
@@ -285,11 +285,11 @@ def fundCost(_supply, _reserveBalance, _reserveRatio, _amount):
 
     # special case if the reserve ratio = 100%
     if (_reserveRatio == MAX_WEIGHT):
-        return (safeMul(_amount, _reserveBalance) - 1) // _supply + 1;
+        return (mul(_amount, _reserveBalance) - 1) // _supply + 1;
 
-    baseN = safeAdd(_supply, _amount);
+    baseN = add(_supply, _amount);
     (result, precision) = power(baseN, _supply, MAX_WEIGHT, _reserveRatio);
-    temp = ((safeMul(_reserveBalance, result) - 1) >> precision) + 1;
+    temp = ((mul(_reserveBalance, result) - 1) >> precision) + 1;
     return temp - _reserveBalance;
 
 '''
@@ -323,11 +323,11 @@ def liquidateRate(_supply, _reserveBalance, _reserveRatio, _amount):
 
     # special case if the reserve ratio = 100%
     if (_reserveRatio == MAX_WEIGHT):
-        return safeMul(_amount, _reserveBalance) // _supply;
+        return mul(_amount, _reserveBalance) // _supply;
 
     baseD = _supply - _amount;
     (result, precision) = power(_supply, baseD, MAX_WEIGHT, _reserveRatio);
-    temp1 = safeMul(_reserveBalance, result);
+    temp1 = mul(_reserveBalance, result);
     temp2 = _reserveBalance << precision;
     return (temp1 - temp2) // result;
 
@@ -597,12 +597,12 @@ def calculateLiquidateReturn(_supply, _reserveBalance, _reserveRatio, _amount):
     return liquidateRate(_supply, _reserveBalance, _reserveRatio, _amount);
 
 
-def safeAdd(x,y):
+def add(x,y):
     assert x + y < (1 << 256)
     return x + y
 
 
-def safeMul(x,y):
+def mul(x,y):
     assert x * y < (1 << 256)
     return x * y
 
