@@ -11,7 +11,7 @@ const CONVERTER_REGISTRY_ABI = JSON.parse(fs.readFileSync(__dirname + "/../build
 const SMART_TOKEN_ABI        = JSON.parse(fs.readFileSync(__dirname + "/../build/SmartToken.abi"          ));
 const CONVERTER_ABI          = JSON.parse(fs.readFileSync(__dirname + "/../build/Converter.abi"           ));
 
-async function generatePath(web3, sourceToken, targetToken, anchorToken, converterRegistry) {
+async function findPath(web3, sourceToken, targetToken, anchorToken, converterRegistry) {
     const sourcePath = await getPath(web3, sourceToken, anchorToken, converterRegistry);
     const targetPath = await getPath(web3, targetToken, anchorToken, converterRegistry);
     return getShortestPath(sourcePath, targetPath);
@@ -127,8 +127,8 @@ async function run() {
         const source = await symbol(web3, tokens[i]);
         for (let j = 0; j < tokens.length; j++) {
             const target = await symbol(web3, tokens[j]);
-            const expected = await generatePath(web3, tokens[i], tokens[j], anchorToken, converterRegistry);
-            const actual = await rpc(pathFinder.methods.generatePath(tokens[i], tokens[j]));
+            const expected = await findPath(web3, tokens[i], tokens[j], anchorToken, converterRegistry);
+            const actual = await rpc(pathFinder.methods.findPath(tokens[i], tokens[j]));
             const path = await Promise.all(actual.map(token => symbol(web3, token)));
             print(tokens, i, j, source, target, path);
             assert.equal(`${actual}`, `${expected}`);

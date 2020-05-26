@@ -50,7 +50,7 @@ async function printPath(sourceToken, targetToken, path) {
     console.log(`path from ${sourceSymbol} to ${targetSymbol} = [${symbols}]`);
 }
 
-async function generatePath(sourceToken, targetToken, anchorToken, converterRegistry) {
+async function findPath(sourceToken, targetToken, anchorToken, converterRegistry) {
     const sourcePath = await getPath(sourceToken, anchorToken, converterRegistry);
     const targetPath = await getPath(targetToken, anchorToken, converterRegistry);
     return getShortestPath(sourcePath, targetPath);
@@ -142,8 +142,8 @@ contract('ConversionPathFinder', accounts => {
             const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
             await converterRegistry.newConverter(tokens.length == 1 ? 0 : 1, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
             const smartToken = SmartToken.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
-            const newConverter = ConverterBase.at(await smartToken.owner());
-            await newConverter.acceptOwnership();
+            const converterBase = ConverterBase.at(await smartToken.owner());
+            await converterBase.acceptOwnership();
             addresses[converter.symbol] = smartToken.address;
         }
 
@@ -159,7 +159,7 @@ contract('ConversionPathFinder', accounts => {
     it('should return an empty path if the source-token has no path to the anchor-token', async () => {
         const sourceToken = accounts[0];
         const targetToken = anchorToken;
-        const expected = await generatePath(sourceToken, targetToken, anchorToken, converterRegistry);
+        const expected = await findPath(sourceToken, targetToken, anchorToken, converterRegistry);
         const actual = await pathFinder.findPath(sourceToken, targetToken);
         assert.equal(actual + expected, []);
     });
@@ -167,7 +167,7 @@ contract('ConversionPathFinder', accounts => {
     it('should return an empty path if the target-token has no path to the anchor-token', async () => {
         const sourceToken = anchorToken;
         const targetToken = accounts[0];
-        const expected = await generatePath(sourceToken, targetToken, anchorToken, converterRegistry);
+        const expected = await findPath(sourceToken, targetToken, anchorToken, converterRegistry);
         const actual = await pathFinder.findPath(sourceToken, targetToken);
         assert.equal(actual + expected, []);
     });
@@ -178,7 +178,7 @@ contract('ConversionPathFinder', accounts => {
             it(`from ${sourceSymbol} to ${targetSymbol}`, async () => {
                 const sourceToken = addresses[sourceSymbol];
                 const targetToken = addresses[targetSymbol];
-                const expected = await generatePath(sourceToken, targetToken, anchorToken, converterRegistry);
+                const expected = await findPath(sourceToken, targetToken, anchorToken, converterRegistry);
                 const actual = await pathFinder.findPath(sourceToken, targetToken);
                 assert.equal(`${actual}`, `${expected}`);
                 await printPath(sourceToken, targetToken, actual);
