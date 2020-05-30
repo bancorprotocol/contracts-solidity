@@ -138,8 +138,8 @@ async function run() {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConversionPathFinder" ), conversionPathFinder ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConverterRegistry"    ), converterRegistry    ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConverterRegistryData"), converterRegistryData._address));
-    await execute(converterFactory.methods.registerTypedFactory(liquidTokenConverterFactory    ._address));
-    await execute(converterFactory.methods.registerTypedFactory(liquidityPoolV1ConverterFactory._address));
+    await execute(converterFactory.methods.registerTypedConverterFactory(liquidTokenConverterFactory    ._address));
+    await execute(converterFactory.methods.registerTypedConverterFactory(liquidityPoolV1ConverterFactory._address));
 
     for (const reserve of get().reserves) {
         const name     = reserve.symbol + " ERC20 Token";

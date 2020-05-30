@@ -200,8 +200,8 @@ contract('ConverterUpgrader', accounts => {
         contractRegistry = await ContractRegistry.new();
         converterFactory = await ConverterFactory.new();
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY, converterFactory.address);
-        await converterFactory.registerTypedFactory((await LiquidTokenConverterFactory.new()).address);
-        await converterFactory.registerTypedFactory((await LiquidityPoolV1ConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
     });
 
     const f = (a, b) => [].concat(...a.map(d => b.map(e => [].concat(d, e))));

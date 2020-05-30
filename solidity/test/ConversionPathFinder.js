@@ -126,8 +126,8 @@ contract('ConversionPathFinder', accounts => {
         converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
         pathFinder            = await ConversionPathFinder .new(contractRegistry.address);
 
-        await converterFactory.registerTypedFactory((await LiquidTokenConverterFactory.new()).address);
-        await converterFactory.registerTypedFactory((await LiquidityPoolV1ConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
 
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY      , converterFactory     .address);
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY     , converterRegistry    .address);

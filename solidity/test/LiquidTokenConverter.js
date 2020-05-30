@@ -99,7 +99,7 @@ contract('LiquidTokenConverter', accounts => {
         factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY, factory.address);
 
-        await factory.registerTypedFactory((await LiquidTokenConverterFactory.new()).address);
+        await factory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
 
         upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);

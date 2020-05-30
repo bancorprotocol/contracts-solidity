@@ -5,7 +5,6 @@ import "./interfaces/IConverterFactory.sol";
 import "./interfaces/IConverterRegistry.sol";
 import "./interfaces/IConverterRegistryData.sol";
 import "../token/interfaces/ISmartTokenController.sol";
-import "../token/SmartToken.sol";
 
 /**
   * @dev The ConverterRegistry maintains a list of all active converters in the Bancor Network.
@@ -108,9 +107,10 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         require(getLiquidityPoolByConfig(_type, _reserveTokens, _reserveWeights) == ISmartToken(0), "ERR_ALREADY_EXISTS");
 
         IConverterFactory factory = IConverterFactory(addressOf(CONVERTER_FACTORY));
-        SmartToken token = new SmartToken(_smartTokenName, _smartTokenSymbol, _smartTokenDecimals);
+        ISmartToken token = ISmartToken(factory.createSmartToken(_type, _smartTokenName, _smartTokenSymbol, _smartTokenDecimals));
         IConverter converter = IConverter(factory.createConverter(_type, token, registry, _maxConversionFee));
 
+        token.acceptOwnership();
         converter.acceptOwnership();
 
         for (uint256 i = 0; i < length; i++)
