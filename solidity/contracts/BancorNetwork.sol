@@ -309,30 +309,20 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         greaterThanZero(_minReturn)
         returns (uint256)
     {
-        // verify that the path contrains at least a single 'hop' and that the number of elements is odd
-        require(_path.length > 2 && _path.length % 2 == 1, "ERR_INVALID_PATH");
+        IERC20Token targetToken = _path[_path.length - 1];
+        IBancorX bancorX = IBancorX(addressOf(BANCOR_X));
 
         // verify that the destination token is BNT
-        require(_path[_path.length - 1] == addressOf(BNT_TOKEN), "ERR_INVALID_TARGET_TOKEN");
-
-        // validate msg.value and prepare the source token for the conversion
-        handleSourceToken(_path[0], ISmartToken(_path[1]), _amount);
-
-        bool affiliateFeeEnabled = false;
-        if (address(_affiliateAccount) == 0) {
-            require(_affiliateFee == 0, "ERR_INVALID_AFFILIATE_FEE");
-        }
-        else {
-            require(0 < _affiliateFee && _affiliateFee <= maxAffiliateFee, "ERR_INVALID_AFFILIATE_FEE");
-            affiliateFeeEnabled = true;
-        }
+        require(targetToken == addressOf(BNT_TOKEN), "ERR_INVALID_TARGET_TOKEN");
 
         // convert and get the resulting amount
-        ConversionStep[] memory data = createConversionData(_path, this, affiliateFeeEnabled);
-        uint256 amount = doConversion(data, _amount, _minReturn, _affiliateAccount, _affiliateFee);
+        uint256 amount = convertByPath(_path, _amount, _minReturn, this, _affiliateAccount, _affiliateFee);
+
+        // grant BancorX allowance
+        ensureAllowance(targetToken, bancorX, amount);
 
         // transfer the resulting amount to BancorX
-        IBancorX(addressOf(BANCOR_X)).xTransfer(_targetBlockchain, _targetAccount, amount, _conversionId);
+        bancorX.xTransfer(_targetBlockchain, _targetAccount, amount, _conversionId);
 
         return amount;
     }
