@@ -131,13 +131,13 @@ async function run() {
     const liquidTokenConverterFactory     = await web3Func(deploy, "liquidTokenConverterFactory"    , "LiquidTokenConverterFactory"    , []);
     const liquidityPoolV1ConverterFactory = await web3Func(deploy, "liquidityPoolV1ConverterFactory", "LiquidityPoolV1ConverterFactory", []);
 
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractRegistry"     ), contractRegistry     ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConverterFactory"     ), converterFactory     ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"        ), bancorFormula        ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetwork"        ), bancorNetwork        ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConversionPathFinder" ), conversionPathFinder ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConverterRegistry"    ), converterRegistry    ._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConverterRegistryData"), converterRegistryData._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ContractRegistry"           ), contractRegistry     ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConverterFactory"           ), converterFactory     ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"              ), bancorFormula        ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetwork"              ), bancorNetwork        ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConversionPathFinder"       ), conversionPathFinder ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistry"    ), converterRegistry    ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistryData"), converterRegistryData._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidTokenConverterFactory    ._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidityPoolV1ConverterFactory._address));
 
