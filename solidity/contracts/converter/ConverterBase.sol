@@ -26,8 +26,6 @@ import "../bancorx/interfaces/IBancorX.sol";
 contract ConverterBase is IConverter, TokenHandler, SmartTokenController, ContractRegistryClient {
     using SafeMath for uint256;
 
-    // error messages
-
     uint32 internal constant WEIGHT_RESOLUTION = 1000000;
     uint64 internal constant CONVERSION_FEE_RESOLUTION = 1000000;
     address internal constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
