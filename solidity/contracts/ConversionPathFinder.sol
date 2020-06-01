@@ -58,21 +58,21 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
         if (_token == anchorToken)
             return getInitialArray(_token);
 
-        address[] memory smartTokens;
-        if (_converterRegistry.isSmartToken(_token))
-            smartTokens = getInitialArray(_token);
+        address[] memory anchors;
+        if (_converterRegistry.isAnchor(_token))
+            anchors = getInitialArray(_token);
         else
-            smartTokens = _converterRegistry.getConvertibleTokenSmartTokens(_token);
+            anchors = _converterRegistry.getConvertibleTokenAnchors(_token);
 
-        for (uint256 n = 0; n < smartTokens.length; n++) {
-            IConverter converter = IConverter(IConverterAnchor(smartTokens[n]).owner());
+        for (uint256 n = 0; n < anchors.length; n++) {
+            IConverter converter = IConverter(IConverterAnchor(anchors[n]).owner());
             uint256 connectorTokenCount = converter.connectorTokenCount();
             for (uint256 i = 0; i < connectorTokenCount; i++) {
                 address connectorToken = converter.connectorTokens(i);
                 if (connectorToken != _token) {
                     address[] memory path = getPath(connectorToken, _converterRegistry);
                     if (path.length > 0)
-                        return getExtendedArray(_token, smartTokens[n], path);
+                        return getExtendedArray(_token, anchors[n], path);
                 }
             }
         }

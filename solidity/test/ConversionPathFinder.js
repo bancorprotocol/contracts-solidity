@@ -5,8 +5,8 @@ const utils = require('./helpers/Utils');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const ERC20Token = artifacts.require('ERC20Token');
-const SmartToken = artifacts.require('SmartToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
+const IConverterAnchor = artifacts.require('IConverterAnchor');
 const ConverterBase = artifacts.require('ConverterBase');
 const ConverterFactory = artifacts.require('ConverterFactory');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
@@ -60,17 +60,17 @@ async function getPath(token, anchorToken, converterRegistry) {
     if (token == anchorToken)
         return [token];
 
-    const isSmartToken = await converterRegistry.isSmartToken(token);
-    const smartTokens = isSmartToken ? [token] : await converterRegistry.getConvertibleTokenSmartTokens(token);
-    for (const smartToken of smartTokens) {
-        const converter = ConverterBase.at(await SmartToken.at(smartToken).owner());
+    const isAnchor = await converterRegistry.isAnchor(token);
+    const anchors = isAnchor ? [token] : await converterRegistry.getConvertibleTokenAnchors(token);
+    for (const anchor of anchors) {
+        const converter = ConverterBase.at(await IConverterAnchor.at(anchor).owner());
         const connectorTokenCount = await converter.connectorTokenCount();
         for (let i = 0; i < connectorTokenCount; i++) {
             const connectorToken = await converter.connectorTokens(i);
             if (connectorToken != token) {
                 const path = await getPath(connectorToken, anchorToken, converterRegistry);
                 if (path.length > 0)
-                    return [token, smartToken, ...path];
+                    return [token, anchor, ...path];
             }
         }
     }
@@ -141,10 +141,10 @@ contract('ConversionPathFinder', accounts => {
         for (const converter of layout.converters) {
             const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
             await converterRegistry.newConverter(tokens.length == 1 ? 0 : 1, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
-            const smartToken = SmartToken.at((await converterRegistry.getSmartTokens()).slice(-1)[0]);
-            const converterBase = ConverterBase.at(await smartToken.owner());
+            const anchor = IConverterAnchor.at((await converterRegistry.getAnchors()).slice(-1)[0]);
+            const converterBase = ConverterBase.at(await anchor.owner());
             await converterBase.acceptOwnership();
-            addresses[converter.symbol] = smartToken.address;
+            addresses[converter.symbol] = anchor.address;
         }
 
         anchorToken = addresses[ANCHOR_TOKEN_SYMBOL];
