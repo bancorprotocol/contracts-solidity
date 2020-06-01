@@ -2,6 +2,7 @@ pragma solidity 0.4.26;
 import "./IBancorNetwork.sol";
 import "./IConversionPathFinder.sol";
 import "./converter/interfaces/IConverter.sol";
+import "./converter/interfaces/IConverterAnchor.sol";
 import "./converter/interfaces/IBancorFormula.sol";
 import "./utility/TokenHolder.sol";
 import "./utility/SafeMath.sol";
@@ -17,18 +18,22 @@ contract ILegacyConverter {
 
 /**
   * @dev The BancorNetwork contract is the main entry point for Bancor token conversions.
-  * It also allows for the conversion of any token in the Bancor Network to any other token in a single transaction by providing a conversion path.
+  * It also allows for the conversion of any token in the Bancor Network to any other token in a single
+  * transaction by providing a conversion path.
   *
-  * A note on Conversion Path: Conversion path is a data structure that is used when converting a token to another token in the Bancor Network,
-  * when the conversion cannot necessarily be done by a single converter and might require multiple 'hops'.
+  * A note on Conversion Path: Conversion path is a data structure that is used when converting a token
+  * to another token in the Bancor Network, when the conversion cannot necessarily be done by a single
+  * converter and might require multiple 'hops'.
   * The path defines which converters should be used and what kind of conversion should be done in each step.
   *
-  * The path format doesn't include complex structure; instead, it is represented by a single array in which each 'hop' is represented by a 2-tuple - smart token & target token.
+  * The path format doesn't include complex structure; instead, it is represented by a single array
+  * in which each 'hop' is represented by a 2-tuple - converter anchor & target token.
   * In addition, the first element is always the source token.
-  * The smart token is only used as a pointer to a converter (since converter addresses are more likely to change as opposed to smart token addresses).
+  * The converter anchor is only used as a pointer to a converter (since converter addresses are more
+  * likely to change as opposed to anchor addresses).
   *
   * Format:
-  * [source token, smart token, target token, smart token, target token...]
+  * [source token, converter anchor, target token, converter anchor, target token...]
 */
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     using SafeMath for uint256;
@@ -39,7 +44,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
 
     struct ConversionStep {
         IConverter converter;
-        ISmartToken smartToken;
+        IConverterAnchor anchor;
         IERC20Token sourceToken;
         IERC20Token targetToken;
         address beneficiary;
@@ -54,7 +59,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     /**
       * @dev triggered when a conversion between two tokens occurs
       *
-      * @param _smartToken  smart token governed by the converter
+      * @param _smartToken  anchor governed by the converter
       * @param _fromToken   source ERC20 token
       * @param _toToken     target ERC20 token
       * @param _fromAmount  amount converted, in the source token
@@ -147,14 +152,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         // iterate over the conversion path
         for (uint256 i = 2; i < _path.length; i += 2) {
             IERC20Token sourceToken = _path[i - 2];
-            IERC20Token smartToken = _path[i - 1];
+            IERC20Token anchor = _path[i - 1];
             IERC20Token targetToken = _path[i];
 
-            if (targetToken == smartToken) { // buy the smart token
+            if (targetToken == anchor) { // buy the smart token
                 // check if the current smart token has changed
-                if (i < 3 || smartToken != _path[i - 3]) {
-                    supply = smartToken.totalSupply();
-                    converter = IConverter(ISmartToken(smartToken).owner());
+                if (i < 3 || anchor != _path[i - 3]) {
+                    supply = ISmartToken(anchor).totalSupply();
+                    converter = IConverter(IConverterAnchor(anchor).owner());
                 }
 
                 // get the amount & the conversion fee
@@ -167,11 +172,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
                 // update the smart token supply for the next iteration
                 supply += amount;
             }
-            else if (sourceToken == smartToken) { // sell the smart token
+            else if (sourceToken == anchor) { // sell the smart token
                 // check if the current smart token has changed
-                if (i < 3 || smartToken != _path[i - 3]) {
-                    supply = smartToken.totalSupply();
-                    converter = IConverter(ISmartToken(smartToken).owner());
+                if (i < 3 || anchor != _path[i - 3]) {
+                    supply = ISmartToken(anchor).totalSupply();
+                    converter = IConverter(IConverterAnchor(anchor).owner());
                 }
 
                 // get the amount & the conversion fee
@@ -186,8 +191,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
             }
             else { // cross reserve conversion
                 // check if the current smart token has changed
-                if (i < 3 || smartToken != _path[i - 3]) {
-                    converter = IConverter(ISmartToken(smartToken).owner());
+                if (i < 3 || anchor != _path[i - 3]) {
+                    converter = IConverter(IConverterAnchor(anchor).owner());
                 }
 
                 (amount, fee) = getReturn(converter, sourceToken, targetToken, amount);
@@ -222,7 +227,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         require(_path.length > 2 && _path.length % 2 == 1, "ERR_INVALID_PATH");
 
         // validate msg.value and prepare the source token for the conversion
-        handleSourceToken(_path[0], ISmartToken(_path[1]), _amount);
+        handleSourceToken(_path[0], IConverterAnchor(_path[1]), _amount);
 
         // check if affiliate fee is enabled
         bool affiliateFeeEnabled = false;
@@ -389,7 +394,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
             }
             // older converter
             // if the source token is the smart token, no need to do any transfers as the converter controls it
-            else if (stepData.sourceToken != stepData.smartToken) {
+            else if (stepData.sourceToken != ISmartToken(stepData.anchor)) {
                 // grant allowance for it to transfer the tokens from the network contract
                 ensureAllowance(stepData.sourceToken, stepData.converter, fromAmount);
             }
@@ -409,7 +414,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
                 toAmount -= affiliateAmount;
             }
 
-            emit Conversion(stepData.smartToken, stepData.sourceToken, stepData.targetToken, fromAmount, toAmount, msg.sender);
+            emit Conversion(stepData.anchor, stepData.sourceToken, stepData.targetToken, fromAmount, toAmount, msg.sender);
             fromAmount = toAmount;
         }
 
@@ -423,11 +428,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
       * @dev validates msg.value and prepares the conversion source token for the conversion
       *
       * @param _sourceToken source token of the first conversion step
-      * @param _smartToken  smart token of the first conversion step
+      * @param _anchor      converter anchor of the first conversion step
       * @param _amount      amount to convert from, in the source token
     */
-    function handleSourceToken(IERC20Token _sourceToken, ISmartToken _smartToken, uint256 _amount) private {
-        IConverter firstConverter = IConverter(_smartToken.owner());
+    function handleSourceToken(IERC20Token _sourceToken, IConverterAnchor _anchor, uint256 _amount) private {
+        IConverter firstConverter = IConverter(_anchor.owner());
         bool isNewerConverter = isV28OrHigherConverter(firstConverter);
 
         // ETH
@@ -509,8 +514,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
         // iterate the conversion path and create the conversion data for each step
         uint256 i;
         for (i = 0; i < _conversionPath.length - 1; i += 2) {
-            ISmartToken smartToken = ISmartToken(_conversionPath[i + 1]);
-            IConverter converter = IConverter(smartToken.owner());
+            IConverterAnchor anchor = IConverterAnchor(_conversionPath[i + 1]);
+            IConverter converter = IConverter(anchor.owner());
             IERC20Token targetToken = _conversionPath[i + 2];
 
             // check if the affiliate fee should be processed in this step
@@ -519,8 +524,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
                 affiliateFeeProcessed = true;
 
             data[i / 2] = ConversionStep({
-                // set the smart token
-                smartToken: smartToken,
+                // set the converter anchor
+                anchor: anchor,
 
                 // set the converter
                 converter: converter,

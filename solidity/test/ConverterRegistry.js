@@ -109,13 +109,13 @@ contract('ConverterRegistry', function(accounts) {
             await smartToken6.transferOwnership(converter6.address);
             await smartToken7.transferOwnership(converter7.address);
 
-            await converter1.acceptTokenOwnership();
-            await converter2.acceptTokenOwnership();
-            await converter3.acceptTokenOwnership();
-            await converter4.acceptTokenOwnership();
-            await converter5.acceptTokenOwnership();
-            await converter6.acceptTokenOwnership();
-            await converter7.acceptTokenOwnership();
+            await converter1.acceptAnchorOwnership();
+            await converter2.acceptAnchorOwnership();
+            await converter3.acceptAnchorOwnership();
+            await converter4.acceptAnchorOwnership();
+            await converter5.acceptAnchorOwnership();
+            await converter6.acceptAnchorOwnership();
+            await converter7.acceptAnchorOwnership();
         });
 
         it('function addConverter', async function() {

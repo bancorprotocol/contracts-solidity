@@ -94,11 +94,11 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         copyConnectors(converter, newConverter);
         copyConversionFee(converter, newConverter);
         transferConnectorsBalances(converter, newConverter);
-        ISmartToken token = converter.token();
+        IConverterAnchor anchor = converter.token();
 
-        if (token.owner() == address(converter)) {
+        if (anchor.owner() == address(converter)) {
             converter.transferTokenOwnership(newConverter);
-            newConverter.acceptTokenOwnership();
+            newConverter.acceptAnchorOwnership();
         }
 
         converter.transferOwnership(prevOwner);
@@ -128,8 +128,8 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       *
       * @return the new converter  new converter contract address
     */
-    function createConverter(IConverter _oldConverter) private returns(IConverter) {
-        ISmartToken token = _oldConverter.token();
+    function createConverter(IConverter _oldConverter) private returns (IConverter) {
+        IConverterAnchor anchor = _oldConverter.token();
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
         uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
 
@@ -143,7 +143,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
             newType = 1;
 
         IConverterFactory converterFactory = IConverterFactory(addressOf(CONVERTER_FACTORY));
-        IConverter converter = converterFactory.createConverter(newType, token, registry, maxConversionFee);
+        IConverter converter = converterFactory.createConverter(newType, anchor, registry, maxConversionFee);
 
         converter.acceptOwnership();
         return converter;

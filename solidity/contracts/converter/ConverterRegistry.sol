@@ -1,22 +1,23 @@
 pragma solidity 0.4.26;
 import "../utility/TokenHandler.sol";
 import "../utility/ContractRegistryClient.sol";
+import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterFactory.sol";
 import "./interfaces/IConverterRegistry.sol";
 import "./interfaces/IConverterRegistryData.sol";
-import "../token/interfaces/ISmartTokenController.sol";
 
 /**
   * @dev The ConverterRegistry maintains a list of all active converters in the Bancor Network.
   *
-  * Since converters can be upgraded and thus their address can change, the registry actually keeps smart tokens internally and not the converters themselves.
-  * The active converter for each smart token can be easily accessed by querying the smart token owner.
+  * Since converters can be upgraded and thus their address can change, the registry actually keeps
+  * converter anchors internally and not the converters themselves.
+  * The active converter for each anchor can be easily accessed by querying the anchor's owner.
   *
   * The registry exposes 3 differnet lists that can be accessed and iterated, based on the use-case of the caller:
-  * - Smart tokens - can be used to get all the latest / historical data in the network
+  * - anchors - can be used to get all the latest / historical data in the network
   * - Liquidity pools - can be used to get all liquidity pools for funding, liquidation etc.
   * - Convertible tokens - can be used to get all tokens that can be converted in the network (excluding pool
-  *   tokens), and for each one - all smart tokens that hold it in their reserves
+  *   tokens), and for each one - all anchors that hold it in their reserves
   *
   *
   * The contract fires events whenever one of the primitives is added to or removed from the registry
@@ -27,14 +28,14 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /**
-      * @dev triggered when a smart token is added to the registry
+      * @dev triggered when a converter anchor is added to the registry
       *
       * @param _smartToken smart token
     */
     event SmartTokenAdded(address indexed _smartToken);
 
     /**
-      * @dev triggered when a smart token is removed from the registry
+      * @dev triggered when a converter anchor is removed from the registry
       *
       * @param _smartToken smart token
     */
@@ -82,9 +83,9 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @dev creates a zero supply liquid token / empty liquidity pool and adds its converter to the registry
       *
       * @param _type                converter type, see ConverterBase contract main doc
-      * @param _smartTokenName      token / pool name
-      * @param _smartTokenSymbol    token / pool symbol
-      * @param _smartTokenDecimals  token / pool decimals
+      * @param _name                token / pool name
+      * @param _symbol              token / pool symbol
+      * @param _decimals            token / pool decimals
       * @param _maxConversionFee    maximum conversion-fee
       * @param _reserveTokens       reserve tokens
       * @param _reserveWeights      reserve weights
@@ -93,9 +94,9 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     */
     function newConverter(
         uint8 _type,
-        string _smartTokenName,
-        string _smartTokenSymbol,
-        uint8 _smartTokenDecimals,
+        string _name,
+        string _symbol,
+        uint8 _decimals,
         uint32 _maxConversionFee,
         IERC20Token[] memory _reserveTokens,
         uint32[] memory _reserveWeights
@@ -104,20 +105,20 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     {
         uint256 length = _reserveTokens.length;
         require(length == _reserveWeights.length, "ERR_INVALID_RESERVES");
-        require(getLiquidityPoolByConfig(_type, _reserveTokens, _reserveWeights) == ISmartToken(0), "ERR_ALREADY_EXISTS");
+        require(getLiquidityPoolByConfig(_type, _reserveTokens, _reserveWeights) == IConverterAnchor(0), "ERR_ALREADY_EXISTS");
 
         IConverterFactory factory = IConverterFactory(addressOf(CONVERTER_FACTORY));
-        ISmartToken token = ISmartToken(factory.createSmartToken(_type, _smartTokenName, _smartTokenSymbol, _smartTokenDecimals));
-        IConverter converter = IConverter(factory.createConverter(_type, token, registry, _maxConversionFee));
+        IConverterAnchor anchor = IConverterAnchor(factory.createAnchor(_type, _name, _symbol, _decimals));
+        IConverter converter = IConverter(factory.createConverter(_type, anchor, registry, _maxConversionFee));
 
-        token.acceptOwnership();
+        anchor.acceptOwnership();
         converter.acceptOwnership();
 
         for (uint256 i = 0; i < length; i++)
             converter.addReserve(_reserveTokens[i], _reserveWeights[i]);
 
-        token.transferOwnership(converter);
-        converter.acceptTokenOwnership();
+        anchor.transferOwnership(converter);
+        converter.acceptAnchorOwnership();
         converter.transferOwnership(msg.sender);
 
         addConverterInternal(converter);
@@ -313,7 +314,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         address[] memory converters = new address[](_smartTokens.length);
 
         for (uint i = 0; i < _smartTokens.length; i++)
-            converters[i] = ISmartToken(_smartTokens[i]).owner();
+            converters[i] = IConverterAnchor(_smartTokens[i]).owner();
 
         return converters;
     }
@@ -348,7 +349,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         }
 
         // return if a liquidity pool with the same configuration is already registered
-        return getLiquidityPoolByConfig(_converter.converterType(), reserveTokens, reserveWeights) != ISmartToken(0);
+        return getLiquidityPoolByConfig(_converter.converterType(), reserveTokens, reserveWeights) != IConverterAnchor(0);
     }
 
     /**
@@ -359,21 +360,21 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _reserveWeights  reserve weights
       * @return the liquidity pool, or zero if no such liquidity pool exists
     */
-    function getLiquidityPoolByConfig(uint8 _type, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) public view returns (ISmartToken) {
+    function getLiquidityPoolByConfig(uint8 _type, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) public view returns (IConverterAnchor) {
         // verify that the input parameters represent a valid liquidity pool
         if (_reserveTokens.length == _reserveWeights.length && _reserveTokens.length > 1) {
             // get the smart tokens of the least frequent token (optimization)
             address[] memory convertibleTokenSmartTokens = getLeastFrequentTokenSmartTokens(_reserveTokens);
             // search for a converter with the same configuration
             for (uint i = 0; i < convertibleTokenSmartTokens.length; i++) {
-                ISmartToken smartToken = ISmartToken(convertibleTokenSmartTokens[i]);
-                IConverter converter = IConverter(smartToken.owner());
+                IConverterAnchor anchor = IConverterAnchor(convertibleTokenSmartTokens[i]);
+                IConverter converter = IConverter(anchor.owner());
                 if (isConverterReserveConfigEqual(converter, _type, _reserveTokens, _reserveWeights))
-                    return smartToken;
+                    return anchor;
             }
         }
 
-        return ISmartToken(0);
+        return IConverterAnchor(0);
     }
 
     /**
@@ -440,36 +441,36 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
 
     function addConverterInternal(IConverter _converter) private {
         IConverterRegistryData converterRegistryData = IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA));
-        ISmartToken token = ISmartTokenController(_converter).token();
+        IConverterAnchor anchor = IConverter(_converter).token();
         uint reserveTokenCount = _converter.connectorTokenCount();
 
         // add the smart token
-        addSmartToken(converterRegistryData, token);
+        addSmartToken(converterRegistryData, anchor);
         if (reserveTokenCount > 1)
-            addLiquidityPool(converterRegistryData, token);
+            addLiquidityPool(converterRegistryData, anchor);
         else
-            addConvertibleToken(converterRegistryData, token, token);
+            addConvertibleToken(converterRegistryData, anchor, anchor);
 
         // add all reserve tokens
         for (uint i = 0; i < reserveTokenCount; i++)
-            addConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
+            addConvertibleToken(converterRegistryData, _converter.connectorTokens(i), anchor);
     }
 
     function removeConverterInternal(IConverter _converter) private {
         IConverterRegistryData converterRegistryData = IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA));
-        ISmartToken token = ISmartTokenController(_converter).token();
+        IConverterAnchor anchor = IConverter(_converter).anchor();
         uint reserveTokenCount = _converter.connectorTokenCount();
 
         // remove the smart token
-        removeSmartToken(converterRegistryData, token);
+        removeSmartToken(converterRegistryData, anchor);
         if (reserveTokenCount > 1)
-            removeLiquidityPool(converterRegistryData, token);
+            removeLiquidityPool(converterRegistryData, anchor);
         else
-            removeConvertibleToken(converterRegistryData, token, token);
+            removeConvertibleToken(converterRegistryData, anchor, anchor);
 
         // remove all reserve tokens
         for (uint i = 0; i < reserveTokenCount; i++)
-            removeConvertibleToken(converterRegistryData, _converter.connectorTokens(i), token);
+            removeConvertibleToken(converterRegistryData, _converter.connectorTokens(i), anchor);
     }
 
     function getLeastFrequentTokenSmartTokens(IERC20Token[] memory _reserveTokens) private view returns (address[] memory) {
@@ -530,7 +531,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     /**
       * @dev deprecated, backward compatibility
     */
-    function getLiquidityPoolByReserveConfig(IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) public view returns (ISmartToken) {
+    function getLiquidityPoolByReserveConfig(IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) public view returns (IConverterAnchor) {
         return getLiquidityPoolByConfig(1, _reserveTokens, _reserveWeights);
     }
 }

@@ -1,7 +1,7 @@
 pragma solidity 0.4.26;
 import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterFactory.sol";
-import "./interfaces/ITypedSmartTokenFactory.sol";
+import "./interfaces/ITypedConverterAnchorFactory.sol";
 import "./interfaces/ITypedConverterFactory.sol";
 import "../utility/Owned.sol";
 import "../utility/interfaces/IContractRegistry.sol";
@@ -19,7 +19,7 @@ contract ConverterFactory is IConverterFactory, Owned {
     */
     event NewConverter(address indexed _converter, address indexed _owner);
 
-    mapping (uint8 => ITypedSmartTokenFactory) public smartTokenFactories;
+    mapping (uint8 => ITypedConverterAnchorFactory) public anchorFactories;
     mapping (uint8 => ITypedConverterFactory) public converterFactories;
 
     /**
@@ -29,13 +29,13 @@ contract ConverterFactory is IConverterFactory, Owned {
     }
 
     /**
-      * @dev initializes the factory with a specific typed smart token factory
+      * @dev initializes the factory with a specific typed converter anchor factory
       * can only be called by the owner
       *
-      * @param _factory typed smart token factory
+      * @param _factory typed converter anchor factory
     */
-    function registerTypedSmartTokenFactory(ITypedSmartTokenFactory _factory) public ownerOnly {
-        smartTokenFactories[_factory.converterType()] = _factory;
+    function registerTypedConverterAnchorFactory(ITypedConverterAnchorFactory _factory) public ownerOnly {
+        anchorFactories[_factory.converterType()] = _factory;
     }
 
     /**
@@ -49,32 +49,32 @@ contract ConverterFactory is IConverterFactory, Owned {
     }
 
     /**
-      * @dev creates a new smart token with the given arguments and transfers
+      * @dev creates a new converter anchor with the given arguments and transfers
       * the ownership to the caller
       *
       * @param _converterType   converter type, see ConverterBase contract main doc
-      * @param _name            smart token name
-      * @param _symbol          smart token symbol
-      * @param _decimals        smart token decimals
+      * @param _name            name
+      * @param _symbol          symbol
+      * @param _decimals        decimals
       *
-      * @return new smart token
+      * @return new converter anchor
     */
-    function createSmartToken(uint8 _converterType, string _name, string _symbol, uint8 _decimals) public returns (ISmartToken) {
-        ISmartToken token;
-        ITypedSmartTokenFactory factory = smartTokenFactories[_converterType];
+    function createAnchor(uint8 _converterType, string _name, string _symbol, uint8 _decimals) public returns (IConverterAnchor) {
+        IConverterAnchor anchor;
+        ITypedConverterAnchorFactory factory = anchorFactories[_converterType];
 
         if (factory == address(0)) {
-            // create default smart token
-            token = new SmartToken(_name, _symbol, _decimals);
+            // create default anchor (SmartToken)
+            anchor = new SmartToken(_name, _symbol, _decimals);
         }
         else {
-            // create custom smart token
-            token = factory.createSmartToken(_name, _symbol, _decimals);
-            token.acceptOwnership();
+            // create custom anchor
+            anchor = factory.createAnchor(_name, _symbol, _decimals);
+            anchor.acceptOwnership();
         }
 
-        token.transferOwnership(msg.sender);
-        return token;
+        anchor.transferOwnership(msg.sender);
+        return anchor;
     }
 
     /**
@@ -82,14 +82,14 @@ contract ConverterFactory is IConverterFactory, Owned {
       * the ownership to the caller
       *
       * @param _type              converter type, see ConverterBase contract main doc
-      * @param _token             smart token governed by the converter
+      * @param _anchor            anchor governed by the converter
       * @param _registry          address of a contract registry contract
       * @param _maxConversionFee  maximum conversion fee, represented in ppm
       *
       * @return new converter
     */
-    function createConverter(uint8 _type, ISmartToken _token, IContractRegistry _registry, uint32 _maxConversionFee) public returns (IConverter) {
-        IConverter converter = converterFactories[_type].createConverter(_token, _registry, _maxConversionFee);
+    function createConverter(uint8 _type, IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) public returns (IConverter) {
+        IConverter converter = converterFactories[_type].createConverter(_anchor, _registry, _maxConversionFee);
         converter.acceptOwnership();
         converter.transferOwnership(msg.sender);
 

@@ -2,8 +2,8 @@ pragma solidity 0.4.26;
 import "./IConversionPathFinder.sol";
 import "./utility/ContractRegistryClient.sol";
 import "./converter/interfaces/IConverter.sol";
+import "./converter/interfaces/IConverterAnchor.sol";
 import "./converter/interfaces/IConverterRegistry.sol";
-import "./token/interfaces/ISmartToken.sol";
 
 /**
   * @dev The ConversionPathFinder contract allows generating a conversion path between any token pair in the Bancor Network.
@@ -65,7 +65,7 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
             smartTokens = _converterRegistry.getConvertibleTokenSmartTokens(_token);
 
         for (uint256 n = 0; n < smartTokens.length; n++) {
-            IConverter converter = IConverter(ISmartToken(smartTokens[n]).owner());
+            IConverter converter = IConverter(IConverterAnchor(smartTokens[n]).owner());
             uint256 connectorTokenCount = converter.connectorTokenCount();
             for (uint256 i = 0; i < connectorTokenCount; i++) {
                 address connectorToken = converter.connectorTokens(i);

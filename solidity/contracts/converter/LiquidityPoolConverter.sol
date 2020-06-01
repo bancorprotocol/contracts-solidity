@@ -10,7 +10,6 @@ import "./ConverterBase.sol";
   * Liquidity pools have 2 reserves or more and they allow converting between them.
 */
 contract LiquidityPoolConverter is ConverterBase {
-
     /**
       * @dev triggered after liquidity is added
       *
@@ -18,7 +17,7 @@ contract LiquidityPoolConverter is ConverterBase {
       * @param  _reserve    reserve token address
       * @param  _amount     reserve token amount
       * @param  _newBalance reserve token new balance
-      * @param  _newSupply  smart token new supply
+      * @param  _newSupply  pool token new supply
     */
     event LiquidityAdded(
         address indexed _provider,
@@ -35,7 +34,7 @@ contract LiquidityPoolConverter is ConverterBase {
       * @param  _reserve    reserve token address
       * @param  _amount     reserve token amount
       * @param  _newBalance reserve token new balance
-      * @param  _newSupply  smart token new supply
+      * @param  _newSupply  pool token new supply
     */
     event LiquidityRemoved(
         address indexed _provider,
@@ -48,16 +47,16 @@ contract LiquidityPoolConverter is ConverterBase {
     /**
       * @dev initializes a new LiquidityPoolConverter instance
       *
-      * @param  _token              pool token governed by the converter
+      * @param  _anchor             anchor governed by the converter
       * @param  _registry           address of a contract registry contract
       * @param  _maxConversionFee   maximum conversion fee, represented in ppm
     */
     constructor(
-        ISmartToken _token,
+        IConverterAnchor _anchor,
         IContractRegistry _registry,
         uint32 _maxConversionFee
     )
-        ConverterBase(_token, _registry, _maxConversionFee)
+        ConverterBase(_anchor, _registry, _maxConversionFee)
         internal
     {
     }

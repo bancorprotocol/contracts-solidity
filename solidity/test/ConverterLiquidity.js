@@ -25,7 +25,7 @@ async function initLiquidityPool(hasETH, ...weights) {
     }
 
     await smartToken.transferOwnership(converter.address);
-    await converter.acceptTokenOwnership();
+    await converter.acceptAnchorOwnership();
 
     return [converter, smartToken];
 }

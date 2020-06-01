@@ -1,6 +1,6 @@
 pragma solidity 0.4.26;
 import "./IConverter.sol";
-import "../../token/interfaces/ISmartToken.sol";
+import "./IConverterAnchor.sol";
 import "../../utility/interfaces/IContractRegistry.sol";
 
 /*
@@ -8,5 +8,5 @@ import "../../utility/interfaces/IContractRegistry.sol";
 */
 contract ITypedConverterFactory {
     function converterType() public pure returns (uint8);
-    function createConverter(ISmartToken _token, IContractRegistry _registry, uint32 _maxConversionFee) public returns (IConverter);
+    function createConverter(IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) public returns (IConverter);
 }

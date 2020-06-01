@@ -1,6 +1,7 @@
 pragma solidity 0.4.26;
 import "./LiquidityPoolConverter.sol";
 import "./interfaces/ITypedConverterFactory.sol";
+import "../token/interfaces/ISmartToken.sol";
 
 /*
     LiquidityPoolV1Converter Factory
@@ -19,14 +20,14 @@ contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
       * @dev creates a new converter with the given arguments and transfers
       * the ownership to the caller
       *
-      * @param _token             smart token governed by the converter
+      * @param _anchor            anchor governed by the converter
       * @param _registry          address of a contract registry contract
       * @param _maxConversionFee  maximum conversion fee, represented in ppm
       *
       * @return a new converter
     */
-    function createConverter(ISmartToken _token, IContractRegistry _registry, uint32 _maxConversionFee) public returns(IConverter) {
-        ConverterBase converter = new LiquidityPoolV1Converter(_token, _registry, _maxConversionFee);
+    function createConverter(IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) public returns (IConverter) {
+        ConverterBase converter = new LiquidityPoolV1Converter(ISmartToken(_anchor), _registry, _maxConversionFee);
         converter.transferOwnership(msg.sender);
         return converter;
     }
@@ -42,7 +43,6 @@ contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
   * the pool has 2 reserves with 50%/50% weights.
 */
 contract LiquidityPoolV1Converter is LiquidityPoolConverter {
-
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
 
     /**
@@ -89,7 +89,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         validReserve(_targetToken)
         returns (uint256, uint256)
     {
-        require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET"); // validate input
+        // validate input
+        require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET");
 
         uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).crossReserveRate(
             reserveBalance(_sourceToken),
@@ -152,9 +153,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _amount, amount, fee);
 
-        // dispatch price data updates for the smart token / both reserves
-        emit PriceDataUpdate(_sourceToken, token.totalSupply(), reserveBalance(_sourceToken), reserves[_sourceToken].weight);
-        emit PriceDataUpdate(_targetToken, token.totalSupply(), reserveBalance(_targetToken), reserves[_targetToken].weight);
+        // dispatch price data updates for the pool token / both reserves
+        emit PriceDataUpdate(_sourceToken, ISmartToken(anchor).totalSupply(), reserveBalance(_sourceToken), reserves[_sourceToken].weight);
+        emit PriceDataUpdate(_targetToken, ISmartToken(anchor).totalSupply(), reserveBalance(_targetToken), reserves[_targetToken].weight);
 
         return amount;
     }
@@ -186,7 +187,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             require(reserves[ETH_RESERVE_ADDRESS].isSet, "ERR_NO_ETH_RESERVE");
 
         // get the total supply
-        uint256 totalSupply = token.totalSupply();
+        uint256 totalSupply = ISmartToken(anchor).totalSupply();
 
         // transfer from the user an equally-worth amount of each one of the reserve tokens
         uint256 amount = addLiquidityToPool(_reserveTokens, _reserveAmounts, totalSupply);
@@ -195,7 +196,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         require(amount >= _minReturn, "ERR_RETURN_TOO_LOW");
 
         // issue the tokens to the user
-        token.issue(msg.sender, amount);
+        ISmartToken(anchor).issue(msg.sender, amount);
     }
 
     /**
@@ -215,10 +216,10 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
 
         // get the total supply BEFORE destroying the user tokens
-        uint256 totalSupply = token.totalSupply();
+        uint256 totalSupply = ISmartToken(anchor).totalSupply();
 
         // destroy the user tokens
-        token.destroy(msg.sender, _amount);
+        ISmartToken(anchor).destroy(msg.sender, _amount);
 
         // transfer to the user an equivalent amount of each one of the reserve tokens
         removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _amount);
@@ -231,13 +232,13 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * note that the function cannot be called when the converter has only one reserve
       * note that starting from version 28, you should use 'addLiquidity' instead
       *
-      * @param _amount  amount to increase the supply by (in the smart token)
+      * @param _amount  amount to increase the supply by (in the pool token)
     */
     function fund(uint256 _amount) public payable protected {
         syncReserveBalances();
         reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
 
-        uint256 supply = token.totalSupply();
+        uint256 supply = ISmartToken(anchor).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
 
         // iterate through the reserve tokens and transfer a percentage equal to the weight between
@@ -265,12 +266,12 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             // sync the reserve balance
             reserves[reserveToken].balance = reserves[reserveToken].balance.add(reserveAmount);
 
-            // dispatch liquidity update for the smart token/reserve
+            // dispatch liquidity update for the pool token/reserve
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, rsvBalance + reserveAmount, supply + _amount);
         }
 
-        // issue new funds to the caller in the smart token
-        token.issue(msg.sender, _amount);
+        // issue new funds to the caller in the pool token
+        ISmartToken(anchor).issue(msg.sender, _amount);
     }
 
     /**
@@ -280,13 +281,13 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * note that the function cannot be called when the converter has only one reserve
       * note that starting from version 28, you should use 'removeLiquidity' instead
       *
-      * @param _amount  amount to liquidate (in the smart token)
+      * @param _amount  amount to liquidate (in the pool token)
     */
     function liquidate(uint256 _amount) public protected {
         require(_amount > 0, "ERR_ZERO_AMOUNT");
 
-        uint256 totalSupply = token.totalSupply();
-        token.destroy(msg.sender, _amount);
+        uint256 totalSupply = ISmartToken(anchor).totalSupply();
+        ISmartToken(anchor).destroy(msg.sender, _amount);
 
         uint256[] memory reserveMinReturnAmounts = new uint256[](reserveTokens.length);
         for (uint256 i = 0; i < reserveMinReturnAmounts.length; i++)

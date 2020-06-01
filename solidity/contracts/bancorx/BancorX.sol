@@ -1,11 +1,9 @@
 pragma solidity 0.4.26;
 import "./interfaces/IBancorXUpgrader.sol";
 import "./interfaces/IBancorX.sol";
-import "../token/interfaces/ISmartTokenController.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/SafeMath.sol";
 import "../utility/TokenHolder.sol";
-import "../token/interfaces/ISmartToken.sol";
 
 /**
   * @dev The BancorX contract allows cross chain token transfers.
@@ -41,8 +39,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
     uint256 public prevReleaseBlockNumber;  // the block number of the last release transaction
     uint256 public minRequiredReports;      // minimum number of required reports to release tokens
 
-    IERC20Token public token;               // erc20 token or smart token
-    bool public isSmartToken;               // false - erc20 token; true - smart token
+    IERC20Token public token;               // erc20 token
 
     bool public xTransfersEnabled = true;   // true if x transfers are enabled, false if not
     bool public reportingEnabled = true;    // true if reporting is enabled, false if not
@@ -137,8 +134,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
       * @param _limitIncPerBlock      how much the limit increases per block
       * @param _minRequiredReports    minimum number of reporters to report transaction before tokens can be released
       * @param _registry              address of contract registry
-      * @param _token                 erc20 token or smart token
-      * @param _isSmartToken          false - erc20 token; true - smart token
+      * @param _token                 erc20 token
      */
     constructor(
         uint256 _maxLockLimit,
@@ -147,8 +143,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         uint256 _limitIncPerBlock,
         uint256 _minRequiredReports,
         IContractRegistry _registry,
-        IERC20Token _token,
-        bool _isSmartToken
+        IERC20Token _token
     )   ContractRegistryClient(_registry)
         public
     {
@@ -166,7 +161,6 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         prevReleaseBlockNumber = block.number;
 
         token = _token;
-        isSmartToken = _isSmartToken;
     }
 
     // validates that the caller is a reporter
@@ -454,10 +448,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
       * @param _amount  the amount of tokens to lock
      */
     function lockTokens(uint256 _amount) private {
-        if (isSmartToken)
-            ISmartTokenController(ISmartToken(token).owner()).claimTokens(msg.sender, _amount);
-        else
-            token.transferFrom(msg.sender, address(this), _amount);
+        token.transferFrom(msg.sender, address(this), _amount);
         emit TokensLock(msg.sender, _amount);
     }
 

@@ -170,7 +170,7 @@ contract('LiquidityPoolConverter', accounts => {
                 await utils.catchRevert(converter.addReserve(reserveToken2.address, 500001));
             });
 
-            it('should throw when the owner attempts to transfer the token ownership and only 1 reserve is defined', async () => {
+            it('should throw when the owner attempts to accept the token ownership and only 1 reserve is defined', async () => {
                 let converter = await createConverter(tokenAddress, contractRegistry.address, 0);
                 await converter.addReserve(getReserve1Address(isETHReserve), 500000);
 

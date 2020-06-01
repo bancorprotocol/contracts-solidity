@@ -1,13 +1,13 @@
 pragma solidity 0.4.26;
 import "./interfaces/IConverter.sol";
+import "./interfaces/IConverterAnchor.sol";
 import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IBancorFormula.sol";
 import "../IBancorNetwork.sol";
 import "../utility/SafeMath.sol";
 import "../utility/TokenHandler.sol";
+import "../utility/TokenHolder.sol";
 import "../utility/ContractRegistryClient.sol";
-import "../token/SmartTokenController.sol";
-import "../token/interfaces/ISmartToken.sol";
 import "../token/interfaces/IEtherToken.sol";
 import "../bancorx/interfaces/IBancorX.sol";
 
@@ -16,14 +16,27 @@ import "../bancorx/interfaces/IBancorX.sol";
   *
   * The converter contains the main logic for conversions between different ERC20 tokens.
   *
-  * The converter is upgradable (just like any SmartTokenController) and all upgrades are opt-in.
+  * It is also the upgradable part of the mechanism (note that upgrades are opt-in).
+  *
+  * The anchor must be set on construction and cannot be changed afterwards.
+  * Wrappers are provided for some of the anchor's functions, for easier access.
+  *
+  * Once the converter accepts ownership of the anchor, it becomes the anchor's sole controller
+  * and can execute any of its functions.
+  *
+  * To upgrade the converter, anchor ownership must be transferred to a new converter, along with
+  * any relevant data.
+  *
+  * Note that the converter can transfer anchor ownership to a new converter that
+  * doesn't allow upgrades anymore, for finalizing the relationship between the converter
+  * and the anchor.
   *
   * Converter types (defined as uint8 type) -
   * 0 = liquid token converter
   * 1 = liquidity pool v1 converter
   *
 */
-contract ConverterBase is IConverter, TokenHandler, SmartTokenController, ContractRegistryClient {
+contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistryClient {
     using SafeMath for uint256;
 
     uint32 internal constant WEIGHT_RESOLUTION = 1000000;
@@ -43,6 +56,7 @@ contract ConverterBase is IConverter, TokenHandler, SmartTokenController, Contra
     */
     uint16 public version = 28;
 
+    IConverterAnchor public anchor;                 // converter anchor contract
     IWhitelist public conversionWhitelist;          // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public reserveTokens;             // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
     mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
@@ -98,20 +112,21 @@ contract ConverterBase is IConverter, TokenHandler, SmartTokenController, Contra
     /**
       * @dev used by sub-contracts to initialize a new converter
       *
-      * @param  _token              smart token governed by the converter
+      * @param  _anchor             anchor governed by the converter
       * @param  _registry           address of a contract registry contract
       * @param  _maxConversionFee   maximum conversion fee, represented in ppm
     */
     constructor(
-        ISmartToken _token,
+        IConverterAnchor _anchor,
         IContractRegistry _registry,
         uint32 _maxConversionFee
     )
-        SmartTokenController(_token)
+        validAddress(_anchor)
         ContractRegistryClient(_registry)
         internal
         validConversionFee(_maxConversionFee)
     {
+        anchor = _anchor;
         maxConversionFee = _maxConversionFee;
     }
 
@@ -126,6 +141,28 @@ contract ConverterBase is IConverter, TokenHandler, SmartTokenController, Contra
     // error message binary size optimization
     function _protected() internal view {
         require(!locked, "ERR_REENTRANCY");
+    }
+
+    // ensures that the converter is active
+    modifier active() {
+        _active();
+        _;
+    }
+
+    // error message binary size optimization
+    function _active() internal view {
+        require(isActive(), "ERR_INACTIVE");
+    }
+
+    // ensures that the converter is not active
+    modifier inactive() {
+        _inactive();
+        _;
+    }
+
+    // error message binary size optimization
+    function _inactive() internal view {
+        require(!isActive(), "ERR_ACTIVE");
     }
 
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
@@ -185,7 +222,7 @@ contract ConverterBase is IConverter, TokenHandler, SmartTokenController, Contra
         address converterUpgrader = addressOf(CONVERTER_UPGRADER);
 
         // verify that the converter is inactive or that the owner is the upgrader contract
-        require(token.owner() != address(this) || owner == converterUpgrader, "ERR_ACCESS_DENIED");
+        require(!isActive() || owner == converterUpgrader, "ERR_ACCESS_DENIED");
         _to.transfer(address(this).balance);
 
         // sync the ETH reserve balance
@@ -217,30 +254,51 @@ contract ConverterBase is IConverter, TokenHandler, SmartTokenController, Contra
     }
 
     /**
-      * @dev allows transferring the token ownership
+      * @dev returns true if the converter is active, false otherwise
+    */
+    function isActive() public view returns (bool) {
+        return anchor.owner() == address(this);
+    }
+
+    /**
+      * @dev transfers the anchor ownership
       * the new owner needs to accept the transfer
-      * can only be called by the contract owner
-      * note that token ownership can only be transferred while the owner is the converter upgrader contract
+      * can only be called by the converter upgrder while the upgrader is the owner
+      * note that prior to version 28, you should use 'transferAnchorOwnership' instead
       *
       * @param _newOwner    new token owner
     */
-    function transferTokenOwnership(address _newOwner)
+    function transferAnchorOwnership(address _newOwner)
         public
         ownerOnly
         only(CONVERTER_UPGRADER)
     {
-        super.transferTokenOwnership(_newOwner);
+        anchor.transferOwnership(_newOwner);
     }
 
     /**
-      * @dev activates the converter
+      * @dev accepts ownership of the anchor after an ownership transfer
+      * also activates the converter
       * can only be called by the contract owner
+      * note that prior to version 28, you should use 'acceptTokenOwnership' instead
     */
-    function acceptTokenOwnership() public ownerOnly {
+    function acceptAnchorOwnership() public ownerOnly {
         // verify the the converter has at least one reserve
         require(reserveTokenCount() > 0, "ERR_INVALID_RESERVE_COUNT");
-        super.acceptTokenOwnership();
+        anchor.acceptOwnership();
         syncReserveBalances();
+    }
+
+    /**
+      * @dev withdraws tokens held by the anchor and sends them to an account
+      * can only be called by the owner
+      *
+      * @param _token   ERC20 token contract address
+      * @param _to      account to receive the new amount
+      * @param _amount  amount to withdraw
+    */
+    function withdrawFromAnchor(IERC20Token _token, address _to, uint256 _amount) public ownerOnly {
+        anchor.withdrawTokens(_token, _to, _amount);
     }
 
     /**
@@ -270,7 +328,7 @@ contract ConverterBase is IConverter, TokenHandler, SmartTokenController, Contra
 
         // if the token is not a reserve token, allow withdrawal
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
-        require(!reserves[_token].isSet || token.owner() != address(this) || owner == converterUpgrader, "ERR_ACCESS_DENIED");
+        require(!reserves[_token].isSet || !isActive() || owner == converterUpgrader, "ERR_ACCESS_DENIED");
         super.withdrawTokens(_token, _to, _amount);
 
         // if the token is a reserve token, sync the reserve balance
@@ -316,8 +374,9 @@ contract ConverterBase is IConverter, TokenHandler, SmartTokenController, Contra
         notThis(_token)
         validReserveWeight(_weight)
     {
-        require(_token != token && !reserves[_token].isSet, "ERR_INVALID_RESERVE"); // validate input
-        require(reserveRatio + _weight <= WEIGHT_RESOLUTION, "ERR_INVALID_RESERVE_WEIGHT"); // validate input
+        // validate input
+        require(_token != address(anchor) && !reserves[_token].isSet, "ERR_INVALID_RESERVE");
+        require(reserveRatio + _weight <= WEIGHT_RESOLUTION, "ERR_INVALID_RESERVE_WEIGHT");
 
         reserves[_token].balance = 0;
         reserves[_token].weight = _weight;
@@ -388,7 +447,8 @@ contract ConverterBase is IConverter, TokenHandler, SmartTokenController, Contra
         returns (uint256)
     {
         _amount; // remove unused parameter warning
-        require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET"); // validate input
+        // validate input
+        require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET");
 
         // if a whitelist is set, verify that both and trader and the beneficiary are whitelisted
         require(conversionWhitelist == address(0) ||
@@ -442,6 +502,27 @@ contract ConverterBase is IConverter, TokenHandler, SmartTokenController, Contra
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
         assert(_feeAmount < 2 ** 255);
         emit Conversion(_sourceToken, _targetToken, msg.sender, _amount, _returnAmount, int256(_feeAmount));
+    }
+
+    /**
+      * @dev deprecated since version 28, backward compatibility - use only for earlier versions
+    */
+    function token() public view returns (IConverterAnchor) {
+        return anchor;
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function transferTokenOwnership(address _newOwner) public ownerOnly {
+        transferAnchorOwnership(_newOwner);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function acceptTokenOwnership() public ownerOnly {
+        acceptAnchorOwnership();
     }
 
     /**
