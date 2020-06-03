@@ -160,7 +160,7 @@ contract('Converter:', accounts => {
                     assert.equal(prevBalance.toNumber(), balance.toNumber());
                 });
             
-                it('should throw when the owner attempts to withdraw other tokens from the anchor while the controller is not active', async () => {
+                it('should throw when the owner attempts to withdraw other tokens from the anchor while the converter is not active', async () => {
                     let converter = await initConverter(type, accounts, false, isETHReserve);
                     let ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
                     await ercToken.transfer(anchor.address, 100);
