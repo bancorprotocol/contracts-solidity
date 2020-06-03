@@ -597,18 +597,18 @@ def calculateLiquidateReturn(_supply, _reserveBalance, _reserveRatio, _amount):
     return liquidateRate(_supply, _reserveBalance, _reserveRatio, _amount);
 
 
-def add(x,y):
+def add(x, y):
     assert x + y < (1 << 256)
     return x + y
 
 
-def mul(x,y):
+def mul(x, y):
     assert x * y < (1 << 256)
     return x * y
 
 
-def require(cond,msg=''):
-    assert cond,msg
+def require(cond, msg = ''):
+    assert cond, msg
 
 
 constructor()
