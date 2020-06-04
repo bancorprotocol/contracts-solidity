@@ -90,7 +90,7 @@ function get(contractId, guid) {
             }
             else {
                 body = parse(body);
-                if (body.result == "Pending in queue" || body.result.startsWith("Max rate limit reached"))
+                if (body.result == "Pending in queue" || (body.result && body.result.startsWith("Max rate limit reached")))
                     get(contractId, guid);
                 else
                     console.log(contractId + ": " + body.result);
