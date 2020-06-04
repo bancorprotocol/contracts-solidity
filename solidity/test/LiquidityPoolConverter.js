@@ -182,23 +182,6 @@ contract('LiquidityPoolConverter', accounts => {
                 await utils.catchRevert(converter.rateAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, 500));
             });
 
-            it('verifies that convert returns valid amount and fee after converting', async () => {
-                let converter = await initConverter(accounts, true, isETHReserve, 5000);
-                let watcher = converter.Conversion();
-                await converter.setConversionFee(3000);
-                
-                let value = 0;
-                if (isETHReserve)
-                    value = 500;
-                else
-                    await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
-
-                await convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], 500, 1, { value });
-                let events = await watcher.get();
-                assert(events.length > 0);
-                assert(events[0].args._return.equals(1171), events[0].args._conversionFee.equals(8));
-            });
-
             it('should throw when attempting to convert with 0 minimum requested amount', async () => {
                 await initConverter(accounts, true, isETHReserve);
                 let value = 0;
