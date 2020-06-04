@@ -82,7 +82,7 @@ async function convert(path, amount, minReturn, options) {
     return bancorNetwork.convertByPath(path, amount, minReturn, utils.zeroAddress, utils.zeroAddress, 0, options);
 }
 
-contract('LiquidityPoolConverter', accounts => {
+contract('LiquidityPoolV1Converter', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
 
