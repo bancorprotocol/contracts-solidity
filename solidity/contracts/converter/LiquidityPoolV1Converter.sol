@@ -131,8 +131,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         require(amount != 0, "ERR_ZERO_RATE");
 
         // ensure that the trade won't deplete the reserve balance
-        uint256 toReserveBalance = reserveBalance(_targetToken);
-        assert(amount < toReserveBalance);
+        uint256 targetReserveBalance = reserveBalance(_targetToken);
+        assert(amount < targetReserveBalance);
 
         // ensure that the input amount was already deposited
         if (_sourceToken == ETH_RESERVE_ADDRESS)
