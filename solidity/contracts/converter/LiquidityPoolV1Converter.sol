@@ -127,7 +127,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         // get expected rate and fee
         (uint256 amount, uint256 fee) = rateAndFee(_sourceToken, _targetToken, _amount);
 
-        // ensure the trade gives something in return
+        // ensure that the trade gives something in return
         require(amount != 0, "ERR_ZERO_RATE");
 
         // ensure that the trade won't deplete the reserve balance
