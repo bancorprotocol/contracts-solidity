@@ -34,6 +34,7 @@ import "../bancorx/interfaces/IBancorX.sol";
   * Converter types (defined as uint8 type) -
   * 0 = liquid token converter
   * 1 = liquidity pool v1 converter
+  * 2 = liquidity pool v2 converter
   *
 */
 contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistryClient {

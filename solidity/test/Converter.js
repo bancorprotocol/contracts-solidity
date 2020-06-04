@@ -108,7 +108,7 @@ contract('Converter:', accounts => {
         upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
 
-        let anchor = await SmartToken.new('Token1', 'TKN1', 2); 
+        anchor = await SmartToken.new('Token1', 'TKN1', 2); 
         anchorAddress = anchor.address;
 
         reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);

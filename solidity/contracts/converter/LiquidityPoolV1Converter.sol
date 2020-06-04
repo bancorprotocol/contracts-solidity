@@ -161,8 +161,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev buys the token with all reserve tokens using the same percentage
-      * note that the function cannot be called when the converter has only one reserve
+      * @dev increases the pool's liquidity and mints new shares in the pool to the caller
       * note that prior to version 28, you should use 'fund' instead
       *
       * @param _reserveTokens   address of each reserve token
@@ -200,8 +199,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev sells the token for all reserve tokens using the same percentage
-      * note that the function cannot be called when the converter has only one reserve
+      * @dev decreases the pool's liquidity and burns the caller's shares in the pool
       * note that prior to version 28, you should use 'liquidate' instead
       *
       * @param _amount                  token amount
@@ -226,10 +224,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev buys the token with all reserve tokens using the same percentage
+      * @dev increases the pool's liquidity and mints new shares in the pool to the caller
       * for example, if the caller increases the supply by 10%,
       * then it will cost an amount equal to 10% of each reserve token balance
-      * note that the function cannot be called when the converter has only one reserve
       * note that starting from version 28, you should use 'addLiquidity' instead
       *
       * @param _amount  amount to increase the supply by (in the pool token)
@@ -275,10 +272,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev sells the token for all reserve tokens using the same percentage
+      * @dev decreases the pool's liquidity and burns the caller's shares in the pool
       * for example, if the holder sells 10% of the supply,
       * then they will receive 10% of each reserve token balance in return
-      * note that the function cannot be called when the converter has only one reserve
       * note that starting from version 28, you should use 'removeLiquidity' instead
       *
       * @param _amount  amount to liquidate (in the pool token)
