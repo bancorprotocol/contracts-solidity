@@ -377,7 +377,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     {
         // validate input
         require(_token != address(anchor) && !reserves[_token].isSet, "ERR_INVALID_RESERVE");
-        require(reserveRatio + _weight <= WEIGHT_RESOLUTION, "ERR_INVALID_RESERVE_WEIGHT");
+        require(_weight <= WEIGHT_RESOLUTION - reserveRatio, "ERR_INVALID_RESERVE_WEIGHT");
 
         reserves[_token].balance = 0;
         reserves[_token].weight = _weight;
