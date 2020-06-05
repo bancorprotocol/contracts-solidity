@@ -264,7 +264,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             reserves[reserveToken].balance = reserves[reserveToken].balance.add(reserveAmount);
 
             // dispatch liquidity update for the pool token/reserve
-            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, rsvBalance + reserveAmount, supply + _amount);
+            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, rsvBalance.add(reserveAmount), supply.add(_amount));
         }
 
         // issue new funds to the caller in the pool token
@@ -399,7 +399,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
             reserves[reserveToken].balance = reserves[reserveToken].balance.add(reserveAmount);
 
-            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, rsvBalance + reserveAmount, _totalSupply + amount);
+            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, rsvBalance.add(reserveAmount), _totalSupply.add(amount));
         }
 
         return amount;
