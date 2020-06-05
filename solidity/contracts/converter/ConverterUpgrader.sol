@@ -91,9 +91,9 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         address prevOwner = converter.owner();
         acceptConverterOwnership(converter);
         IConverter newConverter = createConverter(converter);
-        copyConnectors(converter, newConverter);
+        copyReserves(converter, newConverter);
         copyConversionFee(converter, newConverter);
-        transferConnectorsBalances(converter, newConverter);
+        transferReserveBalances(converter, newConverter);
         IConverterAnchor anchor = converter.token();
 
         if (anchor.owner() == address(converter)) {
@@ -131,7 +131,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     function createConverter(IConverter _oldConverter) private returns (IConverter) {
         IConverterAnchor anchor = _oldConverter.token();
         uint32 maxConversionFee = _oldConverter.maxConversionFee();
-        uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
+        uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 
         // determine new converter type
         uint8 newType = 0;
@@ -139,7 +139,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         if (isV28OrHigherConverter(_oldConverter))
             newType = _oldConverter.converterType();
         // old converter - if it has 1 reserve token, the type is a liquid token, otherwise the type liquidity pool
-        else if (connectorTokenCount > 1)
+        else if (reserveTokenCount > 1)
             newType = 1;
 
         IConverterFactory converterFactory = IConverterFactory(addressOf(CONVERTER_FACTORY));
@@ -156,26 +156,26 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */
-    function copyConnectors(IConverter _oldConverter, IConverter _newConverter)
+    function copyReserves(IConverter _oldConverter, IConverter _newConverter)
         private
     {
-        uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
+        uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 
-        for (uint16 i = 0; i < connectorTokenCount; i++) {
-            address connectorAddress = _oldConverter.connectorTokens(i);
-            (, uint32 weight, , , ) = _oldConverter.connectors(connectorAddress);
+        for (uint16 i = 0; i < reserveTokenCount; i++) {
+            address reserveAddress = _oldConverter.connectorTokens(i);
+            (, uint32 weight, , , ) = _oldConverter.connectors(reserveAddress);
 
             // Ether reserve
-            if (connectorAddress == ETH_RESERVE_ADDRESS) {
+            if (reserveAddress == ETH_RESERVE_ADDRESS) {
                 _newConverter.addReserve(IERC20Token(ETH_RESERVE_ADDRESS), weight);
             }
             // Ether reserve token
-            else if (connectorAddress == address(etherToken)) {
+            else if (reserveAddress == address(etherToken)) {
                 _newConverter.addReserve(IERC20Token(ETH_RESERVE_ADDRESS), weight);
             }
             // ERC20 reserve token
             else {
-                _newConverter.addReserve(IERC20Token(connectorAddress), weight);
+                _newConverter.addReserve(IERC20Token(reserveAddress), weight);
             }
         }
     }
@@ -192,36 +192,36 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     }
 
     /**
-      * @dev transfers the balance of each connector in the old converter to the new one.
+      * @dev transfers the balance of each reserve in the old converter to the new one.
       * note that the function assumes that the new converter already has the exact same number of
       * also, this will not work for an unlimited number of reserves due to block gas limit constraints.
       *
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */
-    function transferConnectorsBalances(IConverter _oldConverter, IConverter _newConverter)
+    function transferReserveBalances(IConverter _oldConverter, IConverter _newConverter)
         private
     {
-        uint256 connectorBalance;
-        uint16 connectorTokenCount = _oldConverter.connectorTokenCount();
+        uint256 reserveBalance;
+        uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 
-        for (uint16 i = 0; i < connectorTokenCount; i++) {
-            address connectorAddress = _oldConverter.connectorTokens(i);
+        for (uint16 i = 0; i < reserveTokenCount; i++) {
+            address reserveAddress = _oldConverter.connectorTokens(i);
             // Ether reserve
-            if (connectorAddress == ETH_RESERVE_ADDRESS) {
+            if (reserveAddress == ETH_RESERVE_ADDRESS) {
                 _oldConverter.withdrawETH(address(_newConverter));
             }
             // Ether reserve token
-            else if (connectorAddress == address(etherToken)) {
-                connectorBalance = etherToken.balanceOf(_oldConverter);
-                _oldConverter.withdrawTokens(etherToken, address(this), connectorBalance);
-                etherToken.withdrawTo(address(_newConverter), connectorBalance);
+            else if (reserveAddress == address(etherToken)) {
+                reserveBalance = etherToken.balanceOf(_oldConverter);
+                _oldConverter.withdrawTokens(etherToken, address(this), reserveBalance);
+                etherToken.withdrawTo(address(_newConverter), reserveBalance);
             }
             // ERC20 reserve token
             else {
-                IERC20Token connector = IERC20Token(connectorAddress);
-                connectorBalance = connector.balanceOf(_oldConverter);
-                _oldConverter.withdrawTokens(connector, address(_newConverter), connectorBalance);
+                IERC20Token connector = IERC20Token(reserveAddress);
+                reserveBalance = connector.balanceOf(_oldConverter);
+                _oldConverter.withdrawTokens(connector, address(_newConverter), reserveBalance);
             }
         }
     }
