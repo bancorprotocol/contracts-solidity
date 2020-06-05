@@ -434,7 +434,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             else
                 safeTransfer(reserveToken, msg.sender, reserveAmount);
 
-            emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, rsvBalance - reserveAmount, _totalSupply.sub(_amount));
+            emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, rsvBalance.sub(reserveAmount), _totalSupply.sub(_amount));
         }
     }
 
