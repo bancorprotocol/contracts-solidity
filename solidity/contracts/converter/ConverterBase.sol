@@ -458,14 +458,14 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     }
 
     /**
-      * @dev given a return amount, returns the amount minus the conversion fee
+      * @dev returns the conversion fee for a given return amount
       *
       * @param _amount  return amount
       *
-      * @return return amount minus conversion fee
+      * @return conversion fee
     */
-    function deductFee(uint256 _amount) internal view returns (uint256) {
-        return _amount.mul((CONVERSION_FEE_RESOLUTION - conversionFee)).div(CONVERSION_FEE_RESOLUTION);
+    function calculateFee(uint256 _amount) internal view returns (uint256) {
+        return _amount.mul(conversionFee).div(CONVERSION_FEE_RESOLUTION);
     }
 
     /**

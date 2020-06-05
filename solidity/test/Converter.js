@@ -116,6 +116,12 @@ contract('Converter:', accounts => {
     });
 
     for (let type = 0; type < 2; type++) {
+        it('verifies that converterType returns the correct type', async () => {
+            let converter = await initConverter(type, accounts, true, true);
+            let converterType = await converter.converterType.call();
+            assert.equal(type, converterType);
+        });
+
         it('verifies that sending ether to the converter succeeds if it has ETH reserve', async () => {
             let converter = await initConverter(type, accounts, true, true);
             await converter.send(100);

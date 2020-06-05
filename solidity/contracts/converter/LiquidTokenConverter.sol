@@ -160,8 +160,8 @@ contract LiquidTokenConverter is ConverterBase {
         );
 
         // return the amount minus the conversion fee and the conversion fee
-        uint256 amountMinusFee = deductFee(amount);
-        return (amountMinusFee, amount - amountMinusFee);
+        uint256 fee = calculateFee(amount);
+        return (amount - fee, fee);
     }
 
     /**
@@ -194,8 +194,8 @@ contract LiquidTokenConverter is ConverterBase {
         );
 
         // return the amount minus the conversion fee and the conversion fee
-        uint256 amountMinusFee = deductFee(amount);
-        return (amountMinusFee, amount - amountMinusFee);
+        uint256 fee = calculateFee(amount);
+        return (amount - fee, fee);
     }
 
     /**
