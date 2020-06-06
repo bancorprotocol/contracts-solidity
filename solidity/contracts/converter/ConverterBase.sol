@@ -326,7 +326,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @param _to      account to receive the new amount
       * @param _amount  amount to withdraw
     */
-    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public protected {
+    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public protected ownerOnly {
         address converterUpgrader = addressOf(CONVERTER_UPGRADER);
 
         // if the token is not a reserve token, allow withdrawal
