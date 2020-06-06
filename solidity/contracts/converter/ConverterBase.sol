@@ -36,6 +36,7 @@ import "../bancorx/interfaces/IBancorX.sol";
   * 1 = liquidity pool v1 converter
   * 2 = liquidity pool v2 converter
   *
+  * Note that converters don't currently support tokens with transfer fees.
 */
 contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistryClient {
     using SafeMath for uint256;
