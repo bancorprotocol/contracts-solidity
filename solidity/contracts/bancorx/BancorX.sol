@@ -147,7 +147,17 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
         IERC20Token _token
     )   ContractRegistryClient(_registry)
         public
+        greaterThanZero(_maxLockLimit)
+        greaterThanZero(_maxReleaseLimit)
+        greaterThanZero(_minLimit)
+        greaterThanZero(_limitIncPerBlock)
+        greaterThanZero(_minRequiredReports)
+        validAddress(_token)
+        notThis(_token)
     {
+        // validate input
+        require(_minLimit <= _maxLockLimit, "ERR_INVALID_MIN_LIMIT");
+
         // the maximum limits, minimum limit, and limit increase per block
         maxLockLimit = _maxLockLimit;
         maxReleaseLimit = _maxReleaseLimit;
@@ -202,7 +212,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
       *
       * @param _maxLockLimit    new maxLockLimit
      */
-    function setMaxLockLimit(uint256 _maxLockLimit) public ownerOnly {
+    function setMaxLockLimit(uint256 _maxLockLimit) public ownerOnly greaterThanZero(_maxLockLimit) {
         maxLockLimit = _maxLockLimit;
     }
 
@@ -211,7 +221,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
       *
       * @param _maxReleaseLimit    new maxReleaseLimit
      */
-    function setMaxReleaseLimit(uint256 _maxReleaseLimit) public ownerOnly {
+    function setMaxReleaseLimit(uint256 _maxReleaseLimit) public ownerOnly greaterThanZero(_maxReleaseLimit) {
         maxReleaseLimit = _maxReleaseLimit;
     }
 
@@ -220,7 +230,10 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
       *
       * @param _minLimit    new minLimit
      */
-    function setMinLimit(uint256 _minLimit) public ownerOnly {
+    function setMinLimit(uint256 _minLimit) public ownerOnly greaterThanZero(_minLimit) {
+        // validate input
+        require(_minLimit <= maxLockLimit, "ERR_INVALID_MIN_LIMIT");
+
         minLimit = _minLimit;
     }
 
@@ -229,7 +242,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
       *
       * @param _limitIncPerBlock    new limitIncPerBlock
      */
-    function setLimitIncPerBlock(uint256 _limitIncPerBlock) public ownerOnly {
+    function setLimitIncPerBlock(uint256 _limitIncPerBlock) public ownerOnly greaterThanZero(_limitIncPerBlock) {
         limitIncPerBlock = _limitIncPerBlock;
     }
 
@@ -238,7 +251,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
       *
       * @param _minRequiredReports    new minRequiredReports
      */
-    function setMinRequiredReports(uint256 _minRequiredReports) public ownerOnly {
+    function setMinRequiredReports(uint256 _minRequiredReports) public ownerOnly greaterThanZero(_minRequiredReports) {
         minRequiredReports = _minRequiredReports;
     }
 
