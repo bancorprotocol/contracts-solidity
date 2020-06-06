@@ -194,9 +194,9 @@ contract('LiquidTokenConverter', accounts => {
             });
 
             it('verifies that convert returns valid amount and fee after buying', async () => {
-                let converter = await initConverter(accounts, true, isETHReserve, 5000);
+                let converter = await initConverter(accounts, true, isETHReserve, 10000);
                 let watcher = converter.Conversion();
-                await converter.setConversionFee(3000);
+                await converter.setConversionFee(6000);
                 let value = 0;
                 if (isETHReserve)
                     value = 500;
@@ -206,18 +206,20 @@ contract('LiquidTokenConverter', accounts => {
                 await convert([getReserve1Address(isETHReserve), tokenAddress, tokenAddress], 500, 1, { value });
                 let events = await watcher.get();
                 assert(events.length > 0);
-                assert(events[0].args._return.equals(480), events[0].args._conversionFee.equals(2));
+                assert.equal(events[0].args._return.toFixed(), 480);
+                assert.equal(events[0].args._conversionFee.toFixed(), 2);
             });
 
             it('verifies that convert returns valid amount and fee after selling', async () => {
-                let converter = await initConverter(accounts, true, isETHReserve, 5000);
+                let converter = await initConverter(accounts, true, isETHReserve, 10000);
                 let watcher = converter.Conversion();
-                await converter.setConversionFee(3000);
+                await converter.setConversionFee(6000);
                 await approve(token, accounts[0], bancorNetwork.address, 500);
                 await convert([tokenAddress, tokenAddress, getReserve1Address(isETHReserve)], 500, 1);
                 let events = await watcher.get();
                 assert(events.length > 0);
-                assert(events[0].args._return.equals(479), events[0].args._conversionFee.equals(2));
+                assert.equal(events[0].args._return.toFixed(), 479);
+                assert.equal(events[0].args._conversionFee.toFixed(), 2);
             });
 
             it('verifies that selling right after buying does not result in an amount greater than the original purchase amount', async () => {

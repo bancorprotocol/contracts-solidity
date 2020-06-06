@@ -125,7 +125,8 @@ contract('LiquidityPoolV1Converter', accounts => {
                 await convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], 500, 1, { value });
                 let events = await watcher.get();
                 assert(events.length > 0);
-                assert(events[0].args._return.equals(1171), events[0].args._conversionFee.equals(8));
+                assert.equal(events[0].args._return.toFixed(), 1172);
+                assert.equal(events[0].args._conversionFee.toFixed(), 3);
             });
 
             it('should throw when attempting to convert when the return is smaller than the minimum requested amount', async () => {
