@@ -56,19 +56,19 @@ contract ContractRegistryClient is Owned, Utils {
         require(msg.sender == owner || !onlyOwnerCanUpdateRegistry, "ERR_ACCESS_DENIED");
 
         // get the new contract-registry
-        address newRegistry = addressOf(CONTRACT_REGISTRY);
+        IContractRegistry newRegistry = IContractRegistry(addressOf(CONTRACT_REGISTRY));
 
         // verify that the new contract-registry is different and not zero
         require(newRegistry != address(registry) && newRegistry != address(0), "ERR_INVALID_REGISTRY");
 
         // verify that the new contract-registry is pointing to a non-zero contract-registry
-        require(IContractRegistry(newRegistry).addressOf(CONTRACT_REGISTRY) != address(0), "ERR_INVALID_REGISTRY");
+        require(newRegistry.addressOf(CONTRACT_REGISTRY) != address(0), "ERR_INVALID_REGISTRY");
 
         // save a backup of the current contract-registry before replacing it
         prevRegistry = registry;
 
         // replace the current contract-registry with the new contract-registry
-        registry = IContractRegistry(newRegistry);
+        registry = newRegistry;
     }
 
     /**

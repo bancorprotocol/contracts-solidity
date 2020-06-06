@@ -382,9 +382,10 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
         require(_weight <= WEIGHT_RESOLUTION - reserveRatio, "ERR_INVALID_RESERVE_WEIGHT");
         require(reserveTokenCount() < uint16(-1), "ERR_INVALID_RESERVE_COUNT");
 
-        reserves[_token].balance = 0;
-        reserves[_token].weight = _weight;
-        reserves[_token].isSet = true;
+        Reserve storage newReserve = reserves[_token];
+        newReserve.balance = 0;
+        newReserve.weight = _weight;
+        newReserve.isSet = true;
         reserveTokens.push(_token);
         reserveRatio += _weight;
     }
