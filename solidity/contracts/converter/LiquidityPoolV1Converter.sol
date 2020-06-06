@@ -12,7 +12,7 @@ contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
       *
       * @return converter type
     */
-    function converterType() public pure returns (uint8) {
+    function converterType() public pure returns (uint16) {
         return 1;
     }
 
@@ -67,7 +67,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       *
       * @return see the converter types in the the main contract doc
     */
-    function converterType() public pure returns (uint8) {
+    function converterType() public pure returns (uint16) {
         return 1;
     }
 

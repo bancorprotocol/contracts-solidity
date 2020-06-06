@@ -103,7 +103,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @return new converter
     */
     function newConverter(
-        uint8 _type,
+        uint16 _type,
         string _name,
         string _symbol,
         uint8 _decimals,
@@ -370,7 +370,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _reserveWeights  reserve weights
       * @return the liquidity pool, or zero if no such liquidity pool exists
     */
-    function getLiquidityPoolByConfig(uint8 _type, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) public view returns (IConverterAnchor) {
+    function getLiquidityPoolByConfig(uint16 _type, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) public view returns (IConverterAnchor) {
         // verify that the input parameters represent a valid liquidity pool
         if (_reserveTokens.length == _reserveWeights.length && _reserveTokens.length > 1) {
             // get the anchors of the least frequent token (optimization)
@@ -502,7 +502,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         return converterRegistryData.getConvertibleTokenSmartTokens(_reserveTokens[index]);
     }
 
-    function isConverterReserveConfigEqual(IConverter _converter, uint8 _type, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) private view returns (bool) {
+    function isConverterReserveConfigEqual(IConverter _converter, uint16 _type, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) private view returns (bool) {
         if (_type != _converter.converterType())
             return false;
 

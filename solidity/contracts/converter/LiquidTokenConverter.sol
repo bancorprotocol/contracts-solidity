@@ -12,7 +12,7 @@ contract LiquidTokenConverterFactory is ITypedConverterFactory {
       *
       * @return converter type
     */
-    function converterType() public pure returns (uint8) {
+    function converterType() public pure returns (uint16) {
         return 0;
     }
 
@@ -64,7 +64,7 @@ contract LiquidTokenConverter is ConverterBase {
       *
       * @return see the converter types in the the main contract doc
     */
-    function converterType() public pure returns (uint8) {
+    function converterType() public pure returns (uint16) {
         return 0;
     }
 

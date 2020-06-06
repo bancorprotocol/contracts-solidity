@@ -31,7 +31,7 @@ import "../bancorx/interfaces/IBancorX.sol";
   * doesn't allow upgrades anymore, for finalizing the relationship between the converter
   * and the anchor.
   *
-  * Converter types (defined as uint8 type) -
+  * Converter types (defined as uint16 type) -
   * 0 = liquid token converter
   * 1 = liquidity pool v1 converter
   * 2 = liquidity pool v2 converter

@@ -19,8 +19,8 @@ contract ConverterFactory is IConverterFactory, Owned {
     */
     event NewConverter(address indexed _converter, address indexed _owner);
 
-    mapping (uint8 => ITypedConverterAnchorFactory) public anchorFactories;
-    mapping (uint8 => ITypedConverterFactory) public converterFactories;
+    mapping (uint16 => ITypedConverterAnchorFactory) public anchorFactories;
+    mapping (uint16 => ITypedConverterFactory) public converterFactories;
 
     /**
       * @dev initializes a new ConverterFactory instance
@@ -59,7 +59,7 @@ contract ConverterFactory is IConverterFactory, Owned {
       *
       * @return new converter anchor
     */
-    function createAnchor(uint8 _converterType, string _name, string _symbol, uint8 _decimals) public returns (IConverterAnchor) {
+    function createAnchor(uint16 _converterType, string _name, string _symbol, uint8 _decimals) public returns (IConverterAnchor) {
         IConverterAnchor anchor;
         ITypedConverterAnchorFactory factory = anchorFactories[_converterType];
 
@@ -88,7 +88,7 @@ contract ConverterFactory is IConverterFactory, Owned {
       *
       * @return new converter
     */
-    function createConverter(uint8 _type, IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) public returns (IConverter) {
+    function createConverter(uint16 _type, IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) public returns (IConverter) {
         IConverter converter = converterFactories[_type].createConverter(_anchor, _registry, _maxConversionFee);
         converter.acceptOwnership();
         converter.transferOwnership(msg.sender);

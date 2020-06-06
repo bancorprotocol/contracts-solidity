@@ -134,7 +134,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 
         // determine new converter type
-        uint8 newType = 0;
+        uint16 newType = 0;
         // new converter - get the type from the converter itself
         if (isV28OrHigherConverter(_oldConverter))
             newType = _oldConverter.converterType();

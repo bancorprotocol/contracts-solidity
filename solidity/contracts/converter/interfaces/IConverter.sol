@@ -8,7 +8,7 @@ import "../../utility/interfaces/IWhitelist.sol";
     Converter interface
 */
 contract IConverter is IOwned {
-    function converterType() public pure returns (uint8);
+    function converterType() public pure returns (uint16);
     function anchor() public view returns (IConverterAnchor) {this;}
     function isActive() public view returns (bool);
 
