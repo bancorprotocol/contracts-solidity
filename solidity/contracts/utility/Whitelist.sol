@@ -14,14 +14,14 @@ contract Whitelist is IWhitelist, Owned, Utils {
       *
       * @param _address address that's added from the whitelist
     */
-    event AddressAddition(address _address);
+    event AddressAddition(address indexed _address);
 
     /**
       * @dev triggered when an address is removed from the whitelist
       *
       * @param _address address that's removed from the whitelist
     */
-    event AddressRemoval(address _address);
+    event AddressRemoval(address indexed _address);
 
     /**
       * @dev returns true if a given address is whitelisted, false if not
