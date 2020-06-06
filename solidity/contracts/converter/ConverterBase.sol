@@ -186,7 +186,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
 
     // error message binary size optimization
     function _validConversionFee(uint32 _conversionFee) internal pure {
-        require(_conversionFee >= 0 && _conversionFee <= CONVERSION_FEE_RESOLUTION, "ERR_INVALID_CONVERSION_FEE");
+        require(_conversionFee <= CONVERSION_FEE_RESOLUTION, "ERR_INVALID_CONVERSION_FEE");
     }
 
     // validates reserve weight
@@ -311,7 +311,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @param _conversionFee new conversion fee, represented in ppm
     */
     function setConversionFee(uint32 _conversionFee) public ownerOnly {
-        require(_conversionFee >= 0 && _conversionFee <= maxConversionFee, "ERR_INVALID_CONVERSION_FEE");
+        require(_conversionFee <= maxConversionFee, "ERR_INVALID_CONVERSION_FEE");
         emit ConversionFeeUpdate(conversionFee, _conversionFee);
         conversionFee = _conversionFee;
     }
