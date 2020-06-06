@@ -366,6 +366,8 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
         public
         reporterOnly
         reportingAllowed
+        validAddress(_to)
+        greaterThanZero(_amount)
     {
         // require that the transaction has not been reported yet by the reporter
         require(!reportedTxs[_txId][msg.sender], "ERR_ALREADY_REPORTED");
