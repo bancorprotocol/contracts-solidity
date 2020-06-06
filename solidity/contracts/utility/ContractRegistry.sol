@@ -65,7 +65,12 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
         // validate input
         require(_contractName.length > 0, "ERR_INVALID_NAME");
 
-        if (items[_contractName].contractAddress == address(0)) {
+        // check if any change is needed
+        address currentAddress = items[_contractName].contractAddress;
+        if (_contractAddress == currentAddress)
+            return;
+
+        if (currentAddress == address(0)) {
             // add the contract name to the name list
             uint256 i = contractNames.push(bytes32ToString(_contractName));
             // update the item's index in the list

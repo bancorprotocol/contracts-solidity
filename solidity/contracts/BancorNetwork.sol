@@ -170,7 +170,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
                 amount -= fee;
 
                 // update the smart token supply for the next iteration
-                suply = supply.add(amount);
+                supply = supply.add(amount);
             }
             else if (sourceToken == anchor) { // sell the smart token
                 // check if the current smart token has changed
