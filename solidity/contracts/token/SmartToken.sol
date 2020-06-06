@@ -81,7 +81,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
         balanceOf[_to] = balanceOf[_to].add(_amount);
 
         emit Issuance(_amount);
-        emit Transfer(this, _to, _amount);
+        emit Transfer(address(0), _to, _amount);
     }
 
     /**
@@ -95,7 +95,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
         balanceOf[_from] = balanceOf[_from].sub(_amount);
         totalSupply = totalSupply.sub(_amount);
 
-        emit Transfer(_from, this, _amount);
+        emit Transfer(_from, address(0), _amount);
         emit Destruction(_amount);
     }
 
