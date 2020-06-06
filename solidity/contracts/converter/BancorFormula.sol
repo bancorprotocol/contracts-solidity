@@ -5,7 +5,7 @@ import "../utility/SafeMath.sol";
 contract BancorFormula is IBancorFormula {
     using SafeMath for uint256;
 
-    uint16 public version = 6;
+    uint16 public constant version = 6;
 
     uint256 private constant ONE = 1;
     uint32 private constant MAX_WEIGHT = 1000000;
