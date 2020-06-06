@@ -3,6 +3,7 @@ import "./interfaces/IBancorXUpgrader.sol";
 import "./interfaces/IBancorX.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/SafeMath.sol";
+import "../utility/TokenHandler.sol";
 import "../utility/TokenHolder.sol";
 
 /**
@@ -15,7 +16,7 @@ import "../utility/TokenHolder.sol";
   * Reporting cross chain transfers works similar to standard multisig contracts, meaning that multiple
   * callers are required to report a transfer before tokens are released to the target account.
 */
-contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
+contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient {
     using SafeMath for uint256;
 
     // represents a transaction on another blockchain where tokens were destroyed/locked
@@ -448,7 +449,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
       * @param _amount  the amount of tokens to lock
      */
     function lockTokens(uint256 _amount) private {
-        token.transferFrom(msg.sender, address(this), _amount);
+        safeTransferFrom(token, msg.sender, address(this), _amount);
         emit TokensLock(msg.sender, _amount);
     }
 
@@ -469,7 +470,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         prevReleaseBlockNumber = block.number;
 
         // no need to require, reverts on failure
-        token.transfer(_to, _amount);
+        safeTransfer(token, _to, _amount);
 
         emit TokensRelease(_to, _amount);
     }
