@@ -126,7 +126,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
     */
     function bytes32ToString(bytes32 _bytes) private pure returns (string) {
         bytes memory byteArray = new bytes(32);
-        for (uint256 i; i < 32; i++) {
+        for (uint256 i = 0; i < 32; i++) {
             byteArray[i] = _bytes[i];
         }
 
