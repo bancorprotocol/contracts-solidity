@@ -452,7 +452,6 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
         only(BANCOR_NETWORK)
         returns (uint256)
     {
-        _amount; // remove unused parameter warning
         // validate input
         require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET");
 
