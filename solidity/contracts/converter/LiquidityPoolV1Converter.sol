@@ -172,6 +172,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         public
         payable
         protected
+        active
     {
         // verify the user input
         verifyLiquidityInput(_reserveTokens, _reserveAmounts, _minReturn);
@@ -209,6 +210,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     function removeLiquidity(uint256 _amount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
         public
         protected
+        active
     {
         // verify the user input
         verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
