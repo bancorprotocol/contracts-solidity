@@ -156,7 +156,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
         notThis(_token)
     {
         // validate input
-        require(_minLimit <= _maxLockLimit, "ERR_INVALID_MIN_LIMIT");
+        require(_minLimit <= _maxLockLimit && _minLimit <= _maxReleaseLimit, "ERR_INVALID_MIN_LIMIT");
 
         // the maximum limits, minimum limit, and limit increase per block
         maxLockLimit = _maxLockLimit;
@@ -232,7 +232,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
      */
     function setMinLimit(uint256 _minLimit) public ownerOnly greaterThanZero(_minLimit) {
         // validate input
-        require(_minLimit <= maxLockLimit, "ERR_INVALID_MIN_LIMIT");
+        require(_minLimit <= maxLockLimit && _minLimit <= maxReleaseLimit, "ERR_INVALID_MIN_LIMIT");
 
         minLimit = _minLimit;
     }
