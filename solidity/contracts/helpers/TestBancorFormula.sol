@@ -5,9 +5,6 @@ import "../converter/BancorFormula.sol";
     BancorFormula test helper that exposes some BancorFormula functions
 */
 contract TestBancorFormula is BancorFormula {
-    constructor() public {
-    }
-
     function powerTest(uint256 _baseN, uint256 _baseD, uint32 _expN, uint32 _expD) external view returns (uint256, uint8) {
         return super.power(_baseN, _baseD, _expN, _expD);
     }

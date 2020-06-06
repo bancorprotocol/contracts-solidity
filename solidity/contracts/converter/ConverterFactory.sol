@@ -23,12 +23,6 @@ contract ConverterFactory is IConverterFactory, Owned {
     mapping (uint16 => ITypedConverterFactory) public converterFactories;
 
     /**
-      * @dev initializes a new ConverterFactory instance
-    */
-    constructor() public {
-    }
-
-    /**
       * @dev initializes the factory with a specific typed converter anchor factory
       * can only be called by the owner
       *

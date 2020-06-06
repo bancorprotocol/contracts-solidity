@@ -24,12 +24,6 @@ contract Whitelist is IWhitelist, Owned, Utils {
     event AddressRemoval(address _address);
 
     /**
-      * @dev initializes a new Whitelist instance
-    */
-    constructor() public {
-    }
-
-    /**
       * @dev returns true if a given address is whitelisted, false if not
       *
       * @param _address address to check

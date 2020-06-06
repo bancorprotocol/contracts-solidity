@@ -4,12 +4,6 @@ pragma solidity 0.4.26;
   * @dev Utilities & Common Modifiers
 */
 contract Utils {
-    /**
-      * constructor
-    */
-    constructor() public {
-    }
-
     // verifies that a value is greater than zero
     modifier greaterThanZero(uint256 _value) {
         _greaterThanZero(_value);

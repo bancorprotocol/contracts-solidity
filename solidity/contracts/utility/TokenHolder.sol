@@ -18,12 +18,6 @@ import "../token/interfaces/IERC20Token.sol";
 */
 contract TokenHolder is ITokenHolder, TokenHandler, Owned, Utils {
     /**
-      * @dev initializes a new TokenHolder instance
-    */
-    constructor() public {
-    }
-
-    /**
       * @dev withdraws tokens held by the contract and sends them to an account
       * can only be called by the owner
       *
