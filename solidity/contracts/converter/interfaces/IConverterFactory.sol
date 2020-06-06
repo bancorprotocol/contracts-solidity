@@ -1,7 +1,7 @@
 pragma solidity 0.4.26;
-import './IConverter.sol';
-import './IConverterAnchor.sol';
-import '../../utility/interfaces/IContractRegistry.sol';
+import "./IConverter.sol";
+import "./IConverterAnchor.sol";
+import "../../utility/interfaces/IContractRegistry.sol";
 
 /*
     Converter Factory interface

@@ -1,5 +1,5 @@
 pragma solidity 0.4.26;
-import './Owned.sol';
+import "./Owned.sol";
 import "./Utils.sol";
 import "./TokenHandler.sol";
 import "./interfaces/ITokenHolder.sol";
