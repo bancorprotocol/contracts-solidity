@@ -112,18 +112,15 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param _sourceToken source ERC20 token
       * @param _targetToken target ERC20 token
       * @param _amount      amount of tokens to convert (in units of the source token)
+      * @param _trader      address of the caller who executed the conversion
       * @param _beneficiary wallet to receive the conversion result
       *
       * @return amount of tokens received (in units of the target token)
     */
-    function convert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary)
-        public
-        payable
+    function doConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary)
+        internal
         returns (uint256)
     {
-        // call the parent to verify input
-        super.convert(_sourceToken, _targetToken, _amount, _trader, _beneficiary);
-
         // get expected rate and fee
         (uint256 amount, uint256 fee) = rateAndFee(_sourceToken, _targetToken, _amount);
 
@@ -151,7 +148,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             safeTransfer(_targetToken, _beneficiary, amount);
 
         // dispatch the conversion event
-        dispatchConversionEvent(_sourceToken, _targetToken, _amount, amount, fee);
+        dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
 
         // dispatch price data updates for the pool token / both reserves
         emit PriceDataUpdate(_sourceToken, ISmartToken(anchor).totalSupply(), reserveBalance(_sourceToken), reserves[_sourceToken].weight);

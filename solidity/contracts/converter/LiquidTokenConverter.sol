@@ -110,22 +110,19 @@ contract LiquidTokenConverter is ConverterBase {
       * @param _sourceToken source ERC20 token
       * @param _targetToken target ERC20 token
       * @param _amount      amount of tokens to convert (in units of the source token)
+      * @param _trader      address of the caller who executed the conversion
       * @param _beneficiary wallet to receive the conversion result
       *
       * @return amount of tokens received (in units of the target token)
     */
-    function convert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary)
-        public
-        payable
+    function doConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary)
+        internal
         returns (uint256)
     {
-        // call the parent to verify input
-        super.convert(_sourceToken, _targetToken, _amount, _trader, _beneficiary);
-
         if (_targetToken == ISmartToken(anchor) && reserves[_sourceToken].isSet)
-            return buy(_amount, _beneficiary);
+            return buy(_amount, _trader, _beneficiary);
         if (_sourceToken == ISmartToken(anchor) && reserves[_targetToken].isSet)
-            return sell(_amount, _beneficiary);
+            return sell(_amount, _trader, _beneficiary);
 
         // invalid input
         revert("ERR_INVALID_TOKEN");
@@ -202,11 +199,12 @@ contract LiquidTokenConverter is ConverterBase {
       * @dev buys the liquid token by depositing in its reserve
       *
       * @param _amount      amount of reserve token to buy the token for
+      * @param _trader      address of the caller who executed the conversion
       * @param _beneficiary wallet to receive the conversion result
       *
       * @return amount of liquid tokens received
     */
-    function buy(uint256 _amount, address _beneficiary) internal returns (uint256) {
+    function buy(uint256 _amount, address _trader, address _beneficiary) internal returns (uint256) {
         // get expected rate and fee
         (uint256 amount, uint256 fee) = purchaseRate(_amount);
 
@@ -228,7 +226,7 @@ contract LiquidTokenConverter is ConverterBase {
         ISmartToken(anchor).issue(_beneficiary, amount);
 
         // dispatch the conversion event
-        dispatchConversionEvent(reserveToken, ISmartToken(anchor), _amount, amount, fee);
+        dispatchConversionEvent(reserveToken, ISmartToken(anchor), _trader, _amount, amount, fee);
 
         // dispatch price data update for the liquid token/reserve
         emit PriceDataUpdate(reserveToken, ISmartToken(anchor).totalSupply(), reserveBalance(reserveToken), reserves[reserveToken].weight);
@@ -240,11 +238,12 @@ contract LiquidTokenConverter is ConverterBase {
       * @dev sells the liquid token by withdrawing from its reserve
       *
       * @param _amount      amount of liquid tokens to sell
+      * @param _trader      address of the caller who executed the conversion
       * @param _beneficiary wallet to receive the conversion result
       *
       * @return amount of reserve tokens received
     */
-    function sell(uint256 _amount, address _beneficiary) internal returns (uint256) {
+    function sell(uint256 _amount, address _trader, address _beneficiary) internal returns (uint256) {
         // ensure that the input amount was already deposited
         require(_amount <= ISmartToken(anchor).balanceOf(this), "ERR_INVALID_AMOUNT");
 
@@ -274,7 +273,7 @@ contract LiquidTokenConverter is ConverterBase {
             safeTransfer(reserveToken, _beneficiary, amount);
 
         // dispatch the conversion event
-        dispatchConversionEvent(ISmartToken(anchor), reserveToken, _amount, amount, fee);
+        dispatchConversionEvent(ISmartToken(anchor), reserveToken, _trader, _amount, amount, fee);
 
         // dispatch price data update for the liquid token/reserve
         emit PriceDataUpdate(reserveToken, ISmartToken(anchor).totalSupply(), reserveBalance(reserveToken), reserves[reserveToken].weight);

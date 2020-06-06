@@ -439,6 +439,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @param _sourceToken source ERC20 token
       * @param _targetToken target ERC20 token
       * @param _amount      amount of tokens to convert (in units of the source token)
+      * @param _trader      address of the caller who executed the conversion
       * @param _beneficiary wallet to receive the conversion result
       *
       * @return amount of tokens received (in units of the target token)
@@ -458,7 +459,23 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
         require(conversionWhitelist == address(0) ||
                 (conversionWhitelist.isWhitelisted(_trader) && conversionWhitelist.isWhitelisted(_beneficiary)),
                 "ERR_NOT_WHITELISTED");
+
+        return doConvert(_sourceToken, _targetToken, _amount, _trader, _beneficiary);
     }
+
+    /**
+      * @dev converts a specific amount of source tokens to target tokens
+      * called by ConverterBase and allows the inherited contracts to implement custom conversion logic
+      *
+      * @param _sourceToken source ERC20 token
+      * @param _targetToken target ERC20 token
+      * @param _amount      amount of tokens to convert (in units of the source token)
+      * @param _trader      address of the caller who executed the conversion
+      * @param _beneficiary wallet to receive the conversion result
+      *
+      * @return amount of tokens received (in units of the target token)
+    */
+    function doConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary) internal returns (uint256);
 
     /**
       * @dev returns the conversion fee for a given return amount
@@ -496,16 +513,25 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       *
       * @param _sourceToken     source ERC20 token
       * @param _targetToken     target ERC20 token
+      * @param _trader          address of the caller who executed the conversion
       * @param _amount          amount purchased/sold (in the source token)
       * @param _returnAmount    amount returned (in the target token)
     */
-    function dispatchConversionEvent(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _returnAmount, uint256 _feeAmount) internal {
+    function dispatchConversionEvent(
+        IERC20Token _sourceToken,
+        IERC20Token _targetToken,
+        address _trader,
+        uint256 _amount,
+        uint256 _returnAmount,
+        uint256 _feeAmount)
+        internal
+    {
         // fee amount is converted to 255 bits -
         // negative amount means the fee is taken from the source token, positive amount means its taken from the target token
         // currently the fee is always taken from the target token
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
         assert(_feeAmount < 2 ** 255);
-        emit Conversion(_sourceToken, _targetToken, msg.sender, _amount, _returnAmount, int256(_feeAmount));
+        emit Conversion(_sourceToken, _targetToken, _trader, _amount, _returnAmount, int256(_feeAmount));
     }
 
     /**
