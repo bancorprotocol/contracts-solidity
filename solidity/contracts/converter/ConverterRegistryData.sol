@@ -275,7 +275,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       * @param _items list of items
       * @param _value item's value
     */
-    function addItem(Items storage _items, address _value) internal {
+    function addItem(Items storage _items, address _value) internal validAddress(_value) {
         Item storage item = _items.table[_value];
         require(item.valid == false, "ERR_INVALID_ITEM");
 
@@ -289,7 +289,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       * @param _items list of items
       * @param _value item's value
     */
-    function removeItem(Items storage _items, address _value) internal {
+    function removeItem(Items storage _items, address _value) internal validAddress(_value) {
         Item storage item = _items.table[_value];
         require(item.valid == true, "ERR_INVALID_ITEM");
 
