@@ -23,7 +23,7 @@ import "../token/interfaces/IEtherToken.sol";
 */
 contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    IEtherToken etherToken;
+    IEtherToken public etherToken;
 
     /**
       * @dev triggered when the contract accept a converter ownership

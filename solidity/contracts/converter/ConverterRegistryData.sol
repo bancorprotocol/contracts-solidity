@@ -34,9 +34,9 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
         mapping(address => List) table;
     }
 
-    Items smartTokens;
-    Items liquidityPools;
-    Lists convertibleTokens;
+    Items public smartTokens;
+    Items public liquidityPools;
+    Lists public convertibleTokens;
 
     /**
       * @dev initializes a new ConverterRegistryData instance
