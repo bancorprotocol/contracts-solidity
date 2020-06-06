@@ -12,7 +12,7 @@ import "../utility/TokenHolder.sol";
 contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     using SafeMath for uint256;
 
-    uint16 public version = 4;
+    uint16 public constant version = 4;
 
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false otherwise
 
