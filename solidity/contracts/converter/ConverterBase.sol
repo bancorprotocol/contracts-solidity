@@ -217,6 +217,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     */
     function withdrawETH(address _to)
         public
+        protected
         ownerOnly
         validReserve(IERC20Token(ETH_RESERVE_ADDRESS))
     {
@@ -324,7 +325,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @param _to      account to receive the new amount
       * @param _amount  amount to withdraw
     */
-    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public {
+    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public protected {
         address converterUpgrader = addressOf(CONVERTER_UPGRADER);
 
         // if the token is not a reserve token, allow withdrawal
