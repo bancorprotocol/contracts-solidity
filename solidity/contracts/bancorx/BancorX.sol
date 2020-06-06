@@ -38,7 +38,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
     uint256 public limitIncPerBlock;        // how much the limit increases per block
     uint256 public prevLockBlockNumber;     // the block number of the last lock transaction
     uint256 public prevReleaseBlockNumber;  // the block number of the last release transaction
-    uint256 public minRequiredReports;      // minimum number of required reports to release tokens
+    uint8 public minRequiredReports;        // minimum number of required reports to release tokens
 
     IERC20Token public token;               // erc20 token
 
@@ -142,7 +142,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
         uint256 _maxReleaseLimit,
         uint256 _minLimit,
         uint256 _limitIncPerBlock,
-        uint256 _minRequiredReports,
+        uint8 _minRequiredReports,
         IContractRegistry _registry,
         IERC20Token _token
     )   ContractRegistryClient(_registry)
@@ -251,7 +251,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
       *
       * @param _minRequiredReports    new minRequiredReports
      */
-    function setMinRequiredReports(uint256 _minRequiredReports) public ownerOnly greaterThanZero(_minRequiredReports) {
+    function setMinRequiredReports(uint8 _minRequiredReports) public ownerOnly greaterThanZero(_minRequiredReports) {
         minRequiredReports = _minRequiredReports;
     }
 
