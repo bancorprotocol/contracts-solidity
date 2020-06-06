@@ -1,3 +1,39 @@
+### 0.6.0 (2020-06-xx)
+General
+* Major upgrade, many improvements and design changes (new backward compatibility layer still supports most of older interfaces)
+* Major gas optimization on conversions
+* New design to allow different converter types
+* Removed EtherToken functionality in favor of using ETH directly (the contract is still used for backward compatibility)
+* Added revert error messages
+* Improved support for non standard token transfer/transferFrom functions
+* Many other minor changes, bug fixes and cleanups
+
+BancorNetwork
+* Added a new `conversionPath` function
+* `getReturnByPath` is now replaced by `rateByPath`
+* all conversion functions are now replaced by `convertByPath`
+
+BancorConverter
+* Converters are now broken into different contracts with `ConverterBase` as the base contract
+* New entity introduced - Converter Anchor. The anchor rerpresents the converter id and is the non upgradable component of the converter
+* New `converterType` function to allow identifying the converter
+* There are now two major converter types - Liquid Token Converter & Liquidity Pool Converter
+* Add/Remove liquidity functions moved to the new liquidity pool converter
+* New add/remove liquidity functions - `addLiquidity` now accepts the reserve amounts instead of the pool token amount
+* It's now possible to add liquidity to empty liquidity pools
+* It's no longer possible to convert into pool tokens (these can only be acquired by adding liquidity)
+* Conversions cannot be executed directly against converters anymore - all conversions should be executed through the BancorNetwork contract
+
+ConverterRegistry
+* Added `newConverter` factory function to simplify converter creation process
+* Converters cannot be added to the registry directly anymore, instead use the new factory function
+* Converters are now accessible by their anchors instead of by their smart tokens
+* Smart token functions/events are now replaced with anchor functions/events
+
+BancorX
+* Removed support for smart tokens for security reasons. Allowance should be used instead
+
+
 ### 0.5.19 (2020-04-18)
 BancorConverter
 * Added re-entrancy protection
