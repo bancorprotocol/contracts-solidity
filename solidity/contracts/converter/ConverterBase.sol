@@ -560,7 +560,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @dev deprecated, backward compatibility
     */
     function connectors(address _address) public view returns (uint256, uint32, bool, bool, bool) {
-        Reserve storage reserve = reserves[_address];
+        Reserve memory reserve = reserves[_address];
         return(reserve.balance, reserve.weight, false, false, reserve.isSet);
     }
 
