@@ -16,7 +16,7 @@ import "./interfaces/IConverterRegistryData.sol";
 contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient {
     struct Item {
         bool valid;
-        uint index;
+        uint256 index;
     }
 
     struct Items {
@@ -25,7 +25,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
     }
 
     struct List {
-        uint index;
+        uint256 index;
         Items items;
     }
 
@@ -34,9 +34,9 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
         mapping(address => List) table;
     }
 
-    Items public smartTokens;
-    Items public liquidityPools;
-    Lists public convertibleTokens;
+    Items private smartTokens;
+    Items private liquidityPools;
+    Lists private convertibleTokens;
 
     /**
       * @dev initializes a new ConverterRegistryData instance
@@ -119,7 +119,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       *
       * @return number of smart tokens
     */
-    function getSmartTokenCount() external view returns (uint) {
+    function getSmartTokenCount() external view returns (uint256) {
         return smartTokens.array.length;
     }
 
@@ -138,7 +138,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       * @param _index index
       * @return smart token at the given index
     */
-    function getSmartToken(uint _index) external view returns (address) {
+    function getSmartToken(uint256 _index) external view returns (address) {
         return smartTokens.array[_index];
     }
 
@@ -157,7 +157,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       *
       * @return number of liquidity pools
     */
-    function getLiquidityPoolCount() external view returns (uint) {
+    function getLiquidityPoolCount() external view returns (uint256) {
         return liquidityPools.array.length;
     }
 
@@ -176,7 +176,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       * @param _index index
       * @return liquidity pool at the given index
     */
-    function getLiquidityPool(uint _index) external view returns (address) {
+    function getLiquidityPool(uint256 _index) external view returns (address) {
         return liquidityPools.array[_index];
     }
 
@@ -195,7 +195,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       *
       * @return number of convertible tokens
     */
-    function getConvertibleTokenCount() external view returns (uint) {
+    function getConvertibleTokenCount() external view returns (uint256) {
         return convertibleTokens.array.length;
     }
 
@@ -214,7 +214,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       * @param _index index
       * @return convertible token at the given index
     */
-    function getConvertibleToken(uint _index) external view returns (address) {
+    function getConvertibleToken(uint256 _index) external view returns (address) {
         return convertibleTokens.array[_index];
     }
 
@@ -234,7 +234,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       * @param _convertibleToken convertible token
       * @return number of smart tokens associated with the given convertible token
     */
-    function getConvertibleTokenSmartTokenCount(address _convertibleToken) external view returns (uint) {
+    function getConvertibleTokenSmartTokenCount(address _convertibleToken) external view returns (uint256) {
         return convertibleTokens.table[_convertibleToken].items.array.length;
     }
 
@@ -254,7 +254,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       * @param _index index
       * @return smart token associated with the given convertible token at the given index
     */
-    function getConvertibleTokenSmartToken(address _convertibleToken, uint _index) external view returns (address) {
+    function getConvertibleTokenSmartToken(address _convertibleToken, uint256 _index) external view returns (address) {
         return convertibleTokens.table[_convertibleToken].items.array[_index];
     }
 
