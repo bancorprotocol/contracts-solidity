@@ -239,7 +239,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         // iterate through the reserve tokens and transfer a percentage equal to the weight between
         // _amount and the total supply in each reserve from the caller to the converter
-        for (uint256 i = 0; i < reserveTokens.length; i++) {
+        uint256 reserveCount = reserveTokens.length;
+        for (uint256 i = 0; i < reserveCount; i++) {
             IERC20Token reserveToken = reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
             uint256 reserveAmount = formula.fundCost(supply, rsvBalance, reserveRatio, _amount);

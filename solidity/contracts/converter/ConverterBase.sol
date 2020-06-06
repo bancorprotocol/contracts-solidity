@@ -504,7 +504,8 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @dev syncs all stored reserve balances
     */
     function syncReserveBalances() internal {
-        for (uint256 i = 0; i < reserveTokens.length; i++)
+        uint256 reserveCount = reserveTokens.length;
+        for (uint256 i = 0; i < reserveCount; i++)
             syncReserveBalance(reserveTokens[i]);
     }
 
