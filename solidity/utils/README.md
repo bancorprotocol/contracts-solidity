@@ -4,25 +4,8 @@
 
 ### [Installation](../../README.md#installation)
 
-### Verify Network Path Finder
-
-```bash
-node verify_network_path_finder.js
-    Ethereum node address
-    ConversionPathFinder contract address
-```
-
-### Migrate Converter Registry
-
-```bash
-node migrate_converter_registry.js
-    Ethereum node address
-    Account private key
-    Old ConverterRegistry contract address
-    New ConverterRegistry contract address
-```
-
-### Deploy Network Emulation
+### Test Deployment
+Deploys a test Bancor Network contracts - can be used locally or on testnets.
 
 ```bash
 node deploy_network_emulation.js
