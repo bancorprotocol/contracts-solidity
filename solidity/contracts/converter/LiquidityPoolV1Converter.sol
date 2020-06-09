@@ -139,8 +139,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         // sync the reserve balances
         syncReserveBalance(_sourceToken);
-        targetReserveBalance = reserves[_targetToken].balance.sub(amount);
-        reserves[_targetToken].balance = targetReserveBalance;
+        reserves[_targetToken].balance = reserves[_targetToken].balance.sub(amount);
 
         // transfer funds to the beneficiary in the to reserve token
         if (_targetToken == ETH_RESERVE_ADDRESS)
