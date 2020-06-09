@@ -13,15 +13,15 @@ contract LiquidityPoolConverter is ConverterBase {
     /**
       * @dev triggered after liquidity is added
       *
-      * @param  _provider   liquidity provider
-      * @param  _reserve    reserve token address
-      * @param  _amount     reserve token amount
-      * @param  _newBalance reserve token new balance
-      * @param  _newSupply  pool token new supply
+      * @param  _provider       liquidity provider
+      * @param  _reserveToken   reserve token address
+      * @param  _amount         reserve token amount
+      * @param  _newBalance     reserve token new balance
+      * @param  _newSupply      pool token new supply
     */
     event LiquidityAdded(
         address indexed _provider,
-        address indexed _reserve,
+        address indexed _reserveToken,
         uint256 _amount,
         uint256 _newBalance,
         uint256 _newSupply
@@ -30,15 +30,15 @@ contract LiquidityPoolConverter is ConverterBase {
     /**
       * @dev triggered after liquidity is removed
       *
-      * @param  _provider   liquidity provider
-      * @param  _reserve    reserve token address
-      * @param  _amount     reserve token amount
-      * @param  _newBalance reserve token new balance
-      * @param  _newSupply  pool token new supply
+      * @param  _provider       liquidity provider
+      * @param  _reserveToken   reserve token address
+      * @param  _amount         reserve token amount
+      * @param  _newBalance     reserve token new balance
+      * @param  _newSupply      pool token new supply
     */
     event LiquidityRemoved(
         address indexed _provider,
-        address indexed _reserve,
+        address indexed _reserveToken,
         uint256 _amount,
         uint256 _newBalance,
         uint256 _newSupply
