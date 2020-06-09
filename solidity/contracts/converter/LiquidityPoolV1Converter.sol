@@ -260,14 +260,17 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             }
 
             // sync the reserve balance
-            reserves[reserveToken].balance = rsvBalance.add(reserveAmount);
+            uint256 newReserveBalance = rsvBalance.add(reserveAmount);
+            reserves[reserveToken].balance = newReserveBalance;
+
+            uint256 newPoolTokenSupply = supply.add(_amount);
 
             // dispatch liquidity update for the pool token/reserve
-            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, rsvBalance.add(reserveAmount), supply.add(_amount));
+            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch pool token rate update event
             uint32 reserveWeight = reserves[reserveToken].weight;
-            dispatchPoolTokenRateEvent(supply.add(_amount), reserveToken, rsvBalance.add(reserveAmount), reserveWeight);
+            dispatchPoolTokenRateEvent(newPoolTokenSupply, reserveToken, newReserveBalance, reserveWeight);
         }
 
         // issue new funds to the caller in the pool token
@@ -404,13 +407,16 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             else if (_reserveAmounts[i] > reserveAmount) // transfer the extra amount of ETH back to the user
                 msg.sender.transfer(_reserveAmounts[i] - reserveAmount);
 
-            reserves[reserveToken].balance = rsvBalance.add(reserveAmount);
+            uint256 newReserveBalance = rsvBalance.add(reserveAmount);
+            reserves[reserveToken].balance = newReserveBalance;
 
-            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, rsvBalance.add(reserveAmount), _totalSupply.add(amount));
+            uint256 newPoolTokenSupply = _totalSupply.add(amount);
+
+            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch pool token rate update event
             uint32 reserveWeight = reserves[_reserveTokens[i]].weight;
-            dispatchPoolTokenRateEvent(_totalSupply.add(amount), _reserveTokens[i], rsvBalance.add(reserveAmount), reserveWeight);
+            dispatchPoolTokenRateEvent(newPoolTokenSupply, _reserveTokens[i], newReserveBalance, reserveWeight);
         }
 
         return amount;
@@ -437,7 +443,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             uint256 reserveAmount = formula.liquidateRate(_totalSupply, rsvBalance, reserveRatio, _amount);
             require(reserveAmount >= _reserveMinReturnAmounts[i], "ERR_ZERO_RATE");
 
-            reserves[reserveToken].balance = rsvBalance.sub(reserveAmount);
+            uint256 newReserveBalance = rsvBalance.sub(reserveAmount);
+            reserves[reserveToken].balance = newReserveBalance;
 
             // transfer each one of the reserve amounts from the pool to the user
             if (reserveToken == ETH_RESERVE_ADDRESS)
@@ -445,11 +452,13 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             else
                 safeTransfer(reserveToken, msg.sender, reserveAmount);
 
-            emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, rsvBalance.sub(reserveAmount), _totalSupply.sub(_amount));
+            uint256 newPoolTokenSupply = _totalSupply.sub(_amount);
+
+            emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch pool token rate update event
             uint32 reserveWeight = reserves[reserveToken].weight;
-            dispatchPoolTokenRateEvent(_totalSupply.sub(_amount), reserveToken, rsvBalance.sub(reserveAmount), reserveWeight);
+            dispatchPoolTokenRateEvent(newPoolTokenSupply, reserveToken, newReserveBalance, reserveWeight);
         }
     }
 
