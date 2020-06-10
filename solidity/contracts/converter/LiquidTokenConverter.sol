@@ -69,6 +69,18 @@ contract LiquidTokenConverter is ConverterBase {
     }
 
     /**
+      * @dev accepts ownership of the anchor after an ownership transfer
+      * also activates the converter
+      * can only be called by the contract owner
+      * note that prior to version 28, you should use 'acceptTokenOwnership' instead
+    */
+    function acceptAnchorOwnership() public ownerOnly {
+        super.acceptAnchorOwnership();
+
+        emit Activation(anchor, true);
+    }
+
+    /**
       * @dev defines the reserve token for the converter
       * can only be called by the owner while the converter is inactive and the
       * reserve wasn't defined yet

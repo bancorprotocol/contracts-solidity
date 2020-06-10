@@ -70,6 +70,14 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     bool private locked = false;                    // true while protected code is being executed, false otherwise
 
     /**
+      * @dev triggered when the converter is activated
+      *
+      * @param _anchor      converter anchor
+      * @param _activated   true if the converter was activated, false if it was deactivated
+    */
+    event Activation(IConverterAnchor _anchor, bool _activated);
+
+    /**
       * @dev triggered when a conversion between two tokens occurs
       *
       * @param _fromToken       source ERC20 token
@@ -281,7 +289,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
 
     /**
       * @dev accepts ownership of the anchor after an ownership transfer
-      * also activates the converter
+      * most converters are also activated as soon as they accept the anchor ownership
       * can only be called by the contract owner
       * note that prior to version 28, you should use 'acceptTokenOwnership' instead
     */

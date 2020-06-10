@@ -77,8 +77,10 @@ contract LiquidityPoolConverter is ConverterBase {
     }
 
     /**
-      * @dev activates the converter
+      * @dev accepts ownership of the anchor after an ownership transfer
+      * also activates the converter
       * can only be called by the contract owner
+      * note that prior to version 28, you should use 'acceptTokenOwnership' instead
     */
     function acceptTokenOwnership() public {
         // verify that the converter has at least 2 reserves

@@ -72,6 +72,18 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
+      * @dev accepts ownership of the anchor after an ownership transfer
+      * also activates the converter
+      * can only be called by the contract owner
+      * note that prior to version 28, you should use 'acceptTokenOwnership' instead
+    */
+    function acceptAnchorOwnership() public ownerOnly {
+        super.acceptAnchorOwnership();
+
+        emit Activation(anchor, true);
+    }
+
+    /**
       * @dev returns the expected rate of converting one reserve to another along with the fee
       *
       * @param _sourceToken contract address of the source reserve token
