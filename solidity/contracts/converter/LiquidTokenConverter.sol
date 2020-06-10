@@ -150,7 +150,7 @@ contract LiquidTokenConverter is ConverterBase {
         // dispatch rate update for the liquid token
         uint256 totalSupply = ISmartToken(anchor).totalSupply();
         uint32 reserveWeight = reserves[reserveToken].weight;
-        emit TokenRateUpdate(anchor, reserveToken, reserveBalance(reserveToken), totalSupply.mul(reserveWeight).div(WEIGHT_RESOLUTION));
+        emit TokenRateUpdate(anchor, reserveToken, reserveBalance(reserveToken).mul(WEIGHT_RESOLUTION), totalSupply.mul(reserveWeight));
 
         return rate;
     }

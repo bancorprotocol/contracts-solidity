@@ -557,8 +557,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint32 targetReserveWeight = reserves[_targetToken].weight;
 
         // dispatch token rate update event
-        uint256 rateN = targetReserveBalance.mul(sourceReserveWeight).div(WEIGHT_RESOLUTION);
-        uint256 rateD = sourceReserveBalance.mul(targetReserveWeight).div(WEIGHT_RESOLUTION);
+        uint256 rateN = targetReserveBalance.mul(sourceReserveWeight);
+        uint256 rateD = sourceReserveBalance.mul(targetReserveWeight);
         emit TokenRateUpdate(_sourceToken, _targetToken, rateN, rateD);
 
         // dispatch the `TokenRateUpdate` event for the pool token
@@ -580,6 +580,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param _reserveWeight   reserve weight
     */
     function dispatchPoolTokenRateEvent(uint256 _poolTokenSupply, IERC20Token _reserveToken, uint256 _reserveBalance, uint32 _reserveWeight) private {
-        emit TokenRateUpdate(anchor, _reserveToken, _reserveBalance, _poolTokenSupply.mul(_reserveWeight).div(WEIGHT_RESOLUTION));
+        emit TokenRateUpdate(anchor, _reserveToken, _reserveBalance.mul(WEIGHT_RESOLUTION), _poolTokenSupply.mul(_reserveWeight));
     }
 }
