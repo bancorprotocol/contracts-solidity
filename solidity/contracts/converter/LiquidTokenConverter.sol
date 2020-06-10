@@ -131,13 +131,28 @@ contract LiquidTokenConverter is ConverterBase {
         internal
         returns (uint256)
     {
-        if (_targetToken == ISmartToken(anchor) && reserves[_sourceToken].isSet)
-            return buy(_amount, _trader, _beneficiary);
-        if (_sourceToken == ISmartToken(anchor) && reserves[_targetToken].isSet)
-            return sell(_amount, _trader, _beneficiary);
+        uint256 rate;
+        IERC20Token reserveToken;
 
-        // invalid input
-        revert("ERR_INVALID_TOKEN");
+        if (_targetToken == ISmartToken(anchor) && reserves[_sourceToken].isSet) {
+            reserveToken = _sourceToken;
+            rate = buy(_amount, _trader, _beneficiary);
+        }
+        else if (_sourceToken == ISmartToken(anchor) && reserves[_targetToken].isSet) {
+            reserveToken = _targetToken;
+            rate = sell(_amount, _trader, _beneficiary);
+        }
+        else {
+            // invalid input
+            revert("ERR_INVALID_TOKEN");
+        }
+
+        // dispatch rate update for the liquid token
+        uint256 totalSupply = ISmartToken(anchor).totalSupply();
+        uint32 reserveWeight = reserves[reserveToken].weight;
+        emit TokenRateUpdate(anchor, reserveToken, reserveBalance(reserveToken), totalSupply.mul(reserveWeight).div(WEIGHT_RESOLUTION));
+
+        return rate;
     }
 
     /**
@@ -240,11 +255,6 @@ contract LiquidTokenConverter is ConverterBase {
         // dispatch the conversion event
         dispatchConversionEvent(reserveToken, ISmartToken(anchor), _trader, _amount, amount, fee);
 
-        // dispatch rate update for the liquid token/reserve
-        uint256 totalSupply = ISmartToken(anchor).totalSupply();
-        uint32 reserveWeight = reserves[reserveToken].weight;
-        emit TokenRateUpdate(anchor, reserveToken, reserveBalance(reserveToken), totalSupply.mul(reserveWeight).div(WEIGHT_RESOLUTION));
-
         return amount;
     }
 
@@ -288,11 +298,6 @@ contract LiquidTokenConverter is ConverterBase {
 
         // dispatch the conversion event
         dispatchConversionEvent(ISmartToken(anchor), reserveToken, _trader, _amount, amount, fee);
-
-        // dispatch rate update for the liquid token/reserve
-        uint256 totalSupply = ISmartToken(anchor).totalSupply();
-        uint32 reserveWeight = reserves[reserveToken].weight;
-        emit TokenRateUpdate(anchor, reserveToken, reserveBalance(reserveToken), totalSupply.mul(reserveWeight).div(WEIGHT_RESOLUTION));
 
         return amount;
     }
