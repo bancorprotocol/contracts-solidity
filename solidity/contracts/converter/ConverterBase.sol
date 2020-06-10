@@ -98,6 +98,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
 
     /**
       * @dev triggered when the rate between two tokens in the pool changes
+      * note that the event might be dispatched for rate updates between any two tokens in the converter
       *
       * @param  _tokens1    address of the first token
       * @param  _tokens2    address of the second token

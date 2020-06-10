@@ -8,23 +8,11 @@ import "./ConverterBase.sol";
   * manage liquidity pools.
   *
   * Liquidity pools have 2 reserves or more and they allow converting between them.
+  *
+  * Note that TokenRateUpdate events are dispatched for pool tokens as well.
+  * The pool token is the first token in the event in that case.
 */
 contract LiquidityPoolConverter is ConverterBase {
-    /**
-      * @dev triggered when the rate between a pool token and a reserve token changes
-      *
-      * @param  _poolToken      pool token address
-      * @param  _reserveToken   reserve token address
-      * @param  _rateN          rate of 1 unit of pool token in reserve tokens (numerator)
-      * @param  _rateD          rate of 1 unit of pool token in reserve tokens (denominator)
-    */
-    event PoolTokenRateUpdate(
-        address indexed _poolToken,
-        address indexed _reserveToken,
-        uint256 _rateN,
-        uint256 _rateD
-    );
-
     /**
       * @dev triggered after liquidity is added
       *
