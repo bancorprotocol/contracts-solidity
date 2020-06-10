@@ -15,6 +15,7 @@ const ConverterFactory = artifacts.require('ConverterFactory');
 const ConverterUpgrader = artifacts.require('ConverterUpgrader');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
+const WEIGHT_RESOLUTION = 1000000;
 
 let bancorNetwork;
 let factory;
@@ -108,6 +109,51 @@ contract('LiquidityPoolV1Converter', accounts => {
         reserveToken3 = await ERC20Token.new('ERC Token 3', 'ERC3', 0, 1500000000);
     });
 
+    it('verifies the TokenRateUpdate event after adding liquidity', async () => {
+        let converter = await initConverter(accounts, true, false);
+        let watcher = converter.TokenRateUpdate();
+
+        await approve(reserveToken, accounts[0], converter.address, 500);
+        await approve(reserveToken2, accounts[0], converter.address, 500);
+
+        await converter.addLiquidity([reserveToken.address, reserveToken2.address], [500, 500], 1);
+
+        let poolTokenSupply = await token.totalSupply();
+        let reserve1Balance = await converter.reserveBalance(reserveToken.address);
+        let reserve1Weight = await converter.reserveWeight(reserveToken.address);
+        let reserve2Balance = await converter.reserveBalance(reserveToken2.address);
+        let reserve2Weight = await converter.reserveWeight(reserveToken2.address);
+
+        let expectedRate = reserve1Balance.mul(WEIGHT_RESOLUTION).div(poolTokenSupply.mul(reserve1Weight));
+        let expectedRate2 = reserve2Balance.mul(WEIGHT_RESOLUTION).div(poolTokenSupply.mul(reserve2Weight));
+
+        let events = await watcher.get();
+        assert(events.length > 1);
+        assert.equal(events[0].args._rateN.div(events[0].args._rateD).toFixed(), expectedRate.toFixed());
+        assert.equal(events[1].args._rateN.div(events[1].args._rateD).toFixed(), expectedRate2.toFixed());
+    });
+
+    it('verifies the TokenRateUpdate event after removing liquidity', async () => {
+        let converter = await initConverter(accounts, true, false);
+        let watcher = converter.TokenRateUpdate();
+
+        await converter.removeLiquidity(100, [reserveToken.address, reserveToken2.address], [1, 1]);
+
+        let poolTokenSupply = await token.totalSupply();
+        let reserve1Balance = await converter.reserveBalance(reserveToken.address);
+        let reserve1Weight = await converter.reserveWeight(reserveToken.address);
+        let reserve2Balance = await converter.reserveBalance(reserveToken2.address);
+        let reserve2Weight = await converter.reserveWeight(reserveToken2.address);
+
+        let expectedRate = reserve1Balance.mul(WEIGHT_RESOLUTION).div(poolTokenSupply.mul(reserve1Weight));
+        let expectedRate2 = reserve2Balance.mul(WEIGHT_RESOLUTION).div(poolTokenSupply.mul(reserve2Weight));
+
+        let events = await watcher.get();
+        assert(events.length > 1);
+        assert.equal(events[0].args._rateN.div(events[0].args._rateD).toFixed(), expectedRate.toFixed());
+        assert.equal(events[1].args._rateN.div(events[1].args._rateD).toFixed(), expectedRate2.toFixed());
+    });
+
     for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
         describe(`${isETHReserve == 0 ? '(with ERC20 reserves)' : '(with ETH reserve)'}:`, () => {
 
@@ -127,6 +173,30 @@ contract('LiquidityPoolV1Converter', accounts => {
                 assert(events.length > 0);
                 assert.equal(events[0].args._return.toFixed(), 1172);
                 assert.equal(events[0].args._conversionFee.toFixed(), 3);
+            });
+
+            it.only('verifies the TokenRateUpdate event after conversion', async () => {
+                let converter = await initConverter(accounts, true, isETHReserve, 10000);
+                let watcher = converter.TokenRateUpdate();
+                await converter.setConversionFee(6000);
+                let value = 0;
+                if (isETHReserve)
+                    value = 500;
+                else
+                    await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
+
+                await convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], 500, 1, { value });
+
+                let reserve1Balance = await converter.reserveBalance(getReserve1Address(isETHReserve));
+                let reserve1Weight = await converter.reserveWeight(getReserve1Address(isETHReserve));
+                let reserve2Balance = await converter.reserveBalance(reserveToken2.address);
+                let reserve2Weight = await converter.reserveWeight(reserveToken2.address);
+
+                let expectedRate = reserve2Balance.mul(reserve1Weight).div(reserve1Balance.mul(reserve2Weight));
+
+                let events = await watcher.get();
+                assert(events.length > 0);
+                assert.equal(events[0].args._rateN.div(events[0].args._rateD).toFixed(), expectedRate.toFixed());
             });
 
             it('should throw when attempting to convert when the return is smaller than the minimum requested amount', async () => {
