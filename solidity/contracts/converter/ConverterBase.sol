@@ -104,7 +104,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @param  _token1 address of the first token
       * @param  _token2 address of the second token
       * @param  _rateN  rate of 1 unit of `_token1` in `_token2` (numerator)
-      * @param  _rateD  rate of 1 unit of `_token1` in `_token2`  (denominator)
+      * @param  _rateD  rate of 1 unit of `_token1` in `_token2` (denominator)
     */
     event TokenRateUpdate(
         address indexed _token1,
