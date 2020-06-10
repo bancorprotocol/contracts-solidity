@@ -97,34 +97,20 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     );
 
     /**
-      * @dev triggered when the rate between two tokens in the pool changes
+      * @dev triggered when the rate between two tokens in the converter changes
       * note that the event might be dispatched for rate updates between any two tokens in the converter
+      * note that prior to version 28, you should use the 'PriceDataUpdate' event instead
       *
-      * @param  _tokens1    address of the first token
-      * @param  _tokens2    address of the second token
-      * @param  _rateN      rate of 1 unit of token 1 in token 2 (numerator)
-      * @param  _rateD      rate of 1 unit of token 1 in token 2  (denominator)
+      * @param  _token1 address of the first token
+      * @param  _token2 address of the second token
+      * @param  _rateN  rate of 1 unit of `_token1` in `_token2` (numerator)
+      * @param  _rateD  rate of 1 unit of `_token1` in `_token2`  (denominator)
     */
     event TokenRateUpdate(
-        address indexed _tokens1,
-        address indexed _tokens2,
+        address indexed _token1,
+        address indexed _token2,
         uint256 _rateN,
         uint256 _rateD
-    );
-
-    /**
-      * @dev triggered after a conversion with new price data
-      *
-      * @param  _connectorToken     reserve token
-      * @param  _tokenSupply        smart token supply
-      * @param  _connectorBalance   reserve balance
-      * @param  _connectorWeight    reserve weight
-    */
-    event PriceDataUpdate(
-        address indexed _connectorToken,
-        uint256 _tokenSupply,
-        uint256 _connectorBalance,
-        uint32 _connectorWeight
     );
 
     /**

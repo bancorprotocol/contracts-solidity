@@ -23,6 +23,8 @@ BancorConverter
 * It's now possible to add liquidity to empty liquidity pools
 * It's no longer possible to convert into pool tokens (these can only be acquired by adding liquidity)
 * Conversions cannot be executed directly against converters anymore - all conversions should be executed through the BancorNetwork contract
+* New `TokenRateUpdate` event that gets emitted for rate changes between any two tokens (reserve/reserve, pool/reserve etc.)
+* `PriceDataEvent` is now deprecated in favor of the new `TokenRateUpdate` event
 
 ConverterRegistry
 * Added `newConverter` factory function to simplify converter creation process

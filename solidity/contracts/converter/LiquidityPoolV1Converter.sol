@@ -46,6 +46,22 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
 
     /**
+      * @dev triggered after a conversion with new price data
+      * deprecated, use `TokenRateUpdate` from version 28 and up
+      *
+      * @param  _connectorToken     reserve token
+      * @param  _tokenSupply        smart token supply
+      * @param  _connectorBalance   reserve balance
+      * @param  _connectorWeight    reserve weight
+    */
+    event PriceDataUpdate(
+        address indexed _connectorToken,
+        uint256 _tokenSupply,
+        uint256 _connectorBalance,
+        uint32 _connectorWeight
+    );
+
+    /**
       * @dev initializes a new LiquidityPoolV1Converter instance
       *
       * @param  _token              pool token governed by the converter
