@@ -540,13 +540,18 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint32 sourceReserveWeight = reserves[_sourceToken].weight;
         uint32 targetReserveWeight = reserves[_targetToken].weight;
 
-        // dispatch price data update events
-        emit PriceDataUpdate(_sourceToken, poolTokenSupply, sourceReserveBalance, sourceReserveWeight);
-        emit PriceDataUpdate(_targetToken, poolTokenSupply, targetReserveBalance, targetReserveWeight);
+        // dispatch token rate update event
+        uint256 rateN = targetReserveBalance.mul(sourceReserveWeight).div(WEIGHT_RESOLUTION);
+        uint256 rateD = sourceReserveBalance.mul(targetReserveWeight).div(WEIGHT_RESOLUTION);
+        emit TokenRateUpdate(_sourceToken, _targetToken, rateN, rateD);
 
         // dispatch pool token rate update events
         dispatchPoolTokenRateEvent(poolTokenSupply, _sourceToken, sourceReserveBalance, sourceReserveWeight);
         dispatchPoolTokenRateEvent(poolTokenSupply, _targetToken, targetReserveBalance, targetReserveWeight);
+
+        // dispatch price data update events (deprecated events)
+        emit PriceDataUpdate(_sourceToken, poolTokenSupply, sourceReserveBalance, sourceReserveWeight);
+        emit PriceDataUpdate(_targetToken, poolTokenSupply, targetReserveBalance, targetReserveWeight);
     }
 
     /**

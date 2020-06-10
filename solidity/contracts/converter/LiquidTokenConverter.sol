@@ -240,8 +240,10 @@ contract LiquidTokenConverter is ConverterBase {
         // dispatch the conversion event
         dispatchConversionEvent(reserveToken, ISmartToken(anchor), _trader, _amount, amount, fee);
 
-        // dispatch price data update for the liquid token/reserve
-        emit PriceDataUpdate(reserveToken, ISmartToken(anchor).totalSupply(), reserveBalance(reserveToken), reserves[reserveToken].weight);
+        // dispatch rate update for the liquid token/reserve
+        uint256 totalSupply = ISmartToken(anchor).totalSupply();
+        uint32 reserveWeight = reserves[reserveToken].weight;
+        emit TokenRateUpdate(anchor, reserveToken, reserveBalance(reserveToken), totalSupply.mul(reserveWeight).div(WEIGHT_RESOLUTION));
 
         return amount;
     }
@@ -287,8 +289,10 @@ contract LiquidTokenConverter is ConverterBase {
         // dispatch the conversion event
         dispatchConversionEvent(ISmartToken(anchor), reserveToken, _trader, _amount, amount, fee);
 
-        // dispatch price data update for the liquid token/reserve
-        emit PriceDataUpdate(reserveToken, ISmartToken(anchor).totalSupply(), reserveBalance(reserveToken), reserves[reserveToken].weight);
+        // dispatch rate update for the liquid token/reserve
+        uint256 totalSupply = ISmartToken(anchor).totalSupply();
+        uint32 reserveWeight = reserves[reserveToken].weight;
+        emit TokenRateUpdate(anchor, reserveToken, reserveBalance(reserveToken), totalSupply.mul(reserveWeight).div(WEIGHT_RESOLUTION));
 
         return amount;
     }

@@ -97,6 +97,21 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     );
 
     /**
+      * @dev triggered when the rate between two tokens in the pool changes
+      *
+      * @param  _tokens1    address of the first token
+      * @param  _tokens2    address of the second token
+      * @param  _rateN      rate of 1 unit of token 1 in token 2 (numerator)
+      * @param  _rateD      rate of 1 unit of token 1 in token 2  (denominator)
+    */
+    event TokenRateUpdate(
+        address indexed _tokens1,
+        address indexed _tokens2,
+        uint256 _rateN,
+        uint256 _rateD
+    );
+
+    /**
       * @dev triggered after a conversion with new price data
       *
       * @param  _connectorToken     reserve token
