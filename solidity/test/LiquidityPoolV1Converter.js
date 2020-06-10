@@ -175,7 +175,7 @@ contract('LiquidityPoolV1Converter', accounts => {
                 assert.equal(events[0].args._conversionFee.toFixed(), 3);
             });
 
-            it.only('verifies the TokenRateUpdate event after conversion', async () => {
+            it('verifies the TokenRateUpdate event after conversion', async () => {
                 let converter = await initConverter(accounts, true, isETHReserve, 10000);
                 let watcher = converter.TokenRateUpdate();
                 await converter.setConversionFee(6000);
