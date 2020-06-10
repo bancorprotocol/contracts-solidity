@@ -412,7 +412,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
         public
         view
         validReserve(_reserveToken)
-        returns (uint256)
+        returns (uint32)
     {
         return reserves[_reserveToken].weight;
     }
