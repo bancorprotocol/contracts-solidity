@@ -228,6 +228,8 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
 
     bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
 
+    // using assembly code to identify converter version
+    // can't rely on the version number since the function had a different signature in older converters
     function isV28OrHigherConverter(IConverter _converter) internal view returns (bool) {
         bool success;
         uint256[1] memory ret;

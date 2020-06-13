@@ -628,6 +628,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
 
+    // using assembly code since older converter versions have different return values
     function getReturn(address _dest, address _sourceToken, address _targetToken, uint256 _amount) internal view returns (uint256, uint256) {
         uint256[2] memory ret;
         bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _sourceToken, _targetToken, _amount);
@@ -651,6 +652,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
 
+    // using assembly code to identify converter version
+    // can't rely on the version number since the function had a different signature in older converters
     function isV28OrHigherConverter(IConverter _converter) internal view returns (bool) {
         bool success;
         uint256[1] memory ret;
