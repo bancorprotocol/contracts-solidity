@@ -551,7 +551,7 @@ contract BancorFormula is IBancorFormula {
 
     /**
       * @dev computes log(x / FIXED_1) * FIXED_1
-      * Input range: FIXED_1 <= x <= LOG_EXP_MAX_VAL - 1
+      * Input range: FIXED_1 <= x <= OPT_LOG_MAX_VAL - 1
       * Auto-generated via 'PrintFunctionOptimalLog.py'
       * Detailed description:
       * - Rewrite the input as a product of natural exponents and a single residual r, such that 1 < r < 2
