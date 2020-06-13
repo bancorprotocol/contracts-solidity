@@ -49,13 +49,13 @@ library SafeMath {
         return z;
     }
 
-      /**
-        * ev Integer division of two numbers truncating the quotient, reverts on division by zero.
-        *
-        * aram _x   dividend
-        * aram _y   divisor
-        *
-        * eturn quotient
+    /**
+      * @dev Integer division of two numbers truncating the quotient, reverts on division by zero.
+      *
+      * @param _x   dividend
+      * @param _y   divisor
+      *
+      * @return quotient
     */
     function div(uint256 _x, uint256 _y) internal pure returns (uint256) {
         require(_y > 0, "ERR_DIVIDE_BY_ZERO");

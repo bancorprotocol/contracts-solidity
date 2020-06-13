@@ -56,7 +56,7 @@ contract ERC20Token is IERC20Token, Utils {
     }
 
     /**
-      * @dev send coins
+      * @dev transfers tokens to a given address
       * throws on any error rather then return a false flag to minimize user errors
       *
       * @param _to      target address
@@ -76,7 +76,7 @@ contract ERC20Token is IERC20Token, Utils {
     }
 
     /**
-      * @dev an account/contract attempts to get the coins
+      * @dev transfers tokens to a given address on behalf of another address
       * throws on any error rather then return a false flag to minimize user errors
       *
       * @param _from    source address
@@ -99,7 +99,7 @@ contract ERC20Token is IERC20Token, Utils {
     }
 
     /**
-      * @dev allow another account/contract to spend some tokens on your behalf
+      * @dev allows another account/contract to transfers tokens on behalf of the caller
       * throws on any error rather then return a false flag to minimize user errors
       *
       * also, to minimize the risk of the approve/transferFrom attack vector

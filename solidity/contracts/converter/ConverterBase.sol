@@ -198,7 +198,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     }
 
     /**
-      * @dev deposit ether
+      * @dev deposits ether
       * can only be called if the converter has an ETH reserve
     */
     function() external payable {
@@ -208,10 +208,12 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     }
 
     /**
-      * @dev withdraw ether
+      * @dev withdraws ether
       * can only be called by the owner if the converter is inactive or by upgrader contract
       * can only be called after the upgrader contract has accepted the ownership of this contract
       * can only be called if the converter has an ETH reserve
+      *
+      * @param _to  address to send the ETH to
     */
     function withdrawETH(address _to)
         public
