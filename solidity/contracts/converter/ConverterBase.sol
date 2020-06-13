@@ -4,10 +4,11 @@ import "./interfaces/IConverterAnchor.sol";
 import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IBancorFormula.sol";
 import "../IBancorNetwork.sol";
+import "../utility/ContractRegistryClient.sol";
+import "../utility/ReentrancyGuard.sol";
 import "../utility/SafeMath.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/TokenHolder.sol";
-import "../utility/ContractRegistryClient.sol";
 import "../token/interfaces/IEtherToken.sol";
 import "../bancorx/interfaces/IBancorX.sol";
 
@@ -38,7 +39,7 @@ import "../bancorx/interfaces/IBancorX.sol";
   *
   * Note that converters don't currently support tokens with transfer fees.
 */
-contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistryClient {
+contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
 
     uint32 internal constant WEIGHT_RESOLUTION = 1000000;
@@ -67,7 +68,6 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
                                                     // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public conversionFee = 0;                // current conversion fee, represented in ppm, 0...maxConversionFee
     bool public constant conversionsEnabled = true; // deprecated, backward compatibility
-    bool private locked = false;                    // true while protected code is being executed, false otherwise
 
     /**
       * @dev triggered when the converter is activated
@@ -140,19 +140,6 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     {
         anchor = _anchor;
         maxConversionFee = _maxConversionFee;
-    }
-
-    // protects a function against reentrancy attacks
-    modifier protected() {
-        _protected();
-        locked = true;
-        _;
-        locked = false;
-    }
-
-    // error message binary size optimization
-    function _protected() internal view {
-        require(!locked, "ERR_REENTRANCY");
     }
 
     // ensures that the converter is active

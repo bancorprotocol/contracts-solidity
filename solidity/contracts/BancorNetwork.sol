@@ -4,9 +4,10 @@ import "./IConversionPathFinder.sol";
 import "./converter/interfaces/IConverter.sol";
 import "./converter/interfaces/IConverterAnchor.sol";
 import "./converter/interfaces/IBancorFormula.sol";
+import "./utility/ContractRegistryClient.sol";
+import "./utility/ReentrancyGuard.sol";
 import "./utility/TokenHolder.sol";
 import "./utility/SafeMath.sol";
-import "./utility/ContractRegistryClient.sol";
 import "./token/interfaces/IEtherToken.sol";
 import "./token/interfaces/ISmartToken.sol";
 import "./bancorx/interfaces/IBancorX.sol";
@@ -35,7 +36,7 @@ contract ILegacyConverter {
   * Format:
   * [source token, converter anchor, target token, converter anchor, target token...]
 */
-contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
+contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
 
     uint256 private constant CONVERSION_FEE_RESOLUTION = 1000000;
@@ -220,6 +221,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient {
     function convertByPath(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary, address _affiliateAccount, uint256 _affiliateFee)
         public
         payable
+        protected
         greaterThanZero(_minReturn)
         returns (uint256)
     {
