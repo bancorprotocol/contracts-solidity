@@ -519,6 +519,9 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
 
     bytes4 private constant CONNECTORS_FUNC_SELECTOR = bytes4(keccak256("connectors(address)"));
 
+    // assembly is used since older converters didn't have the `getReserveWeight` function, so getting the weight
+    // requires calling the `connectors` property function, however that results in the `stack too deep` compiler
+    // error so using assembly to circumvent that issue
     function getReserveWeight(address _converter, address _reserveToken) private view returns (uint32) {
         uint256[2] memory ret;
         bytes memory data = abi.encodeWithSelector(CONNECTORS_FUNC_SELECTOR, _reserveToken);
