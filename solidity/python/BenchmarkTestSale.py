@@ -3,14 +3,14 @@ import FormulaSolidityPort
 import FormulaNativePython
 
 
-def formulaTest(supply, balance, ratio, amount):
-    resultSolidityPort = FormulaSolidityPort.calculateSaleReturn(supply, balance, ratio, amount)
-    resultNativePython = FormulaNativePython.calculateSaleReturn(supply, balance, ratio, amount)
+def formulaTest(supply, balance, weight, amount):
+    resultSolidityPort = FormulaSolidityPort.saleRate(supply, balance, weight, amount)
+    resultNativePython = FormulaNativePython.saleRate(supply, balance, weight, amount)
     if resultSolidityPort > resultNativePython:
         error = ['Implementation Error:']
         error.append('supply             = {}'.format(supply))
         error.append('balance            = {}'.format(balance))
-        error.append('ratio              = {}'.format(ratio))
+        error.append('weight             = {}'.format(weight))
         error.append('amount             = {}'.format(amount))
         error.append('resultSolidityPort = {}'.format(resultSolidityPort))
         error.append('resultNativePython = {}'.format(resultNativePython))
@@ -35,10 +35,10 @@ numOfFailures = 0
 for n in range(size):
     supply = 10 ** 26
     balance = 10 ** 23
-    ratio = 100000
+    weight = 100000
     amount = bgn + gap * n
     try:
-        accuracy = formulaTest(supply, balance, ratio, amount)
+        accuracy = formulaTest(supply, balance, weight, amount)
         worstAccuracy = min(worstAccuracy, accuracy)
     except Exception as error:
         accuracy = 0

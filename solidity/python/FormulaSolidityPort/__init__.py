@@ -1,5 +1,5 @@
 ONE = 1;
-MAX_RATIO = 1000000;
+MAX_WEIGHT = 1000000;
 MIN_PRECISION = 32;
 MAX_PRECISION = 127;
 
@@ -157,150 +157,161 @@ def constructor():
     maxExpArray[127] = 0x00857ddf0117efa215952912839f6473e6;
 
 '''
-    @dev given a token supply, reserve balance, ratio and a deposit amount (in the reserve token),
-    calculates the return for a given conversion (in the main token)
+    @dev given a token supply, reserve balance, weight and a deposit amount (in the reserve token),
+    calculates the rate for a given conversion (in the main token)
 
     Formula:
-    Return = _supply * ((1 + _depositAmount / _reserveBalance) ^ (_reserveRatio / 1000000) - 1)
+    return = _supply * ((1 + _amount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
 
-    @param _supply              token total supply
-    @param _reserveBalance      total reserve balance
-    @param _reserveRatio        reserve ratio, represented in ppm, 1-1000000
-    @param _depositAmount       deposit amount, in reserve token
+    @param _supply          smart token supply
+    @param _reserveBalance  reserve balance
+    @param _reserveWeight   reserve weight, represented in ppm (1-1000000)
+    @param _amount          amount of reserve tokens to get the rate for
 
-    @return purchase return amount
+    @return smart token amount
 '''
-def calculatePurchaseReturn(_supply, _reserveBalance, _reserveRatio, _depositAmount):
+def purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= MAX_RATIO);
+    require(_supply > 0, "ERR_INVALID_SUPPLY");
+    require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+    require(_reserveWeight > 0 and _reserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
 
     # special case for 0 deposit amount
-    if (_depositAmount == 0):
+    if (_amount == 0):
         return 0;
 
-    # special case if the ratio = 100%
-    if (_reserveRatio == MAX_RATIO):
-        return safeMul(_supply, _depositAmount) // _reserveBalance;
+    # special case if the weight = 100%
+    if (_reserveWeight == MAX_WEIGHT):
+        return mul(_supply, _amount) // _reserveBalance;
 
-    baseN = safeAdd(_depositAmount, _reserveBalance);
-    (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_RATIO);
-    temp = safeMul(_supply, result) >> precision;
+    baseN = add(_amount, _reserveBalance);
+    (result, precision) = power(baseN, _reserveBalance, _reserveWeight, MAX_WEIGHT);
+    temp = mul(_supply, result) >> precision;
     return temp - _supply;
 
 '''
-    @dev given a token supply, reserve balance, ratio and a sell amount (in the main token),
-    calculates the return for a given conversion (in the reserve token)
+    @dev given a token supply, reserve balance, weight and a sell amount (in the main token),
+    calculates the rate for a given conversion (in the reserve token)
 
     Formula:
-    Return = _reserveBalance * (1 - (1 - _sellAmount / _supply) ^ (1000000 / _reserveRatio))
+    return = _reserveBalance * (1 - (1 - _amount / _supply) ^ (1000000 / _reserveWeight))
 
-    @param _supply              token total supply
-    @param _reserveBalance      total reserve
-    @param _reserveRatio        constant reserve Ratio, represented in ppm, 1-1000000
-    @param _sellAmount          sell amount, in the token itself
+    @param _supply          smart token supply
+    @param _reserveBalance  reserve balance
+    @param _reserveWeight   reserve weight, represented in ppm (1-1000000)
+    @param _amount          amount of smart tokens to get the rate for
 
-    @return sale return amount
+    @return reserve token amount
 '''
-def calculateSaleReturn(_supply, _reserveBalance, _reserveRatio, _sellAmount):
+def saleRate(_supply, _reserveBalance, _reserveWeight, _amount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _reserveRatio > 0 and _reserveRatio <= MAX_RATIO and _sellAmount <= _supply);
+    require(_supply > 0, "ERR_INVALID_SUPPLY");
+    require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+    require(_reserveWeight > 0 and _reserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
+    require(_amount <= _supply, "ERR_INVALID_AMOUNT");
 
     # special case for 0 sell amount
-    if (_sellAmount == 0):
+    if (_amount == 0):
         return 0;
 
     # special case for selling the entire supply
-    if (_sellAmount == _supply):
+    if (_amount == _supply):
         return _reserveBalance;
 
-    # special case if the ratio = 100%
-    if (_reserveRatio == MAX_RATIO):
-        return safeMul(_reserveBalance, _sellAmount) // _supply;
+    # special case if the weight = 100%
+    if (_reserveWeight == MAX_WEIGHT):
+        return mul(_reserveBalance, _amount) // _supply;
 
-    baseD = _supply - _sellAmount;
-    (result, precision) = power(_supply, baseD, MAX_RATIO, _reserveRatio);
-    temp1 = safeMul(_reserveBalance, result);
+    baseD = _supply - _amount;
+    (result, precision) = power(_supply, baseD, MAX_WEIGHT, _reserveWeight);
+    temp1 = mul(_reserveBalance, result);
     temp2 = _reserveBalance << precision;
     return (temp1 - temp2) // result;
 
 '''
-    @dev given two reserve balances/ratios and a sell amount (in the first reserve token),
-    calculates the return for a conversion from the first reserve token to the second reserve token (in the second reserve token)
-    note that prior to version 4, you should use 'calculateCrossConnectorReturn' instead
+    @dev given two reserve balances/weights and a sell amount (in the first reserve token),
+    calculates the rate for a conversion from the source reserve token to the target reserve token
 
     Formula:
-    Return = _toReserveBalance * (1 - (_fromReserveBalance / (_fromReserveBalance + _amount)) ^ (_fromReserveRatio / _toReserveRatio))
+    return = _targetReserveBalance * (1 - (_sourceReserveBalance / (_sourceReserveBalance + _amount)) ^ (_sourceReserveWeight / _targetReserveWeight))
 
-    @param _fromReserveBalance      input reserve balance
-    @param _fromReserveRatio        input reserve ratio, represented in ppm, 1-1000000
-    @param _toReserveBalance        output reserve balance
-    @param _toReserveRatio          output reserve ratio, represented in ppm, 1-1000000
-    @param _amount                  input reserve amount
+    @param _sourceReserveBalance    source reserve balance
+    @param _sourceReserveWeight     source reserve weight, represented in ppm (1-1000000)
+    @param _targetReserveBalance    target reserve balance
+    @param _targetReserveWeight     target reserve weight, represented in ppm (1-1000000)
+    @param _amount                  source reserve amount
 
-    @return second reserve amount
+    @return target reserve amount
 '''
-def calculateCrossReserveReturn(_fromReserveBalance, _fromReserveRatio, _toReserveBalance, _toReserveRatio, _amount):
+def crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount):
     # validate input
-    assert(_fromReserveBalance > 0 and _fromReserveRatio > 0 and _fromReserveRatio <= MAX_RATIO and _toReserveBalance > 0 and _toReserveRatio > 0 and _toReserveRatio <= MAX_RATIO);
+    require(_sourceReserveBalance > 0 and _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+    require(_sourceReserveWeight > 0 and _sourceReserveWeight <= MAX_WEIGHT and
+            _targetReserveWeight > 0 and _targetReserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
 
-    # special case for equal ratios
-    if (_fromReserveRatio == _toReserveRatio):
-        return safeMul(_toReserveBalance, _amount) // safeAdd(_fromReserveBalance, _amount);
+    # special case for equal weights
+    if (_sourceReserveWeight == _targetReserveWeight):
+        return mul(_targetReserveBalance, _amount) // add(_sourceReserveBalance, _amount);
 
-    baseN = safeAdd(_fromReserveBalance, _amount);
-    (result, precision) = power(baseN, _fromReserveBalance, _fromReserveRatio, _toReserveRatio);
-    temp1 = safeMul(_toReserveBalance, result);
-    temp2 = _toReserveBalance << precision;
+    baseN = add(_sourceReserveBalance, _amount);
+    (result, precision) = power(baseN, _sourceReserveBalance, _sourceReserveWeight, _targetReserveWeight);
+    temp1 = mul(_targetReserveBalance, result);
+    temp2 = _targetReserveBalance << precision;
     return (temp1 - temp2) // result;
 
 '''
-    @dev given a smart token supply, reserve balance, total ratio and an amount of requested smart tokens,
+    @dev given a smart token supply, reserve balance, reserve ratio and an amount of requested smart tokens,
     calculates the amount of reserve tokens required for purchasing the given amount of smart tokens
 
     Formula:
-    Return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_RATIO / _totalRatio) - 1)
+    return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio) - 1)
 
-    @param _supply              smart token supply
-    @param _reserveBalance      reserve token balance
-    @param _totalRatio          total ratio, represented in ppm, 2-2000000
-    @param _amount              requested amount of smart tokens
+    @param _supply          smart token supply
+    @param _reserveBalance  reserve balance
+    @param _reserveRatio    reserve ratio, represented in ppm (2-2000000)
+    @param _amount          requested amount of smart tokens
 
-    @return amount of reserve tokens
+    @return reserve token amount
 '''
-def calculateFundCost(_supply, _reserveBalance, _totalRatio, _amount):
+def fundCost(_supply, _reserveBalance, _reserveRatio, _amount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _totalRatio > 1 and _totalRatio <= MAX_RATIO * 2);
+    require(_supply > 0, "ERR_INVALID_SUPPLY");
+    require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+    require(_reserveRatio > 1 and _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
 
     # special case for 0 amount
     if (_amount == 0):
         return 0;
 
-    # special case if the total ratio = 100%
-    if (_totalRatio == MAX_RATIO):
-        return (safeMul(_amount, _reserveBalance) - 1) // _supply + 1;
+    # special case if the reserve ratio = 100%
+    if (_reserveRatio == MAX_WEIGHT):
+        return (mul(_amount, _reserveBalance) - 1) // _supply + 1;
 
-    baseN = safeAdd(_supply, _amount);
-    (result, precision) = power(baseN, _supply, MAX_RATIO, _totalRatio);
-    temp = ((safeMul(_reserveBalance, result) - 1) >> precision) + 1;
+    baseN = add(_supply, _amount);
+    (result, precision) = power(baseN, _supply, MAX_WEIGHT, _reserveRatio);
+    temp = ((mul(_reserveBalance, result) - 1) >> precision) + 1;
     return temp - _reserveBalance;
 
 '''
-    @dev given a smart token supply, reserve balance, total ratio and an amount of smart tokens to liquidate,
+    @dev given a smart token supply, reserve balance, reserve ratio and an amount of smart tokens to liquidate,
     calculates the amount of reserve tokens received for selling the given amount of smart tokens
 
     Formula:
-    Return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_RATIO / _totalRatio))
+    return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio))
 
-    @param _supply              smart token supply
-    @param _reserveBalance      reserve token balance
-    @param _totalRatio          total ratio, represented in ppm, 2-2000000
-    @param _amount              amount of smart tokens to liquidate
+    @param _supply          smart token supply
+    @param _reserveBalance  reserve balance
+    @param _reserveRatio    reserve ratio, represented in ppm (2-2000000)
+    @param _amount          amount of smart tokens to liquidate
 
-    @return amount of reserve tokens
+    @return reserve token amount
 '''
-def calculateLiquidateReturn(_supply, _reserveBalance, _totalRatio, _amount):
+def liquidateRate(_supply, _reserveBalance, _reserveRatio, _amount):
     # validate input
-    assert(_supply > 0 and _reserveBalance > 0 and _totalRatio > 1 and _totalRatio <= MAX_RATIO * 2 and _amount <= _supply);
+    require(_supply > 0, "ERR_INVALID_SUPPLY");
+    require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+    require(_reserveRatio > 1 and _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
+    require(_amount <= _supply, "ERR_INVALID_AMOUNT");
 
     # special case for 0 amount
     if (_amount == 0):
@@ -310,13 +321,13 @@ def calculateLiquidateReturn(_supply, _reserveBalance, _totalRatio, _amount):
     if (_amount == _supply):
         return _reserveBalance;
 
-    # special case if the total ratio = 100%
-    if (_totalRatio == MAX_RATIO):
-        return safeMul(_amount, _reserveBalance) // _supply;
+    # special case if the reserve ratio = 100%
+    if (_reserveRatio == MAX_WEIGHT):
+        return mul(_amount, _reserveBalance) // _supply;
 
     baseD = _supply - _amount;
-    (result, precision) = power(_supply, baseD, MAX_RATIO, _totalRatio);
-    temp1 = safeMul(_reserveBalance, result);
+    (result, precision) = power(_supply, baseD, MAX_WEIGHT, _reserveRatio);
+    temp1 = mul(_reserveBalance, result);
     temp2 = _reserveBalance << precision;
     return (temp1 - temp2) // result;
 
@@ -339,7 +350,7 @@ def calculateLiquidateReturn(_supply, _reserveBalance, _totalRatio, _amount):
         Since we rely on unsigned-integer arithmetic and "base < 1" ==> "log(base) < 0", this function does not support "_baseN < _baseD".
 '''
 def power(_baseN, _baseD, _expN, _expD):
-    assert(_baseN < MAX_NUM);
+    require(_baseN < MAX_NUM);
 
     base = _baseN * FIXED_1 // _baseD;
     if (base < OPT_LOG_MAX_VAL):
@@ -418,7 +429,7 @@ def findPositionInMaxExpArray(_x):
     if (maxExpArray[lo] >= _x):
         return lo;
 
-    assert(False);
+    require(False);
     return 0;
 
 '''
@@ -469,7 +480,7 @@ def generalExp(_x, _precision):
 
 '''
     @dev computes log(x / FIXED_1) * FIXED_1
-    Input range: FIXED_1 <= x <= LOG_EXP_MAX_VAL - 1
+    Input range: FIXED_1 <= x <= OPT_LOG_MAX_VAL - 1
     Auto-generated via 'PrintFunctionOptimalLog.py'
     Detailed description:
     - Rewrite the input as a product of natural exponents and a single residual r, such that 1 < r < 2
@@ -552,18 +563,52 @@ def optimalExp(x):
 '''
     @dev deprecated, backward compatibility
 '''
-def calculateCrossConnectorReturn(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount):
-    return calculateCrossReserveReturn(_fromConnectorBalance, _fromConnectorWeight, _toConnectorBalance, _toConnectorWeight, _amount);
+def calculatePurchaseReturn(_supply, _reserveBalance, _reserveWeight, _amount):
+    return purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount);
+
+'''
+    @dev deprecated, backward compatibility
+'''
+def calculateSaleReturn(_supply, _reserveBalance, _reserveWeight, _amount):
+    return saleRate(_supply, _reserveBalance, _reserveWeight, _amount);
+
+'''
+    @dev deprecated, backward compatibility
+'''
+def calculateCrossReserveReturn(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount):
+    return crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
+
+'''
+    @dev deprecated, backward compatibility
+'''
+def calculateCrossConnectorReturn(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount):
+    return crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
+
+'''
+    @dev deprecated, backward compatibility
+'''
+def calculateFundCost(_supply, _reserveBalance, _reserveRatio, _amount):
+    return fundCost(_supply, _reserveBalance, _reserveRatio, _amount);
+
+'''
+    @dev deprecated, backward compatibility
+'''
+def calculateLiquidateReturn(_supply, _reserveBalance, _reserveRatio, _amount):
+    return liquidateRate(_supply, _reserveBalance, _reserveRatio, _amount);
 
 
-def safeAdd(x,y):
+def add(x, y):
     assert x + y < (1 << 256)
     return x + y
 
 
-def safeMul(x,y):
+def mul(x, y):
     assert x * y < (1 << 256)
     return x * y
+
+
+def require(cond, msg = ''):
+    assert cond, msg
 
 
 constructor()

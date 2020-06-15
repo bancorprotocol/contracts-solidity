@@ -4,15 +4,15 @@ import FormulaSolidityPort
 import FormulaNativePython
 
 
-def powerTest(baseN, baseD, expN, expD):
+def formulaTest(baseN, baseD, expN, expD):
     resultSolidityPort, precision = FormulaSolidityPort.power(baseN, baseD, expN, expD)
     resultNativePython = FormulaNativePython.power(baseN, baseD, expN, expD, precision)
     if resultSolidityPort > resultNativePython:
         error = ['Implementation Error:']
-        error.append('baseN              = {}'.format(baseN             ))
-        error.append('baseD              = {}'.format(baseD             ))
-        error.append('expN               = {}'.format(expN              ))
-        error.append('expD               = {}'.format(expD              ))
+        error.append('baseN              = {}'.format(baseN))
+        error.append('baseD              = {}'.format(baseD))
+        error.append('expN               = {}'.format(expN))
+        error.append('expD               = {}'.format(expD))
         error.append('resultSolidityPort = {}'.format(resultSolidityPort))
         error.append('resultNativePython = {}'.format(resultNativePython))
         raise BaseException('\n'.join(error))
@@ -34,7 +34,7 @@ for n in range(size):
     expN = random.randrange(1, 1000000)
     expD = random.randrange(expN, 1000001)
     try:
-        accuracy = powerTest(baseN, baseD, expN, expD)
+        accuracy = formulaTest(baseN, baseD, expN, expD)
         worstAccuracy = min(worstAccuracy, accuracy)
     except Exception as error:
         accuracy = 0

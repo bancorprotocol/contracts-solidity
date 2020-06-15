@@ -1,0 +1,1 @@
+[{"constant":false,"inputs":[{"name":"_sourceToken","type":"address"},{"name":"_targetToken","type":"address"},{"name":"_amount","type":"uint256"},{"name":"_minReturn","type":"uint256"}],"name":"change","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"}]

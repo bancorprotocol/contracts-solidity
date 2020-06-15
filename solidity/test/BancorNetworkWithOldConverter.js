@@ -1,16 +1,14 @@
 /* global artifacts, contract, before, it, assert, web3 */
 /* eslint-disable prefer-reflect */
 
-const BancorConverter = require('./helpers/BancorConverter');
+const Converter = require('./helpers/Converter');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 
 const BancorNetwork = artifacts.require('BancorNetwork');
 const TestBancorNetwork = artifacts.require('TestBancorNetwork');
 const SmartToken = artifacts.require('SmartToken');
-const NonStandardSmartToken = artifacts.require('NonStandardSmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
-const ContractFeatures = artifacts.require('ContractFeatures');
 
 const OLD_CONVERTER_VERSION = 9;
 
@@ -34,9 +32,6 @@ contract('BancorNetworkWithOldConverter', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
 
-        let contractFeatures = await ContractFeatures.new();
-        await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_FEATURES, contractFeatures.address);
-
         let bancorFormula = await BancorFormula.new();
         await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
 
@@ -46,13 +41,13 @@ contract('BancorNetworkWithOldConverter', accounts => {
         smartToken1 = await SmartToken.new('Token1', 'TKN1', 2);
         await smartToken1.issue(accounts[0], 1000000);
 
-        smartToken2 = await NonStandardSmartToken.new('Token2', 'TKN2', 2);
+        smartToken2 = await SmartToken.new('Token2', 'TKN2', 2);
         await smartToken2.issue(accounts[0], 2000000);
 
         smartToken3 = await SmartToken.new('Token3', 'TKN3', 2);
         await smartToken3.issue(accounts[0], 3000000);
 
-        converter = await BancorConverter.new(smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000, OLD_CONVERTER_VERSION);
+        converter = await Converter.new(1, smartToken2.address, contractRegistry.address, 0, smartToken1.address, 300000, OLD_CONVERTER_VERSION);
         await converter.addConnector(smartToken3.address, 150000, false);
 
         await smartToken1.transfer(converter.address, 40000);
@@ -60,6 +55,11 @@ contract('BancorNetworkWithOldConverter', accounts => {
 
         await smartToken2.transferOwnership(converter.address);
         await converter.acceptTokenOwnership();
+    });
+
+    it('verifies that isV28OrHigherConverter returns false', async () => {
+        let network = await TestBancorNetwork.new(0, 0);
+        assert.isFalse(await network.isV28OrHigherConverterExternal.call(converter.address));
     });
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting a reserve to the smart token', async () => {

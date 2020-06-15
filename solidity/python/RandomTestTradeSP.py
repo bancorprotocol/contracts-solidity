@@ -8,15 +8,15 @@ from decimal import getcontext
 getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
 
 
-def formulaTest(supply, balance, ratio, amount):
-    amount1 = FormulaSolidityPort.calculateSaleReturn(supply, balance, ratio, amount)
-    amount2 = FormulaSolidityPort.calculatePurchaseReturn(supply - amount, balance - amount1, ratio, amount1)
+def formulaTest(supply, balance, weight, amount):
+    amount1 = FormulaSolidityPort.saleRate(supply, balance, weight, amount)
+    amount2 = FormulaSolidityPort.purchaseRate(supply - amount, balance - amount1, weight, amount1)
     before, after = amount, amount2
     if after > before:
         error = ['Implementation Error:']
         error.append('supply  = {}'.format(supply))
         error.append('balance = {}'.format(balance))
-        error.append('ratio   = {}'.format(ratio))
+        error.append('weight  = {}'.format(weight))
         error.append('amount  = {}'.format(amount))
         error.append('amount1 = {}'.format(amount1))
         error.append('amount2 = {}'.format(amount2))
@@ -38,10 +38,10 @@ numOfFailures = 0
 for n in range(size):
     supply = random.randrange(2, 10 ** 26)
     balance = random.randrange(1, 10 ** 23)
-    ratio = random.randrange(1, 1000000)
+    weight = random.randrange(1, 1000000)
     amount = random.randrange(1, supply // 10)
     try:
-        accuracy = formulaTest(supply, balance, ratio, amount)
+        accuracy = formulaTest(supply, balance, weight, amount)
         worstAccuracy = min(worstAccuracy, accuracy)
     except Exception as error:
         accuracy = 0

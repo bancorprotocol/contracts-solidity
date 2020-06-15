@@ -8,16 +8,16 @@ def factor(fee, sign, direction, times):
     return ((1000000 - Decimal(fee)) ** times / 1000000 ** times) ** ((sign + direction) // 2) * sign
 
 
-def buy(supply, balance, ratio, amount):
-    return Decimal(supply) * ((1 + Decimal(amount) / Decimal(balance)) ** (Decimal(ratio) / 1000000) - 1)
+def buy(supply, balance, weight, amount):
+    return Decimal(supply) * ((1 + Decimal(amount) / Decimal(balance)) ** (Decimal(weight) / 1000000) - 1)
 
 
-def sell(supply, balance, ratio, amount):
-    return Decimal(balance) * (1 - (1 - Decimal(amount) / Decimal(supply)) ** (1000000 / Decimal(ratio)))
+def sell(supply, balance, weight, amount):
+    return Decimal(balance) * (1 - (1 - Decimal(amount) / Decimal(supply)) ** (1000000 / Decimal(weight)))
 
 
-def both(balance1, ratio1, balance2, ratio2, amount):
-    return Decimal(balance2) * (1 - (Decimal(balance1) / (Decimal(balance1) + Decimal(amount))) ** (Decimal(ratio1) / Decimal(ratio2)))
+def both(balance1, weight1, balance2, weight2, amount):
+    return Decimal(balance2) * (1 - (Decimal(balance1) / (Decimal(balance1) + Decimal(amount))) ** (Decimal(weight1) / Decimal(weight2)))
 
 
 class Engine():
@@ -61,8 +61,8 @@ class Engine():
                 reserve = model[path[n + 1]]
                 outer, inner = (reserve, reserve[second])
                 side1, side2 = (reserve[first], reserve[second])
-                entries += [{'currency': first, 'fee': outer['fee'], 'supply': outer['supply'], 'balance': side1['balance'], 'ratio': side1['ratio'], 'amount': amounts[-1]}]
-                amounts += [both(side1['balance'], side1['ratio'], side2['balance'], side2['ratio'], amounts[-1] * factor(outer['fee'], sign, -1, 2)) * factor(outer['fee'], sign, +1, 2)]
+                entries += [{'currency': first, 'fee': outer['fee'], 'supply': outer['supply'], 'balance': side1['balance'], 'weight': side1['weight'], 'amount': amounts[-1]}]
+                amounts += [both(side1['balance'], side1['weight'], side2['balance'], side2['weight'], amounts[-1] * factor(outer['fee'], sign, -1, 2)) * factor(outer['fee'], sign, +1, 2)]
                 side1['balance'] += amounts[-2] * sign
                 side2['balance'] -= amounts[-1] * sign
                 n += 2
@@ -70,12 +70,12 @@ class Engine():
                 first = path[n + 0]
                 second = path[n + 1]
                 func, outer, inner = (sell, model[first], model[first][second]) if first in model and second in model[first] else (buy, model[second], model[second][first])
-                entries += [{'currency': first, 'fee': outer['fee'], 'supply': outer['supply'], 'balance': inner['balance'], 'ratio': inner['ratio'], 'amount': amounts[-1]}]
-                amounts += [func(outer['supply'], inner['balance'], inner['ratio'], amounts[-1] * factor(outer['fee'], sign, -1, 1)) * factor(outer['fee'], sign, +1, 1)]
+                entries += [{'currency': first, 'fee': outer['fee'], 'supply': outer['supply'], 'balance': inner['balance'], 'weight': inner['weight'], 'amount': amounts[-1]}]
+                amounts += [func(outer['supply'], inner['balance'], inner['weight'], amounts[-1] * factor(outer['fee'], sign, -1, 1)) * factor(outer['fee'], sign, +1, 1)]
                 outer['supply'] += {buy: +amounts[-1] * sign, sell: -amounts[-2] * sign}[func]
                 inner['balance'] += {buy: +amounts[-2] * sign, sell: -amounts[-1] * sign}[func]
                 n += 1
-        entries += [{'currency': second, 'supply': outer['supply'], 'balance': inner['balance'], 'ratio': inner['ratio'], 'amount': amounts[-1]}]
+        entries += [{'currency': second, 'supply': outer['supply'], 'balance': inner['balance'], 'weight': inner['weight'], 'amount': amounts[-1]}]
         if update:
             self.model = model
         return entries[::sign]

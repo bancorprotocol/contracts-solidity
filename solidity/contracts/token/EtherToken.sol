@@ -1,11 +1,11 @@
 pragma solidity 0.4.26;
-import './ERC20Token.sol';
-import './interfaces/IEtherToken.sol';
-import '../utility/SafeMath.sol';
+import "./ERC20Token.sol";
+import "./interfaces/IEtherToken.sol";
+import "../utility/SafeMath.sol";
 
 /**
   * @dev Ether tokenization contract
-  * 
+  *
   * 'Owned' is specified here for readability reasons
 */
 contract EtherToken is IEtherToken, ERC20Token {
@@ -13,21 +13,21 @@ contract EtherToken is IEtherToken, ERC20Token {
 
     /**
       * @dev triggered when the total supply is increased
-      * 
+      *
       * @param _amount  amount that gets added to the supply
     */
     event Issuance(uint256 _amount);
 
     /**
       * @dev triggered when the total supply is decreased
-      * 
+      *
       * @param _amount  amount that gets removed from the supply
     */
     event Destruction(uint256 _amount);
 
     /**
       * @dev initializes a new EtherToken instance
-      * 
+      *
       * @param _name        token name
       * @param _symbol      token symbol
     */
@@ -45,7 +45,7 @@ contract EtherToken is IEtherToken, ERC20Token {
 
     /**
       * @dev withdraw ether to the sender's account
-      * 
+      *
       * @param _amount  amount of ether to withdraw
     */
     function withdraw(uint256 _amount) public {
@@ -54,7 +54,7 @@ contract EtherToken is IEtherToken, ERC20Token {
 
     /**
       * @dev deposit ether to be entitled for a given account
-      * 
+      *
       * @param _to      account to be entitled for the ether
     */
     function depositTo(address _to)
@@ -71,7 +71,7 @@ contract EtherToken is IEtherToken, ERC20Token {
 
     /**
       * @dev withdraw ether entitled by the sender to a given account
-      * 
+      *
       * @param _to      account to receive the ether
       * @param _amount  amount of ether to withdraw
     */
@@ -92,10 +92,10 @@ contract EtherToken is IEtherToken, ERC20Token {
     /**
       * @dev send coins
       * throws on any error rather then return a false flag to minimize user errors
-      * 
+      *
       * @param _to      target address
       * @param _value   transfer amount
-      * 
+      *
       * @return true if the transfer was successful, false if it wasn't
     */
     function transfer(address _to, uint256 _value)
@@ -110,11 +110,11 @@ contract EtherToken is IEtherToken, ERC20Token {
     /**
       * @dev an account/contract attempts to get the coins
       * throws on any error rather then return a false flag to minimize user errors
-      * 
+      *
       * @param _from    source address
       * @param _to      target address
       * @param _value   transfer amount
-      * 
+      *
       * @return true if the transfer was successful, false if it wasn't
     */
     function transferFrom(address _from, address _to, uint256 _value)
@@ -129,7 +129,7 @@ contract EtherToken is IEtherToken, ERC20Token {
     /**
       * @dev deposit ether in the account
     */
-    function() public payable {
+    function() external payable {
         deposit();
     }
 }

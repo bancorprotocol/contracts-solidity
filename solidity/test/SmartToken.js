@@ -106,14 +106,6 @@ contract('SmartToken', accounts => {
         assert.equal(balance, 80);
     });
 
-    it('verifies that a holder can destroy tokens from his/her own account', async () => {
-        let token = await SmartToken.new('Token1', 'TKN1', 2);
-        await token.issue(accounts[1], 100);
-        await token.destroy(accounts[1], 20);
-        let balance = await token.balanceOf.call(accounts[1]);
-        assert.equal(balance, 80);
-    });
-
     it('should throw when a non owner attempts to destroy tokens', async () => {
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         await token.issue(accounts[1], 100);
@@ -142,7 +134,7 @@ contract('SmartToken', accounts => {
         let transfersEnabled = await token.transfersEnabled.call();
         assert.equal(transfersEnabled, false);
 
-        await utils.catchInvalidOpcode(token.transfer(accounts[1], 100));
+        await utils.catchRevert(token.transfer(accounts[1], 100));
     });
 
     it('verifies the allowance after an approval', async () => {
@@ -166,6 +158,6 @@ contract('SmartToken', accounts => {
         let transfersEnabled = await token.transfersEnabled.call();
         assert.equal(transfersEnabled, false);
 
-        await utils.catchInvalidOpcode(token.transferFrom(accounts[0], accounts[2], 50, { from: accounts[1] }));
+        await utils.catchRevert(token.transferFrom(accounts[0], accounts[2], 50, { from: accounts[1] }));
     });
 });

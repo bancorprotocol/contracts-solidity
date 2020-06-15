@@ -5,8 +5,6 @@ module.exports = {
     testCommand:    "node ../../node_modules/truffle/build/cli.bundled.js test --network=coverage",
     compileCommand: "node ../../node_modules/truffle/build/cli.bundled.js compile --network=coverage",
     skipFiles:      [
-        "helpers/Migrations.sol",
-        "legacy/BancorGasPriceLimit.sol",
-        "legacy/BancorPriceFloor.sol"
+        "helpers/Migrations.sol"
     ]
 };
