@@ -1,10 +1,17 @@
 {
-  "name": "bancor-contracts",
+  "name": "@bancor/contracts-solidity",
   "version": "0.5.19",
+  "description": "The solidity version of the Bancor smart contracts is composed of many different components that work together to create the Bancor Network deployment.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bancorprotocol/contracts"
+    "url": "git+https://github.com/bancorprotocol/contracts-solidity.git"
   },
+  "homepage": "https://github.com/bancorprotocol/contracts-solidity#readme",
+  "bugs": {
+    "url": "https://github.com/bancorprotocol/contracts-solidity/issues"
+  },
+  "author": "Yudi Levi",
+  "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "npm": "^3.0.0"
   },
