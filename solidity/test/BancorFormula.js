@@ -3,7 +3,7 @@
 
 let constants = require('./helpers/FormulaConstants');
 let catchRevert = require('./helpers/Utils').catchRevert;
-let TestBancorFormula = artifacts.require('./helpers/TestBancorFormula');
+let TestBancorFormula = artifacts.require('TestBancorFormula');
 
 let Decimal = require("decimal.js");
 Decimal.set({precision: 100, rounding: Decimal.ROUND_DOWN});
