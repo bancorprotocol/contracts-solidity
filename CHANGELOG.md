@@ -1,4 +1,4 @@
-### 0.6.0 (2020-06-xx)
+### 0.6.0 (2020-06-16)
 General
 * Major upgrade, many improvements and design changes (new backward compatibility layer still supports most of older interfaces)
 * Major gas optimization on conversions
