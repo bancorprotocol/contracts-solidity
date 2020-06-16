@@ -19,6 +19,14 @@ solidity/coverage.json
 solidity/scTopics
 
 # npm run build
+solidity/build/ConverterV27OrLowerWithoutFallback.abi
+solidity/build/ConverterV27OrLowerWithoutFallback.bin
+solidity/build/ConverterV27OrLowerWithFallback.abi
+solidity/build/ConverterV27OrLowerWithFallback.bin
+solidity/build/ConverterV28OrHigherWithoutFallback.abi
+solidity/build/ConverterV28OrHigherWithoutFallback.bin
+solidity/build/ConverterV28OrHigherWithFallback.abi
+solidity/build/ConverterV28OrHigherWithFallback.bin
 solidity/build/Migrations.abi
 solidity/build/Migrations.bin
 solidity/build/NewConverter.abi
