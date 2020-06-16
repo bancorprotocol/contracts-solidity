@@ -156,6 +156,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
             IERC20Token anchor = _path[i - 1];
             IERC20Token targetToken = _path[i];
 
+            // backward compatibility
+            if (etherTokens[sourceToken])
+                sourceToken = IERC20Token(ETH_RESERVE_ADDRESS);
+            if (etherTokens[targetToken])
+                targetToken = IERC20Token(ETH_RESERVE_ADDRESS);
+
             if (targetToken == anchor) { // buy the smart token
                 // check if the current smart token has changed
                 if (i < 3 || anchor != _path[i - 3]) {
