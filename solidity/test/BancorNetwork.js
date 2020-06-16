@@ -16,12 +16,17 @@ const EtherToken = artifacts.require('EtherToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardToken = artifacts.require('TestNonStandardToken');
 const ConverterHelper = require('./helpers/Converter');
-const TestBancorNetwork = artifacts.require('./helpers/TestBancorNetwork');
+const TestBancorNetwork = artifacts.require('TestBancorNetwork');
+const ConverterV27OrLowerWithoutFallback = artifacts.require('ConverterV27OrLowerWithoutFallback');
+const ConverterV27OrLowerWithFallback = artifacts.require('ConverterV27OrLowerWithFallback');
+const ConverterV28OrHigherWithoutFallback = artifacts.require('ConverterV28OrHigherWithoutFallback');
+const ConverterV28OrHigherWithFallback = artifacts.require('ConverterV28OrHigherWithFallback');
 
 const ETH_RESERVE_ADDRESS = '0x'.padEnd(42, 'e');
 
 const OLD_CONVERTER_VERSION = 9;
 
+let network;
 let bntToken;
 let erc20Token1;
 let erc20Token2;
@@ -281,12 +286,28 @@ contract('BancorNetwork', accounts => {
 
     describe('Conversions', () => {
         before(async () => {
+            network = await TestBancorNetwork.new(0, 0);
             await initTokensAndConverters(accounts);
         });
 
-        it('verifies that isV28OrHigherConverter returns true', async () => {
-            let network = await TestBancorNetwork.new(0, 0);
-            assert.isTrue(await network.isV28OrHigherConverterExternal.call(converter1.address));
+        it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithoutFallback', async () => {
+            let converter = await ConverterV27OrLowerWithoutFallback.new();
+            assert.isFalse(await network.isV28OrHigherConverterExternal.call(converter.address));
+        });
+
+        it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithFallback', async () => {
+            let converter = await ConverterV27OrLowerWithFallback.new();
+            assert.isFalse(await network.isV28OrHigherConverterExternal.call(converter.address));
+        });
+
+        it('verifies that isV28OrHigherConverter returns true for ConverterV28OrHigherWithoutFallback', async () => {
+            let converter = await ConverterV28OrHigherWithoutFallback.new();
+            assert.isTrue(await network.isV28OrHigherConverterExternal.call(converter.address));
+        });
+
+        it('verifies that isV28OrHigherConverter returns true for ConverterV28OrHigherWithFallback', async () => {
+            let converter = await ConverterV28OrHigherWithFallback.new();
+            assert.isTrue(await network.isV28OrHigherConverterExternal.call(converter.address));
         });
 
         for (let sourceSymbol in pathsTokens) {

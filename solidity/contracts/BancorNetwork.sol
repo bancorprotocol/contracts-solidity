@@ -668,7 +668,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
         assembly {
             success := staticcall(
-                gas,           // gas remaining
+                50000,         // this function consumes around 24000 gas, but just in case
                 _converter,    // destination address
                 add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
                 mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
@@ -677,7 +677,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
             )
         }
 
-        return success;
+        return success && ret[0] != 0;
     }
 
     /**

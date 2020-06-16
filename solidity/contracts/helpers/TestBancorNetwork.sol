@@ -33,6 +33,30 @@ contract NewConverter {
     }
 }
 
+contract ConverterV27OrLowerWithoutFallback {
+}
+
+contract ConverterV27OrLowerWithFallback {
+    function() external payable {
+    }
+}
+
+contract ConverterV28OrHigherWithoutFallback {
+    function isV28OrHigher() public pure returns (bool) {
+        return true;
+    }
+}
+
+contract ConverterV28OrHigherWithFallback {
+    function isV28OrHigher() public pure returns (bool) {
+        return true;
+    }
+
+    function() external payable {
+        revert();
+    }
+}
+
 contract TestBancorNetwork is BancorNetwork {
     OldConverter private oldConverter;
     NewConverter private newConverter;
