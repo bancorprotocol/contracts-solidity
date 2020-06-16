@@ -159,18 +159,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
             converter = IConverter(IConverterAnchor(anchor).owner());
 
             // backward compatibility
-            if (etherTokens[sourceToken]) {
-                if (isV28OrHigherConverter(converter))
-                    sourceToken = IERC20Token(ETH_RESERVE_ADDRESS);
-                else
-                    sourceToken = IERC20Token(getConverterEtherTokenAddress(converter));
-            }
-            if (etherTokens[targetToken]) {
-                if (isV28OrHigherConverter(converter))
-                    targetToken = IERC20Token(ETH_RESERVE_ADDRESS);
-                else
-                    targetToken = IERC20Token(getConverterEtherTokenAddress(converter));
-            }
+            sourceToken = getConverterTokenAddress(converter, sourceToken);
+            targetToken = getConverterTokenAddress(converter, targetToken);
 
             if (targetToken == anchor) { // buy the smart token
                 // check if the current smart token has changed
@@ -631,6 +621,18 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         }
 
         return ETH_RESERVE_ADDRESS;
+    }
+
+    // legacy - if the token is an ether token, returns the ETH reserve address
+    // used by the converter, otherwise returns the input token address
+    function getConverterTokenAddress(IConverter _converter, IERC20Token _token) private view returns (IERC20Token) {
+        if (!etherTokens[_token])
+            return _token;
+
+        if (isV28OrHigherConverter(_converter))
+            return IERC20Token(ETH_RESERVE_ADDRESS);
+
+        return IERC20Token(getConverterEtherTokenAddress(_converter));
     }
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
