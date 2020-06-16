@@ -156,18 +156,26 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
             IERC20Token anchor = _path[i - 1];
             IERC20Token targetToken = _path[i];
 
+            converter = IConverter(IConverterAnchor(anchor).owner());
+
             // backward compatibility
-            if (etherTokens[sourceToken])
-                sourceToken = IERC20Token(ETH_RESERVE_ADDRESS);
-            if (etherTokens[targetToken])
-                targetToken = IERC20Token(ETH_RESERVE_ADDRESS);
+            if (etherTokens[sourceToken]) {
+                if (isV28OrHigherConverter(converter))
+                    sourceToken = IERC20Token(ETH_RESERVE_ADDRESS);
+                else
+                    sourceToken = IERC20Token(getConverterEtherTokenAddress(converter));
+            }
+            if (etherTokens[targetToken]) {
+                if (isV28OrHigherConverter(converter))
+                    targetToken = IERC20Token(ETH_RESERVE_ADDRESS);
+                else
+                    targetToken = IERC20Token(getConverterEtherTokenAddress(converter));
+            }
 
             if (targetToken == anchor) { // buy the smart token
                 // check if the current smart token has changed
-                if (i < 3 || anchor != _path[i - 3]) {
+                if (i < 3 || anchor != _path[i - 3])
                     supply = ISmartToken(anchor).totalSupply();
-                    converter = IConverter(IConverterAnchor(anchor).owner());
-                }
 
                 // get the amount & the conversion fee
                 balance = converter.getConnectorBalance(sourceToken);
@@ -181,10 +189,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
             }
             else if (sourceToken == anchor) { // sell the smart token
                 // check if the current smart token has changed
-                if (i < 3 || anchor != _path[i - 3]) {
+                if (i < 3 || anchor != _path[i - 3])
                     supply = ISmartToken(anchor).totalSupply();
-                    converter = IConverter(IConverterAnchor(anchor).owner());
-                }
 
                 // get the amount & the conversion fee
                 balance = converter.getConnectorBalance(targetToken);
@@ -197,11 +203,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 supply = supply.sub(amount);
             }
             else { // cross reserve conversion
-                // check if the current smart token has changed
-                if (i < 3 || anchor != _path[i - 3]) {
-                    converter = IConverter(IConverterAnchor(anchor).owner());
-                }
-
                 (amount, fee) = getReturn(converter, sourceToken, targetToken, amount);
             }
         }
