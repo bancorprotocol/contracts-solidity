@@ -470,7 +470,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
 
     function removeConverterInternal(IConverter _converter) private {
         IConverterRegistryData converterRegistryData = IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA));
-        IConverterAnchor anchor = IConverter(_converter).anchor();
+        IConverterAnchor anchor = IConverter(_converter).token();
         uint256 reserveTokenCount = _converter.connectorTokenCount();
 
         // remove the converter anchor

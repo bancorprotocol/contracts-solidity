@@ -1,3 +1,13 @@
+### 0.6.2 (2020-06-16)
+BancorNetwork
+* Added backward compatibility to `rateByPath`
+
+
+### 0.6.1 (2020-06-16)
+ConverterRegistry
+* Fixed a bug that prevented removal of older converters from the registry
+
+
 ### 0.6.0 (2020-06-15)
 General
 * Major upgrade, many improvements and design changes (new backward compatibility layer still supports most of older interfaces)
