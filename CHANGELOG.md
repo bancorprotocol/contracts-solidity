@@ -1,3 +1,11 @@
+### 0.6.3 (2020-06-17)
+BancorNetwork
+* Fixed an issue in the backward compatibility layer for older converters
+
+ConverterUpgrader
+* Fixed an issue in the backward compatibility layer for older converters
+
+
 ### 0.6.2 (2020-06-16)
 BancorNetwork
 * Added backward compatibility to `rateByPath`
