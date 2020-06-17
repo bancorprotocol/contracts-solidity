@@ -237,7 +237,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
 
         assembly {
             success := staticcall(
-                50000,         // this function consumes around 24000 gas, but just in case
+                5000,          // isV28OrHigher consumes 190 gas, but just for extra safety
                 _converter,    // destination address
                 add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
                 mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
