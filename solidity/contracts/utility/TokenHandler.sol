@@ -15,7 +15,7 @@ contract TokenHandler {
       * @param _spender approved address
       * @param _value   allowance amount
     */
-    function safeApprove(IERC20Token _token, address _spender, uint256 _value) public {
+    function safeApprove(IERC20Token _token, address _spender, uint256 _value) internal {
        execute(_token, abi.encodeWithSelector(APPROVE_FUNC_SELECTOR, _spender, _value));
     }
 
@@ -28,7 +28,7 @@ contract TokenHandler {
       * @param _to      target address
       * @param _value   transfer amount
     */
-    function safeTransfer(IERC20Token _token, address _to, uint256 _value) public {
+    function safeTransfer(IERC20Token _token, address _to, uint256 _value) internal {
        execute(_token, abi.encodeWithSelector(TRANSFER_FUNC_SELECTOR, _to, _value));
     }
 
@@ -42,7 +42,7 @@ contract TokenHandler {
       * @param _to      target address
       * @param _value   transfer amount
     */
-    function safeTransferFrom(IERC20Token _token, address _from, address _to, uint256 _value) public {
+    function safeTransferFrom(IERC20Token _token, address _from, address _to, uint256 _value) internal {
        execute(_token, abi.encodeWithSelector(TRANSFER_FROM_FUNC_SELECTOR, _from, _to, _value));
     }
 

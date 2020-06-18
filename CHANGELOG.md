@@ -1,3 +1,8 @@
+### 0.6.4 (2020-06-18)
+TokenHandler
+* Fixed a security vulnerability that allowed any wallet to invoke the transfer functions
+
+
 ### 0.6.3 (2020-06-17)
 BancorNetwork
 * Fixed an issue in the backward compatibility layer for older converters
