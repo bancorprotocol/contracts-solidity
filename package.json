@@ -18,6 +18,7 @@
   "scripts": {
     "build": "truffle compile",
     "test": "truffle test",
+    "coverage": "truffle run coverage",
     "export": "node scripts/export.js",
     "deploy": "node scripts/deploy-one.js",
     "verify": "node scripts/verify-all.js",
@@ -29,7 +30,6 @@
     "@truffle/contract": "^4.2.9",
     "decimal.js": "10.2.0",
     "snyk": "^1.336.0",
-    "solidity-coverage": "0.6.7",
     "truffle": "5.1.31",
     "truffle-flattener": "1.4.4",
     "web3": "1.2.9"

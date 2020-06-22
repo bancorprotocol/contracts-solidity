@@ -22,21 +22,9 @@ module.exports = {
             network_id: '*',
             gasPrice: 20000000000,
             gas: 6721975
-        },
-        coverage: {
-            host: 'localhost',
-            port: 7555,
-            network_id: '*',
-            gasPrice: 0x1,
-            gas: 0x1fffffffffffff
         }
     },
-    mocha: {
-        enableTimeouts: false,
-        useColors: true,
-        bail: true,
-        reporter: 'list'
-    },
+    plugins: ['solidity-coverage'],
     compilers: {
         solc: {
             version: '0.4.26',
@@ -47,5 +35,11 @@ module.exports = {
                 },
             },
         },
-    }
+    },
+    mocha: {
+        enableTimeouts: false,
+        useColors: true,
+        bail: true,
+        reporter: 'list'
+    },
 };
