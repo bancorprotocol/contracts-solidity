@@ -1,57 +1,57 @@
-/* global artifacts, contract, it, assert */
-/* eslint-disable prefer-reflect */
+import { constants } from '@openzeppelin/test-helpers';
+import { expectRevert, expectEvent } from '@openzeppelin/test-helpers';
 
 const Owned = artifacts.require('Owned');
-const utils = require('./helpers/Utils');
 
 contract('Owned', accounts => {
+    let contract;
+    const owner = accounts[0];
+    const newOwner = accounts[1];
+
+    beforeEach(async () => {
+        contract = await Owned.new();
+    });
+
     it('verifies the owner after construction', async () => {
-        let contract = await Owned.new();
-        let owner = await contract.owner.call();
-        assert.equal(owner, accounts[0]);
+        expect(await contract.owner.call()).to.be.eql(accounts[0]);
     });
 
     it('verifies the new owner after ownership transfer', async () => {
-        let contract = await Owned.new();
-        await contract.transferOwnership(accounts[1]);
-        await contract.acceptOwnership({ from: accounts[1] });
-        let owner = await contract.owner.call();
-        assert.equal(owner, accounts[1]);
+        await contract.transferOwnership(newOwner);
+        await contract.acceptOwnership({ from: newOwner });
+
+        expect(await contract.owner.call()).to.be.eql(newOwner);
     });
 
     it('verifies that ownership transfer fires an OwnerUpdate event', async () => {
-        let contract = await Owned.new();
-        await contract.transferOwnership(accounts[1]);
-        let res = await contract.acceptOwnership({ from: accounts[1] });
-        assert(res.logs.length > 0 && res.logs[0].event == 'OwnerUpdate');
+        await contract.transferOwnership(newOwner);
+        const res = await contract.acceptOwnership({ from: newOwner });
+        expectEvent(res, 'OwnerUpdate', { _prevOwner: owner, _newOwner: newOwner });
     });
 
     it('verifies that newOwner is cleared after ownership transfer', async () => {
-        let contract = await Owned.new();
-        await contract.transferOwnership(accounts[1]);
-        await contract.acceptOwnership({ from: accounts[1] });
-        let newOwner = await contract.newOwner.call();
-        assert.equal(newOwner, utils.zeroAddress);
+        await contract.transferOwnership(newOwner);
+        await contract.acceptOwnership({ from: newOwner });
+
+        expect(await contract.newOwner.call()).to.be.eql(constants.ZERO_ADDRESS);
     });
 
     it('verifies that no ownership transfer takes places before the new owner accepted it', async () => {
-        let contract = await Owned.new();
-        await contract.transferOwnership(accounts[1]);
-        let owner = await contract.owner.call();
-        assert.equal(owner, accounts[0]);
+        await contract.transferOwnership(newOwner);
+
+        expect(await contract.owner.call()).to.be.eql(owner);
     });
 
     it('verifies that only the owner can initiate ownership transfer', async () => {
-        let contract = await Owned.new();
+        const nonOwner = accounts[2];
 
-        await utils.catchRevert(contract.transferOwnership(accounts[1], { from: accounts[2] }));
+        await expectRevert(contract.transferOwnership(newOwner, { from: nonOwner }), 'ERR_ACCESS_DENIED');
     });
 
     it('verifies that the owner can cancel ownership transfer before the new owner accepted it', async () => {
-        let contract = await Owned.new();
-        await contract.transferOwnership(accounts[1]);
-        await contract.transferOwnership('0x0');
-        let newOwner = await contract.newOwner.call();
-        assert.equal(newOwner, utils.zeroAddress);
+        await contract.transferOwnership(newOwner);
+        await contract.transferOwnership(constants.ZERO_ADDRESS);
+
+        expect(await contract.newOwner.call()).to.be.eql(constants.ZERO_ADDRESS);
     });
 });
