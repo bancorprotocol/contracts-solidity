@@ -1,0 +1,19 @@
+{
+    "extends": "solhint:recommended",
+    "rules": {
+        "avoid-throw": "off",
+        "avoid-suicide": "error",
+        "avoid-sha3": "warn",
+        "not-rely-on-time": "off",
+        "no-empty-blocks": "off",
+        "mark-callable-contracts": "off",
+        "indent": [
+            "warn",
+            4
+        ],
+        "compiler-version": [
+            "error",
+            "0.4.26"
+        ]
+    }
+}
