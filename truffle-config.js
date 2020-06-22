@@ -1,4 +1,14 @@
 /* eslint-disable import/no-extraneous-dependencies */
+require('babel-register');
+require('babel-polyfill');
+
+/* eslint-disable import/no-extraneous-dependencies */
+require('chai')
+  .use(require('chai-as-promised'))
+  .use(require('chai-bn')(require('bn.js')))
+  .use(require('dirty-chai'))
+  .expect();
+
 const ganache = require('ganache-core');
 /* eslint-enable import/no-extraneous-dependencies */
 
