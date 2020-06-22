@@ -27,9 +27,21 @@
     "prepare": "npm run snyk-protect"
   },
   "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.6",
     "@truffle/contract": "^4.2.9",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-register": "^6.26.0",
+    "bn.js": "^5.1.2",
+    "chai": "^4.2.0",
+    "chai-bn": "^0.2.1",
     "decimal.js": "10.2.0",
+    "dirty-chai": "^2.0.1",
+    "eslint": "^7.3.0",
+    "eslint-config-airbnb": "^18.2.0",
+    "eslint-plugin-import": "^2.21.2",
     "snyk": "^1.347.1",
+    "solhint": "^3.0.0",
     "truffle": "5.1.31",
     "truffle-flattener": "1.4.4",
     "web3": "1.2.9"
