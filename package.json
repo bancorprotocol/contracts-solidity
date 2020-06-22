@@ -29,7 +29,7 @@
   "devDependencies": {
     "@truffle/contract": "^4.2.9",
     "decimal.js": "10.2.0",
-    "snyk": "^1.336.0",
+    "snyk": "^1.347.1",
     "truffle": "5.1.31",
     "truffle-flattener": "1.4.4",
     "web3": "1.2.9"
