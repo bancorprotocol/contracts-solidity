@@ -1,0 +1,42 @@
+{
+    "extends": "airbnb",
+    "env": {
+        "mocha": true
+    },
+    "rules": {
+        "max-len": [
+            "error",
+            120,
+            2
+        ],
+        "no-plusplus": "off",
+        "no-await-in-loop": "off",
+        "no-restricted-syntax": "off",
+        "function-paren-newline": [
+            "error",
+            "consistent"
+        ],
+        "space-before-function-paren": "error",
+        "no-continue": "off",
+        "arrow-body-style": "off",
+        "object-curly-newline": [
+            "error",
+            {
+                "ImportDeclaration": "never"
+            }
+        ],
+        "no-loop-func": "off"
+    },
+    "globals": {
+        "assert": true,
+        "expect": true,
+        "artifacts": true,
+        "contract": true,
+        "web3": true
+    },
+    "settings": {
+        "react": {
+            "version": "999.999.999"
+        }
+    }
+}
