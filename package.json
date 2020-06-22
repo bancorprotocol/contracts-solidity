@@ -33,7 +33,7 @@
     "solidity-coverage": "0.6.7",
     "truffle": "5.1.31",
     "truffle-flattener": "1.4.4",
-    "web3": "1.2.1"
+    "web3": "1.2.9"
   },
   "snyk": true
 }
