@@ -1,3 +1,7 @@
+/* eslint-disable import/no-extraneous-dependencies */
+const ganache = require('ganache-core');
+/* eslint-enable import/no-extraneous-dependencies */
+
 module.exports = {
     contracts_directory: './solidity',
     contracts_build_directory: './solidity/build/contracts',
@@ -7,7 +11,10 @@ module.exports = {
             port: 7545,
             network_id: '*',
             gasPrice: 20000000000,
-            gas: 6721975
+            gas: 6721975,
+            provider: ganache.provider({
+                defaultEtherBalance: 1000,
+            }),
         },
         production: {
             host: 'localhost',

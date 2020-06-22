@@ -28,7 +28,6 @@
   "devDependencies": {
     "@truffle/contract": "^4.2.9",
     "decimal.js": "10.2.0",
-    "ganache-cli": "6.7.0",
     "snyk": "^1.336.0",
     "solidity-coverage": "0.6.7",
     "truffle": "5.1.31",
