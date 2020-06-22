@@ -3,32 +3,32 @@ module.exports = {
     contracts_build_directory: './solidity/build/contracts',
     networks: {
         development: {
-            host:       "localhost",
-            port:       7545,
-            network_id: "*",         // Match any network id
-            gasPrice:   20000000000, // Gas price used for deploys
-            gas:        6721975      // Gas limit used for deploys
+            host: 'localhost',
+            port: 7545,
+            network_id: '*',
+            gasPrice: 20000000000,
+            gas: 6721975
         },
         production: {
-            host:       "localhost",
-            port:       7545,
-            network_id: "*",         // Match any network id
-            gasPrice:   20000000000, // Gas price used for deploys
-            gas:        6721975      // Gas limit used for deploys
+            host: 'localhost',
+            port: 7545,
+            network_id: '*',
+            gasPrice: 20000000000,
+            gas: 6721975
         },
-        coverage: {     // See <https://www.npmjs.com/package/solidity-coverage#network-configuration>
-            host:       "localhost",
-            port:       7555,            // Also in .solcover.js
-            network_id: "*",             // Match any network id
-            gasPrice:   0x1,             // Gas price used for deploys
-            gas:        0x1fffffffffffff // Gas limit used for deploys
+        coverage: {
+            host: 'localhost',
+            port: 7555,
+            network_id: '*',
+            gasPrice: 0x1,
+            gas: 0x1fffffffffffff
         }
     },
     mocha: {
         enableTimeouts: false,
-        useColors:      true,
-        bail:           true,
-        reporter:       "list"
+        useColors: true,
+        bail: true,
+        reporter: 'list'
     },
     compilers: {
         solc: {
