@@ -40,6 +40,7 @@
     "eslint": "^7.3.0",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-plugin-import": "^2.21.2",
+    "ganache-core": "^2.10.2",
     "snyk": "^1.347.1",
     "solhint": "^3.0.0",
     "truffle": "5.1.31",
