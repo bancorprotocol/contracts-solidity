@@ -34,6 +34,7 @@
     "babel-register": "^6.26.0",
     "bn.js": "^5.1.2",
     "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
     "chai-bn": "^0.2.1",
     "decimal.js": "10.2.0",
     "dirty-chai": "^2.0.1",
