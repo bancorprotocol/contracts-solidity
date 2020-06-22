@@ -1,5 +1,6 @@
-// See <http://truffleframework.com/docs/advanced/configuration>
 module.exports = {
+    contracts_directory: './solidity',
+    contracts_build_directory: './solidity/build/contracts',
     networks: {
         development: {
             host:       "localhost",
@@ -27,12 +28,17 @@ module.exports = {
         enableTimeouts: false,
         useColors:      true,
         bail:           true,
-        reporter:       "list" // See <https://mochajs.org/#reporters>
+        reporter:       "list"
     },
-    solc: {
-        optimizer: {
-            enabled: true,
-            runs:    200
-        }
+    compilers: {
+        solc: {
+            version: '0.4.26',
+            settings: {
+                optimizer: {
+                    enabled: true,
+                    runs: 1000,
+                },
+            },
+        },
     }
 };

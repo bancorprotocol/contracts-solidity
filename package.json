@@ -16,8 +16,9 @@
     "npm": "^3.0.0"
   },
   "scripts": {
-    "build": "node scripts/rebuild-all.js",
-    "test": "node scripts/run-tests.js",
+    "build": "truffle compile",
+    "test": "truffle test",
+    "export": "node scripts/export.js",
     "deploy": "node scripts/deploy-one.js",
     "verify": "node scripts/verify-all.js",
     "flatten": "node scripts/flatten.js",
