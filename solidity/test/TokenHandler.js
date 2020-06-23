@@ -1,6 +1,7 @@
-const utils = require('./helpers/Utils');
+import { expectRevert } from '@openzeppelin/test-helpers';
 
-const TokenHandler = artifacts.require('TokenHandler');
+
+const TestTokenHandler = artifacts.require('TestTokenHandler');
 const TestStandardToken = artifacts.require('TestStandardToken');
 const TestNonStandardToken = artifacts.require('TestNonStandardToken');
 
@@ -8,50 +9,61 @@ contract('TokenHandler', async accounts => {
     let tokenHandler;
     let standardToken;
     let nonStandardToken;
+    const sender = accounts[0];
 
-    before(async () => {
-        tokenHandler = await TokenHandler.new();
-        standardToken = await TestStandardToken.new('name', 'symbol', 0, 0);
-        nonStandardToken = await TestNonStandardToken.new('name', 'symbol', 0, 0);
+    beforeEach(async () => {
+        tokenHandler = await TestTokenHandler.new();
     });
 
-    for (const ok of [false, true]) {
-        for (const ret of [false, true]) {
-            describe('standard token test of function', () => {
-                before(async () => {
-                    await standardToken.set(ok, ret);
+    async function test(state, transaction) {
+        return state ? transaction : expectRevert.unspecified(transaction);
+    }
+
+    describe('standard token tests', async () => {
+        for (const ok of [false, true]) {
+            for (const ret of [false, true]) {
+                context(`ok: ${ok}, ret: ${ret}`, async () => {
+                    beforeEach(async () => {
+                        standardToken = await TestStandardToken.new('name', 'symbol', 0, 0);
+                        await standardToken.set(ok, ret);
+                    });
+
+                    it(`approve should ${ok && ret ? 'not ' : ''}revert`, async () => {
+                        await test(ok && ret, tokenHandler.testSafeApprove(standardToken.address, sender, 0));
+                    });
+
+                    it(`transfer should ${ok && ret ? 'not ' : ''}revert`, async () => {
+                        await test(ok && ret, tokenHandler.testSafeTransfer(standardToken.address, sender, 0));
+                    });
+
+                    it(`transferFrom should ${ok && ret ? 'not ' : ''}revert`, async () => {
+                        await test(ok && ret, tokenHandler.testSafeTransferFrom(standardToken.address, sender, sender, 0));
+                    });
                 });
-                it(`approve with ok = ${ok} and ret = ${ret} should ${ok && ret ? 'not ' : ''}revert`, async () => {
-                    await test(ok && ret, tokenHandler.safeApprove(standardToken.address, accounts[0], 0));
+            }
+        }
+    });
+
+    describe('non-standard token tests', async () => {
+        for (const ok of [false, true]) {
+            context(`ok: ${ok}`, async () => {
+                beforeEach(async () => {
+                    nonStandardToken = await TestNonStandardToken.new('name', 'symbol', 0, 0);
+                    await nonStandardToken.set(ok);
                 });
-                it(`transfer with ok = ${ok} and ret = ${ret} should ${ok && ret ? 'not ' : ''}revert`, async () => {
-                    await test(ok && ret, tokenHandler.safeTransfer(standardToken.address, accounts[0], 0));
+
+                it(`approve should ${ok ? 'not ' : ''}revert`, async () => {
+                    await test(ok, tokenHandler.testSafeApprove(nonStandardToken.address, sender, 0));
                 });
-                it(`transferFrom with ok = ${ok} and ret = ${ret} should ${ok && ret ? 'not ' : ''}revert`, async () => {
-                    await test(ok && ret, tokenHandler.safeTransferFrom(standardToken.address, accounts[0], accounts[0], 0));
+
+                it(`transfer should ${ok ? 'not ' : ''}revert`, async () => {
+                    await test(ok, tokenHandler.testSafeTransfer(nonStandardToken.address, sender, 0));
+                });
+
+                it(`transferFrom should ${ok ? 'not ' : ''}revert`, async () => {
+                    await test(ok, tokenHandler.testSafeTransferFrom(nonStandardToken.address, sender, sender, 0));
                 });
             });
         }
-    }
-
-    for (const ok of [false, true]) {
-            describe('non-standard token test where', () => {
-            before(async () => {
-                await nonStandardToken.set(ok);
-            });
-                it(`approve with ok = ${ok} should ${ok ? 'not ' : ''}revert`, async () => {
-                await test(ok, tokenHandler.safeApprove(nonStandardToken.address, accounts[0], 0));
-            });
-                it(`transfer with ok = ${ok} should ${ok ? 'not ' : ''}revert`, async () => {
-                await test(ok, tokenHandler.safeTransfer(nonStandardToken.address, accounts[0], 0));
-            });
-                it(`transferFrom with ok = ${ok} should ${ok ? 'not ' : ''}revert`, async () => {
-                await test(ok, tokenHandler.safeTransferFrom(nonStandardToken.address, accounts[0], accounts[0], 0));
-            });
-        });
-    }
-
-    async function test(state, transaction) {
-        await (state ? transaction : utils.catchRevert(transaction));
-    }
+    });
 });
