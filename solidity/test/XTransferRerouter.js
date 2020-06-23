@@ -1,69 +1,46 @@
-/* global artifacts, contract, before, it, assert */
-/* eslint-disable prefer-reflect */
+import { expect } from 'chai';
+import { expectRevert, expectEvent, BN } from '@openzeppelin/test-helpers';
 
 const XTransferRerouter = artifacts.require('XTransferRerouter');
-const utils = require('./helpers/Utils');
 
-const EOS_ADDRESS    = web3.fromAscii('just a string 1')
-const EOS_BLOCKCHAIN = web3.fromAscii('just a string 2')
+contract('XTransferRerouter', accounts => {
+    const owner = accounts[0];
+    const nonOwner = accounts[5];
+    const receiver = accounts[1];
+    const txId = new BN(123);
 
-let txRouter
-let accounts
+    const EOS_ADDRESS = '0x3c69a194aaf415ba5d6afca734660d0a3d45acdc05d54cd1ca89a8988e7625b4';
+    const EOS_BLOCKCHAIN = '0x4e8ebbefa452077428f93c9520d3edd60594ff452a29ac7d2ccc11d47f3ab95b';
 
-contract('XTransferRerouter', async () => {
-    // get contracts deployed during migration (truffle migrates contracts before tests)
-    before(async () => {
-        accounts = await web3.eth.accounts
-        
+    it("verify that a user can't call rerouteTx when rerouting is disabled", async () => {
+        const txRouter = await XTransferRerouter.new(false, { from: owner });
+
+        await expectRevert(txRouter.rerouteTx(txId, EOS_ADDRESS, EOS_BLOCKCHAIN, { from: receiver }), 'ERR_DISABLED');
+
     })
 
-    it('verify that a user can\'t call rerouteTx when rerouting is disabled', async () => {
-        txRouter = await XTransferRerouter.new(false, {
-            from: accounts[0]
-        })
-        await utils.catchRevert(txRouter.rerouteTx(
-            123,
-            EOS_ADDRESS,
-            EOS_BLOCKCHAIN,
-            { from: accounts[1] }
-        ))
-        
-    })
     it('verify that calling rerouteTx emits an event properly', async () => {
-        txRouter = await XTransferRerouter.new(true, {
-            from: accounts[0]
-        })
-        const tx = await txRouter.rerouteTx(
-            123,
-            EOS_ADDRESS,
-            EOS_BLOCKCHAIN,
-            { from: accounts[1] }
-        )
-        let event = tx.logs.some(log => log.event == 'TxReroute')
-        assert(event, 'TxReroute event was not emitted')
+        let txRouter = await XTransferRerouter.new(true, { from: owner });
+        const res = await txRouter.rerouteTx(txId, EOS_ADDRESS, EOS_BLOCKCHAIN, { from: receiver });
+
+        expectEvent(res, 'TxReroute', { _txId: txId, _toBlockchain: EOS_ADDRESS, _to: EOS_BLOCKCHAIN });
     })
 
-    it('verify that a non-owner can\'t call enableRerouting', async () => {
-        txRouter = await XTransferRerouter.new(false, {
-            from: accounts[0]
-        })
-        await utils.catchRevert(txRouter.enableRerouting(
-            true,
-            { from: accounts[1] }
-        ))
+    it("verify that a non-owner can't call enableRerouting", async () => {
+        const txRouter = await XTransferRerouter.new(false, { from: owner });
+
+        await expectRevert(txRouter.enableRerouting(true, { from: nonOwner }), 'ERR_ACCESS_DENIED');
     })
 
     it('verify that the owner can call enableRerouting', async () => {
-        txRouter = await XTransferRerouter.new(false, {
-            from: accounts[0]
-        })
-        let reroutingEnabledBefore = await txRouter.reroutingEnabled.call()
-        await txRouter.enableRerouting(
-            true,
-            { from: accounts[0] }
-        )
-        let reroutingEnabledAfter = await txRouter.reroutingEnabled.call()
-        assert(!reroutingEnabledBefore && reroutingEnabledAfter, 'reroutingEnabled didn\'t get updated properly!')
+        const txRouter = await XTransferRerouter.new(false, { from: owner });
+
+        const prevReroutingEnabled = await txRouter.reroutingEnabled.call();
+        expect(prevReroutingEnabled).to.be.false();
+
+        await txRouter.enableRerouting(true, { from: owner });
+
+        const reroutingEnabled = await txRouter.reroutingEnabled.call()
+        expect(reroutingEnabled).to.be.true();
     })
 })
-
