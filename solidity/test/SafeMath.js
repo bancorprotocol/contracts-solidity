@@ -18,7 +18,7 @@ contract('SafeMath', () => {
         expect(z).to.be.bignumber.equal(x.add(y));
     });
 
-    it('should throw on addition overflow', async () => {
+    it('should revert on addition overflow', async () => {
         const x = new BN('115792089237316195423570985008687907853269984665640564039457584007913129639935');
         const y = new BN(1);
 
@@ -33,7 +33,7 @@ contract('SafeMath', () => {
         expect(z).to.be.bignumber.equal(x.sub(y));
     });
 
-    it('should throw on subtraction with negative result', async () => {
+    it('should revert on subtraction with negative result', async () => {
         const x = new BN(10);
         const y = new BN(11);
 
@@ -48,7 +48,7 @@ contract('SafeMath', () => {
         expect(z).to.be.bignumber.equal(x.mul(y));
     });
 
-    it('should throw on multiplication overflow', async () => {
+    it('should revert on multiplication overflow', async () => {
         const x = new BN('15792089237316195423570985008687907853269984665640564039457584007913129639935');
         const y = new BN(2000);
 
