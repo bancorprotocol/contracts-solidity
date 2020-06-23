@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { constants } from '@openzeppelin/test-helpers';
-import { expectRevert, expectEvent } from '@openzeppelin/test-helpers';
-import { BN } from '@openzeppelin/test-helpers/src/setup';
+import { expectRevert, expectEvent, BN } from '@openzeppelin/test-helpers';
 
 const ERC20Token = artifacts.require('ERC20Token');
 
