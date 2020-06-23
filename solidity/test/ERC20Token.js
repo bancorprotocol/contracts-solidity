@@ -8,7 +8,7 @@ contract('ERC20Token', accounts => {
     let token;
     const name = 'Token1';
     const symbol = 'TKN1';
-    const decimals = 18;
+    const decimals = new BN(18);
     const totalSupply = new BN(10000);
     const sender = accounts[0];
     const receiver = accounts[1];
@@ -24,6 +24,10 @@ contract('ERC20Token', accounts => {
 
     it('verifies the token symbol after construction', async () => {
         expect(await token.symbol.call()).to.eql(symbol);
+    });
+
+    it('verifies the token decimals after construction', async () => {
+        expect(await token.decimals.call()).to.be.bignumber.equal(decimals);
     });
 
     it('verifies the balances after a transfer', async () => {

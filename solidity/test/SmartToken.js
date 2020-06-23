@@ -1,7 +1,5 @@
 import { expect } from 'chai';
-import { constants } from '@openzeppelin/test-helpers';
-import { expectRevert } from '@openzeppelin/test-helpers';
-import { BN } from '@openzeppelin/test-helpers/src/setup';
+import { expectRevert, constants, BN } from '@openzeppelin/test-helpers';
 
 const SmartToken = artifacts.require('SmartToken');
 
