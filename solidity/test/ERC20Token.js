@@ -43,14 +43,14 @@ contract('ERC20Token', accounts => {
         expectEvent(res, 'Transfer', { _from: sender, _to: receiver, _value: value });
     });
 
-    it('should throw when attempting to transfer more than the balance', async () => {
+    it('should revert when attempting to transfer more than the balance', async () => {
         const initialTotalSupply = new BN(100);
         const token2 = await ERC20Token.new(name, symbol, decimals, initialTotalSupply);
 
         await expectRevert(token2.transfer(receiver, initialTotalSupply.add(new BN(1))), 'ERR_UNDERFLOW');
     });
 
-    it('should throw when attempting to transfer to an invalid address', async () => {
+    it('should revert when attempting to transfer to an invalid address', async () => {
         await expectRevert(token.transfer(constants.ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_ADDRESS');
     });
 
@@ -68,7 +68,7 @@ contract('ERC20Token', accounts => {
         expectEvent(res, 'Approval', { _owner: sender, _spender: receiver, _value: value });
     });
 
-    it('should throw when attempting to define allowance for an invalid address', async () => {
+    it('should revert when attempting to define allowance for an invalid address', async () => {
         await expectRevert(token.approve(constants.ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_ADDRESS');
     });
 
@@ -108,7 +108,7 @@ contract('ERC20Token', accounts => {
         expect(allowance).to.be.bignumber.equal(value.sub(value2));
     });
 
-    it('should throw when attempting to transfer from another account more than the allowance', async () => {
+    it('should revert when attempting to transfer from another account more than the allowance', async () => {
         const value = new BN(200);
         await token.approve(receiver, value);
 
@@ -116,7 +116,7 @@ contract('ERC20Token', accounts => {
             'ERR_UNDERFLOW.');
     });
 
-    it('should throw when attempting to transfer from an invalid account', async () => {
+    it('should revert when attempting to transfer from an invalid account', async () => {
         const value = new BN(10);
         await token.approve(receiver, value);
 
@@ -124,7 +124,7 @@ contract('ERC20Token', accounts => {
             'ERR_INVALID_ADDRESS');
     });
 
-    it('should throw when attempting to transfer from to an invalid account', async () => {
+    it('should revert when attempting to transfer from to an invalid account', async () => {
         const value = new BN(111);
         await token.approve(receiver, value);
 
