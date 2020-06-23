@@ -9,8 +9,8 @@ getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits f
 
 
 def formulaTest(supply, balance, weight, amount):
-    amount1 = FormulaSolidityPort.saleRate(supply, balance, weight, amount)
-    amount2 = FormulaSolidityPort.purchaseRate(supply - amount, balance - amount1, weight, amount1)
+    amount1 = FormulaSolidityPort.saleTargetAmount(supply, balance, weight, amount)
+    amount2 = FormulaSolidityPort.purchaseTargetAmount(supply - amount, balance - amount1, weight, amount1)
     before, after = amount, amount2
     if after > before:
         error = ['Implementation Error:']

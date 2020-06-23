@@ -5,8 +5,8 @@ import FormulaNativePython
 
 
 def formulaTest(balance1, weight1, balance2, weight2, amount):
-    resultSolidityPort = FormulaSolidityPort.crossReserveRate(balance1, weight1, balance2, weight2, amount)
-    resultNativePython = FormulaNativePython.crossReserveRate(balance1, weight1, balance2, weight2, amount)
+    resultSolidityPort = FormulaSolidityPort.crossReserveTargetAmount(balance1, weight1, balance2, weight2, amount)
+    resultNativePython = FormulaNativePython.crossReserveTargetAmount(balance1, weight1, balance2, weight2, amount)
     if resultSolidityPort > resultNativePython:
         error = ['Implementation Error:']
         error.append('balance1           = {}'.format(balance1))

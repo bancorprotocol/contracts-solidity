@@ -168,7 +168,7 @@ contract BancorFormula is IBancorFormula {
 
     /**
       * @dev given a token supply, reserve balance, weight and a deposit amount (in the reserve token),
-      * calculates the rate for a given conversion (in the main token)
+      * calculates the target amount for a given conversion (in the main token)
       *
       * Formula:
       * return = _supply * ((1 + _amount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
@@ -176,15 +176,15 @@ contract BancorFormula is IBancorFormula {
       * @param _supply          smart token supply
       * @param _reserveBalance  reserve balance
       * @param _reserveWeight   reserve weight, represented in ppm (1-1000000)
-      * @param _amount          amount of reserve tokens to get the rate for
+      * @param _amount          amount of reserve tokens to get the target amount for
       *
       * @return smart token amount
     */
-    function purchaseRate(uint256 _supply,
-                          uint256 _reserveBalance,
-                          uint32 _reserveWeight,
-                          uint256 _amount)
-                          public view returns (uint256)
+    function purchaseTargetAmount(uint256 _supply,
+                                  uint256 _reserveBalance,
+                                  uint32 _reserveWeight,
+                                  uint256 _amount)
+                                  public view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -209,7 +209,7 @@ contract BancorFormula is IBancorFormula {
 
     /**
       * @dev given a token supply, reserve balance, weight and a sell amount (in the main token),
-      * calculates the rate for a given conversion (in the reserve token)
+      * calculates the target amount for a given conversion (in the reserve token)
       *
       * Formula:
       * return = _reserveBalance * (1 - (1 - _amount / _supply) ^ (1000000 / _reserveWeight))
@@ -217,15 +217,15 @@ contract BancorFormula is IBancorFormula {
       * @param _supply          smart token supply
       * @param _reserveBalance  reserve balance
       * @param _reserveWeight   reserve weight, represented in ppm (1-1000000)
-      * @param _amount          amount of smart tokens to get the rate for
+      * @param _amount          amount of smart tokens to get the target amount for
       *
       * @return reserve token amount
     */
-    function saleRate(uint256 _supply,
-                      uint256 _reserveBalance,
-                      uint32 _reserveWeight,
-                      uint256 _amount)
-                      public view returns (uint256)
+    function saleTargetAmount(uint256 _supply,
+                              uint256 _reserveBalance,
+                              uint32 _reserveWeight,
+                              uint256 _amount)
+                              public view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -256,7 +256,7 @@ contract BancorFormula is IBancorFormula {
 
     /**
       * @dev given two reserve balances/weights and a sell amount (in the first reserve token),
-      * calculates the rate for a conversion from the source reserve token to the target reserve token
+      * calculates the target amount for a conversion from the source reserve token to the target reserve token
       *
       * Formula:
       * return = _targetReserveBalance * (1 - (_sourceReserveBalance / (_sourceReserveBalance + _amount)) ^ (_sourceReserveWeight / _targetReserveWeight))
@@ -269,12 +269,12 @@ contract BancorFormula is IBancorFormula {
       *
       * @return target reserve amount
     */
-    function crossReserveRate(uint256 _sourceReserveBalance,
-                              uint32 _sourceReserveWeight,
-                              uint256 _targetReserveBalance,
-                              uint32 _targetReserveWeight,
-                              uint256 _amount)
-                              public view returns (uint256)
+    function crossReserveTargetAmount(uint256 _sourceReserveBalance,
+                                      uint32 _sourceReserveWeight,
+                                      uint256 _targetReserveBalance,
+                                      uint32 _targetReserveWeight,
+                                      uint256 _amount)
+                                      public view returns (uint256)
     {
         // validate input
         require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -349,11 +349,11 @@ contract BancorFormula is IBancorFormula {
       *
       * @return reserve token amount
     */
-    function liquidateRate(uint256 _supply,
-                           uint256 _reserveBalance,
-                           uint32 _reserveRatio,
-                           uint256 _amount)
-                           public view returns (uint256)
+    function liquidateReserveAmount(uint256 _supply,
+                                    uint256 _reserveBalance,
+                                    uint32 _reserveRatio,
+                                    uint256 _amount)
+                                    public view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -649,7 +649,7 @@ contract BancorFormula is IBancorFormula {
                                      uint256 _amount)
                                      public view returns (uint256)
     {
-        return purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount);
+        return purchaseTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount);
     }
 
     /**
@@ -661,7 +661,7 @@ contract BancorFormula is IBancorFormula {
                                  uint256 _amount)
                                  public view returns (uint256)
     {
-        return saleRate(_supply, _reserveBalance, _reserveWeight, _amount);
+        return saleTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount);
     }
 
     /**
@@ -674,7 +674,7 @@ contract BancorFormula is IBancorFormula {
                                          uint256 _amount)
                                          public view returns (uint256)
     {
-        return crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
+        return crossReserveTargetAmount(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
     }
 
     /**
@@ -687,7 +687,7 @@ contract BancorFormula is IBancorFormula {
                                            uint256 _amount)
                                            public view returns (uint256)
     {
-        return crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
+        return crossReserveTargetAmount(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
     }
 
     /**
@@ -711,6 +711,55 @@ contract BancorFormula is IBancorFormula {
                                       uint256 _amount)
                                       public view returns (uint256)
     {
-        return liquidateRate(_supply, _reserveBalance, _reserveRatio, _amount);
+        return liquidateReserveAmount(_supply, _reserveBalance, _reserveRatio, _amount);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function purchaseRate(uint256 _supply,
+                          uint256 _reserveBalance,
+                          uint32 _reserveWeight,
+                          uint256 _amount)
+                          public view returns (uint256)
+    {
+        return purchaseTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function saleRate(uint256 _supply,
+                      uint256 _reserveBalance,
+                      uint32 _reserveWeight,
+                      uint256 _amount)
+                      public view returns (uint256)
+    {
+        return saleTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function crossReserveRate(uint256 _sourceReserveBalance,
+                              uint32 _sourceReserveWeight,
+                              uint256 _targetReserveBalance,
+                              uint32 _targetReserveWeight,
+                              uint256 _amount)
+                              public view returns (uint256)
+    {
+        return crossReserveTargetAmount(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function liquidateRate(uint256 _supply,
+                           uint256 _reserveBalance,
+                           uint32 _reserveRatio,
+                           uint256 _amount)
+                           public view returns (uint256)
+    {
+        return liquidateReserveAmount(_supply, _reserveBalance, _reserveRatio, _amount);
     }
 }

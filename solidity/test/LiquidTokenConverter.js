@@ -148,9 +148,9 @@ contract('LiquidTokenConverter', accounts => {
                 await converter.acceptTokenOwnership();
             });
 
-            it('verifies that rateAndFee returns a valid amount', async () => {
+            it('verifies that targetAmountAndFee returns a valid amount', async () => {
                 let converter = await initConverter(accounts, true, isETHReserve);
-                let returnAmount = (await converter.rateAndFee.call(getReserve1Address(isETHReserve), tokenAddress, 500))[0];
+                let returnAmount = (await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), tokenAddress, 500))[0];
                 assert.isNumber(returnAmount.toNumber());
                 assert.notEqual(returnAmount.toNumber(), 0);
             });
@@ -182,16 +182,16 @@ contract('LiquidTokenConverter', accounts => {
                 assert('_conversionFee' in events[0].args);
             });
 
-            it('should throw when attempting to get the purchase rate while the converter is not active', async () => {
+            it('should throw when attempting to get the purchase target amount while the converter is not active', async () => {
                 let converter = await initConverter(accounts, false, isETHReserve);
 
-                await utils.catchRevert(converter.rateAndFee.call(getReserve1Address(isETHReserve), tokenAddress, 500));
+                await utils.catchRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), tokenAddress, 500));
             });
 
-            it('should throw when attempting to get the sale rate while the converter is not active', async () => {
+            it('should throw when attempting to get the sale target amount while the converter is not active', async () => {
                 let converter = await initConverter(accounts, false, isETHReserve);
 
-                await utils.catchRevert(converter.rateAndFee.call(tokenAddress, getReserve1Address(isETHReserve), 500));
+                await utils.catchRevert(converter.targetAmountAndFee.call(tokenAddress, getReserve1Address(isETHReserve), 500));
             });
 
             it('verifies that convert returns valid amount and fee after buying', async () => {

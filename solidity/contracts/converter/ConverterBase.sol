@@ -588,6 +588,6 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @dev deprecated, backward compatibility
     */
     function getReturn(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256) {
-        return rateAndFee(_sourceToken, _targetToken, _amount);
+        return targetAmountAndFee(_sourceToken, _targetToken, _amount);
     }
 }

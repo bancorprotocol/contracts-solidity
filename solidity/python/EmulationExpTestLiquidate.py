@@ -51,7 +51,7 @@ def Main():
 
 def Run(module, supply, balance, weights, amount):
     try:
-        return module.liquidateRate(supply, balance, weights, amount)
+        return module.liquidateReserveAmount(supply, balance, weights, amount)
     except:
         return -1
 

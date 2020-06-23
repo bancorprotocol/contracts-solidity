@@ -471,22 +471,22 @@ contract('Converter:', accounts => {
                     await utils.catchRevert(converter.upgrade({ from: accounts[1] }));
                 });
 
-                it('should throw when attempting to get the rate with an invalid source token adress', async () => {
+                it('should throw when attempting to get the target amount with an invalid source token adress', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
             
-                    await utils.catchRevert(converter.rateAndFee.call(utils.zeroAddress, getReserve1Address(isETHReserve), 500));
+                    await utils.catchRevert(converter.targetAmountAndFee.call(utils.zeroAddress, getReserve1Address(isETHReserve), 500));
                 });
             
-                it('should throw when attempting to get the rate with an invalid target token address', async () => {
+                it('should throw when attempting to get the target amount with an invalid target token address', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
             
-                    await utils.catchRevert(converter.rateAndFee.call(getReserve1Address(isETHReserve), utils.zeroAddress, 500));
+                    await utils.catchRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), utils.zeroAddress, 500));
                 });
             
-                it('should throw when attempting to get the rate with identical source/target addresses', async () => {
+                it('should throw when attempting to get the target amount with identical source/target addresses', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
             
-                    await utils.catchRevert(converter.rateAndFee.call(getReserve1Address(isETHReserve), getReserve1Address(isETHReserve), 500));
+                    await utils.catchRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), getReserve1Address(isETHReserve), 500));
                 });
 
                 it('should throw when attempting to convert with an invalid source token adress', async () => {
