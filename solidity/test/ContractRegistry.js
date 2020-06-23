@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { constants } from '@openzeppelin/test-helpers';
-import { expectRevert, expectEvent } from '@openzeppelin/test-helpers';
+import { expectRevert } from '@openzeppelin/test-helpers';
 import { BN } from '@openzeppelin/test-helpers/src/setup';
 
 const ContractRegistry = artifacts.require('ContractRegistry');
