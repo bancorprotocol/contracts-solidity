@@ -1,55 +1,57 @@
-/* global artifacts, contract, it, assert, web3 */
-/* eslint-disable prefer-reflect */
+import { expect } from 'chai';
+import { expectRevert, BN } from '@openzeppelin/test-helpers';
 
 const TestSafeMath = artifacts.require('TestSafeMath');
-const utils = require('./helpers/Utils');
 
 contract('SafeMath', () => {
+    let math;
+
+    beforeEach(async () => {
+        math = await TestSafeMath.new();
+    });
+
     it('verifies successful addition', async () => {
-        let math = await TestSafeMath.new();
-        let x = 2957;
-        let y = 1740;
-        let z = await math.testSafeAdd.call(x, y);
-        assert.equal(z, x + y);
+        const x = new BN(2957);
+        const y = new BN(1740);
+        const z = await math.testSafeAdd.call(x, y);
+
+        expect(z).to.be.bignumber.equal(x.add(y));
     });
 
     it('should throw on addition overflow', async () => {
-        let math = await TestSafeMath.new();
-        let x = web3.toBigNumber('115792089237316195423570985008687907853269984665640564039457584007913129639935');
-        let y = 1;
+        const x = new BN('115792089237316195423570985008687907853269984665640564039457584007913129639935');
+        const y = new BN(1);
 
-        await utils.catchRevert(math.testSafeAdd.call(x, y));
+        await expectRevert(math.testSafeAdd.call(x, y), 'ERR_OVERFLOW');
     });
 
     it('verifies successful subtraction', async () => {
-        let math = await TestSafeMath.new();
-        let x = 2957;
-        let y = 1740;
-        let z = await math.testSafeSub.call(x, y);
-        assert.equal(z, x - y);
+        const x = new BN(2957);
+        const y = new BN(1740);
+        const z = await math.testSafeSub.call(x, y);
+
+        expect(z).to.be.bignumber.equal(x.sub(y));
     });
 
     it('should throw on subtraction with negative result', async () => {
-        let math = await TestSafeMath.new();
-        let x = 10;
-        let y = 11;
+        const x = new BN(10);
+        const y = new BN(11);
 
-        await utils.catchRevert(math.testSafeSub.call(x, y));
+        await expectRevert(math.testSafeSub.call(x, y), 'ERR_UNDERFLOW');
     });
 
     it('verifies successful multiplication', async () => {
-        let math = await TestSafeMath.new();
-        let x = 2957;
-        let y = 1740;
-        let z = await math.testSafeMul.call(x, y);
-        assert.equal(z, x * y);
+        const x = new BN(2957);
+        const y = new BN(1740);
+        const z = await math.testSafeMul.call(x, y);
+
+        expect(z).to.be.bignumber.equal(x.mul(y));
     });
 
     it('should throw on multiplication overflow', async () => {
-        let math = await TestSafeMath.new();
-        let x = web3.toBigNumber('15792089237316195423570985008687907853269984665640564039457584007913129639935');
-        let y = 2000;
+        const x = new BN('15792089237316195423570985008687907853269984665640564039457584007913129639935');
+        const y = new BN(2000);
 
-        await utils.catchRevert(math.testSafeMul.call(x, y));
+        await expectRevert(math.testSafeMul.call(x, y), 'ERR_OVERFLOW');
     });
 });

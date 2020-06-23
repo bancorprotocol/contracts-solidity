@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { constants } from '@openzeppelin/test-helpers';
 import { expectRevert, expectEvent } from '@openzeppelin/test-helpers';
 
