@@ -123,7 +123,7 @@ function initPaths(tokens, generatePaths) {
 
 async function initTokensAndConverters(accounts) {
     contractRegistry = await ContractRegistry.new();
-    
+
     let bancorFormula = await BancorFormula.new();
     await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
 
@@ -208,7 +208,7 @@ async function approve(token, from, to, amount) {
 
 async function getBalance(token, symbol, account) {
     if (symbol == 'ETH')
-        return await web3.eth.getBalance(account);
+        return await balance.current(account);
     else
         return await token.balanceOf.call(account);
 }
@@ -236,12 +236,12 @@ contract('BancorNetwork', accounts => {
             assert.isTrue(validEtherToken, 'registered etherToken address verification');
         });
 
-        it('should throw when attempting register ether token with invalid address', async () => {
+        it('should revert when attempting register ether token with invalid address', async () => {
             let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
-            await utils.catchRevert(bancorNetwork1.registerEtherToken(utils.zeroAddress, true));
+            await utils.catchRevert(bancorNetwork1.registerEtherToken(constants.ZERO_ADDRESS, true));
         });
 
-        it('should throw when non owner attempting register ether token', async () => {
+        it('should revert when non owner attempting register ether token', async () => {
             let etherToken = await EtherToken.new('Token0', 'TKN0');
             await etherToken.deposit({ value: 10000000 });
             let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
@@ -260,7 +260,7 @@ contract('BancorNetwork', accounts => {
             assert.isNotTrue(validEtherToken2, 'unregistered etherToken address verification');
         });
 
-        it('should throw when non owner attempting to unregister ether token', async () => {
+        it('should revert when non owner attempting to unregister ether token', async () => {
             let etherToken = await EtherToken.new('Token0', 'TKN0');
             await etherToken.deposit({ value: 10000000 });
             let bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
@@ -278,7 +278,7 @@ contract('BancorNetwork', accounts => {
             assert.equal(newMaxAffiliateFee.toString(), oldMaxAffiliateFee.plus(1));
         });
 
-        it('should throw when calling setMaxAffiliateFee with a non-owner or an illegal value', async () => {
+        it('should revert when calling setMaxAffiliateFee with a non-owner or an illegal value', async () => {
             await utils.catchRevert(bancorNetwork.setMaxAffiliateFee("1000000", { from: accounts[1] }));
             await utils.catchRevert(bancorNetwork.setMaxAffiliateFee("1000001", { from: accounts[0] }));
         });
@@ -323,7 +323,7 @@ contract('BancorNetwork', accounts => {
                         await approve(sourceToken, accounts[0], bancorNetwork.address, 1000);
 
                     let prevBalance = await getBalance(targetToken, targetSymbol, accounts[0]);
-                    let res = await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 1000, 1, utils.zeroAddress, utils.zeroAddress, 0, { value });
+                    let res = await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 1000, 1, constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0, { value });
                     let postBalance = await getBalance(targetToken, targetSymbol, accounts[0]);
 
                     let transactionCost = 0;
@@ -344,7 +344,7 @@ contract('BancorNetwork', accounts => {
                         await approve(sourceToken, accounts[0], bancorNetwork.address, 1000);
 
                     let prevBalance = await getBalance(targetToken, targetSymbol, accounts[1]);
-                    await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 1000, 1, accounts[1], utils.zeroAddress, 0, { value });
+                    await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 1000, 1, accounts[1], constants.ZERO_ADDRESS, 0, { value });
                     let postBalance = await getBalance(targetToken, targetSymbol, accounts[1]);
 
                     assert(postBalance.greaterThan(prevBalance), "beneficiary balance isn't higher than previous balance");
@@ -360,7 +360,7 @@ contract('BancorNetwork', accounts => {
                         await approve(sourceToken, accounts[0], bancorNetwork.address, 10000);
 
                     let prevBalance = await getBalance(bntToken, 'BNT', accounts[2]);
-                    await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 10000, 1, utils.zeroAddress, accounts[2], 10000, { value });
+                    await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 10000, 1, constants.ZERO_ADDRESS, accounts[2], 10000, { value });
                     let postBalance = await getBalance(bntToken, 'BNT', accounts[2]);
 
                     // affiliate fee is only taken when converting to BNT, so BNT must exist and not be the first token in the path
@@ -382,7 +382,7 @@ contract('BancorNetwork', accounts => {
 
                     let expectedReturn = await bancorNetwork.rateByPath(paths[sourceSymbol][targetSymbol], 1000);
                     let prevBalance = await getBalance(targetToken, targetSymbol, accounts[0]);
-                    let res = await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 1000, 1, utils.zeroAddress, utils.zeroAddress, 0, { value });
+                    let res = await bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 1000, 1, constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0, { value });
                     let postBalance = await getBalance(targetToken, targetSymbol, accounts[0]);
 
                     let transactionCost = 0;
@@ -392,7 +392,7 @@ contract('BancorNetwork', accounts => {
                     assert(expectedReturn.equals(postBalance.minus(prevBalance.minus(transactionCost))), "expected return differs from actual return");
                 });
 
-                it(`should throw when attempting to convert from ${sourceSymbol} to ${targetSymbol} and the conversion return amount is lower than the given minimum`, async () => {
+                it(`should revert when attempting to convert from ${sourceSymbol} to ${targetSymbol} and the conversion return amount is lower than the given minimum`, async () => {
                     let pathTokens = pathsTokens[sourceSymbol][targetSymbol];
                     let sourceToken = pathTokens[0];
                     let value = 0;
@@ -402,7 +402,7 @@ contract('BancorNetwork', accounts => {
                         await approve(sourceToken, accounts[0], bancorNetwork.address, 1000);
 
                     let expectedReturn = await bancorNetwork.rateByPath(paths[sourceSymbol][targetSymbol], 1000);
-                    await utils.catchRevert(bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 1000, expectedReturn.plus(1), utils.zeroAddress, utils.zeroAddress, 0, { value }));
+                    await utils.catchRevert(bancorNetwork.convertByPath(paths[sourceSymbol][targetSymbol], 1000, expectedReturn.plus(1), constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0, { value }));
                 });
             }
         }
@@ -417,9 +417,9 @@ contract('BancorNetwork', accounts => {
                 assert.equal(conversionPath[i], expectedPath[i]);
         });
 
-        it('should throw when attempting to convert and passing an amount higher than the ETH amount sent with the request', async () => {
+        it('should revert when attempting to convert and passing an amount higher than the ETH amount sent with the request', async () => {
             let path = paths['ETH']['SMART4'];
-            await utils.catchRevert(bancorNetwork.convertByPath(path, 100001, 1, utils.zeroAddress, utils.zeroAddress, 0, { from: accounts[1], value: 100000 }));
+            await utils.catchRevert(bancorNetwork.convertByPath(path, 100001, 1, constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0, { from: accounts[1], value: 100000 }));
         });
 
         it('verifies that convert returns a valid amount when buying a liquid token', async () => {
@@ -428,42 +428,42 @@ contract('BancorNetwork', accounts => {
             assert.isAbove(amount.toNumber(), 0, 'amount converted');
         });
 
-        it('should throw when calling convertFor with ether token but without sending ether', async () => {
+        it('should revert when calling convertFor with ether token but without sending ether', async () => {
             let path = paths['ETH']['SMART4'];
             await utils.catchRevert(bancorNetwork.convertFor(path, 10000, 1, accounts[1]));
         });
 
-        it('should throw when calling convertFor with ether amount different than the amount sent', async () => {
+        it('should revert when calling convertFor with ether amount different than the amount sent', async () => {
             let path = paths['ETH']['SMART4'];
             await utils.catchRevert(bancorNetwork.convertFor.call(path, 20000, 1, accounts[1], { value: 10000 }));
         });
 
-        it('should throw when calling convertFor with too-short path', async () => {
+        it('should revert when calling convertFor with too-short path', async () => {
             let invalidPath = [ETH_RESERVE_ADDRESS, smartToken4.address];
             await utils.catchRevert(bancorNetwork.convertFor(invalidPath, 10000, 1, accounts[1], { value: 10000 }));
         });
 
-        it('should throw when calling convertFor with even-length path', async () => {
+        it('should revert when calling convertFor with even-length path', async () => {
             let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken4.address];
             await utils.catchRevert(bancorNetwork.convertFor(invalidPath, 10000, 1, accounts[1], { value: 10000 }));
         });
 
-        it('should throw when calling convert with ether token but without sending ether', async () => {
+        it('should revert when calling convert with ether token but without sending ether', async () => {
             let path = paths['ETH']['SMART4'];
             await utils.catchRevert(bancorNetwork.convert(path, 10000, 1, { from: accounts[1] }));
         });
 
-        it('should throw when calling convert with ether amount different than the amount sent', async () => {
+        it('should revert when calling convert with ether amount different than the amount sent', async () => {
             let path = paths['ETH']['SMART4'];
             await utils.catchRevert(bancorNetwork.convert.call(path, 20000, 1, { from: accounts[1], value: 10000 }));
         });
 
-        it('should throw when calling convert with too-short path', async () => {
+        it('should revert when calling convert with too-short path', async () => {
             let invalidPath = [ETH_RESERVE_ADDRESS, smartToken4.address];
             await utils.catchRevert(bancorNetwork.convert(invalidPath, 10000, 1, { from: accounts[1], value: 10000 }));
         });
 
-        it('should throw when calling convert with even-length path', async () => {
+        it('should revert when calling convert with even-length path', async () => {
             let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken4.address];
             await utils.catchRevert(bancorNetwork.convert(invalidPath, 10000, 1, { from: accounts[1], value: 10000 }));
         });
@@ -486,7 +486,7 @@ contract('BancorNetwork', accounts => {
             assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
         });
 
-        it('should throw when calling claimAndConvertFor without approval', async () => {
+        it('should revert when calling claimAndConvertFor without approval', async () => {
             let path = paths['ERC1']['SMART4'];
             await utils.catchRevert(bancorNetwork.claimAndConvertFor(path, 10000, 1, accounts[1]));
         });
@@ -500,17 +500,17 @@ contract('BancorNetwork', accounts => {
             assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
         });
 
-        it('should throw when calling claimAndConvert without approval', async () => {
+        it('should revert when calling claimAndConvert without approval', async () => {
             let path = paths['ERC1']['SMART4'];
             await utils.catchRevert(bancorNetwork.claimAndConvert(path, 10000, 1));
         });
 
-        it('should throw when attempting to call rateByPath on a path with fewer than 3 elements', async () => {
+        it('should revert when attempting to call rateByPath on a path with fewer than 3 elements', async () => {
             let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address];
             await utils.catchRevert(bancorNetwork.rateByPath.call(invalidPath, 1000));
         });
 
-        it('should throw when attempting to call rateByPath on a path with an even number of elements', async () => {
+        it('should revert when attempting to call rateByPath on a path with an even number of elements', async () => {
             let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken3.address];
             await utils.catchRevert(bancorNetwork.rateByPath.call(invalidPath, 1000));
         });
@@ -518,7 +518,7 @@ contract('BancorNetwork', accounts => {
         it('verifies that convertFor2 transfers the converted amount correctly', async () => {
             let balanceBeforeTransfer = await smartToken4.balanceOf.call(accounts[1]);
             let path = paths['ETH']['SMART4'];
-            await bancorNetwork.convertFor2(path, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 });
+            await bancorNetwork.convertFor2(path, 10000, 1, accounts[1], constants.ZERO_ADDRESS, 0, { value: 10000 });
             let balanceAfterTransfer = await smartToken4.balanceOf.call(accounts[1]);
             assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
         });
@@ -526,94 +526,94 @@ contract('BancorNetwork', accounts => {
         it('verifies that convert2 transfers the converted amount correctly', async () => {
             let balanceBeforeTransfer = await smartToken4.balanceOf.call(accounts[1]);
             let path = paths['ETH']['SMART4'];
-            await bancorNetwork.convert2(path, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 });
+            await bancorNetwork.convert2(path, 10000, 1, constants.ZERO_ADDRESS, 0, { from: accounts[1], value: 10000 });
             let balanceAfterTransfer = await smartToken4.balanceOf.call(accounts[1]);
             assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
         });
 
         it('verifies that convertFor2 returns a valid amount when buying a liquid token', async () => {
             let path = paths['ETH']['SMART4'];
-            let amount = await bancorNetwork.convertFor2.call(path, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 });
+            let amount = await bancorNetwork.convertFor2.call(path, 10000, 1, accounts[1], constants.ZERO_ADDRESS, 0, { value: 10000 });
             assert.isAbove(amount.toNumber(), 0, 'amount converted');
         });
 
         it('verifies that convert2 returns a valid amount when buying a liquid token', async () => {
             let path = paths['ETH']['SMART4'];
-            let amount = await bancorNetwork.convert2.call(path, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 });
+            let amount = await bancorNetwork.convert2.call(path, 10000, 1, constants.ZERO_ADDRESS, 0, { from: accounts[1], value: 10000 });
             assert.isAbove(amount.toNumber(), 0, 'amount converted');
         });
 
-        it('should throw when calling convertFor2 with ether token but without sending ether', async () => {
+        it('should revert when calling convertFor2 with ether token but without sending ether', async () => {
             let path = paths['ETH']['ERC2'];
-            await utils.catchRevert(bancorNetwork.convertFor2(path, 10000, 1, accounts[1], utils.zeroAddress, 0));
+            await utils.catchRevert(bancorNetwork.convertFor2(path, 10000, 1, accounts[1], constants.ZERO_ADDRESS, 0));
         });
 
-        it('should throw when calling convertFor2 with ether amount different than the amount sent', async () => {
+        it('should revert when calling convertFor2 with ether amount different than the amount sent', async () => {
             let path = paths['ETH']['ERC2'];
-            await utils.catchRevert(bancorNetwork.convertFor2.call(path, 20000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 }));
+            await utils.catchRevert(bancorNetwork.convertFor2.call(path, 20000, 1, accounts[1], constants.ZERO_ADDRESS, 0, { value: 10000 }));
         });
 
-        it('should throw when calling convertFor2 with too-short path', async () => {
+        it('should revert when calling convertFor2 with too-short path', async () => {
             let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address];
-            await utils.catchRevert(bancorNetwork.convertFor2(invalidPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 }));
+            await utils.catchRevert(bancorNetwork.convertFor2(invalidPath, 10000, 1, accounts[1], constants.ZERO_ADDRESS, 0, { value: 10000 }));
         });
 
-        it('should throw when calling convertFor2 with even-length path', async () => {
+        it('should revert when calling convertFor2 with even-length path', async () => {
             let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken3.address];
-            await utils.catchRevert(bancorNetwork.convertFor2(invalidPath, 10000, 1, accounts[1], utils.zeroAddress, 0, { value: 10000 }));
+            await utils.catchRevert(bancorNetwork.convertFor2(invalidPath, 10000, 1, accounts[1], constants.ZERO_ADDRESS, 0, { value: 10000 }));
         });
 
-        it('should throw when calling convert2 with ether token but without sending ether', async () => {
+        it('should revert when calling convert2 with ether token but without sending ether', async () => {
             let path = paths['ETH']['BNT'];
-            await utils.catchRevert(bancorNetwork.convert2(path, 10000, 1, utils.zeroAddress, 0, { from: accounts[1] }));
+            await utils.catchRevert(bancorNetwork.convert2(path, 10000, 1, constants.ZERO_ADDRESS, 0, { from: accounts[1] }));
         });
 
-        it('should throw when calling convert2 with ether amount different than the amount sent', async () => {
+        it('should revert when calling convert2 with ether amount different than the amount sent', async () => {
             let path = paths['ETH']['BNT'];
-            await utils.catchRevert(bancorNetwork.convert2.call(path, 20000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 }));
+            await utils.catchRevert(bancorNetwork.convert2.call(path, 20000, 1, constants.ZERO_ADDRESS, 0, { from: accounts[1], value: 10000 }));
         });
 
-        it('should throw when calling convert2 with too-short path', async () => {
+        it('should revert when calling convert2 with too-short path', async () => {
             let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address];
-            await utils.catchRevert(bancorNetwork.convert2(invalidPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 }));
+            await utils.catchRevert(bancorNetwork.convert2(invalidPath, 10000, 1, constants.ZERO_ADDRESS, 0, { from: accounts[1], value: 10000 }));
         });
 
-        it('should throw when calling convert2 with even-length path', async () => {
+        it('should revert when calling convert2 with even-length path', async () => {
             let invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken3.address];
-            await utils.catchRevert(bancorNetwork.convert2(invalidPath, 10000, 1, utils.zeroAddress, 0, { from: accounts[1], value: 10000 }));
+            await utils.catchRevert(bancorNetwork.convert2(invalidPath, 10000, 1, constants.ZERO_ADDRESS, 0, { from: accounts[1], value: 10000 }));
         });
 
         it('verifies that claimAndConvertFor2 transfers the converted amount correctly', async () => {
             await approve(erc20Token1, accounts[0], bancorNetwork.address, 10000);
             let balanceBeforeTransfer = await smartToken4.balanceOf.call(accounts[1]);
             let path = paths['ERC1']['SMART4'];
-            await bancorNetwork.claimAndConvertFor2(path, 10000, 1, accounts[1], utils.zeroAddress, 0);
+            await bancorNetwork.claimAndConvertFor2(path, 10000, 1, accounts[1], constants.ZERO_ADDRESS, 0);
             let balanceAfterTransfer = await smartToken4.balanceOf.call(accounts[1]);
             assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
         });
 
-        it('should throw when calling claimAndConvertFor2 without approval', async () => {
+        it('should revert when calling claimAndConvertFor2 without approval', async () => {
             let path = paths['ERC1']['SMART4'];
-            await utils.catchRevert(bancorNetwork.claimAndConvertFor2(path, 10000, 1, accounts[1], utils.zeroAddress, 0));
+            await utils.catchRevert(bancorNetwork.claimAndConvertFor2(path, 10000, 1, accounts[1], constants.ZERO_ADDRESS, 0));
         });
 
         it('verifies that claimAndConvert2 transfers the converted amount correctly', async () => {
             await approve(erc20Token1, accounts[0], bancorNetwork.address, 10000);
             let balanceBeforeTransfer = await smartToken4.balanceOf.call(accounts[0]);
             let path = paths['ERC1']['SMART4'];
-            await bancorNetwork.claimAndConvert2(path, 10000, 1, utils.zeroAddress, 0);
+            await bancorNetwork.claimAndConvert2(path, 10000, 1, constants.ZERO_ADDRESS, 0);
             let balanceAfterTransfer = await smartToken4.balanceOf.call(accounts[0]);
             assert.isAbove(balanceAfterTransfer.toNumber(), balanceBeforeTransfer.toNumber(), 'amount transfered');
         });
 
-        it('should throw when calling claimAndConvert2 without approval', async () => {
+        it('should revert when calling claimAndConvert2 without approval', async () => {
             let path = paths['ERC1']['SMART4'];
-            await utils.catchRevert(bancorNetwork.claimAndConvert2(path, 10000, 1, utils.zeroAddress, 0));
+            await utils.catchRevert(bancorNetwork.claimAndConvert2(path, 10000, 1, constants.ZERO_ADDRESS, 0));
         });
 
-        it('should throw when attempting to convert and passing an amount higher than the ETH amount sent with the request', async () => {
+        it('should revert when attempting to convert and passing an amount higher than the ETH amount sent with the request', async () => {
             let path = paths['ETH']['SMART4'];
-            await utils.catchRevert(bancorNetwork.convert2(path, 100001, 1, utils.zeroAddress, 0, { from: accounts[1], value: 100000 }));
+            await utils.catchRevert(bancorNetwork.convert2(path, 100001, 1, constants.ZERO_ADDRESS, 0, { from: accounts[1], value: 100000 }));
         });
 
         it('verifies that convertFor2 transfers the affiliate fee correctly', async () => {

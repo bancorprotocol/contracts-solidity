@@ -39,7 +39,7 @@ def Main():
                         testNum += 1
                         if True:
                             try:
-                                gas = tester.crossReserveRate(balance1, weight1, balance2, weight2, amount)
+                                gas = tester.crossReserveTargetAmount(balance1, weight1, balance2, weight2, amount)
                                 minGas = min(minGas, gas)
                                 maxGas = max(maxGas, gas)
                                 totalGas += gas

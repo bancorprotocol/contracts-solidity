@@ -100,16 +100,16 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev returns the expected rate of converting one reserve to another along with the fee
+      * @dev returns the expected target amount of converting one reserve to another along with the fee
       *
       * @param _sourceToken contract address of the source reserve token
       * @param _targetToken contract address of the target reserve token
       * @param _amount      amount of tokens received from the user
       *
-      * @return expected rate
+      * @return expected target amount
       * @return expected fee
     */
-    function rateAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount)
+    function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount)
         public
         view
         active
@@ -120,7 +120,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         // validate input
         require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET");
 
-        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).crossReserveRate(
+        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).crossReserveTargetAmount(
             reserveBalance(_sourceToken),
             reserves[_sourceToken].weight,
             reserveBalance(_targetToken),
@@ -149,11 +149,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         internal
         returns (uint256)
     {
-        // get expected rate and fee
-        (uint256 amount, uint256 fee) = rateAndFee(_sourceToken, _targetToken, _amount);
+        // get expected target amount and fee
+        (uint256 amount, uint256 fee) = targetAmountAndFee(_sourceToken, _targetToken, _amount);
 
         // ensure that the trade gives something in return
-        require(amount != 0, "ERR_ZERO_RATE");
+        require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
 
         // ensure that the trade won't deplete the reserve balance
         uint256 targetReserveBalance = reserveBalance(_targetToken);
@@ -426,7 +426,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
             uint256 reserveAmount = formula.fundCost(_totalSupply, rsvBalance, reserveRatio, amount);
-            require(reserveAmount > 0, "ERR_ZERO_RATE");
+            require(reserveAmount > 0, "ERR_ZERO_TARGET_AMOUNT");
             assert(reserveAmount <= _reserveAmounts[i]);
 
             // transfer each one of the reserve amounts from the user to the pool
@@ -468,8 +468,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
-            uint256 reserveAmount = formula.liquidateRate(_totalSupply, rsvBalance, reserveRatio, _amount);
-            require(reserveAmount >= _reserveMinReturnAmounts[i], "ERR_ZERO_RATE");
+            uint256 reserveAmount = formula.liquidateReserveAmount(_totalSupply, rsvBalance, reserveRatio, _amount);
+            require(reserveAmount >= _reserveMinReturnAmounts[i], "ERR_ZERO_TARGET_AMOUNT");
 
             uint256 newReserveBalance = rsvBalance.sub(reserveAmount);
             reserves[reserveToken].balance = newReserveBalance;

@@ -95,21 +95,21 @@ contract LiquidTokenConverter is ConverterBase {
     }
 
     /**
-      * @dev returns the expected rate of converting the source token to the
+      * @dev returns the expected target amount of converting the source token to the
       * target token along with the fee
       *
       * @param _sourceToken contract address of the source token
       * @param _targetToken contract address of the target token
       * @param _amount      amount of tokens received from the user
       *
-      * @return expected rate
+      * @return expected target amount
       * @return expected fee
     */
-    function rateAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256) {
+    function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256) {
         if (_targetToken == ISmartToken(anchor) && reserves[_sourceToken].isSet)
-            return purchaseRate(_amount);
+            return purchaseTargetAmount(_amount);
         if (_sourceToken == ISmartToken(anchor) && reserves[_targetToken].isSet)
-            return saleRate(_amount);
+            return saleTargetAmount(_amount);
 
         // invalid input
         revert("ERR_INVALID_TOKEN");
@@ -131,16 +131,16 @@ contract LiquidTokenConverter is ConverterBase {
         internal
         returns (uint256)
     {
-        uint256 rate;
+        uint256 targetAmount;
         IERC20Token reserveToken;
 
         if (_targetToken == ISmartToken(anchor) && reserves[_sourceToken].isSet) {
             reserveToken = _sourceToken;
-            rate = buy(_amount, _trader, _beneficiary);
+            targetAmount = buy(_amount, _trader, _beneficiary);
         }
         else if (_sourceToken == ISmartToken(anchor) && reserves[_targetToken].isSet) {
             reserveToken = _targetToken;
-            rate = sell(_amount, _trader, _beneficiary);
+            targetAmount = sell(_amount, _trader, _beneficiary);
         }
         else {
             // invalid input
@@ -152,18 +152,18 @@ contract LiquidTokenConverter is ConverterBase {
         uint32 reserveWeight = reserves[reserveToken].weight;
         emit TokenRateUpdate(anchor, reserveToken, reserveBalance(reserveToken).mul(WEIGHT_RESOLUTION), totalSupply.mul(reserveWeight));
 
-        return rate;
+        return targetAmount;
     }
 
     /**
-      * @dev returns the expected return of buying with a given amount of tokens
+      * @dev returns the expected target amount of buying with a given amount of tokens
       *
-      * @param _amount  amount of reserve tokens to get the rate for
+      * @param _amount  amount of reserve tokens to get the target amount for
       *
       * @return amount of liquid tokens that the user will receive
       * @return amount of liquid tokens that the user will pay as fee
     */
-    function purchaseRate(uint256 _amount)
+    function purchaseTargetAmount(uint256 _amount)
         internal
         view
         active
@@ -176,7 +176,7 @@ contract LiquidTokenConverter is ConverterBase {
             return (_amount, 0);
 
         IERC20Token reserveToken = reserveTokens[0];
-        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).purchaseRate(
+        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).purchaseTargetAmount(
             totalSupply,
             reserveBalance(reserveToken),
             reserves[reserveToken].weight,
@@ -189,14 +189,14 @@ contract LiquidTokenConverter is ConverterBase {
     }
 
     /**
-      * @dev returns the expected return of selling a given amount of tokens
+      * @dev returns the expected target amount of selling a given amount of tokens
       *
-      * @param _amount  amount of liquid tokens to get the rate for
+      * @param _amount  amount of liquid tokens to get the target amount for
       *
       * @return expected reserve tokens
       * @return expected fee
     */
-    function saleRate(uint256 _amount)
+    function saleTargetAmount(uint256 _amount)
         internal
         view
         active
@@ -210,7 +210,7 @@ contract LiquidTokenConverter is ConverterBase {
         if (totalSupply == _amount)
             return (reserveBalance(reserveToken), 0);
 
-        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).saleRate(
+        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).saleTargetAmount(
             totalSupply,
             reserveBalance(reserveToken),
             reserves[reserveToken].weight,
@@ -232,11 +232,11 @@ contract LiquidTokenConverter is ConverterBase {
       * @return amount of liquid tokens received
     */
     function buy(uint256 _amount, address _trader, address _beneficiary) internal returns (uint256) {
-        // get expected rate and fee
-        (uint256 amount, uint256 fee) = purchaseRate(_amount);
+        // get expected target amount and fee
+        (uint256 amount, uint256 fee) = purchaseTargetAmount(_amount);
 
         // ensure the trade gives something in return
-        require(amount != 0, "ERR_ZERO_RATE");
+        require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
 
         IERC20Token reserveToken = reserveTokens[0];
 
@@ -271,11 +271,11 @@ contract LiquidTokenConverter is ConverterBase {
         // ensure that the input amount was already deposited
         require(_amount <= ISmartToken(anchor).balanceOf(this), "ERR_INVALID_AMOUNT");
 
-        // get expected rate and fee
-        (uint256 amount, uint256 fee) = saleRate(_amount);
+        // get expected target amount and fee
+        (uint256 amount, uint256 fee) = saleTargetAmount(_amount);
 
         // ensure the trade gives something in return
-        require(amount != 0, "ERR_ZERO_RATE");
+        require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
 
         IERC20Token reserveToken = reserveTokens[0];
 

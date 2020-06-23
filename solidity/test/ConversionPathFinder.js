@@ -151,7 +151,7 @@ contract('ConversionPathFinder', accounts => {
         await pathFinder.setAnchorToken(anchorToken);
     });
 
-    it('should throw when a non owner tries to update the anchor token', async () => {
+    it('should revert when a non owner tries to update the anchor token', async () => {
         await utils.catchRevert(pathFinder.setAnchorToken(accounts[0], {from: accounts[1]}));
         assert.equal(await pathFinder.anchorToken(), anchorToken);
     });

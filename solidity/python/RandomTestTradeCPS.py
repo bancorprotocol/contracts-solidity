@@ -9,9 +9,9 @@ getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits f
 
 
 def formulaTest(supply, balance1, weight1, balance2, weight2, amount1):
-    amount2 = FormulaSolidityPort.crossReserveRate(balance1, weight1, balance2, weight2, amount1)
-    amount0 = FormulaSolidityPort.purchaseRate(supply, balance2 - amount2, weight2, amount2)
-    amount3 = FormulaSolidityPort.saleRate(supply + amount0, balance1 + amount1, weight1, amount0)
+    amount2 = FormulaSolidityPort.crossReserveTargetAmount(balance1, weight1, balance2, weight2, amount1)
+    amount0 = FormulaSolidityPort.purchaseTargetAmount(supply, balance2 - amount2, weight2, amount2)
+    amount3 = FormulaSolidityPort.saleTargetAmount(supply + amount0, balance1 + amount1, weight1, amount0)
     before, after = amount1, amount3
     if after > before:
         error = ['Implementation Error:']

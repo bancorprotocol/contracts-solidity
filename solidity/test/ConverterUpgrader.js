@@ -31,7 +31,7 @@ async function initWith1Reserve(deployer, version, active) {
     const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
     const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, RESERVE1_BALANCE);
     const converter = await Converter.new(0, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, reserveToken1.address, 500000, version);
-    const upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
+    const upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
 
     await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
 
@@ -52,14 +52,14 @@ async function initWith2Reserves(deployer, version, active) {
     const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, RESERVE1_BALANCE);
     const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, RESERVE2_BALANCE);
     const converter = await Converter.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, reserveToken1.address, 500000, version);
-    const upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
+    const upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
 
     await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
     if (version)
         await converter.addConnector(reserveToken2.address, 500000, false);
     else
         await converter.addReserve(reserveToken2.address, 500000);
-        
+
     await converter.setConversionFee(CONVERSION_FEE);
     await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
     await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
@@ -75,8 +75,8 @@ async function initWith2Reserves(deployer, version, active) {
 
 async function initWithoutReserves(deployer, version, active) {
     const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
-    const converter = await Converter.new(0, smartToken.address, contractRegistry.address, 0, utils.zeroAddress, 0, version);
-    const upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
+    const converter = await Converter.new(0, smartToken.address, contractRegistry.address, 0, constants.ZERO_ADDRESS, 0, version);
+    const upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
 
     await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
 
@@ -99,7 +99,7 @@ async function initWithEtherReserve(deployer, version, active) {
         await converter.addConnector(reserveToken2.address, 500000, false);
     else
         await converter.addReserve(reserveToken2.address, 500000);
-        
+
     await converter.setConversionFee(CONVERSION_FEE);
     await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
     await reserveToken1.deposit({value: RESERVE1_BALANCE});
@@ -122,7 +122,7 @@ async function initWithETHReserve(deployer, version, active) {
     const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
     const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, RESERVE1_BALANCE);
     const converter = await Converter.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE, reserveToken1.address, 500000);
-    const upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
+    const upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
 
     await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
     await converter.addReserve(ETH_RESERVE_ADDRESS, 500000);
@@ -150,7 +150,7 @@ async function upgradeConverter(upgrader, converter, version, options = {}) {
         // for previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
         // then accept ownership of the new and old converter. The end results should be the same.
         await converter.transferOwnership(upgrader.address);
-        response = await upgrader.upgradeOld(converter.address, web3.fromAscii(''), options);
+        response = await upgrader.upgradeOld(converter.address, web3.utils.asciiToHex(''), options);
         await converter.acceptOwnership();
     }
 
@@ -219,7 +219,7 @@ contract('ConverterUpgrader', accounts => {
                 const newConverterCurrentState = await getConverterState(newConverter);
                 assertEqual(oldConverterInitialState, {
                     owner: deployer,
-                    newOwner: utils.zeroAddress,
+                    newOwner: constants.ZERO_ADDRESS,
                     tokenOwner: oldConverter.address,
                     conversionFee: CONVERSION_FEE,
                     maxConversionFee: MAX_CONVERSION_FEE,
@@ -229,7 +229,7 @@ contract('ConverterUpgrader', accounts => {
                 });
                 assertEqual(oldConverterCurrentState, {
                     owner: deployer,
-                    newOwner: utils.zeroAddress,
+                    newOwner: constants.ZERO_ADDRESS,
                     token: oldConverterInitialState.token,
                     tokenOwner: newConverter.address,
                     conversionFee: CONVERSION_FEE,
@@ -264,7 +264,7 @@ contract('ConverterUpgrader', accounts => {
             it('upgrade should fail if the upgrader did not receive ownership', async () => {
                 const [upgrader, oldConverter] = await init(deployer, version, active);
                 const oldConverterInitialState = await getConverterState(oldConverter);
-                await utils.catchRevert(upgrader.upgradeOld(oldConverter.address, web3.fromAscii('')));
+                await utils.catchRevert(upgrader.upgradeOld(oldConverter.address, web3.utils.asciiToHex('')));
                 const oldConverterCurrentState = await getConverterState(oldConverter);
                 assertEqual(oldConverterInitialState, oldConverterCurrentState);
             });

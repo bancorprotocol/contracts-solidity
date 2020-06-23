@@ -1,6 +1,5 @@
 import { expectRevert } from '@openzeppelin/test-helpers';
 
-
 const TestTokenHandler = artifacts.require('TestTokenHandler');
 const TestStandardToken = artifacts.require('TestStandardToken');
 const TestNonStandardToken = artifacts.require('TestNonStandardToken');

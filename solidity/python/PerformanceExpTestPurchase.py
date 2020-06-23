@@ -41,7 +41,7 @@ def Main():
                     testNum += 1
                     if True:
                         try:
-                            gas = tester.purchaseRate(supply, balance, weight, amount)
+                            gas = tester.purchaseTargetAmount(supply, balance, weight, amount)
                             minGas = min(minGas, gas)
                             maxGas = max(maxGas, gas)
                             totalGas += gas
