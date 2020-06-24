@@ -1,4 +1,4 @@
-const { expectRevert } = require('@openzeppelin/test-helpers');
+const { expectRevert, expectEvent, constants, BN } = require('@openzeppelin/test-helpers');
 
 const TestTokenHandler = artifacts.require('TestTokenHandler');
 const TestStandardToken = artifacts.require('TestStandardToken');
@@ -6,8 +6,6 @@ const TestNonStandardToken = artifacts.require('TestNonStandardToken');
 
 contract('TokenHandler', async accounts => {
     let tokenHandler;
-    let standardToken;
-    let nonStandardToken;
     const sender = accounts[0];
 
     beforeEach(async () => {
@@ -19,6 +17,8 @@ contract('TokenHandler', async accounts => {
     };
 
     describe('standard token tests', async () => {
+        let standardToken;
+
         for (const ok of [false, true]) {
             for (const ret of [false, true]) {
                 context(`ok: ${ok}, ret: ${ret}`, async () => {
@@ -44,6 +44,8 @@ contract('TokenHandler', async accounts => {
     });
 
     describe('non-standard token tests', async () => {
+        let nonStandardToken;
+
         for (const ok of [false, true]) {
             context(`ok: ${ok}`, async () => {
                 beforeEach(async () => {
