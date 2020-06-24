@@ -5,7 +5,7 @@ const ContractRegistryClient = require('./helpers/ContractRegistryClient');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 
-contract.only('ConverterRegistryData', accounts => {
+contract('ConverterRegistryData', accounts => {
     let contractRegistry
     let converterRegistry;
     const owner = accounts[0];
