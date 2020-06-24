@@ -1,6 +1,5 @@
-import { expect } from 'chai';
-import { constants } from '@openzeppelin/test-helpers';
-import { expectRevert, expectEvent } from '@openzeppelin/test-helpers';
+const { expect } = require('chai');
+const { expectRevert, expectEvent, constants } = require('@openzeppelin/test-helpers');
 
 const Owned = artifacts.require('Owned');
 

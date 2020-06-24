@@ -1,5 +1,5 @@
-import { expect } from 'chai';
-import { expectRevert, expectEvent, BN } from '@openzeppelin/test-helpers';
+const { expect } = require('chai');
+const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
 
 const XTransferRerouter = artifacts.require('XTransferRerouter');
 

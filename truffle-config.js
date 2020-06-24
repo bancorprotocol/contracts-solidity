@@ -1,8 +1,4 @@
 /* eslint-disable import/no-extraneous-dependencies */
-require('babel-register');
-require('babel-polyfill');
-
-/* eslint-disable import/no-extraneous-dependencies */
 require('chai')
   .use(require('chai-as-promised'))
   .use(require('chai-bn')(require('bn.js')))

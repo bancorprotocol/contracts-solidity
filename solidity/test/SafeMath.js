@@ -1,5 +1,5 @@
-import { expect } from 'chai';
-import { expectRevert, BN } from '@openzeppelin/test-helpers';
+const { expect } = require('chai');
+const { expectRevert, BN } = require('@openzeppelin/test-helpers');
 
 const TestSafeMath = artifacts.require('TestSafeMath');
 

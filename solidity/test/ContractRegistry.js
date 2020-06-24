@@ -1,5 +1,5 @@
-import { expect } from 'chai';
-import { expectRevert, constants, BN } from '@openzeppelin/test-helpers';
+const { expect } = require('chai');
+const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
 const ContractRegistry = artifacts.require('ContractRegistry');
 
