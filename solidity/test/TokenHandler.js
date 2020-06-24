@@ -14,9 +14,9 @@ contract('TokenHandler', async accounts => {
         tokenHandler = await TestTokenHandler.new();
     });
 
-    async function test(state, transaction) {
+    const test = async (state, transaction) => {
         return state ? transaction : expectRevert.unspecified(transaction);
-    }
+    };
 
     describe('standard token tests', async () => {
         for (const ok of [false, true]) {

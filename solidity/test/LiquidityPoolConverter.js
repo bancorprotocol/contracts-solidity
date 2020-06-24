@@ -101,7 +101,7 @@ contract('LiquidityPoolConverter', accounts => {
         upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
 
-        let token = await SmartToken.new('Token1', 'TKN1', 2); 
+        let token = await SmartToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
         reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
@@ -136,27 +136,27 @@ contract('LiquidityPoolConverter', accounts => {
                 verifyReserve(reserve, 0, 200000, true);
             });
 
-            it('should throw when attempting to add a reserve when the converter is active', async () => {
+            it('should revert when attempting to add a reserve when the converter is active', async () => {
                 let converter = await initConverter(accounts, true, isETHReserve);
 
                 await utils.catchRevert(converter.addReserve(reserveToken3.address, weight10Percent));
             });
 
-            it('should throw when attempting to add a reserve that already exists', async () => {
+            it('should revert when attempting to add a reserve that already exists', async () => {
                 let converter = await createConverter(tokenAddress, contractRegistry.address, 0);
                 await converter.addReserve(getReserve1Address(isETHReserve), weight10Percent);
 
                 await utils.catchRevert(converter.addReserve(getReserve1Address(isETHReserve), 200000));
             });
 
-            it('should throw when attempting to add multiple reserves with total weight greater than 100%', async () => {
+            it('should revert when attempting to add multiple reserves with total weight greater than 100%', async () => {
                 let converter = await createConverter(tokenAddress, contractRegistry.address, 0);
                 await converter.addReserve(getReserve1Address(isETHReserve), 500000);
 
                 await utils.catchRevert(converter.addReserve(reserveToken2.address, 500001));
             });
 
-            it('should throw when the owner attempts to accept the token ownership and only 1 reserve is defined', async () => {
+            it('should revert when the owner attempts to accept the token ownership and only 1 reserve is defined', async () => {
                 let converter = await createConverter(tokenAddress, contractRegistry.address, 0);
                 await converter.addReserve(getReserve1Address(isETHReserve), 500000);
 
@@ -170,19 +170,19 @@ contract('LiquidityPoolConverter', accounts => {
                 assert.notEqual(returnAmount.toNumber(), 0);
             });
 
-            it('should throw when attempting to get the target amount between the pool token and a reserve', async () => {
+            it('should revert when attempting to get the target amount between the pool token and a reserve', async () => {
                 let converter = await initConverter(accounts, true, isETHReserve);
 
                 await utils.catchRevert(converter.targetAmountAndFee.call(tokenAddress, getReserve1Address(isETHReserve), 500));
             });
 
-            it('should throw when attempting to get the target amount while the converter is not active', async () => {
+            it('should revert when attempting to get the target amount while the converter is not active', async () => {
                 let converter = await initConverter(accounts, false, isETHReserve);
 
                 await utils.catchRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, 500));
             });
 
-            it('should throw when attempting to convert with 0 minimum requested amount', async () => {
+            it('should revert when attempting to convert with 0 minimum requested amount', async () => {
                 await initConverter(accounts, true, isETHReserve);
                 let value = 0;
                 if (isETHReserve)
@@ -210,7 +210,7 @@ contract('LiquidityPoolConverter', accounts => {
                 await convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], 500, 1, { from: accounts[1], value })
             });
 
-            it('should throw when calling convert from a non whitelisted account', async () => {
+            it('should revert when calling convert from a non whitelisted account', async () => {
                 let converter = await initConverter(accounts, true, isETHReserve);
                 let whitelist = await Whitelist.new();
                 await whitelist.addAddress(converter.address);
@@ -226,7 +226,7 @@ contract('LiquidityPoolConverter', accounts => {
                 await utils.catchRevert(convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], 500, 1, { from: accounts[1], value  }));
             });
 
-            it('should throw when calling convert while the beneficiary is not whitelisted', async () => {
+            it('should revert when calling convert while the beneficiary is not whitelisted', async () => {
                 let converter = await initConverter(accounts, true, isETHReserve);
                 let whitelist = await Whitelist.new();
                 await whitelist.addAddress(accounts[1]);

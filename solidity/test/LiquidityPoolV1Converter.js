@@ -101,7 +101,7 @@ contract('LiquidityPoolV1Converter', accounts => {
         upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
 
-        let token = await SmartToken.new('Token1', 'TKN1', 2); 
+        let token = await SmartToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
         reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
@@ -161,7 +161,7 @@ contract('LiquidityPoolV1Converter', accounts => {
                 let converter = await initConverter(accounts, true, isETHReserve, 5000);
                 let watcher = converter.Conversion();
                 await converter.setConversionFee(3000);
-                
+
                 let value = 0;
                 if (isETHReserve)
                     value = 500;
@@ -199,7 +199,7 @@ contract('LiquidityPoolV1Converter', accounts => {
                 assert.equal(events[0].args._rateN.div(events[0].args._rateD).toFixed(), expectedRate.toFixed());
             });
 
-            it('should throw when attempting to convert when the return is smaller than the minimum requested amount', async () => {
+            it('should revert when attempting to convert when the return is smaller than the minimum requested amount', async () => {
                 await initConverter(accounts, true, isETHReserve);
                 let value = 0;
                 if (isETHReserve)
@@ -335,7 +335,7 @@ contract('LiquidityPoolV1Converter', accounts => {
                 await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
             });
 
-            it('should throw when attempting to fund the converter with insufficient funds', async () => {
+            it('should revert when attempting to fund the converter with insufficient funds', async () => {
                 let converter = await initConverter(accounts, false, isETHReserve);
                 await converter.addReserve(reserveToken3.address, 600000);
 
@@ -366,7 +366,7 @@ contract('LiquidityPoolV1Converter', accounts => {
                 await reserveToken.transfer(accounts[0], token1Balance, { from: accounts[9] });
                 await reserveToken2.transfer(accounts[0], token2Balance, { from: accounts[9] });
                 await reserveToken3.transfer(accounts[0], token3Balance, { from: accounts[9] });
-                
+
             });
 
             for (const percent of [50, 75, 100]) {
@@ -498,7 +498,7 @@ contract('LiquidityPoolV1Converter', accounts => {
                 assert(token3PrevBalance.plus(reserve3Balance).equals(token3Balance));
             });
 
-            it('should throw when attempting to liquidate with insufficient funds', async () => {
+            it('should revert when attempting to liquidate with insufficient funds', async () => {
                 let converter = await initConverter(accounts, false, isETHReserve);
                 await converter.addReserve(reserveToken3.address, 600000);
 

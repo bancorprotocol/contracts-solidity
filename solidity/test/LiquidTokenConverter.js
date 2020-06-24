@@ -105,13 +105,13 @@ contract('LiquidTokenConverter', accounts => {
         upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
 
-        let token = await SmartToken.new('Token1', 'TKN1', 2); 
+        let token = await SmartToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
         reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
     });
 
-    it('should throw when attempting to buy without first approving the network to transfer from the buyer account in the reserve contract', async () => {
+    it('should revert when attempting to buy without first approving the network to transfer from the buyer account in the reserve contract', async () => {
         await initConverter(accounts, true, false);
         await approve(reserveToken, accounts[0], bancorNetwork.address, 0);
         await utils.catchRevert(convert([getReserve1Address(false), tokenAddress, tokenAddress], 500, 1));
@@ -133,7 +133,7 @@ contract('LiquidTokenConverter', accounts => {
                 assert.equal(reserveRatio.toFixed(), '100000');
             });
 
-            it('should throw when attempting to add 2nd reserve', async () => {
+            it('should revert when attempting to add 2nd reserve', async () => {
                 let converter = await createConverter(tokenAddress, contractRegistry.address, 0);
                 await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT);
 
@@ -182,13 +182,13 @@ contract('LiquidTokenConverter', accounts => {
                 assert('_conversionFee' in events[0].args);
             });
 
-            it('should throw when attempting to get the purchase target amount while the converter is not active', async () => {
+            it('should revert when attempting to get the purchase target amount while the converter is not active', async () => {
                 let converter = await initConverter(accounts, false, isETHReserve);
 
                 await utils.catchRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), tokenAddress, 500));
             });
 
-            it('should throw when attempting to get the sale target amount while the converter is not active', async () => {
+            it('should revert when attempting to get the sale target amount while the converter is not active', async () => {
                 let converter = await initConverter(accounts, false, isETHReserve);
 
                 await utils.catchRevert(converter.targetAmountAndFee.call(tokenAddress, getReserve1Address(isETHReserve), 500));
@@ -246,7 +246,7 @@ contract('LiquidTokenConverter', accounts => {
                 await approve(token, accounts[0], bancorNetwork.address, 500);
                 await convert([tokenAddress, tokenAddress, getReserve1Address(isETHReserve)], 500, 1);
                 let saleAmount = await getConversionAmount(watcher);
-                
+
                 let value = 0;
                 if (isETHReserve)
                     value = saleAmount;
@@ -282,7 +282,7 @@ contract('LiquidTokenConverter', accounts => {
                 assert.equal(events[0].args._rateN.div(events[0].args._rateD).toFixed(), expectedRate.toFixed());
             });
 
-            it('should throw when attempting to convert with 0 minimum requested amount', async () => {
+            it('should revert when attempting to convert with 0 minimum requested amount', async () => {
                 await initConverter(accounts, true, isETHReserve);
                 let value = 0;
                 if (isETHReserve)
@@ -293,7 +293,7 @@ contract('LiquidTokenConverter', accounts => {
                 await utils.catchRevert(convert([getReserve1Address(isETHReserve), tokenAddress, tokenAddress], 500, 0, { value }));
             });
 
-            it('should throw when attempting to convert when the return is smaller than the minimum requested amount', async () => {
+            it('should revert when attempting to convert when the return is smaller than the minimum requested amount', async () => {
                 await initConverter(accounts, true, isETHReserve);
                 let value = 0;
                 if (isETHReserve)
@@ -331,7 +331,7 @@ contract('LiquidTokenConverter', accounts => {
                 assert.equal(tokenNewBalance.toNumber(), tokenPrevBalance.plus(purchaseAmount).toNumber());
             });
 
-            it('should throw when attempting to buy while the converter is not active', async () => {
+            it('should revert when attempting to buy while the converter is not active', async () => {
                 await initConverter(accounts, false, isETHReserve);
                 let value = 0;
                 if (isETHReserve)
@@ -342,7 +342,7 @@ contract('LiquidTokenConverter', accounts => {
                 await utils.catchRevert(convert([getReserve1Address(isETHReserve), tokenAddress, tokenAddress], 500, 1, { value }));
             });
 
-            it('should throw when attempting to buy with a non reserve address', async () => {
+            it('should revert when attempting to buy with a non reserve address', async () => {
                 await initConverter(accounts, true, isETHReserve);
                 let value = 0;
                 if (isETHReserve)
@@ -353,7 +353,7 @@ contract('LiquidTokenConverter', accounts => {
                 await utils.catchRevert(convert([tokenAddress, tokenAddress, tokenAddress], 500, 1, { value }));
             });
 
-            it('should throw when attempting to buy while the purchase yields 0 return', async () => {
+            it('should revert when attempting to buy while the purchase yields 0 return', async () => {
                 await initConverter(accounts, true, isETHReserve);
                 let value = 0;
                 if (isETHReserve)
@@ -364,7 +364,7 @@ contract('LiquidTokenConverter', accounts => {
                 await utils.catchRevert(convert([getReserve1Address(isETHReserve), tokenAddress, tokenAddress], 0, 1, { value }));
             });
 
-            it('should throw when attempting to buy with 0 minimum requested amount', async () => {
+            it('should revert when attempting to buy with 0 minimum requested amount', async () => {
                 await initConverter(accounts, true, isETHReserve);
                 let value = 0;
                 if (isETHReserve)
@@ -398,28 +398,28 @@ contract('LiquidTokenConverter', accounts => {
                 assert.equal(tokenNewBalance.toNumber(), tokenPrevBalance.minus(500).toNumber());
             });
 
-            it('should throw when attempting to sell while the converter is not active', async () => {
+            it('should revert when attempting to sell while the converter is not active', async () => {
                 await initConverter(accounts, false, isETHReserve);
                 await approve(token, accounts[0], bancorNetwork.address, 500);
 
                 await utils.catchRevert(convert([tokenAddress, tokenAddress, getReserve1Address(isETHReserve)], 500, 1));
             });
 
-            it('should throw when attempting to sell with a non reserve address', async () => {
+            it('should revert when attempting to sell with a non reserve address', async () => {
                 await initConverter(accounts, true, isETHReserve);
                 await approve(token, accounts[0], bancorNetwork.address, 500);
 
                 await utils.catchRevert(convert([tokenAddress, tokenAddress, tokenAddress], 500, 1));
             });
 
-            it('should throw when attempting to sell while the sale yields 0 return', async () => {
+            it('should revert when attempting to sell while the sale yields 0 return', async () => {
                 await initConverter(accounts, true, isETHReserve);
                 await approve(token, accounts[0], bancorNetwork.address, 1);
 
                 await utils.catchRevert(convert([tokenAddress, tokenAddress, getReserve1Address(isETHReserve)], 1, 1));
             });
 
-            it('should throw when attempting to sell with amount greater than the seller balance', async () => {
+            it('should revert when attempting to sell with amount greater than the seller balance', async () => {
                 await initConverter(accounts, true, isETHReserve);
                 await approve(token, accounts[0], bancorNetwork.address, 30000);
 
@@ -445,7 +445,7 @@ contract('LiquidTokenConverter', accounts => {
                 await convert([getReserve1Address(isETHReserve), tokenAddress, tokenAddress], 500, 1, { from: accounts[1], value })
             });
 
-            it('should throw when calling convert from a non whitelisted account', async () => {
+            it('should revert when calling convert from a non whitelisted account', async () => {
                 let converter = await initConverter(accounts, true, isETHReserve);
                 let whitelist = await Whitelist.new();
                 await whitelist.addAddress(converter.address);
@@ -463,12 +463,12 @@ contract('LiquidTokenConverter', accounts => {
                 await utils.catchRevert(convert([getReserve1Address(isETHReserve), tokenAddress, tokenAddress], 500, 1, { from: accounts[1] }));
             });
 
-            it('should throw when calling convert while the beneficiary is not whitelisted', async () => {
+            it('should revert when calling convert while the beneficiary is not whitelisted', async () => {
                 let converter = await initConverter(accounts, true, isETHReserve);
                 let whitelist = await Whitelist.new();
                 await whitelist.addAddress(accounts[1]);
                 await converter.setConversionWhitelist(whitelist.address);
-                
+
                 let value = 0;
                 if (isETHReserve) {
                     value = 500;

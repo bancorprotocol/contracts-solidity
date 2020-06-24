@@ -108,7 +108,7 @@ contract('Converter:', accounts => {
         upgrader = await ConverterUpgrader.new(contractRegistry.address, utils.zeroAddress);
         await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
 
-        anchor = await SmartToken.new('Token1', 'TKN1', 2); 
+        anchor = await SmartToken.new('Token1', 'TKN1', 2);
         anchorAddress = anchor.address;
 
         reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
@@ -127,7 +127,7 @@ contract('Converter:', accounts => {
             await converter.send(100);
         });
 
-        it('should throw when sending ether to the converter fails if it has no ETH reserve', async () => {
+        it('should revert when sending ether to the converter fails if it has no ETH reserve', async () => {
             let converter = await initConverter(type, accounts, true, false);
             await utils.catchRevert(converter.send(100));
         });
@@ -144,15 +144,15 @@ contract('Converter:', accounts => {
                     assert.equal(maxConversionFee, 0);
                 });
 
-                it('should throw when attempting to construct a converter with no anchor', async () => {
+                it('should revert when attempting to construct a converter with no anchor', async () => {
                     await utils.catchRevert(createConverter(type, utils.zeroAddress));
                 });
 
-                it('should throw when attempting to construct a converter with no contract registry', async () => {
+                it('should revert when attempting to construct a converter with no contract registry', async () => {
                     await utils.catchRevert(createConverter(type, anchorAddress, utils.zeroAddress));
                 });
 
-                it('should throw when attempting to construct a converter with invalid conversion fee', async () => {
+                it('should revert when attempting to construct a converter with invalid conversion fee', async () => {
                     await utils.catchRevert(createConverter(type, anchorAddress, contractRegistry.address, 1000001));
                 });
 
@@ -165,20 +165,20 @@ contract('Converter:', accounts => {
                     const balance = await ercToken.balanceOf.call(accounts[0]);
                     assert.equal(prevBalance.toNumber(), balance.toNumber());
                 });
-            
-                it('should throw when the owner attempts to withdraw other tokens from the anchor while the converter is not active', async () => {
+
+                it('should revert when the owner attempts to withdraw other tokens from the anchor while the converter is not active', async () => {
                     let converter = await initConverter(type, accounts, false, isETHReserve);
                     let ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
                     await ercToken.transfer(anchor.address, 100);
-            
+
                     await utils.catchRevert(converter.withdrawFromAnchor(ercToken.address, accounts[0], 100));
                 });
-            
-                it('should throw when a non owner attempts to withdraw other tokens from the anchor', async () => {
+
+                it('should revert when a non owner attempts to withdraw other tokens from the anchor', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
                     let ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
                     await ercToken.transfer(anchor.address, 100);
-            
+
                     await utils.catchRevert(converter.withdrawFromAnchor(ercToken.address, accounts[0], 100, { from: accounts[1] }));
                 });
 
@@ -190,7 +190,7 @@ contract('Converter:', accounts => {
                     assert.notEqual(prevWhitelist, newWhitelist);
                 });
 
-                it('should throw when a non owner attempts update the conversion whitelist contract address', async () => {
+                it('should revert when a non owner attempts update the conversion whitelist contract address', async () => {
                     let converter = await createConverter(type, anchorAddress);
 
                     await utils.catchRevert(converter.setConversionWhitelist(accounts[3], { from: accounts[1] }));
@@ -206,7 +206,7 @@ contract('Converter:', accounts => {
                     assert.equal(whitelist, utils.zeroAddress);
                 });
 
-                it('should throw when the owner attempts update the conversion whitelist contract address with the converter address', async () => {
+                it('should revert when the owner attempts update the conversion whitelist contract address with the converter address', async () => {
                     let converter = await createConverter(type, anchorAddress);
 
                     await utils.catchRevert(converter.setConversionWhitelist(converter.address));
@@ -219,13 +219,13 @@ contract('Converter:', accounts => {
                     assert.equal(conversionFee, 30000);
                 });
 
-                it('should throw when attempting to update the fee to an invalid value', async () => {
+                it('should revert when attempting to update the fee to an invalid value', async () => {
                     let converter = await createConverter(type, anchorAddress, contractRegistry.address, 200000);
 
                     await utils.catchRevert(converter.setConversionFee(200001));
                 });
 
-                it('should throw when a non owner attempts to update the fee', async () => {
+                it('should revert when a non owner attempts to update the fee', async () => {
                     let converter = await createConverter(type, anchorAddress, contractRegistry.address, 200000);
 
                     await utils.catchRevert(converter.setConversionFee(30000, { from: accounts[1] }));
@@ -270,37 +270,37 @@ contract('Converter:', accounts => {
                     assert.equal(events.length, 0);
                 });
 
-                it('should throw when a non owner attempts to add a reserve', async () => {
+                it('should revert when a non owner attempts to add a reserve', async () => {
                     let converter = await createConverter(type, anchorAddress);
 
                     await utils.catchRevert(converter.addReserve(getReserve1Address(isETHReserve), weight10Percent, { from: accounts[1] }));
                 });
 
-                it('should throw when attempting to add a reserve with invalid address', async () => {
+                it('should revert when attempting to add a reserve with invalid address', async () => {
                     let converter = await createConverter(type, anchorAddress);
 
                     await utils.catchRevert(converter.addReserve(utils.zeroAddress, weight10Percent));
                 });
 
-                it('should throw when attempting to add a reserve with weight = 0', async () => {
+                it('should revert when attempting to add a reserve with weight = 0', async () => {
                     let converter = await createConverter(type, anchorAddress);
 
                     await utils.catchRevert(converter.addReserve(getReserve1Address(isETHReserve), 0));
                 });
 
-                it('should throw when attempting to add a reserve with weight greater than 100%', async () => {
+                it('should revert when attempting to add a reserve with weight greater than 100%', async () => {
                     let converter = await createConverter(type, anchorAddress);
 
                     await utils.catchRevert(converter.addReserve(getReserve1Address(isETHReserve), 1000001));
                 });
 
-                it('should throw when attempting to add the anchor as a reserve', async () => {
+                it('should revert when attempting to add the anchor as a reserve', async () => {
                     let converter = await createConverter(type, anchorAddress);
 
                     await utils.catchRevert(converter.addReserve(anchorAddress, weight10Percent));
                 });
 
-                it('should throw when attempting to add the converter as a reserve', async () => {
+                it('should revert when attempting to add the converter as a reserve', async () => {
                     let converter = await createConverter(type, anchorAddress);
 
                     await utils.catchRevert(converter.addReserve(converter.address, weight10Percent));
@@ -313,7 +313,7 @@ contract('Converter:', accounts => {
                     assert.equal(reserveWeight, weight10Percent);
                 });
 
-                it('should throw when attempting to retrieve the balance for a reserve that does not exist', async () => {
+                it('should revert when attempting to retrieve the balance for a reserve that does not exist', async () => {
                     let converter = await createConverter(type, anchorAddress);
                     await converter.addReserve(getReserve1Address(isETHReserve), weight10Percent);
 
@@ -341,19 +341,19 @@ contract('Converter:', accounts => {
                     assert.equal(newOwner, accounts[1]);
                 });
 
-                it('should throw when the owner attempts to transfer the anchor ownership', async () => {
+                it('should revert when the owner attempts to transfer the anchor ownership', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
 
                     await utils.catchRevert(converter.transferAnchorOwnership(accounts[1]));
                 });
 
-                it('should throw when a non owner attempts to transfer the anchor ownership', async () => {
+                it('should revert when a non owner attempts to transfer the anchor ownership', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
 
                     await utils.catchRevert(converter.transferAnchorOwnership(accounts[1], { from: accounts[2] }));
                 });
 
-                it('should throw when a the upgrader contract attempts to transfer the anchor ownership while the upgrader is not the owner', async () => {
+                it('should revert when a the upgrader contract attempts to transfer the anchor ownership while the upgrader is not the owner', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
                     await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, accounts[2]);
 
@@ -410,8 +410,8 @@ contract('Converter:', accounts => {
                     balance = await token.balanceOf.call(accounts[1]);
                     assert(balance.equals(prevBalance.plus(50)));
                 });
-            
-                it('should throw when the owner attempts to withdraw a reserve token while the converter is active', async () => {
+
+                it('should revert when the owner attempts to withdraw a reserve token while the converter is active', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
 
                     if (isETHReserve)
@@ -420,7 +420,7 @@ contract('Converter:', accounts => {
                         await utils.catchRevert(converter.withdrawTokens(getReserve1Address(isETHReserve), accounts[1], 50));
                 });
 
-                it('should throw when a non owner attempts to withdraw a non reserve token while the converter is not active', async () => {
+                it('should revert when a non owner attempts to withdraw a non reserve token while the converter is not active', async () => {
                     let converter = await initConverter(type, accounts, false, isETHReserve);
 
                     let token = await ERC20Token.new('ERC Token 3', 'ERC3', 0, 100000);
@@ -431,7 +431,7 @@ contract('Converter:', accounts => {
                     await utils.catchRevert(converter.withdrawTokens(token.address, accounts[1], 50, { from: accounts[2] }));
                 });
 
-                it('should throw when a non owner attempts to withdraw a reserve token while the converter is not active', async () => {
+                it('should revert when a non owner attempts to withdraw a reserve token while the converter is not active', async () => {
                     let converter = await initConverter(type, accounts, false, isETHReserve);
 
                     if (isETHReserve)
@@ -440,7 +440,7 @@ contract('Converter:', accounts => {
                         await utils.catchRevert(converter.withdrawTokens(getReserve1Address(isETHReserve), accounts[1], 50, { from: accounts[2] }));
                 });
 
-                it('should throw when a non owner attempts to withdraw a reserve token while the converter is active', async () => {
+                it('should revert when a non owner attempts to withdraw a reserve token while the converter is active', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
 
                     if (isETHReserve)
@@ -465,43 +465,43 @@ contract('Converter:', accounts => {
                     await upgrader.upgradeOld(converter.address, web3.fromUtf8("0.9"));
                 });
 
-                it('should throw when a non owner attempts to upgrade the converter', async () => {
+                it('should revert when a non owner attempts to upgrade the converter', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
 
                     await utils.catchRevert(converter.upgrade({ from: accounts[1] }));
                 });
 
-                it('should throw when attempting to get the target amount with an invalid source token adress', async () => {
+                it('should revert when attempting to get the target amount with an invalid source token adress', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
-            
+
                     await utils.catchRevert(converter.targetAmountAndFee.call(utils.zeroAddress, getReserve1Address(isETHReserve), 500));
                 });
-            
-                it('should throw when attempting to get the target amount with an invalid target token address', async () => {
+
+                it('should revert when attempting to get the target amount with an invalid target token address', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
-            
+
                     await utils.catchRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), utils.zeroAddress, 500));
                 });
-            
-                it('should throw when attempting to get the target amount with identical source/target addresses', async () => {
+
+                it('should revert when attempting to get the target amount with identical source/target addresses', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
-            
+
                     await utils.catchRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), getReserve1Address(isETHReserve), 500));
                 });
 
-                it('should throw when attempting to convert with an invalid source token adress', async () => {
+                it('should revert when attempting to convert with an invalid source token adress', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
                     await utils.catchRevert(convert([utils.zeroAddress, anchorAddress, getReserve1Address(isETHReserve)], 500, 1));
                 });
 
-                it('should throw when attempting to convert with an invalid target token address', async () => {
+                it('should revert when attempting to convert with an invalid target token address', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
                     await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
 
                     await utils.catchRevert(convert([getReserve1Address(isETHReserve), anchorAddress, utils.zeroAddress], 500, 1));
                 });
 
-                it('should throw when attempting to convert with identical source/target addresses', async () => {
+                it('should revert when attempting to convert with identical source/target addresses', async () => {
                     let converter = await initConverter(type, accounts, true, isETHReserve);
                     await approve(reserveToken, accounts[0], bancorNetwork.address, 500);
 
@@ -509,11 +509,11 @@ contract('Converter:', accounts => {
                 });
 
                 // TODO: move the registry client tests to a dedicated file and use a simpler client (no need for a converter)
-                it('should throw when attempting to register the registry to the zero address', async () => {
+                it('should revert when attempting to register the registry to the zero address', async () => {
                     await utils.catchRevert(contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, utils.zeroAddress));
                 });
 
-                it('should throw when attempting to update the registry when it points to the zero address', async () => {
+                it('should revert when attempting to update the registry when it points to the zero address', async () => {
                     let converter = await initConverter(type, accounts, false, isETHReserve);
 
                     await utils.catchRevert(converter.updateRegistry());
@@ -521,7 +521,7 @@ contract('Converter:', accounts => {
                     assert.equal(await converter.prevRegistry.call(), contractRegistry.address);
                 });
 
-                it('should throw when attempting to update the registry when it points to the current registry', async () => {
+                it('should revert when attempting to update the registry when it points to the current registry', async () => {
                     let converter = await initConverter(type, accounts, false, isETHReserve);
 
                     await contractRegistry.registerAddress(ContractRegistryClient.CONTRACT_REGISTRY, contractRegistry.address);
@@ -530,7 +530,7 @@ contract('Converter:', accounts => {
                     assert.equal(await converter.prevRegistry.call(), contractRegistry.address);
                 });
 
-                it('should throw when attempting to update the registry when it points to a new registry which points to the zero address', async () => {
+                it('should revert when attempting to update the registry when it points to a new registry which points to the zero address', async () => {
                     let converter = await initConverter(type, accounts, false, isETHReserve);
 
                     let newRegistry = await ContractRegistry.new();
