@@ -1,5 +1,4 @@
-﻿
-# Bancor Protocol Contracts v0.6 (beta)
+﻿# Bancor Protocol Contracts v0.6 (beta)
 
 ## Overview
 
@@ -35,8 +34,8 @@ Bancor is a work in progress. Make sure you understand the risks before using it
 ### Verification
 
 * Verifying all the contracts:
-  * `npm test 1` (quick testing)
-  * `npm test 2` (full coverage)
+  * `npm test` (quick testing)
+  * `npm run coverage` (full coverage)
 * [Verifying the BancorFormula contract](solidity/python/README.md)
 
 ### [Utilities](solidity/utils/README.md)
