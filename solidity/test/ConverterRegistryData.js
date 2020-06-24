@@ -1,184 +1,185 @@
-const utils = require('./helpers/Utils');
-const ContractRegistryClient = require('./helpers/ContractRegistryClient');
+const { expect } = require('chai');
+const { expectRevert } = require('@openzeppelin/test-helpers');
 
-contract('ConverterRegistryData', function(accounts) {
+const ContractRegistryClient = require('./helpers/ContractRegistryClient');
+const ContractRegistry = artifacts.require('ContractRegistry');
+const ConverterRegistryData = artifacts.require('ConverterRegistryData');
+
+contract.only('ConverterRegistryData', accounts => {
     let contractRegistry
     let converterRegistry;
+    const owner = accounts[0];
+    const nonOwner = accounts[9];
+    const address1 = accounts[1];
+    const address2 = accounts[2];
 
-    const keyAccounts = accounts.slice(0, 4);
-    const valAccounts = accounts.slice(4, 8);
-    const currentState = {convertibleTokens: [], smartTokens: []};
+    beforeEach(async () => {
+        contractRegistry = await ContractRegistry.new();
+        converterRegistry = await ConverterRegistryData.new(contractRegistry.address);
 
-    before(async function() {
-        contractRegistry = await artifacts.require('ContractRegistry').new();
-        converterRegistry = await artifacts.require('ConverterRegistryData').new(contractRegistry.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY, accounts[0]);
+        // Allow the owner to manipulate the contract registry data.
+        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY, owner);
     });
 
-    describe('security assertion:', function() {
-        it('function addSmartToken should abort with an error if called without permission', async function() {
-            await utils.catchRevert(converterRegistry.addSmartToken(accounts[0], {from: accounts[1]}));
+    describe('security assertions', () => {
+        it('should revert when a non owner attempts to add a smart token', async () => {
+            await expectRevert(converterRegistry.addSmartToken(address1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
         });
 
-        it('function removeSmartToken should abort with an error if called without permission', async function() {
-            await utils.catchRevert(converterRegistry.removeSmartToken(accounts[0], {from: accounts[1]}));
+        it('should revert when a non owner attempts to remove a smart token', async () => {
+            await converterRegistry.addSmartToken(address1);
+            await expectRevert(converterRegistry.removeSmartToken(address1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
         });
 
-        it('function addLiquidityPool should abort with an error if called without permission', async function() {
-            await utils.catchRevert(converterRegistry.addLiquidityPool(accounts[0], {from: accounts[1]}));
+        it('should revert when a non owner attempts to add a liquidity pool', async () => {
+            await expectRevert(converterRegistry.addLiquidityPool(address1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
         });
 
-        it('function removeLiquidityPool should abort with an error if called without permission', async function() {
-            await utils.catchRevert(converterRegistry.removeLiquidityPool(accounts[0], {from: accounts[1]}));
+        it('should revert when a non owner attempts to remove a liquidity pool', async () => {
+            await converterRegistry.addLiquidityPool(address1);
+            await expectRevert(converterRegistry.removeLiquidityPool(address1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
         });
 
-        it('function addConvertibleToken should abort with an error if called without permission', async function() {
-            await utils.catchRevert(converterRegistry.addConvertibleToken(accounts[0], accounts[0], {from: accounts[1]}));
+        it('should revert when a non owner attempts to add a convertible token', async () => {
+            await expectRevert(converterRegistry.addConvertibleToken(address1, address1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
         });
 
-        it('function removeConvertibleToken should abort with an error if called without permission', async function() {
-            await utils.catchRevert(converterRegistry.removeConvertibleToken(accounts[0], accounts[0], {from: accounts[1]}));
-        });
-    });
-
-    describe('smart tokens basic verification:', function() {
-        it('function addSmartToken should complete successfully if item does not exists', async function() {
-            await converterRegistry.addSmartToken(accounts[0]);
-        });
-
-        it('function addSmartToken should abort with an error if item already exists', async function() {
-            await utils.catchRevert(converterRegistry.addSmartToken(accounts[0]));
-        });
-
-        it('function removeSmartToken should complete successfully if item already exists', async function() {
-            await converterRegistry.removeSmartToken(accounts[0]);
-        });
-
-        it('function removeSmartToken should abort with an error if item does not exist', async function() {
-            await utils.catchRevert(converterRegistry.removeSmartToken(accounts[0]));
+        it('should revert when a non owner attempts to remove a convertible token', async () => {
+            await converterRegistry.addConvertibleToken(address1, address1);
+            await expectRevert(converterRegistry.removeConvertibleToken(address1, address2, { from: nonOwner }), 'ERR_ACCESS_DENIED');
         });
     });
 
-    describe('liquidity pools basic verification:', function() {
-        it('function addLiquidityPool should complete successfully if item does not exists', async function() {
-            await converterRegistry.addLiquidityPool(accounts[0]);
+    describe('smart tokens basic verification', () => {
+        it('should add a smart token if it does not exists', async () => {
+            await converterRegistry.addSmartToken(address1);
+            expect(await converterRegistry.isSmartToken(address1)).to.be.true();
         });
 
-        it('function addLiquidityPool should abort with an error if item already exists', async function() {
-            await utils.catchRevert(converterRegistry.addLiquidityPool(accounts[0]));
+        it('should revert if adding a smart token that already exists', async () => {
+            await converterRegistry.addSmartToken(address1);
+            await expectRevert(converterRegistry.addSmartToken(address1), 'ERR_INVALID_ITEM');
         });
 
-        it('function removeLiquidityPool should complete successfully if item already exists', async function() {
-            await converterRegistry.removeLiquidityPool(accounts[0]);
+        it('should remove a smart token', async () => {
+            await converterRegistry.addSmartToken(address1);
+            await converterRegistry.removeSmartToken(address1);
+            expect(await converterRegistry.isSmartToken(address1)).to.be.false();
         });
 
-        it('function removeLiquidityPool should abort with an error if item does not exist', async function() {
-            await utils.catchRevert(converterRegistry.removeLiquidityPool(accounts[0]));
-        });
-    });
-
-    describe('convertible tokens basic verification:', function() {
-        it('function addConvertibleToken should complete successfully if item does not exists', async function() {
-            await converterRegistry.addConvertibleToken(keyAccounts[0], valAccounts[0]);
-        });
-
-        it('function addConvertibleToken should abort with an error if item already exists', async function() {
-            await utils.catchRevert(converterRegistry.addConvertibleToken(keyAccounts[0], valAccounts[0]));
-        });
-
-        it('function removeConvertibleToken should complete successfully if item already exists', async function() {
-            await converterRegistry.removeConvertibleToken(keyAccounts[0], valAccounts[0]);
-        });
-
-        it('function removeConvertibleToken should abort with an error if item does not exist', async function() {
-            await utils.catchRevert(converterRegistry.removeConvertibleToken(keyAccounts[0], valAccounts[0]));
+        it("should revert if removing a smart token that doesn't not exist", async () => {
+            await expectRevert(converterRegistry.removeSmartToken(address1), 'ERR_INVALID_ITEM');
         });
     });
 
-    describe('smart tokens advanced verification:', function() {
-        it('remove first item until all items removed', async function() {
-            await removeAllOneByOne(+1);
+    describe('liquidity pools basic verification', () => {
+        it('should add a liquidity pool if it does not exists', async () => {
+            await converterRegistry.addLiquidityPool(address1);
+            expect(await converterRegistry.isLiquidityPool(address1)).to.be.true();
         });
 
-        it('remove last item until all items removed', async function() {
-            await removeAllOneByOne(-1);
+        it('should revert if adding a liquidity pool that already exists', async () => {
+            await converterRegistry.addLiquidityPool(address1);
+            await expectRevert(converterRegistry.addLiquidityPool(address1), 'ERR_INVALID_ITEM');
         });
 
-        async function removeAllOneByOne(direction) {
-            console.log(`adding ${accounts.length} items...`);
-            for (const account of accounts)
+        it('should remove a liquidity pool', async () => {
+            await converterRegistry.addLiquidityPool(address1);
+            await converterRegistry.removeLiquidityPool(address1);
+            expect(await converterRegistry.isLiquidityPool(address1)).to.be.false();
+        });
+
+        it("should revert if removing a liquidity pool that doesn't not exist", async () => {
+            await expectRevert(converterRegistry.removeLiquidityPool(address1), 'ERR_INVALID_ITEM');
+        });
+    });
+
+    describe('convertible tokens basic verification', () => {
+        it('should add a convertible token if it does not exists', async () => {
+            await converterRegistry.addConvertibleToken(address1, address2);
+            expect(await converterRegistry.isConvertibleToken(address1)).to.be.true();
+        });
+
+        it('should revert if adding a convertible token that already exists', async () => {
+            await converterRegistry.addConvertibleToken(address1, address2);
+            await expectRevert(converterRegistry.addConvertibleToken(address1, address2), 'ERR_INVALID_ITEM');
+        });
+
+        it('should remove a convertible token', async () => {
+            await converterRegistry.addConvertibleToken(address1, address2);
+            await converterRegistry.removeConvertibleToken(address1, address2);
+            expect(await converterRegistry.isConvertibleToken(address1)).to.be.false();
+        });
+
+        it("should revert if removing a convertible token that doesn't not exist", async () => {
+            await expectRevert(converterRegistry.removeConvertibleToken(address1, address2), 'ERR_INVALID_ITEM');
+        });
+    });
+
+    describe('smart tokens advanced verification', () => {
+         const removeAllOneByOne = async (direction) => {
+            for (const account of accounts) {
                 await converterRegistry.addSmartToken(account);
+            }
+
             for (let items = accounts.slice(); items.length > 0; items.length--) {
                 const bgnIndex = (items.length - 1) * (1 - direction) / 2;
                 const endIndex = (items.length - 1) * (1 + direction) / 2;
                 const item = await converterRegistry.getSmartToken(bgnIndex);
                 await converterRegistry.removeSmartToken(item);
-                assert.equal(item, items[bgnIndex]);
+                expect(item).to.eql(items[bgnIndex]);
+
                 items[bgnIndex] = items[endIndex];
-                console.log(`item ${bgnIndex} removed`);
             }
         };
-    });
 
-    describe('liquidity pools advanced verification:', function() {
-        it('remove first item until all items removed', async function() {
+        it('remove first item until all items removed', async () => {
             await removeAllOneByOne(+1);
         });
 
-        it('remove last item until all items removed', async function() {
+        it('remove last item until all items removed', async () => {
             await removeAllOneByOne(-1);
         });
+    });
 
-        async function removeAllOneByOne(direction) {
-            console.log(`adding ${accounts.length} items...`);
-            for (const account of accounts)
+    describe('liquidity pools advanced verification', () => {
+        const removeAllOneByOne = async (direction) => {
+            for (const account of accounts) {
                 await converterRegistry.addLiquidityPool(account);
+            }
+
             for (let items = accounts.slice(); items.length > 0; items.length--) {
                 const bgnIndex = (items.length - 1) * (1 - direction) / 2;
                 const endIndex = (items.length - 1) * (1 + direction) / 2;
                 const item = await converterRegistry.getLiquidityPool(bgnIndex);
                 await converterRegistry.removeLiquidityPool(item);
-                assert.equal(item, items[bgnIndex]);
+                expect(item).to.eql(items[bgnIndex]);
+
                 items[bgnIndex] = items[endIndex];
-                console.log(`item ${bgnIndex} removed`);
             }
         };
+
+        it('remove first item until all items removed', async () => {
+            await removeAllOneByOne(+1);
+        });
+
+        it('remove last item until all items removed', async () => {
+            await removeAllOneByOne(-1);
+        });
     });
 
-    describe('convertible tokens advanced verification:', function() {
-        for (const reverseKeys of [false, true]) {
-            for (const reverseVals of [false, true]) {
-                for (const addTuples of [rows, cols]) {
-                    for (const removeTuples of [rows, cols]) {
-                        for (const [convertibleToken, smartToken] of addTuples(false, false)) {
-                            it(title(convertibleToken, smartToken, add), async function() {
-                                await test(convertibleToken, smartToken, add);
-                            });
-                        }
-                        for (const [convertibleToken, smartToken] of removeTuples(reverseKeys, reverseVals)) {
-                            it(title(convertibleToken, smartToken, remove), async function() {
-                                await test(convertibleToken, smartToken, remove);
-                            });
-                        }
-                    }
-                }
-            }
-        }
+    describe('convertible tokens advanced verification', () => {
+        const keyAccounts = accounts.slice(0, 4);
+        const valAccounts = accounts.slice(4, 8);
 
-        function reorder(tokens, reverse) {return reverse ? tokens.slice().reverse() : tokens;}
-        function stringify(state) {return accounts.reduce((result, account, index) => result.split(account).join(`${index}`), JSON.stringify(state));}
-        function title(convertibleToken, smartToken, func) {return `${func.name}(${accounts.indexOf(convertibleToken)} --> ${accounts.indexOf(smartToken)})`;}
-        function rows(reverseKeys, reverseVals) {return [].concat.apply([], reorder(keyAccounts, reverseKeys).map(x => reorder(valAccounts, reverseVals).map(y => [x, y])));}
-        function cols(reverseKeys, reverseVals) {return [].concat.apply([], reorder(valAccounts, reverseVals).map(x => reorder(keyAccounts, reverseKeys).map(y => [y, x])));}
-
-        async function test(convertibleToken, smartToken, func) {
-            const response = await func(convertibleToken, smartToken);
+        const test = async (convertibleToken, smartToken, func, currentState) => {
+            await func(convertibleToken, smartToken, currentState);
             const convertibleTokens = await converterRegistry.getConvertibleTokens();
             const smartTokens = await Promise.all(convertibleTokens.map(convertibleToken => converterRegistry.getConvertibleTokenSmartTokens(convertibleToken)));
-            assert.equal(stringify({convertibleTokens: convertibleTokens, smartTokens: smartTokens}), stringify(currentState));
-        }
+            expect({ convertibleTokens, smartTokens }).to.deep.eql(currentState);
+        };
 
-        async function add(convertibleToken, smartToken) {
+        const add = async (convertibleToken, smartToken, currentState) => {
             const index = currentState.convertibleTokens.indexOf(convertibleToken);
             if (index == -1) {
                 currentState.convertibleTokens.push(convertibleToken);
@@ -187,10 +188,16 @@ contract('ConverterRegistryData', function(accounts) {
             else {
                 currentState.smartTokens[index].push(smartToken);
             }
-            return await converterRegistry.addConvertibleToken(convertibleToken, smartToken);
-        }
 
-        async function remove(convertibleToken, smartToken) {
+            return converterRegistry.addConvertibleToken(convertibleToken, smartToken);
+        };
+
+        const swapLast = (array, item) => {
+            array[array.indexOf(item)] = array[array.length - 1];
+            array.length -= 1;
+        };
+
+        const remove = async (convertibleToken, smartToken, currentState) => {
             const index = currentState.convertibleTokens.indexOf(convertibleToken);
             if (currentState.smartTokens[index].length == 1) {
                 currentState.smartTokens.splice(index, 1);
@@ -199,12 +206,40 @@ contract('ConverterRegistryData', function(accounts) {
             else {
                 swapLast(currentState.smartTokens[index], smartToken);
             }
-            return await converterRegistry.removeConvertibleToken(convertibleToken, smartToken);
-        }
 
-        function swapLast(array, item) {
-            array[array.indexOf(item)] = array[array.length - 1];
-            array.length -= 1;
-        }
+            return converterRegistry.removeConvertibleToken(convertibleToken, smartToken);
+        };
+
+        const reorder = (tokens, reverse) => {
+            return reverse ? tokens.slice().reverse() : tokens;
+        };
+
+        const rows = (reverseKeys, reverseVals) => {
+            return [].concat.apply([], reorder(keyAccounts, reverseKeys).map(x => reorder(valAccounts, reverseVals).map(y => [x, y])));
+        };
+
+        const cols = (reverseKeys, reverseVals) => {
+            return [].concat.apply([], reorder(valAccounts, reverseVals).map(x => reorder(keyAccounts, reverseKeys).map(y => [y, x])));
+        };
+
+        it('should add and remove data', async () => {
+            const currentState = { convertibleTokens: [], smartTokens: [] };
+
+            for (const reverseKeys of [false, true]) {
+                for (const reverseVals of [false, true]) {
+                    for (const addTuples of [rows, cols]) {
+                        for (const removeTuples of [rows, cols]) {
+                            for (const [convertibleToken, smartToken] of addTuples(false, false)) {
+                                await test(convertibleToken, smartToken, add, currentState);
+                            }
+
+                            for (const [convertibleToken, smartToken] of removeTuples(reverseKeys, reverseVals)) {
+                                await test(convertibleToken, smartToken, remove, currentState);
+                            }
+                        }
+                    }
+                }
+            }
+        });
     });
 });
