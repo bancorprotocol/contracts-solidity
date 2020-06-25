@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { expectRevert, expectEvent, constants } = require('@openzeppelin/test-helpers');
+const { expectRevert } = require('@openzeppelin/test-helpers');
 
 const { ETH_RESERVE_ADDRESS } = require('./helpers/Constants');
 const ContractRegistryClient = require('./helpers/ContractRegistryClient');
