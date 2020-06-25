@@ -54,6 +54,7 @@ const printPath = async (sourceToken, targetToken, path) => {
 const findPath = async (sourceToken, targetToken, anchorToken, converterRegistry) => {
     const sourcePath = await getPath(sourceToken, anchorToken, converterRegistry);
     const targetPath = await getPath(targetToken, anchorToken, converterRegistry);
+
     return getShortestPath(sourcePath, targetPath);
 };
 
@@ -62,15 +63,15 @@ const getPath = async (token, anchorToken, converterRegistry) => {
         return [token];
     }
 
-    const isAnchor = await converterRegistry.isAnchor(token);
-    const anchors = isAnchor ? [token] : await converterRegistry.getConvertibleTokenAnchors(token);
+    const isAnchor = await converterRegistry.isAnchor.call(token);
+    const anchors = isAnchor ? [token] : await converterRegistry.getConvertibleTokenAnchors.call(token);
     for (const anchor of anchors) {
         const converterAnchor = await IConverterAnchor.at(anchor);
         const converterAnchorOwner = await converterAnchor.owner.call();
         const converter = await ConverterBase.at(converterAnchorOwner);
-        const connectorTokenCount = await converter.connectorTokenCount();
+        const connectorTokenCount = await converter.connectorTokenCount.call();
         for (let i = 0; i < connectorTokenCount; i++) {
-            const connectorToken = await converter.connectorTokens(i);
+            const connectorToken = await converter.connectorTokens.call(i);
             if (connectorToken !== token) {
                 const path = await getPath(connectorToken, anchorToken, converterRegistry);
                 if (path.length > 0) {
@@ -127,7 +128,7 @@ contract('ConversionPathFinder', accounts => {
 
     const addresses = {ETH: ETH_RESERVE_ADDRESS};
 
-    beforeEach(async function() {
+    beforeEach(async () => {
         contractRegistry = await ContractRegistry.new();
 
         converterFactory = await ConverterFactory.new();
@@ -150,7 +151,7 @@ contract('ConversionPathFinder', accounts => {
         for (const converter of LAYOUT.converters) {
             const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
             await converterRegistry.newConverter(tokens.length == 1 ? 0 : 1, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
-            const anchor = await IConverterAnchor.at((await converterRegistry.getAnchors()).slice(-1)[0]);
+            const anchor = await IConverterAnchor.at((await converterRegistry.getAnchors.call()).slice(-1)[0]);
             const converterBase = await ConverterBase.at(await anchor.owner());
             await converterBase.acceptOwnership();
             addresses[converter.symbol] = anchor.address;
@@ -168,7 +169,7 @@ contract('ConversionPathFinder', accounts => {
         const sourceToken = accounts[0];
         const targetToken = anchorToken;
         const expected = await findPath(sourceToken, targetToken, anchorToken, converterRegistry);
-        const actual = await pathFinder.findPath(sourceToken, targetToken);
+        const actual = await pathFinder.findPath.call(sourceToken, targetToken);
         expect(expected).to.be.empty();
         expect(actual).to.be.empty();
     });
@@ -177,7 +178,7 @@ contract('ConversionPathFinder', accounts => {
         const sourceToken = anchorToken;
         const targetToken = accounts[0];
         const expected = await findPath(sourceToken, targetToken, anchorToken, converterRegistry);
-        const actual = await pathFinder.findPath(sourceToken, targetToken);
+        const actual = await pathFinder.findPath.call(sourceToken, targetToken);
         expect(expected).to.be.empty();
         expect(actual).to.be.empty();
     });
@@ -189,7 +190,7 @@ contract('ConversionPathFinder', accounts => {
                 const sourceToken = addresses[sourceSymbol];
                 const targetToken = addresses[targetSymbol];
                 const expected = await findPath(sourceToken, targetToken, anchorToken, converterRegistry);
-                const actual = await pathFinder.findPath(sourceToken, targetToken);
+                const actual = await pathFinder.findPath.call(sourceToken, targetToken);
                 expect(actual).to.be.deep.equal(expected);
 
                 await printPath(sourceToken, targetToken, actual);
