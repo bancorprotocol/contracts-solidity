@@ -1,21 +1,21 @@
-.DS_STORE
-.vscode
+.DS_Store
+.vscode/
+*/**/.DS_Store
 
 # node
-node_modules
+/node_modules
 npm-debug.log
 
 # python
 *.pyc
 
-# npm test 1
 solidity/build/contracts
-
-# npm test 2
-solidity/allFiredEvents
-solidity/coverageEnv
+solidity/.coverage_artifacts
+solidity/.coverage_contracts
 solidity/coverage
+solidity/coverageEnv
 solidity/coverage.json
+solidity/allFiredEvents
 solidity/scTopics
 
 # npm run build
