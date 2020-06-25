@@ -36,6 +36,11 @@ contract('ContractRegistry', accounts => {
         expect(address).to.eql(address1);
     });
 
+    it('should revert when attempting to register the registry to the zero address', async () => {
+        await expectRevert(contractRegistry.registerAddress(registry.CONTRACT_REGISTRY, constants.ZERO_ADDRESS),
+            'ERR_INVALID_ADDRESS');
+    });
+
     it('should revert when a non owner attempts to register a contract address', async () => {
         await expectRevert(contractRegistry.registerAddress(contractName1bytes, address1, { from: nonOwner }),
             'ERR_ACCESS_DENIED');
