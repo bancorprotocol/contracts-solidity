@@ -1,8 +1,7 @@
 const { expect } = require('chai');
 const { expectRevert } = require('@openzeppelin/test-helpers');
 
-const { ETH_RESERVE_ADDRESS } = require('./helpers/Constants');
-const ContractRegistryClient = require('./helpers/ContractRegistryClient');
+const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
 const ERC20Token = artifacts.require('ERC20Token');
 const ContractRegistry = artifacts.require('ContractRegistry');
@@ -139,9 +138,9 @@ contract('ConversionPathFinder', accounts => {
         await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
 
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY, converterFactory.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY, converterRegistry.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
         for (const reserve of LAYOUT.reserves) {
             const erc20Token = await ERC20Token.new('name', reserve.symbol, 0, 0);
@@ -152,7 +151,7 @@ contract('ConversionPathFinder', accounts => {
             const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
             await converterRegistry.newConverter(tokens.length == 1 ? 0 : 1, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
             const anchor = await IConverterAnchor.at((await converterRegistry.getAnchors.call()).slice(-1)[0]);
-            const converterBase = await ConverterBase.at(await anchor.owner());
+            const converterBase = await ConverterBase.at(await anchor.owner.call());
             await converterBase.acceptOwnership();
             addresses[converter.symbol] = anchor.address;
         }

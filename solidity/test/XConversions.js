@@ -1,8 +1,7 @@
 const { expect } = require('chai');
 const { expectRevert, BN, balance } = require('@openzeppelin/test-helpers');
 
-const { ETH_RESERVE_ADDRESS } = require('./helpers/Constants');
-const ContractRegistryClient = require('./helpers/ContractRegistryClient');
+const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const BancorX = artifacts.require('BancorX');
@@ -65,10 +64,10 @@ contract('XConversions', accounts => {
 
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
-        await contractRegistry.registerAddress(ContractRegistryClient.BNT_TOKEN, bntToken.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_NETWORK, bancorNetwork.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_X, bancorX.address);
+        await contractRegistry.registerAddress(registry.BNT_TOKEN, bntToken.address);
+        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+        await contractRegistry.registerAddress(registry.BANCOR_X, bancorX.address);
 
         erc20Token = await ERC20Token.new('Test Token', 'TST', 0, web3.utils.toWei(new BN(100)));
 

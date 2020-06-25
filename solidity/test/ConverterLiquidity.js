@@ -1,8 +1,7 @@
 const { expect } = require('chai');
 const { expectRevert, constants, BN, balance } = require('@openzeppelin/test-helpers');
 
-const { ETH_RESERVE_ADDRESS } = require('./helpers/Constants');
-const ContractRegistryClient = require('./helpers/ContractRegistryClient');
+const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
@@ -40,7 +39,7 @@ contract('ConverterLiquidity', accounts => {
         contractRegistry = await ContractRegistry.new();
         erc20Tokens = await Promise.all([...Array(5).keys()].map(i => ERC20Token.new('name', 'symbol', 0, -1)));
 
-        await contractRegistry.registerAddress(ContractRegistryClient.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
     });
 
     describe('auxiliary functions', () => {

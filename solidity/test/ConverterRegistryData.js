@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { expectRevert } = require('@openzeppelin/test-helpers');
 
-const ContractRegistryClient = require('./helpers/ContractRegistryClient');
+const { registry } = require('./helpers/Constants');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 
@@ -18,7 +18,7 @@ contract('ConverterRegistryData', accounts => {
         converterRegistry = await ConverterRegistryData.new(contractRegistry.address);
 
         // Allow the owner to manipulate the contract registry data.
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY, owner);
+        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, owner);
     });
 
     describe('security assertions', () => {

@@ -2,8 +2,7 @@ const { expect } = require('chai');
 const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
 const ConverterHelper = require('./helpers/Converter');
-const { ETH_RESERVE_ADDRESS } = require('./helpers/Constants');
-const ContractRegistryClient = require('./helpers/ContractRegistryClient');
+const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
 const SmartToken = artifacts.require('SmartToken');
 const EtherToken = artifacts.require('EtherToken');
@@ -30,7 +29,7 @@ contract('ConverterUpgrader', accounts => {
             reserveToken1.address, 500000, version);
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
 
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
         await converter.setConversionFee(CONVERSION_FEE);
         await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
@@ -52,7 +51,7 @@ contract('ConverterUpgrader', accounts => {
             reserveToken1.address, 500000, version);
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
 
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         if (version) {
             await converter.addConnector(reserveToken2.address, 500000, false);
         } else {
@@ -78,7 +77,7 @@ contract('ConverterUpgrader', accounts => {
             constants.ZERO_ADDRESS, 0, version);
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
 
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
         await converter.setConversionFee(CONVERSION_FEE);
 
@@ -97,7 +96,7 @@ contract('ConverterUpgrader', accounts => {
             reserveToken1.address, 500000, version);
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, reserveToken1.address);
 
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         if (version) {
             await converter.addConnector(reserveToken2.address, 500000, false);
         } else {
@@ -129,7 +128,7 @@ contract('ConverterUpgrader', accounts => {
             reserveToken1.address, 500000);
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
 
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_UPGRADER, upgrader.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         await converter.addReserve(ETH_RESERVE_ADDRESS, 500000);
         await converter.setConversionFee(CONVERSION_FEE);
         await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
@@ -208,7 +207,7 @@ contract('ConverterUpgrader', accounts => {
         contractRegistry = await ContractRegistry.new();
         converterFactory = await ConverterFactory.new();
 
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY, converterFactory.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
         await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
     });

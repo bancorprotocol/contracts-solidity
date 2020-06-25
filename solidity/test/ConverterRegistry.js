@@ -1,8 +1,7 @@
 const { expect } = require('chai');
 const { expectRevert, expectEvent, constants, BN } = require('@openzeppelin/test-helpers');
 
-const { ETH_RESERVE_ADDRESS } = require('./helpers/Constants');
-const ContractRegistryClient = require('./helpers/ContractRegistryClient');
+const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
 const ERC20Token = artifacts.require('ERC20Token');
 const EtherToken = artifacts.require('EtherToken');
@@ -31,9 +30,9 @@ contract('ConverterRegistry', () => {
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         converterRegistry = await TestConverterRegistry.new(contractRegistry.address);
         converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_FACTORY, converterFactory.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY, converterRegistry.address);
-        await contractRegistry.registerAddress(ContractRegistryClient.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
     });
 
     const testRemove = async (converter) => {
