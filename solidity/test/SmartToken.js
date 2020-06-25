@@ -1,6 +1,8 @@
 const { expect } = require('chai');
 const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
+const { ZERO_ADDRESS } = constants;
+
 const SmartToken = artifacts.require('SmartToken');
 
 contract('SmartToken', accounts => {
@@ -64,7 +66,7 @@ contract('SmartToken', accounts => {
     });
 
     it('should revert when the owner attempts to issue tokens to an invalid address', async () => {
-        await expectRevert(token.issue(constants.ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_ADDRESS');
+        await expectRevert(token.issue(ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_ADDRESS');
     });
 
     it('should revert when the owner attempts to issue tokens to the token address', async () => {

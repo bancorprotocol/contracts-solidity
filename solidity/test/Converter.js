@@ -2,6 +2,7 @@ const { expect } = require('chai');
 const { expectRevert, expectEvent, constants, BN, balance } = require('@openzeppelin/test-helpers');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { ZERO_ADDRESS } = constants;
 
 const BancorNetwork = artifacts.require('BancorNetwork');
 const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
@@ -64,8 +65,7 @@ contract('Converter', accounts => {
     };
 
     const convert = async (path, amount, minReturn, options) => {
-        return bancorNetwork.convertByPath.call(path, amount, minReturn, constants.ZERO_ADDRESS, constants.ZERO_ADDRESS,
-            0, options);
+        return bancorNetwork.convertByPath.call(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, options);
     };
 
     let bancorNetwork;
@@ -99,7 +99,7 @@ contract('Converter', accounts => {
         await factory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
 
-        upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
+        upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
         anchor = await SmartToken.new('Token1', 'TKN1', 2);
@@ -141,12 +141,11 @@ contract('Converter', accounts => {
                 });
 
                 it('should revert when attempting to construct a converter with no anchor', async () => {
-                    await expectRevert(createConverter(type, constants.ZERO_ADDRESS), 'ERR_INVALID_ADDRESS');
+                    await expectRevert(createConverter(type, ZERO_ADDRESS), 'ERR_INVALID_ADDRESS');
                 });
 
                 it('should revert when attempting to construct a converter with no contract registry', async () => {
-                    await expectRevert(createConverter(type, anchorAddress, constants.ZERO_ADDRESS),
-                        'ERR_INVALID_ADDRESS');
+                    await expectRevert(createConverter(type, anchorAddress, ZERO_ADDRESS), 'ERR_INVALID_ADDRESS');
                 });
 
                 it('should revert when attempting to construct a converter with invalid conversion fee', async () => {
@@ -218,10 +217,10 @@ contract('Converter', accounts => {
                     let whitelist = await converter.conversionWhitelist.call();
                     expect(whitelist).to.eql(receiver);
 
-                    await converter.setConversionWhitelist(constants.ZERO_ADDRESS);
+                    await converter.setConversionWhitelist(ZERO_ADDRESS);
                     whitelist = await converter.conversionWhitelist.call();
 
-                    expect(whitelist).to.eql(constants.ZERO_ADDRESS);
+                    expect(whitelist).to.eql(ZERO_ADDRESS);
                 });
 
                 it('should revert when the owner attempts update the conversion whitelist contract address with the converter address', async () => {
@@ -292,8 +291,7 @@ contract('Converter', accounts => {
                 it('should revert when attempting to add a reserve with invalid address', async () => {
                     const converter = await createConverter(type, anchorAddress);
 
-                    await expectRevert(converter.addReserve(constants.ZERO_ADDRESS, WEIGHT_10_PERCENT),
-                        'ERR_INVALID_ADDRESS');
+                    await expectRevert(converter.addReserve(ZERO_ADDRESS, WEIGHT_10_PERCENT), 'ERR_INVALID_ADDRESS');
                 });
 
                 it('should revert when attempting to add a reserve with weight = 0', async () => {
@@ -519,7 +517,7 @@ contract('Converter', accounts => {
                 it('should revert when attempting to get the target amount with an invalid source token adress', async () => {
                     const converter = await initConverter(type, accounts, true, isETHReserve);
 
-                    await expectRevert(converter.targetAmountAndFee.call(constants.ZERO_ADDRESS,
+                    await expectRevert(converter.targetAmountAndFee.call(ZERO_ADDRESS,
                         getReserve1Address(isETHReserve), 500), type === 0 ?'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
                 });
 
@@ -527,7 +525,7 @@ contract('Converter', accounts => {
                     const converter = await initConverter(type, accounts, true, isETHReserve);
 
                     await expectRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve),
-                        constants.ZERO_ADDRESS, 500), type === 0 ?'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
+                        ZERO_ADDRESS, 500), type === 0 ?'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
                 });
 
                 it('should revert when attempting to get the target amount with identical source/target addresses', async () => {
@@ -539,8 +537,8 @@ contract('Converter', accounts => {
 
                 it('should revert when attempting to convert with an invalid source token address', async () => {
                     await initConverter(type, accounts, true, isETHReserve);
-                    await expectRevert(convert([constants.ZERO_ADDRESS, anchorAddress,
-                        getReserve1Address(isETHReserve)], 500, 1), type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
+                    await expectRevert(convert([ZERO_ADDRESS, anchorAddress, getReserve1Address(isETHReserve)], 500, 1),
+                        type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
                 });
 
                 it('should revert when attempting to convert with an invalid target token address', async () => {
@@ -549,10 +547,10 @@ contract('Converter', accounts => {
 
                     if (isETHReserve) {
                         await expectRevert.unspecified(convert([getReserve1Address(isETHReserve), anchorAddress,
-                            constants.ZERO_ADDRESS], 500, 1));
+                            ZERO_ADDRESS], 500, 1));
                     } else {
                         await expectRevert(convert([getReserve1Address(isETHReserve), anchorAddress,
-                            constants.ZERO_ADDRESS], 500, 1), type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
+                            ZERO_ADDRESS], 500, 1), type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
                     }
                 });
 

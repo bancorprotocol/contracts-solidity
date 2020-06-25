@@ -1,6 +1,9 @@
 const fs = require('fs');
 const truffleContract = require('@truffle/contract');
+
 const { constants } = require('@openzeppelin/test-helpers');
+
+const { ZERO_ADDRESS } = constants;
 
 const Converter = artifacts.require('ConverterBase');
 const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
@@ -20,7 +23,7 @@ module.exports.new = async (type, tokenAddress, registryAddress, maxConversionFe
 
     const converterType = [LiquidTokenConverter, LiquidityPoolV1Converter][type];
     const converter = await converterType.new(tokenAddress, registryAddress, maxConversionFee);
-    if (reserveTokenAddress != constants.ZERO_ADDRESS) {
+    if (reserveTokenAddress !== ZERO_ADDRESS) {
         await converter.addReserve(reserveTokenAddress, weight);
     }
 

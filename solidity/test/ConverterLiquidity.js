@@ -1,8 +1,9 @@
 const { expect } = require('chai');
 const { expectRevert, constants, BN, balance } = require('@openzeppelin/test-helpers');
+const Decimal = require('decimal.js');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
-const Decimal = require('decimal.js');
+const { ZERO_ADDRESS } = constants;
 
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const SmartToken = artifacts.require('SmartToken');
@@ -46,7 +47,7 @@ contract('ConverterLiquidity', accounts => {
         let converter;
 
         beforeEach(async () => {
-            converter = await LiquidityPoolV1Converter.new(constants.ZERO_ADDRESS, contractRegistry.address, 0);
+            converter = await LiquidityPoolV1Converter.new(ZERO_ADDRESS, contractRegistry.address, 0);
         });
 
         for (let n = 1; n <= 77; n++) {

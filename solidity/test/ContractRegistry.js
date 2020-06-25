@@ -1,6 +1,8 @@
 const { expect } = require('chai');
 const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
+const { ZERO_ADDRESS } = constants;
+
 const ContractRegistry = artifacts.require('ContractRegistry');
 
 function trimNull(str) {
@@ -26,7 +28,7 @@ contract('ContractRegistry', accounts => {
 
     it('verifies that a given contract address is not set after construction', async () => {
         const address = await contractRegistry.addressOf.call(contractName1bytes);
-        expect(address).to.eql(constants.ZERO_ADDRESS);
+        expect(address).to.eql(ZERO_ADDRESS);
     });
 
     it('verifies that the owner can register a contract address', async () => {
@@ -37,7 +39,7 @@ contract('ContractRegistry', accounts => {
     });
 
     it('should revert when attempting to register the registry to the zero address', async () => {
-        await expectRevert(contractRegistry.registerAddress(registry.CONTRACT_REGISTRY, constants.ZERO_ADDRESS),
+        await expectRevert(contractRegistry.registerAddress(registry.CONTRACT_REGISTRY, ZERO_ADDRESS),
             'ERR_INVALID_ADDRESS');
     });
 
@@ -69,7 +71,7 @@ contract('ContractRegistry', accounts => {
         await contractRegistry.unregisterAddress(contractName1bytes);
 
         address = await contractRegistry.addressOf.call(contractName1bytes);
-        expect(address).to.eql(constants.ZERO_ADDRESS);
+        expect(address).to.eql(ZERO_ADDRESS);
     });
 
     it('should revert when a non owner attempts to unregister a contract address', async () => {

@@ -3,6 +3,7 @@ const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
 const ConverterHelper = require('./helpers/Converter');
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { ZERO_ADDRESS } = constants;
 
 const SmartToken = artifacts.require('SmartToken');
 const EtherToken = artifacts.require('EtherToken');
@@ -27,7 +28,7 @@ contract('ConverterUpgrader', accounts => {
         const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, RESERVE1_BALANCE);
         const converter = await ConverterHelper.new(0, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE,
             reserveToken1.address, 500000, version);
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
+        const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
@@ -49,7 +50,7 @@ contract('ConverterUpgrader', accounts => {
         const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, RESERVE2_BALANCE);
         const converter = await ConverterHelper.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE,
             reserveToken1.address, 500000, version);
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
+        const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         if (version) {
@@ -74,8 +75,8 @@ contract('ConverterUpgrader', accounts => {
     const initWithoutReserves = async (deployer, version, activate) => {
         const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
         const converter = await ConverterHelper.new(0, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE,
-            constants.ZERO_ADDRESS, 0, version);
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
+            ZERO_ADDRESS, 0, version);
+        const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
@@ -126,7 +127,7 @@ contract('ConverterUpgrader', accounts => {
         const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, RESERVE1_BALANCE);
         const converter = await ConverterHelper.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE,
             reserveToken1.address, 500000);
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address, constants.ZERO_ADDRESS);
+        const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         await converter.addReserve(ETH_RESERVE_ADDRESS, 500000);
@@ -229,7 +230,7 @@ contract('ConverterUpgrader', accounts => {
 
                 const oldConverterInitialState = await getConverterState(oldConverter);
                 expect(oldConverterInitialState.owner).to.be.eql(deployer);
-                expect(oldConverterInitialState.newOwner).to.be.eql(constants.ZERO_ADDRESS);
+                expect(oldConverterInitialState.newOwner).to.be.eql(ZERO_ADDRESS);
                 expect(oldConverterInitialState.tokenOwner).to.be.eql(activate ? oldConverter.address : deployer);
                 expect(oldConverterInitialState.conversionFee).to.be.bignumber.equal(CONVERSION_FEE);
                 expect(oldConverterInitialState.maxConversionFee).to.be.bignumber.equal(MAX_CONVERSION_FEE);
@@ -242,7 +243,7 @@ contract('ConverterUpgrader', accounts => {
 
                 const oldConverterCurrentState = await getConverterState(oldConverter);
                 expect(oldConverterCurrentState.owner).to.be.eql(deployer);
-                expect(oldConverterCurrentState.newOwner).to.be.eql(constants.ZERO_ADDRESS);
+                expect(oldConverterCurrentState.newOwner).to.be.eql(ZERO_ADDRESS);
                 expect(oldConverterCurrentState.token).to.be.eql(oldConverterInitialState.token);
                 expect(oldConverterCurrentState.tokenOwner).to.be.eql(activate ? newConverter.address : deployer);
                 expect(oldConverterCurrentState.conversionFee).to.be.bignumber.equal(CONVERSION_FEE);

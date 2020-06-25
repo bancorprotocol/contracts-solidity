@@ -1,6 +1,8 @@
 const { expect } = require('chai');
 const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
+const { ZERO_ADDRESS } = constants;
+
 const TokenHolder = artifacts.require('TokenHolder');
 const ERC20Token = artifacts.require('ERC20Token');
 
@@ -32,12 +34,11 @@ contract('TokenHolder', accounts => {
     });
 
     it('should revert when attempting to withdraw tokens from an invalid ERC20 token address', async () => {
-        await expectRevert(holder.withdrawTokens(constants.ZERO_ADDRESS, receiver, new BN(1)), 'ERR_INVALID_ADDRESS');
+        await expectRevert(holder.withdrawTokens(ZERO_ADDRESS, receiver, new BN(1)), 'ERR_INVALID_ADDRESS');
     });
 
     it('should revert when attempting to withdraw tokens to an invalid account address', async () => {
-        await expectRevert(holder.withdrawTokens(erc20Token.address, constants.ZERO_ADDRESS, new BN(1)),
-            'ERR_INVALID_ADDRESS');
+        await expectRevert(holder.withdrawTokens(erc20Token.address, ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_ADDRESS');
     });
 
     it('should revert when attempting to withdraw tokens to the holder address', async () => {

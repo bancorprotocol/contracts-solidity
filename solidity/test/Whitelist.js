@@ -1,6 +1,8 @@
 const { expect } = require('chai');
 const { expectRevert, expectEvent, constants } = require('@openzeppelin/test-helpers');
 
+const { ZERO_ADDRESS } = constants;
+
 const Whitelist = artifacts.require('Whitelist');
 
 contract('Whitelist', accounts => {
@@ -29,7 +31,7 @@ contract('Whitelist', accounts => {
     });
 
     it('should revert when the owner tries to add an invalid address to the whitelist', async () => {
-        await expectRevert(whitelist.addAddress(constants.ZERO_ADDRESS), 'ERR_INVALID_ADDRESS');
+        await expectRevert(whitelist.addAddress(ZERO_ADDRESS), 'ERR_INVALID_ADDRESS');
     });
 
     it('verifies that the owner can add multiple addresses to the whitelist', async () => {

@@ -1,6 +1,8 @@
 const { expect } = require('chai');
 const { expectRevert, expectEvent, constants } = require('@openzeppelin/test-helpers');
 
+const { ZERO_ADDRESS } = constants;
+
 const Owned = artifacts.require('Owned');
 
 contract('Owned', accounts => {
@@ -33,7 +35,7 @@ contract('Owned', accounts => {
         await contract.transferOwnership(newOwner);
         await contract.acceptOwnership({ from: newOwner });
 
-        expect(await contract.newOwner.call()).to.be.eql(constants.ZERO_ADDRESS);
+        expect(await contract.newOwner.call()).to.be.eql(ZERO_ADDRESS);
     });
 
     it('verifies that no ownership transfer takes places before the new owner accepted it', async () => {
@@ -50,8 +52,8 @@ contract('Owned', accounts => {
 
     it('verifies that the owner can cancel ownership transfer before the new owner accepted it', async () => {
         await contract.transferOwnership(newOwner);
-        await contract.transferOwnership(constants.ZERO_ADDRESS);
+        await contract.transferOwnership(ZERO_ADDRESS);
 
-        expect(await contract.newOwner.call()).to.be.eql(constants.ZERO_ADDRESS);
+        expect(await contract.newOwner.call()).to.be.eql(ZERO_ADDRESS);
     });
 });

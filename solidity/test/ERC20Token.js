@@ -1,6 +1,8 @@
 const { expect } = require('chai');
 const { expectRevert, expectEvent, constants, BN } = require('@openzeppelin/test-helpers');
 
+const { ZERO_ADDRESS } = constants;
+
 const ERC20Token = artifacts.require('ERC20Token');
 
 contract('ERC20Token', accounts => {
@@ -54,7 +56,7 @@ contract('ERC20Token', accounts => {
     });
 
     it('should revert when attempting to transfer to an invalid address', async () => {
-        await expectRevert(token.transfer(constants.ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_ADDRESS');
+        await expectRevert(token.transfer(ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_ADDRESS');
     });
 
     it('verifies the allowance after an approval', async () => {
@@ -72,7 +74,7 @@ contract('ERC20Token', accounts => {
     });
 
     it('should revert when attempting to define allowance for an invalid address', async () => {
-        await expectRevert(token.approve(constants.ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_ADDRESS');
+        await expectRevert(token.approve(ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_ADDRESS');
     });
 
     it('verifies the balances after transferring from another account', async () => {
@@ -123,7 +125,7 @@ contract('ERC20Token', accounts => {
         const value = new BN(10);
         await token.approve(receiver, value);
 
-        await expectRevert(token.transferFrom(constants.ZERO_ADDRESS, receiver2, new BN(0), { from: receiver }),
+        await expectRevert(token.transferFrom(ZERO_ADDRESS, receiver2, new BN(0), { from: receiver }),
             'ERR_INVALID_ADDRESS');
     });
 
@@ -131,7 +133,7 @@ contract('ERC20Token', accounts => {
         const value = new BN(111);
         await token.approve(receiver, value);
 
-        await expectRevert(token.transferFrom(sender, constants.ZERO_ADDRESS, new BN(0), { from: receiver }),
+        await expectRevert(token.transferFrom(sender, ZERO_ADDRESS, new BN(0), { from: receiver }),
             'ERR_INVALID_ADDRESS');
     });
 });
