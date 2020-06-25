@@ -138,7 +138,7 @@ contract('XConversions', accounts => {
                 { from: sender, value: amount }
             );
 
-            const prevBalance = await bntToken.balanceOf(bancorX.address);
+            const prevBalance = await bntToken.balanceOf.call(bancorX.address);
 
             await bancorNetwork.xConvert(
                 path,
@@ -150,7 +150,7 @@ contract('XConversions', accounts => {
                 { from: sender, value: amount }
             );
 
-            expect((await bntToken.balanceOf(bancorX.address)).sub(prevBalance)).to.be.bignumber.equal(retAmount);
+            expect((await bntToken.balanceOf.call(bancorX.address)).sub(prevBalance)).to.be.bignumber.equal(retAmount);
         });
 
         it('should be able to xConvert from an ERC20', async () => {
@@ -169,7 +169,7 @@ contract('XConversions', accounts => {
                 { from: sender }
             );
 
-            const prevBalance = await bntToken.balanceOf(bancorX.address)
+            const prevBalance = await bntToken.balanceOf.call(bancorX.address)
 
             await bancorNetwork.xConvert(
                 path,
@@ -181,7 +181,7 @@ contract('XConversions', accounts => {
                 { from: sender }
             );
 
-            expect((await bntToken.balanceOf(bancorX.address)).sub(prevBalance)).to.be.bignumber.equal(retAmount);
+            expect((await bntToken.balanceOf.call(bancorX.address)).sub(prevBalance)).to.be.bignumber.equal(retAmount);
         });
 
         it('should be able to completeXConversion to ETH', async () => {
@@ -219,14 +219,14 @@ contract('XConversions', accounts => {
 
             await bntToken.approve(bancorNetwork.address, amount, { from: sender });
 
-            const prevBalance = await erc20Token.balanceOf(sender);
+            const prevBalance = await erc20Token.balanceOf.call(sender);
 
             const retAmount = await bancorNetwork.completeXConversion.call(path, bancorX.address, xTransferId,
                 MIN_RETURN, sender, { from: sender })
             await bancorNetwork.completeXConversion(path, bancorX.address, xTransferId, MIN_RETURN, sender,
                 { from: sender })
 
-            expect(await erc20Token.balanceOf(sender)).to.be.bignumber.equal(prevBalance.add(retAmount));
+            expect(await erc20Token.balanceOf.call(sender)).to.be.bignumber.equal(prevBalance.add(retAmount));
         });
 
         it("shouldn't be able to completeXConversion to an ERC20 with a different xTransferId", async () => {
@@ -271,8 +271,8 @@ contract('XConversions', accounts => {
                     { from: sender, value: amount }
                 );
 
-                const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address);
-                const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress);
+                const prevBalanceOfBancorX = await bntToken.balanceOf.call(bancorX.address);
+                const prevBalanceAffiliate = await bntToken.balanceOf.call(affiliateAddress);
 
                 const res = await bancorNetwork.xConvert2(
                     path,
@@ -285,9 +285,9 @@ contract('XConversions', accounts => {
                     { from: sender, value: amount }
                 )
 
-                expect((await bntToken.balanceOf(bancorX.address)).sub(prevBalanceOfBancorX)).to.be.bignumber
+                expect((await bntToken.balanceOf.call(bancorX.address)).sub(prevBalanceOfBancorX)).to.be.bignumber
                     .equal(retAmount);
-                expect((await bntToken.balanceOf(affiliateAddress)).sub(prevBalanceAffiliate)).to.be.bignumber
+                expect((await bntToken.balanceOf.call(affiliateAddress)).sub(prevBalanceAffiliate)).to.be.bignumber
                     .equal(expectedFee(expectedRate, percent));
             });
 
@@ -309,8 +309,8 @@ contract('XConversions', accounts => {
                     { from: sender }
                 );
 
-                const prevBalanceOfBancorX = await bntToken.balanceOf(bancorX.address);
-                const prevBalanceAffiliate = await bntToken.balanceOf(affiliateAddress);
+                const prevBalanceOfBancorX = await bntToken.balanceOf.call(bancorX.address);
+                const prevBalanceAffiliate = await bntToken.balanceOf.call(affiliateAddress);
 
                 await bancorNetwork.xConvert2(
                     path,
@@ -323,9 +323,9 @@ contract('XConversions', accounts => {
                     { from: sender }
                 );
 
-                expect((await bntToken.balanceOf(bancorX.address)).sub(prevBalanceOfBancorX)).to.be.bignumber
+                expect((await bntToken.balanceOf.call(bancorX.address)).sub(prevBalanceOfBancorX)).to.be.bignumber
                     .equal(retAmount);
-                expect((await bntToken.balanceOf(affiliateAddress)).sub(prevBalanceAffiliate)).to.be.bignumber
+                expect((await bntToken.balanceOf.call(affiliateAddress)).sub(prevBalanceAffiliate)).to.be.bignumber
                     .equal(expectedFee(expectedRate, percent));
             });
         });
