@@ -20,7 +20,7 @@ module.exports = {
             gasPrice: 20000000000,
             gas: 6721975,
             provider: ganache.provider({
-                defaultEtherBalance: 1000,
+                default_balance_ether: 10000000000000000000,
             }),
         },
         production: {
