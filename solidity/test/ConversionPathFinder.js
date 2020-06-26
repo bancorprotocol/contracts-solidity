@@ -16,30 +16,32 @@ const ConversionPathFinder = artifacts.require('ConversionPathFinder');
 
 const ANCHOR_TOKEN_SYMBOL = 'ETH';
 
+/* eslint-disable no-multi-spaces,comma-spacing */
 const LAYOUT = {
     reserves: [
-        {symbol: 'AAA'},
-        {symbol: 'BBB'},
-        {symbol: 'CCC'},
-        {symbol: 'DDD'},
+        { symbol: 'AAA' },
+        { symbol: 'BBB' },
+        { symbol: 'CCC' },
+        { symbol: 'DDD' }
     ],
     converters: [
-        {symbol: 'BNT'         , reserves: [{symbol: 'ETH'   }                      ]},
-        {symbol: 'AAABNT'      , reserves: [{symbol: 'AAA'   }, {symbol: 'BNT'      }]},
-        {symbol: 'BBBBNT'      , reserves: [{symbol: 'BBB'   }, {symbol: 'BNT'      }]},
-        {symbol: 'CCCBNT'      , reserves: [{symbol: 'CCC'   }, {symbol: 'BNT'      }]},
-        {symbol: 'AAABNTBNT'   , reserves: [{symbol: 'AAABNT'}, {symbol: 'BNT'      }]},
-        {symbol: 'BBBBNTBNT'   , reserves: [{symbol: 'BBBBNT'}, {symbol: 'BNT'      }]},
-        {symbol: 'DDDAAABNTBNT', reserves: [{symbol: 'DDD'   }, {symbol: 'AAABNTBNT'}]},
+        { symbol: 'BNT'         , reserves: [{ symbol: 'ETH'    }] },
+        { symbol: 'AAABNT'      , reserves: [{ symbol: 'AAA'    }, { symbol: 'BNT'       }] },
+        { symbol: 'BBBBNT'      , reserves: [{ symbol: 'BBB'    }, { symbol: 'BNT'       }] },
+        { symbol: 'CCCBNT'      , reserves: [{ symbol: 'CCC'    }, { symbol: 'BNT'       }] },
+        { symbol: 'AAABNTBNT'   , reserves: [{ symbol: 'AAABNT' }, { symbol: 'BNT'       }] },
+        { symbol: 'BBBBNTBNT'   , reserves: [{ symbol: 'BBBBNT' }, { symbol: 'BNT'       }] },
+        { symbol: 'DDDAAABNTBNT', reserves: [{ symbol: 'DDD'    }, { symbol: 'AAABNTBNT' }] }
     ]
 };
+/* eslint-enable no-multi-spaces,comma-spacing */
 
 const getSymbol = async (tokenAddress) => {
-    if (tokenAddress == ETH_RESERVE_ADDRESS) {
+    if (tokenAddress === ETH_RESERVE_ADDRESS) {
         return 'ETH';
     }
 
-    const token =  await ERC20Token.at(tokenAddress);
+    const token = await ERC20Token.at(tokenAddress);
     return token.symbol.call();
 };
 
@@ -58,7 +60,7 @@ const findPath = async (sourceToken, targetToken, anchorToken, converterRegistry
 };
 
 const getPath = async (token, anchorToken, converterRegistry) => {
-    if (token == anchorToken) {
+    if (token === anchorToken) {
         return [token];
     }
 
@@ -90,7 +92,7 @@ const getShortestPath = (sourcePath, targetPath) => {
 
     let i = sourcePath.length - 1;
     let j = targetPath.length - 1;
-    while (i >= 0 && j >= 0 && sourcePath[i] == targetPath[j]) {
+    while (i >= 0 && j >= 0 && sourcePath[i] === targetPath[j]) {
         i--;
         j--;
     }
@@ -106,7 +108,7 @@ const getShortestPath = (sourcePath, targetPath) => {
     let length = 0;
     for (let p = 0; p < path.length; p += 1) {
         for (let q = p + 2; q < path.length - p % 2; q += 2) {
-            if (path[p] == path[q]) {
+            if (path[p] === path[q]) {
                 p = q;
             }
         }
@@ -114,10 +116,10 @@ const getShortestPath = (sourcePath, targetPath) => {
     }
 
     return path.slice(0, length);
-}
+};
 
 contract('ConversionPathFinder', accounts => {
-    let contractRegistry
+    let contractRegistry;
     let converterFactory;
     let converterRegistry;
     let converterRegistryData;
@@ -125,7 +127,7 @@ contract('ConversionPathFinder', accounts => {
     let anchorToken;
     const nonOwner = accounts[1];
 
-    const addresses = {ETH: ETH_RESERVE_ADDRESS};
+    const addresses = { ETH: ETH_RESERVE_ADDRESS };
 
     beforeEach(async () => {
         contractRegistry = await ContractRegistry.new();
@@ -149,7 +151,7 @@ contract('ConversionPathFinder', accounts => {
 
         for (const converter of LAYOUT.converters) {
             const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
-            await converterRegistry.newConverter(tokens.length == 1 ? 0 : 1, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
+            await converterRegistry.newConverter(tokens.length === 1 ? 0 : 1, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
             const anchor = await IConverterAnchor.at((await converterRegistry.getAnchors.call()).slice(-1)[0]);
             const converterBase = await ConverterBase.at(await anchor.owner.call());
             await converterBase.acceptOwnership();
@@ -161,7 +163,7 @@ contract('ConversionPathFinder', accounts => {
     });
 
     it('should revert when a non owner tries to update the anchor token', async () => {
-        await expectRevert(pathFinder.setAnchorToken(accounts[0], {from: nonOwner}), 'ERR_ACCESS_DENIED');
+        await expectRevert(pathFinder.setAnchorToken(accounts[0], { from: nonOwner }), 'ERR_ACCESS_DENIED');
     });
 
     it('should return an empty path if the source-token has no path to the anchor-token', async () => {

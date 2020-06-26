@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { expectRevert, expectEvent, constants, BN, balance } = require('@openzeppelin/test-helpers');
+const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 const { ZERO_ADDRESS } = constants;
@@ -107,7 +107,7 @@ contract('LiquidityPoolConverter', accounts => {
     });
 
     for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
-        describe(`${isETHReserve == 0 ? '(with ERC20 reserves)' : '(with ETH reserve)'}:`, () => {
+        describe(`${isETHReserve === 0 ? '(with ERC20 reserves)' : '(with ETH reserve)'}:`, () => {
             it('verifies the reserve token count and reserve ratio before / after adding a reserve', async () => {
                 const converter = await createConverter(tokenAddress, contractRegistry.address, 0);
 
@@ -218,7 +218,7 @@ contract('LiquidityPoolConverter', accounts => {
                 }
 
                 await convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], 500, 1,
-                    { from: receiver, value })
+                    { from: receiver, value });
             });
 
             it('should revert when calling convert from a non whitelisted account', async () => {
@@ -255,8 +255,7 @@ contract('LiquidityPoolConverter', accounts => {
                 }
 
                 await expectRevert(bancorNetwork.convertByPath([getReserve1Address(isETHReserve), tokenAddress,
-                    reserveToken2.address], 500, 1, beneficiary, ZERO_ADDRESS, 0, { from: receiver, value }),
-                    'ERR_NOT_WHITELISTED');
+                    reserveToken2.address], 500, 1, beneficiary, ZERO_ADDRESS, 0, { from: receiver, value }), 'ERR_NOT_WHITELISTED');
             });
 
             it('verifies that targetAmountAndFee returns the same amount as converting', async () => {

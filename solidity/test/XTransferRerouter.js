@@ -16,21 +16,20 @@ contract('XTransferRerouter', accounts => {
         const txRouter = await XTransferRerouter.new(false, { from: owner });
 
         await expectRevert(txRouter.rerouteTx(txId, EOS_ADDRESS, EOS_BLOCKCHAIN, { from: receiver }), 'ERR_DISABLED');
-
-    })
+    });
 
     it('verify that calling rerouteTx emits an event properly', async () => {
-        let txRouter = await XTransferRerouter.new(true, { from: owner });
+        const txRouter = await XTransferRerouter.new(true, { from: owner });
         const res = await txRouter.rerouteTx(txId, EOS_ADDRESS, EOS_BLOCKCHAIN, { from: receiver });
 
         expectEvent(res, 'TxReroute', { _txId: txId, _toBlockchain: EOS_ADDRESS, _to: EOS_BLOCKCHAIN });
-    })
+    });
 
     it("verify that a non-owner can't call enableRerouting", async () => {
         const txRouter = await XTransferRerouter.new(false, { from: owner });
 
         await expectRevert(txRouter.enableRerouting(true, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-    })
+    });
 
     it('verify that the owner can call enableRerouting', async () => {
         const txRouter = await XTransferRerouter.new(false, { from: owner });
@@ -40,7 +39,7 @@ contract('XTransferRerouter', accounts => {
 
         await txRouter.enableRerouting(true, { from: owner });
 
-        const reroutingEnabled = await txRouter.reroutingEnabled.call()
+        const reroutingEnabled = await txRouter.reroutingEnabled.call();
         expect(reroutingEnabled).to.be.true();
-    })
-})
+    });
+});

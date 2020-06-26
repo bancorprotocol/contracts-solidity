@@ -30,6 +30,8 @@ contract('XConversions', accounts => {
     let bancorNetwork;
     let bntToken;
     let erc20Token;
+    let erc20TokenConverter1;
+    let erc20TokenConverter2;
     let ethBntPath;
     let bntEthPath;
     let erc20TokenBntPath;
@@ -168,7 +170,7 @@ contract('XConversions', accounts => {
                 { from: sender }
             );
 
-            const prevBalance = await bntToken.balanceOf.call(bancorX.address)
+            const prevBalance = await bntToken.balanceOf.call(bancorX.address);
 
             await bancorNetwork.xConvert(
                 path,
@@ -221,9 +223,9 @@ contract('XConversions', accounts => {
             const prevBalance = await erc20Token.balanceOf.call(sender);
 
             const retAmount = await bancorNetwork.completeXConversion.call(path, bancorX.address, xTransferId,
-                MIN_RETURN, sender, { from: sender })
+                MIN_RETURN, sender, { from: sender });
             await bancorNetwork.completeXConversion(path, bancorX.address, xTransferId, MIN_RETURN, sender,
-                { from: sender })
+                { from: sender });
 
             expect(await erc20Token.balanceOf.call(sender)).to.be.bignumber.equal(prevBalance.add(retAmount));
         });
@@ -232,7 +234,7 @@ contract('XConversions', accounts => {
             const txId1 = TX_ID;
             const xTransferId1 = txId1.add(new BN(1));
             const txId2 = TX_ID.add(new BN(100));
-            const xTransferId2 = txId2.add(new BN(1));;
+            const xTransferId2 = txId2.add(new BN(1)); ;
             const amount = web3.utils.toWei(new BN(10)); // releasing 10 BNT
             const path = bntErc20Path;
 
@@ -248,7 +250,7 @@ contract('XConversions', accounts => {
         });
     });
 
-    for (const percent of [0.5 /*, 1.0, 1.5, 2.0, 3.0*/]) {
+    for (const percent of [0.5, 1.0, 1.5, 2.0, 3.0]]) {
         describe(`advanced testing with affiliate fee of ${percent}%:`, () => {
             const expectedFee = (amount, percent) => new BN(amount).mul(new BN(10 * percent)).div(new BN(10)).div(new BN(100));
 
@@ -273,7 +275,7 @@ contract('XConversions', accounts => {
                 const prevBalanceOfBancorX = await bntToken.balanceOf.call(bancorX.address);
                 const prevBalanceAffiliate = await bntToken.balanceOf.call(affiliateAddress);
 
-                const res = await bancorNetwork.xConvert2(
+                await bancorNetwork.xConvert2(
                     path,
                     amount,
                     MIN_LIMIT,
@@ -282,7 +284,7 @@ contract('XConversions', accounts => {
                     TX_ID,
                     affiliateAddress, affiliateFee,
                     { from: sender, value: amount }
-                )
+                );
 
                 expect((await bntToken.balanceOf.call(bancorX.address)).sub(prevBalanceOfBancorX)).to.be.bignumber
                     .equal(retAmount);

@@ -17,7 +17,7 @@ contract('ConverterLiquidity', accounts => {
         const converter = await LiquidityPoolV1Converter.new(smartToken.address, contractRegistry.address, 0);
 
         for (let i = 0; i < weights.length; i++) {
-            if (hasETH && i == weights.length - 1) {
+            if (hasETH && i === weights.length - 1) {
                 await converter.addReserve(ETH_RESERVE_ADDRESS, weights[i] * 10000);
             } else {
                 await converter.addReserve(erc20Tokens[i].address, weights[i] * 10000);
@@ -28,7 +28,7 @@ contract('ConverterLiquidity', accounts => {
         await converter.acceptAnchorOwnership();
 
         return [converter, smartToken];
-    }
+    };
 
     let bancorFormula;
     let contractRegistry;
@@ -126,7 +126,7 @@ contract('ConverterLiquidity', accounts => {
         });
 
         it('should revert if any of the input reserve amounts is not larger than zero', async () => {
-            reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
+            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
             await expectRevert(converter.addLiquidity(reserveTokens, [...reserveAmounts.slice(0, -1), 0], 1),
                 'ERR_INVALID_AMOUNT');
         });
@@ -134,13 +134,13 @@ contract('ConverterLiquidity', accounts => {
         it('should revert if the input value to a non-ether converter is larger than zero', async () => {
             const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
             await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts, 1,
-                {value: reserveAmounts.slice(-1)[0]}), 'ERR_NO_ETH_RESERVE');
+                { value: reserveAmounts.slice(-1)[0] }), 'ERR_NO_ETH_RESERVE');
         });
 
         it('should revert if the input value is not equal to the input amount of ether', async () => {
             const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
             await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts, 1,
-                {value: reserveAmounts.slice(-1)[0] + 1}), 'ERR_ETH_AMOUNT_MISMATCH');
+                { value: reserveAmounts.slice(-1)[0] + 1 }), 'ERR_ETH_AMOUNT_MISMATCH');
         });
     });
 
@@ -167,7 +167,7 @@ contract('ConverterLiquidity', accounts => {
             }
         }
 
-        function test(hasETH, ...weights) {
+        function test (hasETH, ...weights) {
             it(`hasETH = ${hasETH}, weights = [${weights.join('%, ')}%]`, async () => {
                 const [converter, smartToken] = await initLiquidityPool(hasETH, ...weights);
                 const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
@@ -179,12 +179,12 @@ contract('ConverterLiquidity', accounts => {
                     const reserveAmounts = reserveTokens.map((reserveToken, i) => new BN(supplyAmount).mul(new BN(100 + i)).div(new BN(100)));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(new BN(0)))));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(new BN(1)))));
-                    await converter.addLiquidity(reserveTokens, reserveAmounts, 1, {value: hasETH ? reserveAmounts.slice(-1)[0] : 0});
+                    await converter.addLiquidity(reserveTokens, reserveAmounts, 1, { value: hasETH ? reserveAmounts.slice(-1)[0] : 0 });
                     const allowances = await Promise.all(reserveTokens.map(reserveToken => getAllowance(reserveToken, converter)));
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                     const supply = await smartToken.totalSupply.call();
 
-                    state.push({supply: supply, balances: balances});
+                    state.push({ supply: supply, balances: balances });
 
                     for (let i = 0; i < allowances.length; i++) {
                         const diff = Decimal(allowances[i].toString()).div(reserveAmounts[i].toString());

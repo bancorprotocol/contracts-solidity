@@ -6,9 +6,18 @@
     "rules": {
         "max-len": [
             "error",
-            120,
+            150,
             2
         ],
+        "indent": [
+            "error",
+            4
+        ],
+        "semi": [
+            "error",
+            "always"
+        ],
+        "brace-style": [ "error"],
         "no-plusplus": "off",
         "no-await-in-loop": "off",
         "no-restricted-syntax": "off",
@@ -19,12 +28,6 @@
         "space-before-function-paren": "error",
         "no-continue": "off",
         "arrow-body-style": "off",
-        "object-curly-newline": [
-            "error",
-            {
-                "ImportDeclaration": "never"
-            }
-        ],
         "no-loop-func": "off"
     },
     "globals": {

@@ -22,7 +22,7 @@ const TOKEN_TOTAL_SUPPLY = new BN(20000);
 
 const versions = [9, 10, 11, 23];
 
-contract('ConverterUpgrader', accounts => {
+contract.only('ConverterUpgrader', accounts => {
     const initWith1Reserve = async (deployer, version, activate) => {
         const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
         const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, RESERVE1_BALANCE);
@@ -106,7 +106,7 @@ contract('ConverterUpgrader', accounts => {
 
         await converter.setConversionFee(CONVERSION_FEE);
         await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
-        await reserveToken1.deposit({value: RESERVE1_BALANCE});
+        await reserveToken1.deposit({ value: RESERVE1_BALANCE });
         await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
         await reserveToken2.transfer(converter.address, RESERVE2_BALANCE);
 
@@ -116,7 +116,7 @@ contract('ConverterUpgrader', accounts => {
         }
 
         return [upgrader, converter];
-    }
+    };
 
     const initWithETHReserve = async (deployer, version, activate) => {
         if (version) {
@@ -134,7 +134,7 @@ contract('ConverterUpgrader', accounts => {
         await converter.setConversionFee(CONVERSION_FEE);
         await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
         await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
-        await converter.send(RESERVE2_BALANCE, {from: deployer});
+        await converter.send(RESERVE2_BALANCE, { from: deployer });
 
         if (activate) {
             await smartToken.transferOwnership(converter.address);
@@ -142,14 +142,14 @@ contract('ConverterUpgrader', accounts => {
         }
 
         return [upgrader, converter];
-    }
+    };
 
     const upgradeConverter = async (upgrader, converter, options = {}) => {
         let res;
 
         // For versions 11 or higher, we just call upgrade on the converter.
         if (converter.upgrade) {
-            res = await converter.upgrade({from: accounts[0], ...options});
+            res = await converter.upgrade({ from: accounts[0], ...options });
         } else {
             // For previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
             // then accept ownership of the new and old converter. The end results should be the same.
@@ -158,7 +158,7 @@ contract('ConverterUpgrader', accounts => {
             await converter.acceptOwnership();
         }
 
-        const logs = res.logs.filter(log => log.event == 'ConverterUpgrade');
+        const logs = res.logs.filter(log => log.event === 'ConverterUpgrade');
         expect(logs.length).to.be.at.most(1);
 
         if (logs.length === 1) {
@@ -166,7 +166,7 @@ contract('ConverterUpgrader', accounts => {
         }
 
         const newConverterAddress = await new Promise((resolve, reject) => {
-            upgrader.ConverterUpgrade({fromBlock: res.receipt.blockNumber, toBlock: res.receipt.blockNumber}, (error, event) => {
+            upgrader.ConverterUpgrade({ fromBlock: res.receipt.blockNumber, toBlock: res.receipt.blockNumber }, (error, event) => {
                 expect(error).to.be.null();
                 resolve(event.args._newConverter);
             });
@@ -186,7 +186,7 @@ contract('ConverterUpgrader', accounts => {
             conversionFee: await converter.conversionFee.call(),
             maxConversionFee: await converter.maxConversionFee.call(),
             reserveTokenCount: await converter.connectorTokenCount.call(),
-            reserveTokens: [],
+            reserveTokens: []
         };
 
         for (let i = 0; i < state.reserveTokenCount; i++) {
@@ -198,7 +198,7 @@ contract('ConverterUpgrader', accounts => {
         }
 
         return state;
-    }
+    };
 
     let contractRegistry;
     let converterFactory;
@@ -215,16 +215,14 @@ contract('ConverterUpgrader', accounts => {
 
     const f = (a, b) => [].concat(...a.map(d => b.map(e => [].concat(d, e))));
     const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
-    const product = cartesian([initWithoutReserves, initWith1Reserve, initWith2Reserves, initWithEtherReserve, initWithETHReserve], [...versions, null], [false, true]);
-    const combinations = product.filter(([init, version, active]) => !(init == initWithoutReserves && active) && !(init == initWithETHReserve && version));
+    const product = cartesian([initWithoutReserves, initWith1Reserve, initWith2Reserves, initWithEtherReserve, initWithETHReserve],
+        [...versions, null], [false, true]);
+    const combinations = product.filter(([init, version, active]) => !(init === initWithoutReserves && active) &&
+        !(init === initWithETHReserve && version));
     const reserveBalances = [RESERVE1_BALANCE, RESERVE2_BALANCE];
 
     for (const [init, version, activate] of combinations) {
-        const init = initWith1Reserve;
-        const version = 23;
-        const activate = true;
-
-        describe(`${init.name}(version = ${version ? version : 'latest'}, active = ${activate}):`, () => {
+        describe(`${init.name}(version = ${version || 'latest'}, active = ${activate}):`, () => {
             it('should upgrade successfully', async () => {
                 const [upgrader, oldConverter] = await init(deployer, version, activate);
 
@@ -265,7 +263,8 @@ contract('ConverterUpgrader', accounts => {
                 expect(newConverterCurrentState.reserveTokenCount).to.be.bignumber.equal(oldConverterInitialState.reserveTokenCount);
 
                 for (let i = 0; i < newConverterCurrentState.reserveTokenCount.toNumber(); ++i) {
-                    expect(newConverterCurrentState.reserveTokens[i].balance).to.be.bignumber.equal(activate ? oldConverterInitialState.reserveTokens[i].balance : new BN(0));
+                    expect(newConverterCurrentState.reserveTokens[i].balance).to.be.bignumber
+                        .equal(activate ? oldConverterInitialState.reserveTokens[i].balance : new BN(0));
                     expect(newConverterCurrentState.reserveTokens[i].token).to.be.eql(oldConverterInitialState.reserveTokens[i].token);
                 }
             });
@@ -273,7 +272,7 @@ contract('ConverterUpgrader', accounts => {
             it('should fail if the transaction did not receive enough gas', async () => {
                 const lowGas = 2000000;
                 const [upgrader, oldConverter] = await init(deployer, version, activate);
-                await expectRevert.unspecified(upgradeConverter(upgrader, oldConverter, {gas: lowGas}));
+                await expectRevert.unspecified(upgradeConverter(upgrader, oldConverter, { gas: lowGas }));
             });
 
             it('should fail if the upgrader did not receive ownership', async () => {

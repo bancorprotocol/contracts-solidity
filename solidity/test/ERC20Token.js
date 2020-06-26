@@ -88,7 +88,7 @@ contract('ERC20Token', accounts => {
         expect(senderBalance).to.be.bignumber(totalSupply.sub(value2));
 
         const receiverBalance = await token.balanceOf.call(receiver);
-        expect(receiverBalance).to.be.bignumber.zero;
+        expect(receiverBalance).to.be.bignumber.equal(new BN(0));
 
         const receiver2Balance = await token.balanceOf.call(receiver2);
         expect(receiver2Balance).to.be.bignumber.equal(value2);

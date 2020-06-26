@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { expectRevert, BN } = require('@openzeppelin/test-helpers');
+const { expectRevert, BN, balance } = require('@openzeppelin/test-helpers');
 
 const EtherToken = artifacts.require('EtherToken');
 
@@ -105,7 +105,7 @@ contract('EtherToken', accounts => {
         await token.transfer(receiver, value2);
 
         const senderBalance = await token.balanceOf.call(sender);
-        expect(senderBalance).to.be.bignumber.equal(value.sub(value2))
+        expect(senderBalance).to.be.bignumber.equal(value.sub(value2));
 
         const receiverBalance = await token.balanceOf.call(receiver);
         expect(receiverBalance).to.be.bignumber.equal(value2);

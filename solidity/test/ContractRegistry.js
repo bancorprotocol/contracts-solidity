@@ -1,13 +1,14 @@
 const { expect } = require('chai');
 const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
-const { ZERO_ADDRESS } = constants;
+const { ZERO_ADDRESS, registry } = constants;
 
 const ContractRegistry = artifacts.require('ContractRegistry');
 
-function trimNull(str) {
+const trimNull = (str) => {
+    // eslint-disable-next-line no-control-regex
     return str.replace(/\u0000*$/, '');
-}
+};
 
 contract('ContractRegistry', accounts => {
     let contractRegistry;
@@ -97,7 +98,7 @@ contract('ContractRegistry', accounts => {
         let name2 = trimNull(await contractRegistry.contractNames.call(1));
         expect(name2).to.eql(contractName2);
 
-        let name3 = trimNull(await contractRegistry.contractNames.call(2));
+        const name3 = trimNull(await contractRegistry.contractNames.call(2));
         expect(name3).to.eql(contractName3);
 
         await contractRegistry.unregisterAddress(contractName1bytes);

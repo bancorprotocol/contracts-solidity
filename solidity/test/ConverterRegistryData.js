@@ -6,7 +6,7 @@ const ContractRegistry = artifacts.require('ContractRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 
 contract('ConverterRegistryData', accounts => {
-    let contractRegistry
+    let contractRegistry;
     let converterRegistry;
     const owner = accounts[0];
     const nonOwner = accounts[9];
@@ -117,7 +117,7 @@ contract('ConverterRegistryData', accounts => {
     });
 
     describe('smart tokens advanced verification', () => {
-         const removeAllOneByOne = async (direction) => {
+        const removeAllOneByOne = async (direction) => {
             for (const account of accounts) {
                 await converterRegistry.addSmartToken(account);
             }
@@ -175,17 +175,17 @@ contract('ConverterRegistryData', accounts => {
         const test = async (convertibleToken, smartToken, func, currentState) => {
             await func(convertibleToken, smartToken, currentState);
             const convertibleTokens = await converterRegistry.getConvertibleTokens();
-            const smartTokens = await Promise.all(convertibleTokens.map(convertibleToken => converterRegistry.getConvertibleTokenSmartTokens(convertibleToken)));
+            const smartTokens = await Promise.all(convertibleTokens.map(convertibleToken =>
+                converterRegistry.getConvertibleTokenSmartTokens(convertibleToken)));
             expect({ convertibleTokens, smartTokens }).to.deep.eql(currentState);
         };
 
         const add = async (convertibleToken, smartToken, currentState) => {
             const index = currentState.convertibleTokens.indexOf(convertibleToken);
-            if (index == -1) {
+            if (index === -1) {
                 currentState.convertibleTokens.push(convertibleToken);
                 currentState.smartTokens.push([smartToken]);
-            }
-            else {
+            } else {
                 currentState.smartTokens[index].push(smartToken);
             }
 
@@ -199,11 +199,10 @@ contract('ConverterRegistryData', accounts => {
 
         const remove = async (convertibleToken, smartToken, currentState) => {
             const index = currentState.convertibleTokens.indexOf(convertibleToken);
-            if (currentState.smartTokens[index].length == 1) {
+            if (currentState.smartTokens[index].length === 1) {
                 currentState.smartTokens.splice(index, 1);
                 swapLast(currentState.convertibleTokens, convertibleToken);
-            }
-            else {
+            } else {
                 swapLast(currentState.smartTokens[index], smartToken);
             }
 
