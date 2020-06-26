@@ -1,5 +1,8 @@
 ﻿# Bancor Protocol Contracts v0.6 (beta)
 
+[![Docs](https://img.shields.io/badge/docs-%F0%9F%93%84-blue)](https://docs.bancor.network/)
+[![NPM Package](https://img.shields.io/npm/v/@bancor/contracts-solidity.svg)](https://www.npmjs.org/package/@bancor/contracts-solidity)
+
 ## Overview
 
 The solidity version of the Bancor smart contracts is composed of many different components that work together to create the Bancor Network deployment.
