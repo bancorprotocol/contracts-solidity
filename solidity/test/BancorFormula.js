@@ -94,7 +94,7 @@ contract('BancorFormula', () => {
         ];
 
         for (const { input, output } of tuples) {
-            it.only(`findPositionInMaxExpArray(0x${input.toString(16)})`, async () => {
+            it(`findPositionInMaxExpArray(0x${input.toString(16)})`, async () => {
                 if (precision === MIN_PRECISION && output.lt(new BN(precision))) {
                     await expectRevert.unspecified(formula.findPositionInMaxExpArrayTest.call(input));
                 } else {
@@ -173,7 +173,7 @@ contract('BancorFormula', () => {
 
             it(`optimalExp(${x.toString()})`, async () => {
                 const fixedPoint = new BigNumber(await formula.optimalExpTest.call(FIXED_1.multipliedBy(x).toFixed(0)));
-                const floatPoint = new BigNumber(Decimal(x.toFixed()).exp().multipliedBy(FIXED_1.toFixed()).toFixed());
+                const floatPoint = new BigNumber(Decimal(x.toFixed()).exp().mul(FIXED_1.toFixed()).toFixed());
 
                 const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
                 expect(ratio.gte(MIN_RATIO), 'below MIN_RATIO');
@@ -192,7 +192,7 @@ contract('BancorFormula', () => {
             for (const value of values) {
                 it(`generalLog(${value.toString()})`, async () => {
                     const fixedPoint = new BigNumber(await formula.generalLogTest.call(FIXED_1.multipliedBy(value).toFixed(0)));
-                    const floatPoint = new BigNumber(Decimal(value.toFixed()).ln().multipliedBy(FIXED_1.toFixed()).toFixed());
+                    const floatPoint = new BigNumber(Decimal(value.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
 
                     const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
                     expect(ratio.gte(MIN_RATIO), 'below MIN_RATIO');
