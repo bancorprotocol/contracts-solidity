@@ -23,19 +23,19 @@ const ConverterV27OrLowerWithFallback = artifacts.require('ConverterV27OrLowerWi
 const ConverterV28OrHigherWithoutFallback = artifacts.require('ConverterV28OrHigherWithoutFallback');
 const ConverterV28OrHigherWithFallback = artifacts.require('ConverterV28OrHigherWithFallback');
 
+/*
+Token network structure:
+
+    SmartToken1  SmartToken2
+        /     \     /     \
+        ETH       BNT    ERC20Token1
+
+    SmartToken3  SmartToken4
+        /       \     /
+    ERC20Token2    BNT
+*/
+
 contract('BancorNetwork', accounts => {
-    /*
-    Token network structure:
-
-        SmartToken1  SmartToken2
-            /     \     /     \
-          ETH       BNT    ERC20Token1
-
-        SmartToken3  SmartToken4
-            /       \     /
-       ERC20Token2    BNT
-    */
-
     const initPaths = (tokens) => {
         const bntToken = tokens[0];
         const erc20Token1 = tokens[1];
