@@ -250,7 +250,7 @@ contract('XConversions', accounts => {
         });
     });
 
-    for (const percent of [0.5, 1.0, 1.5, 2.0, 3.0]]) {
+    for (const percent of [0.5, 1.0, 1.5, 2.0, 3.0]) {
         describe(`advanced testing with affiliate fee of ${percent}%:`, () => {
             const expectedFee = (amount, percent) => new BN(amount).mul(new BN(10 * percent)).div(new BN(10)).div(new BN(100));
 
