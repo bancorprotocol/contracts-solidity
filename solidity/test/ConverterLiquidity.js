@@ -1,9 +1,8 @@
 const { expect } = require('chai');
-const { expectRevert, constants, BN, balance } = require('@openzeppelin/test-helpers');
+const { expectRevert, BN, balance } = require('@openzeppelin/test-helpers');
 const Decimal = require('decimal.js');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
-const { ZERO_ADDRESS } = constants;
 
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const SmartToken = artifacts.require('SmartToken');
@@ -35,6 +34,8 @@ contract('ConverterLiquidity', accounts => {
     let erc20Tokens;
     const owner = accounts[0];
 
+    const MIN_RETURN = new BN(1);
+
     beforeEach(async () => {
         bancorFormula = await BancorFormula.new();
         contractRegistry = await ContractRegistry.new();
@@ -47,7 +48,7 @@ contract('ConverterLiquidity', accounts => {
         let converter;
 
         beforeEach(async () => {
-            converter = await LiquidityPoolV1Converter.new(ZERO_ADDRESS, contractRegistry.address, 0);
+            converter = await LiquidityPoolV1Converter.new(ETH_RESERVE_ADDRESS, contractRegistry.address, 0);
         });
 
         for (let n = 1; n <= 77; n++) {
@@ -74,7 +75,7 @@ contract('ConverterLiquidity', accounts => {
         for (const values of [[123, 456789], [12, 345, 6789], [1, 1000, 1000000, 1000000000, 1000000000000]]) {
             it(`geometricMean([${values}])`, async () => {
                 const expected = 10 ** (Math.round(values.join('').length / values.length) - 1);
-                const actual = await converter.geometricMean.call(values).call;
+                const actual = await converter.geometricMean.call(values);
                 expect(actual).to.be.bignumber.equal(new BN(expected));
             });
         }
@@ -83,64 +84,65 @@ contract('ConverterLiquidity', accounts => {
     describe('security assertion', () => {
         let converter;
         let smartToken;
-
-        beforeEach(async () => {
-            [converter, smartToken] = await initLiquidityPool(false, ...weights);
-        });
+        let reserveTokens;
 
         const weights = [1, 2, 3, 4, 5];
         const reserveAmounts = weights.map(weight => 1);
 
-        it('should revert if the number of input reserve tokens is not equal to the number of reserve tokens', async () => {
-            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
-            await expectRevert(converter.addLiquidity(reserveTokens.slice(0, -1), reserveAmounts, 1),
-                'ERR_INVALID_RESERVE');
+        context('without ether reserve', async () => {
+            beforeEach(async () => {
+                [converter, smartToken] = await initLiquidityPool(false, ...weights);
+                reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
+            });
+
+            it('should revert if the number of input reserve tokens is not equal to the number of reserve tokens', async () => {
+                await expectRevert(converter.addLiquidity(reserveTokens.slice(0, -1), reserveAmounts, MIN_RETURN), 'ERR_INVALID_RESERVE');
+            });
+
+            it('should revert if the number of input reserve amounts is not equal to the number of reserve tokens', async () => {
+                await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts.slice(0, -1), MIN_RETURN), 'ERR_INVALID_AMOUNT');
+            });
+
+            it('should revert if any of the input reserve tokens is not one of the reserve tokens', async () => {
+                await expectRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), smartToken.address], reserveAmounts,
+                    MIN_RETURN), 'ERR_INVALID_RESERVE');
+            });
+
+            it('should revert if any of the reserve tokens is not within the input reserve tokens', async () => {
+                await expectRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), reserveTokens[0]], reserveAmounts,
+                    MIN_RETURN), 'ERR_INVALID_RESERVE');
+            });
+
+            it('should revert if the minimum-return is not larger than zero', async () => {
+                await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts, 0), 'ERR_ZERO_AMOUNT');
+            });
+
+            it('should revert if the minimum-return is larger than the return', async () => {
+                await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i])));
+                await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts, -1), 'ERR_RETURN_TOO_LOW');
+            });
+
+            it('should revert if any of the input reserve amounts is not larger than zero', async () => {
+                await expectRevert(converter.addLiquidity(reserveTokens, [...reserveAmounts.slice(0, -1), 0], MIN_RETURN),
+                    'ERR_INVALID_AMOUNT');
+            });
+
+            it('should revert if the input value to a non-ether converter is larger than zero', async () => {
+                await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN,
+                    { value: reserveAmounts.slice(-1)[0] }), 'ERR_NO_ETH_RESERVE');
+            });
         });
 
-        it('should revert if the number of input reserve amounts is not equal to the number of reserve tokens', async () => {
-            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
-            await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts.slice(0, -1), 1),
-                'ERR_INVALID_RESERVE');
-        });
+        context('with ether reserve', async () => {
+            beforeEach(async () => {
+                [converter, smartToken] = await initLiquidityPool(true, ...weights);
+                reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
+            });
 
-        it('should revert if any of the input reserve tokens is not one of the reserve tokens', async () => {
-            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
-            await expectRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), smartToken.address],
-                reserveAmounts, 1), 'ERR_INVALID_RESERVE');
-        });
-
-        it('should revert if any of the reserve tokens is not within the input reserve tokens', async () => {
-            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
-            await expectRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), reserveTokens[0]],
-                reserveAmounts, 1), 'ERR_INVALID_RESERVE');
-        });
-
-        it('should revert if the minimum-return is not larger than zero', async () => {
-            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
-            await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts, 0), 'ERR_ZERO_AMOUNT');
-        });
-
-        it('should revert if the minimum-return is larger than the return', async () => {
-            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
-            await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts, -1), 'ERR_RETURN_TOO_LOW');
-        });
-
-        it('should revert if any of the input reserve amounts is not larger than zero', async () => {
-            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
-            await expectRevert(converter.addLiquidity(reserveTokens, [...reserveAmounts.slice(0, -1), 0], 1),
-                'ERR_INVALID_AMOUNT');
-        });
-
-        it('should revert if the input value to a non-ether converter is larger than zero', async () => {
-            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
-            await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts, 1,
-                { value: reserveAmounts.slice(-1)[0] }), 'ERR_NO_ETH_RESERVE');
-        });
-
-        it('should revert if the input value is not equal to the input amount of ether', async () => {
-            const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
-            await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts, 1,
-                { value: reserveAmounts.slice(-1)[0] + 1 }), 'ERR_ETH_AMOUNT_MISMATCH');
+            it('should revert if the input value is not equal to the input amount of ether', async () => {
+                await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN,
+                    { value: reserveAmounts.slice(-1)[0] + 1 }), 'ERR_ETH_AMOUNT_MISMATCH');
+            });
         });
     });
 
@@ -179,7 +181,7 @@ contract('ConverterLiquidity', accounts => {
                     const reserveAmounts = reserveTokens.map((reserveToken, i) => new BN(supplyAmount).mul(new BN(100 + i)).div(new BN(100)));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(new BN(0)))));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(new BN(1)))));
-                    await converter.addLiquidity(reserveTokens, reserveAmounts, 1, { value: hasETH ? reserveAmounts.slice(-1)[0] : 0 });
+                    await converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, { value: hasETH ? reserveAmounts.slice(-1)[0] : 0 });
                     const allowances = await Promise.all(reserveTokens.map(reserveToken => getAllowance(reserveToken, converter)));
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                     const supply = await smartToken.totalSupply.call();
