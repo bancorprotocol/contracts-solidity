@@ -35,15 +35,5 @@ solidity/build/NonStandardToken.abi
 solidity/build/NonStandardToken.bin
 solidity/build/OldConverter.abi
 solidity/build/OldConverter.bin
-solidity/build/TestBancorFormula.abi
-solidity/build/TestBancorFormula.bin
-solidity/build/TestBancorNetwork.abi
-solidity/build/TestBancorNetwork.bin
-solidity/build/TestLiquidityPoolConverter.abi
-solidity/build/TestLiquidityPoolConverter.bin
-solidity/build/TestNonStandardToken.abi
-solidity/build/TestNonStandardToken.bin
-solidity/build/TestSafeMath.abi
-solidity/build/TestSafeMath.bin
-solidity/build/TestStandardToken.abi
-solidity/build/TestStandardToken.bin
+solidity/build/Test*.abi
+solidity/build/Test*.bin
