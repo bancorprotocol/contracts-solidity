@@ -1,7 +1,9 @@
 const { expect } = require('chai');
 const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
-const { ZERO_ADDRESS, registry } = constants;
+const { registry } = require('./helpers/Constants');
+
+const { ZERO_ADDRESS } = constants;
 
 const ContractRegistry = artifacts.require('ContractRegistry');
 
