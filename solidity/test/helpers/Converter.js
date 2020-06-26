@@ -13,8 +13,8 @@ const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 
 module.exports.new = async (type, tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight, version) => {
     if (version) {
-        const abi = fs.readFileSync(path.resolve(__dirname, `/../bin/converter_v${version}.abi`));
-        const bin = fs.readFileSync(path.resolve(__dirname, `/../bin/converter_v${version}.bin`));
+        const abi = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.abi`));
+        const bin = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.bin`));
         const converter = truffleContract({ abi: JSON.parse(abi), unlinked_binary: `0x${bin}` });
         const block = await web3.eth.getBlock('latest');
         converter.setProvider(web3.currentProvider);
@@ -34,7 +34,7 @@ module.exports.new = async (type, tokenAddress, registryAddress, maxConversionFe
 
 module.exports.at = async (address, version) => {
     if (version) {
-        const abi = fs.readFileSync(path.resolve(__dirname, `/../bin/converter_v${version}.abi`));
+        const abi = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.abi`));
         const converter = truffleContract({ abi: JSON.parse(abi) });
         return converter.at(address);
     }
