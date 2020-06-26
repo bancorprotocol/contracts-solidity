@@ -23,7 +23,7 @@ const ConverterV27OrLowerWithFallback = artifacts.require('ConverterV27OrLowerWi
 const ConverterV28OrHigherWithoutFallback = artifacts.require('ConverterV28OrHigherWithoutFallback');
 const ConverterV28OrHigherWithFallback = artifacts.require('ConverterV28OrHigherWithFallback');
 
-contrac('BancorNetwork', accounts => {
+contract('BancorNetwork', accounts => {
     /*
     Token network structure:
 
