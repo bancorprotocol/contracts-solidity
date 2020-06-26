@@ -82,6 +82,7 @@ contract('Converter', accounts => {
     const nonOwner = accounts[1];
     const receiver = accounts[3];
 
+    const MIN_RETURN = new BN(1);
     const WEIGHT_10_PERCENT = new BN(100000);
     const MAX_CONVERSION_FEE = new BN(200000);
 
@@ -475,10 +476,11 @@ contract('Converter', accounts => {
                 it('should revert when a non owner attempts to withdraw a reserve token while the converter is not active', async () => {
                     const converter = await initConverter(type, false, isETHReserve);
 
+                    const value = new BN(5);
                     if (isETHReserve) {
                         await expectRevert(converter.withdrawETH(receiver, { from: nonOwner }), 'ERR_ACCESS_DENIED');
                     } else {
-                        await expectRevert(converter.withdrawTokens(getReserve1Address(isETHReserve), receiver, 50,
+                        await expectRevert(converter.withdrawTokens(getReserve1Address(isETHReserve), receiver, value,
                             { from: nonOwner }), 'ERR_ACCESS_DENIED');
                     }
                 });
@@ -486,10 +488,11 @@ contract('Converter', accounts => {
                 it('should revert when a non owner attempts to withdraw a reserve token while the converter is active', async () => {
                     const converter = await initConverter(type, true, isETHReserve);
 
+                    const value = new BN(5);
                     if (isETHReserve) {
                         await expectRevert(converter.withdrawETH(receiver, { from: nonOwner }), 'ERR_ACCESS_DENIED');
                     } else {
-                        await expectRevert(converter.withdrawTokens(getReserve1Address(isETHReserve), receiver, 50,
+                        await expectRevert(converter.withdrawTokens(getReserve1Address(isETHReserve), receiver, value,
                             { from: nonOwner }), 'ERR_ACCESS_DENIED');
                     }
                 });
@@ -519,27 +522,27 @@ contract('Converter', accounts => {
                 it('should revert when attempting to get the target amount with an invalid source token adress', async () => {
                     const converter = await initConverter(type, true, isETHReserve);
 
-                    await expectRevert(converter.targetAmountAndFee.call(ZERO_ADDRESS,
-                        getReserve1Address(isETHReserve), 500), type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
+                    await expectRevert(converter.targetAmountAndFee.call(ZERO_ADDRESS, getReserve1Address(isETHReserve), 500),
+                        type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
                 });
 
                 it('should revert when attempting to get the target amount with an invalid target token address', async () => {
                     const converter = await initConverter(type, true, isETHReserve);
 
-                    await expectRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve),
-                        ZERO_ADDRESS, 500), type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
+                    await expectRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), ZERO_ADDRESS, 500),
+                        type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
                 });
 
                 it('should revert when attempting to get the target amount with identical source/target addresses', async () => {
                     const converter = await initConverter(type, true, isETHReserve);
 
-                    await expectRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve),
-                        getReserve1Address(isETHReserve), 500), type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_SAME_SOURCE_TARGET');
+                    await expectRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), getReserve1Address(isETHReserve), 500),
+                        type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_SAME_SOURCE_TARGET');
                 });
 
                 it('should revert when attempting to convert with an invalid source token address', async () => {
                     await initConverter(type, true, isETHReserve);
-                    await expectRevert(convert([ZERO_ADDRESS, anchorAddress, getReserve1Address(isETHReserve)], 500, 1),
+                    await expectRevert(convert([ZERO_ADDRESS, anchorAddress, getReserve1Address(isETHReserve)], 500, MIN_RETURN),
                         type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
                 });
 
@@ -549,10 +552,10 @@ contract('Converter', accounts => {
 
                     if (isETHReserve) {
                         await expectRevert.unspecified(convert([getReserve1Address(isETHReserve), anchorAddress,
-                            ZERO_ADDRESS], 500, 1));
+                            ZERO_ADDRESS], 500, MIN_RETURN));
                     } else {
-                        await expectRevert(convert([getReserve1Address(isETHReserve), anchorAddress,
-                            ZERO_ADDRESS], 500, 1), type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
+                        await expectRevert(convert([getReserve1Address(isETHReserve), anchorAddress, ZERO_ADDRESS], 500, MIN_RETURN),
+                            type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE');
                     }
                 });
 
@@ -562,10 +565,10 @@ contract('Converter', accounts => {
 
                     if (isETHReserve) {
                         await expectRevert.unspecified(convert([getReserve1Address(isETHReserve), anchorAddress,
-                            getReserve1Address(isETHReserve)], 500, 1));
+                            getReserve1Address(isETHReserve)], 500, MIN_RETURN));
                     } else {
                         await expectRevert(convert([getReserve1Address(isETHReserve), anchorAddress,
-                            getReserve1Address(isETHReserve)], 500, 1), 'ERR_SAME_SOURCE_TARGET');
+                            getReserve1Address(isETHReserve)], 500, MIN_RETURN), 'ERR_SAME_SOURCE_TARGET');
                     }
                 });
             });

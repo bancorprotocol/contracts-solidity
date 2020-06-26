@@ -29,12 +29,13 @@ contract('LiquidityPoolConverter', accounts => {
         await converter.addReserve(getReserve1Address(isETHReserve), 250000);
         await converter.addReserve(reserveToken2.address, 150000);
         await reserveToken2.transfer(converter.address, 8000);
-        await token.issue(owner, 20000);
+        await token.issue(sender, 20000);
 
+        const amount = new BN(5000);
         if (isETHReserve) {
-            await converter.send(5000);
+            await converter.send(amount);
         } else {
-            await reserveToken.transfer(converter.address, 5000);
+            await reserveToken.transfer(converter.address, amount);
         }
 
         if (activate) {
@@ -55,11 +56,11 @@ contract('LiquidityPoolConverter', accounts => {
         expect(reserve[4]).to.be.eql(isSet);
     };
 
-    const convert = async (path, amount, minReturn, options) => {
+    const convert = async (path, amount, minReturn, options = {}) => {
         return bancorNetwork.convertByPath(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, options);
     };
 
-    const convertCall = async (path, amount, minReturn, options) => {
+    const convertCall = async (path, amount, minReturn, options = {}) => {
         return bancorNetwork.convertByPath.call(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, options);
     };
 
@@ -73,10 +74,11 @@ contract('LiquidityPoolConverter', accounts => {
     let reserveToken2;
     let reserveToken3;
     let upgrader;
-    const owner = accounts[0];
-    const receiver = accounts[1];
+    const sender = accounts[0];
+    const whitelisted = accounts[1];
     const beneficiary = accounts[2];
 
+    const MIN_RETURN = new BN(1);
     const WEIGHT_10_PERCENT = new BN(100000);
     const WEIGHT_20_PERCENT = new BN(200000);
     const WEIGHT_50_PERCENT = new BN(500000);
@@ -113,14 +115,14 @@ contract('LiquidityPoolConverter', accounts => {
 
                 await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT);
                 let reserveTokenCount = await converter.reserveTokenCount.call();
-                expect(reserveTokenCount).to.be.bignumber.equal(new BN(1));
                 let reserveRatio = await converter.reserveRatio.call();
+                expect(reserveTokenCount).to.be.bignumber.equal(new BN(1));
                 expect(reserveRatio).to.be.bignumber.equal(WEIGHT_10_PERCENT);
 
                 await converter.addReserve(reserveToken2.address, WEIGHT_20_PERCENT);
                 reserveTokenCount = await converter.reserveTokenCount.call();
-                expect(reserveTokenCount).to.be.bignumber.equal(new BN(2));
                 reserveRatio = await converter.reserveRatio.call();
+                expect(reserveTokenCount).to.be.bignumber.equal(new BN(2));
                 expect(reserveRatio).to.be.bignumber.equal(WEIGHT_10_PERCENT.add(WEIGHT_20_PERCENT));
             });
 
@@ -168,37 +170,56 @@ contract('LiquidityPoolConverter', accounts => {
             it('verifies that targetAmountAndFee returns a valid amount', async () => {
                 const converter = await initConverter(true, isETHReserve);
 
+                const amount = new BN(500);
                 const returnAmount = (await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve),
-                    reserveToken2.address, 500))[0];
+                    reserveToken2.address, amount))[0];
                 expect(returnAmount).to.be.bignumber.equal(new BN(1175));
             });
 
             it('should revert when attempting to get the target amount between the pool token and a reserve', async () => {
                 const converter = await initConverter(true, isETHReserve);
 
+                const amount = new BN(500);
                 await expectRevert(converter.targetAmountAndFee.call(tokenAddress, getReserve1Address(isETHReserve),
-                    500), 'ERR_INVALID_RESERVE');
+                    amount), 'ERR_INVALID_RESERVE');
             });
 
             it('should revert when attempting to get the target amount while the converter is not active', async () => {
                 const converter = await initConverter(false, isETHReserve);
 
-                await expectRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve),
-                    reserveToken2.address, 500), 'ERR_INACTIVE');
+                const amount = new BN(500);
+                await expectRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount),
+                    'ERR_INACTIVE');
             });
 
             it('should revert when attempting to convert with 0 minimum requested amount', async () => {
                 await initConverter(true, isETHReserve);
 
+                const amount = new BN(500);
                 let value = 0;
                 if (isETHReserve) {
-                    value = 500;
+                    value = amount;
                 } else {
-                    await reserveToken.approve(bancorNetwork.address, 500, { from: owner });
+                    await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
                 await expectRevert(convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address],
-                    500, 0, { value }), 'ERR_ZERO_VALUE');
+                    amount, 0, { value }), 'ERR_ZERO_VALUE');
+            });
+
+            it('should revert when attempting to convert when the return is smaller than the minimum requested amount', async () => {
+                await initConverter(true, isETHReserve);
+
+                const amount = new BN(500);
+                let value = 0;
+                if (isETHReserve) {
+                    value = amount;
+                } else {
+                    await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
+                }
+
+                await expectRevert(convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], amount, 2000,
+                    { value }), 'ERR_RETURN_TOO_LOW');
             });
 
             it('verifies that convert is allowed for a whitelisted account', async () => {
@@ -206,19 +227,20 @@ contract('LiquidityPoolConverter', accounts => {
 
                 const whitelist = await Whitelist.new();
                 await whitelist.addAddress(converter.address);
-                await whitelist.addAddress(receiver);
+                await whitelist.addAddress(whitelisted);
                 await converter.setConversionWhitelist(whitelist.address);
-                await reserveToken.transfer(receiver, 1000);
 
+                const amount = new BN(500);
                 let value = 0;
                 if (isETHReserve) {
-                    value = 500;
+                    value = amount;
                 } else {
-                    await reserveToken.approve(bancorNetwork.address, 500, { from: receiver });
+                    await reserveToken.transfer(whitelisted, amount.mul(new BN(2)));
+                    await reserveToken.approve(bancorNetwork.address, amount, { from: whitelisted });
                 }
 
-                await convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], 500, 1,
-                    { from: receiver, value });
+                await convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], amount, MIN_RETURN,
+                    { from: whitelisted, value });
             });
 
             it('should revert when calling convert from a non whitelisted account', async () => {
@@ -227,52 +249,55 @@ contract('LiquidityPoolConverter', accounts => {
                 const whitelist = await Whitelist.new();
                 await whitelist.addAddress(converter.address);
                 await converter.setConversionWhitelist(whitelist.address);
-                await reserveToken.transfer(receiver, 1000);
 
+                const amount = new BN(500);
                 let value = 0;
                 if (isETHReserve) {
-                    value = 500;
+                    value = amount;
                 } else {
-                    await reserveToken.approve(bancorNetwork.address, 500, { from: receiver });
+                    await reserveToken.transfer(whitelisted, amount.mul(new BN(2)));
+                    await reserveToken.approve(bancorNetwork.address, amount, { from: whitelisted });
                 }
 
                 await expectRevert(convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address],
-                    500, 1, { from: receiver, value }), 'ERR_NOT_WHITELISTED');
+                    amount, MIN_RETURN, { from: whitelisted, value }), 'ERR_NOT_WHITELISTED');
             });
 
             it('should revert when calling convert while the beneficiary is not whitelisted', async () => {
                 const converter = await initConverter(true, isETHReserve);
                 const whitelist = await Whitelist.new();
-                await whitelist.addAddress(receiver);
+                await whitelist.addAddress(whitelisted);
                 await converter.setConversionWhitelist(whitelist.address);
-                await reserveToken.transfer(receiver, 1000);
 
+                const amount = new BN(500);
                 let value = 0;
                 if (isETHReserve) {
-                    value = 500;
+                    value = amount;
                 } else {
-                    await reserveToken.approve(bancorNetwork.address, 500, { from: receiver });
+                    await reserveToken.transfer(whitelisted, amount.mul(new BN(2)));
+                    await reserveToken.approve(bancorNetwork.address, amount, { from: whitelisted });
                 }
 
                 await expectRevert(bancorNetwork.convertByPath([getReserve1Address(isETHReserve), tokenAddress,
-                    reserveToken2.address], 500, 1, beneficiary, ZERO_ADDRESS, 0, { from: receiver, value }), 'ERR_NOT_WHITELISTED');
+                    reserveToken2.address], amount, MIN_RETURN, beneficiary, ZERO_ADDRESS, 0, { from: whitelisted, value }), 'ERR_NOT_WHITELISTED');
             });
 
             it('verifies that targetAmountAndFee returns the same amount as converting', async () => {
                 const converter = await initConverter(true, isETHReserve);
 
+                const amount = new BN(500);
                 const returnAmount = (await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve),
-                    reserveToken2.address, 500))[0];
+                    reserveToken2.address, amount))[0];
 
                 let value = 0;
                 if (isETHReserve) {
-                    value = 500;
+                    value = amount;
                 } else {
-                    await reserveToken.approve(bancorNetwork.address, 500, { from: owner });
+                    await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
                 const returnAmount2 = await convertCall([getReserve1Address(isETHReserve), tokenAddress,
-                    reserveToken2.address], 500, 1, { value });
+                    reserveToken2.address], amount, MIN_RETURN, { value });
 
                 expect(returnAmount2).to.be.bignumber.equal(returnAmount);
             });
