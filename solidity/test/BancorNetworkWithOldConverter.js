@@ -61,6 +61,7 @@ contract('BancorNetworkWithOldConverter', accounts => {
 
     it('verifies that isV28OrHigherConverter returns false', async () => {
         const network = await TestBancorNetwork.new(0, 0);
+
         expect(await network.isV28OrHigherConverterExternal.call(converter.address)).to.be.false();
     });
 
