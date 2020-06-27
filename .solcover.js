@@ -6,6 +6,6 @@ module.exports = {
         'helpers/Migrations.sol'
     ],
     providerOptions: {
-        defaultEtherBalance: 1000
+        default_balance_ether: 10000000000000000000
     }
 };

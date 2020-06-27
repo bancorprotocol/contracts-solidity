@@ -141,7 +141,7 @@ contract('BancorNetwork', accounts => {
     const AFFILIATE_FEE = new BN(10000);
 
     describe('Settings', () => {
-        before(async () => {
+        beforeEach(async () => {
             contractRegistry = await ContractRegistry.new();
             bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         });

@@ -160,7 +160,7 @@ contract('BancorFormula', () => {
 
             it(`optimalLog(${x.toFixed()})`, async () => {
                 const fixedPoint = new BigNumber(await formula.optimalLogTest(FIXED_1.multipliedBy(x).toFixed(0)));
-                const floatPoint = new BigNumber(Decimal(x.toFixed()).ln().multipliedBy(FIXED_1.toFixed()).toFixed());
+                const floatPoint = new BigNumber(Decimal(x.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
 
                 const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
                 expect(ratio.gte(MIN_RATIO), 'below MIN_RATIO');

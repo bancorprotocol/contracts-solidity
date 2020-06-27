@@ -160,14 +160,12 @@ contract('ConverterUpgrader', accounts => {
             return ConverterHelper.at(logs[0].args._newConverter);
         }
 
-        const newConverterAddress = await new Promise((resolve, reject) => {
-            upgrader.ConverterUpgrade({ fromBlock: res.receipt.blockNumber, toBlock: res.receipt.blockNumber }, (error, event) => {
-                expect(error).to.be.null();
-                resolve(event.args._newConverter);
-            });
+        const events = await upgrader.getPastEvents('ConverterUpgrade', {
+            fromBlock: res.receipt.blockNumber,
+            toBlock: res.receipt.blockNumber
         });
 
-        return ConverterHelper.at(newConverterAddress);
+        return ConverterHelper.at(events[0].args._newConverter);
     };
 
     const getConverterState = async (converter) => {
@@ -223,10 +221,6 @@ contract('ConverterUpgrader', accounts => {
         !(init === initWithETHReserve && version));
 
     for (const [init, version, activate] of combinations) {
-    // const init = initWithETHReserve;
-    // const version = false;
-    // const activate = false;
-
         describe(`${init.name}(version = ${version || 'latest'}, activate = ${activate}):`, () => {
             it('should upgrade successfully', async () => {
                 let reserveTokens;
