@@ -5,7 +5,7 @@ import "../utility/SafeMath.sol";
 contract BancorFormula is IBancorFormula {
     using SafeMath for uint256;
 
-    uint16 public constant version = 6;
+    uint16 public constant version = 7;
 
     uint256 private constant ONE = 1;
     uint32 private constant MAX_WEIGHT = 1000000;
@@ -336,6 +336,47 @@ contract BancorFormula is IBancorFormula {
     }
 
     /**
+      * @dev given a smart token supply, reserve balance, reserve ratio and an amount of reserve tokens to fund with,
+      * calculates the amount of smart tokens received for purchasing with the given amount of reserve tokens
+      *
+      * Formula:
+      * return = _supply * ((_amount / _reserveBalance + 1) ^ (_reserveRatio / MAX_WEIGHT) - 1)
+      *
+      * @param _supply          smart token supply
+      * @param _reserveBalance  reserve balance
+      * @param _reserveRatio    reserve ratio, represented in ppm (2-2000000)
+      * @param _amount          amount of reserve tokens to fund with
+      *
+      * @return smart token amount
+    */
+    function fundSupplyAmount(uint256 _supply,
+                              uint256 _reserveBalance,
+                              uint32 _reserveRatio,
+                              uint256 _amount)
+                              public view returns (uint256)
+    {
+        // validate input
+        require(_supply > 0, "ERR_INVALID_SUPPLY");
+        require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
+
+        // special case for 0 amount
+        if (_amount == 0)
+            return 0;
+
+        // special case if the reserve ratio = 100%
+        if (_reserveRatio == MAX_WEIGHT)
+            return _amount.mul(_supply) / _reserveBalance;
+
+        uint256 result;
+        uint8 precision;
+        uint256 baseN = _reserveBalance.add(_amount);
+        (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_WEIGHT);
+        uint256 temp = _supply.mul(result) >> precision;
+        return temp - _supply;
+    }
+
+    /**
       * @dev given a smart token supply, reserve balance, reserve ratio and an amount of smart tokens to liquidate,
       * calculates the amount of reserve tokens received for selling the given amount of smart tokens
       *
@@ -499,7 +540,6 @@ contract BancorFormula is IBancorFormula {
             return lo;
 
         require(false);
-        return 0;
     }
 
     /**
