@@ -10,13 +10,13 @@ npm-debug.log
 *.pyc
 
 solidity/build/contracts
-solidity/.coverage_artifacts
-solidity/.coverage_contracts
-solidity/coverage
-solidity/coverageEnv
-solidity/coverage.json
-solidity/allFiredEvents
-solidity/scTopics
+.coverage_artifacts
+.coverage_contracts
+coverage
+coverageEnv
+coverage.json
+allFiredEvents
+scTopics
 
 # npm run build
 solidity/build/ConverterV27OrLowerWithoutFallback.abi
