@@ -1,4 +1,4 @@
-module.exports = function (deployer, network, accounts) {
+module.exports = (deployer, network, accounts) => {
     if (network === 'production') {
         deployer.deploy(artifacts.require('Migrations'));
     }

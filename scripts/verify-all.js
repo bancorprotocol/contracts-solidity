@@ -67,7 +67,7 @@ function post (contractId, sourceCode) {
             constructorArguements: input.contracts[contractId].args
         }
     },
-    function (error, response, body) {
+    (error, response, body) => {
         if (error) {
             console.log(contractId + ': ' + error);
         } else {
@@ -85,7 +85,7 @@ function get (contractId, guid) {
     console.log(contractId + ': checking verification status...');
     request.get(
         'https://' + input.network + '.etherscan.io/api?module=contract&action=checkverifystatus&guid=' + guid,
-        function (error, response, body) {
+        (error, response, body) => {
             if (error) {
                 console.log(contractId + ': ' + error);
             } else {

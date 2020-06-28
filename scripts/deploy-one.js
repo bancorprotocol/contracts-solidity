@@ -9,9 +9,9 @@ const CONTRACT_ARGS = process.argv.slice(5);
 
 async function scan (message) {
     process.stdout.write(message);
-    return await new Promise(function (resolve, reject) {
+    return await new Promise((resolve, reject) => {
         process.stdin.resume();
-        process.stdin.once('data', function (data) {
+        process.stdin.once('data', (data) => {
             process.stdin.pause();
             resolve(data.toString().trim());
         });

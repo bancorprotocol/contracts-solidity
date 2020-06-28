@@ -1,7 +1,7 @@
 const path = require('path');
 const childProcess = require('child_process');
 
-module.exports = function (deployer, network) {
+module.exports = (deployer, network) => {
     if (network === 'production') {
         const CFG_FILE_NAME = process.argv[4];
         const NODE_ADDRESS = process.argv[5];
@@ -14,6 +14,7 @@ module.exports = function (deployer, network) {
                 NODE_ADDRESS,
                 PRIVATE_KEY
             ], { stdio: ['inherit', 'inherit', 'pipe'] });
+
         if (result.stderr.length > 0) {
             throw new Error(result.stderr);
         }
