@@ -121,6 +121,13 @@ contract('ERC20Token', accounts => {
             'ERR_UNDERFLOW.');
     });
 
+    it('should revert when attempting to change the allowance without resetting it first', async () => {
+        const value = new BN(111);
+        await token.approve(receiver, value);
+
+        await expectRevert(token.approve(receiver, value.sub(new BN(1))), 'ERR_INVALID_AMOUNT');
+    });
+
     it('should revert when attempting to transfer from an invalid account', async () => {
         const value = new BN(10);
         await token.approve(receiver, value);
