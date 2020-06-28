@@ -56,4 +56,8 @@ contract('Owned', accounts => {
 
         expect(await contract.newOwner.call()).to.be.eql(ZERO_ADDRESS);
     });
+
+    it("verifies that it's not possible to transfer ownership to the same owner", async () => {
+        await expectRevert(contract.transferOwnership(owner), 'ERR_SAME_OWNER');
+    });
 });
