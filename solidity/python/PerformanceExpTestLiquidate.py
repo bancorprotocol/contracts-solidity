@@ -28,9 +28,12 @@ def Main():
     testNum = 0
     numOfTests = len(rangeSupply) * len(rangeBalance) * len(rangeWeights) * len(rangeAmount)
 
-    tester = Web3Wrapper.Contract('BancorFormula').tester()
+    FormulaContract = Web3Wrapper.Contract('BancorFormula')
+    FormulaContractAddr = FormulaContract.tester()
+
     minGas = float('+inf')
     maxGas = float('-inf')
+
     totalGas = 0
     countGas = 0
 
@@ -41,7 +44,7 @@ def Main():
                     testNum += 1
                     if amount <= supply:
                         try:
-                            gas = tester.liquidateReserveAmount(supply, balance, weights, amount)
+                            gas = FormulaContractAddr.liquidateReserveAmount(supply, balance, weights, amount)
                             minGas = min(minGas, gas)
                             maxGas = max(maxGas, gas)
                             totalGas += gas

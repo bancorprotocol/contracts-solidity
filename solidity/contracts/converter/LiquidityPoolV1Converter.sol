@@ -420,7 +420,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
 
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-        uint256 amount = getMinShare(_totalSupply, _reserveTokens, _reserveAmounts);
+        uint256 amount = getMinShare(formula, _totalSupply, _reserveTokens, _reserveAmounts);
+        uint256 newPoolTokenSupply = _totalSupply.add(amount);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
@@ -437,8 +438,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
             uint256 newReserveBalance = rsvBalance.add(reserveAmount);
             reserves[reserveToken].balance = newReserveBalance;
-
-            uint256 newPoolTokenSupply = _totalSupply.add(amount);
 
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
@@ -464,6 +463,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         syncReserveBalances();
 
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+        uint256 newPoolTokenSupply = _totalSupply.sub(_amount);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
@@ -480,8 +480,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             else
                 safeTransfer(reserveToken, msg.sender, reserveAmount);
 
-            uint256 newPoolTokenSupply = _totalSupply.sub(_amount);
-
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
@@ -490,18 +488,13 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         }
     }
 
-    function getMinShare(uint256 _totalSupply, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts) private view returns (uint256) {
-        uint256 minShare = getShare(_totalSupply, reserves[_reserveTokens[0]].balance, _reserveAmounts[0]);
+    function getMinShare(IBancorFormula formula, uint256 _totalSupply, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts) private view returns (uint256) {
+        uint256 minIndex = 0;
         for (uint256 i = 1; i < _reserveTokens.length; i++) {
-            uint256 share = getShare(_totalSupply, reserves[_reserveTokens[i]].balance, _reserveAmounts[i]);
-            if (minShare > share)
-                minShare = share;
+            if (_reserveAmounts[i].mul(reserves[_reserveTokens[minIndex]].balance) < _reserveAmounts[minIndex].mul(reserves[_reserveTokens[i]].balance))
+                minIndex = i;
         }
-        return minShare;
-    }
-
-    function getShare(uint256 _totalSupply, uint256 _reserveBalance, uint256 _reserveAmount) private view returns (uint256) {
-        return _totalSupply.mul(_reserveAmount).mul(reserveRatio).div(_reserveBalance.add(_reserveAmount).mul(WEIGHT_RESOLUTION));
+        return formula.fundSupplyAmount(_totalSupply, reserves[_reserveTokens[minIndex]].balance, reserveRatio, _reserveAmounts[minIndex]);
     }
 
     /**

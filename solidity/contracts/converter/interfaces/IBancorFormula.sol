@@ -29,6 +29,12 @@ contract IBancorFormula {
                       uint256 _amount)
                       public view returns (uint256);
 
+    function fundSupplyAmount(uint256 _supply,
+                              uint256 _reserveBalance,
+                              uint32 _reserveRatio,
+                              uint256 _amount)
+                              public view returns (uint256);
+
     function liquidateReserveAmount(uint256 _supply,
                                     uint256 _reserveBalance,
                                     uint32 _reserveRatio,

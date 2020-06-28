@@ -29,7 +29,8 @@ def Main():
     testNum = 0
     numOfTests = len(rangeSupply) * len(rangeBalance) * len(rangeWeights) * len(rangeAmount)
 
-    FormulaContractAddr = Web3Wrapper.Contract('BancorFormula').getter()
+    FormulaContract = Web3Wrapper.Contract('BancorFormula')
+    FormulaContractAddr = FormulaContract.getter()
 
     for supply in rangeSupply:
         for balance in rangeBalance:

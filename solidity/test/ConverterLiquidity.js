@@ -172,7 +172,7 @@ contract('ConverterLiquidity', accounts => {
 
                     for (let i = 0; i < allowances.length; i++) {
                         const diff = allowances[i].div(reserveAmounts[i]);
-                        assert(inRange(diff, '0', '0.004'), `allowance #${i + 1}: diff = ${diff.toFixed()}`);
+                        assert(inRange(diff, '0', '0.0000005'), `allowance #${i + 1}: diff = ${diff.toFixed()}`);
                     }
 
                     const actual = balances.map(balance => balance.div(supply));
@@ -190,7 +190,7 @@ contract('ConverterLiquidity', accounts => {
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                     for (let i = 0; i < balances.length; i++) {
                         const diff = state[n - 1].balances[i].div(balances[i]);
-                        assert(inRange(diff, '0.99999999', '1'), `balance #${i + 1}: diff = ${diff.toFixed()}`);
+                        assert(inRange(diff, '0.999999996', '1'), `balance #${i + 1}: diff = ${diff.toFixed()}`);
                     }
                 }
 
