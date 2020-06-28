@@ -346,6 +346,13 @@ contract('Converter', accounts => {
                     expect(await anchor.owner.call()).to.eql(converter.address);
                 });
 
+                it('should revert when attempting to accept an anchor ownership of a converter without any reserves', async () => {
+                    const converter = await createConverter(type, anchorAddress);
+
+                    await anchor.transferOwnership(converter.address);
+                    await expectRevert(converter.acceptAnchorOwnership(), 'ERR_INVALID_RESERVE_COUNT');
+                });
+
                 it('verifies that the owner can transfer the anchor ownership if the owner is the upgrader contract', async () => {
                     const converter = await initConverter(type, true, isETHReserve);
 
