@@ -7,7 +7,7 @@ import FormulaNativePython
 def formulaTest(supply, balance, weights, amount):
     resultSolidityPort = FormulaSolidityPort.fundSupplyAmount(supply, balance, weights, amount)
     resultNativePython = FormulaNativePython.fundSupplyAmount(supply, balance, weights, amount)
-    if resultNativePython > resultSolidityPort:
+    if resultSolidityPort > resultNativePython:
         error = ['Implementation Error:']
         error.append('supply             = {}'.format(supply))
         error.append('balance            = {}'.format(balance))
