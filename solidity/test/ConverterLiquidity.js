@@ -147,28 +147,6 @@ contract('ConverterLiquidity', accounts => {
     });
 
     describe('functionality assertion', () => {
-        for (const hasETH of [false, true]) {
-            for (const weight1 of [10, 20, 30, 40, 50, 60, 70, 80, 90]) {
-                for (const weight2 of [10, 20, 30, 40, 50, 60, 70, 80, 90]) {
-                    if (weight1 + weight2 <= 100) {
-                        test(hasETH, weight1, weight2);
-                    }
-                }
-            }
-        }
-
-        for (const hasETH of [false, true]) {
-            for (const weight1 of [10, 20, 30, 40, 50, 60]) {
-                for (const weight2 of [10, 20, 30, 40, 50, 60]) {
-                    for (const weight3 of [10, 20, 30, 40, 50, 60]) {
-                        if (weight1 + weight2 + weight3 <= 100) {
-                            test(hasETH, weight1, weight2, weight3);
-                        }
-                    }
-                }
-            }
-        }
-
         const test = (hasETH, ...weights) => {
             it(`hasETH = ${hasETH}, weights = [${weights.join('%, ')}%]`, async () => {
                 const [converter, smartToken] = await initLiquidityPool(hasETH, ...weights);
@@ -220,6 +198,28 @@ contract('ConverterLiquidity', accounts => {
                 }
             });
         };
+
+        for (const hasETH of [false, true]) {
+            for (const weight1 of [10, 20, 30, 40, 50, 60, 70, 80, 90]) {
+                for (const weight2 of [10, 20, 30, 40, 50, 60, 70, 80, 90]) {
+                    if (weight1 + weight2 <= 100) {
+                        test(hasETH, weight1, weight2);
+                    }
+                }
+            }
+        }
+
+        for (const hasETH of [false, true]) {
+            for (const weight1 of [10, 20, 30, 40, 50, 60]) {
+                for (const weight2 of [10, 20, 30, 40, 50, 60]) {
+                    for (const weight3 of [10, 20, 30, 40, 50, 60]) {
+                        if (weight1 + weight2 + weight3 <= 100) {
+                            test(hasETH, weight1, weight2, weight3);
+                        }
+                    }
+                }
+            }
+        }
     });
 
     const approve = async (reserveToken, converter, amount) => {
