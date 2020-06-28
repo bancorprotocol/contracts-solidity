@@ -421,6 +421,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         uint256 amount = getMinShare(formula, _totalSupply, _reserveTokens, _reserveAmounts);
+        uint256 newPoolTokenSupply = _totalSupply.add(amount);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
@@ -437,8 +438,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
             uint256 newReserveBalance = rsvBalance.add(reserveAmount);
             reserves[reserveToken].balance = newReserveBalance;
-
-            uint256 newPoolTokenSupply = _totalSupply.add(amount);
 
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
@@ -464,6 +463,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         syncReserveBalances();
 
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+        uint256 newPoolTokenSupply = _totalSupply.sub(_amount);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
@@ -479,8 +479,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
                 msg.sender.transfer(reserveAmount);
             else
                 safeTransfer(reserveToken, msg.sender, reserveAmount);
-
-            uint256 newPoolTokenSupply = _totalSupply.sub(_amount);
 
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
