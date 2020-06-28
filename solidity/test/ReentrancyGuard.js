@@ -1,6 +1,5 @@
 const { expect } = require('chai');
-const { expectRevert } = require('@openzeppelin/test-helpers');
-const { BN } = require('@openzeppelin/test-helpers/src/setup');
+const { expectRevert, BN } = require('@openzeppelin/test-helpers');
 
 const TestReentrancyGuard = artifacts.require('TestReentrancyGuard');
 const TestReentrancyGuardAttacker = artifacts.require('TestReentrancyGuardAttacker');
