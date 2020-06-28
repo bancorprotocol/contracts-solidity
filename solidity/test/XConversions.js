@@ -125,35 +125,6 @@ contract('XConversions', accounts => {
             }
         };
 
-        it('should be able to xConvert from ETH', async () => {
-            const path = ethBntPath;
-            const amount = web3.utils.toWei(new BN(1));
-
-            const retAmount = await bancorNetwork.xConvert.call(
-                path,
-                amount,
-                MIN_RETURN,
-                EOS_BLOCKCHAIN,
-                EOS_ADDRESS,
-                TX_ID,
-                { from: sender, value: amount }
-            );
-
-            const prevBalance = await bntToken.balanceOf.call(bancorX.address);
-
-            await bancorNetwork.xConvert(
-                path,
-                amount,
-                MIN_RETURN,
-                EOS_BLOCKCHAIN,
-                EOS_ADDRESS,
-                TX_ID,
-                { from: sender, value: amount }
-            );
-
-            expect((await bntToken.balanceOf.call(bancorX.address)).sub(prevBalance)).to.be.bignumber.equal(retAmount);
-        });
-
         it('should be able to xConvert from an ERC20', async () => {
             const path = erc20TokenBntPath;
             const amount = web3.utils.toWei(new BN(1));
@@ -183,6 +154,21 @@ contract('XConversions', accounts => {
             );
 
             expect((await bntToken.balanceOf.call(bancorX.address)).sub(prevBalance)).to.be.bignumber.equal(retAmount);
+        });
+
+        it('should revert when attempting to xConvert2 to a different token than BNT', async () => {
+            const path = [...ethBntPath.slice(0, 1), sender];
+            const amount = web3.utils.toWei(new BN(1));
+
+            await expectRevert(bancorNetwork.xConvert.call(
+                path,
+                amount,
+                MIN_RETURN,
+                EOS_BLOCKCHAIN,
+                EOS_ADDRESS,
+                TX_ID,
+                { from: sender, value: amount }
+            ), 'ERR_INVALID_TARGET_TOKEN');
         });
 
         it('should be able to completeXConversion to ETH', async () => {
@@ -247,6 +233,15 @@ contract('XConversions', accounts => {
 
             await expectRevert(bancorNetwork.completeXConversion(path, bancorX.address, xTransferId2, MIN_RETURN,
                 sender, { from: sender }), 'ERR_TX_MISMATCH');
+        });
+
+        it('should revert when attempting to completeXConversion from a different token than BNT', async () => {
+            const txId = TX_ID;
+            const xTransferId = txId.add(new BN(1));
+            const path = [sender, ...bntErc20Path.slice(1)];
+
+            await expectRevert(bancorNetwork.completeXConversion(path, bancorX.address, xTransferId, MIN_RETURN,
+                sender, { from: sender }), 'ERR_INVALID_SOURCE_TOKEN');
         });
     });
 

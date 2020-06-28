@@ -475,14 +475,30 @@ contract('BancorNetwork', accounts => {
             const value = new BN(10000);
 
             await expectRevert(bancorNetwork.convertByPath(path, value.add(new BN(1)), MIN_RETURN, ZERO_ADDRESS, ZERO_ADDRESS,
-                0, { from: nonOwner, value }), 'ERR_ETH_AMOUNT_MISMATCH');
+                0, { from: sender, value }), 'ERR_ETH_AMOUNT_MISMATCH');
+        });
+
+        it('should revert when attempting to convert without an affiliate account, but with an affiliate fee', async () => {
+            const path = paths.ETH.SMART4;
+            const value = new BN(100);
+
+            await expectRevert(bancorNetwork.convertByPath(path, value, MIN_RETURN, ZERO_ADDRESS, ZERO_ADDRESS,
+                AFFILIATE_FEE, { from: sender, value }), 'ERR_INVALID_AFFILIATE_FEE');
+        });
+
+        it('should revert when attempting to convert with a 0 affiliate fee', async () => {
+            const path = paths.ETH.SMART4;
+            const value = new BN(100);
+
+            await expectRevert(bancorNetwork.convertByPath(path, value, MIN_RETURN, ZERO_ADDRESS, affiliate,
+                0, { from: sender, value }), 'ERR_INVALID_AFFILIATE_FEE');
         });
 
         it('verifies that convert returns a valid amount when buying a liquid token', async () => {
             const path = paths.ETH.SMART4;
             const value = new BN(10000);
 
-            const amount = await bancorNetwork.convert.call(path, value, MIN_RETURN, { from: nonOwner, value });
+            const amount = await bancorNetwork.convert.call(path, value, MIN_RETURN, { from: sender, value });
             expect(amount).to.be.bignumber.equal(new BN(27654));
         });
 
@@ -521,14 +537,14 @@ contract('BancorNetwork', accounts => {
             const path = paths.ETH.SMART4;
             const value = new BN(1000);
 
-            await expectRevert.unspecified(bancorNetwork.convert(path, value, MIN_RETURN, { from: nonOwner }));
+            await expectRevert.unspecified(bancorNetwork.convert(path, value, MIN_RETURN, { from: sender }));
         });
 
         it('should revert when calling convert with ether amount different than the amount sent', async () => {
             const path = paths.ETH.SMART4;
             const value = new BN(1000);
 
-            await expectRevert(bancorNetwork.convert.call(path, value.add(new BN(5)), MIN_RETURN, { from: nonOwner, value }),
+            await expectRevert(bancorNetwork.convert.call(path, value.add(new BN(5)), MIN_RETURN, { from: sender, value }),
                 'ERR_ETH_AMOUNT_MISMATCH');
         });
 
@@ -536,7 +552,7 @@ contract('BancorNetwork', accounts => {
             const invalidPath = [ETH_RESERVE_ADDRESS, smartToken4.address];
             const value = new BN(1000);
 
-            await expectRevert(bancorNetwork.convert(invalidPath, value, MIN_RETURN, { from: nonOwner, value }),
+            await expectRevert(bancorNetwork.convert(invalidPath, value, MIN_RETURN, { from: sender, value }),
                 'ERR_INVALID_PATH');
         });
 
@@ -544,7 +560,7 @@ contract('BancorNetwork', accounts => {
             const invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken4.address];
             const value = new BN(1000);
 
-            await expectRevert(bancorNetwork.convert(invalidPath, value, MIN_RETURN, { from: nonOwner, value }),
+            await expectRevert(bancorNetwork.convert(invalidPath, value, MIN_RETURN, { from: sender, value }),
                 'ERR_INVALID_PATH');
         });
 
@@ -679,7 +695,7 @@ contract('BancorNetwork', accounts => {
             const path = paths.ETH.BNT;
             const value = new BN(1000);
 
-            await expectRevert.unspecified(bancorNetwork.convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: nonOwner }));
+            await expectRevert.unspecified(bancorNetwork.convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender }));
         });
 
         it('should revert when calling convert2 with ether amount different than the amount sent', async () => {
@@ -687,7 +703,7 @@ contract('BancorNetwork', accounts => {
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convert2.call(path, value.add(new BN(2)), MIN_RETURN, ZERO_ADDRESS, 0,
-                { from: nonOwner, value }), 'ERR_ETH_AMOUNT_MISMATCH');
+                { from: sender, value }), 'ERR_ETH_AMOUNT_MISMATCH');
         });
 
         it('should revert when calling convert2 with too-short path', async () => {
@@ -695,7 +711,7 @@ contract('BancorNetwork', accounts => {
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convert2(invalidPath, value, MIN_RETURN, ZERO_ADDRESS, 0,
-                { from: nonOwner, value }), 'ERR_INVALID_PATH');
+                { from: sender, value }), 'ERR_INVALID_PATH');
         });
 
         it('should revert when calling convert2 with even-length path', async () => {
@@ -703,7 +719,7 @@ contract('BancorNetwork', accounts => {
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convert2(invalidPath, value, MIN_RETURN, ZERO_ADDRESS, 0,
-                { from: nonOwner, value }), 'ERR_INVALID_PATH');
+                { from: sender, value }), 'ERR_INVALID_PATH');
         });
 
         it('verifies that claimAndConvertFor2 transfers the converted amount correctly', async () => {
@@ -773,7 +789,7 @@ contract('BancorNetwork', accounts => {
 
             const balanceBeforeTransfer = await bntToken.balanceOf.call(affiliate);
 
-            await bancorNetwork.convert2(path, value, MIN_RETURN, affiliate, AFFILIATE_FEE, { from: nonOwner, value });
+            await bancorNetwork.convert2(path, value, MIN_RETURN, affiliate, AFFILIATE_FEE, { from: sender, value });
 
             const balanceAfterTransfer = await bntToken.balanceOf.call(affiliate);
             expect(balanceAfterTransfer).to.be.bignumber.gt(balanceBeforeTransfer);
