@@ -54,4 +54,25 @@ contract('SafeMath', () => {
 
         await expectRevert(math.testSafeMul.call(x, y), 'ERR_OVERFLOW');
     });
+
+    it('verifies successful division correctly', async function () {
+        const a = new BN(1000);
+        const b = new BN(25);
+
+        expect(await math.testSafeDiv(a, b)).to.be.bignumber.equal(a.div(b));
+    });
+
+    it('divides zero correctly', async function () {
+        const a = new BN('0');
+        const b = new BN('5678');
+
+        expect(await math.testSafeDiv(a, b)).to.be.bignumber.equal('0');
+    });
+
+    it('should revert on on division by zero', async function () {
+        const a = new BN(1234);
+        const b = new BN(0);
+
+        await expectRevert(math.testSafeDiv(a, b), 'ERR_DIVIDE_BY_ZERO');
+    });
 });
