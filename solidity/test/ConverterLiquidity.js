@@ -168,7 +168,7 @@ contract('ConverterLiquidity', accounts => {
 
                     for (let i = 0; i < allowances.length; i++) {
                         const diff = Decimal(allowances[i].toString()).div(reserveAmounts[i].toString());
-                        expect(diff.toNumber()).to.be.gte(0).and.lte(0.004);
+                        expect(diff.toNumber()).to.be.gte(0).and.lte(0.0000005);
                     }
 
                     const actual = balances.map(balance => Decimal(balance.toString()).div(supply.toString()));
@@ -186,7 +186,7 @@ contract('ConverterLiquidity', accounts => {
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                     for (let i = 0; i < balances.length; i++) {
                         const diff = Decimal(state[n - 1].balances[i].toString()).div(Decimal(balances[i].toString()));
-                        expect(diff.toNumber()).to.be.gte(0.99999999).and.lte(1);
+                        expect(diff.toNumber()).to.be.gte(0.999999996).and.lte(1);
                     }
                 }
 

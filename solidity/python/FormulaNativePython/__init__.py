@@ -25,6 +25,11 @@ def fundCost(supply, balance, weights, amount):
     return balance*(((supply+amount)/supply)**(1000000/weights)-1)
 
 
+def fundSupplyAmount(supply, balance, weights, amount):
+    supply, balance, weights, amount = [Decimal(value) for value in vars().values()]
+    return supply*((amount/balance+1)**(weights/1000000)-1)
+
+
 def liquidateReserveAmount(supply, balance, weights, amount):
     supply, balance, weights, amount = [Decimal(value) for value in vars().values()]
     return balance*(1-((supply-amount)/supply)**(1000000/weights))

@@ -4,26 +4,26 @@ import InputGenerator
 
 MINIMUM_VALUE_SUPPLY = 100
 MAXIMUM_VALUE_SUPPLY = 10 ** 34
-SAMPLES_COUNT_SUPPLY = 50
+GROWTH_FACTOR_SUPPLY = 2.5
 
 MINIMUM_VALUE_BALANCE = 100
 MAXIMUM_VALUE_BALANCE = 10 ** 34
-SAMPLES_COUNT_BALANCE = 50
+GROWTH_FACTOR_BALANCE = 2.5
 
 MINIMUM_VALUE_WEIGHTS = 100000
 MAXIMUM_VALUE_WEIGHTS = 1900000
-SAMPLES_COUNT_WEIGHTS = 20
+GROWTH_FACTOR_WEIGHTS = 1.5
 
 MINIMUM_VALUE_AMOUNT = 1
 MAXIMUM_VALUE_AMOUNT = 10 ** 34
-SAMPLES_COUNT_AMOUNT = 50
+GROWTH_FACTOR_AMOUNT = 2.5
 
 
 def Main():
-    rangeSupply = InputGenerator.UniformDistribution(MINIMUM_VALUE_SUPPLY, MAXIMUM_VALUE_SUPPLY, SAMPLES_COUNT_SUPPLY)
-    rangeBalance = InputGenerator.UniformDistribution(MINIMUM_VALUE_BALANCE, MAXIMUM_VALUE_BALANCE, SAMPLES_COUNT_BALANCE)
-    rangeWeights = InputGenerator.UniformDistribution(MINIMUM_VALUE_WEIGHTS, MAXIMUM_VALUE_WEIGHTS, SAMPLES_COUNT_WEIGHTS)
-    rangeAmount = InputGenerator.UniformDistribution(MINIMUM_VALUE_AMOUNT, MAXIMUM_VALUE_AMOUNT, SAMPLES_COUNT_AMOUNT)
+    rangeSupply = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_SUPPLY, MAXIMUM_VALUE_SUPPLY, GROWTH_FACTOR_SUPPLY)
+    rangeBalance = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_BALANCE, MAXIMUM_VALUE_BALANCE, GROWTH_FACTOR_BALANCE)
+    rangeWeights = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_WEIGHTS, MAXIMUM_VALUE_WEIGHTS, GROWTH_FACTOR_WEIGHTS)
+    rangeAmount = InputGenerator.ExponentialDistribution(MINIMUM_VALUE_AMOUNT, MAXIMUM_VALUE_AMOUNT, GROWTH_FACTOR_AMOUNT)
 
     testNum = 0
     numOfTests = len(rangeSupply) * len(rangeBalance) * len(rangeWeights) * len(rangeAmount)
@@ -44,7 +44,7 @@ def Main():
                     testNum += 1
                     if True:
                         try:
-                            gas = FormulaContractAddr.fundCost(supply, balance, weights, amount)
+                            gas = FormulaContractAddr.fundSupplyAmount(supply, balance, weights, amount)
                             minGas = min(minGas, gas)
                             maxGas = max(maxGas, gas)
                             totalGas += gas

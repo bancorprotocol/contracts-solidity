@@ -12,6 +12,7 @@
   * `python RandomTestPower.py`
   * `python RandomTestPurchase.py`
   * `python RandomTestSale.py`
+  * `python RandomTestTradeCC.py`
   * `python RandomTestTradeCPS.py`
   * `python RandomTestTradeFSC.py`
   * `python RandomTestTradeFSPS.py`
