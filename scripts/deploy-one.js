@@ -7,7 +7,7 @@ const PRIVATE_KEY = process.argv[3];
 const CONTRACT_NAME = process.argv[4];
 const CONTRACT_ARGS = process.argv.slice(5);
 
-async function scan (message) {
+const scan = async (message) => {
     process.stdout.write(message);
     return await new Promise((resolve, reject) => {
         process.stdin.resume();
@@ -16,9 +16,9 @@ async function scan (message) {
             resolve(data.toString().trim());
         });
     });
-}
+};
 
-async function getGasPrice (web3) {
+const getGasPrice = async (web3) => {
     while (true) {
         const nodeGasPrice = await web3.eth.getGasPrice();
         const userGasPrice = await scan(`Enter gas-price or leave empty to use ${nodeGasPrice}: `);
@@ -32,9 +32,9 @@ async function getGasPrice (web3) {
 
         console.log('Illegal gas-price');
     }
-}
+};
 
-async function getTransactionReceipt (web3) {
+const getTransactionReceipt = async (web3) => {
     while (true) {
         const hash = await scan('Enter transaction-hash or leave empty to retry: ');
         if (/^0x([0-9A-Fa-f]{64})$/.test(hash)) {
@@ -49,9 +49,9 @@ async function getTransactionReceipt (web3) {
             return null;
         }
     }
-}
+};
 
-async function send (web3, account, transaction) {
+const send = async (web3, account, transaction) => {
     while (true) {
         try {
             const options = {
@@ -72,9 +72,9 @@ async function send (web3, account, transaction) {
             }
         }
     }
-}
+};
 
-async function run () {
+const run = async () => {
     const web3 = new Web3(NODE_ADDRESS);
     const account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
     const contractPath = path.resolve(__dirname, '../solidity/build', CONTRACT_NAME);
@@ -100,6 +100,6 @@ async function run () {
     if (web3.currentProvider.constructor.name === 'WebsocketProvider') {
         web3.currentProvider.connection.close();
     }
-}
+};
 
 run();

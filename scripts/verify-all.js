@@ -22,7 +22,7 @@ const input = JSON.parse(fs.readFileSync(INPUT_FILE, { encoding: 'utf8' }));
 //      }
 //  }
 
-function run () {
+const run = () => {
     for (const pathName of getPathNames('contracts')) {
         const contractName = path.basename(pathName, '.sol');
         for (const contractId of Object.keys(input.contracts)) {
@@ -31,9 +31,9 @@ function run () {
             }
         }
     }
-}
+};
 
-function getPathNames (dirName) {
+const getPathNames = (dirName) => {
     let pathNames = [];
     for (const fileName of fs.readdirSync(WORK_DIR + '/' + dirName)) {
         if (fs.statSync(WORK_DIR + '/' + dirName + '/' + fileName).isDirectory()) {
@@ -43,14 +43,14 @@ function getPathNames (dirName) {
         }
     }
     return pathNames;
-}
+};
 
-function getSourceCode (pathName) {
+const getSourceCode = (pathName) => {
     const result = spawnSync('node', [NODE_DIR + '/truffle-flattener/index.js', pathName], { cwd: WORK_DIR });
     return result.output.toString().slice(1, -1);
-}
+};
 
-function post (contractId, sourceCode) {
+const post = (contractId, sourceCode) => {
     console.log(contractId + ': sending verification request...');
     request.post({
         url: 'https://' + input.network + '.etherscan.io/api',
@@ -79,9 +79,9 @@ function post (contractId, sourceCode) {
             }
         }
     });
-}
+};
 
-function get (contractId, guid) {
+const get = (contractId, guid) => {
     console.log(contractId + ': checking verification status...');
     request.get(
         'https://' + input.network + '.etherscan.io/api?module=contract&action=checkverifystatus&guid=' + guid,
@@ -98,14 +98,14 @@ function get (contractId, guid) {
             }
         }
     );
-}
+};
 
-function parse (str) {
+const parse = (str) => {
     try {
         return JSON.parse(str);
     } catch (error) {
         return {};
     }
-}
+};
 
 run();

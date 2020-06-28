@@ -6,16 +6,16 @@ const fs = require('fs');
 const path = require('path');
 const spawnSync = require('child_process').spawnSync;
 
-function run () {
+const run = () => {
     for (const pathName of getPathNames('contracts')) {
         const contractName = path.basename(pathName, '.sol');
         if (CONTRACT_NAME === contractName) {
             console.log(getSourceCode(pathName));
         }
     }
-}
+};
 
-function getPathNames (dirName) {
+const getPathNames = (dirName) => {
     let pathNames = [];
     for (const fileName of fs.readdirSync(WORK_DIR + '/' + dirName)) {
         if (fs.statSync(WORK_DIR + '/' + dirName + '/' + fileName).isDirectory()) {
@@ -25,13 +25,13 @@ function getPathNames (dirName) {
         }
     }
     return pathNames;
-}
+};
 
-function getSourceCode (pathName) {
+const getSourceCode = (pathName) => {
     const result = spawnSync('node', [NODE_DIR + '/truffle-flattener/index.js', pathName], {
         cwd: WORK_DIR
     });
     return result.output.toString().slice(1, -1);
-}
+};
 
 run();

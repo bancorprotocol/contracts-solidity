@@ -169,7 +169,7 @@ contract('ConverterLiquidity', accounts => {
             }
         }
 
-        function test (hasETH, ...weights) {
+        const test = (hasETH, ...weights) => {
             it(`hasETH = ${hasETH}, weights = [${weights.join('%, ')}%]`, async () => {
                 const [converter, smartToken] = await initLiquidityPool(hasETH, ...weights);
                 const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
@@ -219,7 +219,7 @@ contract('ConverterLiquidity', accounts => {
                     expect(balances[i]).to.be.bignumber.equal(new BN(0));
                 }
             });
-        }
+        };
     });
 
     const approve = async (reserveToken, converter, amount) => {

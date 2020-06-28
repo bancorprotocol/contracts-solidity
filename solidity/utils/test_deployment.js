@@ -10,15 +10,15 @@ const ARTIFACTS_DIR = path.resolve(__dirname, '../build/');
 
 const MIN_GAS_LIMIT = 100000;
 
-function get () {
+const get = () => {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, { encoding: 'utf8' }));
-}
+};
 
-function set (record) {
+const set = (record) => {
     fs.writeFileSync(CFG_FILE_NAME, JSON.stringify({ ...get(), ...record }, null, 4));
-}
+};
 
-async function scan (message) {
+const scan = async (message) => {
     process.stdout.write(message);
     return await new Promise((resolve, reject) => {
         process.stdin.resume();
@@ -27,9 +27,9 @@ async function scan (message) {
             resolve(data.toString().trim());
         });
     });
-}
+};
 
-async function getGasPrice (web3) {
+const getGasPrice = async (web3) => {
     while (true) {
         const nodeGasPrice = await web3.eth.getGasPrice();
         const userGasPrice = await scan(`Enter gas-price or leave empty to use ${nodeGasPrice}: `);
@@ -41,9 +41,9 @@ async function getGasPrice (web3) {
         }
         console.log('Illegal gas-price');
     }
-}
+};
 
-async function getTransactionReceipt (web3) {
+const getTransactionReceipt = async (web3) => {
     while (true) {
         const hash = await scan('Enter transaction-hash or leave empty to retry: ');
         if (/^0x([0-9A-Fa-f]{64})$/.test(hash)) {
@@ -58,9 +58,9 @@ async function getTransactionReceipt (web3) {
             return null;
         }
     }
-}
+};
 
-async function send (web3, account, gasPrice, transaction, value = 0) {
+const send = async (web3, account, gasPrice, transaction, value = 0) => {
     while (true) {
         try {
             const options = {
@@ -81,9 +81,9 @@ async function send (web3, account, gasPrice, transaction, value = 0) {
             }
         }
     }
-}
+};
 
-async function deploy (web3, account, gasPrice, contractId, contractName, contractArgs) {
+const deploy = async (web3, account, gasPrice, contractId, contractName, contractArgs) => {
     if (get()[contractId] === undefined) {
         const abi = fs.readFileSync(ARTIFACTS_DIR + contractName + '.abi', { encoding: 'utf8' });
         const bin = fs.readFileSync(ARTIFACTS_DIR + contractName + '.bin', { encoding: 'utf8' });
@@ -96,14 +96,14 @@ async function deploy (web3, account, gasPrice, contractId, contractName, contra
         set({ [contractId]: { name: contractName, addr: receipt.contractAddress, args: args } });
     }
     return deployed(web3, contractName, get()[contractId].addr);
-}
+};
 
-function deployed (web3, contractName, contractAddr) {
+const deployed = (web3, contractName, contractAddr) => {
     const abi = fs.readFileSync(ARTIFACTS_DIR + contractName + '.abi', { encoding: 'utf8' });
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
-}
+};
 
-async function run () {
+const run = async () => {
     const web3 = new Web3(NODE_ADDRESS);
 
     const gasPrice = await getGasPrice(web3);
@@ -187,6 +187,6 @@ async function run () {
     if (web3.currentProvider.constructor.name === 'WebsocketProvider') {
         web3.currentProvider.connection.close();
     }
-}
+};
 
 run();
