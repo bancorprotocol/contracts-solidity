@@ -60,7 +60,7 @@ contract('ConverterRegistry', () => {
         }
     };
 
-    describe('add converters', function () {
+    describe('add converters', () => {
         const testAdd = async (converter) => {
             const res = await converterRegistry.addConverter(converter.address);
 
