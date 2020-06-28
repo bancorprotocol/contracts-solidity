@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { expectRevert } = require('@openzeppelin/test-helpers');
+const { expectRevert, BN } = require('@openzeppelin/test-helpers');
 
 const { registry } = require('./helpers/Constants');
 const ContractRegistry = artifacts.require('ContractRegistry');
@@ -52,8 +52,16 @@ contract('ConverterRegistryData', accounts => {
 
     describe('smart tokens basic verification', () => {
         it('should add a smart token if it does not exists', async () => {
+            expect(await converterRegistry.isSmartToken.call(address1)).to.be.false();
+            expect(await converterRegistry.getSmartTokens.call()).not.to.include(address1);
+            expect(await converterRegistry.getSmartTokenCount.call()).to.be.bignumber.equal(new BN(0));
+
             await converterRegistry.addSmartToken(address1);
-            expect(await converterRegistry.isSmartToken(address1)).to.be.true();
+
+            expect(await converterRegistry.isSmartToken.call(address1)).to.be.true();
+            expect(await converterRegistry.getSmartTokens.call()).to.include(address1);
+            expect(await converterRegistry.getSmartToken.call(0)).to.eql(address1);
+            expect(await converterRegistry.getSmartTokenCount.call()).to.be.bignumber.equal(new BN(1));
         });
 
         it('should revert if adding a smart token that already exists', async () => {
@@ -63,8 +71,17 @@ contract('ConverterRegistryData', accounts => {
 
         it('should remove a smart token', async () => {
             await converterRegistry.addSmartToken(address1);
+
+            expect(await converterRegistry.isSmartToken.call(address1)).to.be.true();
+            expect(await converterRegistry.getSmartTokens.call()).to.include(address1);
+            expect(await converterRegistry.getSmartToken.call(0)).to.eql(address1);
+            expect(await converterRegistry.getSmartTokenCount.call()).to.be.bignumber.equal(new BN(1));
+
             await converterRegistry.removeSmartToken(address1);
-            expect(await converterRegistry.isSmartToken(address1)).to.be.false();
+
+            expect(await converterRegistry.isSmartToken.call(address1)).to.be.false();
+            expect(await converterRegistry.getSmartTokens.call()).not.to.include(address1);
+            expect(await converterRegistry.getSmartTokenCount.call()).to.be.bignumber.equal(new BN(0));
         });
 
         it("should revert if removing a smart token that doesn't not exist", async () => {
@@ -74,8 +91,16 @@ contract('ConverterRegistryData', accounts => {
 
     describe('liquidity pools basic verification', () => {
         it('should add a liquidity pool if it does not exists', async () => {
+            expect(await converterRegistry.isLiquidityPool(address1)).to.be.false();
+            expect(await converterRegistry.getLiquidityPools.call()).not.to.include(address1);
+            expect(await converterRegistry.getLiquidityPoolCount.call()).to.be.bignumber.equal(new BN(0));
+
             await converterRegistry.addLiquidityPool(address1);
+
             expect(await converterRegistry.isLiquidityPool(address1)).to.be.true();
+            expect(await converterRegistry.getLiquidityPools.call()).to.include(address1);
+            expect(await converterRegistry.getLiquidityPool.call(0)).to.eql(address1);
+            expect(await converterRegistry.getLiquidityPoolCount.call()).to.be.bignumber.equal(new BN(1));
         });
 
         it('should revert if adding a liquidity pool that already exists', async () => {
@@ -85,8 +110,15 @@ contract('ConverterRegistryData', accounts => {
 
         it('should remove a liquidity pool', async () => {
             await converterRegistry.addLiquidityPool(address1);
+            expect(await converterRegistry.isLiquidityPool(address1)).to.be.true();
+            expect(await converterRegistry.getLiquidityPools.call()).to.include(address1);
+            expect(await converterRegistry.getLiquidityPool.call(0)).to.eql(address1);
+            expect(await converterRegistry.getLiquidityPoolCount.call()).to.be.bignumber.equal(new BN(1));
+
             await converterRegistry.removeLiquidityPool(address1);
             expect(await converterRegistry.isLiquidityPool(address1)).to.be.false();
+            expect(await converterRegistry.getLiquidityPools.call()).not.to.include(address1);
+            expect(await converterRegistry.getLiquidityPoolCount.call()).to.be.bignumber.equal(new BN(0));
         });
 
         it("should revert if removing a liquidity pool that doesn't not exist", async () => {
@@ -96,8 +128,19 @@ contract('ConverterRegistryData', accounts => {
 
     describe('convertible tokens basic verification', () => {
         it('should add a convertible token if it does not exists', async () => {
+            expect(await converterRegistry.isConvertibleToken(address1)).to.be.false();
+            expect(await converterRegistry.getConvertibleTokens.call()).not.to.include(address1);
+            expect(await converterRegistry.getConvertibleTokenCount.call()).to.be.bignumber.equal(new BN(0));
+            expect(await converterRegistry.isConvertibleTokenSmartToken.call(address1, address2)).to.be.false();
+
             await converterRegistry.addConvertibleToken(address1, address2);
+
             expect(await converterRegistry.isConvertibleToken(address1)).to.be.true();
+            expect(await converterRegistry.getConvertibleTokens.call()).to.include(address1);
+            expect(await converterRegistry.getConvertibleToken.call(0)).to.eql(address1);
+            expect(await converterRegistry.getConvertibleTokenCount.call()).to.be.bignumber.equal(new BN(1));
+            expect(await converterRegistry.isConvertibleTokenSmartToken.call(address1, address2)).to.be.true();
+            expect(await converterRegistry.getConvertibleTokenSmartToken.call(address1, 0)).to.be.equal(address2);
         });
 
         it('should revert if adding a convertible token that already exists', async () => {
@@ -107,8 +150,18 @@ contract('ConverterRegistryData', accounts => {
 
         it('should remove a convertible token', async () => {
             await converterRegistry.addConvertibleToken(address1, address2);
+            expect(await converterRegistry.isConvertibleToken(address1)).to.be.true();
+            expect(await converterRegistry.getConvertibleTokens.call()).to.include(address1);
+            expect(await converterRegistry.getConvertibleToken.call(0)).to.eql(address1);
+            expect(await converterRegistry.getConvertibleTokenCount.call()).to.be.bignumber.equal(new BN(1));
+            expect(await converterRegistry.isConvertibleTokenSmartToken.call(address1, address2)).to.be.true();
+            expect(await converterRegistry.getConvertibleTokenSmartToken.call(address1, 0)).to.be.equal(address2);
+
             await converterRegistry.removeConvertibleToken(address1, address2);
             expect(await converterRegistry.isConvertibleToken(address1)).to.be.false();
+            expect(await converterRegistry.getConvertibleTokens.call()).not.to.include(address1);
+            expect(await converterRegistry.getConvertibleTokenCount.call()).to.be.bignumber.equal(new BN(0));
+            expect(await converterRegistry.isConvertibleTokenSmartToken.call(address1, address2)).to.be.false();
         });
 
         it("should revert if removing a convertible token that doesn't not exist", async () => {
@@ -177,6 +230,7 @@ contract('ConverterRegistryData', accounts => {
             const convertibleTokens = await converterRegistry.getConvertibleTokens();
             const smartTokens = await Promise.all(convertibleTokens.map(convertibleToken =>
                 converterRegistry.getConvertibleTokenSmartTokens(convertibleToken)));
+
             expect({ convertibleTokens, smartTokens }).to.deep.eql(currentState);
         };
 
