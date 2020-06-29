@@ -520,10 +520,18 @@ contract('LiquidityPoolV1Converter', accounts => {
         let converter;
         let reserveToken1;
         let reserveToken2;
-        let amounts = [[1000, 1200], [200, 240], [2000, 2400], [20000, 22000], [20000, 26000], [100000, 120000]];
+
+        const amounts = [
+            [  1000,   1200],
+            [   200,    240],
+            [  2000,   2400],
+            [ 20000,  22000],
+            [ 20000,  26000],
+            [100000, 120000],
+        ];
 
         before(async () => {
-            let token = await SmartToken.new('Token', 'TKN', 0); 
+            const token = await SmartToken.new('Token', 'TKN', 0); 
             converter = await LiquidityPoolV1Converter.new(token.address, contractRegistry.address, 0)
             reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
             reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, 1000000000);
@@ -538,14 +546,14 @@ contract('LiquidityPoolV1Converter', accounts => {
                 await approve(reserveToken1, accounts[0], converter.address, amount1);
                 await approve(reserveToken2, accounts[0], converter.address, amount2);
                 await converter.addLiquidity([reserveToken1.address, reserveToken2.address], [amount1, amount2], 1);
-                let balance1 = await reserveToken1.balanceOf(converter.address);
-                let balance2 = await reserveToken2.balanceOf(converter.address);
-                let a1b2 = web3.toBigNumber(amount1).mul(balance2);
-                let a2b1 = web3.toBigNumber(amount2).mul(balance1);
-                let expected1 = a1b2.lt(a2b1) ? web3.toBigNumber(0) : a1b2.sub(a2b1).div(balance2).toFixed(0, web3.BigNumber.ROUND_CEIL);
-                let expected2 = a2b1.lt(a1b2) ? web3.toBigNumber(0) : a2b1.sub(a1b2).div(balance1).toFixed(0, web3.BigNumber.ROUND_FLOOR);
-                let actual1 = await reserveToken1.allowance(accounts[0], converter.address);
-                let actual2 = await reserveToken2.allowance(accounts[0], converter.address);
+                const balance1 = await reserveToken1.balanceOf(converter.address);
+                const balance2 = await reserveToken2.balanceOf(converter.address);
+                const a1b2 = web3.toBigNumber(amount1).mul(balance2);
+                const a2b1 = web3.toBigNumber(amount2).mul(balance1);
+                const expected1 = a1b2.lt(a2b1) ? web3.toBigNumber(0) : a1b2.sub(a2b1).div(balance2).toFixed(0, web3.BigNumber.ROUND_CEIL);
+                const expected2 = a2b1.lt(a1b2) ? web3.toBigNumber(0) : a2b1.sub(a1b2).div(balance1).toFixed(0, web3.BigNumber.ROUND_FLOOR);
+                const actual1 = await reserveToken1.allowance(accounts[0], converter.address);
+                const actual2 = await reserveToken2.allowance(accounts[0], converter.address);
                 assert(actual1.equals(expected1), `expected1 = ${expected1}, actual1 = ${actual1}`);
                 assert(actual2.equals(expected2), `expected2 = ${expected2}, actual2 = ${actual2}`);
             });
@@ -569,7 +577,7 @@ contract('LiquidityPoolV1Converter', accounts => {
 
         for (const amounts of addAmounts) {
             for (const percents of removePercents) {
-                it(`amounts = ${amounts}, percents = ${percents}`, async () => {
+                it(`(amounts = ${amounts}, percents = ${percents})`, async () => {
                     const token = await SmartToken.new('Token', 'TKN', 0); 
                     const converter = await LiquidityPoolV1Converter.new(token.address, contractRegistry.address, 0)
                     const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
