@@ -551,4 +551,52 @@ contract('LiquidityPoolV1Converter', accounts => {
             });
         }
     });
+
+    describe('verifies no gain by adding/removing liquidity', () => {
+        const addAmounts = [
+            [1000, 1000],
+            [1000, 2000],
+            [2000, 1000],
+        ];
+
+        const removePercents = [
+            [100],
+            [50, 50],
+            [25, 75],
+            [75, 25],
+            [10, 20, 30, 40],
+        ];
+
+        for (const amounts of addAmounts) {
+            for (const percents of removePercents) {
+                it(`amounts = ${amounts}, percents = ${percents}`, async () => {
+                    const token = await SmartToken.new('Token', 'TKN', 0); 
+                    const converter = await LiquidityPoolV1Converter.new(token.address, contractRegistry.address, 0)
+                    const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
+                    const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, 1000000000);
+                    await converter.addReserve(reserveToken1.address, 500000);
+                    await converter.addReserve(reserveToken2.address, 500000);
+                    await token.transferOwnership(converter.address);
+                    await converter.acceptTokenOwnership();
+                    let lastAmount = web3.toBigNumber(0);
+                    for (const amount of amounts) {
+                        await reserveToken1.transfer(accounts[1], amount, {from: accounts[0]});
+                        await reserveToken2.transfer(accounts[1], amount, {from: accounts[0]});
+                        await approve(reserveToken1, accounts[1], converter.address, amount);
+                        await approve(reserveToken2, accounts[1], converter.address, amount);
+                        await converter.addLiquidity([reserveToken1.address, reserveToken2.address], [amount, amount], 1, {from: accounts[1]});
+                        const balance = await token.balanceOf(accounts[1]);
+                        lastAmount = balance.sub(lastAmount);
+                    }
+                    for (const percent of percents) {
+                        await converter.removeLiquidity(lastAmount.mul(percent).div(100), [reserveToken1.address, reserveToken2.address], [1, 1], {from: accounts[1]});
+                    }
+                    const balance1 = await reserveToken1.balanceOf(accounts[1]);
+                    const balance2 = await reserveToken2.balanceOf(accounts[1]);
+                    assert.equal(balance1.toFixed(), amounts[1]);
+                    assert.equal(balance2.toFixed(), amounts[1]);
+                });
+            }
+        }
+    });
 });
