@@ -158,7 +158,7 @@ def constructor():
 
 '''
     @dev given a token supply, reserve balance, weight and a deposit amount (in the reserve token),
-    calculates the rate for a given conversion (in the main token)
+    calculates the target amount for a given conversion (in the main token)
 
     Formula:
     return = _supply * ((1 + _amount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
@@ -166,11 +166,11 @@ def constructor():
     @param _supply          smart token supply
     @param _reserveBalance  reserve balance
     @param _reserveWeight   reserve weight, represented in ppm (1-1000000)
-    @param _amount          amount of reserve tokens to get the rate for
+    @param _amount          amount of reserve tokens to get the target amount for
 
     @return smart token amount
 '''
-def purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount):
+def purchaseTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount):
     # validate input
     require(_supply > 0, "ERR_INVALID_SUPPLY");
     require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -191,7 +191,7 @@ def purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount):
 
 '''
     @dev given a token supply, reserve balance, weight and a sell amount (in the main token),
-    calculates the rate for a given conversion (in the reserve token)
+    calculates the target amount for a given conversion (in the reserve token)
 
     Formula:
     return = _reserveBalance * (1 - (1 - _amount / _supply) ^ (1000000 / _reserveWeight))
@@ -199,11 +199,11 @@ def purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount):
     @param _supply          smart token supply
     @param _reserveBalance  reserve balance
     @param _reserveWeight   reserve weight, represented in ppm (1-1000000)
-    @param _amount          amount of smart tokens to get the rate for
+    @param _amount          amount of smart tokens to get the target amount for
 
     @return reserve token amount
 '''
-def saleRate(_supply, _reserveBalance, _reserveWeight, _amount):
+def saleTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount):
     # validate input
     require(_supply > 0, "ERR_INVALID_SUPPLY");
     require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -230,7 +230,7 @@ def saleRate(_supply, _reserveBalance, _reserveWeight, _amount):
 
 '''
     @dev given two reserve balances/weights and a sell amount (in the first reserve token),
-    calculates the rate for a conversion from the source reserve token to the target reserve token
+    calculates the target amount for a conversion from the source reserve token to the target reserve token
 
     Formula:
     return = _targetReserveBalance * (1 - (_sourceReserveBalance / (_sourceReserveBalance + _amount)) ^ (_sourceReserveWeight / _targetReserveWeight))
@@ -243,7 +243,7 @@ def saleRate(_supply, _reserveBalance, _reserveWeight, _amount):
 
     @return target reserve amount
 '''
-def crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount):
+def crossReserveTargetAmount(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount):
     # validate input
     require(_sourceReserveBalance > 0 and _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
     require(_sourceReserveWeight > 0 and _sourceReserveWeight <= MAX_WEIGHT and
@@ -293,6 +293,39 @@ def fundCost(_supply, _reserveBalance, _reserveRatio, _amount):
     return temp - _reserveBalance;
 
 '''
+    @dev given a smart token supply, reserve balance, reserve ratio and an amount of reserve tokens to fund with,
+    calculates the amount of smart tokens received for purchasing with the given amount of reserve tokens
+
+    Formula:
+    return = _supply * ((_amount / _reserveBalance + 1) ^ (_reserveRatio / MAX_WEIGHT) - 1)
+
+    @param _supply          smart token supply
+    @param _reserveBalance  reserve balance
+    @param _reserveRatio    reserve ratio, represented in ppm (2-2000000)
+    @param _amount          amount of reserve tokens to fund with
+
+    @return smart token amount
+'''
+def fundSupplyAmount(_supply, _reserveBalance, _reserveRatio, _amount):
+    # validate input
+    require(_supply > 0, "ERR_INVALID_SUPPLY");
+    require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+    require(_reserveRatio > 1 and _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
+
+    # special case for 0 amount
+    if (_amount == 0):
+        return 0;
+
+    # special case if the reserve ratio = 100%
+    if (_reserveRatio == MAX_WEIGHT):
+        return mul(_amount, _supply) // _reserveBalance;
+
+    baseN = add(_reserveBalance, _amount);
+    (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_WEIGHT);
+    temp = mul(_supply, result) >> precision;
+    return temp - _supply;
+
+'''
     @dev given a smart token supply, reserve balance, reserve ratio and an amount of smart tokens to liquidate,
     calculates the amount of reserve tokens received for selling the given amount of smart tokens
 
@@ -306,7 +339,7 @@ def fundCost(_supply, _reserveBalance, _reserveRatio, _amount):
 
     @return reserve token amount
 '''
-def liquidateRate(_supply, _reserveBalance, _reserveRatio, _amount):
+def liquidateReserveAmount(_supply, _reserveBalance, _reserveRatio, _amount):
     # validate input
     require(_supply > 0, "ERR_INVALID_SUPPLY");
     require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -430,7 +463,6 @@ def findPositionInMaxExpArray(_x):
         return lo;
 
     require(False);
-    return 0;
 
 '''
     @dev this function can be auto-generated by the script 'PrintFunctionGeneralExp.py'.
@@ -564,25 +596,25 @@ def optimalExp(x):
     @dev deprecated, backward compatibility
 '''
 def calculatePurchaseReturn(_supply, _reserveBalance, _reserveWeight, _amount):
-    return purchaseRate(_supply, _reserveBalance, _reserveWeight, _amount);
+    return purchaseTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount);
 
 '''
     @dev deprecated, backward compatibility
 '''
 def calculateSaleReturn(_supply, _reserveBalance, _reserveWeight, _amount):
-    return saleRate(_supply, _reserveBalance, _reserveWeight, _amount);
+    return saleTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount);
 
 '''
     @dev deprecated, backward compatibility
 '''
 def calculateCrossReserveReturn(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount):
-    return crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
+    return crossReserveTargetAmount(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
 
 '''
     @dev deprecated, backward compatibility
 '''
 def calculateCrossConnectorReturn(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount):
-    return crossReserveRate(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
+    return crossReserveTargetAmount(_sourceReserveBalance, _sourceReserveWeight, _targetReserveBalance, _targetReserveWeight, _amount);
 
 '''
     @dev deprecated, backward compatibility
@@ -594,7 +626,7 @@ def calculateFundCost(_supply, _reserveBalance, _reserveRatio, _amount):
     @dev deprecated, backward compatibility
 '''
 def calculateLiquidateReturn(_supply, _reserveBalance, _reserveRatio, _amount):
-    return liquidateRate(_supply, _reserveBalance, _reserveRatio, _amount);
+    return liquidateReserveAmount(_supply, _reserveBalance, _reserveRatio, _amount);
 
 
 def add(x, y):

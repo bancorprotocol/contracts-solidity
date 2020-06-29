@@ -163,23 +163,23 @@ contract('LiquidityPoolConverter', accounts => {
                 await utils.catchRevert(converter.acceptTokenOwnership());
             });
 
-            it('verifies that rateAndFee returns a valid amount', async () => {
+            it('verifies that targetAmountAndFee returns a valid amount', async () => {
                 let converter = await initConverter(accounts, true, isETHReserve);
-                let returnAmount = (await converter.rateAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, 500))[0];
+                let returnAmount = (await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, 500))[0];
                 assert.isNumber(returnAmount.toNumber());
                 assert.notEqual(returnAmount.toNumber(), 0);
             });
 
-            it('should throw when attempting to get the rate between the pool token and a reserve', async () => {
+            it('should throw when attempting to get the target amount between the pool token and a reserve', async () => {
                 let converter = await initConverter(accounts, true, isETHReserve);
 
-                await utils.catchRevert(converter.rateAndFee.call(tokenAddress, getReserve1Address(isETHReserve), 500));
+                await utils.catchRevert(converter.targetAmountAndFee.call(tokenAddress, getReserve1Address(isETHReserve), 500));
             });
 
-            it('should throw when attempting to get the rate while the converter is not active', async () => {
+            it('should throw when attempting to get the target amount while the converter is not active', async () => {
                 let converter = await initConverter(accounts, false, isETHReserve);
 
-                await utils.catchRevert(converter.rateAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, 500));
+                await utils.catchRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, 500));
             });
 
             it('should throw when attempting to convert with 0 minimum requested amount', async () => {
@@ -242,10 +242,10 @@ contract('LiquidityPoolConverter', accounts => {
                 await utils.catchRevert(bancorNetwork.convertByPath([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], 500, 1, accounts[2], utils.zeroAddress, 0, { from: accounts[1], value }));
             });
 
-            it('verifies that rateAndFee returns the same amount as converting', async () => {
+            it('verifies that targetAmountAndFee returns the same amount as converting', async () => {
                 let converter = await initConverter(accounts, true, isETHReserve);
                 let watcher = converter.Conversion();
-                let returnAmount = (await converter.rateAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, 500))[0];
+                let returnAmount = (await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, 500))[0];
 
                 let value = 0;
                 if (isETHReserve)

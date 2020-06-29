@@ -44,7 +44,7 @@ def Main():
                     testNum += 1
                     if True:
                         try:
-                            gas = FormulaContractAddr.fundCost(supply, balance, weights, amount)
+                            gas = FormulaContractAddr.fundSupplyAmount(supply, balance, weights, amount)
                             minGas = min(minGas, gas)
                             maxGas = max(maxGas, gas)
                             totalGas += gas

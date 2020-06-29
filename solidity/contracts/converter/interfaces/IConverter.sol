@@ -12,7 +12,7 @@ contract IConverter is IOwned {
     function anchor() public view returns (IConverterAnchor) {this;}
     function isActive() public view returns (bool);
 
-    function rateAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256);
+    function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256);
     function convert(IERC20Token _sourceToken,
                      IERC20Token _targetToken,
                      uint256 _amount,

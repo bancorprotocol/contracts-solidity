@@ -100,16 +100,16 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev returns the expected rate of converting one reserve to another along with the fee
+      * @dev returns the expected target amount of converting one reserve to another along with the fee
       *
       * @param _sourceToken contract address of the source reserve token
       * @param _targetToken contract address of the target reserve token
       * @param _amount      amount of tokens received from the user
       *
-      * @return expected rate
+      * @return expected target amount
       * @return expected fee
     */
-    function rateAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount)
+    function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount)
         public
         view
         active
@@ -120,7 +120,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         // validate input
         require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET");
 
-        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).crossReserveRate(
+        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).crossReserveTargetAmount(
             reserveBalance(_sourceToken),
             reserves[_sourceToken].weight,
             reserveBalance(_targetToken),
@@ -149,11 +149,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         internal
         returns (uint256)
     {
-        // get expected rate and fee
-        (uint256 amount, uint256 fee) = rateAndFee(_sourceToken, _targetToken, _amount);
+        // get expected target amount and fee
+        (uint256 amount, uint256 fee) = targetAmountAndFee(_sourceToken, _targetToken, _amount);
 
         // ensure that the trade gives something in return
-        require(amount != 0, "ERR_ZERO_RATE");
+        require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
 
         // ensure that the trade won't deplete the reserve balance
         uint256 targetReserveBalance = reserveBalance(_targetToken);
@@ -420,13 +420,14 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
 
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-        uint256 amount = getMinShare(_totalSupply, _reserveTokens, _reserveAmounts);
+        uint256 amount = getMinShare(formula, _totalSupply, _reserveTokens, _reserveAmounts);
+        uint256 newPoolTokenSupply = _totalSupply.add(amount);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
             uint256 reserveAmount = formula.fundCost(_totalSupply, rsvBalance, reserveRatio, amount);
-            require(reserveAmount > 0, "ERR_ZERO_RATE");
+            require(reserveAmount > 0, "ERR_ZERO_TARGET_AMOUNT");
             assert(reserveAmount <= _reserveAmounts[i]);
 
             // transfer each one of the reserve amounts from the user to the pool
@@ -437,8 +438,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
             uint256 newReserveBalance = rsvBalance.add(reserveAmount);
             reserves[reserveToken].balance = newReserveBalance;
-
-            uint256 newPoolTokenSupply = _totalSupply.add(amount);
 
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
@@ -464,12 +463,13 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         syncReserveBalances();
 
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+        uint256 newPoolTokenSupply = _totalSupply.sub(_amount);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
-            uint256 reserveAmount = formula.liquidateRate(_totalSupply, rsvBalance, reserveRatio, _amount);
-            require(reserveAmount >= _reserveMinReturnAmounts[i], "ERR_ZERO_RATE");
+            uint256 reserveAmount = formula.liquidateReserveAmount(_totalSupply, rsvBalance, reserveRatio, _amount);
+            require(reserveAmount >= _reserveMinReturnAmounts[i], "ERR_ZERO_TARGET_AMOUNT");
 
             uint256 newReserveBalance = rsvBalance.sub(reserveAmount);
             reserves[reserveToken].balance = newReserveBalance;
@@ -480,8 +480,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             else
                 safeTransfer(reserveToken, msg.sender, reserveAmount);
 
-            uint256 newPoolTokenSupply = _totalSupply.sub(_amount);
-
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
@@ -490,18 +488,13 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         }
     }
 
-    function getMinShare(uint256 _totalSupply, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts) private view returns (uint256) {
-        uint256 minShare = getShare(_totalSupply, reserves[_reserveTokens[0]].balance, _reserveAmounts[0]);
+    function getMinShare(IBancorFormula formula, uint256 _totalSupply, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts) private view returns (uint256) {
+        uint256 minIndex = 0;
         for (uint256 i = 1; i < _reserveTokens.length; i++) {
-            uint256 share = getShare(_totalSupply, reserves[_reserveTokens[i]].balance, _reserveAmounts[i]);
-            if (minShare > share)
-                minShare = share;
+            if (_reserveAmounts[i].mul(reserves[_reserveTokens[minIndex]].balance) < _reserveAmounts[minIndex].mul(reserves[_reserveTokens[i]].balance))
+                minIndex = i;
         }
-        return minShare;
-    }
-
-    function getShare(uint256 _totalSupply, uint256 _reserveBalance, uint256 _reserveAmount) private view returns (uint256) {
-        return _totalSupply.mul(_reserveAmount).mul(reserveRatio).div(_reserveBalance.add(_reserveAmount).mul(WEIGHT_RESOLUTION));
+        return formula.fundSupplyAmount(_totalSupply, reserves[_reserveTokens[minIndex]].balance, reserveRatio, _reserveAmounts[minIndex]);
     }
 
     /**

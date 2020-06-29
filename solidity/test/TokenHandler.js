@@ -1,6 +1,6 @@
 const utils = require('./helpers/Utils');
 
-const TokenHandler = artifacts.require('TokenHandler');
+const TokenHandler = artifacts.require('TestTokenHandler');
 const TestStandardToken = artifacts.require('TestStandardToken');
 const TestNonStandardToken = artifacts.require('TestNonStandardToken');
 
@@ -22,13 +22,13 @@ contract('TokenHandler', async accounts => {
                     await standardToken.set(ok, ret);
                 });
                 it(`approve with ok = ${ok} and ret = ${ret} should ${ok && ret ? 'not ' : ''}revert`, async () => {
-                    await test(ok && ret, tokenHandler.safeApprove(standardToken.address, accounts[0], 0));
+                    await test(ok && ret, tokenHandler.testSafeApprove(standardToken.address, accounts[0], 0));
                 });
                 it(`transfer with ok = ${ok} and ret = ${ret} should ${ok && ret ? 'not ' : ''}revert`, async () => {
-                    await test(ok && ret, tokenHandler.safeTransfer(standardToken.address, accounts[0], 0));
+                    await test(ok && ret, tokenHandler.testSafeTransfer(standardToken.address, accounts[0], 0));
                 });
                 it(`transferFrom with ok = ${ok} and ret = ${ret} should ${ok && ret ? 'not ' : ''}revert`, async () => {
-                    await test(ok && ret, tokenHandler.safeTransferFrom(standardToken.address, accounts[0], accounts[0], 0));
+                    await test(ok && ret, tokenHandler.testSafeTransferFrom(standardToken.address, accounts[0], accounts[0], 0));
                 });
             });
         }
@@ -40,13 +40,13 @@ contract('TokenHandler', async accounts => {
                 await nonStandardToken.set(ok);
             });
                 it(`approve with ok = ${ok} should ${ok ? 'not ' : ''}revert`, async () => {
-                await test(ok, tokenHandler.safeApprove(nonStandardToken.address, accounts[0], 0));
+                await test(ok, tokenHandler.testSafeApprove(nonStandardToken.address, accounts[0], 0));
             });
                 it(`transfer with ok = ${ok} should ${ok ? 'not ' : ''}revert`, async () => {
-                await test(ok, tokenHandler.safeTransfer(nonStandardToken.address, accounts[0], 0));
+                await test(ok, tokenHandler.testSafeTransfer(nonStandardToken.address, accounts[0], 0));
             });
                 it(`transferFrom with ok = ${ok} should ${ok ? 'not ' : ''}revert`, async () => {
-                await test(ok, tokenHandler.safeTransferFrom(nonStandardToken.address, accounts[0], accounts[0], 0));
+                await test(ok, tokenHandler.testSafeTransferFrom(nonStandardToken.address, accounts[0], accounts[0], 0));
             });
         });
     }

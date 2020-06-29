@@ -57,7 +57,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     /**
       * @dev version number
     */
-    uint16 public constant version = 29;
+    uint16 public constant version = 30;
 
     IConverterAnchor public anchor;                 // converter anchor contract
     IWhitelist public conversionWhitelist;          // whitelist contract with list of addresses that are allowed to use the converter
@@ -588,6 +588,6 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @dev deprecated, backward compatibility
     */
     function getReturn(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256) {
-        return rateAndFee(_sourceToken, _targetToken, _amount);
+        return targetAmountAndFee(_sourceToken, _targetToken, _amount);
     }
 }

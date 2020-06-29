@@ -25,9 +25,12 @@ def Main():
     testNum = 0
     numOfTests = len(rangeBalance1) * len(rangeWeight1) * len(rangeBalance2) * len(rangeWeight2) * len(rangeAmount)
 
-    tester = Web3Wrapper.Contract('BancorFormula').tester()
+    FormulaContract = Web3Wrapper.Contract('BancorFormula')
+    FormulaContractAddr = FormulaContract.tester()
+
     minGas = float('+inf')
     maxGas = float('-inf')
+
     totalGas = 0
     countGas = 0
 
@@ -39,7 +42,7 @@ def Main():
                         testNum += 1
                         if True:
                             try:
-                                gas = tester.crossReserveRate(balance1, weight1, balance2, weight2, amount)
+                                gas = FormulaContractAddr.crossReserveTargetAmount(balance1, weight1, balance2, weight2, amount)
                                 minGas = min(minGas, gas)
                                 maxGas = max(maxGas, gas)
                                 totalGas += gas

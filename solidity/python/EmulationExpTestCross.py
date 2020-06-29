@@ -26,7 +26,8 @@ def Main():
     testNum = 0
     numOfTests = len(rangeBalance1) * len(rangeWeight1) * len(rangeBalance2) * len(rangeWeight2) * len(rangeAmount)
 
-    FormulaContractAddr = Web3Wrapper.Contract('BancorFormula').getter()
+    FormulaContract = Web3Wrapper.Contract('BancorFormula')
+    FormulaContractAddr = FormulaContract.getter()
 
     for balance1 in rangeBalance1:
         for weight1 in rangeWeight1:
@@ -50,7 +51,7 @@ def Main():
 
 def Run(module, balance1, weight1, balance2, weight2, amount):
     try:
-        return module.crossReserveRate(balance1, weight1, balance2, weight2, amount)
+        return module.crossReserveTargetAmount(balance1, weight1, balance2, weight2, amount)
     except:
         return -1
 

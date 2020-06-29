@@ -29,7 +29,8 @@ def Main():
     testNum = 0
     numOfTests = len(rangeSupply) * len(rangeBalance) * len(rangeWeight) * len(rangeAmount)
 
-    FormulaContractAddr = Web3Wrapper.Contract('BancorFormula').getter()
+    FormulaContract = Web3Wrapper.Contract('BancorFormula')
+    FormulaContractAddr = FormulaContract.getter()
 
     for supply in rangeSupply:
         for balance in rangeBalance:
@@ -51,7 +52,7 @@ def Main():
 
 def Run(module, supply, balance, weight, amount):
     try:
-        return module.purchaseRate(supply, balance, weight, amount)
+        return module.purchaseTargetAmount(supply, balance, weight, amount)
     except:
         return -1
 
