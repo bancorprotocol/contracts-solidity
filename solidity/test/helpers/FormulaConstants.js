@@ -1,3 +1,4 @@
+module.exports.MAX_WEIGHT = 1000000;
 module.exports.MIN_PRECISION = 32;
 module.exports.MAX_PRECISION = 127;
 module.exports.maxExpArray = [

@@ -5,7 +5,7 @@ let constants = require('./helpers/FormulaConstants');
 let catchRevert = require('./helpers/Utils').catchRevert;
 let TestBancorFormula = artifacts.require('TestBancorFormula');
 
-let Decimal = require("decimal.js");
+let Decimal = require('decimal.js');
 Decimal.set({precision: 100, rounding: Decimal.ROUND_DOWN});
 web3.BigNumber.config({DECIMAL_PLACES: 100, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
 
@@ -18,13 +18,13 @@ contract('BancorFormula', () => {
     let ILLEGAL_VAL = web3.toBigNumber(2).toPower(256);
     let MAX_BASE_N = web3.toBigNumber(2).toPower(256 - constants.MAX_PRECISION).minus(1);
     let MIN_BASE_D = web3.toBigNumber(1);
-    let MAX_EXPONENT = 1000000;
+    let MAX_EXP = constants.MAX_WEIGHT;
 
     for (let percent = 1; percent <= 100; percent++) {
         let baseN = MAX_BASE_N;
         let baseD = MAX_BASE_N.minus(1);
-        let expN  = MAX_EXPONENT * percent / 100;
-        let expD  = MAX_EXPONENT;
+        let expN  = MAX_EXP * percent / 100;
+        let expD  = MAX_EXP;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}`, async () => {
@@ -35,8 +35,8 @@ contract('BancorFormula', () => {
     for (let percent = 1; percent <= 100; percent++) {
         let baseN = MAX_BASE_N;
         let baseD = MAX_BASE_N.minus(1);
-        let expN  = MAX_EXPONENT;
-        let expD  = MAX_EXPONENT * percent / 100;
+        let expN  = MAX_EXP;
+        let expD  = MAX_EXP * percent / 100;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}`, async () => {
@@ -47,8 +47,8 @@ contract('BancorFormula', () => {
     for (let percent = 1; percent <= 100; percent++) {
         let baseN = MAX_BASE_N;
         let baseD = MIN_BASE_D;
-        let expN  = MAX_EXPONENT * percent / 100;
-        let expD  = MAX_EXPONENT;
+        let expN  = MAX_EXP * percent / 100;
+        let expD  = MAX_EXP;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}`, async () => {
@@ -62,8 +62,8 @@ contract('BancorFormula', () => {
     for (let percent = 1; percent <= 100; percent++) {
         let baseN = MAX_BASE_N;
         let baseD = MIN_BASE_D;
-        let expN  = MAX_EXPONENT;
-        let expD  = MAX_EXPONENT * percent / 100;
+        let expN  = MAX_EXP;
+        let expD  = MAX_EXP * percent / 100;
         let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
 
         it(`${test}`, async () => {
@@ -82,7 +82,7 @@ contract('BancorFormula', () => {
 
         it(`${test}`, async () => {
             let retVal = await formula.generalLogTest(values[index]);
-            assert(retVal.times(MAX_EXPONENT).lessThan(ILLEGAL_VAL), `output is too large`);
+            assert(retVal.times(MAX_EXP).lessThan(ILLEGAL_VAL), `output is too large`);
         });
     }
 
@@ -174,7 +174,7 @@ contract('BancorFormula', () => {
             let fixedPoint = await formula.optimalLogTest(FIXED_1.times(x).truncated());
             let floatPoint = web3.toBigNumber(Decimal(x.toFixed()).ln().times(FIXED_1.toFixed()).toFixed());
             let ratio = fixedPoint.equals(floatPoint) ? web3.toBigNumber(1) : fixedPoint.dividedBy(floatPoint);
-            assert(ratio.greaterThanOrEqualTo("0.99999999999999999999999999999999999") && ratio.lessThanOrEqualTo("1"), `ratio = ${ratio.toFixed()}`);
+            assert(ratio.greaterThanOrEqualTo('0.99999999999999999999999999999999999') && ratio.lessThanOrEqualTo('1'), `ratio = ${ratio.toFixed()}`);
         });
     }
 
@@ -185,7 +185,7 @@ contract('BancorFormula', () => {
             let fixedPoint = await formula.optimalExpTest(FIXED_1.times(x).truncated());
             let floatPoint = web3.toBigNumber(Decimal(x.toFixed()).exp().times(FIXED_1.toFixed()).toFixed());
             let ratio = fixedPoint.equals(floatPoint) ? web3.toBigNumber(1) : fixedPoint.dividedBy(floatPoint);
-            assert(ratio.greaterThanOrEqualTo("0.99999999999999999999999999999999999") && ratio.lessThanOrEqualTo("1"), `ratio = ${ratio.toFixed()}`);
+            assert(ratio.greaterThanOrEqualTo('0.99999999999999999999999999999999999') && ratio.lessThanOrEqualTo('1'), `ratio = ${ratio.toFixed()}`);
         });
     }
 
@@ -204,7 +204,7 @@ contract('BancorFormula', () => {
                 let fixedPoint = await formula.generalLogTest(FIXED_1.times(x).truncated());
                 let floatPoint = web3.toBigNumber(Decimal(x.toFixed()).ln().times(FIXED_1.toFixed()).toFixed());
                 let ratio = fixedPoint.equals(floatPoint) ? web3.toBigNumber(1) : fixedPoint.dividedBy(floatPoint);
-                assert(ratio.greaterThanOrEqualTo("0.99999999999999999999999999999999999") && ratio.lessThanOrEqualTo("1"), `ratio = ${ratio.toFixed()}`);
+                assert(ratio.greaterThanOrEqualTo('0.99999999999999999999999999999999999') && ratio.lessThanOrEqualTo('1'), `ratio = ${ratio.toFixed()}`);
             });
         }
     }
