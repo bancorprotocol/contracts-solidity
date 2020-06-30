@@ -31,80 +31,80 @@ Here is an example of the initial configuration file which should be provided to
         {
             "symbol": "XXX",
             "decimals": 18,
-            "supply": "1000000000000000000000"
+            "supply": "1000"
         },
         {
             "symbol": "YYY",
             "decimals": 18,
-            "supply": "36000000000000000000"
+            "supply": "36"
         },
         {
             "symbol": "BNT",
             "decimals": 18,
-            "supply": "69100000000000000000"
+            "supply": "69.1"
         }
     ],
     "converters": [
         {
             "symbol": "ETHBNT",
             "decimals": 18,
-            "fee": 1000,
+            "fee": "0.1%",
             "reserves": [
                 {
                     "symbol": "ETH",
-                    "weight": 500000,
-                    "balance": "7950000000000000000"
+                    "weight": "50%",
+                    "balance": "7.95"
                 },
                 {
                     "symbol": "BNT",
-                    "weight": 500000,
-                    "balance": "12700000000000000"
+                    "weight": "50%",
+                    "balance": "0.0127"
                 }
             ]
         },
         {
             "symbol": "XXXBNT",
             "decimals": 18,
-            "fee": 1000,
+            "fee": "0.1%",
             "reserves": [
                 {
                     "symbol": "XXX",
-                    "weight": 500000,
-                    "balance": "340000000000000000"
+                    "weight": "50%",
+                    "balance": "0.34"
                 },
                 {
                     "symbol": "BNT",
-                    "weight": 500000,
-                    "balance": "1040000000000000000"
+                    "weight": "50%",
+                    "balance": "1.04"
                 }
             ]
         },
         {
             "symbol": "YYYBNT",
             "decimals": 18,
-            "fee": 2000,
+            "fee": "0.2%",
             "reserves": [
                 {
                     "symbol": "YYY",
-                    "weight": 500000,
-                    "balance": "369000000000000000"
+                    "weight": "50%",
+                    "balance": "0.369"
                 },
                 {
                     "symbol": "BNT",
-                    "weight": 500000,
-                    "balance": "84800000000000000"
+                    "weight": "50%",
+                    "balance": "0.0848"
                 }
             ]
         },
         {
             "symbol": "ZZZ",
             "decimals": 18,
-            "fee": 3000,
+            "fee": "0.3%",
             "reserves": [
                 {
                     "symbol": "BNT",
-                    "weight": 100000,
-                    "balance": "41100000000000000"
+                    "weight": "10%",
+                    "balance": "0.0411"
                 }
             ]
         }
