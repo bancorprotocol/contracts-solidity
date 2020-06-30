@@ -135,6 +135,7 @@ async function run() {
     const bancorFormula                   = await web3Func(deploy, "bancorFormula"                  , "BancorFormula"                  , []);
     const bancorNetwork                   = await web3Func(deploy, "bancorNetwork"                  , "BancorNetwork"                  , [contractRegistry._address]);
     const conversionPathFinder            = await web3Func(deploy, "conversionPathFinder"           , "ConversionPathFinder"           , [contractRegistry._address]);
+    const converterUpgrader               = await web3Func(deploy, "converterUpgrader"              , "ConverterUpgrader"              , [contractRegistry._address, addresses.ETH]);
     const converterRegistry               = await web3Func(deploy, "converterRegistry"              , "ConverterRegistry"              , [contractRegistry._address]);
     const converterRegistryData           = await web3Func(deploy, "converterRegistryData"          , "ConverterRegistryData"          , [contractRegistry._address]);
     const liquidTokenConverterFactory     = await web3Func(deploy, "liquidTokenConverterFactory"    , "LiquidTokenConverterFactory"    , []);
@@ -145,6 +146,7 @@ async function run() {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorFormula"              ), bancorFormula        ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorNetwork"              ), bancorNetwork        ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("ConversionPathFinder"       ), conversionPathFinder ._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterUpgrader"    ), converterUpgrader    ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistry"    ), converterRegistry    ._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex("BancorConverterRegistryData"), converterRegistryData._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidTokenConverterFactory    ._address));
