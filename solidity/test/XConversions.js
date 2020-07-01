@@ -44,10 +44,15 @@ contract('XConversions', accounts => {
     const sender = accounts[5];
     const sender2 = accounts[6];
 
-    beforeEach(async () => {
+    before(async () => {
+        // The following contracts are unaffected by the underlying tests, this can be shared.
         bancorFormula = await BancorFormula.new();
         contractRegistry = await ContractRegistry.new();
 
+        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
+    });
+
+    beforeEach(async () => {
         bntToken = await ERC20Token.new('Bancor', 'BNT', 18, BNT_AMOUNT);
 
         bancorX = await BancorX.new(

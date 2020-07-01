@@ -21,16 +21,27 @@ const TestConverterRegistry = artifacts.require('TestConverterRegistry');
 contract('ConverterRegistry', () => {
     let contractRegistry;
     let converterFactory;
+    let liquidTokenConverterFactory;
+    let liquidityPoolV1ConverterFactory;
     let converterRegistry;
     let converterRegistryData;
 
+    before(async () => {
+        // The following contracts are unaffected by the underlying tests, this can be shared.
+        converterFactory = await ConverterFactory.new();
+        liquidTokenConverterFactory = await LiquidTokenConverterFactory.new();
+        liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
+
+        await converterFactory.registerTypedConverterFactory(liquidTokenConverterFactory.address);
+        await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
+    });
+
     beforeEach(async () => {
         contractRegistry = await ContractRegistry.new();
-        converterFactory = await ConverterFactory.new();
-        await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
-        await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
+
         converterRegistry = await TestConverterRegistry.new(contractRegistry.address);
         converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
+
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
         await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);

@@ -18,9 +18,12 @@ contract('ConverterFactory', accounts => {
 
     const MAX_CONVERSION_FEE = new BN(10000);
 
-    beforeEach(async () => {
+    before(async () => {
+        // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await ContractRegistry.new();
+    });
 
+    beforeEach(async () => {
         converterFactory = await ConverterFactory.new();
         anchorFactory = await TypedConverterAnchorFactory.new('TypedAnchor');
         factory = await LiquidTokenConverterFactory.new();

@@ -129,7 +129,8 @@ contract('ConversionPathFinder', accounts => {
 
     const addresses = { ETH: ETH_RESERVE_ADDRESS };
 
-    beforeEach(async () => {
+    before(async () => {
+        // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await ContractRegistry.new();
 
         converterFactory = await ConverterFactory.new();
@@ -143,7 +144,9 @@ contract('ConversionPathFinder', accounts => {
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
         await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+    });
 
+    beforeEach(async () => {
         for (const reserve of LAYOUT.reserves) {
             const erc20Token = await ERC20Token.new('name', reserve.symbol, 0, 0);
             addresses[reserve.symbol] = erc20Token.address;

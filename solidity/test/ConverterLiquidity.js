@@ -29,19 +29,22 @@ contract('ConverterLiquidity', accounts => {
         return [converter, smartToken];
     };
 
-    let bancorFormula;
     let contractRegistry;
     let erc20Tokens;
     const owner = accounts[0];
 
     const MIN_RETURN = new BN(1);
 
-    beforeEach(async () => {
-        bancorFormula = await BancorFormula.new();
+    before(async () => {
+        // The following contracts are unaffected by the underlying tests, this can be shared.
+        const bancorFormula = await BancorFormula.new();
         contractRegistry = await ContractRegistry.new();
-        erc20Tokens = await Promise.all([...Array(5).keys()].map(i => ERC20Token.new('name', 'symbol', 0, -1)));
 
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
+    });
+
+    beforeEach(async () => {
+        erc20Tokens = await Promise.all([...Array(5).keys()].map(i => ERC20Token.new('name', 'symbol', 0, -1)));
     });
 
     describe('auxiliary functions', () => {

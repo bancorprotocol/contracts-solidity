@@ -200,14 +200,17 @@ contract('ConverterUpgrader', accounts => {
     let reserveToken2;
     let etherToken;
 
-    beforeEach(async () => {
+    before(async () => {
+        // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await ContractRegistry.new();
         converterFactory = await ConverterFactory.new();
 
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
         await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
+    });
 
+    beforeEach(async () => {
         reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, RESERVE1_BALANCE);
         reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, RESERVE2_BALANCE);
         etherToken = await EtherToken.new('Ether Token', 'ETH');

@@ -65,8 +65,6 @@ contract('LiquidityPoolConverter', accounts => {
     };
 
     let bancorNetwork;
-    let bancorFormula;
-    let factory;
     let token;
     let tokenAddress;
     let contractRegistry;
@@ -83,19 +81,22 @@ contract('LiquidityPoolConverter', accounts => {
     const WEIGHT_20_PERCENT = new BN(200000);
     const WEIGHT_50_PERCENT = new BN(500000);
 
-    beforeEach(async () => {
+    before(async () => {
+        // The following contracts are unaffected by the underlying tests, this can be shared.
+        const bancorFormula = await BancorFormula.new();
         contractRegistry = await ContractRegistry.new();
 
-        bancorFormula = await BancorFormula.new();
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
 
-        bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-        await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
-
-        factory = await ConverterFactory.new();
+        const factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
 
         await factory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
+    });
+
+    beforeEach(async () => {
+        bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+        await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
         upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
