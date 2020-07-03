@@ -5,10 +5,10 @@
 ### [Installation](../../README.md#installation)
 
 ### Test Deployment
-Deploys a test Bancor Network contracts - can be used locally or on testnets.
 
+Deploys a set of contracts for testing purpose; can be used on both private and public networks:
 ```bash
-node deploy_network_emulation.js
+node test_deployment.js
     Configuration file name
     Ethereum node address
     Account private key
