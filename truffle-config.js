@@ -46,7 +46,6 @@ module.exports = {
     mocha: {
         enableTimeouts: false,
         useColors: true,
-        bail: true,
         reporter: 'list'
     }
 };
