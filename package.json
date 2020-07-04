@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "truffle compile",
-    "test": "truffle test",
+    "test": "truffle compile && truffle test",
     "coverage": "truffle run coverage",
     "export": "node scripts/export.js",
     "lint": "npm run lint:js && npm run lint:sol",
