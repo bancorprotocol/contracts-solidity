@@ -228,7 +228,6 @@ contract('BancorNetwork', accounts => {
     describe('Conversions', () => {
         const initTokensAndConverters = async () => {
             bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-
             await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
             const converterRegistry = await ConverterRegistry.new(contractRegistry.address);
