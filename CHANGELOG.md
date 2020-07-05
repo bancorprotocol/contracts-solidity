@@ -1,3 +1,11 @@
+### 0.6.5 (2020-06-29)
+General
+* Renamed `rate` related functions to `targetAmount` for clarity
+
+LiquidityPoolV1Converter
+* Fixed an issue when adding liquidity that only added a fraction of the requested amount
+
+
 ### 0.6.4 (2020-06-18)
 TokenHandler
 * Fixed a security vulnerability that allowed any wallet to invoke the transfer functions

@@ -9,7 +9,7 @@ module.exports = (deployer, network) => {
 
         const result = childProcess.spawnSync('node',
             [
-                path.resolve(__dirname, '../utils/deploy_network_emulation.js'),
+                path.resolve(__dirname, '../utils/test_deployment.js'),
                 CFG_FILE_NAME,
                 NODE_ADDRESS,
                 PRIVATE_KEY

@@ -1,4 +1,5 @@
 module.exports = {
+    MAX_WEIGHT: 1000000,
     MIN_PRECISION: 32,
     MAX_PRECISION: 127,
     maxExpArray: [

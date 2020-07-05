@@ -103,6 +103,15 @@ const deployed = (web3, contractName, contractAddr) => {
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 };
 
+const decimalToInteger = (value, decimals) => {
+    const parts = [...value.split('.'), ''];
+    return parts[0] + parts[1].padEnd(decimals, '0');
+};
+
+const percentageToPPM = (value) => {
+    return decimalToInteger(value.replace('%', ''), 4);
+};
+
 const run = async () => {
     const web3 = new Web3(NODE_ADDRESS);
 
@@ -129,6 +138,7 @@ const run = async () => {
     const bancorFormula = await web3Func(deploy, 'bancorFormula', 'BancorFormula', []);
     const bancorNetwork = await web3Func(deploy, 'bancorNetwork', 'BancorNetwork', [contractRegistry._address]);
     const conversionPathFinder = await web3Func(deploy, 'conversionPathFinder', 'ConversionPathFinder', [contractRegistry._address]);
+    const converterUpgrader = await web3Func(deploy, 'converterUpgrader', 'ConverterUpgrader', [contractRegistry._address, addresses.ETH]);
     const converterRegistry = await web3Func(deploy, 'converterRegistry', 'ConverterRegistry', [contractRegistry._address]);
     const converterRegistryData = await web3Func(deploy, 'converterRegistryData', 'ConverterRegistryData', [contractRegistry._address]);
     const liquidTokenConverterFactory = await web3Func(deploy, 'liquidTokenConverterFactory', 'LiquidTokenConverterFactory', []);
@@ -139,6 +149,7 @@ const run = async () => {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorFormula'), bancorFormula._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorNetwork'), bancorNetwork._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('ConversionPathFinder'), conversionPathFinder._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorConverterUpgrader'), converterUpgrader._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorConverterRegistry'), converterRegistry._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorConverterRegistryData'), converterRegistryData._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidTokenConverterFactory._address));
@@ -148,7 +159,7 @@ const run = async () => {
         const name = reserve.symbol + ' ERC20 Token';
         const symbol = reserve.symbol;
         const decimals = reserve.decimals;
-        const supply = reserve.supply;
+        const supply = decimalToInteger(reserve.supply, decimals);
         const token = await web3Func(deploy, 'erc20Token' + symbol, 'ERC20Token', [name, symbol, decimals, supply]);
         addresses[reserve.symbol] = token._address;
     }
@@ -157,12 +168,12 @@ const run = async () => {
         const name = converter.symbol + ' Smart Token';
         const symbol = converter.symbol;
         const decimals = converter.decimals;
-        const fee = converter.fee;
+        const fee = percentageToPPM(converter.fee);
         const type = converter.reserves.length > 1 ? 1 : 0;
         const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
-        const weights = converter.reserves.map(reserve => reserve.weight);
-        const amounts = converter.reserves.map(reserve => reserve.balance);
-        const value = [...converter.reserves.filter(reserve => reserve.symbol === 'ETH'), {}][0].balance;
+        const weights = converter.reserves.map(reserve => percentageToPPM(reserve.weight));
+        const amounts = converter.reserves.map(reserve => decimalToInteger(reserve.balance, decimals));
+        const value = amounts[converter.reserves.findIndex(reserve => reserve.symbol === 'ETH')];
 
         await execute(converterRegistry.methods.newConverter(type, name, symbol, decimals, fee, tokens, weights));
         const smartToken = deployed(web3, 'SmartToken', (await converterRegistry.methods.getSmartTokens().call()).slice(-1)[0]);

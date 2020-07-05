@@ -7,7 +7,7 @@ const BigNumber = require('bignumber.js');
 const Decimal = require('decimal.js');
 Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN });
 
-const { MIN_PRECISION, MAX_PRECISION, maxExpArray, maxValArray } = require('./helpers/FormulaConstants');
+const { MIN_PRECISION, MAX_PRECISION, MAX_WEIGHT, maxExpArray, maxValArray } = require('./helpers/FormulaConstants');
 
 const TestBancorFormula = artifacts.require('TestBancorFormula');
 
@@ -20,13 +20,13 @@ contract('BancorFormula', () => {
     const ILLEGAL_VAL = new BN(2).pow(new BN(256));
     const MAX_BASE_N = new BN(2).pow(new BN(256 - MAX_PRECISION)).sub(new BN(1));
     const MIN_BASE_D = new BN(1);
-    const MAX_EXPONENT = 1000000;
+    const MAX_EXP = new BN(MAX_WEIGHT);
 
     for (let percent = 1; percent <= 100; percent++) {
         const baseN = MAX_BASE_N;
         const baseD = MAX_BASE_N.sub(new BN(1));
-        const expN = MAX_EXPONENT * percent / 100;
-        const expD = MAX_EXPONENT;
+        const expN = MAX_EXP * percent / 100;
+        const expD = MAX_EXP;
 
         it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
             await formula.powerTest.call(baseN, baseD, expN, expD);
@@ -36,8 +36,8 @@ contract('BancorFormula', () => {
     for (let percent = 1; percent <= 100; percent++) {
         const baseN = MAX_BASE_N;
         const baseD = MAX_BASE_N.sub(new BN(1));
-        const expN = MAX_EXPONENT;
-        const expD = MAX_EXPONENT * percent / 100;
+        const expN = MAX_EXP;
+        const expD = MAX_EXP * percent / 100;
 
         it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
             await formula.powerTest.call(baseN, baseD, expN, expD);
@@ -47,8 +47,8 @@ contract('BancorFormula', () => {
     for (let percent = 1; percent <= 100; percent++) {
         const baseN = MAX_BASE_N;
         const baseD = MIN_BASE_D;
-        const expN = MAX_EXPONENT * percent / 100;
-        const expD = MAX_EXPONENT;
+        const expN = MAX_EXP * percent / 100;
+        const expD = MAX_EXP;
 
         it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
             if (percent < 64) {
@@ -62,8 +62,8 @@ contract('BancorFormula', () => {
     for (let percent = 1; percent <= 100; percent++) {
         const baseN = MAX_BASE_N;
         const baseD = MIN_BASE_D;
-        const expN = MAX_EXPONENT;
-        const expD = MAX_EXPONENT * percent / 100;
+        const expN = MAX_EXP;
+        const expD = MAX_EXP * percent / 100;
 
         it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
             await expectRevert.unspecified(formula.powerTest.call(baseN, baseD, expN, expD));
@@ -79,7 +79,7 @@ contract('BancorFormula', () => {
     for (const value of values) {
         it(`generalLog(0x${value.toString(16)})`, async () => {
             const retVal = await formula.generalLogTest.call(value);
-            expect(retVal.mul(new BN(MAX_EXPONENT))).be.bignumber.lt(ILLEGAL_VAL);
+            expect(retVal.mul(new BN(MAX_EXP))).be.bignumber.lt(ILLEGAL_VAL);
         });
     }
 
