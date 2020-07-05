@@ -16,9 +16,13 @@
     "npm": "^3.0.0"
   },
   "scripts": {
-    "install": "node scripts/fix-modules.js",
-    "build": "node scripts/rebuild-all.js",
-    "test": "node scripts/run-tests.js",
+    "build": "truffle compile",
+    "test": "truffle test",
+    "coverage": "truffle run coverage",
+    "export": "node scripts/export.js",
+    "lint": "npm run lint:js && npm run lint:sol",
+    "lint:js": "eslint .",
+    "lint:sol": "solhint --max-warnings 0 \"solidity/contracts/**/*.sol\"",
     "deploy": "node scripts/deploy-one.js",
     "verify": "node scripts/verify-all.js",
     "flatten": "node scripts/flatten.js",
@@ -26,14 +30,28 @@
     "prepare": "npm run snyk-protect"
   },
   "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.6",
+    "@truffle/contract": "^4.2.10",
+    "bignumber.js": "^9.0.0",
+    "bn.js": "^5.1.2",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "chai-bn": "^0.2.1",
     "decimal.js": "10.2.0",
-    "ganache-cli": "6.7.0",
-    "snyk": "^1.336.0",
-    "solidity-coverage": "0.6.7",
-    "truffle": "4.1.16",
-    "truffle-contract": "3.0.8",
-    "truffle-flattener": "1.4.2",
-    "web3": "1.2.1"
+    "dirty-chai": "^2.0.1",
+    "eslint": "^7.3.1",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.21.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "ganache-core": "^2.10.2",
+    "snyk": "^1.347.1",
+    "solhint": "^3.0.0",
+    "solidity-coverage": "^0.7.9",
+    "truffle": "5.1.32",
+    "truffle-flattener": "1.4.4",
+    "web3": "1.2.9"
   },
   "snyk": true
 }

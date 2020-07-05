@@ -1,13 +1,13 @@
-const WORK_DIR = "./solidity";
-const NODE_DIR = "../node_modules";
+const WORK_DIR = './solidity';
+const NODE_DIR = '../node_modules';
 const INPUT_FILE = process.argv[2];
 
-const fs        = require("fs");
-const path      = require("path");
-const request   = require("request");
-const spawnSync = require("child_process").spawnSync;
+const fs = require('fs');
+const path = require('path');
+const request = require('request');
+const spawnSync = require('child_process').spawnSync;
 
-const input = JSON.parse(fs.readFileSync(INPUT_FILE, {encoding: "utf8"}));
+const input = JSON.parse(fs.readFileSync(INPUT_FILE, { encoding: 'utf8' }));
 //  input example:
 //  {
 //      "network"        : "api", // use "api" for mainnet or "api-<testnet>" for testnet
@@ -22,90 +22,90 @@ const input = JSON.parse(fs.readFileSync(INPUT_FILE, {encoding: "utf8"}));
 //      }
 //  }
 
-function run() {
-    for (const pathName of getPathNames("contracts")) {
-        const contractName = path.basename(pathName, ".sol");
+const run = () => {
+    for (const pathName of getPathNames('contracts')) {
+        const contractName = path.basename(pathName, '.sol');
         for (const contractId of Object.keys(input.contracts)) {
-            if (input.contracts[contractId].name == contractName)
+            if (input.contracts[contractId].name === contractName) {
                 post(contractId, getSourceCode(pathName));
+            }
         }
     }
-}
+};
 
-function getPathNames(dirName) {
+const getPathNames = (dirName) => {
     let pathNames = [];
-    for (const fileName of fs.readdirSync(WORK_DIR + "/" + dirName)) {
-        if (fs.statSync(WORK_DIR + "/" + dirName + "/" + fileName).isDirectory())
-            pathNames = pathNames.concat(getPathNames(dirName + "/" + fileName));
-        else if (fileName.endsWith(".sol"))
-            pathNames.push(dirName + "/" + fileName);
+    for (const fileName of fs.readdirSync(WORK_DIR + '/' + dirName)) {
+        if (fs.statSync(WORK_DIR + '/' + dirName + '/' + fileName).isDirectory()) {
+            pathNames = pathNames.concat(getPathNames(dirName + '/' + fileName));
+        } else if (fileName.endsWith('.sol')) {
+            pathNames.push(dirName + '/' + fileName);
+        }
     }
     return pathNames;
-}
+};
 
-function getSourceCode(pathName) {
-    const result = spawnSync("node", [NODE_DIR + "/truffle-flattener/index.js", pathName], {cwd: WORK_DIR});
+const getSourceCode = (pathName) => {
+    const result = spawnSync('node', [NODE_DIR + '/truffle-flattener/index.js', pathName], { cwd: WORK_DIR });
     return result.output.toString().slice(1, -1);
-}
+};
 
-function post(contractId, sourceCode) {
-    console.log(contractId + ": sending verification request...");
+const post = (contractId, sourceCode) => {
+    console.log(contractId + ': sending verification request...');
     request.post({
-            url: "https://" + input.network + ".etherscan.io/api",
-            form: {
-                module               : "contract",
-                action               : "verifysourcecode",
-                sourceCode           : sourceCode,
-                apikey               : input.apiKey,
-                compilerversion      : input.compilerVersion,
-                optimizationUsed     : input.optimization.used,
-                runs                 : input.optimization.runs,
-                contractname         : input.contracts[contractId].name,
-                contractaddress      : input.contracts[contractId].addr,
-                constructorArguements: input.contracts[contractId].args,
-            }
-        },
-        function(error, response, body) {
-            if (error) {
-                console.log(contractId + ": " + error);
-            }
-            else {
-                body = parse(body);
-                if (body.status == "1")
-                    get(contractId, body.result);
-                else
-                    console.log(contractId + ": " + body.result);
+        url: 'https://' + input.network + '.etherscan.io/api',
+        form: {
+            module: 'contract',
+            action: 'verifysourcecode',
+            sourceCode: sourceCode,
+            apikey: input.apiKey,
+            compilerversion: input.compilerVersion,
+            optimizationUsed: input.optimization.used,
+            runs: input.optimization.runs,
+            contractname: input.contracts[contractId].name,
+            contractaddress: input.contracts[contractId].addr,
+            constructorArguements: input.contracts[contractId].args
+        }
+    },
+    (error, response, body) => {
+        if (error) {
+            console.log(contractId + ': ' + error);
+        } else {
+            body = parse(body);
+            if (body.status === '1') {
+                get(contractId, body.result);
+            } else {
+                console.log(contractId + ': ' + body.result);
             }
         }
-    );
-}
+    });
+};
 
-function get(contractId, guid) {
-    console.log(contractId + ": checking verification status...");
+const get = (contractId, guid) => {
+    console.log(contractId + ': checking verification status...');
     request.get(
-        "https://" + input.network + ".etherscan.io/api?module=contract&action=checkverifystatus&guid=" + guid,
-        function(error, response, body) {
+        'https://' + input.network + '.etherscan.io/api?module=contract&action=checkverifystatus&guid=' + guid,
+        (error, response, body) => {
             if (error) {
-                console.log(contractId + ": " + error);
-            }
-            else {
+                console.log(contractId + ': ' + error);
+            } else {
                 body = parse(body);
-                if (body.result == "Pending in queue" || (body.result && body.result.startsWith("Max rate limit reached")))
+                if (body.result === 'Pending in queue' || (body.result && body.result.startsWith('Max rate limit reached'))) {
                     get(contractId, guid);
-                else
-                    console.log(contractId + ": " + body.result);
+                } else {
+                    console.log(contractId + ': ' + body.result);
+                }
             }
         }
     );
-}
+};
 
-function parse(str) {
+const parse = (str) => {
     try {
         return JSON.parse(str);
-    }
-    catch (error) {
+    } catch (error) {
         return {};
     }
-}
+};
 
 run();

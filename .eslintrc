@@ -1,0 +1,45 @@
+{
+    "extends": "standard",
+    "env": {
+        "mocha": true
+    },
+    "rules": {
+        "max-len": [
+            "error",
+            150,
+            2
+        ],
+        "indent": [
+            "error",
+            4
+        ],
+        "semi": [
+            "error",
+            "always"
+        ],
+        "brace-style": [ "error"],
+        "no-plusplus": "off",
+        "no-await-in-loop": "off",
+        "no-restricted-syntax": "off",
+        "function-paren-newline": [
+            "error",
+            "consistent"
+        ],
+        "space-before-function-paren": "error",
+        "no-continue": "off",
+        "arrow-body-style": "off",
+        "no-loop-func": "off"
+    },
+    "globals": {
+        "assert": true,
+        "expect": true,
+        "artifacts": true,
+        "contract": true,
+        "web3": true
+    },
+    "settings": {
+        "react": {
+            "version": "999.999.999"
+        }
+    }
+}

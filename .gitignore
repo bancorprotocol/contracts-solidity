@@ -1,22 +1,22 @@
-.DS_STORE
-.vscode
+.DS_Store
+.vscode/
+*/**/.DS_Store
 
 # node
-node_modules
+/node_modules
 npm-debug.log
 
 # python
 *.pyc
 
-# npm test 1
 solidity/build/contracts
-
-# npm test 2
-solidity/allFiredEvents
-solidity/coverageEnv
-solidity/coverage
-solidity/coverage.json
-solidity/scTopics
+.coverage_artifacts
+.coverage_contracts
+coverage
+coverageEnv
+coverage.json
+allFiredEvents
+scTopics
 
 # npm run build
 solidity/build/ConverterV27OrLowerWithoutFallback.abi
@@ -35,17 +35,5 @@ solidity/build/NonStandardToken.abi
 solidity/build/NonStandardToken.bin
 solidity/build/OldConverter.abi
 solidity/build/OldConverter.bin
-solidity/build/TestBancorFormula.abi
-solidity/build/TestBancorFormula.bin
-solidity/build/TestBancorNetwork.abi
-solidity/build/TestBancorNetwork.bin
-solidity/build/TestLiquidityPoolConverter.abi
-solidity/build/TestLiquidityPoolConverter.bin
-solidity/build/TestNonStandardToken.abi
-solidity/build/TestNonStandardToken.bin
-solidity/build/TestSafeMath.abi
-solidity/build/TestSafeMath.bin
-solidity/build/TestStandardToken.abi
-solidity/build/TestStandardToken.bin
-solidity/build/TestTokenHandler.abi
-solidity/build/TestTokenHandler.bin
+solidity/build/Test*.abi
+solidity/build/Test*.bin

@@ -1,217 +1,203 @@
-/* global artifacts, contract, before, it, assert */
-/* eslint-disable prefer-reflect */
-
-const utils = require('./helpers/Utils');
+const { expect } = require('chai');
+const { expectRevert, expectEvent, BN, time } = require('@openzeppelin/test-helpers');
 
 const BancorX = artifacts.require('BancorX');
 const ERC20Token = artifacts.require('ERC20Token');
 const ContractRegistry = artifacts.require('ContractRegistry');
 
-const MAX_LOCK_LIMIT    = web3.toBigNumber('1000000000000000000000') // 1000 tokens
-const MAX_RELEASE_LIMIT = web3.toBigNumber('1000000000000000000000') // 1000 tokens
-const MIN_LIMIT         = web3.toBigNumber('1000000000000000000') // 1 token
-const LIM_INC_PER_BLOCK = web3.toBigNumber('1000000000000000000') // 1 token
-const TEST_AMOUNT       = web3.toBigNumber('10000000000000000000') // 10 tokens
-const SUPPLY_AMOUNT     = web3.toBigNumber('77492920201018469141404133')
-const MIN_REQ_REPORTS   = web3.toBigNumber('3')
-const TRANSACTION_ID    = web3.toBigNumber('12345678')
-const X_TRANSFER_ID     = web3.toBigNumber('87654321')
+const MAX_LOCK_LIMIT = new BN('1000000000000000000000'); // 1000 tokens
+const MAX_RELEASE_LIMIT = new BN('1000000000000000000000'); // 1000 tokens
+const MIN_LIMIT = new BN('1000000000000000000'); // 1 token
+const LIM_INC_PER_BLOCK = new BN('1000000000000000000'); // 1 token
+const TEST_AMOUNT = new BN('10000000000000000000'); // 10 tokens
+const SUPPLY_AMOUNT = new BN('77492920201018469141404133');
+const MIN_REQ_REPORTS = new BN(3);
+const TRANSACTION_ID = new BN(12345678);
+const X_TRANSFER_ID = new BN(87654321);
 
-const EOS_ADDRESS    = web3.fromAscii('just a string 1')
-const EOS_BLOCKCHAIN = web3.fromAscii('just a string 2')
+const EOS_ADDRESS = '0x3c69a194aaf415ba5d6afca734660d0a3d45acdc05d54cd1ca89a8988e7625b4';
+const EOS_BLOCKCHAIN = '0x4e8ebbefa452077428f93c9520d3edd60594ff452a29ac7d2ccc11d47f3ab95b';
 
-function assertEqual(x, y) {
-    assert.equal(x.toFixed(), y.toFixed())
-}
+contract('BancorX', accounts => {
+    let bancorX;
+    const reporter1 = accounts[1];
+    const reporter2 = accounts[2];
+    const reporter3 = accounts[3];
+    const sender = accounts[0];
+    const nonOwner = accounts[9];
 
-async function initBancorX(accounts) {
-    const contractRegistry = await ContractRegistry.new()
-    const bancorXToken = await ERC20Token.new('Bancor', 'BNT', 18, SUPPLY_AMOUNT)
+    beforeEach(async () => {
+        const contractRegistry = await ContractRegistry.new();
+        const bancorXToken = await ERC20Token.new('Bancor', 'BNT', 18, SUPPLY_AMOUNT);
 
-    const bancorX = await BancorX.new(
-        MAX_LOCK_LIMIT,
-        MAX_RELEASE_LIMIT,
-        MIN_LIMIT,
-        LIM_INC_PER_BLOCK,
-        MIN_REQ_REPORTS,
-        contractRegistry.address,
-        bancorXToken.address
-    )
+        bancorX = await BancorX.new(
+            MAX_LOCK_LIMIT,
+            MAX_RELEASE_LIMIT,
+            MIN_LIMIT,
+            LIM_INC_PER_BLOCK,
+            MIN_REQ_REPORTS,
+            contractRegistry.address,
+            bancorXToken.address
+        );
 
-    // grant bancorx allowance
-    await bancorXToken.approve(bancorX.address, SUPPLY_AMOUNT)
-    return bancorX;
-}
+        // Grant bancorx allowance
+        await bancorXToken.approve(bancorX.address, SUPPLY_AMOUNT);
+    });
 
-contract('BancorX', async accounts => {
     it('should allow the owner to set reporters', async () => {
-        let bancorX = await initBancorX(accounts)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.setReporter(accounts[2], true)
-        await bancorX.setReporter(accounts[3], true)
+        await bancorX.setReporter(reporter1, true);
+        await bancorX.setReporter(reporter2, true);
+        await bancorX.setReporter(reporter3, true);
 
-        assert.equal(await bancorX.reporters.call(accounts[1]), true)
-        assert.equal(await bancorX.reporters.call(accounts[2]), true)
-        assert.equal(await bancorX.reporters.call(accounts[3]), true)
-    })
+        expect(await bancorX.reporters.call(reporter1)).to.be.true();
+        expect(await bancorX.reporters.call(reporter2)).to.be.true();
+        expect(await bancorX.reporters.call(reporter3)).to.be.true();
+    });
 
     it('should not allow a non-owner to set reporters', async () => {
-        let bancorX = await initBancorX(accounts)
-        await utils.catchRevert(bancorX.setReporter(accounts[1], true, {from: accounts[1]}))
-        await utils.catchRevert(bancorX.setReporter(accounts[2], true, {from: accounts[1]}))
-        await utils.catchRevert(bancorX.setReporter(accounts[3], true, {from: accounts[1]}))
+        await expectRevert(bancorX.setReporter(reporter1, true, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        await expectRevert(bancorX.setReporter(reporter2, true, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        await expectRevert(bancorX.setReporter(reporter3, true, { from: nonOwner }), 'ERR_ACCESS_DENIED');
 
-        assert.equal(await bancorX.reporters.call(accounts[1]), false)
-        assert.equal(await bancorX.reporters.call(accounts[2]), false)
-        assert.equal(await bancorX.reporters.call(accounts[3]), false)
-    })
+        expect(await bancorX.reporters.call(reporter1)).to.be.false();
+        expect(await bancorX.reporters.call(reporter2)).to.be.false();
+        expect(await bancorX.reporters.call(reporter3)).to.be.false();
+    });
 
     it('should allow the owner to set limits', async () => {
-        let bancorX = await initBancorX(accounts)
-        await bancorX.setMaxLockLimit(MAX_LOCK_LIMIT.plus(1))
-        await bancorX.setMaxReleaseLimit(MAX_RELEASE_LIMIT.plus(1))
-        await bancorX.setMinLimit(MIN_LIMIT.plus(1))
-        await bancorX.setLimitIncPerBlock(LIM_INC_PER_BLOCK.plus(1))
-        await bancorX.setMinRequiredReports(MIN_REQ_REPORTS.plus(1))
+        const newMaxLockLimit = MAX_LOCK_LIMIT.add(new BN(1));
+        const newMaxReleaseLimit = MAX_RELEASE_LIMIT.add(new BN(1));
+        const newMinLimit = MIN_LIMIT.add(new BN(1));
+        const newLimitIncPerBlock = LIM_INC_PER_BLOCK.add(new BN(1));
+        const newMinRequiredReports = MIN_REQ_REPORTS.add(new BN(1));
 
-        let maxLockLimit = await bancorX.maxLockLimit.call()
-        let maxReleaseLimit = await bancorX.maxReleaseLimit.call()
-        let minLimit = await bancorX.minLimit.call()
-        let limitIncPerBlock = await bancorX.limitIncPerBlock.call()
-        let minRequiredReports = await bancorX.minRequiredReports.call()
+        await bancorX.setMaxLockLimit(newMaxLockLimit);
+        await bancorX.setMaxReleaseLimit(newMaxReleaseLimit);
+        await bancorX.setMinLimit(newMinLimit);
+        await bancorX.setLimitIncPerBlock(newLimitIncPerBlock);
+        await bancorX.setMinRequiredReports(newMinRequiredReports);
 
-        assertEqual(maxLockLimit, MAX_LOCK_LIMIT.plus(1))
-        assertEqual(maxReleaseLimit, MAX_RELEASE_LIMIT.plus(1))
-        assertEqual(minLimit, MIN_LIMIT.plus(1))
-        assertEqual(limitIncPerBlock, LIM_INC_PER_BLOCK.plus(1))
-        assertEqual(minRequiredReports, MIN_REQ_REPORTS.plus(1))
-    })
+        expect(await bancorX.maxLockLimit.call()).to.be.bignumber.equal(newMaxLockLimit);
+        expect(await bancorX.maxReleaseLimit.call()).to.be.bignumber.equal(newMaxReleaseLimit);
+        expect(await bancorX.minLimit.call()).to.be.bignumber.equal(newMinLimit);
+        expect(await bancorX.limitIncPerBlock.call()).to.be.bignumber.equal(newLimitIncPerBlock);
+        expect(await bancorX.minRequiredReports.call()).to.be.bignumber.equal(newMinRequiredReports);
+    });
 
     it('should not allow a non-owner to set limits', async () => {
-        let bancorX = await initBancorX(accounts)
-        await utils.catchRevert(bancorX.setMaxLockLimit(MAX_LOCK_LIMIT.plus(1), {from: accounts[1]}))
-        await utils.catchRevert(bancorX.setMaxReleaseLimit(MAX_RELEASE_LIMIT.plus(1), {from: accounts[1]}))
-        await utils.catchRevert(bancorX.setMinLimit(MIN_LIMIT.plus(1), {from: accounts[1]}))
-        await utils.catchRevert(bancorX.setLimitIncPerBlock(LIM_INC_PER_BLOCK.plus(1), {from: accounts[1]}))
-        await utils.catchRevert(bancorX.setMinRequiredReports(MIN_REQ_REPORTS.plus(1), {from: accounts[1]}))
+        const newMaxLockLimit = MAX_LOCK_LIMIT.add(new BN(1));
+        const newMaxReleaseLimit = MAX_RELEASE_LIMIT.add(new BN(1));
+        const newMinLimit = MIN_LIMIT.add(new BN(1));
+        const newLimitIncPerBlock = LIM_INC_PER_BLOCK.add(new BN(1));
+        const newMinRequiredReports = MIN_REQ_REPORTS.add(new BN(1));
 
-        let maxLockLimit = await bancorX.maxLockLimit.call()
-        let maxReleaseLimit = await bancorX.maxReleaseLimit.call()
-        let minLimit = await bancorX.minLimit.call()
-        let limitIncPerBlock = await bancorX.limitIncPerBlock.call()
-        let minRequiredReports = await bancorX.minRequiredReports.call()
-
-        assertEqual(maxLockLimit, MAX_LOCK_LIMIT)
-        assertEqual(maxReleaseLimit, MAX_RELEASE_LIMIT)
-        assertEqual(minLimit, MIN_LIMIT)
-        assertEqual(limitIncPerBlock, LIM_INC_PER_BLOCK)
-        assertEqual(minRequiredReports, MIN_REQ_REPORTS)
-    })
+        await expectRevert(bancorX.setMaxLockLimit(newMaxLockLimit, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        await expectRevert(bancorX.setMaxReleaseLimit(newMaxReleaseLimit, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        await expectRevert(bancorX.setMinLimit(newMinLimit, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        await expectRevert(bancorX.setLimitIncPerBlock(newLimitIncPerBlock, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        await expectRevert(bancorX.setMinRequiredReports(newMinRequiredReports, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+    });
 
     it('should not be able to lock below the min limit', async () => {
-        let bancorX = await initBancorX(accounts)
-        let amount = MIN_LIMIT.minus(1)
-        await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount))
-    })
+        const amount = MIN_LIMIT.sub(new BN(1));
+        await expectRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount), 'ERR_AMOUNT_TOO_HIGH');
+    });
 
     it('should not be able to lock above the max limit', async () => {
-        let bancorX = await initBancorX(accounts)
-        let amount = MAX_LOCK_LIMIT.plus(1)
-        await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount))
-    })
+        const amount = MAX_LOCK_LIMIT.add(new BN(1));
+        await expectRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount), 'ERR_AMOUNT_TOO_HIGH');
+    });
 
     it('should not be able to release below the min limit', async () => {
-        let bancorX = await initBancorX(accounts)
-        let amount = MIN_LIMIT.minus(1)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.setReporter(accounts[2], true)
-        await bancorX.setReporter(accounts[3], true)
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[1]})
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[2]})
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[3]}))
-    })
+        const amount = MIN_LIMIT.sub(new BN(1));
+        await bancorX.setReporter(reporter1, true);
+        await bancorX.setReporter(reporter2, true);
+        await bancorX.setReporter(reporter3, true);
+
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, amount, X_TRANSFER_ID, { from: reporter1 });
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, amount, X_TRANSFER_ID, { from: reporter2 });
+
+        await expectRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, amount, X_TRANSFER_ID,
+            { from: reporter3 }), 'ERR_AMOUNT_TOO_HIGH');
+    });
 
     it('should not be able to release above the max limit', async () => {
-        let bancorX = await initBancorX(accounts)
-        let amount = MAX_RELEASE_LIMIT.plus(1)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.setReporter(accounts[2], true)
-        await bancorX.setReporter(accounts[3], true)
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[1]})
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[2]})
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], amount, X_TRANSFER_ID, {from: accounts[3]}))
-    })
+        const amount = MAX_RELEASE_LIMIT.add(new BN(1));
+        await bancorX.setReporter(reporter1, true);
+        await bancorX.setReporter(reporter2, true);
+        await bancorX.setReporter(reporter3, true);
+
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, amount, X_TRANSFER_ID, { from: reporter1 });
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, amount, X_TRANSFER_ID, { from: reporter2 });
+
+        await expectRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, amount, X_TRANSFER_ID,
+            { from: reporter3 }), 'ERR_AMOUNT_TOO_HIGH');
+    });
 
     it('should emit an event when successfuly locking tokens', async () => {
-        let bancorX = await initBancorX(accounts)
-        let amount = TEST_AMOUNT
-        let result = await bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount)
-        assert.equal(result.logs[0].args._amount, amount.toFixed())
-        assert.equal(result.logs[0].args._from, accounts[0])
-    })
+        const amount = TEST_AMOUNT;
+        const res = await bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount);
+
+        expectEvent(res, 'XTransfer', {
+            _from: sender,
+            _toBlockchain: EOS_BLOCKCHAIN,
+            _to: EOS_ADDRESS,
+            _amount: TEST_AMOUNT,
+            _id: new BN(0)
+        });
+    });
 
     it('should properly calculate the current lock limit after a single transaction', async () => {
-        let bancorX = await initBancorX(accounts)
-        let numOfTests = 10;
-        let amount = LIM_INC_PER_BLOCK.times(numOfTests)
-        await bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount)
+        const numOfTests = 10;
+        const amount = LIM_INC_PER_BLOCK.mul(new BN(numOfTests));
+        await bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount);
 
-        for (let i = 0; i <= numOfTests; i++) {
-            assertEqual(await bancorX.getCurrentLockLimit.call(), MAX_LOCK_LIMIT.minus(amount).plus(MIN_LIMIT.times(i)))
-            web3.currentProvider.send({method: 'evm_mine'});
+        for (let i = 0; i <= numOfTests; ++i) {
+            expect(await bancorX.getCurrentLockLimit.call()).to.be.bignumber.equal(MAX_LOCK_LIMIT.sub(amount).add(MIN_LIMIT.mul(new BN(i))));
+
+            await time.advanceBlock();
         }
 
         for (let i = 0; i < 3; i++) {
-            assertEqual(await bancorX.getCurrentLockLimit.call(), MAX_LOCK_LIMIT)
-            web3.currentProvider.send({method: 'evm_mine'});
+            expect(await bancorX.getCurrentLockLimit.call()).to.be.bignumber.equal(MAX_LOCK_LIMIT);
+
+            await time.advanceBlock();
         }
-    })
+    });
 
     it('should not allow a reporter to report the same transaction twice', async () => {
-        let bancorX = await initBancorX(accounts)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]}))
-    })
+        await bancorX.setReporter(reporter1, true);
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, TEST_AMOUNT, X_TRANSFER_ID, { from: reporter1 });
+
+        await expectRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, TEST_AMOUNT, X_TRANSFER_ID,
+            { from: reporter1 }), 'ERR_ALREADY_REPORTED');
+    });
 
     it('should not allow two reporters to give conflicting transaction details', async () => {
-        let bancorX = await initBancorX(accounts)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.setReporter(accounts[2], true)
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[1], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[2], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[2]}))
-    })
+        await bancorX.setReporter(reporter1, true);
+        await bancorX.setReporter(reporter2, true);
+
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, reporter1, TEST_AMOUNT, X_TRANSFER_ID, { from: reporter1 });
+        await expectRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, reporter2, TEST_AMOUNT, X_TRANSFER_ID,
+            { from: reporter2 }), 'ERR_TX_MISMATCH');
+    });
 
     it('should not allow a non-reporter to report', async () => {
-        let bancorX = await initBancorX(accounts)
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]}))
-    })
+        await expectRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, TEST_AMOUNT, X_TRANSFER_ID,
+            { from: reporter1 }), 'ERR_ACCESS_DENIED');
+    });
 
     it('should not allow reports when disabled', async () => {
-        let bancorX = await initBancorX(accounts)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.enableReporting(false)
-        await utils.catchRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]}))
-    })
+        await bancorX.setReporter(reporter1, true);
+        await bancorX.enableReporting(false);
+
+        await expectRevert(bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, TEST_AMOUNT, X_TRANSFER_ID,
+            { from: reporter1 }), 'ERR_DISABLED');
+    });
 
     it('should not allow xTransfers when disabled', async () => {
-        let bancorX = await initBancorX(accounts)
-        await bancorX.enableXTransfers(false)
-        await utils.catchRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, TEST_AMOUNT))
-    })
+        await bancorX.enableXTransfers(false);
 
-    it('Gas Test', async () => {
-        let bancorX = await initBancorX(accounts)
-        await bancorX.setReporter(accounts[1], true)
-        await bancorX.setReporter(accounts[2], true)
-        await bancorX.setReporter(accounts[3], true)
-        let result0 = await bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, TEST_AMOUNT)
-        let result1 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[1]})
-        let result2 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[2]})
-        let result3 = await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, accounts[0], TEST_AMOUNT, X_TRANSFER_ID, {from: accounts[3]})
-        console.log(`\nGasPrice for xTransfer: ${result0.receipt.gasUsed}`)
-        console.log(`GasPrice for reportTx (first reporter, no release): ${result1.receipt.gasUsed}`)
-        console.log(`GasPrice for reportTx (second reporter, no release): ${result2.receipt.gasUsed}`)
-        console.log(`GasPrice for reportTx (third reporter, yes release): ${result3.receipt.gasUsed}`)
-    })
-})
+        await expectRevert(bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, TEST_AMOUNT), 'ERR_DISABLED');
+    });
+});

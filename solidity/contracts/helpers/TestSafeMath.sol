@@ -18,4 +18,8 @@ contract TestSafeMath {
     function testSafeMul(uint256 _x, uint256 _y) public pure returns (uint256) {
         return _x.mul(_y);
     }
+
+    function testSafeDiv(uint256 _x, uint256 _y) public pure returns (uint256) {
+        return _x.div(_y);
+    }
 }
