@@ -1,211 +1,204 @@
-/* global artifacts, contract, it, before, assert, web3 */
-/* eslint-disable prefer-reflect, no-loop-func */
+const { expect } = require('chai');
+const { expectRevert, BN } = require('@openzeppelin/test-helpers');
 
-let constants = require('./helpers/FormulaConstants');
-let catchRevert = require('./helpers/Utils').catchRevert;
-let TestBancorFormula = artifacts.require('TestBancorFormula');
+// We will be using BigNumber in some of formula tests, since it'd be much more convenient to work implicitily with
+// decimal numbers.
+const BigNumber = require('bignumber.js');
+const Decimal = require('decimal.js');
+Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN });
 
-let Decimal = require('decimal.js');
-Decimal.set({precision: 100, rounding: Decimal.ROUND_DOWN});
-web3.BigNumber.config({DECIMAL_PLACES: 100, ROUNDING_MODE: web3.BigNumber.ROUND_DOWN});
+const { MIN_PRECISION, MAX_PRECISION, MAX_WEIGHT, maxExpArray, maxValArray } = require('./helpers/FormulaConstants');
+
+const TestBancorFormula = artifacts.require('TestBancorFormula');
 
 contract('BancorFormula', () => {
     let formula;
-    before(async () => {
+    beforeEach(async () => {
         formula = await TestBancorFormula.new();
     });
 
-    let ILLEGAL_VAL = web3.toBigNumber(2).toPower(256);
-    let MAX_BASE_N = web3.toBigNumber(2).toPower(256 - constants.MAX_PRECISION).minus(1);
-    let MIN_BASE_D = web3.toBigNumber(1);
-    let MAX_EXP = constants.MAX_WEIGHT;
+    const ILLEGAL_VAL = new BN(2).pow(new BN(256));
+    const MAX_BASE_N = new BN(2).pow(new BN(256 - MAX_PRECISION)).sub(new BN(1));
+    const MIN_BASE_D = new BN(1);
+    const MAX_EXP = new BN(MAX_WEIGHT);
 
     for (let percent = 1; percent <= 100; percent++) {
-        let baseN = MAX_BASE_N;
-        let baseD = MAX_BASE_N.minus(1);
-        let expN  = MAX_EXP * percent / 100;
-        let expD  = MAX_EXP;
-        let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
+        const baseN = MAX_BASE_N;
+        const baseD = MAX_BASE_N.sub(new BN(1));
+        const expN = MAX_EXP * percent / 100;
+        const expD = MAX_EXP;
 
-        it(`${test}`, async () => {
-            await formula.powerTest(baseN, baseD, expN, expD);
+        it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
+            await formula.powerTest.call(baseN, baseD, expN, expD);
         });
     }
 
     for (let percent = 1; percent <= 100; percent++) {
-        let baseN = MAX_BASE_N;
-        let baseD = MAX_BASE_N.minus(1);
-        let expN  = MAX_EXP;
-        let expD  = MAX_EXP * percent / 100;
-        let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
+        const baseN = MAX_BASE_N;
+        const baseD = MAX_BASE_N.sub(new BN(1));
+        const expN = MAX_EXP;
+        const expD = MAX_EXP * percent / 100;
 
-        it(`${test}`, async () => {
-            await formula.powerTest(baseN, baseD, expN, expD);
+        it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
+            await formula.powerTest.call(baseN, baseD, expN, expD);
         });
     }
 
     for (let percent = 1; percent <= 100; percent++) {
-        let baseN = MAX_BASE_N;
-        let baseD = MIN_BASE_D;
-        let expN  = MAX_EXP * percent / 100;
-        let expD  = MAX_EXP;
-        let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
+        const baseN = MAX_BASE_N;
+        const baseD = MIN_BASE_D;
+        const expN = MAX_EXP * percent / 100;
+        const expD = MAX_EXP;
 
-        it(`${test}`, async () => {
-            if (percent < 64)
-                await formula.powerTest(baseN, baseD, expN, expD);
-            else
-                await catchRevert(formula.powerTest(baseN, baseD, expN, expD));
+        it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
+            if (percent < 64) {
+                await formula.powerTest.call(baseN, baseD, expN, expD);
+            } else {
+                await expectRevert.unspecified(formula.powerTest.call(baseN, baseD, expN, expD));
+            }
         });
     }
 
     for (let percent = 1; percent <= 100; percent++) {
-        let baseN = MAX_BASE_N;
-        let baseD = MIN_BASE_D;
-        let expN  = MAX_EXP;
-        let expD  = MAX_EXP * percent / 100;
-        let test  = `Function power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`;
+        const baseN = MAX_BASE_N;
+        const baseD = MIN_BASE_D;
+        const expN = MAX_EXP;
+        const expD = MAX_EXP * percent / 100;
 
-        it(`${test}`, async () => {
-            await catchRevert(formula.powerTest(baseN, baseD, expN, expD));
+        it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
+            await expectRevert.unspecified(formula.powerTest.call(baseN, baseD, expN, expD));
         });
     }
 
-    let values = [
-        MAX_BASE_N.dividedToIntegerBy(MIN_BASE_D),
-        MAX_BASE_N.dividedToIntegerBy(MAX_BASE_N.minus(1)),
-        MIN_BASE_D.plus(1).dividedToIntegerBy(MIN_BASE_D),
+    const values = [
+        MAX_BASE_N.divRound(MIN_BASE_D),
+        MAX_BASE_N.divRound(MAX_BASE_N.sub(new BN(1))),
+        MIN_BASE_D.add(new BN(1)).divRound(MIN_BASE_D)
     ];
 
-    for (let index = 0; index < values.length; index++) {
-        let test = `Function generalLog(0x${values[index].toString(16)})`;
-
-        it(`${test}`, async () => {
-            let retVal = await formula.generalLogTest(values[index]);
-            assert(retVal.times(MAX_EXP).lessThan(ILLEGAL_VAL), `output is too large`);
+    for (const value of values) {
+        it(`generalLog(0x${value.toString(16)})`, async () => {
+            const retVal = await formula.generalLogTest.call(value);
+            expect(retVal.mul(new BN(MAX_EXP))).be.bignumber.lt(ILLEGAL_VAL);
         });
     }
 
-    for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
-        let maxExp = web3.toBigNumber(constants.maxExpArray[precision]);
-        let shlVal = web3.toBigNumber(2).toPower(constants.MAX_PRECISION - precision);
-        let tuples = [
-            {'input' : maxExp.plus(0).times(shlVal).minus(1), 'output' : web3.toBigNumber(precision-0)},
-            {'input' : maxExp.plus(0).times(shlVal).minus(0), 'output' : web3.toBigNumber(precision-0)},
-            {'input' : maxExp.plus(1).times(shlVal).minus(1), 'output' : web3.toBigNumber(precision-0)},
-            {'input' : maxExp.plus(1).times(shlVal).minus(0), 'output' : web3.toBigNumber(precision-1)},
+    for (let precision = MIN_PRECISION; precision <= MAX_PRECISION; precision++) {
+        const maxExp = new BN(maxExpArray[precision].slice(2), 16);
+        const shlVal = new BN(2).pow(new BN(MAX_PRECISION - precision));
+        const tuples = [
+            { input: maxExp.add(new BN(0)).mul(shlVal).sub(new BN(1)), output: new BN(precision - 0) },
+            { input: maxExp.add(new BN(0)).mul(shlVal).sub(new BN(0)), output: new BN(precision - 0) },
+            { input: maxExp.add(new BN(1)).mul(shlVal).sub(new BN(1)), output: new BN(precision - 0) },
+            { input: maxExp.add(new BN(1)).mul(shlVal).sub(new BN(0)), output: new BN(precision - 1) }
         ];
 
-        for (let index = 0; index < tuples.length; index++) {
-            let input  = tuples[index]['input' ];
-            let output = tuples[index]['output'];
-            let test   = `Function findPositionInMaxExpArray(0x${input.toString(16)})`;
-
-            it(`${test}`, async () => {
-                if (precision == constants.MIN_PRECISION && output.lessThan(web3.toBigNumber(precision))) {
-                    await catchRevert(formula.findPositionInMaxExpArrayTest(input));
-                }
-                else {
-                    let retVal = await formula.findPositionInMaxExpArrayTest(input);
-                    assert(retVal.equals(output), `output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
+        for (const { input, output } of tuples) {
+            it(`findPositionInMaxExpArray(0x${input.toString(16)})`, async () => {
+                if (precision === MIN_PRECISION && output.lt(new BN(precision))) {
+                    await expectRevert.unspecified(formula.findPositionInMaxExpArrayTest.call(input));
+                } else {
+                    const retVal = await formula.findPositionInMaxExpArrayTest.call(input);
+                    expect(retVal).to.be.bignumber.equal(output);
                 }
             });
         }
     }
 
-    for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
-        let maxExp = web3.toBigNumber(constants.maxExpArray[precision]);
-        let maxVal = web3.toBigNumber(constants.maxValArray[precision]);
-        let errExp = maxExp.plus(1);
-        let test1  = `Function generalExp(0x${maxExp.toString(16)}, ${precision})`;
-        let test2  = `Function generalExp(0x${errExp.toString(16)}, ${precision})`;
+    for (let precision = MIN_PRECISION; precision <= MAX_PRECISION; precision++) {
+        const maxExp = new BN(maxExpArray[precision].slice(2), 16);
+        const maxVal = new BN(maxValArray[precision].slice(2), 16);
+        const errExp = maxExp.add(new BN(1));
 
-        it(`${test1}`, async () => {
-            let retVal = await formula.generalExpTest(maxExp, precision);
-            assert(retVal.equals(maxVal), `output is wrong`);
+        it(`generalExp(0x${maxExp.toString(16)}, ${precision})`, async () => {
+            const retVal = await formula.generalExpTest.call(maxExp, precision);
+            expect(retVal).to.be.bignumber.equal(maxVal);
         });
 
-        it(`${test2}`, async () => {
-            let retVal = await formula.generalExpTest(errExp, precision);
-            assert(retVal.lessThan(maxVal), `output indicates that maxExpArray[${precision}] is wrong`);
+        it(`generalExp(0x${errExp.toString(16)}, ${precision})`, async () => {
+            const retVal = await formula.generalExpTest.call(errExp, precision);
+            expect(retVal).to.be.bignumber.lt(maxVal);
         });
     }
 
-    for (let precision = constants.MIN_PRECISION; precision <= constants.MAX_PRECISION; precision++) {
-        let minExp = web3.toBigNumber(constants.maxExpArray[precision-1]).plus(1);
-        let minVal = web3.toBigNumber(2).toPower(precision);
-        let test   = `Function generalExp(0x${minExp.toString(16)}, ${precision})`;
+    for (let precision = MIN_PRECISION; precision <= MAX_PRECISION; precision++) {
+        const minExp = new BN(maxExpArray[precision - 1].slice(2), 16).add(new BN(1));
+        const minVal = new BN(2).pow(new BN(precision));
 
-        it(`${test}`, async () => {
-            let retVal = await formula.generalExpTest(minExp, precision);
-            assert(retVal.greaterThanOrEqualTo(minVal), `output is too small`);
+        it(`generalExp(0x${minExp.toString(16)}, ${precision})`, async () => {
+            const retVal = await formula.generalExpTest.call(minExp, precision);
+            expect(retVal).to.be.bignumber.gte(minVal);
         });
     }
 
     for (let n = 1; n <= 255; n++) {
-        let tuples = [
-            {'input' : web3.toBigNumber(2).toPower(n)           , 'output' : web3.toBigNumber(n)},
-            {'input' : web3.toBigNumber(2).toPower(n).plus(1)   , 'output' : web3.toBigNumber(n)},
-            {'input' : web3.toBigNumber(2).toPower(n+1).minus(1), 'output' : web3.toBigNumber(n)},
+        const tuples = [
+            { input: new BN(2).pow(new BN(n)), output: new BN(n) },
+            { input: new BN(2).pow(new BN(n)).add(new BN(1)), output: new BN(n) },
+            { input: new BN(2).pow(new BN(n + 1)).sub(new BN(1)), output: new BN(n) }
         ];
 
-        for (let index = 0; index < tuples.length; index++) {
-            let input  = tuples[index]['input' ];
-            let output = tuples[index]['output'];
-            let test   = `Function floorLog2(0x${input.toString(16)})`;
-
-            it(`${test}`, async () => {
-                let retVal = await formula.floorLog2Test(input);
-                assert(retVal.equals(output), `output should be ${output.toString(10)} but it is ${retVal.toString(10)}`);
+        for (const { input, output } of tuples) {
+            it(`floorLog2(0x${input.toString(16)})`, async () => {
+                const retVal = await formula.floorLog2Test.call(input);
+                expect(retVal).to.be.bignumber.equal(output);
             });
         }
     }
 
-    let LOG_MIN = 1;
-    let EXP_MIN = 0;
-    let LOG_MAX = web3.toBigNumber(Decimal.exp(1).toFixed());
-    let EXP_MAX = web3.toBigNumber(Decimal.pow(2,4).toFixed());
-    let FIXED_1 = web3.toBigNumber(2).toPower(constants.MAX_PRECISION);
+    describe('precision tests', async () => {
+        const LOG_MIN = 1;
+        const EXP_MIN = 0;
+        const LOG_MAX = new BigNumber(Decimal.exp(1).toFixed());
+        const EXP_MAX = new BigNumber(Decimal.pow(2, 4).toFixed());
+        const FIXED_1 = new BigNumber(2).pow(MAX_PRECISION);
+        const MIN_RATIO = new BigNumber('0.99999999999999999999999999999999999');
+        const MAX_RATIO = new BigNumber(1);
 
-    for (let percent = 0; percent < 100; percent++) {
-        let x = web3.toBigNumber(percent).dividedBy(100).times(LOG_MAX.minus(LOG_MIN)).plus(LOG_MIN);
+        for (let percent = 0; percent < 100; percent++) {
+            const x = new BigNumber(percent).dividedBy(100).multipliedBy(LOG_MAX.minus(LOG_MIN)).plus(LOG_MIN);
 
-        it(`Function optimalLog(${x.toFixed()})`, async () => {
-            let fixedPoint = await formula.optimalLogTest(FIXED_1.times(x).truncated());
-            let floatPoint = web3.toBigNumber(Decimal(x.toFixed()).ln().times(FIXED_1.toFixed()).toFixed());
-            let ratio = fixedPoint.equals(floatPoint) ? web3.toBigNumber(1) : fixedPoint.dividedBy(floatPoint);
-            assert(ratio.greaterThanOrEqualTo('0.99999999999999999999999999999999999') && ratio.lessThanOrEqualTo('1'), `ratio = ${ratio.toFixed()}`);
-        });
-    }
+            it(`optimalLog(${x.toFixed()})`, async () => {
+                const fixedPoint = new BigNumber(await formula.optimalLogTest(FIXED_1.multipliedBy(x).toFixed(0)));
+                const floatPoint = new BigNumber(Decimal(x.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
 
-    for (let percent = 0; percent < 100; percent++) {
-        let x = web3.toBigNumber(percent).dividedBy(100).times(EXP_MAX.minus(EXP_MIN)).plus(EXP_MIN);
-
-        it(`Function optimalExp(${x.toFixed()})`, async () => {
-            let fixedPoint = await formula.optimalExpTest(FIXED_1.times(x).truncated());
-            let floatPoint = web3.toBigNumber(Decimal(x.toFixed()).exp().times(FIXED_1.toFixed()).toFixed());
-            let ratio = fixedPoint.equals(floatPoint) ? web3.toBigNumber(1) : fixedPoint.dividedBy(floatPoint);
-            assert(ratio.greaterThanOrEqualTo('0.99999999999999999999999999999999999') && ratio.lessThanOrEqualTo('1'), `ratio = ${ratio.toFixed()}`);
-        });
-    }
-
-    for (let n = 0; n < 256 - constants.MAX_PRECISION; n++) {
-        let values = [
-            web3.toBigNumber(2).toPower(n),
-            web3.toBigNumber(2).toPower(n).plus(1),
-            web3.toBigNumber(2).toPower(n).times(1.5),
-            web3.toBigNumber(2).toPower(n+1).minus(1),
-        ];
-
-        for (let index = 0; index < values.length; index++) {
-            let x = values[index];
-
-            it(`Function generalLog(${x.toFixed()})`, async () => {
-                let fixedPoint = await formula.generalLogTest(FIXED_1.times(x).truncated());
-                let floatPoint = web3.toBigNumber(Decimal(x.toFixed()).ln().times(FIXED_1.toFixed()).toFixed());
-                let ratio = fixedPoint.equals(floatPoint) ? web3.toBigNumber(1) : fixedPoint.dividedBy(floatPoint);
-                assert(ratio.greaterThanOrEqualTo('0.99999999999999999999999999999999999') && ratio.lessThanOrEqualTo('1'), `ratio = ${ratio.toFixed()}`);
+                const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
+                expect(ratio.gte(MIN_RATIO), 'below MIN_RATIO');
+                expect(ratio.lte(MAX_RATIO), 'above MAX_RATIO');
             });
         }
-    }
+
+        for (let percent = 0; percent < 100; percent++) {
+            const x = new BigNumber(percent).multipliedBy(EXP_MAX.minus(EXP_MIN)).dividedBy(new BigNumber(100)).plus(EXP_MIN);
+
+            it(`optimalExp(${x.toString()})`, async () => {
+                const fixedPoint = new BigNumber(await formula.optimalExpTest.call(FIXED_1.multipliedBy(x).toFixed(0)));
+                const floatPoint = new BigNumber(Decimal(x.toFixed()).exp().mul(FIXED_1.toFixed()).toFixed());
+
+                const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
+                expect(ratio.gte(MIN_RATIO), 'below MIN_RATIO');
+                expect(ratio.lte(MAX_RATIO), 'above MAX_RATIO');
+            });
+        }
+
+        for (let n = 0; n < 256 - MAX_PRECISION; n++) {
+            const values = [
+                new BigNumber(2).pow(new BigNumber(n)),
+                new BigNumber(2).pow(new BigNumber(n)).plus(new BigNumber(1)),
+                new BigNumber(2).pow(new BigNumber(n)).multipliedBy(new BigNumber(1.5)),
+                new BigNumber(2).pow(new BigNumber(n + 1)).minus(new BigNumber(1))
+            ];
+
+            for (const value of values) {
+                it(`generalLog(${value.toString()})`, async () => {
+                    const fixedPoint = new BigNumber(await formula.generalLogTest.call(FIXED_1.multipliedBy(value).toFixed(0)));
+                    const floatPoint = new BigNumber(Decimal(value.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
+
+                    const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
+                    expect(ratio.gte(MIN_RATIO), 'below MIN_RATIO');
+                    expect(ratio.lte(MAX_RATIO), 'above MAX_RATIO');
+                });
+            }
+        }
+    });
 });

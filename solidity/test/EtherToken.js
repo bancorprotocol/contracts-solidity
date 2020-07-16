@@ -1,100 +1,134 @@
-/* global artifacts, contract, it, assert, web3 */
-/* eslint-disable prefer-reflect */
+const { expect } = require('chai');
+const { expectRevert, BN, balance } = require('@openzeppelin/test-helpers');
 
 const EtherToken = artifacts.require('EtherToken');
-const utils = require('./helpers/Utils');
 
 contract('EtherToken', accounts => {
     let token;
+    const name = 'Ether Token';
+    const symbol = 'ETH';
+    const sender = accounts[0];
+    const receiver = accounts[1];
+
     beforeEach(async () => {
-        token = await EtherToken.new('Ether Token', 'ETH');
+        token = await EtherToken.new(name, symbol);
     });
 
     it('verifies the token name after construction', async () => {
-        let name = await token.name.call();
-        assert.equal(name, 'Ether Token');
+        expect(await token.name.call()).to.eql(name);
     });
 
     it('verifies the token symbol after construction', async () => {
-        let symbol = await token.symbol.call();
-        assert.equal(symbol, 'ETH');
+        expect(await token.symbol.call()).to.eql(symbol);
     });
 
     it('verifies the balance and supply after a deposit through the deposit function', async () => {
-        await token.deposit({ value: 1000 });
-        let balance = await token.balanceOf.call(accounts[0]);
-        assert.equal(balance, 1000);
-        let supply = await token.totalSupply.call();
-        assert.equal(supply, 1000);
+        const value = new BN(1000);
+        await token.deposit({ value });
+
+        const balance = await token.balanceOf.call(sender);
+        expect(balance).to.be.bignumber.equal(value);
+
+        const supply = await token.totalSupply.call();
+        expect(supply).to.be.bignumber.equal(value);
     });
 
     it('verifies the balance and supply after a deposit through the fallback function', async () => {
-        await token.send(1000);
-        let balance = await token.balanceOf.call(accounts[0]);
-        assert.equal(balance, 1000);
-        let supply = await token.totalSupply.call();
-        assert.equal(supply, 1000);
+        const value = new BN(122);
+        await token.send(value);
+
+        const balance = await token.balanceOf.call(sender);
+        expect(balance).to.be.bignumber.equal(value);
+
+        const supply = await token.totalSupply.call();
+        expect(supply).to.be.bignumber.equal(value);
     });
 
     it('verifies the balance and supply after a deposit through the depositTo function', async () => {
-        await token.depositTo(accounts[1], { value: 1000 });
-        let balance = await token.balanceOf.call(accounts[1]);
-        assert.equal(balance, 1000);
-        let supply = await token.totalSupply.call();
-        assert.equal(supply, 1000);
+        const value = new BN(4);
+        await token.depositTo(receiver, { value });
+
+        const balance = await token.balanceOf.call(receiver);
+        expect(balance).to.be.bignumber.equal(value);
+
+        const supply = await token.totalSupply.call();
+        expect(supply).to.be.bignumber.equal(value);
     });
 
     it('verifies the balance and supply after a withdrawal', async () => {
-        await token.deposit({ value: 100 });
-        await token.withdraw(20);
-        let tokenBalance = await token.balanceOf.call(accounts[0]);
-        assert.equal(tokenBalance, 80);
-        let supply = await token.totalSupply.call();
-        assert.equal(supply, 80);
+        const value = new BN(100);
+        await token.deposit({ value });
+
+        const value2 = new BN(20);
+        await token.withdraw(value2);
+
+        const balance = await token.balanceOf.call(sender);
+        expect(balance).to.be.bignumber.equal(value.sub(value2));
+
+        const supply = await token.totalSupply.call();
+        expect(supply).to.be.bignumber.equal(value.sub(value2));
     });
 
     it('verifies the ether balance after a withdrawal', async () => {
-        await token.deposit({ value: 100 });
-        let prevBalance = web3.eth.getBalance(accounts[0]);
-        let res = await token.withdraw(20);
-        let transaction = web3.eth.getTransaction(res.tx);
-        let newBalance = web3.eth.getBalance(accounts[0]);
-        prevBalance = web3.toBigNumber(prevBalance);
-        newBalance = web3.toBigNumber(newBalance);
-        let transactionCost = transaction.gasPrice.times(res.receipt.cumulativeGasUsed);
-        assert.equal(newBalance.toString(), prevBalance.minus(transactionCost).plus(20).toString());
+        const value = new BN(500);
+        await token.deposit({ value });
+
+        const prevBalance = await balance.current(sender);
+
+        const value2 = new BN(200);
+        const res = await token.withdraw(value2);
+        const transaction = await web3.eth.getTransaction(res.tx);
+
+        const newBalance = await balance.current(sender);
+        const transactionCost = new BN(transaction.gasPrice).mul(new BN(res.receipt.cumulativeGasUsed));
+        expect(newBalance).to.be.bignumber.equal(prevBalance.sub(transactionCost).add(value2));
     });
 
     it('verifies the ether balance after a withdrawal to target account', async () => {
-        await token.deposit({ value: 100 });
-        let prevBalance = web3.eth.getBalance(accounts[1]);
-        await token.withdrawTo(accounts[1], 20);
-        let newBalance = web3.eth.getBalance(accounts[1]);
-        prevBalance = web3.toBigNumber(prevBalance);
-        newBalance = web3.toBigNumber(newBalance);
-        assert.equal(newBalance.toString(), prevBalance.plus(20).toString());
+        const value = new BN(800);
+        await token.deposit({ value });
+
+        const prevBalance = await balance.current(receiver);
+
+        const value2 = new BN(56);
+        await token.withdrawTo(receiver, value2);
+
+        const newBalance = await balance.current(receiver);
+        expect(newBalance).to.be.bignumber.equal(prevBalance.add(value2));
     });
 
     it('verifies the balances after a transfer', async () => {
-        await token.deposit({ value: 100 });
-        await token.transfer(accounts[1], 10);
-        let balance;
-        balance = await token.balanceOf.call(accounts[0]);
-        assert.equal(balance, 90);
-        balance = await token.balanceOf.call(accounts[1]);
-        assert.equal(balance, 10);
+        const value = new BN(300);
+        await token.deposit({ value });
+
+        const value2 = new BN(10);
+        await token.transfer(receiver, value2);
+
+        const senderBalance = await token.balanceOf.call(sender);
+        expect(senderBalance).to.be.bignumber.equal(value.sub(value2));
+
+        const receiverBalance = await token.balanceOf.call(receiver);
+        expect(receiverBalance).to.be.bignumber.equal(value2);
+
+        const supply = await token.totalSupply.call();
+        expect(supply).to.be.bignumber.equal(value);
     });
 
-    it('should throw when attempting to transfer to the token address', async () => {
-        await token.deposit({ value: 100 });
+    it('should revert when attempting to transfer to the token address', async () => {
+        const value = new BN(500);
+        await token.deposit({ value });
 
-        await utils.catchRevert(token.transfer(token.address, 10));
+        await expectRevert(token.transfer(token.address, new BN(1)), 'ERR_ADDRESS_IS_SELF');
     });
 
-    it('should throw when attempting to transferFrom to the token address', async () => {
-        await token.deposit({ value: 100 });
-        await token.approve(accounts[1], 50);
+    it('should revert when attempting to transferFrom to the token address', async () => {
+        const value = new BN(111);
+        await token.deposit({ value: value });
 
-        await utils.catchRevert(token.transferFrom(accounts[0], token.address, 10, { from: accounts[1] }));
+        const value2 = new BN(10);
+        await token.approve(receiver, value2);
+
+        await expectRevert(token.transferFrom(sender, token.address, new BN(1), { from: receiver }),
+            'ERR_ADDRESS_IS_SELF');
     });
 });

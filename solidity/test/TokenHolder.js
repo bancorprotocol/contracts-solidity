@@ -1,60 +1,53 @@
-/* global artifacts, contract, it, assert */
-/* eslint-disable prefer-reflect */
+const { expect } = require('chai');
+const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
+
+const { ZERO_ADDRESS } = constants;
 
 const TokenHolder = artifacts.require('TokenHolder');
 const ERC20Token = artifacts.require('ERC20Token');
-const utils = require('./helpers/Utils');
-
-let holderAddress;
-let erc20Token;
-let erc20TokenAddress;
-
-// initializes the holder with some ERC20 token balance
-async function initHolder() {
-    let holder = await TokenHolder.new();
-    holderAddress = holder.address;
-    erc20Token = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
-    erc20TokenAddress = erc20Token.address;
-    await erc20Token.transfer(holderAddress, 1000);
-    return holder;
-}
 
 contract('TokenHolder', accounts => {
+    let holder;
+    let erc20Token;
+    const receiver = accounts[2];
+    const nonOwner = accounts[8];
+
+    beforeEach(async () => {
+        holder = await TokenHolder.new();
+        erc20Token = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
+        await erc20Token.transfer(holder.address, 1000);
+    });
+
     it('verifies that the owner can withdraw tokens', async () => {
-        let holder = await initHolder();
-        let prevBalance = await erc20Token.balanceOf.call(accounts[2]);
-        await holder.withdrawTokens(erc20TokenAddress, accounts[2], 100);
-        let balance = await erc20Token.balanceOf.call(accounts[2]);
-        assert.equal(balance.toNumber(), prevBalance.plus(100).toNumber());
+        const prevBalance = await erc20Token.balanceOf.call(receiver);
+
+        const value = new BN(100);
+        await holder.withdrawTokens(erc20Token.address, receiver, value);
+
+        const balance = await erc20Token.balanceOf.call(receiver);
+        expect(balance).to.be.bignumber.equal(prevBalance.add(value));
     });
 
-    it('should throw when a non owner attempts to withdraw tokens', async () => {
-        let holder = await initHolder();
-
-        await utils.catchRevert(holder.withdrawTokens(erc20TokenAddress, accounts[2], 100, { from: accounts[3] }));
+    it('should revert when a non owner attempts to withdraw tokens', async () => {
+        await expectRevert(holder.withdrawTokens(erc20Token.address, receiver, new BN(1), { from: nonOwner }),
+            'ERR_ACCESS_DENIED');
     });
 
-    it('should throw when attempting to withdraw tokens from an invalid ERC20 token address', async () => {
-        let holder = await initHolder();
-
-        await utils.catchRevert(holder.withdrawTokens('0x0', accounts[2], 100));
+    it('should revert when attempting to withdraw tokens from an invalid ERC20 token address', async () => {
+        await expectRevert(holder.withdrawTokens(ZERO_ADDRESS, receiver, new BN(1)), 'ERR_INVALID_ADDRESS');
     });
 
-    it('should throw when attempting to withdraw tokens to an invalid account address', async () => {
-        let holder = await initHolder();
-
-        await utils.catchRevert(holder.withdrawTokens(erc20TokenAddress, '0x0', 100));
+    it('should revert when attempting to withdraw tokens to an invalid account address', async () => {
+        await expectRevert(holder.withdrawTokens(erc20Token.address, ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_ADDRESS');
     });
 
-    it('should throw when attempting to withdraw tokens to the holder address', async () => {
-        let holder = await initHolder();
-
-        await utils.catchRevert(holder.withdrawTokens(erc20TokenAddress, holderAddress, 100));
+    it('should revert when attempting to withdraw tokens to the holder address', async () => {
+        await expectRevert(holder.withdrawTokens(erc20Token.address, holder.address, new BN(1)), 'ERR_ADDRESS_IS_SELF');
     });
 
-    it('should throw when attempting to withdraw an amount greater than the holder balance', async () => {
-        let holder = await initHolder();
+    it('should revert when attempting to withdraw an amount greater than the holder balance', async () => {
+        const balance = await erc20Token.balanceOf.call(holder.address);
 
-        await utils.catchRevert(holder.withdrawTokens(erc20TokenAddress, accounts[2], 5000));
+        await expectRevert.unspecified(holder.withdrawTokens(erc20Token.address, receiver, balance.add(new BN(1))));
     });
 });
