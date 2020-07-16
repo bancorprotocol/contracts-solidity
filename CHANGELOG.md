@@ -1,3 +1,15 @@
+### 0.6.6 (2020-07-16)
+General
+* Updated truffle to 5.1.32
+* Updated web3.js to 1.2.9
+* Switched to ganache-core
+* Updated to the newest solidity-coverage and run it as a plugin
+* Added solhint and added npm scripts
+* Added eslint
+* Upgraded tests to expect and chai, use BN instead of BigNumber and avoid state sharing via before() callbacks
+* Various tests updates and improvements
+
+
 ### 0.6.5 (2020-06-29)
 General
 * Renamed `rate` related functions to `targetAmount` for clarity
