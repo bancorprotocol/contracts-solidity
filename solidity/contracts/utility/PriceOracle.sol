@@ -49,7 +49,7 @@ contract PriceOracle is IPriceOracle, Utils {
     function _vaidAddresses(address _address1, address _address2) internal pure {
         _validAddress(_address1);
         _validAddress(_address2);
-        require(_address1 != _address2, "ERR_SAME_ADDRESSES");
+        require(_address1 != _address2, "ERR_SAME_ADDRESS");
     }
 
     // ensures that the provides tokens are supported by the oracle
@@ -60,7 +60,7 @@ contract PriceOracle is IPriceOracle, Utils {
 
     // error message binary size optimization
     function _supportedTokens(IERC20Token _tokenA, IERC20Token _tokenB) internal view {
-        require(_tokenA != _tokenB, "ERR_SAME_ADDRESSES");
+        require(_tokenA != _tokenB, "ERR_SAME_ADDRESS");
         require(tokensToOracles[_tokenA] != address(0) && tokensToOracles[_tokenB] != address(0), "ERR_UNSUPPORTED_TOKEN");
     }
 

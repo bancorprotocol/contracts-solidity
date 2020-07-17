@@ -64,7 +64,7 @@ contract('PriceOracle', accounts => {
         await chainlinkOracleA.setTimestamp(5000);
         await chainlinkOracleB.setTimestamp(5010);
         await expectRevert(PriceOracle.new(TOKEN_A_ADDRESS, TOKEN_A_ADDRESS, chainlinkOracleA.address, chainlinkOracleB.address),
-            'ERR_SAME_ADDRESSES');
+            'ERR_SAME_ADDRESS');
     });
 
     it('should revert when attempting to construct a price oracle with zero chainlink oracle A address', async () => {
@@ -88,7 +88,7 @@ contract('PriceOracle', accounts => {
         await chainlinkOracleA.setAnswer(10000);
         await chainlinkOracleA.setTimestamp(5000);
         await expectRevert(PriceOracle.new(TOKEN_A_ADDRESS, TOKEN_B_ADDRESS, chainlinkOracleA.address, chainlinkOracleA.address),
-            'ERR_SAME_ADDRESSES');
+            'ERR_SAME_ADDRESS');
     });
 
     it('verifies that latestRate returns the rates from both oracles in the correct order', async () => {
@@ -113,7 +113,7 @@ contract('PriceOracle', accounts => {
     });
 
     it('should revert when attempting to get the rate for the same tokens', async () => {
-        await expectRevert(oracle.latestRate.call(TOKEN_A_ADDRESS, TOKEN_A_ADDRESS), 'ERR_SAME_ADDRESSES');
+        await expectRevert(oracle.latestRate.call(TOKEN_A_ADDRESS, TOKEN_A_ADDRESS), 'ERR_SAME_ADDRESS');
     });
 
     it('verifies that lastUpdateTime returns the earliest timestamp', async () => {
@@ -155,6 +155,6 @@ contract('PriceOracle', accounts => {
     });
 
     it('should revert when attempting to get latestRateAndUpdateTime for the same token', async () => {
-        await expectRevert(oracle.latestRateAndUpdateTime.call(TOKEN_A_ADDRESS, TOKEN_A_ADDRESS), 'ERR_SAME_ADDRESSES');
+        await expectRevert(oracle.latestRateAndUpdateTime.call(TOKEN_A_ADDRESS, TOKEN_A_ADDRESS), 'ERR_SAME_ADDRESS');
     });
 });
