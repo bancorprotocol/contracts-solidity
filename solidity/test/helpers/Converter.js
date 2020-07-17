@@ -10,6 +10,7 @@ const { ZERO_ADDRESS } = constants;
 const Converter = artifacts.require('ConverterBase');
 const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
+const LiquidityPoolV2Converter = artifacts.require('LiquidityPoolV2Converter');
 
 module.exports.new = async (type, tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight, version) => {
     if (version) {
@@ -23,7 +24,7 @@ module.exports.new = async (type, tokenAddress, registryAddress, maxConversionFe
         return converter.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
     }
 
-    const converterType = [LiquidTokenConverter, LiquidityPoolV1Converter][type];
+    const converterType = [LiquidTokenConverter, LiquidityPoolV1Converter, LiquidityPoolV2Converter][type];
     const converter = await converterType.new(tokenAddress, registryAddress, maxConversionFee);
     if (reserveTokenAddress !== ZERO_ADDRESS) {
         await converter.addReserve(reserveTokenAddress, weight);

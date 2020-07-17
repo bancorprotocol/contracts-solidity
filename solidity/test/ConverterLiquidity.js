@@ -37,9 +37,10 @@ contract('ConverterLiquidity', accounts => {
 
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
-        const bancorFormula = await BancorFormula.new();
         contractRegistry = await ContractRegistry.new();
 
+        const bancorFormula = await BancorFormula.new();
+        await bancorFormula.init();
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
     });
 

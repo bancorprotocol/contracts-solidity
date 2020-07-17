@@ -30,6 +30,7 @@ def Main():
     numOfTests = len(rangeSupply) * len(rangeBalance) * len(rangeWeight) * len(rangeAmount)
 
     FormulaContract = Web3Wrapper.Contract('BancorFormula')
+    FormulaContract.setter().init()
     FormulaContractAddr = FormulaContract.getter()
 
     for supply in rangeSupply:

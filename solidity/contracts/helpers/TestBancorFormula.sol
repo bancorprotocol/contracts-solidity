@@ -32,4 +32,16 @@ contract TestBancorFormula is BancorFormula {
     function optimalExpTest(uint256 x) external pure returns (uint256) {
         return super.optimalExp(x);
     }
+
+    function normalizedWeightsTest(uint256 _a, uint256 _b) external pure returns (uint32, uint32) {
+        return super.normalizedWeights(_a, _b);
+    }
+
+    function accurateWeightsTest(uint256 _a, uint256 _b) external pure returns (uint32, uint32) {
+        return super.accurateWeights(_a, _b);
+    }
+
+    function roundDivTest(uint256 _n, uint256 _d) external pure returns (uint256) {
+        return super.roundDiv(_n, _d);
+    }
 }

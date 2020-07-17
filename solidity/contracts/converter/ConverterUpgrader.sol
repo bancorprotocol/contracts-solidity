@@ -5,6 +5,7 @@ import "./interfaces/IConverterFactory.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/interfaces/IWhitelist.sol";
 import "../token/interfaces/IEtherToken.sol";
+import "./types/liquidity-pool-v2/interfaces/ILiquidityPoolV2Converter.sol";
 
 /**
   * @dev Converter Upgrader
@@ -96,10 +97,15 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         transferReserveBalances(converter, newConverter);
         IConverterAnchor anchor = converter.token();
 
+        // get the activation status before it's being invalidated
+        bool activate = isV28OrHigherConverter(converter) && converter.isActive();
+
         if (anchor.owner() == address(converter)) {
             converter.transferTokenOwnership(newConverter);
             newConverter.acceptAnchorOwnership();
         }
+
+        handleTypeSpecificData(converter, newConverter, activate);
 
         converter.transferOwnership(prevOwner);
         newConverter.transferOwnership(prevOwner);
@@ -156,9 +162,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */
-    function copyReserves(IConverter _oldConverter, IConverter _newConverter)
-        private
-    {
+    function copyReserves(IConverter _oldConverter, IConverter _newConverter) private {
         uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 
         for (uint16 i = 0; i < reserveTokenCount; i++) {
@@ -199,9 +203,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _oldConverter    old converter contract address
       * @param _newConverter    new converter contract address
     */
-    function transferReserveBalances(IConverter _oldConverter, IConverter _newConverter)
-        private
-    {
+    function transferReserveBalances(IConverter _oldConverter, IConverter _newConverter) private {
         uint256 reserveBalance;
         uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 
@@ -223,6 +225,44 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
                 reserveBalance = connector.balanceOf(_oldConverter);
                 _oldConverter.withdrawTokens(connector, address(_newConverter), reserveBalance);
             }
+        }
+    }
+
+    /**
+      * @dev handles upgrading custom (type specific) data from the old converter to the new one
+      *
+      * @param _oldConverter    old converter contract address
+      * @param _newConverter    new converter contract address
+      * @param _activate        activate the new converter
+    */
+    function handleTypeSpecificData(IConverter _oldConverter, IConverter _newConverter, bool _activate) private {
+        if (!isV28OrHigherConverter(_oldConverter))
+            return;
+
+        uint16 converterType = _oldConverter.converterType();
+        if (converterType == 2) {
+            uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
+            for (uint16 i = 0; i < reserveTokenCount; i++) {
+                // copy reserve staked balance
+                IERC20Token reserveTokenAddress = _oldConverter.connectorTokens(i);
+                uint256 balance = ILiquidityPoolV2Converter(_oldConverter).reserveStakedBalance(reserveTokenAddress);
+                ILiquidityPoolV2Converter(_newConverter).setReserveStakedBalance(reserveTokenAddress, balance);
+            }
+
+            if (!_activate) {
+                return;
+            }
+
+            // get the primary reserve token
+            IERC20Token primaryReserveToken = ILiquidityPoolV2Converter(_oldConverter).primaryReserveToken();
+
+            // get the chainlink price oracles
+            IPriceOracle priceOracle = ILiquidityPoolV2Converter(_oldConverter).priceOracle();
+            IChainlinkPriceOracle oracleA = priceOracle.tokenAOracle();
+            IChainlinkPriceOracle oracleB = priceOracle.tokenBOracle();
+
+            // activate the new converter
+            ILiquidityPoolV2Converter(_newConverter).activate(primaryReserveToken, oracleA, oracleB);
         }
     }
 

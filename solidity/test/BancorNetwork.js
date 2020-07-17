@@ -1,16 +1,16 @@
 const { expect } = require('chai');
-const { expectRevert, constants, BN, balance } = require('@openzeppelin/test-helpers');
+const { expectRevert, constants, BN, balance, time } = require('@openzeppelin/test-helpers');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+
+const { latest } = time;
 const { ZERO_ADDRESS } = constants;
 
 const BancorNetwork = artifacts.require('BancorNetwork');
-const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
-const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
-const SmartToken = artifacts.require('SmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ConverterRegistry = artifacts.require('ConverterRegistry');
+const ConverterFactory = artifacts.require('ConverterFactory');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConversionPathFinder = artifacts.require('ConversionPathFinder');
 const EtherToken = artifacts.require('EtherToken');
@@ -23,14 +23,26 @@ const ConverterV27OrLowerWithFallback = artifacts.require('ConverterV27OrLowerWi
 const ConverterV28OrHigherWithoutFallback = artifacts.require('ConverterV28OrHigherWithoutFallback');
 const ConverterV28OrHigherWithFallback = artifacts.require('ConverterV28OrHigherWithFallback');
 
+const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
+const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
+const LiquidityPoolV2Converter = artifacts.require('LiquidityPoolV2Converter');
+const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
+const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
+const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
+
+const PoolTokensContainer = artifacts.require('PoolTokensContainer');
+const SmartToken = artifacts.require('SmartToken');
+const ChainlinkPriceOracle = artifacts.require('TestChainlinkPriceOracle');
+const Whitelist = artifacts.require('Whitelist');
+
 /*
 Token network structure:
 
-    SmartToken1  SmartToken2
+    Anchor1  Anchor2
         /     \     /     \
         ETH       BNT    ERC20Token1
 
-    SmartToken3  SmartToken4
+    Anchor3  Anchor4
         /       \     /
     ERC20Token2    BNT
 */
@@ -40,41 +52,41 @@ contract('BancorNetwork', accounts => {
         const bntToken = tokens[0];
         const erc20Token1 = tokens[1];
         const erc20Token2 = tokens[2];
-        const smartToken1 = tokens[3];
-        const smartToken2 = tokens[4];
-        const smartToken3 = tokens[5];
-        const smartToken4 = tokens[6];
+        const anchor1 = tokens[3];
+        const anchor2 = tokens[4];
+        const anchor3 = tokens[5];
+        const anchor4 = tokens[6];
 
         pathsTokens = {
             ETH: {
-                BNT: ['', smartToken1, bntToken],
-                ERC1: ['', smartToken1, bntToken, smartToken2, erc20Token1],
-                ERC2: ['', smartToken1, bntToken, smartToken3, erc20Token2],
-                SMART4: ['', smartToken1, bntToken, smartToken4, smartToken4]
+                BNT: ['', anchor1, bntToken],
+                ERC1: ['', anchor1, bntToken, anchor2, erc20Token1],
+                ERC2: ['', anchor1, bntToken, anchor3, erc20Token2],
+                SMART4: ['', anchor1, bntToken, anchor4, anchor4]
             },
             BNT: {
-                ETH: [bntToken, smartToken1, ''],
-                ERC1: [bntToken, smartToken2, erc20Token1],
-                ERC2: [bntToken, smartToken3, erc20Token2],
-                SMART4: [bntToken, smartToken4, smartToken4]
+                ETH: [bntToken, anchor1, ''],
+                ERC1: [bntToken, anchor2, erc20Token1],
+                ERC2: [bntToken, anchor3, erc20Token2],
+                SMART4: [bntToken, anchor4, anchor4]
             },
             ERC1: {
-                ETH: [erc20Token1, smartToken2, bntToken, smartToken1, ''],
-                BNT: [erc20Token1, smartToken2, bntToken],
-                ERC2: [erc20Token1, smartToken2, bntToken, smartToken3, erc20Token2],
-                SMART4: [erc20Token1, smartToken2, bntToken, smartToken4, smartToken4]
+                ETH: [erc20Token1, anchor2, bntToken, anchor1, ''],
+                BNT: [erc20Token1, anchor2, bntToken],
+                ERC2: [erc20Token1, anchor2, bntToken, anchor3, erc20Token2],
+                SMART4: [erc20Token1, anchor2, bntToken, anchor4, anchor4]
             },
             ERC2: {
-                ETH: [erc20Token2, smartToken3, bntToken, smartToken1, ''],
-                BNT: [erc20Token2, smartToken3, bntToken],
-                ERC1: [erc20Token2, smartToken3, bntToken, smartToken2, erc20Token1],
-                SMART4: [erc20Token2, smartToken3, bntToken, smartToken4, smartToken4]
+                ETH: [erc20Token2, anchor3, bntToken, anchor1, ''],
+                BNT: [erc20Token2, anchor3, bntToken],
+                ERC1: [erc20Token2, anchor3, bntToken, anchor2, erc20Token1],
+                SMART4: [erc20Token2, anchor3, bntToken, anchor4, anchor4]
             },
             SMART4: {
-                ETH: [smartToken4, smartToken4, bntToken, smartToken1, ''],
-                BNT: [smartToken4, smartToken4, bntToken],
-                ERC1: [smartToken4, smartToken4, bntToken, smartToken2, erc20Token1],
-                ERC2: [smartToken4, smartToken4, bntToken, smartToken3, erc20Token2]
+                ETH: [anchor4, anchor4, bntToken, anchor1, ''],
+                BNT: [anchor4, anchor4, bntToken],
+                ERC1: [anchor4, anchor4, bntToken, anchor2, erc20Token1],
+                ERC2: [anchor4, anchor4, bntToken, anchor3, erc20Token2]
             }
         };
 
@@ -115,18 +127,28 @@ contract('BancorNetwork', accounts => {
         return new BN(transaction.gasPrice).mul(new BN(txResult.receipt.cumulativeGasUsed));
     };
 
+    const createChainlinkOracle = async (answer) => {
+        const chainlinkOracle = await ChainlinkPriceOracle.new();
+        await chainlinkOracle.setAnswer(answer);
+        await chainlinkOracle.setTimestamp(await latest());
+
+        return chainlinkOracle;
+    };
+
     let network;
     let bntToken;
     let erc20Token1;
     let erc20Token2;
-    let smartToken1;
-    let smartToken2;
-    let smartToken3;
-    let smartToken4;
+    let anchor1;
+    let anchor2;
+    let anchor3;
+    let anchor4;
     let converter1;
     let converter2;
     let converter3;
     let converter4;
+    let chainlinkPriceOracleA;
+    let chainlinkPriceOracleB;
     let bancorNetwork;
     let contractRegistry;
     let pathsTokens;
@@ -138,17 +160,36 @@ contract('BancorNetwork', accounts => {
 
     const OLD_CONVERTER_VERSION = 9;
     const MIN_RETURN = new BN(1);
+    const INITIAL_ORACLE_A_PRICE = new BN(10000);
+    const INITIAL_ORACLE_B_PRICE = new BN(20000);
     const AFFILIATE_FEE = new BN(10000);
 
+    before(async () => {
+        // The following contracts are unaffected by the underlying tests, this can be shared.
+        contractRegistry = await ContractRegistry.new();
+
+        const bancorFormula = await BancorFormula.new();
+        await bancorFormula.init();
+        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
+
+        const converterFactory = await ConverterFactory.new();
+        await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
+
+        await converterFactory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterAnchorFactory((await LiquidityPoolV2ConverterAnchorFactory.new()).address);
+        await converterFactory.registerTypedConverterCustomFactory((await LiquidityPoolV2ConverterCustomFactory.new()).address);
+
+        const oracleWhitelist = await Whitelist.new();
+        await contractRegistry.registerAddress(registry.CHAINLINK_ORACLE_WHITELIST, oracleWhitelist.address);
+
+        chainlinkPriceOracleA = await createChainlinkOracle(INITIAL_ORACLE_A_PRICE);
+        chainlinkPriceOracleB = await createChainlinkOracle(INITIAL_ORACLE_B_PRICE);
+
+        await oracleWhitelist.addAddress(chainlinkPriceOracleA.address);
+        await oracleWhitelist.addAddress(chainlinkPriceOracleB.address);
+    });
+
     describe('Settings', () => {
-        before(async () => {
-            // The following contracts are unaffected by the underlying tests, this can be shared.
-            contractRegistry = await ContractRegistry.new();
-
-            const bancorFormula = await BancorFormula.new();
-            await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
-        });
-
         beforeEach(async () => {
             bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         });
@@ -226,7 +267,9 @@ contract('BancorNetwork', accounts => {
     });
 
     describe('Conversions', () => {
-        const initTokensAndConverters = async () => {
+        beforeEach(async () => {
+            network = await TestBancorNetwork.new(0, 0);
+
             bancorNetwork = await BancorNetwork.new(contractRegistry.address);
             await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
@@ -242,54 +285,58 @@ contract('BancorNetwork', accounts => {
             erc20Token1 = await ERC20Token.new('ERC20Token', 'ERC1', 2, 1000000);
             erc20Token2 = await TestNonStandardToken.new('ERC20Token', 'ERC2', 2, 2000000);
 
-            smartToken1 = await SmartToken.new('Smart1', 'SMART1', 2);
-            await smartToken1.issue(sender, 1000000);
+            anchor1 = await SmartToken.new('Smart1', 'SMART1', 2);
+            await anchor1.issue(sender, 1000000);
 
-            smartToken2 = await SmartToken.new('Smart2', 'SMART2', 2);
-            await smartToken2.issue(sender, 2000000);
+            anchor2 = await PoolTokensContainer.new('Pool', 'POOL', 2);
+            await anchor2.createToken();
+            await anchor2.createToken();
 
-            smartToken3 = await SmartToken.new('Smart3', 'SMART3', 2);
-            await smartToken3.issue(sender, 3000000);
+            anchor3 = await SmartToken.new('Smart3', 'SMART3', 2);
+            await anchor3.issue(sender, 3000000);
 
-            smartToken4 = await SmartToken.new('Smart4', 'SMART4', 2);
-            await smartToken4.issue(sender, 2500000);
+            anchor4 = await SmartToken.new('Smart4', 'SMART4', 2);
+            await anchor4.issue(sender, 2500000);
 
             await contractRegistry.registerAddress(registry.BNT_TOKEN, bntToken.address);
 
-            converter1 = await LiquidityPoolV1Converter.new(smartToken1.address, contractRegistry.address, 0);
+            converter1 = await LiquidityPoolV1Converter.new(anchor1.address, contractRegistry.address, 0);
             await converter1.addReserve(bntToken.address, 500000);
             await converter1.addReserve(ETH_RESERVE_ADDRESS, 500000);
 
-            converter2 = await LiquidityPoolV1Converter.new(smartToken2.address, contractRegistry.address, 0);
+            converter2 = await LiquidityPoolV2Converter.new(anchor2.address, contractRegistry.address, 0);
             await converter2.addReserve(bntToken.address, 300000);
             await converter2.addReserve(erc20Token1.address, 150000);
 
-            converter3 = await ConverterHelper.new(1, smartToken3.address, contractRegistry.address, 0, bntToken.address, 350000,
+            converter3 = await ConverterHelper.new(1, anchor3.address, contractRegistry.address, 0, bntToken.address, 350000,
                 OLD_CONVERTER_VERSION);
             await converter3.addConnector(erc20Token2.address, 100000, false);
 
-            converter4 = await LiquidTokenConverter.new(smartToken4.address, contractRegistry.address, 0);
+            converter4 = await LiquidTokenConverter.new(anchor4.address, contractRegistry.address, 0);
             await converter4.addReserve(bntToken.address, 220000);
 
             await bntToken.transfer(converter1.address, 40000);
-            await bntToken.transfer(converter2.address, 70000);
             await bntToken.transfer(converter3.address, 110000);
             await bntToken.transfer(converter4.address, 130000);
 
             await web3.eth.sendTransaction({ from: sender, to: converter1.address, value: 50000 });
-            await erc20Token1.transfer(converter2.address, 25000);
             await erc20Token2.transfer(converter3.address, 30000);
 
-            await smartToken1.transferOwnership(converter1.address);
+            await anchor1.transferOwnership(converter1.address);
             await converter1.acceptTokenOwnership();
 
-            await smartToken2.transferOwnership(converter2.address);
+            await anchor2.transferOwnership(converter2.address);
             await converter2.acceptTokenOwnership();
+            await converter2.activate(erc20Token1.address, chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
+            await bntToken.approve(converter2.address, 700000, { from: sender });
+            await erc20Token1.approve(converter2.address, 250000, { from: sender });
+            await converter2.addLiquidity(bntToken.address, 700000, MIN_RETURN);
+            await converter2.addLiquidity(erc20Token1.address, 250000, MIN_RETURN);
 
-            await smartToken3.transferOwnership(converter3.address);
+            await anchor3.transferOwnership(converter3.address);
             await converter3.acceptTokenOwnership();
 
-            await smartToken4.transferOwnership(converter4.address);
+            await anchor4.transferOwnership(converter4.address);
             await converter4.acceptTokenOwnership();
 
             await pathFinder.setAnchorToken(bntToken.address);
@@ -299,32 +346,27 @@ contract('BancorNetwork', accounts => {
             await converterRegistry.addConverter(converter3.address);
             await converterRegistry.addConverter(converter4.address);
 
-            initPaths([bntToken, erc20Token1, erc20Token2, smartToken1, smartToken2, smartToken3, smartToken4]);
-        };
-
-        beforeEach(async () => {
-            network = await TestBancorNetwork.new(0, 0);
-            await initTokensAndConverters();
+            initPaths([bntToken, erc20Token1, erc20Token2, anchor1, anchor2, anchor3, anchor4]);
         });
 
         it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithoutFallback', async () => {
             const converter = await ConverterV27OrLowerWithoutFallback.new();
-            assert.isFalse(await network.isV28OrHigherConverterExternal.call(converter.address));
+            expect(await network.isV28OrHigherConverterExternal.call(converter.address)).to.be.false();
         });
 
         it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithFallback', async () => {
             const converter = await ConverterV27OrLowerWithFallback.new();
-            assert.isFalse(await network.isV28OrHigherConverterExternal.call(converter.address));
+            expect(await network.isV28OrHigherConverterExternal.call(converter.address)).to.be.false();
         });
 
         it('verifies that isV28OrHigherConverter returns true for ConverterV28OrHigherWithoutFallback', async () => {
             const converter = await ConverterV28OrHigherWithoutFallback.new();
-            assert.isTrue(await network.isV28OrHigherConverterExternal.call(converter.address));
+            expect(await network.isV28OrHigherConverterExternal.call(converter.address)).to.be.true();
         });
 
         it('verifies that isV28OrHigherConverter returns true for ConverterV28OrHigherWithFallback', async () => {
             const converter = await ConverterV28OrHigherWithFallback.new();
-            assert.isTrue(await network.isV28OrHigherConverterExternal.call(converter.address));
+            expect(await network.isV28OrHigherConverterExternal.call(converter.address)).to.be.true();
         });
 
         for (const sourceSymbol in pathsTokens) {
@@ -520,7 +562,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling convertFor with too-short path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, smartToken4.address];
+            const invalidPath = [ETH_RESERVE_ADDRESS, anchor4.address];
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convertFor(invalidPath, value, MIN_RETURN, sender2, { value }),
@@ -528,7 +570,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling convertFor with even-length path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken4.address];
+            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address, anchor2.address, anchor4.address];
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convertFor(invalidPath, value, MIN_RETURN, sender2, { value }),
@@ -551,7 +593,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling convert with too-short path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, smartToken4.address];
+            const invalidPath = [ETH_RESERVE_ADDRESS, anchor4.address];
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convert(invalidPath, value, MIN_RETURN, { from: sender, value }),
@@ -559,7 +601,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling convert with even-length path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken4.address];
+            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address, anchor2.address, anchor4.address];
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convert(invalidPath, value, MIN_RETURN, { from: sender, value }),
@@ -569,7 +611,7 @@ contract('BancorNetwork', accounts => {
         // eslint-disable-next-line max-len
         it('verifies that claimAndConvertFor transfers the converted amount correctly when converter from a new converter to an old one', async () => {
             const value = new BN(1000);
-            await smartToken4.approve(bancorNetwork.address, value, { from: sender });
+            await anchor4.approve(bancorNetwork.address, value, { from: sender });
 
             const balanceBeforeTransfer = await erc20Token2.balanceOf.call(sender2);
 
@@ -586,13 +628,13 @@ contract('BancorNetwork', accounts => {
             const value = new BN(1000);
             await erc20Token2.approve(bancorNetwork.address, value, { from: sender });
 
-            const balanceBeforeTransfer = await smartToken4.balanceOf.call(sender2);
+            const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
 
             const path = paths.ERC2.SMART4;
             const returnAmount = await bancorNetwork.claimAndConvertFor.call(path, value, MIN_RETURN, sender2);
             await bancorNetwork.claimAndConvertFor(path, value, MIN_RETURN, sender2);
 
-            const balanceAfterTransfer = await smartToken4.balanceOf.call(sender2);
+            const balanceAfterTransfer = await anchor4.balanceOf.call(sender2);
             expect(balanceAfterTransfer).to.be.bignumber.equal(balanceBeforeTransfer.add(returnAmount));
         });
 
@@ -625,40 +667,40 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when attempting to call rateByPath on a path with fewer than 3 elements', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address];
+            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address];
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.rateByPath.call(invalidPath, value), 'ERR_INVALID_PATH');
         });
 
         it('should revert when attempting to call rateByPath on a path with an even number of elements', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken3.address];
+            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.rateByPath.call(invalidPath, value), 'ERR_INVALID_PATH');
         });
 
         it('verifies that convertFor2 transfers the converted amount correctly', async () => {
-            const balanceBeforeTransfer = await smartToken4.balanceOf.call(sender2);
+            const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
 
             const value = new BN(1000);
             const path = paths.ETH.SMART4;
             const returnAmount = await bancorNetwork.convertFor2.call(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
             await bancorNetwork.convertFor2(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
 
-            const balanceAfterTransfer = await smartToken4.balanceOf.call(sender2);
+            const balanceAfterTransfer = await anchor4.balanceOf.call(sender2);
             expect(balanceAfterTransfer).to.be.bignumber.equal(balanceBeforeTransfer.add(returnAmount));
         });
 
         it('verifies that convert2 transfers the converted amount correctly', async () => {
-            const balanceBeforeTransfer = await smartToken4.balanceOf.call(sender2);
+            const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
 
             const value = new BN(1000);
             const path = paths.ETH.SMART4;
             const returnAmount = await bancorNetwork.convert2.call(path, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
             await bancorNetwork.convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
 
-            const balanceAfterTransfer = await smartToken4.balanceOf.call(sender2);
+            const balanceAfterTransfer = await anchor4.balanceOf.call(sender2);
             expect(balanceAfterTransfer).to.be.bignumber.equal(balanceBeforeTransfer.add(returnAmount));
         });
 
@@ -678,7 +720,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling convertFor2 with too-short path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address];
+            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address];
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convertFor2(invalidPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value }),
@@ -686,7 +728,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling convertFor2 with even-length path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken3.address];
+            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convertFor2(invalidPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value }),
@@ -709,7 +751,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling convert2 with too-short path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address];
+            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address];
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convert2(invalidPath, value, MIN_RETURN, ZERO_ADDRESS, 0,
@@ -717,7 +759,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling convert2 with even-length path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, smartToken1.address, smartToken2.address, smartToken3.address];
+            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convert2(invalidPath, value, MIN_RETURN, ZERO_ADDRESS, 0,
@@ -728,13 +770,13 @@ contract('BancorNetwork', accounts => {
             const value = new BN(1000);
             await erc20Token1.approve(bancorNetwork.address, value, { from: sender });
 
-            const balanceBeforeTransfer = await smartToken4.balanceOf.call(sender2);
+            const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
 
             const path = paths.ERC1.SMART4;
             const returnAmount = await bancorNetwork.claimAndConvertFor2.call(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0);
             await bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0);
 
-            const balanceAfterTransfer = await smartToken4.balanceOf.call(sender2);
+            const balanceAfterTransfer = await anchor4.balanceOf.call(sender2);
             expect(balanceAfterTransfer).to.be.bignumber.equal(balanceBeforeTransfer.add(returnAmount));
         });
 
@@ -748,13 +790,13 @@ contract('BancorNetwork', accounts => {
             const value = new BN(1000);
             await erc20Token1.approve(bancorNetwork.address, value, { from: sender });
 
-            const balanceBeforeTransfer = await smartToken4.balanceOf.call(sender);
+            const balanceBeforeTransfer = await anchor4.balanceOf.call(sender);
 
             const path = paths.ERC1.SMART4;
             const returnAmount = await bancorNetwork.claimAndConvert2.call(path, value, MIN_RETURN, ZERO_ADDRESS, 0);
             await bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0);
 
-            const balanceAfterTransfer = await smartToken4.balanceOf.call(sender);
+            const balanceAfterTransfer = await anchor4.balanceOf.call(sender);
             expect(balanceAfterTransfer).to.be.bignumber.equal(balanceBeforeTransfer.add(returnAmount));
         });
 

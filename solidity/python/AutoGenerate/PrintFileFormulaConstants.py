@@ -1,12 +1,12 @@
-from common.functions import getCoefficients
+from common.functions import getTaylorCoefs
 from common.functions import getMaxExpArray
 from common.functions import getMaxValArray
-from common.constants import NUM_OF_COEFFICIENTS
+from common.constants import NUM_OF_TAYLOR_COEFS
 from common.constants import MIN_PRECISION
 from common.constants import MAX_PRECISION
 
 
-coefficients = getCoefficients(NUM_OF_COEFFICIENTS)
+coefficients = getTaylorCoefs(NUM_OF_TAYLOR_COEFS)
 maxExpArray = getMaxExpArray(coefficients,MAX_PRECISION+1)
 maxValArray = getMaxValArray(coefficients,maxExpArray)
 

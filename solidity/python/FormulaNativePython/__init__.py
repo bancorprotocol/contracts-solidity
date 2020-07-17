@@ -1,8 +1,10 @@
+from mpmath import mp
+from mpmath import lambertw
 from decimal import Decimal
 from decimal import getcontext
 
 
-getcontext().prec = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
+getcontext().prec = mp.dps = 80 # 78 digits for a maximum of 2^256-1, and 2 more digits for after the decimal point
 
 
 def purchaseTargetAmount(supply, balance, weight, amount):
@@ -38,3 +40,13 @@ def liquidateReserveAmount(supply, balance, weights, amount):
 def power(baseN, baseD, expN, expD, precision):
     baseN, baseD, expN, expD, precision = [Decimal(value) for value in vars().values()]
     return (baseN/baseD)**(expN/expD)*2**precision
+
+
+def lambertPos(x, precision):
+    x, precision = [Decimal(value) for value in vars().values()]
+    return Decimal(str(lambertw(x/2**precision)))/(x/2**precision)*2**precision
+
+
+def lambertNeg(x, precision):
+    x, precision = [Decimal(value) for value in vars().values()]
+    return Decimal(str(lambertw(-x/2**precision)))/(-x/2**precision)*2**precision

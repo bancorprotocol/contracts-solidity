@@ -1,9 +1,14 @@
 from math import factorial
 
 
-def getCoefficients(numOfCoefficients):
+def getTaylorCoefs(numOfCoefficients):
     maxFactorial = factorial(numOfCoefficients-1)
     return [maxFactorial//factorial(i) for i in range(1,numOfCoefficients)]
+
+
+def getLambertCoefs(numOfLambertCoefs):
+    maxFactorial = factorial(numOfLambertCoefs-1)
+    return [maxFactorial*i**(i-1)//factorial(i) for i in range(1,numOfLambertCoefs)]
 
 
 def getMaxExpArray(coefficients,numOfPrecisions):
@@ -67,6 +72,12 @@ def optimalExp(x,hiTerms,loTerms,fixed1):
         if x & term.bit:
             res = safeMul(res,term.num)//term.den
     return res
+
+
+def lambertPos3(x,optimalLog,generalLog,optimalLogMaxVal,fixed1):
+    L1 = optimalLog(x) if x < optimalLogMaxVal else generalLog(x)
+    L2 = optimalLog(L1) if L1 < optimalLogMaxVal else generalLog(L1)
+    return safeMul(safeAdd(safeSub(L1,L2),safeMul(L2,fixed1)//L1),fixed1)//x
 
 
 def safeSub(x,y):

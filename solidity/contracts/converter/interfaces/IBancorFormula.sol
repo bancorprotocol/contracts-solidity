@@ -40,4 +40,11 @@ contract IBancorFormula {
                                     uint32 _reserveRatio,
                                     uint256 _amount)
                                     public view returns (uint256);
+
+    function balancedWeights(uint256 _primaryReserveStakedBalance,
+                             uint256 _primaryReserveBalance,
+                             uint256 _secondaryReserveBalance,
+                             uint256 _reserveRateNumerator,
+                             uint256 _reserveRateDenominator)
+                             public view returns (uint32, uint32);
 }

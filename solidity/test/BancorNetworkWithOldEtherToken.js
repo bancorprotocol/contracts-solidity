@@ -62,6 +62,7 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
         contractRegistry = await ContractRegistry.new();
 
         const bancorFormula = await BancorFormula.new();
+        await bancorFormula.init();
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
     });
 
