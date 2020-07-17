@@ -2,6 +2,7 @@
 require('chai')
     .use(require('chai-as-promised'))
     .use(require('chai-bn')(require('bn.js')))
+    .use(require('chai-string'))
     .use(require('dirty-chai'))
     .expect();
 
@@ -38,7 +39,7 @@ module.exports = {
             settings: {
                 optimizer: {
                     enabled: true,
-                    runs: 1000
+                    runs: 200
                 }
             }
         }
