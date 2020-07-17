@@ -477,14 +477,14 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     function doConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary) internal returns (uint256);
 
     /**
-      * @dev returns the conversion fee for a given return amount
+      * @dev returns the conversion fee for a given target amount
       *
-      * @param _amount  return amount
+      * @param _targetAmount  target amount
       *
       * @return conversion fee
     */
-    function calculateFee(uint256 _amount) internal view returns (uint256) {
-        return _amount.mul(conversionFee).div(CONVERSION_FEE_RESOLUTION);
+    function calculateFee(uint256 _targetAmount) internal view returns (uint256) {
+        return _targetAmount.mul(conversionFee).div(CONVERSION_FEE_RESOLUTION);
     }
 
     /**

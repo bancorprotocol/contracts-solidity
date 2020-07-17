@@ -1,8 +1,9 @@
 pragma solidity 0.4.26;
 import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterFactory.sol";
-import "./interfaces/ITypedConverterAnchorFactory.sol";
 import "./interfaces/ITypedConverterFactory.sol";
+import "./interfaces/ITypedConverterAnchorFactory.sol";
+import "./interfaces/ITypedConverterCustomFactory.sol";
 import "../utility/Owned.sol";
 import "../utility/interfaces/IContractRegistry.sol";
 import "../token/SmartToken.sol";
@@ -19,8 +20,19 @@ contract ConverterFactory is IConverterFactory, Owned {
     */
     event NewConverter(address indexed _converter, address indexed _owner);
 
-    mapping (uint16 => ITypedConverterAnchorFactory) public anchorFactories;
     mapping (uint16 => ITypedConverterFactory) public converterFactories;
+    mapping (uint16 => ITypedConverterAnchorFactory) public anchorFactories;
+    mapping (uint16 => ITypedConverterCustomFactory) public customFactories;
+
+    /**
+      * @dev initializes the factory with a specific typed converter factory
+      * can only be called by the owner
+      *
+      * @param _factory typed converter factory
+    */
+    function registerTypedConverterFactory(ITypedConverterFactory _factory) public ownerOnly {
+        converterFactories[_factory.converterType()] = _factory;
+    }
 
     /**
       * @dev initializes the factory with a specific typed converter anchor factory
@@ -33,13 +45,13 @@ contract ConverterFactory is IConverterFactory, Owned {
     }
 
     /**
-      * @dev initializes the factory with a specific typed converter factory
+      * @dev initializes the factory with a specific typed converter custom factory
       * can only be called by the owner
       *
-      * @param _factory typed converter factory
+      * @param _factory typed converter custom factory
     */
-    function registerTypedConverterFactory(ITypedConverterFactory _factory) public ownerOnly {
-        converterFactories[_factory.converterType()] = _factory;
+    function registerTypedConverterCustomFactory(ITypedConverterCustomFactory _factory) public ownerOnly {
+        customFactories[_factory.converterType()] = _factory;
     }
 
     /**

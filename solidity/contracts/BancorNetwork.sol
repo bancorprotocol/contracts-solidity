@@ -470,7 +470,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @dev handles the conversion target token if the network still holds it at the end of the conversion
       *
       * @param _data        conversion data, see ConversionStep struct above
-      * @param _amount      conversion return amount, in the target token
+      * @param _amount      conversion target amount
       * @param _beneficiary wallet to receive the conversion result
     */
     function handleTargetToken(ConversionStep[] _data, uint256 _amount, address _beneficiary) private {
