@@ -1,0 +1,12 @@
+[
+    {"operation": "newPool", "amp": 20, "fee": 1000, "mainToken": "TKN", "sideToken": "BNT", "numOfUsers": 3, "initialAmount": 1000000},
+    {"operation": "setRates", "mainRate": 1, "sideRate": 1},
+    {"operation": "addLiquidity", "token": "TKN", "user": "user1", "amount": 100000},
+    {"operation": "addLiquidity", "token": "BNT", "user": "user1", "amount": 100000},
+    {"operation": "addLiquidity", "token": "TKN", "user": "user2", "amount": 10000},
+    {"operation": "addLiquidity", "token": "BNT", "user": "user2", "amount": 10000},
+    {"operation": "convert", "updateWeights": false, "sourceToken": "TKN", "targetToken": "BNT", "user": "user3", "amount": 1000},
+    {"operation": "closeArbitrage", "user": "user3"},
+    {"operation": "remLiquidity", "token": "TKN", "user": "user2", "amount": "all"},
+    {"operation": "remLiquidity", "token": "BNT", "user": "user2", "amount": "all"}
+]

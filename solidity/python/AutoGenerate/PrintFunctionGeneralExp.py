@@ -1,8 +1,8 @@
-from common.functions import getCoefficients
-from common.constants import NUM_OF_COEFFICIENTS
+from common.functions import getTaylorCoefs
+from common.constants import NUM_OF_TAYLOR_COEFS
 
 
-coefficients = getCoefficients(NUM_OF_COEFFICIENTS)
+coefficients = getTaylorCoefs(NUM_OF_TAYLOR_COEFS)
 
 
 valueMaxLen = len(hex(coefficients[1]))

@@ -29,6 +29,7 @@ def Main():
     numOfTests = len(rangeSupply) * len(rangeBalance) * len(rangeWeights) * len(rangeAmount)
 
     FormulaContract = Web3Wrapper.Contract('BancorFormula')
+    FormulaContract.setter().init()
     FormulaContractAddr = FormulaContract.tester()
 
     minGas = float('+inf')

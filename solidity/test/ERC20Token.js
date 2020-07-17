@@ -118,7 +118,7 @@ contract('ERC20Token', accounts => {
         await token.approve(receiver, value);
 
         await expectRevert(token.transferFrom(sender, receiver2, value.add(new BN(1)), { from: receiver }),
-            'ERR_UNDERFLOW.');
+            'ERR_UNDERFLOW');
     });
 
     it('should revert when attempting to change the allowance without resetting it first', async () => {

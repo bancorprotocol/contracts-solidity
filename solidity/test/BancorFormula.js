@@ -8,6 +8,7 @@ const Decimal = require('decimal.js');
 Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN });
 
 const { MIN_PRECISION, MAX_PRECISION, MAX_WEIGHT, maxExpArray, maxValArray } = require('./helpers/FormulaConstants');
+const { normalizedWeights, balancedWeights } = require('./helpers/FormulaFunctions');
 
 const TestBancorFormula = artifacts.require('TestBancorFormula');
 
@@ -15,6 +16,7 @@ contract('BancorFormula', () => {
     let formula;
     beforeEach(async () => {
         formula = await TestBancorFormula.new();
+        await formula.init();
     });
 
     const ILLEGAL_VAL = new BN(2).pow(new BN(256));
@@ -198,6 +200,145 @@ contract('BancorFormula', () => {
                     expect(ratio.gte(MIN_RATIO), 'below MIN_RATIO');
                     expect(ratio.lte(MAX_RATIO), 'above MAX_RATIO');
                 });
+            }
+        }
+
+        for (let a = 0; a < 10; a++) {
+            for (let b = 1; b <= 10; b++) {
+                it(`normalizedWeights(${a}, ${b})`, async () => {
+                    const expectedWeights = normalizedWeights(a, b);
+                    const expectedX = expectedWeights[0];
+                    const expectedY = expectedWeights[1];
+
+                    const weights = await formula.normalizedWeightsTest.call(new BN(a), new BN(b));
+                    const actualX = weights[0];
+                    const actualY = weights[1];
+                    expect(actualX).to.be.bignumber.equal(new BN(expectedX.toFixed()));
+                    expect(actualY).to.be.bignumber.equal(new BN(expectedY.toFixed()));
+                });
+            }
+        }
+
+        for (let i = 1; i <= MAX_WEIGHT; i *= 10) {
+            const a = Decimal(ILLEGAL_VAL.toString()).sub(1).divToInt(MAX_WEIGHT).mul(i).add(1);
+            for (let j = 1; j <= MAX_WEIGHT; j *= 10) {
+                const b = Decimal(ILLEGAL_VAL.toString()).sub(1).divToInt(MAX_WEIGHT).mul(j).add(1);
+                it(`normalizedWeights(${a.toFixed()}, ${b.toFixed()})`, async () => {
+                    const expectedWeights = normalizedWeights(a, b);
+                    const expectedX = expectedWeights[0];
+                    const expectedY = expectedWeights[1];
+
+                    const weights = await formula.normalizedWeightsTest.call(new BN(a.toFixed()), new BN(b.toFixed()));
+                    const actualX = weights[0];
+                    const actualY = weights[1];
+                    expect(actualX).to.be.bignumber.equal(new BN(expectedX.toFixed()));
+                    expect(actualY).to.be.bignumber.equal(new BN(expectedY.toFixed()));
+                });
+            }
+        }
+
+        for (let a = 0; a < 10; a++) {
+            for (let b = Math.max(a, 1); b <= 10; b++) {
+                it(`accurateWeights(${a}, ${b})`, async () => {
+                    const expectedX = Math.round(MAX_WEIGHT * a / (a + b));
+                    const expectedY = MAX_WEIGHT - expectedX;
+
+                    const weights = await formula.accurateWeightsTest.call(new BN(a.toFixed()), new BN(b.toFixed()));
+                    const actualX = weights[0];
+                    const actualY = weights[1];
+                    expect(actualX).to.be.bignumber.equal(new BN(expectedX));
+                    expect(actualY).to.be.bignumber.equal(new BN(expectedY));
+                });
+            }
+        }
+
+        for (let i = 1; i <= MAX_WEIGHT; i *= 10) {
+            const a = Decimal(ILLEGAL_VAL.toString()).sub(1).divToInt(MAX_WEIGHT).mul(i).add(1);
+            for (let j = 1; j <= MAX_WEIGHT; j *= 10) {
+                const b = Decimal(ILLEGAL_VAL.toString()).sub(1).divToInt(MAX_WEIGHT).mul(j).add(1);
+                it(`accurateWeightsTest(${a.toFixed()}, ${b.toFixed()})`, async () => {
+                    const expectedWeights = normalizedWeights(a, b);
+                    const expectedX = expectedWeights[0];
+                    const expectedY = expectedWeights[1];
+
+                    const weights = await formula.accurateWeightsTest.call(new BN(a.toFixed()), new BN(b.toFixed()));
+                    const actualX = weights[0];
+                    const actualY = weights[1];
+                    expect(actualX).to.be.bignumber.equal(new BN(expectedX.toFixed()));
+                    expect(actualY).to.be.bignumber.equal(new BN(expectedY.toFixed()));
+                });
+            }
+        }
+
+        for (let n = 0; n < 10; n++) {
+            for (let d = 1; d <= 10; d++) {
+                it(`roundDiv(${n}, ${d})`, async () => {
+                    const expected = Math.round(n / d);
+                    const actual = await formula.roundDivTest.call(new BN(n.toFixed()), new BN(d.toFixed()));
+                    expect(actual).to.be.bignumber.equal(new BN(expected));
+                });
+            }
+        }
+
+        for (const i of [-2, -1, 0, 1, 2]) {
+            const n = Decimal(ILLEGAL_VAL.toString()).add(i).mod(Decimal(ILLEGAL_VAL.toString()));
+            for (const j of [-2, -1, 1, 2]) {
+                const d = Decimal(ILLEGAL_VAL.toString()).add(j).mod(Decimal(ILLEGAL_VAL.toString()));
+                it(`roundDiv(${n.toFixed()}, ${d.toFixed()})`, async () => {
+                    const expected = n.div(d).toFixed(0, Decimal.ROUND_HALF_UP);
+                    const actual = await formula.roundDivTest.call(new BN(n.toFixed()), new BN(d.toFixed()));
+                    expect(actual).to.be.bignumber.equal(new BN(expected));
+                });
+            }
+        }
+
+        const getRatio = (a, b, c, d) => {
+            if (a.isZero()) {
+                return d.div(b);
+            }
+            if (b.isZero()) {
+                return a.div(c);
+            }
+
+            return a.div(b).div(c.div(d));
+        };
+
+        for (let t = 1; t < 5; t++) {
+            for (let s = 1; s < 5; s++) {
+                for (let r = 1; r < 5; r++) {
+                    for (let q = 1; q < 5; q++) {
+                        for (let p = 1; p < 5; p++) {
+                            it(`balancedWeights(${[t, s, r, q, p]})`, async () => {
+                                const actual = formula.balancedWeights(t, s, r, q, p);
+
+                                let expected;
+                                try {
+                                    expected = balancedWeights(t, s, r, q, p);
+                                } catch (error) {
+                                    const { message } = error;
+
+                                    if (message.startsWith('ERR_INVALID')) {
+                                        await expectRevert(actual, 'ERR_INVALID');
+                                    } else {
+                                        throw error;
+                                    }
+
+                                    return;
+                                }
+
+                                const weights = await actual;
+                                const ratio = getRatio(Decimal(weights[0].toString()), Decimal(weights[1].toString()),
+                                    expected[0], expected[1]);
+
+                                const MIN_RATIO = Decimal('0.93271');
+                                const MAX_RATIO = Decimal('1.078991');
+
+                                expect(ratio.gte(MIN_RATIO), 'below MIN_RATIO');
+                                expect(ratio.lte(MAX_RATIO), 'above MAX_RATIO');
+                            });
+                        }
+                    }
+                }
             }
         }
     });
