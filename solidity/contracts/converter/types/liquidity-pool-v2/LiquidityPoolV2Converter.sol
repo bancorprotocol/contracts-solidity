@@ -765,17 +765,17 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         Fraction memory newRate = _effectiveTokensRate();
 
         // if the rate has changed, update it and rebalance the pool
-        if (newRate.n != referenceRateN || newRate.d != referenceRateD) {
-            referenceRateN = newRate.n;
-            referenceRateD = newRate.d;
-            referenceRateUpdateTime = currentTime;
-
-            rebalance();
-
-            return (true, newRate);
+        if (newRate.n == referenceRateN && newRate.d == referenceRateD) {
+            return (false, newRate);
         }
 
-        return (false, newRate);
+        referenceRateN = newRate.n;
+        referenceRateD = newRate.d;
+        referenceRateUpdateTime = currentTime;
+
+        rebalance();
+
+        return (true, newRate);
     }
 
     /**
