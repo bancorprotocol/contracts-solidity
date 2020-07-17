@@ -1,5 +1,5 @@
 pragma solidity 0.4.26;
-import "../converter/LiquidityPoolV1Converter.sol";
+import "../converter/types/liquidity-pool-v1/LiquidityPoolV1Converter.sol";
 
 contract TestLiquidityPoolConverter is LiquidityPoolV1Converter {
     constructor(
