@@ -653,8 +653,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 expect(expectedFee).to.be.bignumber.equal(res[1]);
             });
 
-            // TODO: disabled
-            it.skip('verifies that targetAmountAndFee returns an increased fee when the secondary reserve is in deficit', async () => {
+            it('verifies that targetAmountAndFee returns an increased fee when the secondary reserve is in deficit', async () => {
                 const conversionFee = 25000;
                 const converter = await initConverter(true, true, isETHReserve, conversionFee);
                 await converter.setConversionFee(conversionFee);
@@ -718,8 +717,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 expect(normalFee).to.be.bignumber.lt(res[1]);
             });
 
-            // TODO: disabled
-            it.skip('verifies that targetAmountAndFee returns a decreased fee when the secondary reserve is in surplus', async () => {
+            it('verifies that targetAmountAndFee returns a decreased fee when the secondary reserve is in surplus', async () => {
                 const conversionFee = 25000;
                 const converter = await initConverter(true, true, isETHReserve, conversionFee);
                 await converter.setConversionFee(conversionFee);
