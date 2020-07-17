@@ -33,12 +33,6 @@ contract PriceOracle is IPriceOracle, Utils {
         validAddress(_tokenAOracle)
         validAddress(_tokenBOracle)
     {
-        // validate the oracle interface
-        _tokenAOracle.latestAnswer();
-        _tokenBOracle.latestAnswer();
-        _tokenAOracle.latestTimestamp();
-        _tokenBOracle.latestTimestamp();
-
         tokenA = _tokenA;
         tokenB = _tokenB;
         tokenAOracle = _tokenAOracle;
