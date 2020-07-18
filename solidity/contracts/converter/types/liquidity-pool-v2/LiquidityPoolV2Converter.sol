@@ -647,10 +647,9 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         internal view returns (uint256)
     {
         // conversions to the primary reserve apply normal fees
-        // TODO: disabled adjusted fees
-        //if (_targetToken == primaryReserveToken) {
+        if (_targetToken == primaryReserveToken) {
             return super.calculateFee(_targetAmount);
-        /*}
+        }
 
         // get the adjusted fee
         uint256 fee = calculateAdjustedFee(
@@ -663,7 +662,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             conversionFee);
 
         // calculate the fee based on the adjusted value
-        return _targetAmount.mul(fee).div(CONVERSION_FEE_RESOLUTION);*/
+        return _targetAmount.mul(fee).div(CONVERSION_FEE_RESOLUTION);
     }
 
     /**
