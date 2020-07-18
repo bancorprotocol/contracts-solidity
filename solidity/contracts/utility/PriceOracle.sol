@@ -28,8 +28,8 @@ contract PriceOracle is IPriceOracle, Utils {
     */
     constructor(IERC20Token _tokenA, IERC20Token _tokenB, IChainlinkPriceOracle _tokenAOracle, IChainlinkPriceOracle _tokenBOracle)
         public
-        vaidAddresses(_tokenA, _tokenB)
-        vaidAddresses(_tokenAOracle, _tokenBOracle)
+        validAddresses(_tokenA, _tokenB)
+        validAddresses(_tokenAOracle, _tokenBOracle)
     {
         tokenA = _tokenA;
         tokenB = _tokenB;
@@ -40,13 +40,13 @@ contract PriceOracle is IPriceOracle, Utils {
     }
 
     // ensures that the provided addresses are valid
-    modifier vaidAddresses(address _address1, address _address2) {
-        _vaidAddresses(_address1, _address2);
+    modifier validAddresses(address _address1, address _address2) {
+        _validAddresses(_address1, _address2);
         _;
     }
 
     // error message binary size optimization
-    function _vaidAddresses(address _address1, address _address2) internal pure {
+    function _validAddresses(address _address1, address _address2) internal pure {
         _validAddress(_address1);
         _validAddress(_address2);
         require(_address1 != _address2, "ERR_SAME_ADDRESS");
