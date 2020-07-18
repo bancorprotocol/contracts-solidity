@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.6",
-    "@truffle/contract": "^4.2.12",
+    "@truffle/contract": "^4.2.13",
     "bignumber.js": "^9.0.0",
     "bn.js": "^5.1.2",
     "chai": "^4.2.0",
@@ -51,7 +51,7 @@
     "snyk": "^1.362.1",
     "solhint": "^3.0.0",
     "solidity-coverage": "^0.7.9",
-    "truffle": "5.1.34",
+    "truffle": "5.1.35",
     "truffle-flattener": "1.4.4",
     "web3": "1.2.10"
   },
