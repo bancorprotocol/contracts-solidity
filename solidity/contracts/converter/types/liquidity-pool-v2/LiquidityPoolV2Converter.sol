@@ -286,7 +286,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         public
         view
         active
-        returns (uint256 targetAmount, uint256 fee)
+        returns (uint256, uint256)
     {
         // validate input
         // not using the `validReserve` modifier to circumvent `stack too deep` compiler error
@@ -320,7 +320,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         }
 
         // return the target amount and the adjusted fee using the updated reserve weights
-        (targetAmount, , fee) = targetAmountAndFees(_sourceToken, _targetToken, sourceTokenWeight, targetTokenWeight, rate, _amount);
+        (uint256 targetAmount, , uint256 fee) = targetAmountAndFees(_sourceToken, _targetToken, sourceTokenWeight, targetTokenWeight, rate, _amount);
+        return (targetAmount, fee);
     }
 
     /**
