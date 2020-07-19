@@ -105,11 +105,15 @@ contract('PriceOracle', accounts => {
     });
 
     it('should revert when attempting to get the rate with zero token A address', async () => {
-        await expectRevert(oracle.latestRate.call(ZERO_ADDRESS, TOKEN_B_ADDRESS), 'ERR_UNSUPPORTED_TOKEN');
+        await expectRevert(oracle.latestRate.call(ZERO_ADDRESS, TOKEN_B_ADDRESS), 'ERR_INVALID_ADDRESS');
     });
 
     it('should revert when attempting to get the rate with zero token B address', async () => {
-        await expectRevert(oracle.latestRate.call(TOKEN_A_ADDRESS, ZERO_ADDRESS), 'ERR_UNSUPPORTED_TOKEN');
+        await expectRevert(oracle.latestRate.call(TOKEN_A_ADDRESS, ZERO_ADDRESS), 'ERR_INVALID_ADDRESS');
+    });
+
+    it('should revert when attempting to get the rate with an unsupported token', async () => {
+        await expectRevert(oracle.latestRate.call(TOKEN_A_ADDRESS, accounts[5]), 'ERR_UNSUPPORTED_TOKEN');
     });
 
     it('should revert when attempting to get the rate for the same tokens', async () => {

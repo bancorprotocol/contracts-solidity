@@ -60,7 +60,7 @@ contract PriceOracle is IPriceOracle, Utils {
 
     // error message binary size optimization
     function _supportedTokens(IERC20Token _tokenA, IERC20Token _tokenB) internal view {
-        require(_tokenA != _tokenB, "ERR_SAME_ADDRESS");
+        _validAddresses(_tokenA, _tokenB);
         require(tokensToOracles[_tokenA] != address(0) && tokensToOracles[_tokenB] != address(0), "ERR_UNSUPPORTED_TOKEN");
     }
 
