@@ -6,7 +6,7 @@ const CFG_FILE_NAME = process.argv[2];
 const NODE_ADDRESS = process.argv[3];
 const PRIVATE_KEY = process.argv[4];
 
-const ARTIFACTS_DIR = path.resolve(__dirname, '../build/');
+const ARTIFACTS_DIR = path.resolve(__dirname, '../build');
 
 const MIN_GAS_LIMIT = 100000;
 
@@ -63,14 +63,15 @@ const getTransactionReceipt = async (web3) => {
 const send = async (web3, account, gasPrice, transaction, value = 0) => {
     while (true) {
         try {
-            const options = {
+            const tx = {
                 to: transaction._parent._address,
                 data: transaction.encodeABI(),
                 gas: Math.max(await transaction.estimateGas({ from: account.address, value: value }), MIN_GAS_LIMIT),
                 gasPrice: gasPrice || await getGasPrice(web3),
+                chainId: await web3.eth.net.getId(),
                 value: value
             };
-            const signed = await web3.eth.accounts.signTransaction(options, account.privateKey);
+            const signed = await web3.eth.accounts.signTransaction(tx, account.privateKey);
             const receipt = await web3.eth.sendSignedTransaction(signed.rawTransaction);
             return receipt;
         } catch (error) {
@@ -85,8 +86,8 @@ const send = async (web3, account, gasPrice, transaction, value = 0) => {
 
 const deploy = async (web3, account, gasPrice, contractId, contractName, contractArgs) => {
     if (get()[contractId] === undefined) {
-        const abi = fs.readFileSync(ARTIFACTS_DIR + contractName + '.abi', { encoding: 'utf8' });
-        const bin = fs.readFileSync(ARTIFACTS_DIR + contractName + '.bin', { encoding: 'utf8' });
+        const abi = fs.readFileSync(path.join(ARTIFACTS_DIR, contractName + '.abi'), { encoding: 'utf8' });
+        const bin = fs.readFileSync(path.join(ARTIFACTS_DIR, contractName + '.bin'), { encoding: 'utf8' });
         const contract = new web3.eth.Contract(JSON.parse(abi));
         const options = { data: '0x' + bin, arguments: contractArgs };
         const transaction = contract.deploy(options);
@@ -99,7 +100,7 @@ const deploy = async (web3, account, gasPrice, contractId, contractName, contrac
 };
 
 const deployed = (web3, contractName, contractAddr) => {
-    const abi = fs.readFileSync(ARTIFACTS_DIR + contractName + '.abi', { encoding: 'utf8' });
+    const abi = fs.readFileSync(path.join(ARTIFACTS_DIR, contractName + '.abi'), { encoding: 'utf8' });
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 };
 
@@ -176,20 +177,20 @@ const run = async () => {
         const value = amounts[converter.reserves.findIndex(reserve => reserve.symbol === 'ETH')];
 
         await execute(converterRegistry.methods.newConverter(type, name, symbol, decimals, fee, tokens, weights));
-        const smartToken = deployed(web3, 'SmartToken', (await converterRegistry.methods.getSmartTokens().call()).slice(-1)[0]);
-        const converterBase = deployed(web3, 'ConverterBase', await smartToken.methods.owner().call());
+        const anchor = deployed(web3, 'SmartToken', (await converterRegistry.methods.getAnchors().call()).slice(-1)[0]);
+        const converterBase = deployed(web3, 'ConverterBase', await anchor.methods.owner().call());
         await execute(converterBase.methods.acceptOwnership());
 
         if (type === 1 && amounts.every(amount => amount > 0)) {
             for (let i = 0; i < converter.reserves.length; i++) {
-                if (converter.reserves.symbol !== 'ETH') {
+                if (converter.reserves[i].symbol !== 'ETH') {
                     await execute(deployed(web3, 'ERC20Token', tokens[i]).methods.approve(converterBase._address, amounts[i]));
                 }
             }
             await execute(deployed(web3, 'LiquidityPoolV1Converter', converterBase._address).methods.addLiquidity(tokens, amounts, 1), value);
         }
 
-        addresses[converter.symbol] = smartToken._address;
+        addresses[converter.symbol] = anchor._address;
     }
 
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BNTToken'), addresses.BNT));

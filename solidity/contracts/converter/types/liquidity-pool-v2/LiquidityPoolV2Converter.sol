@@ -32,12 +32,10 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     // the period of time it takes to the last rate to fully take effect
     uint256 private constant RATE_PROPAGATION_PERIOD = 10 minutes;
 
-    uint256 public referenceRateN;              // reference rate from the previous block(s) of 1 primary token in secondary tokens (numerator)
-    uint256 public referenceRateD;              // reference rate from the previous block(s) of 1 primary token in secondary tokens (denominator)
+    Fraction public referenceRate;              // reference rate from the previous block(s) of 1 primary token in secondary tokens
     uint256 public referenceRateUpdateTime;     // last time when the reference rate was updated (in seconds)
 
-    uint256 public lastConversionRateN;         // last conversion rate of 1 primary token in secondary tokens (numerator)
-    uint256 public lastConversionRateD;         // last conversion rate of 1 primary token in secondary tokens (denominator)
+    Fraction public lastConversionRate;         // last conversion rate of 1 primary token in secondary tokens
 
     // used by the temp liquidity limit mechanism during the pilot
     mapping (address => uint256) public maxStakedBalances;
@@ -119,8 +117,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             LiquidityPoolV2ConverterCustomFactory(IConverterFactory(addressOf(CONVERTER_FACTORY)).customFactories(converterType()));
         priceOracle = customFactory.createPriceOracle(_primaryReserveToken, secondaryReserveToken, _primaryReserveOracle, _secondaryReserveOracle);
 
-        (referenceRateN, referenceRateD) = priceOracle.latestRate(primaryReserveToken, secondaryReserveToken);
-        (lastConversionRateN, lastConversionRateD) = (referenceRateN, referenceRateD);
+        (referenceRate.n, referenceRate.d)  = priceOracle.latestRate(primaryReserveToken, secondaryReserveToken);
+        lastConversionRate = referenceRate;
 
         referenceRateUpdateTime = time();
 
@@ -286,7 +284,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         public
         view
         active
-        returns (uint256 targetAmount, uint256 fee)
+        returns (uint256, uint256)
     {
         // validate input
         // not using the `validReserve` modifier to circumvent `stack too deep` compiler error
@@ -320,7 +318,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         }
 
         // return the target amount and the adjusted fee using the updated reserve weights
-        (targetAmount, , fee) = targetAmountAndFees(_sourceToken, _targetToken, sourceTokenWeight, targetTokenWeight, rate, _amount);
+        (uint256 targetAmount, , uint256 fee) = targetAmountAndFees(_sourceToken, _targetToken, sourceTokenWeight, targetTokenWeight, rate, _amount);
+        return (targetAmount, fee);
     }
 
     /**
@@ -403,8 +402,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         // update the last conversion rate
         if (rateUpdated) {
-            rate = tokensRate(primaryReserveToken, secondaryReserveToken, 0, 0);
-            (lastConversionRateN, lastConversionRateD) = (rate.n, rate.d);
+            lastConversionRate = tokensRate(primaryReserveToken, secondaryReserveToken, 0, 0);
         }
 
         return (amount, adjustedFee);
@@ -597,7 +595,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         IERC20Token _targetToken,
         uint32 _sourceWeight,
         uint32 _targetWeight,
-        Fraction _rate,
+        Fraction memory _rate,
         uint256 _amount)
         private
         view
@@ -642,15 +640,14 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         IERC20Token _targetToken,
         uint32 _sourceWeight,
         uint32 _targetWeight,
-        Fraction _rate,
+        Fraction memory _rate,
         uint256 _targetAmount)
         internal view returns (uint256)
     {
         // conversions to the primary reserve apply normal fees
-        // TODO: disabled adjusted fees
-        //if (_targetToken == primaryReserveToken) {
+        if (_targetToken == primaryReserveToken) {
             return super.calculateFee(_targetAmount);
-        /*}
+        }
 
         // get the adjusted fee
         uint256 fee = calculateAdjustedFee(
@@ -663,7 +660,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             conversionFee);
 
         // calculate the fee based on the adjusted value
-        return _targetAmount.mul(fee).div(CONVERSION_FEE_RESOLUTION);*/
+        return _targetAmount.mul(fee).div(CONVERSION_FEE_RESOLUTION);
     }
 
     /**
@@ -724,7 +721,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         // if both of the conversions are in the same block - use the reference rate
         if (timeElapsed == 0) {
-            return Fraction({ n: referenceRateN, d: referenceRateD });
+            return referenceRate;
         }
 
         // given N as the sampling window, the new internal rate is calculated according to the following formula:
@@ -732,16 +729,19 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         // if a long period of time, since the last update, has passed - the last rate should fully take effect
         if (timeElapsed >= RATE_PROPAGATION_PERIOD) {
-            return Fraction({ n: lastConversionRateN, d: lastConversionRateD });
+            return lastConversionRate;
         }
 
         // calculate the numerator and the denumerator of the new rate
-        uint256 x = referenceRateD.mul(lastConversionRateN);
-        uint256 y = referenceRateN.mul(lastConversionRateD);
+        Fraction memory ref = referenceRate;
+        Fraction memory last = lastConversionRate;
+
+        uint256 x = ref.d.mul(last.n);
+        uint256 y = ref.n.mul(last.d);
 
         // since we know that timeElapsed < RATE_PROPAGATION_PERIOD, we can avoid using SafeMath:
         uint256 newRateN = y.mul(RATE_PROPAGATION_PERIOD - timeElapsed).add(x.mul(timeElapsed));
-        uint256 newRateD = referenceRateD.mul(lastConversionRateD).mul(RATE_PROPAGATION_PERIOD);
+        uint256 newRateD = ref.d.mul(last.d).mul(RATE_PROPAGATION_PERIOD);
 
         return reduceRate(newRateN, newRateD);
     }
@@ -758,19 +758,19 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         // avoid updating the rate more than once per block
         if (referenceRateUpdateTime == currentTime) {
-            return (false, Fraction({ n: referenceRateN, d: referenceRateD }));
+            return (false, referenceRate);
         }
 
         // get and store the effective rate between the reserves
         Fraction memory newRate = _effectiveTokensRate();
 
         // if the rate has changed, update it and rebalance the pool
-        if (newRate.n == referenceRateN && newRate.d == referenceRateD) {
+        Fraction memory ref = referenceRate;
+        if (newRate.n == ref.n && newRate.d == ref.d) {
             return (false, newRate);
         }
 
-        referenceRateN = newRate.n;
-        referenceRateD = newRate.d;
+        referenceRate = newRate;
         referenceRateUpdateTime = currentTime;
 
         rebalance();
@@ -784,7 +784,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     */
     function rebalance() private {
         // get the new reserve weights
-        (uint32 primaryReserveWeight, uint32 secondaryReserveWeight) = effectiveReserveWeights(Fraction({ n: referenceRateN, d: referenceRateD }));
+        (uint32 primaryReserveWeight, uint32 secondaryReserveWeight) = effectiveReserveWeights(referenceRate);
 
         // update the reserve weights with the new values
         reserves[primaryReserveToken].weight = primaryReserveWeight;
@@ -799,7 +799,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @return new primary reserve weight
       * @return new secondary reserve weight
     */
-    function effectiveReserveWeights(Fraction _rate) private view returns (uint32, uint32) {
+    function effectiveReserveWeights(Fraction memory _rate) private view returns (uint32, uint32) {
         // get the primary reserve staked balance
         uint256 primaryStakedBalance = stakedBalances[primaryReserveToken];
 
