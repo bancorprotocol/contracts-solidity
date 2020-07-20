@@ -105,6 +105,20 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         require(oracleWhitelist.isWhitelisted(_primaryReserveOracle), "ERR_INVALID_ORACLE");
         require(oracleWhitelist.isWhitelisted(_secondaryReserveOracle), "ERR_INVALID_ORACLE");
 
+        // create pool tokens
+        // note that technically pool tokens can be created on deployment but gas limit
+        // might get too high for a block, so creating them here if they were not already created
+        if (IPoolTokensContainer(anchor).poolTokens().length == 0) {
+            uint256 reserveCount = reserveTokens.length;
+            for (uint256 i = 0; i < reserveCount; i++) {
+                ISmartToken poolToken = IPoolTokensContainer(anchor).createToken();
+
+                // cache the pool token address (gas optimization)
+                reservesToPoolTokens[reserveTokens[i]] = poolToken;
+                poolTokensToReserves[poolToken] = reserveTokens[i];
+            }
+        }
+
         // sets the primary & secondary reserve tokens
         primaryReserveToken = _primaryReserveToken;
         if (_primaryReserveToken == reserveTokens[0])
@@ -235,11 +249,6 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // verify that the converter doesn't have 2 reserves yet
         require(reserveTokenCount() < 2, "ERR_INVALID_RESERVE_COUNT");
         super.addReserve(_token, _weight);
-
-        // cache the pool token address (gas optimization)
-        ISmartToken reservePoolToken = IPoolTokensContainer(anchor).poolTokens()[reserveTokens.length - 1];
-        reservesToPoolTokens[_token] = reservePoolToken;
-        poolTokensToReserves[reservePoolToken] = _token;
     }
 
     /**
