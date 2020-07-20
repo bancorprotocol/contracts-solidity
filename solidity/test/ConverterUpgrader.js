@@ -85,8 +85,6 @@ contract('ConverterUpgrader', accounts => {
 
     const initLPV2 = async (deployer, version, activate) => {
         const anchor = await PoolTokensContainer.new('Pool', 'POOL', 0);
-        await anchor.createToken();
-        await anchor.createToken();
 
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);

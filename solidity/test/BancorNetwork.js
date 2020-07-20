@@ -289,8 +289,6 @@ contract('BancorNetwork', accounts => {
             await anchor1.issue(sender, 1000000);
 
             anchor2 = await PoolTokensContainer.new('Pool', 'POOL', 2);
-            await anchor2.createToken();
-            await anchor2.createToken();
 
             anchor3 = await SmartToken.new('Smart3', 'SMART3', 2);
             await anchor3.issue(sender, 3000000);
