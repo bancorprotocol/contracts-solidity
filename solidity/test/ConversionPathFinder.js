@@ -41,7 +41,7 @@ const getSymbol = async (tokenAddress) => {
         return 'ETH';
     }
 
-    const token = await ERC20Token.at(tokenAddress);
+    const token = ERC20Token.at(tokenAddress);
     return token.symbol.call();
 };
 
@@ -67,9 +67,9 @@ const getPath = async (token, anchorToken, converterRegistry) => {
     const isAnchor = await converterRegistry.isAnchor.call(token);
     const anchors = isAnchor ? [token] : await converterRegistry.getConvertibleTokenAnchors.call(token);
     for (const anchor of anchors) {
-        const converterAnchor = await IConverterAnchor.at(anchor);
+        const converterAnchor = IConverterAnchor.at(anchor);
         const converterAnchorOwner = await converterAnchor.owner.call();
-        const converter = await ConverterBase.at(converterAnchorOwner);
+        const converter = ConverterBase.at(converterAnchorOwner);
         const connectorTokenCount = await converter.connectorTokenCount.call();
         for (let i = 0; i < connectorTokenCount; i++) {
             const connectorToken = await converter.connectorTokens.call(i);
@@ -155,8 +155,8 @@ contract('ConversionPathFinder', accounts => {
         for (const converter of LAYOUT.converters) {
             const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
             await converterRegistry.newConverter(tokens.length === 1 ? 0 : 1, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
-            const anchor = await IConverterAnchor.at((await converterRegistry.getAnchors.call()).slice(-1)[0]);
-            const converterBase = await ConverterBase.at(await anchor.owner.call());
+            const anchor = IConverterAnchor.at((await converterRegistry.getAnchors.call()).slice(-1)[0]);
+            const converterBase = ConverterBase.at(await anchor.owner.call());
             await converterBase.acceptOwnership();
             addresses[converter.symbol] = anchor.address;
         }

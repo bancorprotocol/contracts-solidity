@@ -333,7 +333,7 @@ contract('ConverterRegistry', () => {
         const testCreate = async (type, name, symbol, decimals, maxConversionFee, reserveTokens, reserveWeights) => {
             const res = await converterRegistry.newConverter(type, name, symbol, decimals, maxConversionFee,
                 reserveTokens, reserveWeights);
-            const converter = await ConverterBase.at(await converterRegistry.createdConverter.call());
+            const converter = ConverterBase.at(await converterRegistry.createdConverter.call());
             await testEvents(res, converter, 'Added');
 
             await converter.acceptOwnership();

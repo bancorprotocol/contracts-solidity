@@ -30,7 +30,7 @@ contract('PoolTokensContainer', accounts => {
         await container.createToken();
 
         const tokens = await container.poolTokens.call();
-        const token = await SmartToken.at(tokens[0]);
+        const token = SmartToken.at(tokens[0]);
 
         expect(await token.name.call()).to.eql('Pool1');
         expect(await token.symbol.call()).to.eql('POOL1');
@@ -43,7 +43,7 @@ contract('PoolTokensContainer', accounts => {
         await container.createToken();
 
         const tokens = await container.poolTokens.call();
-        const token2 = await SmartToken.at(tokens[1]);
+        const token2 = SmartToken.at(tokens[1]);
 
         expect(await token2.name.call()).to.eql('Pool2');
         expect(await token2.symbol.call()).to.eql('POOL2');
@@ -65,7 +65,7 @@ contract('PoolTokensContainer', accounts => {
         await container.createToken();
 
         const tokens = await container.poolTokens.call();
-        const token = await SmartToken.at(tokens[0]);
+        const token = SmartToken.at(tokens[0]);
 
         const amount = new BN(100);
         await container.mint(token.address, sender, amount);
@@ -79,7 +79,7 @@ contract('PoolTokensContainer', accounts => {
         await container.createToken();
 
         const tokens = await container.poolTokens.call();
-        const token = await SmartToken.at(tokens[0]);
+        const token = SmartToken.at(tokens[0]);
 
         const amount = new BN(100);
         await expectRevert(container.mint(token.address, sender, amount, { from: nonOwner }), 'ERR_ACCESS_DENIED');
@@ -90,7 +90,7 @@ contract('PoolTokensContainer', accounts => {
         await container.createToken();
 
         const tokens = await container.poolTokens.call();
-        const token = await SmartToken.at(tokens[0]);
+        const token = SmartToken.at(tokens[0]);
 
         const amount = new BN(100);
         await container.mint(token.address, sender, amount);
@@ -110,7 +110,7 @@ contract('PoolTokensContainer', accounts => {
         await container.createToken();
 
         const tokens = await container.poolTokens.call();
-        const token = await SmartToken.at(tokens[0]);
+        const token = SmartToken.at(tokens[0]);
 
         const amount = new BN(1000);
         await container.mint(token.address, sender, amount);
