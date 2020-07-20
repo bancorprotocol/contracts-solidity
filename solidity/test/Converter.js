@@ -13,6 +13,8 @@ const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardToken = artifacts.require('TestNonStandardToken');
 const ConverterFactory = artifacts.require('ConverterFactory');
 const ConverterUpgrader = artifacts.require('ConverterUpgrader');
+const ConverterRegistry = artifacts.require('ConverterRegistry');
+const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 
 const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
@@ -46,29 +48,48 @@ contract('Converter', accounts => {
         return 'Unknown';
     };
 
+    const getConverterReserveAddresses = (type, isETHReserve) => {
+        switch (type) {
+            case 0: return [getReserve1Address(isETHReserve)];
+            case 1: return [getReserve1Address(isETHReserve), reserveToken2.address];
+            case 2: return [getReserve1Address(isETHReserve), reserveToken2.address];
+        }
+
+        return 'Unknown';
+    };
+
+    const getConverterReserveWeights = (type) => {
+        switch (type) {
+            case 0: return [250000];
+            case 1: return [250000, 150000];
+            case 2: return [500000, 500000];
+        }
+
+        return 'Unknown';
+    };
+
     const initConverter = async (type, activate, isETHReserve, maxConversionFee = 0) => {
         await createAnchor(type);
+        const reserveAddresses = getConverterReserveAddresses(type, isETHReserve);
+        const reserveWeights = getConverterReserveWeights(type);
 
-        let converter;
+        const converter = await createConverter(type, anchorAddress, contractRegistry.address, maxConversionFee);
+
+        for (let i = 0; i < reserveAddresses.length; i++) {
+            await converter.addReserve(reserveAddresses[i], reserveWeights[i]);
+        }
+
         switch (type) {
             case 0:
-                converter = await createConverter(type, anchorAddress, contractRegistry.address, maxConversionFee);
-                await converter.addReserve(getReserve1Address(isETHReserve), 250000);
                 await anchor.issue(owner, 20000);
                 break;
 
             case 1:
-                converter = await createConverter(type, anchorAddress, contractRegistry.address, maxConversionFee);
-                await converter.addReserve(getReserve1Address(isETHReserve), 250000);
-                await converter.addReserve(reserveToken2.address, 150000);
                 await reserveToken2.transfer(converter.address, 8000);
                 await anchor.issue(owner, 20000);
                 break;
 
             case 2:
-                converter = await createConverter(type, anchorAddress, contractRegistry.address, maxConversionFee);
-                await converter.addReserve(getReserve1Address(isETHReserve), 500000);
-                await converter.addReserve(reserveToken2.address, 500000);
                 await reserveToken2.transfer(converter.address, 8000);
                 break;
         }
@@ -233,6 +254,20 @@ contract('Converter', accounts => {
                 it('should revert when attempting to construct a converter with invalid conversion fee', async () => {
                     await expectRevert(createConverter(type, anchorAddress, contractRegistry.address, 1000001),
                         'ERR_INVALID_CONVERSION_FEE');
+                });
+
+                it('verifies that the converter registry can create a new converter', async () => {
+                    const converterRegistry = await ConverterRegistry.new(contractRegistry.address);
+                    const converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
+
+                    await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
+                    await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+
+                    await converterRegistry.newConverter(
+                        type, "test", "TST", 2, 1000,
+                        getConverterReserveAddresses(type, isETHReserve),
+                        getConverterReserveWeights(type)
+                    );
                 });
 
                 it('verifies that the owner can withdraw other tokens from the anchor', async () => {
