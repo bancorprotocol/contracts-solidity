@@ -105,6 +105,9 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         require(oracleWhitelist.isWhitelisted(_primaryReserveOracle), "ERR_INVALID_ORACLE");
         require(oracleWhitelist.isWhitelisted(_secondaryReserveOracle), "ERR_INVALID_ORACLE");
 
+        // create the converter's pool tokens if they don't already exist
+        createPoolTokens();
+
         // sets the primary & secondary reserve tokens
         primaryReserveToken = _primaryReserveToken;
         if (_primaryReserveToken == reserveTokens[0])
@@ -235,11 +238,6 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // verify that the converter doesn't have 2 reserves yet
         require(reserveTokenCount() < 2, "ERR_INVALID_RESERVE_COUNT");
         super.addReserve(_token, _weight);
-
-        // cache the pool token address (gas optimization)
-        ISmartToken reservePoolToken = IPoolTokensContainer(anchor).poolTokens()[reserveTokens.length - 1];
-        reservesToPoolTokens[_token] = reservePoolToken;
-        poolTokensToReserves[reservePoolToken] = _token;
     }
 
     /**
@@ -700,6 +698,28 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             return _conversionFee * 2;
 
         return _conversionFee.mul(y).div(x.mul(AMPLIFICATION_FACTOR).add(y).sub(y.mul(AMPLIFICATION_FACTOR)));
+    }
+
+    /**
+      * @dev creates the converter's pool tokens
+      * note that technically pool tokens can be created on deployment but gas limit
+      * might get too high for a block, so creating them on first activation
+      *
+    */
+    function createPoolTokens() internal {
+        IPoolTokensContainer container = IPoolTokensContainer(anchor);
+        if (container.poolTokens().length != 0) {
+            return;
+        }
+
+        uint256 reserveCount = reserveTokens.length;
+        for (uint256 i = 0; i < reserveCount; i++) {
+            ISmartToken reservePoolToken = container.createToken();
+
+            // cache the pool token address (gas optimization)
+            reservesToPoolTokens[reserveTokens[i]] = reservePoolToken;
+            poolTokensToReserves[reservePoolToken] = reserveTokens[i];
+        }
     }
 
     /**

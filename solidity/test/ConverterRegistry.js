@@ -15,7 +15,6 @@ const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
-const LiquidityPoolV2Converter = artifacts.require('TestLiquidityPoolV2Converter');
 const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
@@ -334,7 +333,7 @@ contract('ConverterRegistry', () => {
         const testCreate = async (type, name, symbol, decimals, maxConversionFee, reserveTokens, reserveWeights) => {
             const res = await converterRegistry.newConverter(type, name, symbol, decimals, maxConversionFee,
                 reserveTokens, reserveWeights);
-            const converter = await ConverterBase.at(await converterRegistry.createdConverter.call());
+            const converter = ConverterBase.at(await converterRegistry.createdConverter.call());
             await testEvents(res, converter, 'Added');
 
             await converter.acceptOwnership();

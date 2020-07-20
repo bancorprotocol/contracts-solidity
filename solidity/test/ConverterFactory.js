@@ -74,7 +74,7 @@ contract('ConverterFactory', accounts => {
         await converterFactory.createAnchor(await anchorFactory.converterType.call(), name, 'ANCHOR1', 2);
 
         const anchorAddress = await converterFactory.createdAnchor.call();
-        const smartToken = await SmartToken.at(anchorAddress);
+        const smartToken = SmartToken.at(anchorAddress);
 
         expect(await smartToken.name.call()).to.not.be.eql(name);
         expect(await smartToken.name.call()).to.be.eql(await anchorFactory.name.call());
@@ -87,7 +87,7 @@ contract('ConverterFactory', accounts => {
         await converterFactory.createAnchor(11, name, 'ANCHOR1', 2);
 
         const anchorAddress = await converterFactory.createdAnchor.call();
-        const smartToken = await SmartToken.at(anchorAddress);
+        const smartToken = SmartToken.at(anchorAddress);
 
         expect(await smartToken.name.call()).to.be.eql(name);
         expect(await smartToken.name.call()).not.to.be.eql(await anchorFactory.name.call());
@@ -103,7 +103,7 @@ contract('ConverterFactory', accounts => {
         const res = await converterFactory.createConverter(await factory.converterType.call(), smartToken.address,
             contractRegistry.address, MAX_CONVERSION_FEE);
         const converterAddress = await converterFactory.createdConverter.call();
-        const converter = await ConverterBase.at(converterAddress);
+        const converter = ConverterBase.at(converterAddress);
 
         expect(await converter.anchor.call()).to.be.eql(smartToken.address);
         expect(await converter.registry.call()).to.be.eql(contractRegistry.address);

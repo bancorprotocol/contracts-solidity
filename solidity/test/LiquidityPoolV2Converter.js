@@ -30,20 +30,23 @@ const Whitelist = artifacts.require('Whitelist');
 contract('LiquidityPoolV2Converter', accounts => {
     const initConverter = async (activate, addLiquidity, isETHReserve, maxConversionFee = 0,
         primaryReserveAddress = getReserve1Address(isETHReserve)) => {
-        anchor = await createAnchor();
+        anchor = await PoolTokensContainer.new('Pool', 'POOL', 2);
         anchorAddress = anchor.address;
 
         const converter = await createConverter(anchorAddress, contractRegistry.address, maxConversionFee);
         await converter.addReserve(getReserve1Address(isETHReserve), 500000);
         await converter.addReserve(reserveToken2.address, 500000);
+        await anchor.transferOwnership(converter.address);
+        await converter.acceptAnchorOwnership();
 
         now = await latest();
         await converter.setTime(now);
 
         if (activate) {
-            await anchor.transferOwnership(converter.address);
-            await converter.acceptTokenOwnership();
             await converter.activate(primaryReserveAddress, chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
+
+            poolToken1 = SmartToken.at(await converter.poolToken.call(getReserve1Address(isETHReserve)));
+            poolToken2 = SmartToken.at(await converter.poolToken.call(reserveToken2.address));
         }
 
         if (addLiquidity) {
@@ -63,17 +66,6 @@ contract('LiquidityPoolV2Converter', accounts => {
 
     const createConverter = async (anchorAddress, registryAddress = contractRegistry.address, maxConversionFee = 0) => {
         return LiquidityPoolV2Converter.new(anchorAddress, registryAddress, maxConversionFee);
-    };
-
-    const createAnchor = async () => {
-        const anchor = await PoolTokensContainer.new('Pool', 'POOL', 2);
-        await anchor.createToken();
-        await anchor.createToken();
-
-        poolToken1 = await SmartToken.at((await anchor.poolTokens.call())[0]);
-        poolToken2 = await SmartToken.at((await anchor.poolTokens.call())[1]);
-
-        return anchor;
     };
 
     function getReserve1 (isETH) {
@@ -349,10 +341,6 @@ contract('LiquidityPoolV2Converter', accounts => {
         describe(`${isETHReserve === 0 ? 'with ERC20 reserves' : 'with ETH reserve'},`, () => {
             it('verifies the converter data after construction', async () => {
                 const converter = await initConverter(false, false, isETHReserve);
-                const reserve1PoolTokenAddress = await converter.poolToken.call(getReserve1Address(isETHReserve));
-                const reserve2PoolTokenAddress = await converter.poolToken.call(reserveToken2.address);
-                expect(reserve1PoolTokenAddress).to.eql(poolToken1.address);
-                expect(reserve2PoolTokenAddress).to.eql(poolToken2.address);
 
                 const primary = await converter.primaryReserveToken.call();
                 const secondary = await converter.secondaryReserveToken.call();
@@ -1449,13 +1437,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                     }
                 }
             }
-
-            it('should revert when attempting to remove liquidity when the converter is not active', async () => {
-                const converter = await initConverter(false, false, isETHReserve);
-                anchor.mint(poolToken1.address, sender, 1000);
-
-                await expectRevert(converter.removeLiquidity(poolToken1.address, 100, MIN_RETURN), 'ERR_INACTIVE');
-            });
 
             it('should revert when attempting to remove liquidity with an invalid pool token address', async () => {
                 const converter = await initConverter(true, true, isETHReserve);

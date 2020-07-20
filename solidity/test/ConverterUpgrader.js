@@ -85,8 +85,6 @@ contract('ConverterUpgrader', accounts => {
 
     const initLPV2 = async (deployer, version, activate) => {
         const anchor = await PoolTokensContainer.new('Pool', 'POOL', 0);
-        await anchor.createToken();
-        await anchor.createToken();
 
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
@@ -210,7 +208,7 @@ contract('ConverterUpgrader', accounts => {
 
     const getConverterState = async (converter) => {
         const token = await converter.token.call();
-        const smartToken = await SmartToken.at(token);
+        const smartToken = SmartToken.at(token);
         const state = {
             owner: await converter.owner.call(),
             token,
@@ -237,7 +235,7 @@ contract('ConverterUpgrader', accounts => {
                 state.tokenAOracle = ZERO_ADDRESS;
                 state.tokenBOracle = ZERO_ADDRESS;
             } else {
-                const priceOracle = await PriceOracle.at(priceOracleAddres);
+                const priceOracle = PriceOracle.at(priceOracleAddres);
                 state.tokenAOracle = await priceOracle.tokenAOracle.call();
                 state.tokenBOracle = await priceOracle.tokenBOracle.call();
             }
@@ -375,7 +373,7 @@ contract('ConverterUpgrader', accounts => {
 
                 let newConverter = await upgradeConverter(upgrader, oldConverter);
                 if (v2) {
-                    newConverter = await LiquidityPoolV2Converter.at(newConverter.address);
+                    newConverter = LiquidityPoolV2Converter.at(newConverter.address);
                 }
 
                 const oldConverterCurrentState = await getConverterState(oldConverter);

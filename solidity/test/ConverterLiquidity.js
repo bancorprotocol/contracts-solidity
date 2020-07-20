@@ -231,7 +231,7 @@ contract('ConverterLiquidity', accounts => {
             return;
         }
 
-        const token = await ERC20Token.at(reserveToken);
+        const token = ERC20Token.at(reserveToken);
         return token.approve(converter.address, amount);
     };
 
@@ -240,7 +240,7 @@ contract('ConverterLiquidity', accounts => {
             return new BN(0);
         }
 
-        const token = await ERC20Token.at(reserveToken);
+        const token = ERC20Token.at(reserveToken);
         return token.allowance.call(owner, converter.address);
     };
 
@@ -249,7 +249,7 @@ contract('ConverterLiquidity', accounts => {
             return balance.current(converter.address);
         }
 
-        const token = await ERC20Token.at(reserveToken);
+        const token = ERC20Token.at(reserveToken);
         return await token.balanceOf.call(converter.address);
     };
 });
