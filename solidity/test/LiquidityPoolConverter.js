@@ -36,12 +36,7 @@ contract('LiquidityPoolConverter', accounts => {
     const createAnchor = async (type) => {
         switch (type) {
             case 1: return await SmartToken.new('Pool1', 'POOL1', 2);
-            case 2: {
-                const anchor = await PoolTokensContainer.new('Pool', 'POOL', 2);
-                await anchor.createToken();
-                await anchor.createToken();
-                return anchor;
-            }
+            case 2: return await PoolTokensContainer.new('Pool', 'POOL', 2);
         }
     };
 
