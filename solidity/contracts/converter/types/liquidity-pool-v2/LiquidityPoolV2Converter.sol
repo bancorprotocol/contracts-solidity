@@ -105,19 +105,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         require(oracleWhitelist.isWhitelisted(_primaryReserveOracle), "ERR_INVALID_ORACLE");
         require(oracleWhitelist.isWhitelisted(_secondaryReserveOracle), "ERR_INVALID_ORACLE");
 
-        // create pool tokens
-        // note that technically pool tokens can be created on deployment but gas limit
-        // might get too high for a block, so creating them here if they were not already created
-        if (IPoolTokensContainer(anchor).poolTokens().length == 0) {
-            uint256 reserveCount = reserveTokens.length;
-            for (uint256 i = 0; i < reserveCount; i++) {
-                ISmartToken poolToken = IPoolTokensContainer(anchor).createToken();
-
-                // cache the pool token address (gas optimization)
-                reservesToPoolTokens[reserveTokens[i]] = poolToken;
-                poolTokensToReserves[poolToken] = reserveTokens[i];
-            }
-        }
+        // create the converter's pool tokens if they don't already exist
+        createPoolTokens();
 
         // sets the primary & secondary reserve tokens
         primaryReserveToken = _primaryReserveToken;
@@ -709,6 +698,27 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             return _conversionFee * 2;
 
         return _conversionFee.mul(y).div(x.mul(AMPLIFICATION_FACTOR).add(y).sub(y.mul(AMPLIFICATION_FACTOR)));
+    }
+
+    /**
+      * @dev creates the converter's pool tokens
+      * note that technically pool tokens can be created on deployment but gas limit
+      * might get too high for a block, so creating them on first activation
+      *
+    */
+    function createPoolTokens() internal {
+        if (IPoolTokensContainer(anchor).poolTokens().length != 0) {
+            return;
+        }
+
+        uint256 reserveCount = reserveTokens.length;
+        for (uint256 i = 0; i < reserveCount; i++) {
+            ISmartToken reservePoolToken = IPoolTokensContainer(anchor).createToken();
+
+            // cache the pool token address (gas optimization)
+            reservesToPoolTokens[reserveTokens[i]] = reservePoolToken;
+            poolTokensToReserves[reservePoolToken] = reserveTokens[i];
+        }
     }
 
     /**
