@@ -31,7 +31,7 @@ module.exports = {
             port: 7545,
             network_id: '*',
             gasPrice: 20000000000,
-            gas: 6721975
+            gas: 9500000
         }
     },
     plugins: ['solidity-coverage'],
