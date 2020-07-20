@@ -59,7 +59,7 @@ contract('LiquidityPoolConverter', accounts => {
 
         if (activate) {
             await anchor.transferOwnership(converter.address);
-            await converter.acceptTokenOwnership();
+            await converter.acceptAnchorOwnership();
 
             if (type === 2) {
                 await converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
@@ -250,7 +250,7 @@ contract('LiquidityPoolConverter', accounts => {
                     const converter = await createConverter(type, anchor.address, contractRegistry.address, 0);
                     await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_50_PERCENT);
 
-                    await expectRevert(converter.acceptTokenOwnership(), 'ERR_INVALID_RESERVE_COUNT');
+                    await expectRevert(converter.acceptAnchorOwnership(), 'ERR_INVALID_RESERVE_COUNT');
                 });
 
                 it('verifies that targetAmountAndFee returns a valid amount', async () => {
