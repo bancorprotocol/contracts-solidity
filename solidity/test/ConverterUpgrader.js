@@ -208,7 +208,7 @@ contract('ConverterUpgrader', accounts => {
 
     const getConverterState = async (converter) => {
         const token = await converter.token.call();
-        const smartToken = SmartToken.at(token);
+        const smartToken = await SmartToken.at(token);
         const state = {
             owner: await converter.owner.call(),
             token,
@@ -235,7 +235,7 @@ contract('ConverterUpgrader', accounts => {
                 state.tokenAOracle = ZERO_ADDRESS;
                 state.tokenBOracle = ZERO_ADDRESS;
             } else {
-                const priceOracle = PriceOracle.at(priceOracleAddres);
+                const priceOracle = await PriceOracle.at(priceOracleAddres);
                 state.tokenAOracle = await priceOracle.tokenAOracle.call();
                 state.tokenBOracle = await priceOracle.tokenBOracle.call();
             }
@@ -373,7 +373,7 @@ contract('ConverterUpgrader', accounts => {
 
                 let newConverter = await upgradeConverter(upgrader, oldConverter);
                 if (v2) {
-                    newConverter = LiquidityPoolV2Converter.at(newConverter.address);
+                    newConverter = await LiquidityPoolV2Converter.at(newConverter.address);
                 }
 
                 const oldConverterCurrentState = await getConverterState(oldConverter);

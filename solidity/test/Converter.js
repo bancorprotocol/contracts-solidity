@@ -481,7 +481,7 @@ contract('Converter', accounts => {
 
                     await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
                     const anchorAddress = await converter.anchor.call();
-                    const token = SmartToken.at(anchorAddress);
+                    const token = await SmartToken.at(anchorAddress);
                     const newOwner = await token.newOwner.call();
                     expect(newOwner).to.eql(nonOwner);
                 });
