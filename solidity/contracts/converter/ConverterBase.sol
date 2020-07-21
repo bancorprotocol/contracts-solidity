@@ -346,6 +346,9 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     function upgrade() public ownerOnly {
         IConverterUpgrader converterUpgrader = IConverterUpgrader(addressOf(CONVERTER_UPGRADER));
 
+        // trigger de-activation event
+        emit Activation(anchor, false);
+
         transferOwnership(converterUpgrader);
         converterUpgrader.upgrade(version);
         acceptOwnership();
