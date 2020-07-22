@@ -936,8 +936,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const { args: event2 } = events[1];
                 expect(event2._token1).to.eql(poolToken2.address);
                 expect(event2._token2).to.eql(reserveToken2.address);
-                expect(event2._rateN).to.be.bignumber.equal(targetStakedBalance.mul(WEIGHT_RESOLUTION));
-                expect(event2._rateD).to.be.bignumber.equal(poolTokenSupply.mul(targetWeight));
+                expect(event2._rateN).to.be.bignumber.equal(targetStakedBalance);
+                expect(event2._rateD).to.be.bignumber.equal(poolTokenSupply);
             });
 
             it('should revert when attempting to convert when the return is smaller than the minimum requested amount', async () => {
@@ -1079,8 +1079,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 expectEvent(res, 'TokenRateUpdate', {
                     _token1: poolToken2.address,
                     _token2: reserveToken2.address,
-                    _rateN: reserve2StakedBalance.mul(WEIGHT_RESOLUTION),
-                    _rateD: poolTokenSupply.mul(reserve2Weight)
+                    _rateN: reserve2StakedBalance,
+                    _rateD: poolTokenSupply
                 });
 
                 expectEvent(res, 'TokenRateUpdate', {
@@ -1112,8 +1112,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 expectEvent(res, 'TokenRateUpdate', {
                     _token1: poolToken1.address,
                     _token2: getReserve1Address(isETHReserve),
-                    _rateN: reserve1StakedBalance.mul(WEIGHT_RESOLUTION),
-                    _rateD: poolTokenSupply.mul(reserve1Weight)
+                    _rateN: reserve1StakedBalance,
+                    _rateD: poolTokenSupply
                 });
 
                 expectEvent(res, 'TokenRateUpdate', {
