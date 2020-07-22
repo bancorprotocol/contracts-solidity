@@ -51,10 +51,10 @@ contract('LiquidityPoolV2Converter', accounts => {
 
         if (addLiquidity) {
             if (!isETHReserve) {
-                reserveToken.approve(converter.address, INITIAL_RESERVE1_LIQUIDITY, { from: sender });
+                await reserveToken.approve(converter.address, INITIAL_RESERVE1_LIQUIDITY, { from: sender });
             }
 
-            reserveToken2.approve(converter.address, INITIAL_RESERVE2_LIQUIDITY, { from: sender });
+            await reserveToken2.approve(converter.address, INITIAL_RESERVE2_LIQUIDITY, { from: sender });
 
             await converter.addLiquidity(getReserve1Address(isETHReserve), INITIAL_RESERVE1_LIQUIDITY, MIN_RETURN,
                 { value: isETHReserve ? INITIAL_RESERVE1_LIQUIDITY : 0 });
@@ -165,7 +165,7 @@ contract('LiquidityPoolV2Converter', accounts => {
         if (sourceTokenAddress === ETH_RESERVE_ADDRESS) {
             value = amount;
         } else {
-            sourceToken.approve(bancorNetwork.address, amount, { from: account });
+            await sourceToken.approve(bancorNetwork.address, amount, { from: account });
         }
 
         const prevTargetReserveBalance = await converter.reserveBalance.call(targetTokenAddress);
@@ -311,7 +311,7 @@ contract('LiquidityPoolV2Converter', accounts => {
     describe('min-return:', () => {
         it('addLiquidity should revert when min-return is zero', async () => {
             const converter = await initConverter(true, true, false);
-            reserveToken2.approve(converter.address, new BN(100), { from: accounts[0] });
+            await reserveToken2.approve(converter.address, new BN(100), { from: accounts[0] });
             await expectRevert(converter.addLiquidity(reserveToken2.address, new BN(100), new BN(0), { from: accounts[0] }), 'ERR_ZERO_VALUE');
         });
 
@@ -322,7 +322,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
         it('addLiquidity should revert when min-return is larger than return', async () => {
             const converter = await initConverter(true, true, false);
-            reserveToken2.approve(converter.address, new BN(100), { from: accounts[0] });
+            await reserveToken2.approve(converter.address, new BN(100), { from: accounts[0] });
             await expectRevert(converter.addLiquidity(reserveToken2.address, new BN(1), new BN(100), { from: accounts[0] }), 'ERR_RETURN_TOO_LOW');
         });
 
