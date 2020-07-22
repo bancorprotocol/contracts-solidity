@@ -48,6 +48,7 @@ contract PriceOracle is IPriceOracle, Utils {
         tokenB = _tokenB;
         tokenDecimals[_tokenA] = _tokenA.decimals();
         tokenDecimals[_tokenB] = _tokenB.decimals();
+
         tokenAOracle = _tokenAOracle;
         tokenBOracle = _tokenBOracle;
         tokensToOracles[_tokenA] = _tokenAOracle;
@@ -96,9 +97,9 @@ contract PriceOracle is IPriceOracle, Utils {
         }
 
         // the normalization works as follows:
-        //   - token A with decimals of dA and price of rateA per one token (e.g., for 100,000 weiA)
-        //   - token B with decimals of dB < dA and price of rateB per one token (e.g., for 100 weiB)
-        // then the normalized rate, representing the rate between 1 weiA and 1 weiB is: rateA / (rateB * 10 ^ (dA - dB)).
+        //   - token A with decimals of dA and price of rateA per one token (e.g., for 10^dA weiA)
+        //   - token B with decimals of dB < dA and price of rateB per one token (e.g., for 10^dB weiB)
+        // then the normalized rate, representing the rate between 1 weiA and 1 weiB is: rateA / (rateB * 10^(dA - dB)).
         //   - token A with decimals of 5 and price of $10 per one token (e.g., for 100,000 weiA)
         //   - token B with decimals of 2 and price of $2 per one token (e.g., for 100 weiB)
         // then the normalized rate would be: 5 / (2 * 10^3) = 0.0025, which is the correct rate since 1 weiA costs $0.00005,
