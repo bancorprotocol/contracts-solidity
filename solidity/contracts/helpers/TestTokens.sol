@@ -119,6 +119,7 @@ contract TestNonStandardToken is NonStandardTokenDetailed {
 
     constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
         NonStandardTokenDetailed(_name, _symbol, _decimals, _supply) {
+        set(true);
     }
 
     function set(bool _ok) public {
