@@ -691,8 +691,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 x = _primaryReserveStaked.mul(_primaryReserveRate).mul(_secondaryReserveWeight);
         uint256 y = _secondaryReserveStaked.mul(_secondaryReserveRate).mul(_primaryReserveWeight);
 
-        if (x >= y)
-            return _conversionFee;
+        if (x.mul(AMPLIFICATION_FACTOR) >= y.mul(AMPLIFICATION_FACTOR + 1))
+            return _conversionFee / 2;
 
         if (x.mul(AMPLIFICATION_FACTOR * 2) <= y.mul(AMPLIFICATION_FACTOR * 2 - 1))
             return _conversionFee * 2;
