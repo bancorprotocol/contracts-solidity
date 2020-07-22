@@ -14,14 +14,6 @@ node test_deployment.js
     Account private key
 ```
 
-This process can also be executed via `truffle deploy` or `truffle migrate` provided with the same input parameters:
-```bash
-truffle deploy
-    Configuration file name
-    Ethereum node address
-    Account private key
-```
-
 The configuration file is updated during the process, in order to allow resuming a prematurely-terminated execution.
 
 Here is an example of the initial configuration file which should be provided to the process:
