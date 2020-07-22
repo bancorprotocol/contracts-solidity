@@ -110,8 +110,8 @@ contract('LiquidTokenConverter', accounts => {
         const token = await SmartToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
-        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
-        erc20Token = await ERC20Token.new('ERC Token 2', 'ERC2', 0, 1000000000);
+        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
+        erc20Token = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
     });
 
     // eslint-disable-next-line max-len
@@ -144,7 +144,7 @@ contract('LiquidTokenConverter', accounts => {
 
                 await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT);
 
-                const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, 1000000000);
+                const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
                 await expectRevert(converter.addReserve(reserveToken2.address, WEIGHT_20_PERCENT), 'ERR_INVALID_RESERVE_COUNT');
             });
 

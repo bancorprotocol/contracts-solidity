@@ -294,8 +294,8 @@ contract('ConverterUpgrader', accounts => {
     });
 
     beforeEach(async () => {
-        reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, RESERVE1_BALANCE);
-        reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, RESERVE2_BALANCE);
+        reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 18, RESERVE1_BALANCE);
+        reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, RESERVE2_BALANCE);
         etherToken = await EtherToken.new('Ether Token', 'ETH');
     });
 
