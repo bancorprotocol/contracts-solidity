@@ -14,6 +14,9 @@ import "./interfaces/IChainlinkPriceOracle.sol";
 contract PriceOracle is IPriceOracle, Utils {
     using SafeMath for uint256;
 
+    address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    uint8 private constant ETH_DECIMALS = 18;
+
     IERC20Token public tokenA;                  // token A the oracle supports
     IERC20Token public tokenB;                  // token B the oracle supports;
     mapping (address => uint8) public tokenDecimals; // token -> token decimals
@@ -46,8 +49,8 @@ contract PriceOracle is IPriceOracle, Utils {
 
         tokenA = _tokenA;
         tokenB = _tokenB;
-        tokenDecimals[_tokenA] = _tokenA.decimals();
-        tokenDecimals[_tokenB] = _tokenB.decimals();
+        tokenDecimals[_tokenA] = decimals(_tokenA);
+        tokenDecimals[_tokenB] = decimals(_tokenB);
 
         tokenAOracle = _tokenAOracle;
         tokenBOracle = _tokenBOracle;
@@ -107,7 +110,8 @@ contract PriceOracle is IPriceOracle, Utils {
 
         if (decimalsTokenA > decimalsTokenB) {
             rateTokenB = rateTokenB.mul(10 ** uint256((decimalsTokenA - decimalsTokenB)));
-        } else {
+        }
+        else {
             rateTokenA = rateTokenA.mul(10 ** uint256((decimalsTokenB - decimalsTokenA)));
         }
 
@@ -142,5 +146,14 @@ contract PriceOracle is IPriceOracle, Utils {
         (uint256 numerator, uint256 denominator) = latestRate(_tokenA, _tokenB);
 
         return (numerator, denominator, lastUpdateTime());
+    }
+
+    /** @dev returns the decimals of a given token */
+    function decimals(IERC20Token _token) private view returns (uint8) {
+        if (_token == ETH_RESERVE_ADDRESS) {
+            return ETH_DECIMALS;
+        }
+
+        return _token.decimals();
     }
 }
