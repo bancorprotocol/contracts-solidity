@@ -27,8 +27,6 @@ solidity/build/ConverterV28OrHigherWithoutFallback.abi
 solidity/build/ConverterV28OrHigherWithoutFallback.bin
 solidity/build/ConverterV28OrHigherWithFallback.abi
 solidity/build/ConverterV28OrHigherWithFallback.bin
-solidity/build/Migrations.abi
-solidity/build/Migrations.bin
 solidity/build/NewConverter.abi
 solidity/build/NewConverter.bin
 solidity/build/NonStandardToken.abi
