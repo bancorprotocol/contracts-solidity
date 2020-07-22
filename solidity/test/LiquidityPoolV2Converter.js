@@ -112,8 +112,30 @@ contract('LiquidityPoolV2Converter', accounts => {
         return targetAmount.sub(expectedFee);
     };
 
-    const getExpectedWeights = (reserve1StakedBalance, reserve2StakedBalance, reserve1Balance, reserve2Balance, oracleAPrice,
-        oracleBPrice, isReserve1Primary) => {
+    const getExpectedWeights = (reserve1StakedBalance, reserve2StakedBalance, reserve1Balance, reserve2Balance, oracle1Price,
+        oracle2Price, isReserve1Primary) => {
+        const normalizedRate = (rate1, decimals1, rate2, decimals2) => {
+            if (decimals1.eq(decimals2)) {
+                return { n: rate1, d: rate2 };
+            }
+
+            if (decimals1.gt(decimals2)) {
+                return { n: rate1, d: rate2.mul(new BN(10).pow(decimals1.sub(decimals2))) };
+            }
+
+            return { n: rate1.mul(new BN(10).pow(decimals2.sub(decimals1))), d: rate2 };
+        };
+
+        let rate;
+        if (isReserve1Primary) {
+            rate = normalizedRate(oracle1Price, reserveTokenDecimals, oracle2Price, reserveToken2Decimals);
+        } else {
+            rate = normalizedRate(oracle1Price, reserveToken2Decimals, oracle2Price, reserveTokenDecimals);
+        }
+
+        oracle1Price = rate.n;
+        oracle2Price = rate.d;
+
         reserve1StakedBalance = new BN(reserve1StakedBalance);
         reserve2StakedBalance = new BN(reserve2StakedBalance);
         reserve1Balance = reserve1StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(new BN(reserve1Balance));
@@ -128,7 +150,7 @@ contract('LiquidityPoolV2Converter', accounts => {
         let newWeights = balancedWeights(
             primaryReserveData[0].mul(AMPLIFICATION_FACTOR),
             primaryReserveData[1], secondaryReserveData[1],
-            oracleBPrice, oracleAPrice
+            oracle2Price, oracle1Price
         );
 
         if (!isReserve1Primary) {
@@ -181,7 +203,9 @@ contract('LiquidityPoolV2Converter', accounts => {
     let anchorAddress;
     let contractRegistry;
     let reserveToken;
+    const reserveTokenDecimals = 8;
     let reserveToken2;
+    const reserveToken2Decimals = 18;
     let upgrader;
     let poolToken1;
     let poolToken2;
@@ -236,8 +260,8 @@ contract('LiquidityPoolV2Converter', accounts => {
         await oracleWhitelist.addAddress(chainlinkPriceOracleA.address);
         await oracleWhitelist.addAddress(chainlinkPriceOracleB.address);
 
-        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 10000000000);
-        reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 0, 20000000000);
+        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', reserveTokenDecimals, 10000000000);
+        reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', reserveToken2Decimals, 20000000000);
     });
 
     describe('adjusted-fee:', () => {
@@ -251,35 +275,35 @@ contract('LiquidityPoolV2Converter', accounts => {
         it('verifies calculateAdjustedFee when x < z', async () => {
             const tknStaked = bntStaked.sub(new BN(3));
             const converter = await initConverter(true, true, false);
-            const adjustedFee = await converter.calculateAdjustedFeeTest(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
+            const adjustedFee = await converter.calculateAdjustedFeeTest.call(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
             expect(adjustedFee).to.be.bignumber.equal(fee.mul(new BN(2)));
         });
 
         it('verifies calculateAdjustedFee when x = z', async () => {
             const tknStaked = bntStaked.sub(new BN(2));
             const converter = await initConverter(true, true, false);
-            const adjustedFee = await converter.calculateAdjustedFeeTest(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
+            const adjustedFee = await converter.calculateAdjustedFeeTest.call(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
             expect(adjustedFee).to.be.bignumber.equal(fee.mul(new BN(2)));
         });
 
         it('verifies calculateAdjustedFee when z < x < y', async () => {
             const tknStaked = bntStaked.sub(new BN(1));
             const converter = await initConverter(true, true, false);
-            const adjustedFee = await converter.calculateAdjustedFeeTest(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
+            const adjustedFee = await converter.calculateAdjustedFeeTest.call(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
             expect(adjustedFee).to.be.bignumber.equal(fee.mul(new BN(4)).div(new BN(3)));
         });
 
         it('verifies calculateAdjustedFee when x = y', async () => {
             const tknStaked = bntStaked;
             const converter = await initConverter(true, true, false);
-            const adjustedFee = await converter.calculateAdjustedFeeTest(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
+            const adjustedFee = await converter.calculateAdjustedFeeTest.call(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
             expect(adjustedFee).to.be.bignumber.equal(fee);
         });
 
         it('verifies calculateAdjustedFee when x > y', async () => {
             const tknStaked = bntStaked.add(new BN(1));
             const converter = await initConverter(true, true, false);
-            const adjustedFee = await converter.calculateAdjustedFeeTest(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
+            const adjustedFee = await converter.calculateAdjustedFeeTest.call(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
             expect(adjustedFee).to.be.bignumber.equal(fee);
         });
     });
@@ -407,7 +431,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
             it('should revert when attempting to activate the converter with an invalid primary reserve', async () => {
                 const converter = await initConverter(false, false, isETHReserve);
-                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
+                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
 
                 await expectRevert(converter.activate(token.address, chainlinkPriceOracleA.address, chainlinkPriceOracleB.address),
                     'ERR_INVALID_RESERVE');
@@ -488,7 +512,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
             it('should revert when attempting to get the reserve staked balance with an invalid reserve address', async () => {
                 const converter = await initConverter(true, false, isETHReserve);
-                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
+                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
 
                 await expectRevert(converter.reserveStakedBalance.call(token.address), 'ERR_INVALID_RESERVE');
             });
@@ -531,7 +555,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
             it('should revert when attempting to set the staked balance with an invalid reserve address', async () => {
                 const converter = await initConverter(true, false, isETHReserve);
-                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
+                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
 
                 await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, sender);
 
@@ -611,7 +635,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 await converter.addReserve(getReserve1Address(isETHReserve), 500000);
                 await converter.addReserve(reserveToken2.address, 300000);
 
-                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
+                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
 
                 await expectRevert(converter.addReserve(token.address, 2000), 'ERR_INVALID_RESERVE_COUNT');
             });
@@ -1012,7 +1036,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
             it('should revert when attempting to convert when source reserve is invalid', async () => {
                 await initConverter(true, true, isETHReserve);
-                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
+                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
 
                 const amount = new BN(500);
                 let value = 0;
@@ -1028,7 +1052,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
             it('should revert when attempting to convert when target reserve is invalid', async () => {
                 await initConverter(true, true, isETHReserve);
-                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
+                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
 
                 const amount = new BN(500);
                 let value = 0;
@@ -1301,7 +1325,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
             it('should revert when attempting to add liquidity with an invalid reserve token address', async () => {
                 const converter = await initConverter(true, true, isETHReserve);
-                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
+                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
 
                 const amount = new BN(700);
 
@@ -1440,7 +1464,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
             it('should revert when attempting to remove liquidity with an invalid pool token address', async () => {
                 const converter = await initConverter(true, true, isETHReserve);
-                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
+                const token = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
 
                 await expectRevert(converter.removeLiquidity(token.address, 100, MIN_RETURN), 'ERR_INVALID_POOL_TOKEN');
             });

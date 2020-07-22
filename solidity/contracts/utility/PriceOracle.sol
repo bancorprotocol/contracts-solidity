@@ -1,5 +1,6 @@
 pragma solidity 0.4.26;
 import "./Utils.sol";
+import "./SafeMath.sol";
 import "./interfaces/IPriceOracle.sol";
 import "./interfaces/IChainlinkPriceOracle.sol";
 
@@ -11,8 +12,12 @@ import "./interfaces/IChainlinkPriceOracle.sol";
   * is equivalent to the rate of TokenA / TokenB
 */
 contract PriceOracle is IPriceOracle, Utils {
+    using SafeMath for uint256;
+
     IERC20Token public tokenA;                  // token A the oracle supports
-    IERC20Token public tokenB;                  // token B the oracle supports
+    IERC20Token public tokenB;                  // token B the oracle supports;
+    mapping (address => uint8) public tokenDecimals; // token -> token decimals
+
     IChainlinkPriceOracle public tokenAOracle;  // token A chainlink price oracle
     IChainlinkPriceOracle public tokenBOracle;  // token B chainlink price oracle
     mapping (address => IChainlinkPriceOracle) public tokensToOracles;  // token -> price oracle for easier access
@@ -41,6 +46,8 @@ contract PriceOracle is IPriceOracle, Utils {
 
         tokenA = _tokenA;
         tokenB = _tokenB;
+        tokenDecimals[_tokenA] = _tokenA.decimals();
+        tokenDecimals[_tokenB] = _tokenB.decimals();
         tokenAOracle = _tokenAOracle;
         tokenBOracle = _tokenBOracle;
         tokensToOracles[_tokenA] = _tokenAOracle;
@@ -77,7 +84,33 @@ contract PriceOracle is IPriceOracle, Utils {
         supportedToken(_tokenB)
         returns (uint256, uint256)
     {
-        return (uint256(tokensToOracles[_tokenA].latestAnswer()), uint256(tokensToOracles[_tokenB].latestAnswer()));
+        uint256 rateTokenA = uint256(tokensToOracles[_tokenA].latestAnswer());
+        uint256 rateTokenB = uint256(tokensToOracles[_tokenB].latestAnswer());
+        uint8 decimalsTokenA = tokenDecimals[_tokenA];
+        uint8 decimalsTokenB = tokenDecimals[_tokenB];
+
+        // since the tokens can differ in their decimals and ChainLink returns the rate per the smallest token unit, we'd
+        // have to normalize the rate.
+        if (decimalsTokenA == decimalsTokenB) {
+            return (rateTokenA, rateTokenB);
+        }
+
+        // the normalization works as follows:
+        //   - token A with decimals of dA and price of rateA per one token (e.g., for 100,000 weiA)
+        //   - token B with decimals of dB < dA and price of rateB per one token (e.g., for 100 weiB)
+        // then the normalized rate, representing the rate between 1 weiA and 1 weiB is: rateA / (rateB * 10 ^ (dA - dB)).
+        //   - token A with decimals of 5 and price of $10 per one token (e.g., for 100,000 weiA)
+        //   - token B with decimals of 2 and price of $2 per one token (e.g., for 100 weiB)
+        // then the normalized rate would be: 5 / (2 * 10^3) = 0.0025, which is the correct rate since 1 weiA costs $0.00005,
+        // 1 webB costs $0.02, and weiA / weiB is 0.0025.
+
+        if (decimalsTokenA > decimalsTokenB) {
+            rateTokenB = rateTokenB.mul(10 ** uint256((decimalsTokenA - decimalsTokenB)));
+        } else {
+            rateTokenA = rateTokenA.mul(10 ** uint256((decimalsTokenB - decimalsTokenA)));
+        }
+
+        return (rateTokenA, rateTokenB);
     }
 
     /**
