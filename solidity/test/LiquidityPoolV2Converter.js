@@ -216,7 +216,6 @@ contract('LiquidityPoolV2Converter', accounts => {
     const nonOwner = accounts[1];
     const sender2 = accounts[9];
 
-    const WEIGHT_RESOLUTION = new BN(1000000);
     const CONVERSION_FEE_RESOLUTION = new BN(1000000);
     const AMPLIFICATION_FACTOR = new BN(20);
     const INITIAL_RESERVE1_LIQUIDITY = new BN(10000);
