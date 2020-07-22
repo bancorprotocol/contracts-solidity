@@ -475,8 +475,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         emit LiquidityAdded(msg.sender, _reserveToken, _amount, initialStakedBalance.add(_amount), poolTokenSupply.add(poolTokenAmount));
 
         // dispatch the `TokenRateUpdate` event for the pool token
-        uint32 reserveWeight = reserves[_reserveToken].weight;
-        dispatchPoolTokenRateUpdateEvent(reservePoolToken, poolTokenSupply.add(poolTokenAmount), _reserveToken, reserveWeight);
+        dispatchPoolTokenRateUpdateEvent(reservePoolToken, poolTokenSupply.add(poolTokenAmount), _reserveToken);
 
         // dispatch the `TokenRateUpdate` event for the reserve tokens
         dispatchTokenRateUpdateEvent(reserveTokens[0], reserveTokens[1], 0, 0);
@@ -539,7 +538,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newStakedBalance, newPoolTokenSupply);
 
         // dispatch the `TokenRateUpdate` event for the pool token
-        dispatchPoolTokenRateUpdateEvent(_poolToken, newPoolTokenSupply, reserveToken, reserves[reserveToken].weight);
+        dispatchPoolTokenRateUpdateEvent(_poolToken, newPoolTokenSupply, reserveToken);
 
         // dispatch the `TokenRateUpdate` event for the reserve tokens
         dispatchTokenRateUpdateEvent(reserveTokens[0], reserveTokens[1], 0, 0);
@@ -893,7 +892,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // by conversions since conversion fees are applied to the target reserve
         ISmartToken targetPoolToken = poolToken(_targetToken);
         uint256 targetPoolTokenSupply = targetPoolToken.totalSupply();
-        dispatchPoolTokenRateUpdateEvent(targetPoolToken, targetPoolTokenSupply, _targetToken, _targetWeight);
+        dispatchPoolTokenRateUpdateEvent(targetPoolToken, targetPoolTokenSupply, _targetToken);
     }
 
     /**
@@ -919,9 +918,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _poolToken       address of the pool token
       * @param _poolTokenSupply total pool token supply
       * @param _reserveToken    address of the reserve token
-      * @param _reserveWeight   reserve weight
     */
-    function dispatchPoolTokenRateUpdateEvent(ISmartToken _poolToken, uint256 _poolTokenSupply, IERC20Token _reserveToken, uint32 _reserveWeight) private {
+    function dispatchPoolTokenRateUpdateEvent(ISmartToken _poolToken, uint256 _poolTokenSupply, IERC20Token _reserveToken) private {
         emit TokenRateUpdate(_poolToken, _reserveToken, stakedBalances[_reserveToken], _poolTokenSupply);
     }
 
