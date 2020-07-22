@@ -9,7 +9,7 @@ const TestNonStandardTokenWithoutDecimals = artifacts.require('TestNonStandardTo
 const PriceOracle = artifacts.require('PriceOracle');
 const ChainlinkPriceOracle = artifacts.require('TestChainlinkPriceOracle');
 
-contract.only('PriceOracle', accounts => {
+contract('PriceOracle', accounts => {
     let tokenA;
     let tokenB;
     const decimalsTokenA = new BN(18);
@@ -115,7 +115,7 @@ contract.only('PriceOracle', accounts => {
             const decimalsTokenA = new BN(decimalsA);
             const decimalsTokenB = new BN(decimalsB);
 
-            context.only(`with decimals ${[decimalsA, decimalsB]}`, () => {
+            context(`with decimals ${[decimalsA, decimalsB]}`, () => {
                 const normalizedRate = (rate1, decimals1, rate2, decimals2) => {
                     if (decimals1.eq(decimals2)) {
                         return { n: rate1, d: rate2 };
