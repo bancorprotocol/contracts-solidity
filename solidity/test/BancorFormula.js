@@ -5,7 +5,6 @@ const { expectRevert, BN } = require('@openzeppelin/test-helpers');
 // decimal numbers.
 const BigNumber = require('bignumber.js');
 const Decimal = require('decimal.js');
-Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN });
 
 const { MIN_PRECISION, MAX_PRECISION, MAX_WEIGHT, maxExpArray, maxValArray } = require('./helpers/FormulaConstants');
 const { normalizedWeights, balancedWeights } = require('./helpers/FormulaFunctions');

@@ -2,7 +2,6 @@ const { expect } = require('chai');
 const { expectRevert, expectEvent, constants, BN, balance, time } = require('@openzeppelin/test-helpers');
 
 const Decimal = require('decimal.js');
-Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN });
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
