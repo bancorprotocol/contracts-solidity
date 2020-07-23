@@ -146,6 +146,7 @@ const normalizedWeights = (a, b) => {
     const prevW2 = Decimal(b.toString());
     const w1 = prevW1.div(prevW1.add(prevW2)).mul(MAX_WEIGHT).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
     const w2 = MAX_WEIGHT.sub(w1);
+
     return [w1, w2];
 };
 
@@ -159,7 +160,7 @@ const W = (x) => {
         return a;
     }
     return W_DEF_SOLUTION;
-}
+};
 
 module.exports = {
     purchaseTargetAmount,
