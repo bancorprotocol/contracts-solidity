@@ -248,40 +248,15 @@ contract('LiquidityPoolV2Converter', accounts => {
         const bntRate = new BN(1);
         const fee = new BN(100000);
 
-        it('verifies calculateAdjustedFee when x < z', async () => {
-            const tknStaked = bntStaked.sub(new BN(3));
-            const converter = await initConverter(true, true, false);
-            const adjustedFee = await converter.calculateAdjustedFeeTest(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
-            expect(adjustedFee).to.be.bignumber.equal(fee.mul(new BN(2)));
-        });
-
-        it('verifies calculateAdjustedFee when x = z', async () => {
-            const tknStaked = bntStaked.sub(new BN(2));
-            const converter = await initConverter(true, true, false);
-            const adjustedFee = await converter.calculateAdjustedFeeTest(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
-            expect(adjustedFee).to.be.bignumber.equal(fee.mul(new BN(2)));
-        });
-
-        it('verifies calculateAdjustedFee when z < x < y', async () => {
-            const tknStaked = bntStaked.sub(new BN(1));
-            const converter = await initConverter(true, true, false);
-            const adjustedFee = await converter.calculateAdjustedFeeTest(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
-            expect(adjustedFee).to.be.bignumber.equal(fee.mul(new BN(4)).div(new BN(3)));
-        });
-
-        it('verifies calculateAdjustedFee when x = y', async () => {
-            const tknStaked = bntStaked;
-            const converter = await initConverter(true, true, false);
-            const adjustedFee = await converter.calculateAdjustedFeeTest(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
-            expect(adjustedFee).to.be.bignumber.equal(fee);
-        });
-
-        it('verifies calculateAdjustedFee when x > y', async () => {
-            const tknStaked = bntStaked.add(new BN(1));
-            const converter = await initConverter(true, true, false);
-            const adjustedFee = await converter.calculateAdjustedFeeTest(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
-            expect(adjustedFee).to.be.bignumber.equal(fee);
-        });
+        for (let n = -3; n <= 1; n++) {
+            const expected = BN.min(BN.max(fee, fee.mul(new BN(4)).div(new BN(4 + n))), fee.mul(new BN(2)));
+            it(`calculateAdjustedFee should return ${expected.toString()}`, async () => {
+                const tknStaked = bntStaked.add(new BN(n));
+                const converter = await initConverter(true, true, false);
+                const actual = await converter.calculateAdjustedFeeTest(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
+                expect(actual).to.be.bignumber.equal(expected);
+            });
+        }
     });
 
     describe('min-return:', () => {
