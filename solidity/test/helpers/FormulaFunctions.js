@@ -144,7 +144,7 @@ const balancedWeights = (primaryReserveStakedBalance, primaryReserveBalance, sec
 const normalizedWeights = (a, b) => {
     const prevW1 = Decimal(a.toString());
     const prevW2 = Decimal(b.toString());
-    const w1 = prevW1.div(prevW1.add(prevW2)).mul(MAX_WEIGHT).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+    const w1 = prevW1.mul(MAX_WEIGHT).div(prevW1.add(prevW2)).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
     const w2 = MAX_WEIGHT.sub(w1);
 
     return [w1, w2];
