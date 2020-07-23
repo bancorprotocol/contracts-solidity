@@ -18,7 +18,7 @@ contract PriceOracle is IPriceOracle, Utils {
     uint8 private constant ETH_DECIMALS = 18;
 
     IERC20Token public tokenA;                  // token A the oracle supports
-    IERC20Token public tokenB;                  // token B the oracle supports;
+    IERC20Token public tokenB;                  // token B the oracle supports
     mapping (address => uint8) public tokenDecimals; // token -> token decimals
 
     IChainlinkPriceOracle public tokenAOracle;  // token A chainlink price oracle
@@ -102,11 +102,13 @@ contract PriceOracle is IPriceOracle, Utils {
         // the normalization works as follows:
         //   - token A with decimals of dA and price of rateA per one token (e.g., for 10^dA weiA)
         //   - token B with decimals of dB < dA and price of rateB per one token (e.g., for 10^dB weiB)
-        // then the normalized rate, representing the rate between 1 weiA and 1 weiB is: rateA / (rateB * 10^(dA - dB)).
+        // then the normalized rate, representing the rate between 1 weiA and 1 weiB is rateA / (rateB * 10^(dA - dB)).
+        //
+        // for example:
         //   - token A with decimals of 5 and price of $10 per one token (e.g., for 100,000 weiA)
         //   - token B with decimals of 2 and price of $2 per one token (e.g., for 100 weiB)
-        // then the normalized rate would be: 5 / (2 * 10^3) = 0.0025, which is the correct rate since 1 weiA costs $0.00005,
-        // 1 webB costs $0.02, and weiA / weiB is 0.0025.
+        // then the normalized rate would be: 5 / (2 * 10^3) = 0.0025, which is the correct rate since
+        // 1 weiA costs $0.00005, 1 weiB costs $0.02, and weiA / weiB is 0.0025.
 
         if (decimalsTokenA > decimalsTokenB) {
             rateTokenB = rateTokenB.mul(10 ** uint256((decimalsTokenA - decimalsTokenB)));
