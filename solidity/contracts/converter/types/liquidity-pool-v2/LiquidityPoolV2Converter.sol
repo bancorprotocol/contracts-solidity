@@ -120,7 +120,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             LiquidityPoolV2ConverterCustomFactory(IConverterFactory(addressOf(CONVERTER_FACTORY)).customFactories(converterType()));
         priceOracle = customFactory.createPriceOracle(_primaryReserveToken, secondaryReserveToken, _primaryReserveOracle, _secondaryReserveOracle);
 
-        (referenceRate.n, referenceRate.d)  = priceOracle.latestRate(primaryReserveToken, secondaryReserveToken);
+        (referenceRate.n, referenceRate.d) = priceOracle.latestRate(primaryReserveToken, secondaryReserveToken);
         lastConversionRate = referenceRate;
 
         referenceRateUpdateTime = time();
