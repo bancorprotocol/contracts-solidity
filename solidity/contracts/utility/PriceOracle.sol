@@ -14,7 +14,7 @@ import "./interfaces/IChainlinkPriceOracle.sol";
 contract PriceOracle is IPriceOracle, Utils {
     using SafeMath for uint256;
 
-    address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address private constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint8 private constant ETH_DECIMALS = 18;
 
     IERC20Token public tokenA;                  // token A the oracle supports
@@ -146,7 +146,7 @@ contract PriceOracle is IPriceOracle, Utils {
 
     /** @dev returns the decimals of a given token */
     function decimals(IERC20Token _token) private view returns (uint8) {
-        if (_token == ETH_RESERVE_ADDRESS) {
+        if (_token == ETH_ADDRESS) {
             return ETH_DECIMALS;
         }
 
