@@ -19,7 +19,6 @@ allFiredEvents
 scTopics
 
 solidity/build/ConverterV*
-solidity/build/Migrations*
 solidity/build/NewConverter*
 solidity/build/NonStandardToken*
 solidity/build/OldConverter*
