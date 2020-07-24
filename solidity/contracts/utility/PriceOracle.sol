@@ -36,8 +36,8 @@ contract PriceOracle is IPriceOracle, Utils {
     */
     constructor(IERC20Token _tokenA, IERC20Token _tokenB, IChainlinkPriceOracle _tokenAOracle, IChainlinkPriceOracle _tokenBOracle)
         public
-        validAddresses(_tokenA, _tokenB)
-        validAddresses(_tokenAOracle, _tokenBOracle)
+        validUniqueAddresses(_tokenA, _tokenB)
+        validUniqueAddresses(_tokenAOracle, _tokenBOracle)
     {
         tokenA = _tokenA;
         tokenB = _tokenB;
@@ -50,14 +50,14 @@ contract PriceOracle is IPriceOracle, Utils {
         tokensToOracles[_tokenB] = _tokenBOracle;
     }
 
-    // ensures that the provided addresses are valid
-    modifier validAddresses(address _address1, address _address2) {
-        _validAddresses(_address1, _address2);
+    // ensures that the provided addresses are unique valid
+    modifier validUniqueAddresses(address _address1, address _address2) {
+        _validUniqueAddresses(_address1, _address2);
         _;
     }
 
     // error message binary size optimization
-    function _validAddresses(address _address1, address _address2) internal pure {
+    function _validUniqueAddresses(address _address1, address _address2) internal pure {
         _validAddress(_address1);
         _validAddress(_address2);
         require(_address1 != _address2, "ERR_SAME_ADDRESS");
@@ -71,7 +71,7 @@ contract PriceOracle is IPriceOracle, Utils {
 
     // error message binary size optimization
     function _supportedTokens(IERC20Token _tokenA, IERC20Token _tokenB) internal view {
-        _validAddresses(_tokenA, _tokenB);
+        _validUniqueAddresses(_tokenA, _tokenB);
         require(tokensToOracles[_tokenA] != address(0) && tokensToOracles[_tokenB] != address(0), "ERR_UNSUPPORTED_TOKEN");
     }
 
