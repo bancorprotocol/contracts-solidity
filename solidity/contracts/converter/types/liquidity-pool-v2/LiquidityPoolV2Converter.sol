@@ -930,8 +930,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         return now;
     }
 
-    uint256 private constant MAX_RATE_FACTOR_LOWER_BOUND = 1000000000000000000000000000000;
-    uint256 private constant MAX_RATE_FACTOR_UPPER_BOUND = 115792089237316195423570985008687907853269984665; // MAX_UINT256 / MAX_RATE_FACTOR_LOWER_BOUND
+    uint256 private constant MAX_RATE_FACTOR_LOWER_BOUND = 1000000000000000000000;
+    uint256 private constant MAX_RATE_FACTOR_UPPER_BOUND = uint256(-1) / MAX_RATE_FACTOR_LOWER_BOUND;
 
     /**
       * @dev reduces the numerator and denominator while maintaining the ratio between them as accurately as possible
