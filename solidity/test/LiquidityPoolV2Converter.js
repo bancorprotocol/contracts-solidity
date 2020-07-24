@@ -299,8 +299,9 @@ contract('LiquidityPoolV2Converter', accounts => {
                     const expected = BN.min(BN.max(fee, fee.mul(new BN(4)).div(new BN(4 + n))), fee.mul(new BN(2)));
                     it(`calculateAdjustedFee should return ${expected.toString()}`, async () => {
                         const tknStaked = bntStaked.add(new BN(n));
-                        const converter = await initConverter(true, true, false);
-                        const actual = await converter.calculateAdjustedFeeTest(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, fee);
+                        const converter = await initConverter(true, true);
+                        const actual = await converter.calculateAdjustedFeeTest.call(tknStaked, bntStaked, tknWeight,
+                            bntWeight, tknRate, bntRate, fee);
                         expect(actual).to.be.bignumber.equal(expected);
                     });
                 }
