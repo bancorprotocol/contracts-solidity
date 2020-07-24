@@ -780,9 +780,9 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 await convert([getReserve1Address(isETHReserve), anchorAddress, reserveToken2.address], amount, MIN_RETURN, { value });
 
-                // increase the primary reserve external price
-                const newOracleAPrice = INITIAL_ORACLE_A_PRICE.add(new BN(1500000));
-                await updateChainlinkOracle(converter, chainlinkPriceOracleA, newOracleAPrice);
+                // decrease the secondary reserve external price
+                const newOracleBPrice = INITIAL_ORACLE_B_PRICE.sub(new BN(5000));
+                await updateChainlinkOracle(converter, chainlinkPriceOracleB, newOracleBPrice);
 
                 const reserve1StakedBalance = await converter.reserveStakedBalance.call(getReserve1Address(isETHReserve));
                 const reserve2StakedBalance = await converter.reserveStakedBalance.call(reserveToken2.address);
@@ -792,7 +792,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const expectedWeights = getExpectedWeights(
                     reserve1StakedBalance, reserve2StakedBalance,
                     reserve1Balance, reserve2Balance,
-                    newOracleAPrice, INITIAL_ORACLE_B_PRICE
+                    INITIAL_ORACLE_A_PRICE, newOracleBPrice
                 );
 
                 const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
