@@ -1284,20 +1284,20 @@ contract('LiquidityPoolV2Converter', accounts => {
                     for (const isReserve1 of [true, false]) {
                         // eslint-disable-next-line max-len
                         describe(`${isReserve1Primary ? 'reserve1 is primary' : 'reserve2 is primary'}, ${isReserve1 ? 'adding reserve1' : 'adding reserve2'} ${isEmpty ? 'to an empty pool' : 'to a non empty pool'},`, () => {
-                            it.skip('verifies the new weights after adding liquidity', async () => {
+                            it('verifies the new weights after adding liquidity', async () => {
                                 // get the reserve and its address
                                 const reserve1Data = [getReserve1(isETHReserve), getReserve1Address(isETHReserve)];
                                 const reserve2Data = [reserveToken2, reserveToken2.address];
 
-                                let amount;
+                                let liquidity;
                                 let reserveData;
 
                                 if (isReserve1) {
                                     reserveData = reserve1Data;
-                                    amount = toReserve1(new BN(800));
+                                    liquidity = toReserve1(new BN(800));
                                 } else {
                                     reserveData = reserve2Data;
-                                    amount = toReserve2(new BN(800));
+                                    liquidity = toReserve2(new BN(800));
                                 }
 
                                 const primaryReserveAddress = isReserve1Primary ? reserve1Data[1] : reserve2Data[1];
@@ -1307,28 +1307,28 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 // approve the amount if needed
                                 let value = 0;
                                 if (isETHReserve && isReserve1) {
-                                    value = amount;
+                                    value = liquidity;
                                 } else {
-                                    await reserveData[0].approve(converter.address, amount, { from: sender });
+                                    await reserveData[0].approve(converter.address, liquidity, { from: sender });
                                 }
 
                                 // add the liquidity
-                                await converter.addLiquidity(reserveData[1], amount, MIN_RETURN, { value });
+                                await converter.addLiquidity(reserveData[1], liquidity, MIN_RETURN, { value });
 
                                 // get new staked balances
                                 let reserve1StakedBalance = new BN(isEmpty ? 0 : INITIAL_RESERVE1_LIQUIDITY);
                                 let reserve2StakedBalance = new BN(isEmpty ? 0 : INITIAL_RESERVE2_LIQUIDITY);
                                 if (isReserve1) {
-                                    reserve1StakedBalance = reserve1StakedBalance.add(amount);
+                                    reserve1StakedBalance = reserve1StakedBalance.add(liquidity);
                                 } else {
-                                    reserve2StakedBalance = reserve2StakedBalance.add(amount);
+                                    reserve2StakedBalance = reserve2StakedBalance.add(liquidity);
                                 }
 
                                 // get expected weights
                                 const expectedWeights = getExpectedWeights(
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     reserve1StakedBalance, reserve2StakedBalance,
-                                    INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY, isReserve1Primary
+                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, isReserve1Primary
                                 );
 
                                 const reserveWeight1 = await converter.reserveWeight.call(reserve1Data[1]);
@@ -1451,7 +1451,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 for (const isEntireSupply of [true, false]) {
                     for (const isPoolToken1 of [true, false]) {
                         // eslint-disable-next-line max-len
-                        describe.skip(`${isReserve1Primary ? 'reserve1 is primary' : 'reserve2 is primary'}, removing ${isEntireSupply ? 'entire' : 'partial'} ${isPoolToken1 ? 'pool token 1' : 'pool token 2'} supply,`, () => {
+                        describe(`${isReserve1Primary ? 'reserve1 is primary' : 'reserve2 is primary'}, removing ${isEntireSupply ? 'entire' : 'partial'} ${isPoolToken1 ? 'pool token 1' : 'pool token 2'} supply,`, () => {
                             it('verifies the new weights after removing liquidity', async () => {
                                 const primaryReserveAddress = isReserve1Primary ? getReserve1Address(isETHReserve) : reserveToken2.address;
                                 const converter = await initConverter(true, true, 5000, primaryReserveAddress);
