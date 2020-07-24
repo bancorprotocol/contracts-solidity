@@ -36,7 +36,7 @@ contract('LiquidityPoolV2Converter', accounts => {
         [new BN(8), new BN(8), false]
     ].forEach(spec => {
         const [reserveToken1Decimals, reserveToken2Decimals, isETHReserve] = spec;
-        const poolTokenDecimals = new BN(18);
+        const poolTokenDecimals = new BN(10);
         const decimalsDesc = `[${reserveToken1Decimals.toString()},${reserveToken2Decimals.toString()}] decimals`;
         const reservesDesc = `${isETHReserve ? 'with ETH reserve' : 'with ERC20 reserves'}`;
 
