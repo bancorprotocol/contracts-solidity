@@ -15,25 +15,28 @@ const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
+const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
+const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
+const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const TestConverterRegistry = artifacts.require('TestConverterRegistry');
 
 contract('ConverterRegistry', () => {
     let contractRegistry;
     let converterFactory;
-    let liquidTokenConverterFactory;
-    let liquidityPoolV1ConverterFactory;
     let converterRegistry;
     let converterRegistryData;
 
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
         converterFactory = await ConverterFactory.new();
-        liquidTokenConverterFactory = await LiquidTokenConverterFactory.new();
-        liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
 
-        await converterFactory.registerTypedConverterFactory(liquidTokenConverterFactory.address);
-        await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
+        await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
+
+        await converterFactory.registerTypedConverterAnchorFactory((await LiquidityPoolV2ConverterAnchorFactory.new()).address);
+        await converterFactory.registerTypedConverterCustomFactory((await LiquidityPoolV2ConverterCustomFactory.new()).address);
     });
 
     beforeEach(async () => {
@@ -351,6 +354,9 @@ contract('ConverterRegistry', () => {
             await testCreate(1, 'Pool1', 'ST4', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]);
             await testCreate(1, 'Pool2', 'ST5', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]);
             await testCreate(1, 'Pool3', 'ST6', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]);
+            await testCreate(2, 'Pool4', 'ST7', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]);
+            await testCreate(2, 'Pool5', 'ST8', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]);
+            await testCreate(2, 'Pool6', 'ST9', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]);
         };
 
         it('should create converters', async () => {

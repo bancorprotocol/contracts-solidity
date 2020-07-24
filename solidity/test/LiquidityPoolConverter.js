@@ -36,12 +36,7 @@ contract('LiquidityPoolConverter', accounts => {
     const createAnchor = async (type) => {
         switch (type) {
             case 1: return await SmartToken.new('Pool1', 'POOL1', 2);
-            case 2: {
-                const anchor = await PoolTokensContainer.new('Pool', 'POOL', 2);
-                await anchor.createToken();
-                await anchor.createToken();
-                return anchor;
-            }
+            case 2: return await PoolTokensContainer.new('Pool', 'POOL', 2);
         }
     };
 
@@ -64,7 +59,7 @@ contract('LiquidityPoolConverter', accounts => {
 
         if (activate) {
             await anchor.transferOwnership(converter.address);
-            await converter.acceptTokenOwnership();
+            await converter.acceptAnchorOwnership();
 
             if (type === 2) {
                 await converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
@@ -181,9 +176,9 @@ contract('LiquidityPoolConverter', accounts => {
         upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
-        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
-        reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 0, 2000000000);
-        reserveToken3 = await ERC20Token.new('ERC Token 3', 'ERC3', 0, 1500000000);
+        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
+        reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 18, 2000000000);
+        reserveToken3 = await ERC20Token.new('ERC Token 3', 'ERC3', 18, 1500000000);
     });
     for (const type of CONVERTER_TYPES) {
         for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
@@ -255,7 +250,7 @@ contract('LiquidityPoolConverter', accounts => {
                     const converter = await createConverter(type, anchor.address, contractRegistry.address, 0);
                     await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_50_PERCENT);
 
-                    await expectRevert(converter.acceptTokenOwnership(), 'ERR_INVALID_RESERVE_COUNT');
+                    await expectRevert(converter.acceptAnchorOwnership(), 'ERR_INVALID_RESERVE_COUNT');
                 });
 
                 it('verifies that targetAmountAndFee returns a valid amount', async () => {

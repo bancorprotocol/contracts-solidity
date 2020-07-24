@@ -6,6 +6,9 @@ require('chai')
     .use(require('dirty-chai'))
     .expect();
 
+const Decimal = require('decimal.js');
+Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
+
 const ganache = require('ganache-core');
 /* eslint-enable import/no-extraneous-dependencies */
 
@@ -19,8 +22,10 @@ module.exports = {
             port: 7545,
             network_id: '*',
             gasPrice: 20000000000,
-            gas: 6721975,
+            gas: 9500000,
             provider: ganache.provider({
+                gasLimit: 9500000,
+                gasPrice: 20000000000,
                 default_balance_ether: 10000000000000000000
             })
         },
@@ -29,7 +34,7 @@ module.exports = {
             port: 7545,
             network_id: '*',
             gasPrice: 20000000000,
-            gas: 6721975
+            gas: 9500000
         }
     },
     plugins: ['solidity-coverage'],

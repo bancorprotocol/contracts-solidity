@@ -18,22 +18,8 @@ coverage.json
 allFiredEvents
 scTopics
 
-# npm run build
-solidity/build/ConverterV27OrLowerWithoutFallback.abi
-solidity/build/ConverterV27OrLowerWithoutFallback.bin
-solidity/build/ConverterV27OrLowerWithFallback.abi
-solidity/build/ConverterV27OrLowerWithFallback.bin
-solidity/build/ConverterV28OrHigherWithoutFallback.abi
-solidity/build/ConverterV28OrHigherWithoutFallback.bin
-solidity/build/ConverterV28OrHigherWithFallback.abi
-solidity/build/ConverterV28OrHigherWithFallback.bin
-solidity/build/Migrations.abi
-solidity/build/Migrations.bin
-solidity/build/NewConverter.abi
-solidity/build/NewConverter.bin
-solidity/build/NonStandardToken.abi
-solidity/build/NonStandardToken.bin
-solidity/build/OldConverter.abi
-solidity/build/OldConverter.bin
-solidity/build/Test*.abi
-solidity/build/Test*.bin
+solidity/build/ConverterV*
+solidity/build/NewConverter*
+solidity/build/NonStandardToken*
+solidity/build/OldConverter*
+solidity/build/Test*

@@ -8,9 +8,6 @@ import "../utility/SafeMath.sol";
 contract NonStandardToken is Utils {
     using SafeMath for uint256;
 
-    string public name;
-    string public symbol;
-    uint8 public decimals;
     uint256 public totalSupply;
     mapping (address => uint256) public balanceOf;
     mapping (address => mapping (address => uint256)) public allowance;
@@ -21,17 +18,11 @@ contract NonStandardToken is Utils {
     /**
       * @dev initializes a new NonStandardToken instance
       *
-      * @param _name        token name
-      * @param _symbol      token symbol
-      * @param _decimals    decimal points
       * @param _supply      initial supply
     */
-    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply)
+    constructor(uint256 _supply)
         internal
     {
-        name = _name;
-        symbol = _symbol;
-        decimals = _decimals;
         totalSupply = _supply;
         balanceOf[msg.sender] = _supply;
     }
@@ -100,11 +91,34 @@ contract NonStandardToken is Utils {
     }
 }
 
-contract TestNonStandardToken is NonStandardToken {
+contract NonStandardTokenDetailed is NonStandardToken {
+    string public name;
+    string public symbol;
+    uint8 public decimals;
+
+    /**
+      * @dev initializes a new NonStandardToken instance
+      *
+      * @param _name        token name
+      * @param _symbol      token symbol
+      * @param _decimals    decimal points
+      * @param _supply      initial supply
+    */
+    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply)
+        internal
+        NonStandardToken(_supply)
+    {
+        name = _name;
+        symbol = _symbol;
+        decimals = _decimals;
+    }
+}
+
+contract TestNonStandardToken is NonStandardTokenDetailed {
     bool public ok;
 
     constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
-        NonStandardToken(_name, _symbol, _decimals, _supply) {
+        NonStandardTokenDetailed(_name, _symbol, _decimals, _supply) {
         set(true);
     }
 
@@ -128,12 +142,35 @@ contract TestNonStandardToken is NonStandardToken {
     }
 }
 
-contract TestStandardToken is NonStandardToken {
+contract TestNonStandardTokenWithoutDecimals is NonStandardToken {
+    string public name;
+    string public symbol;
+
+    constructor(string _name, string _symbol, uint256 _supply) public
+        NonStandardToken(_supply) {
+        name = _name;
+        symbol = _symbol;
+    }
+
+    function approve(address _spender, uint256 _value) public {
+        _approve(_spender, _value);
+    }
+
+    function transfer(address _to, uint256 _value) public {
+        _transfer(_to, _value);
+    }
+
+    function transferFrom(address _from, address _to, uint256 _value) public {
+        _transferFrom(_from, _to, _value);
+    }
+}
+
+contract TestStandardToken is NonStandardTokenDetailed {
     bool public ok;
     bool public ret;
 
     constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
-        NonStandardToken(_name, _symbol, _decimals, _supply) {
+        NonStandardTokenDetailed(_name, _symbol, _decimals, _supply) {
         set(true, true);
     }
 

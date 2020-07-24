@@ -1,7 +1,6 @@
 const { expect } = require('chai');
 const constants = require('./FormulaConstants');
 const Decimal = require('decimal.js');
-Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN });
 
 const ONE = Decimal(1);
 const MAX_WEIGHT = Decimal(constants.MAX_WEIGHT);
@@ -145,8 +144,9 @@ const balancedWeights = (primaryReserveStakedBalance, primaryReserveBalance, sec
 const normalizedWeights = (a, b) => {
     const prevW1 = Decimal(a.toString());
     const prevW2 = Decimal(b.toString());
-    const w1 = prevW1.div(prevW1.add(prevW2)).mul(MAX_WEIGHT).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+    const w1 = prevW1.mul(MAX_WEIGHT).div(prevW1.add(prevW2)).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
     const w2 = MAX_WEIGHT.sub(w1);
+
     return [w1, w2];
 };
 
@@ -160,7 +160,7 @@ const W = (x) => {
         return a;
     }
     return W_DEF_SOLUTION;
-}
+};
 
 module.exports = {
     purchaseTargetAmount,

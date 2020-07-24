@@ -85,8 +85,6 @@ contract('ConverterUpgrader', accounts => {
 
     const initLPV2 = async (deployer, version, activate) => {
         const anchor = await PoolTokensContainer.new('Pool', 'POOL', 0);
-        await anchor.createToken();
-        await anchor.createToken();
 
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
@@ -296,8 +294,8 @@ contract('ConverterUpgrader', accounts => {
     });
 
     beforeEach(async () => {
-        reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, RESERVE1_BALANCE);
-        reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, RESERVE2_BALANCE);
+        reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 18, RESERVE1_BALANCE);
+        reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, RESERVE2_BALANCE);
         etherToken = await EtherToken.new('Ether Token', 'ETH');
     });
 
