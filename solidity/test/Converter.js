@@ -114,7 +114,7 @@ contract('Converter', accounts => {
 
     const createAnchor = async (type) => {
         switch (type) {
-            case 0: 
+            case 0:
                 anchor = await SmartToken.new('Token1', 'TKN1', 2);
                 break;
 
@@ -208,8 +208,8 @@ contract('Converter', accounts => {
         upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
-        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
-        reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 0, 2000000000);
+        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
+        reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 18, 2000000000);
     });
 
     for (let type = 0; type < NUM_CONVERTER_TYPES; type++) {
@@ -264,7 +264,7 @@ contract('Converter', accounts => {
                     await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
                     await converterRegistry.newConverter(
-                        type, "test", "TST", 2, 1000,
+                        type, 'test', 'TST', 2, 1000,
                         getConverterReserveAddresses(type, isETHReserve),
                         getConverterReserveWeights(type)
                     );
@@ -272,7 +272,7 @@ contract('Converter', accounts => {
 
                 it('verifies that the owner can withdraw other tokens from the anchor', async () => {
                     const converter = await initConverter(type, true, isETHReserve);
-                    const ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
+                    const ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 100000);
 
                     const prevBalance = await ercToken.balanceOf.call(owner);
 
@@ -290,7 +290,7 @@ contract('Converter', accounts => {
 
                 it('should revert when the owner attempts to withdraw other tokens from the anchor while the converter is not active', async () => {
                     const converter = await initConverter(type, false, isETHReserve);
-                    const ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
+                    const ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 100000);
 
                     const value = new BN(222);
                     await ercToken.transfer(anchor.address, value);
@@ -301,7 +301,7 @@ contract('Converter', accounts => {
 
                 it('should revert when a non owner attempts to withdraw other tokens from the anchor', async () => {
                     const converter = await initConverter(type, true, isETHReserve);
-                    const ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
+                    const ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 100000);
 
                     const value = new BN(11);
                     await ercToken.transfer(anchor.address, value);
@@ -523,7 +523,7 @@ contract('Converter', accounts => {
                 it('verifies that the owner can withdraw a non reserve token from the converter while the converter is not active', async () => {
                     const converter = await initConverter(type, false, isETHReserve);
 
-                    const token = await ERC20Token.new('ERC Token 3', 'ERC3', 0, 100000);
+                    const token = await ERC20Token.new('ERC Token 3', 'ERC3', 18, 100000);
 
                     const value = new BN(1000);
                     await token.transfer(converter.address, value);
@@ -559,7 +559,7 @@ contract('Converter', accounts => {
                 it('verifies that the owner can withdraw a non reserve token from the converter while the converter is active', async () => {
                     const converter = await initConverter(type, true, isETHReserve);
 
-                    const token = await ERC20Token.new('ERC Token 3', 'ERC3', 0, 100000);
+                    const token = await ERC20Token.new('ERC Token 3', 'ERC3', 18, 100000);
                     const value = new BN(1000);
                     await token.transfer(converter.address, value);
 
@@ -586,7 +586,7 @@ contract('Converter', accounts => {
                 it('should revert when a non owner attempts to withdraw a non reserve token while the converter is not active', async () => {
                     const converter = await initConverter(type, false, isETHReserve);
 
-                    const token = await ERC20Token.new('ERC Token 3', 'ERC3', 0, 100000);
+                    const token = await ERC20Token.new('ERC Token 3', 'ERC3', 18, 100000);
 
                     const value = new BN(255);
                     await token.transfer(converter.address, value);

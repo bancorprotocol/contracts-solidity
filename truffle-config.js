@@ -6,6 +6,9 @@ require('chai')
     .use(require('dirty-chai'))
     .expect();
 
+const Decimal = require('decimal.js');
+Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
+
 const ganache = require('ganache-core');
 /* eslint-enable import/no-extraneous-dependencies */
 

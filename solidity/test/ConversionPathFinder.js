@@ -148,7 +148,7 @@ contract('ConversionPathFinder', accounts => {
 
     beforeEach(async () => {
         for (const reserve of LAYOUT.reserves) {
-            const erc20Token = await ERC20Token.new('name', reserve.symbol, 0, 0);
+            const erc20Token = await ERC20Token.new('name', reserve.symbol, 18, 0);
             addresses[reserve.symbol] = erc20Token.address;
         }
 

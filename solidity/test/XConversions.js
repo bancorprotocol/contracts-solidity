@@ -76,7 +76,7 @@ contract('XConversions', accounts => {
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
         await contractRegistry.registerAddress(registry.BANCOR_X, bancorX.address);
 
-        erc20Token = await ERC20Token.new('Test Token', 'TST', 0, web3.utils.toWei(new BN(100)));
+        erc20Token = await ERC20Token.new('Test Token', 'TST', 18, web3.utils.toWei(new BN(100)));
 
         // Create some converters.
         const poolToken1 = await SmartToken.new('Pool Token 1', 'POOL1', 18);

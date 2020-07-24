@@ -120,7 +120,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             LiquidityPoolV2ConverterCustomFactory(IConverterFactory(addressOf(CONVERTER_FACTORY)).customFactories(converterType()));
         priceOracle = customFactory.createPriceOracle(_primaryReserveToken, secondaryReserveToken, _primaryReserveOracle, _secondaryReserveOracle);
 
-        (referenceRate.n, referenceRate.d)  = priceOracle.latestRate(primaryReserveToken, secondaryReserveToken);
+        (referenceRate.n, referenceRate.d) = priceOracle.latestRate(primaryReserveToken, secondaryReserveToken);
         lastConversionRate = referenceRate;
 
         referenceRateUpdateTime = time();
@@ -930,8 +930,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         return now;
     }
 
-    uint256 private constant MAX_RATE_FACTOR_LOWER_BOUND = 1000000000000000000000000000000;
-    uint256 private constant MAX_RATE_FACTOR_UPPER_BOUND = 115792089237316195423570985008687907853269984665; // MAX_UINT256 / MAX_RATE_FACTOR_LOWER_BOUND
+    uint256 private constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
+    uint256 private constant MAX_RATE_FACTOR_UPPER_BOUND = uint256(-1) / MAX_RATE_FACTOR_LOWER_BOUND;
 
     /**
       * @dev reduces the numerator and denominator while maintaining the ratio between them as accurately as possible
@@ -950,8 +950,10 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     */
     function reduceFactors(uint256 _max, uint256 _min) internal pure returns (Fraction memory) {
         if (_min > MAX_RATE_FACTOR_UPPER_BOUND) {
-            uint256 c = _min / (MAX_RATE_FACTOR_UPPER_BOUND + 1) + 1;
-            return Fraction({ n: _max / c, d: _min / c });
+            return Fraction({
+                n: MAX_RATE_FACTOR_LOWER_BOUND,
+                d: _min / (_max / MAX_RATE_FACTOR_LOWER_BOUND)
+            });
         }
 
         if (_max > MAX_RATE_FACTOR_LOWER_BOUND) {

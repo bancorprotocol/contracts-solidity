@@ -112,9 +112,9 @@ contract('LiquidityPoolV1Converter', accounts => {
         const token = await SmartToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
-        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
-        reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 0, 2000000000);
-        reserveToken3 = await ERC20Token.new('ERC Token 3', 'ERC3', 0, 1500000000);
+        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
+        reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 18, 2000000000);
+        reserveToken3 = await ERC20Token.new('ERC Token 3', 'ERC3', 18, 1500000000);
     });
 
     it('verifies the TokenRateUpdate event after adding liquidity', async () => {
@@ -572,8 +572,8 @@ contract('LiquidityPoolV1Converter', accounts => {
         beforeEach(async () => {
             const token = await SmartToken.new('Token', 'TKN', 0);
             converter = await LiquidityPoolV1Converter.new(token.address, contractRegistry.address, 0);
-            reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
-            reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, 1000000000);
+            reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
+            reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
             await converter.addReserve(reserveToken1.address, 500000);
             await converter.addReserve(reserveToken2.address, 500000);
             await token.transferOwnership(converter.address);
@@ -619,8 +619,8 @@ contract('LiquidityPoolV1Converter', accounts => {
                 it(`(amounts = ${amounts}, percents = ${percents})`, async () => {
                     const token = await SmartToken.new('Token', 'TKN', 0);
                     const converter = await LiquidityPoolV1Converter.new(token.address, contractRegistry.address, 0);
-                    const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
-                    const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 0, 1000000000);
+                    const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
+                    const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
                     await converter.addReserve(reserveToken1.address, 500000);
                     await converter.addReserve(reserveToken2.address, 500000);
                     await token.transferOwnership(converter.address);

@@ -5,7 +5,6 @@ const { expectRevert, BN } = require('@openzeppelin/test-helpers');
 // decimal numbers.
 const BigNumber = require('bignumber.js');
 const Decimal = require('decimal.js');
-Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN });
 
 const { MIN_PRECISION, MAX_PRECISION, MAX_WEIGHT, maxExpArray, maxValArray } = require('./helpers/FormulaConstants');
 const { normalizedWeights, balancedWeights } = require('./helpers/FormulaFunctions');
@@ -165,8 +164,8 @@ contract('BancorFormula', () => {
                 const floatPoint = new BigNumber(Decimal(x.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
 
                 const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
-                expect(ratio.gte(MIN_RATIO), 'below MIN_RATIO');
-                expect(ratio.lte(MAX_RATIO), 'above MAX_RATIO');
+                expect(ratio.gte(MIN_RATIO)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
+                expect(ratio.lte(MAX_RATIO)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
             });
         }
 
@@ -178,8 +177,8 @@ contract('BancorFormula', () => {
                 const floatPoint = new BigNumber(Decimal(x.toFixed()).exp().mul(FIXED_1.toFixed()).toFixed());
 
                 const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
-                expect(ratio.gte(MIN_RATIO), 'below MIN_RATIO');
-                expect(ratio.lte(MAX_RATIO), 'above MAX_RATIO');
+                expect(ratio.gte(MIN_RATIO)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
+                expect(ratio.lte(MAX_RATIO)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
             });
         }
 
@@ -197,8 +196,8 @@ contract('BancorFormula', () => {
                     const floatPoint = new BigNumber(Decimal(value.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
 
                     const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
-                    expect(ratio.gte(MIN_RATIO), 'below MIN_RATIO');
-                    expect(ratio.lte(MAX_RATIO), 'above MAX_RATIO');
+                    expect(ratio.gte(MIN_RATIO)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
+                    expect(ratio.lte(MAX_RATIO)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
                 });
             }
         }
@@ -333,8 +332,8 @@ contract('BancorFormula', () => {
                                 const MIN_RATIO = Decimal('0.93271');
                                 const MAX_RATIO = Decimal('1.078991');
 
-                                expect(ratio.gte(MIN_RATIO), 'below MIN_RATIO');
-                                expect(ratio.lte(MAX_RATIO), 'above MAX_RATIO');
+                                expect(ratio.gte(MIN_RATIO)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
+                                expect(ratio.lte(MAX_RATIO)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
                             });
                         }
                     }
