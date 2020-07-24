@@ -93,12 +93,6 @@ contract PriceOracle is IPriceOracle, Utils {
         uint8 decimalsTokenA = tokenDecimals[_tokenA];
         uint8 decimalsTokenB = tokenDecimals[_tokenB];
 
-        // since the tokens can differ in their decimals and ChainLink returns the rate per the smallest token unit, we'd
-        // have to normalize the rate.
-        if (decimalsTokenA == decimalsTokenB) {
-            return (rateTokenA, rateTokenB);
-        }
-
         // the normalization works as follows:
         //   - token A with decimals of dA and price of rateA per one token (e.g., for 10^dA weiA)
         //   - token B with decimals of dB < dA and price of rateB per one token (e.g., for 10^dB weiB)
@@ -113,7 +107,7 @@ contract PriceOracle is IPriceOracle, Utils {
         if (decimalsTokenA > decimalsTokenB) {
             rateTokenB = rateTokenB.mul(uint256(10) ** (decimalsTokenA - decimalsTokenB));
         }
-        else {
+        else if (decimalsTokenA < decimalsTokenB) {
             rateTokenA = rateTokenA.mul(uint256(10) ** (decimalsTokenB - decimalsTokenA));
         }
 
