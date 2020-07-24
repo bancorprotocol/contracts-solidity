@@ -1053,7 +1053,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 }
 
                 await expectRevert(convert([getReserve1Address(isETHReserve), anchorAddress, reserveToken2.address], amount,
-                    MIN_RETURN, { value }), 'ERR_TARGET_AMOUNT_TOO_HIGH.');
+                    MIN_RETURN, { value }), 'ERR_TARGET_AMOUNT_TOO_HIGH');
             });
 
             it('should revert when attempting to convert when source reserve is invalid', async () => {
@@ -1698,7 +1698,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                         const amount = toReserve1(new BN(600));
                         await reserveToken.approve(converter.address, amount, { from: sender });
                         await expectRevert(converter.addLiquidity(ETH_RESERVE_ADDRESS, amount, MIN_RETURN, { value: amount }),
-                            'ERR_INVALID_RESERVE.');
+                            'ERR_INVALID_RESERVE');
                     });
                 });
             } else {
