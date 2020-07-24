@@ -111,10 +111,10 @@ contract PriceOracle is IPriceOracle, Utils {
         // 1 weiA costs $0.00005, 1 weiB costs $0.02, and weiA / weiB is 0.0025.
 
         if (decimalsTokenA > decimalsTokenB) {
-            rateTokenB = rateTokenB.mul(10 ** uint256((decimalsTokenA - decimalsTokenB)));
+            rateTokenB = rateTokenB.mul(uint256(10) ** (decimalsTokenA - decimalsTokenB));
         }
         else {
-            rateTokenA = rateTokenA.mul(10 ** uint256((decimalsTokenB - decimalsTokenA)));
+            rateTokenA = rateTokenA.mul(uint256(10) ** (decimalsTokenB - decimalsTokenA));
         }
 
         return (rateTokenA, rateTokenB);
