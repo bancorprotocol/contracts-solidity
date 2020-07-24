@@ -1481,6 +1481,26 @@ contract('LiquidityPoolV2Converter', accounts => {
                 await expectRevert(converter.removeLiquidity(poolToken1.address, 0, MIN_RETURN), 'ERR_ZERO_VALUE');
             });
 
+            it('should revert when attempting to call target amount and fee when the primary reserve weight is 0', async () => {
+                const converter = await initConverter(true, true);
+
+                const amount = toReserve1(new BN(500));
+
+                await converter.setReserveWeight(getReserve1Address(isETHReserve), 0);
+                await expectRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address,
+                    amount), 'ERR_INVALID_RESERVE_WEIGHT');
+            });
+
+            it('should revert when attempting to call target amount and fee when the secondary reserve weight is 0', async () => {
+                const converter = await initConverter(true, true);
+
+                const amount = toReserve1(new BN(500));
+
+                await converter.setReserveWeight(reserveToken2.address, 0);
+                await expectRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address,
+                    amount), 'ERR_INVALID_RESERVE_WEIGHT');
+            });
+
             it('should revert when attempting to convert when the primary reserve weight is 0', async () => {
                 const converter = await initConverter(true, true);
 
