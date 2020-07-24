@@ -787,6 +787,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 context(`converting ${tokenAmount} tokens`, async () => {
                     const amount = toReserve1(new BN(tokenAmount));
 
+                    // eslint-disable-next-line max-len
                     it('verifies that targetAmountAndFee returns the correct target amount and fee when there was no external price change', async () => {
                         const converter = await initConverter(true, true, 5000);
                         await converter.setConversionFee(3000);
@@ -816,6 +817,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                         expect(expectedFee).to.be.bignumber.equal(res[1]);
                     });
 
+                    // eslint-disable-next-line max-len
                     it('verifies that targetAmountAndFee returns the correct target amount and fee when there was an external price change', async () => {
                         const conversionFee = 3000;
                         const converter = await initConverter(true, true, 5000);
