@@ -696,7 +696,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         if (x.mul(AMPLIFICATION_FACTOR * 2) <= y.mul(AMPLIFICATION_FACTOR * 2 - 1))
             return _conversionFee * 2;
 
-        return _conversionFee.mul(y).div(x.mul(AMPLIFICATION_FACTOR).add(y).sub(y.mul(AMPLIFICATION_FACTOR)));
+        return _conversionFee.mul(y).div(x.mul(AMPLIFICATION_FACTOR).sub(y.mul(AMPLIFICATION_FACTOR - 1)));
     }
 
     /**
