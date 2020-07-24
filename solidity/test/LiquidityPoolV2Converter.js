@@ -1044,7 +1044,7 @@ contract('LiquidityPoolV2Converter', accounts => {
             it('should revert when attempting to buy too many tokens', async () => {
                 await initConverter(true, true);
 
-                const amount = toReserve1(new BN(10000000));
+                const amount = toReserve1(new BN(100000000000));
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
