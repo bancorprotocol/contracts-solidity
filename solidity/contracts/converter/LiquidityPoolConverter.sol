@@ -70,9 +70,9 @@ contract LiquidityPoolConverter is ConverterBase {
       * can only be called by the contract owner
       * note that prior to version 28, you should use 'acceptTokenOwnership' instead
     */
-    function acceptTokenOwnership() public {
+    function acceptAnchorOwnership() public {
         // verify that the converter has at least 2 reserves
         require(reserveTokenCount() > 1, "ERR_INVALID_RESERVE_COUNT");
-        super.acceptTokenOwnership();
+        super.acceptAnchorOwnership();
     }
 }
