@@ -143,9 +143,11 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev returns the reserve's staked balance
+      * @dev returns the staked balance of a given reserve token
       *
-      * @param _reserveToken    reserve's staked balance
+      * @param _reserveToken    reserve token address
+      *
+      * @return staked balance
     */
     function reserveStakedBalance(IERC20Token _reserveToken)
         public
@@ -154,6 +156,22 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         returns (uint256)
     {
         return stakedBalances[_reserveToken];
+    }
+
+    /**
+      * @dev returns the amplified balance of a given reserve token
+      *
+      * @param _reserveToken   reserve token address
+      *
+      * @return amplified balance
+    */
+    function reserveAmplifiedBalance(IERC20Token _reserveToken)
+        public
+        view
+        validReserve(_reserveToken)
+        returns (uint256)
+    {
+        return stakedBalances[_reserveToken].mul(AMPLIFICATION_FACTOR - 1).add(reserveBalance(_reserveToken));
     }
 
     /**
@@ -565,7 +583,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         if (_amount < totalSupply) {
             uint256 x = stakedBalances[primaryReserveToken].mul(AMPLIFICATION_FACTOR);
-            uint256 y = amplifiedBalance(primaryReserveToken);
+            uint256 y = reserveAmplifiedBalance(primaryReserveToken);
             (uint256 min, uint256 max) = x < y ? (x, y) : (y, x);
             return _amount.mul(stakedBalance.mul(min)).div(totalSupply.mul(max));
         }
@@ -604,8 +622,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             _targetWeight = reserves[_targetToken].weight;
 
         // get the tokens amplified balances
-        uint256 sourceBalance = amplifiedBalance(_sourceToken);
-        uint256 targetBalance = amplifiedBalance(_targetToken);
+        uint256 sourceBalance = reserveAmplifiedBalance(_sourceToken);
+        uint256 targetBalance = reserveAmplifiedBalance(_targetToken);
 
         // get the target amount
         targetAmount = IBancorFormula(addressOf(BANCOR_FORMULA)).crossReserveTargetAmount(
@@ -823,8 +841,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 primaryStakedBalance = stakedBalances[primaryReserveToken];
 
         // get the tokens amplified balances
-        uint256 primaryBalance = amplifiedBalance(primaryReserveToken);
-        uint256 secondaryBalance = amplifiedBalance(secondaryReserveToken);
+        uint256 primaryBalance = reserveAmplifiedBalance(primaryReserveToken);
+        uint256 secondaryBalance = reserveAmplifiedBalance(secondaryReserveToken);
 
         // get the new weights
         // note that the formula expects the rate of one secondary token while the converter requests the rate of one
@@ -849,8 +867,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     */
     function tokensRate(IERC20Token _token1, IERC20Token _token2, uint32 _token1Weight, uint32 _token2Weight) private view returns (Fraction memory) {
         // apply the amplification factor
-        uint256 token1Balance = amplifiedBalance(_token1);
-        uint256 token2Balance = amplifiedBalance(_token2);
+        uint256 token1Balance = reserveAmplifiedBalance(_token1);
+        uint256 token2Balance = reserveAmplifiedBalance(_token2);
 
         // get reserve weights
         if (_token1Weight == 0) {
@@ -862,17 +880,6 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         }
 
         return Fraction({ n: token2Balance.mul(_token1Weight), d: token1Balance.mul(_token2Weight) });
-    }
-
-    /**
-      * @dev returns the amplified balance for a given reserve token
-      *
-      * @param _reserveToken   reserve token address
-      *
-      * @return amplified balance
-    */
-    function amplifiedBalance(IERC20Token _reserveToken) private view returns (uint256) {
-        return stakedBalances[_reserveToken].mul(AMPLIFICATION_FACTOR - 1).add(reserveBalance(_reserveToken));
     }
 
     /**
