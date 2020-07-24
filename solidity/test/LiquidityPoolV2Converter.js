@@ -131,8 +131,8 @@ contract('LiquidityPoolV2Converter', accounts => {
             };
 
             const getExpectedWeights = (reserve1StakedBalance, reserve2StakedBalance, reserve1Balance, reserve2Balance,
-                primaryOraclePrice, secondaryOraclePrice, isReserve1Primary = true) => {
-                const rate = normalizeRates(primaryOraclePrice, secondaryOraclePrice, isReserve1Primary);
+                oracleAPrice, oracleBPrice, isReserve1Primary = true) => {
+                const rate = normalizeRates(oracleAPrice, oracleBPrice, isReserve1Primary);
 
                 reserve1StakedBalance = new BN(reserve1StakedBalance);
                 reserve2StakedBalance = new BN(reserve2StakedBalance);
@@ -746,7 +746,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 expect(normalFee).to.be.bignumber.lt(res[1]);
             });
 
-            it.skip('verifies that targetAmountAndFee returns a decreased fee when the secondary reserve is in surplus', async () => {
+            it('verifies that targetAmountAndFee does not return a decreased fee when the secondary reserve is in surplus', async () => {
                 const conversionFee = 25000;
                 const converter = await initConverter(true, true, conversionFee);
                 await converter.setConversionFee(conversionFee);
@@ -811,7 +811,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
                 expectAlmostEqual(expectedTargetAmount, res[0]);
-                expect(normalFee).to.be.bignumber.gt(res[1]);
+                expect(normalFee).to.be.bignumber.equal(res[1]);
             });
 
             it('verifies that targetAmountAndFee returns the correct target amount and fee when there was an external price change', async () => {
