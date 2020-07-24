@@ -36,17 +36,9 @@ contract PriceOracle is IPriceOracle, Utils {
     */
     constructor(IERC20Token _tokenA, IERC20Token _tokenB, IChainlinkPriceOracle _tokenAOracle, IChainlinkPriceOracle _tokenBOracle)
         public
-        validAddress(_tokenA)
-        validAddress(_tokenB)
-        validAddress(_tokenAOracle)
-        validAddress(_tokenBOracle)
+        validUniqueAddresses(_tokenA, _tokenB)
+        validUniqueAddresses(_tokenAOracle, _tokenBOracle)
     {
-        // validate the oracle interface
-        _tokenAOracle.latestAnswer();
-        _tokenBOracle.latestAnswer();
-        _tokenAOracle.latestTimestamp();
-        _tokenBOracle.latestTimestamp();
-
         tokenA = _tokenA;
         tokenB = _tokenB;
         tokenDecimals[_tokenA] = decimals(_tokenA);
@@ -58,15 +50,29 @@ contract PriceOracle is IPriceOracle, Utils {
         tokensToOracles[_tokenB] = _tokenBOracle;
     }
 
-    // ensures that the token is supported by the oracle
-    modifier supportedToken(IERC20Token _token) {
-        _supportedToken(_token);
+    // ensures that the provided addresses are unique valid
+    modifier validUniqueAddresses(address _address1, address _address2) {
+        _validUniqueAddresses(_address1, _address2);
         _;
     }
 
     // error message binary size optimization
-    function _supportedToken(IERC20Token _token) internal view {
-        require(tokensToOracles[_token] != address(0), "ERR_UNSUPPORTED_TOKEN");
+    function _validUniqueAddresses(address _address1, address _address2) internal pure {
+        _validAddress(_address1);
+        _validAddress(_address2);
+        require(_address1 != _address2, "ERR_SAME_ADDRESS");
+    }
+
+    // ensures that the provides tokens are supported by the oracle
+    modifier supportedTokens(IERC20Token _tokenA, IERC20Token _tokenB) {
+        _supportedTokens(_tokenA, _tokenB);
+        _;
+    }
+
+    // error message binary size optimization
+    function _supportedTokens(IERC20Token _tokenA, IERC20Token _tokenB) internal view {
+        _validUniqueAddresses(_tokenA, _tokenB);
+        require(tokensToOracles[_tokenA] != address(0) && tokensToOracles[_tokenB] != address(0), "ERR_UNSUPPORTED_TOKEN");
     }
 
     /**
@@ -84,8 +90,7 @@ contract PriceOracle is IPriceOracle, Utils {
     function latestRate(IERC20Token _tokenA, IERC20Token _tokenB)
         public
         view
-        supportedToken(_tokenA)
-        supportedToken(_tokenB)
+        supportedTokens(_tokenA, _tokenB)
         returns (uint256, uint256)
     {
         uint256 rateTokenA = uint256(tokensToOracles[_tokenA].latestAnswer());
@@ -120,7 +125,10 @@ contract PriceOracle is IPriceOracle, Utils {
       *
       * @return timestamp
     */
-    function lastUpdateTime() public view returns (uint256) {
+    function lastUpdateTime()
+        public
+        view
+        returns (uint256) {
         // returns the oldest timestamp between the two
         uint256 timestampA = tokenAOracle.latestTimestamp();
         uint256 timestampB = tokenBOracle.latestTimestamp();
@@ -138,7 +146,11 @@ contract PriceOracle is IPriceOracle, Utils {
       * @return denominator
       * @return timestamp of the last update
     */
-    function latestRateAndUpdateTime(IERC20Token _tokenA, IERC20Token _tokenB) public view returns (uint256, uint256, uint256) {
+    function latestRateAndUpdateTime(IERC20Token _tokenA, IERC20Token _tokenB)
+        public
+        view
+        returns (uint256, uint256, uint256)
+    {
         (uint256 numerator, uint256 denominator) = latestRate(_tokenA, _tokenB);
 
         return (numerator, denominator, lastUpdateTime());

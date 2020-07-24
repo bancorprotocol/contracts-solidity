@@ -54,6 +54,17 @@ contract('PriceOracle', accounts => {
             'ERR_INVALID_ADDRESS');
     });
 
+    it('should revert when attempting to construct a price oracle with same tokens', async () => {
+        const chainlinkOracleA = await ChainlinkPriceOracle.new();
+        const chainlinkOracleB = await ChainlinkPriceOracle.new();
+        await chainlinkOracleA.setAnswer(10000);
+        await chainlinkOracleB.setAnswer(20000);
+        await chainlinkOracleA.setTimestamp(5000);
+        await chainlinkOracleB.setTimestamp(5010);
+        await expectRevert(PriceOracle.new(tokenA.address, tokenA.address, chainlinkOracleA.address, chainlinkOracleB.address),
+            'ERR_SAME_ADDRESS');
+    });
+
     it('should revert when attempting to construct a price oracle with zero chainlink oracle A address', async () => {
         await expectRevert(PriceOracle.new(tokenA.address, tokenB.address, ZERO_ADDRESS, chainlinkOracleB.address),
             'ERR_INVALID_ADDRESS');
@@ -64,9 +75,12 @@ contract('PriceOracle', accounts => {
             'ERR_INVALID_ADDRESS');
     });
 
-    it('should revert when attempting to construct a price oracle with zero chainlink oracle B address', async () => {
-        await expectRevert(PriceOracle.new(tokenA.address, tokenB.address, chainlinkOracleA.address, ZERO_ADDRESS),
-            'ERR_INVALID_ADDRESS');
+    it('should revert when attempting to construct a price oracle with same chainlink oracles', async () => {
+        const chainlinkOracleA = await ChainlinkPriceOracle.new();
+        await chainlinkOracleA.setAnswer(10000);
+        await chainlinkOracleA.setTimestamp(5000);
+        await expectRevert(PriceOracle.new(tokenA.address, tokenB.address, chainlinkOracleA.address, chainlinkOracleA.address),
+            'ERR_SAME_ADDRESS');
     });
 
     it('should revert when attempting to construct a price oracle with a non-standard token A', async () => {
@@ -88,11 +102,19 @@ contract('PriceOracle', accounts => {
     });
 
     it('should revert when attempting to get the rate with zero token A address', async () => {
-        await expectRevert(oracle.latestRate.call(ZERO_ADDRESS, tokenB.address), 'ERR_UNSUPPORTED_TOKEN');
+        await expectRevert(oracle.latestRate.call(ZERO_ADDRESS, tokenB.address), 'ERR_INVALID_ADDRESS');
     });
 
     it('should revert when attempting to get the rate with zero token B address', async () => {
-        await expectRevert(oracle.latestRate.call(tokenA.address, ZERO_ADDRESS), 'ERR_UNSUPPORTED_TOKEN');
+        await expectRevert(oracle.latestRate.call(tokenA.address, ZERO_ADDRESS), 'ERR_INVALID_ADDRESS');
+    });
+
+    it('should revert when attempting to get the rate with an unsupported token', async () => {
+        await expectRevert(oracle.latestRate.call(tokenA.address, accounts[5]), 'ERR_UNSUPPORTED_TOKEN');
+    });
+
+    it('should revert when attempting to get the rate for the same tokens', async () => {
+        await expectRevert(oracle.latestRate.call(tokenA.address, tokenA.address), 'ERR_SAME_ADDRESS');
     });
 
     it('verifies that lastUpdateTime returns the earliest timestamp', async () => {
