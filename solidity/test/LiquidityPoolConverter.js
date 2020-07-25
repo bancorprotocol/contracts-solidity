@@ -176,9 +176,9 @@ contract('LiquidityPoolConverter', accounts => {
         upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
-        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 1000000000);
-        reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 0, 2000000000);
-        reserveToken3 = await ERC20Token.new('ERC Token 3', 'ERC3', 0, 1500000000);
+        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
+        reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 18, 2000000000);
+        reserveToken3 = await ERC20Token.new('ERC Token 3', 'ERC3', 18, 1500000000);
     });
     for (const type of CONVERTER_TYPES) {
         for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {

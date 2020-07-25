@@ -14,7 +14,7 @@ contract('TokenHolder', accounts => {
 
     beforeEach(async () => {
         holder = await TokenHolder.new();
-        erc20Token = await ERC20Token.new('ERC Token 1', 'ERC1', 0, 100000);
+        erc20Token = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 100000);
         await erc20Token.transfer(holder.address, 1000);
     });
 
