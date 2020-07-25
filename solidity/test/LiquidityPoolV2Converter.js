@@ -144,7 +144,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const primaryReserveData = isReserve1Primary ? reserve1Data : reserve2Data;
                 const secondaryReserveData = isReserve1Primary ? reserve2Data : reserve1Data;
 
-                // the formula expects the rate of 1 unit of secondary reserve token so the values are inversed here
                 let newWeights = balancedWeights(
                     primaryReserveData[0].mul(AMPLIFICATION_FACTOR),
                     primaryReserveData[1],

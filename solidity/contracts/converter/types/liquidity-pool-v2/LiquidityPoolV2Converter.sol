@@ -845,8 +845,6 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 secondaryBalance = reserveAmplifiedBalance(secondaryReserveToken);
 
         // get the new weights
-        // note that the formula expects the rate of one secondary token while the converter requests the rate of one
-        // primary token from the price oracle, so the values are inversed here
         return IBancorFormula(addressOf(BANCOR_FORMULA)).balancedWeights(
             primaryStakedBalance.mul(AMPLIFICATION_FACTOR),
             primaryBalance,
