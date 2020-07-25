@@ -65,7 +65,7 @@ class Branch():
         self.reserveStaked = add(self.reserveStaked, reserveAmount)
     def remLiquidity(self, pool, user, amount, lo, hi):
         supplyAmount = amount if amount != 'all' else self.smartToken.balanceOf[user]
-        reserveAmount = ratio(supplyAmount, mul(self.reserveStaked, lo), mul(self.smartToken.totalSupply, hi))
+        reserveAmount = ratio(ratio(supplyAmount, self.reserveStaked, self.smartToken.totalSupply), lo, hi)
         self.smartToken.burn(user, supplyAmount)
         self.reserveToken.transfer(pool, user, reserveAmount)
         self.reserveStaked = sub(self.reserveStaked, reserveAmount)
