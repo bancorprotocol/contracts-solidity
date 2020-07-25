@@ -590,22 +590,22 @@ contract BancorFormula is IBancorFormula {
       * - let r denote the secondary reserve token balance
       * - let q denote the numerator of the rate between the tokens
       * - let p denote the denominator of the rate between the tokens
-      * Where q primary tokens are equal to p secondary tokens
+      * Where p primary tokens are equal to q secondary tokens
       *
       * Formula output:
-      * - compute x = W(t / r * p / q * log(s / t)) / log(s / t)
+      * - compute x = W(t / r * q / p * log(s / t)) / log(s / t)
       * - return x / (1 + x) as the weight of the primary reserve token
       * - return 1 / (1 + x) as the weight of the secondary reserve token
       * Where W is the Lambert W Function
       *
       * If the rate-provider provides the rates for a common unit, for example:
-      * - Q = 2 ==> 2 primary reserve tokens = 1 ether
-      * - P = 3 ==> 3 secondary reserve tokens = 1 ether
+      * - P = 2 ==> 2 primary reserve tokens = 1 ether
+      * - Q = 3 ==> 3 secondary reserve tokens = 1 ether
       * Then you can simply use p = P and q = Q
       *
       * If the rate-provider provides the rates for a single unit, for example:
-      * - Q = 2 ==> 1 primary reserve token = 2 ethers
-      * - P = 3 ==> 1 secondary reserve token = 3 ethers
+      * - P = 2 ==> 1 primary reserve token = 2 ethers
+      * - Q = 3 ==> 1 secondary reserve token = 3 ethers
       * Then you can simply use p = Q and q = P
       *
       * @param _primaryReserveStakedBalance the primary reserve token staked balance
@@ -614,7 +614,7 @@ contract BancorFormula is IBancorFormula {
       * @param _reserveRateNumerator        the numerator of the rate between the tokens
       * @param _reserveRateDenominator      the denominator of the rate between the tokens
       *
-      * Note that `numerator / denominator` should represent the amount of primary tokens equal to one secondary token
+      * Note that `numerator / denominator` should represent the amount of secondary tokens equal to one primary token
       *
       * @return the weight of the primary reserve token and the weight of the secondary reserve token, both in ppm (0-1000000)
     */
@@ -631,16 +631,16 @@ contract BancorFormula is IBancorFormula {
             require(_primaryReserveStakedBalance > 0 && _primaryReserveBalance > 0 && _secondaryReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
         require(_reserveRateNumerator > 0 && _reserveRateDenominator > 0, "ERR_INVALID_RESERVE_RATE");
 
-        uint256 tp = _primaryReserveStakedBalance.mul(_reserveRateDenominator);
-        uint256 rq = _secondaryReserveBalance.mul(_reserveRateNumerator);
+        uint256 tq = _primaryReserveStakedBalance.mul(_reserveRateNumerator);
+        uint256 rp = _secondaryReserveBalance.mul(_reserveRateDenominator);
 
         if (_primaryReserveStakedBalance < _primaryReserveBalance)
-            return balancedWeightsByStake(_primaryReserveBalance, _primaryReserveStakedBalance, tp, rq, true);
+            return balancedWeightsByStake(_primaryReserveBalance, _primaryReserveStakedBalance, tq, rp, true);
 
         if (_primaryReserveStakedBalance > _primaryReserveBalance)
-            return balancedWeightsByStake(_primaryReserveStakedBalance, _primaryReserveBalance, tp, rq, false);
+            return balancedWeightsByStake(_primaryReserveStakedBalance, _primaryReserveBalance, tq, rp, false);
 
-        return normalizedWeights(tp, rq);
+        return normalizedWeights(tq, rp);
     }
 
     /**
@@ -1037,15 +1037,15 @@ contract BancorFormula is IBancorFormula {
     }
 
     /**
-      * @dev computes the weights based on "W(log(hi / lo) * tp / rq) * tp / rq", where "W" is a variation of the Lambert W function.
+      * @dev computes the weights based on "W(log(hi / lo) * tq / rp) * tq / rp", where "W" is a variation of the Lambert W function.
     */
-    function balancedWeightsByStake(uint256 _hi, uint256 _lo, uint256 _tp, uint256 _rq, bool _lowerStake) internal view returns (uint32, uint32) {
-        (_tp, _rq) = safeFactors(_tp, _rq);
+    function balancedWeightsByStake(uint256 _hi, uint256 _lo, uint256 _tq, uint256 _rp, bool _lowerStake) internal view returns (uint32, uint32) {
+        (_tq, _rp) = safeFactors(_tq, _rp);
         uint256 f = _hi.mul(FIXED_1) / _lo;
         uint256 g = f < OPT_LOG_MAX_VAL ? optimalLog(f) : generalLog(f);
-        uint256 x = g.mul(_tp) / _rq;
+        uint256 x = g.mul(_tq) / _rp;
         uint256 y = _lowerStake ? lowerStake(x) : higherStake(x);
-        return normalizedWeights(y.mul(_tp), _rq.mul(FIXED_1));
+        return normalizedWeights(y.mul(_tq), _rp.mul(FIXED_1));
     }
 
     /**

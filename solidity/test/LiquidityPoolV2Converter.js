@@ -149,8 +149,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                     primaryReserveData[0].mul(AMPLIFICATION_FACTOR),
                     primaryReserveData[1],
                     secondaryReserveData[1],
-                    rate.d,
-                    rate.n
+                    rate.n,
+                    rate.d
                 );
 
                 if (!isReserve1Primary) {

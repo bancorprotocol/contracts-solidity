@@ -851,8 +851,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             primaryStakedBalance.mul(AMPLIFICATION_FACTOR),
             primaryBalance,
             secondaryBalance,
-            _rate.d,
-            _rate.n);
+            _rate.n,
+            _rate.d);
     }
 
     /**
