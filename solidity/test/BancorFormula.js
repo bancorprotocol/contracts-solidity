@@ -13,7 +13,7 @@ const TestBancorFormula = artifacts.require('TestBancorFormula');
 
 contract('BancorFormula', () => {
     let formula;
-    beforeEach(async () => {
+    before(async () => {
         formula = await TestBancorFormula.new();
         await formula.init();
     });
@@ -293,6 +293,25 @@ contract('BancorFormula', () => {
             }
         }
 
+        const balancedWeightsExpected = (t, s, r, q, p) => {
+            try {
+                return balancedWeights(t, s, r, q, p);
+            }
+            catch (error) {
+                return error.message;
+            }
+        };
+
+        const balancedWeightsActual = async (t, s, r, q, p) => {
+            try {
+                const weights = await formula.balancedWeights(t, s, r, q, p);
+                return [Decimal(weights[0].toString()), Decimal(weights[1].toString())];
+            }
+            catch (error) {
+                return error.message;
+            }
+        };
+
         const getRatio = (a, b, c, d) => {
             if (a.isZero()) {
                 return d.div(b);
@@ -300,43 +319,25 @@ contract('BancorFormula', () => {
             if (b.isZero()) {
                 return a.div(c);
             }
-
             return a.div(b).div(c.div(d));
         };
 
-        for (let t = 1; t < 5; t++) {
-            for (let s = 1; s < 5; s++) {
-                for (let r = 1; r < 5; r++) {
-                    for (let q = 1; q < 5; q++) {
-                        for (let p = 1; p < 5; p++) {
+        for (let t = 0; t < 5; t++) {
+            for (let s = 0; s < 5; s++) {
+                for (let r = 0; r < 5; r++) {
+                    for (let q = 0; q < 5; q++) {
+                        for (let p = 0; p < 5; p++) {
                             it(`balancedWeights(${[t, s, r, q, p]})`, async () => {
-                                const actual = formula.balancedWeights(t, s, r, q, p);
-
-                                let expected;
-                                try {
-                                    expected = balancedWeights(t, s, r, q, p);
-                                } catch (error) {
-                                    const { message } = error;
-
-                                    if (message.startsWith('ERR_INVALID')) {
-                                        await expectRevert(actual, 'ERR_INVALID');
-                                    }
-                                    else {
-                                        throw error;
-                                    }
-
-                                    return;
+                                let expected = balancedWeightsExpected(t, s, r, q, p);
+                                let actual = await balancedWeightsActual(t, s, r, q, p);
+                                if (Array.isArray(actual)) {
+                                    const ratio = getRatio(actual[0], actual[1], expected[0], expected[1]);
+                                    expect(ratio.gte('0.932714') && ratio.lte('1.078991'), `ratio = ${ratio}`);
                                 }
-
-                                const weights = await actual;
-                                const ratio = getRatio(Decimal(weights[0].toString()), Decimal(weights[1].toString()),
-                                    expected[0], expected[1]);
-
-                                const MIN_RATIO = Decimal('0.93271');
-                                const MAX_RATIO = Decimal('1.078991');
-
-                                expect(ratio.gte(MIN_RATIO)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
-                                expect(ratio.lte(MAX_RATIO)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
+                                else {
+                                    expect(actual.startsWith('VM Exception'), actual);
+                                    expect(expected.startsWith('ERR_INVALID'), expected);
+                                }
                             });
                         }
                     }
