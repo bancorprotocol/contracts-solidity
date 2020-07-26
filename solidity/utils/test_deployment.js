@@ -123,7 +123,7 @@ const run = async () => {
     const web3Func = (func, ...args) => func(web3, account, gasPrice, ...args);
 
     const addresses = { ETH: Web3.utils.toChecksumAddress('0x'.padEnd(42, 'e')) };
-    const tokenDecimals = {};
+    const tokenDecimals = { ETH: 18 };
 
     let phase = 0;
     if (getConfig().phase === undefined) {
