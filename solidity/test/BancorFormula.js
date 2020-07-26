@@ -335,8 +335,7 @@ contract('BancorFormula', () => {
                                     expect(ratio.gte('0.932714') && ratio.lte('1.078991'), `ratio = ${ratio}`);
                                 }
                                 else {
-                                    expect(actual.startsWith('VM Exception'), actual);
-                                    expect(expected.startsWith('ERR_INVALID'), expected);
+                                    expect(expected.startsWith(actual.split('revert ')[1]), `expected = ${expected}, actual = ${actual}`);
                                 }
                             });
                         }
