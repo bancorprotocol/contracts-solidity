@@ -332,10 +332,10 @@ contract('BancorFormula', () => {
                                 let actual = await balancedWeightsActual(t, s, r, q, p);
                                 if (Array.isArray(actual)) {
                                     const ratio = getRatio(actual[0], actual[1], expected[0], expected[1]);
-                                    expect(ratio.gte('0.932714') && ratio.lte('1.078991'), `ratio = ${ratio}`);
+                                    expect(ratio.gte('0.932714') && ratio.lte('1.078991')).to.be.true(`ratio = ${ratio}`);
                                 }
                                 else {
-                                    expect(expected.startsWith(actual.split('revert ')[1]), `expected = ${expected}, actual = ${actual}`);
+                                    expect(expected.startsWith(actual.split('revert ')[1])).to.be.true(`expected = ${expected}, actual = ${actual}`);
                                 }
                             });
                         }
