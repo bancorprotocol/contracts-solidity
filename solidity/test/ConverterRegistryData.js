@@ -239,7 +239,8 @@ contract('ConverterRegistryData', accounts => {
             if (index === -1) {
                 currentState.convertibleTokens.push(convertibleToken);
                 currentState.smartTokens.push([smartToken]);
-            } else {
+            }
+            else {
                 currentState.smartTokens[index].push(smartToken);
             }
 
@@ -256,7 +257,8 @@ contract('ConverterRegistryData', accounts => {
             if (currentState.smartTokens[index].length === 1) {
                 currentState.smartTokens.splice(index, 1);
                 swapLast(currentState.convertibleTokens, convertibleToken);
-            } else {
+            }
+            else {
                 swapLast(currentState.smartTokens[index], smartToken);
             }
 

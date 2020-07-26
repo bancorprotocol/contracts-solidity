@@ -388,7 +388,8 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
                 require(transactionIds[_xTransferId] == 0, "ERR_TX_ALREADY_EXISTS");
                 transactionIds[_xTransferId] = _txId;
             }
-        } else {
+        }
+        else {
             // otherwise, verify transaction details
             require(txn.to == _to && txn.amount == _amount && txn.fromBlockchain == _fromBlockchain, "ERR_TX_MISMATCH");
 

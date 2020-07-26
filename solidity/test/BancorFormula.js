@@ -54,7 +54,8 @@ contract('BancorFormula', () => {
         it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
             if (percent < 64) {
                 await formula.powerTest.call(baseN, baseD, expN, expD);
-            } else {
+            }
+            else {
                 await expectRevert.unspecified(formula.powerTest.call(baseN, baseD, expN, expD));
             }
         });
@@ -98,7 +99,8 @@ contract('BancorFormula', () => {
             it(`findPositionInMaxExpArray(0x${input.toString(16)})`, async () => {
                 if (precision === MIN_PRECISION && output.lt(new BN(precision))) {
                     await expectRevert.unspecified(formula.findPositionInMaxExpArrayTest.call(input));
-                } else {
+                }
+                else {
                     const retVal = await formula.findPositionInMaxExpArrayTest.call(input);
                     expect(retVal).to.be.bignumber.equal(output);
                 }
@@ -318,7 +320,8 @@ contract('BancorFormula', () => {
 
                                     if (message.startsWith('ERR_INVALID')) {
                                         await expectRevert(actual, 'ERR_INVALID');
-                                    } else {
+                                    }
+                                    else {
                                         throw error;
                                     }
 

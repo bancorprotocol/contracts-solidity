@@ -64,7 +64,8 @@ contract('ConverterRegistry', () => {
 
         if (count.gt(new BN(1))) {
             expectEvent(res, `LiquidityPool${suffix}`, { _liquidityPool: anchor });
-        } else {
+        }
+        else {
             expectEvent(res, `ConvertibleToken${suffix}`, { _convertibleToken: anchor, _smartToken: anchor });
         }
 

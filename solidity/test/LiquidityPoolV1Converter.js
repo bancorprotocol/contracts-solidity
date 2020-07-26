@@ -32,7 +32,8 @@ contract('LiquidityPoolV1Converter', accounts => {
 
         if (isETHReserve) {
             await converter.send(5000);
-        } else {
+        }
+        else {
             await reserveToken.transfer(converter.address, 5000);
         }
 
@@ -183,7 +184,8 @@ contract('LiquidityPoolV1Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
@@ -206,7 +208,8 @@ contract('LiquidityPoolV1Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
@@ -252,7 +255,8 @@ contract('LiquidityPoolV1Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
@@ -276,7 +280,8 @@ contract('LiquidityPoolV1Converter', accounts => {
                     let value = 0;
                     if (isETHReserve) {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await reserveToken.approve(converter.address, amount, { from: sender });
                     }
 
@@ -317,7 +322,8 @@ contract('LiquidityPoolV1Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(converter.address, amount, { from: sender2 });
                 }
 
@@ -360,7 +366,8 @@ contract('LiquidityPoolV1Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(converter.address, amount, { from: sender2 });
                 }
 
@@ -394,7 +401,8 @@ contract('LiquidityPoolV1Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(converter.address, amount, { from: sender2 });
                 }
 

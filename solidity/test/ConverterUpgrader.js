@@ -66,7 +66,8 @@ contract('ConverterUpgrader', accounts => {
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         if (version) {
             await converter.addConnector(reserveToken2.address, 500000, false);
-        } else {
+        }
+        else {
             await converter.addReserve(reserveToken2.address, 500000);
         }
 
@@ -133,7 +134,8 @@ contract('ConverterUpgrader', accounts => {
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         if (version) {
             await converter.addConnector(reserveToken2.address, 500000, false);
-        } else {
+        }
+        else {
             await converter.addReserve(reserveToken2.address, 500000);
         }
 
@@ -182,7 +184,8 @@ contract('ConverterUpgrader', accounts => {
         // For versions 11 or higher, we just call upgrade on the converter.
         if (converter.upgrade) {
             res = await converter.upgrade({ from: accounts[0], ...options });
-        } else {
+        }
+        else {
             // For previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
             // then accept ownership of the new and old converter. The end results should be the same.
             await converter.transferOwnership(upgrader.address);
@@ -234,7 +237,8 @@ contract('ConverterUpgrader', accounts => {
             if (priceOracleAddres === ZERO_ADDRESS) {
                 state.tokenAOracle = ZERO_ADDRESS;
                 state.tokenBOracle = ZERO_ADDRESS;
-            } else {
+            }
+            else {
                 const priceOracle = await PriceOracle.at(priceOracleAddres);
                 state.tokenAOracle = await priceOracle.tokenAOracle.call();
                 state.tokenBOracle = await priceOracle.tokenBOracle.call();
@@ -317,10 +321,12 @@ contract('ConverterUpgrader', accounts => {
 
                     // An EtherToken reserve is always upgraded to ETH_RESERVE_ADDRESS.
                     upgradedReserveTokens = [ETH_RESERVE_ADDRESS, reserveToken2.address];
-                } else if (init === initWithETHReserve) {
+                }
+                else if (init === initWithETHReserve) {
                     reserveTokens = [reserveToken1.address, ETH_RESERVE_ADDRESS];
                     upgradedReserveTokens = reserveTokens;
-                } else {
+                }
+                else {
                     reserveTokens = [reserveToken1.address, reserveToken2.address];
                     upgradedReserveTokens = reserveTokens;
                 }

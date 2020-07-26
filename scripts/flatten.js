@@ -20,7 +20,8 @@ const getPathNames = (dirName) => {
     for (const fileName of fs.readdirSync(WORK_DIR + '/' + dirName)) {
         if (fs.statSync(WORK_DIR + '/' + dirName + '/' + fileName).isDirectory()) {
             pathNames = pathNames.concat(getPathNames(dirName + '/' + fileName));
-        } else if (fileName.endsWith('.sol')) {
+        }
+        else if (fileName.endsWith('.sol')) {
             pathNames.push(dirName + '/' + fileName);
         }
     }

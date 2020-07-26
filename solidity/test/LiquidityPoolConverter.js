@@ -219,7 +219,8 @@ contract('LiquidityPoolConverter', accounts => {
 
                         await expectRevert(converter.addReserve(reserveToken3.address, WEIGHT_10_PERCENT), 'ERR_ACTIVE');
                     });
-                } else {
+                }
+                else {
                     it('should revert when attempting to add an additional reserve when the converter is active', async () => {
                         const converter = await initConverter(type, true, true, isETHReserve);
 
@@ -285,7 +286,8 @@ contract('LiquidityPoolConverter', accounts => {
                     let value = 0;
                     if (isETHReserve) {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                     }
 
@@ -300,7 +302,8 @@ contract('LiquidityPoolConverter', accounts => {
                     let value = 0;
                     if (isETHReserve) {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                     }
 
@@ -320,7 +323,8 @@ contract('LiquidityPoolConverter', accounts => {
                     let value = 0;
                     if (isETHReserve) {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await reserveToken.transfer(whitelisted, amount.mul(new BN(2)));
                         await reserveToken.approve(bancorNetwork.address, amount, { from: whitelisted });
                     }
@@ -340,7 +344,8 @@ contract('LiquidityPoolConverter', accounts => {
                     let value = 0;
                     if (isETHReserve) {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await reserveToken.transfer(whitelisted, amount.mul(new BN(2)));
                         await reserveToken.approve(bancorNetwork.address, amount, { from: whitelisted });
                     }
@@ -359,7 +364,8 @@ contract('LiquidityPoolConverter', accounts => {
                     let value = 0;
                     if (isETHReserve) {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await reserveToken.transfer(whitelisted, amount.mul(new BN(2)));
                         await reserveToken.approve(bancorNetwork.address, amount, { from: whitelisted });
                     }
@@ -378,7 +384,8 @@ contract('LiquidityPoolConverter', accounts => {
                     let value = 0;
                     if (isETHReserve) {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                     }
 
