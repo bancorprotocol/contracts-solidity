@@ -153,8 +153,8 @@ class Pool():
             sideBranch = self.branches[self.sideSymbol]
             x = mul(mul(mainBranch.reserveStaked, mainBranch.reserveRate), sideBranch.reserveWeight)
             y = mul(mul(sideBranch.reserveStaked, sideBranch.reserveRate), mainBranch.reserveWeight)
-            if x >= y:
-                return self.fee
+            if mul(x, self.amp) >= mul(y, self.amp + 1):
+                return div(self.fee, 2)
             if mul(x, self.amp * 2) <= mul(y, self.amp * 2 - 1):
                 return mul(self.fee, 2)
             return div(mul(self.fee, y), sub(mul(x, self.amp), mul(y, self.amp - 1)))

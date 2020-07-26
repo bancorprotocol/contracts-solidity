@@ -294,8 +294,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const bntRate = new BN(1);
                 const fee = new BN(100000);
 
-                for (let n = -3; n <= 1; n++) {
-                    const expected = BN.min(BN.max(fee, fee.mul(new BN(4)).div(new BN(4 + n))), fee.mul(new BN(2)));
+                for (let n = -3; n <= 5; n++) {
+                    const expected = BN.min(BN.max(fee.div(new BN(2)), fee.mul(new BN(4)).div(new BN(4 + n))), fee.mul(new BN(2)));
                     it(`calculateAdjustedFee should return ${expected.toString()}`, async () => {
                         const tknStaked = bntStaked.add(new BN(n));
                         const converter = await initConverter(true, true);
