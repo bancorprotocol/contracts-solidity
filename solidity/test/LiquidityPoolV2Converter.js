@@ -58,7 +58,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 if (activate) {
                     if (primaryReserveAddress === getReserve1Address(isETHReserve)) {
                         await converter.activate(primaryReserveAddress, chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
-                    } else {
+                    }
+                    else {
                         await converter.activate(primaryReserveAddress, chainlinkPriceOracleB.address, chainlinkPriceOracleA.address);
                     }
 
@@ -163,7 +164,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (sourceTokenAddress === ETH_RESERVE_ADDRESS) {
                     value = amount;
-                } else {
+                }
+                else {
                     await sourceToken.approve(bancorNetwork.address, amount, { from: account });
                 }
 
@@ -591,7 +593,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
@@ -629,7 +632,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = newLiquidity1;
-                } else {
+                }
+                else {
                     await reserveToken.approve(converter.address, newLiquidity1);
                 }
 
@@ -645,7 +649,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
@@ -697,7 +702,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = newLiquidity1;
-                } else {
+                }
+                else {
                     await reserveToken.approve(converter.address, newLiquidity1);
                 }
 
@@ -713,7 +719,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
@@ -898,7 +905,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                         let value = 0;
                         if (isETHReserve) {
                             value = amount;
-                        } else {
+                        }
+                        else {
                             await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                         }
 
@@ -936,7 +944,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                         let value = 0;
                         if (isETHReserve) {
                             value = amount;
-                        } else {
+                        }
+                        else {
                             await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                         }
 
@@ -982,7 +991,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
@@ -997,7 +1007,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                     await reserveToken2.approve(bancorNetwork.address, amount, { from: sender });
                 }
@@ -1005,7 +1016,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 if (reserveToken1Decimals.gte(reserveToken2Decimals)) {
                     await expectRevert(convert([getReserve1Address(isETHReserve), anchorAddress, reserveToken2.address], amount,
                         MIN_RETURN, { value }), 'ERR_ZERO_TARGET_AMOUNT');
-                } else {
+                }
+                else {
                     await expectRevert(convert([reserveToken2.address, anchorAddress, getReserve1Address(isETHReserve)], amount,
                         MIN_RETURN, { value }), 'ERR_ZERO_TARGET_AMOUNT');
                 }
@@ -1018,7 +1030,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
@@ -1034,7 +1047,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await token.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
@@ -1050,7 +1064,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
@@ -1192,7 +1207,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                             await reserveToken.transfer(sender2, amount);
                                         }
                                     }
-                                } else {
+                                }
+                                else {
                                     amount = toReserve2(new BN(800));
                                     reserveAddress = reserveToken2.address;
                                     reserve = reserveToken2;
@@ -1206,7 +1222,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 let value = 0;
                                 if (isETHReserve && isReserve1) {
                                     value = amount;
-                                } else {
+                                }
+                                else {
                                     await reserve.approve(converter.address, amount, { from: account });
                                 }
 
@@ -1238,7 +1255,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 let expectedPoolTokenAmount = new BN(0);
                                 if (isEmpty) {
                                     expectedPoolTokenAmount = amount;
-                                } else {
+                                }
+                                else {
                                     expectedPoolTokenAmount = amount.mul(poolTokenSupply).div(prevStakedBalance);
                                 }
 
@@ -1265,7 +1283,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 if (isReserve1) {
                                     reserveData = reserve1Data;
                                     liquidity = toReserve1(new BN(800));
-                                } else {
+                                }
+                                else {
                                     reserveData = reserve2Data;
                                     liquidity = toReserve2(new BN(800));
                                 }
@@ -1278,7 +1297,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 let value = 0;
                                 if (isETHReserve && isReserve1) {
                                     value = liquidity;
-                                } else {
+                                }
+                                else {
                                     await reserveData[0].approve(converter.address, liquidity, { from: sender });
                                 }
 
@@ -1290,7 +1310,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 let reserve2StakedBalance = new BN(isEmpty ? 0 : INITIAL_RESERVE2_LIQUIDITY);
                                 if (isReserve1) {
                                     reserve1StakedBalance = reserve1StakedBalance.add(liquidity);
-                                } else {
+                                }
+                                else {
                                     reserve2StakedBalance = reserve2StakedBalance.add(liquidity);
                                 }
 
@@ -1321,7 +1342,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(converter.address, amount, { from: sender });
                 }
 
@@ -1337,7 +1359,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await token.approve(converter.address, amount, { from: sender });
                 }
 
@@ -1371,7 +1394,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 let amount;
                                 if (isEntireSupply) {
                                     amount = poolTokenSupply;
-                                } else {
+                                }
+                                else {
                                     amount = toPool(new BN(100));
                                 }
 
@@ -1406,7 +1430,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 let expectedReserveAmount;
                                 if (isEntireSupply) {
                                     expectedReserveAmount = amount;
-                                } else {
+                                }
+                                else {
                                     expectedReserveAmount = amount.mul(prevStakedBalance).div(poolTokenSupply);
                                 }
 
@@ -1434,7 +1459,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 let amount;
                                 if (isEntireSupply) {
                                     amount = poolTokenSupply;
-                                } else {
+                                }
+                                else {
                                     amount = toPool(new BN(100));
                                 }
 
@@ -1445,7 +1471,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 let reserve2StakedBalance = new BN(INITIAL_RESERVE2_LIQUIDITY);
                                 if (isPoolToken1) {
                                     reserve1StakedBalance = reserve1StakedBalance.sub(amount);
-                                } else {
+                                }
+                                else {
                                     reserve2StakedBalance = reserve2StakedBalance.sub(amount);
                                 }
 
@@ -1507,7 +1534,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
@@ -1523,7 +1551,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                } else {
+                }
+                else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
@@ -1633,7 +1662,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                                 if (source === 1) {
                                                     reserve1Balance = reserve1Balance.add(new BN(amount));
                                                     reserve2Balance = reserve2Balance.sub(expectedTargetAmount);
-                                                } else {
+                                                }
+                                                else {
                                                     reserve2Balance = reserve2Balance.add(new BN(amount));
                                                     reserve1Balance = reserve1Balance.sub(expectedTargetAmount);
                                                 }
@@ -1691,7 +1721,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                             'ERR_INVALID_RESERVE');
                     });
                 });
-            } else {
+            }
+            else {
                 describe('adding ETH liquidity', () => {
                     it('should revert when attempting to add liquidity with ETH value different than amount', async () => {
                         const converter = await initConverter(true, true);
@@ -1709,7 +1740,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                             let value = 0;
                             if (isETHReserve) {
                                 value = amount;
-                            } else {
+                            }
+                            else {
                                 await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                             }
 

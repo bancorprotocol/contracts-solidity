@@ -106,7 +106,8 @@ contract('BancorNetwork', accounts => {
                 for (let i = 0; i < pathTokens.length; i++) {
                     if (pathTokens[i] === '') {
                         path[i] = ETH_RESERVE_ADDRESS;
-                    } else {
+                    }
+                    else {
                         path[i] = pathTokens[i].address;
                     }
                 }
@@ -378,7 +379,8 @@ contract('BancorNetwork', accounts => {
                     let value = 0;
                     if (sourceSymbol === 'ETH') {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await sourceToken.approve(bancorNetwork.address, amount, { from: sender });
                     }
 
@@ -406,7 +408,8 @@ contract('BancorNetwork', accounts => {
                     let value = 0;
                     if (sourceSymbol === 'ETH') {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await sourceToken.approve(bancorNetwork.address, amount, { from: sender });
                     }
 
@@ -434,7 +437,8 @@ contract('BancorNetwork', accounts => {
                     let value = 0;
                     if (sourceSymbol === 'ETH') {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await sourceToken.approve(bancorNetwork.address, amount, { from: sender });
                     }
 
@@ -448,7 +452,8 @@ contract('BancorNetwork', accounts => {
                     // in the path.
                     if (pathTokens.indexOf(bntToken) > 0) {
                         expect(postBalance).to.be.bignumber.gt(prevBalance);
-                    } else {
+                    }
+                    else {
                         expect(postBalance).to.be.bignumber.equal(prevBalance);
                     }
                 });
@@ -462,7 +467,8 @@ contract('BancorNetwork', accounts => {
                     let value = 0;
                     if (sourceSymbol === 'ETH') {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await sourceToken.approve(bancorNetwork.address, amount, { from: sender });
                     }
 
@@ -489,7 +495,8 @@ contract('BancorNetwork', accounts => {
                     let value = 0;
                     if (sourceSymbol === 'ETH') {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await sourceToken.approve(bancorNetwork.address, amount, { from: sender });
                     }
 

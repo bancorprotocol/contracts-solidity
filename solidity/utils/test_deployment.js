@@ -52,9 +52,11 @@ const getTransactionReceipt = async (web3) => {
                 return receipt;
             }
             console.log('Invalid transaction-hash');
-        } else if (hash) {
+        }
+        else if (hash) {
             console.log('Illegal transaction-hash');
-        } else {
+        }
+        else {
             return null;
         }
     }

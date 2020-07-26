@@ -18,7 +18,8 @@ contract('ConverterLiquidity', accounts => {
         for (let i = 0; i < weights.length; i++) {
             if (hasETH && i === weights.length - 1) {
                 await converter.addReserve(ETH_RESERVE_ADDRESS, weights[i] * 10000);
-            } else {
+            }
+            else {
                 await converter.addReserve(erc20Tokens[i].address, weights[i] * 10000);
             }
         }

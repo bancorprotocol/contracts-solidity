@@ -38,7 +38,8 @@ const getPathNames = (dirName) => {
     for (const fileName of fs.readdirSync(WORK_DIR + '/' + dirName)) {
         if (fs.statSync(WORK_DIR + '/' + dirName + '/' + fileName).isDirectory()) {
             pathNames = pathNames.concat(getPathNames(dirName + '/' + fileName));
-        } else if (fileName.endsWith('.sol')) {
+        }
+        else if (fileName.endsWith('.sol')) {
             pathNames.push(dirName + '/' + fileName);
         }
     }
@@ -70,11 +71,13 @@ const post = (contractId, sourceCode) => {
     (error, response, body) => {
         if (error) {
             console.log(contractId + ': ' + error);
-        } else {
+        }
+        else {
             body = parse(body);
             if (body.status === '1') {
                 get(contractId, body.result);
-            } else {
+            }
+            else {
                 console.log(contractId + ': ' + body.result);
             }
         }
@@ -88,11 +91,13 @@ const get = (contractId, guid) => {
         (error, response, body) => {
             if (error) {
                 console.log(contractId + ': ' + error);
-            } else {
+            }
+            else {
                 body = parse(body);
                 if (body.result === 'Pending in queue' || (body.result && body.result.startsWith('Max rate limit reached'))) {
                     get(contractId, guid);
-                } else {
+                }
+                else {
                     console.log(contractId + ': ' + body.result);
                 }
             }

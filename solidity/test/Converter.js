@@ -96,7 +96,8 @@ contract('Converter', accounts => {
 
         if (isETHReserve) {
             await converter.send(5000);
-        } else {
+        }
+        else {
             await reserveToken.transfer(converter.address, 5000);
         }
 
@@ -548,7 +549,8 @@ contract('Converter', accounts => {
                     const converterBalance = await getBalance(reserveToken, getReserve1Address(isETHReserve), converter.address);
                     if (isETHReserve) {
                         await converter.withdrawETH(receiver);
-                    } else {
+                    }
+                    else {
                         await converter.withdrawTokens(getReserve1Address(isETHReserve), receiver, converterBalance);
                     }
 
@@ -577,7 +579,8 @@ contract('Converter', accounts => {
                     const value = new BN(1);
                     if (isETHReserve) {
                         await expectRevert(converter.withdrawETH(receiver), 'ERR_ACCESS_DENIED');
-                    } else {
+                    }
+                    else {
                         await expectRevert(converter.withdrawTokens(getReserve1Address(isETHReserve), receiver, value),
                             'ERR_ACCESS_DENIED');
                     }
@@ -605,7 +608,8 @@ contract('Converter', accounts => {
                     const value = new BN(5);
                     if (isETHReserve) {
                         await expectRevert(converter.withdrawETH(receiver, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-                    } else {
+                    }
+                    else {
                         await expectRevert(converter.withdrawTokens(getReserve1Address(isETHReserve), receiver, value,
                             { from: nonOwner }), 'ERR_ACCESS_DENIED');
                     }
@@ -617,7 +621,8 @@ contract('Converter', accounts => {
                     const value = new BN(5);
                     if (isETHReserve) {
                         await expectRevert(converter.withdrawETH(receiver, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-                    } else {
+                    }
+                    else {
                         await expectRevert(converter.withdrawTokens(getReserve1Address(isETHReserve), receiver, value,
                             { from: nonOwner }), 'ERR_ACCESS_DENIED');
                     }
@@ -679,7 +684,8 @@ contract('Converter', accounts => {
                     let value = 0;
                     if (isETHReserve) {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await reserveToken.approve(bancorNetwork.address, amount, { from: owner });
                     }
 
@@ -694,7 +700,8 @@ contract('Converter', accounts => {
                     let value = 0;
                     if (isETHReserve) {
                         value = amount;
-                    } else {
+                    }
+                    else {
                         await reserveToken.approve(bancorNetwork.address, amount, { from: owner });
                     }
 

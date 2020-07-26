@@ -124,7 +124,8 @@ const balancedWeights = (primaryReserveStakedBalance, primaryReserveBalance, sec
 
     if (t.eq(s)) {
         expect(t.gt(0) || r.gt(0)).to.be.true('ERR_INVALID_RESERVE_BALANCE');
-    } else {
+    }
+    else {
         expect(t.gt(0) && s.gt(0) && r.gt(0)).to.be.true('ERR_INVALID_RESERVE_BALANCE');
     }
     expect(q.gt(0) && p.gt(0)).to.be.true('ERR_INVALID_RESERVE_RATE');
