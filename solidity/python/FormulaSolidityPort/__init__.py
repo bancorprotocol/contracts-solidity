@@ -529,22 +529,22 @@ def liquidateReserveAmount(_supply, _reserveBalance, _reserveRatio, _amount):
     - let r denote the secondary reserve token balance
     - let q denote the numerator of the rate between the tokens
     - let p denote the denominator of the rate between the tokens
-    Where q primary tokens are equal to p secondary tokens
+    Where p primary tokens are equal to q secondary tokens
 
     Formula output:
-    - compute x = W(t / r * p / q * log(s / t)) / log(s / t)
+    - compute x = W(t / r * q / p * log(s / t)) / log(s / t)
     - return x / (1 + x) as the weight of the primary reserve token
     - return 1 / (1 + x) as the weight of the secondary reserve token
     Where W is the Lambert W Function
 
     If the rate-provider provides the rates for a common unit, for example:
-    - Q = 2 ==> 2 primary reserve tokens = 1 ether
-    - P = 3 ==> 3 secondary reserve tokens = 1 ether
+    - P = 2 ==> 2 primary reserve tokens = 1 ether
+    - Q = 3 ==> 3 secondary reserve tokens = 1 ether
     Then you can simply use p = P and q = Q
 
     If the rate-provider provides the rates for a single unit, for example:
-    - Q = 2 ==> 1 primary reserve token = 2 ethers
-    - P = 3 ==> 1 secondary reserve token = 3 ethers
+    - P = 2 ==> 1 primary reserve token = 2 ethers
+    - Q = 3 ==> 1 secondary reserve token = 3 ethers
     Then you can simply use p = Q and q = P
 
     @param _primaryReserveStakedBalance the primary reserve token staked balance
@@ -553,7 +553,7 @@ def liquidateReserveAmount(_supply, _reserveBalance, _reserveRatio, _amount):
     @param _reserveRateNumerator        the numerator of the rate between the tokens
     @param _reserveRateDenominator      the denominator of the rate between the tokens
 
-    Note that `numerator / denominator` should represent the amount of primary tokens equal to one secondary token
+    Note that `numerator / denominator` should represent the amount of secondary tokens equal to one primary token
 
     @return the weight of the primary reserve token and the weight of the secondary reserve token, both in ppm (0-1000000)
 '''
@@ -564,16 +564,16 @@ def balancedWeights(_primaryReserveStakedBalance, _primaryReserveBalance, _secon
         require(_primaryReserveStakedBalance > 0 and _primaryReserveBalance > 0 and _secondaryReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
     require(_reserveRateNumerator > 0 and _reserveRateDenominator > 0, "ERR_INVALID_RESERVE_RATE");
 
-    tp = mul(_primaryReserveStakedBalance, _reserveRateDenominator);
-    rq = mul(_secondaryReserveBalance, _reserveRateNumerator);
+    tq = mul(_primaryReserveStakedBalance, _reserveRateNumerator);
+    rp = mul(_secondaryReserveBalance, _reserveRateDenominator);
 
     if (_primaryReserveStakedBalance < _primaryReserveBalance):
-        return balancedWeightsByStake(_primaryReserveBalance, _primaryReserveStakedBalance, tp, rq, True);
+        return balancedWeightsByStake(_primaryReserveBalance, _primaryReserveStakedBalance, tq, rp, True);
 
     if (_primaryReserveStakedBalance > _primaryReserveBalance):
-        return balancedWeightsByStake(_primaryReserveStakedBalance, _primaryReserveBalance, tp, rq, False);
+        return balancedWeightsByStake(_primaryReserveStakedBalance, _primaryReserveBalance, tq, rp, False);
 
-    return normalizedWeights(tp, rq);
+    return normalizedWeights(tq, rp);
 
 '''
     @dev General Description:
@@ -934,15 +934,15 @@ def lambertNeg1(_x):
     return res // 0xde1bc4d19efcac82445da75b00000000 + _x + FIXED_1; # divide by 34! and then add x^(2-1) * (34! * 2^(2-1) / 2!) + x^(1-1) * (34! * 1^(1-1) / 1!)
 
 '''
-    @dev computes the weights based on "W(log(hi / lo) * tp / rq) * tp / rq", where "W" is a variation of the Lambert W function.
+    @dev computes the weights based on "W(log(hi / lo) * tq / rp) * tq / rp", where "W" is a variation of the Lambert W function.
 '''
-def balancedWeightsByStake(_hi, _lo, _tp, _rq, _lowerStake):
-    (_tp, _rq) = safeFactors(_tp, _rq);
+def balancedWeightsByStake(_hi, _lo, _tq, _rp, _lowerStake):
+    (_tq, _rp) = safeFactors(_tq, _rp);
     f = mul(_hi, FIXED_1) // _lo;
     g = optimalLog(f) if f < OPT_LOG_MAX_VAL else generalLog(f);
-    x = mul(g, _tp) // _rq;
+    x = mul(g, _tq) // _rp;
     y = lowerStake(x) if _lowerStake else higherStake(x);
-    return normalizedWeights(mul(y, _tp), mul(_rq, FIXED_1));
+    return normalizedWeights(mul(y, _tq), mul(_rp, FIXED_1));
 
 '''
     @dev reduces "a" and "b" while maintaining their ratio.

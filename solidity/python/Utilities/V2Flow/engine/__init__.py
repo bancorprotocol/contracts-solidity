@@ -142,8 +142,8 @@ class Pool():
                 mainBranch.virtualStaked(self.amp),
                 mainBranch.virtualBalance(self.amp, self.id),
                 sideBranch.virtualBalance(self.amp, self.id),
-                sideBranch.reserveRate,
-                mainBranch.reserveRate
+                mainBranch.reserveRate,
+                sideBranch.reserveRate
             )
             mainBranch.reserveWeight = mainWeight
             sideBranch.reserveWeight = sideWeight

@@ -129,15 +129,15 @@ const balancedWeights = (primaryReserveStakedBalance, primaryReserveBalance, sec
     }
     expect(q.gt(0) && p.gt(0)).to.be.true('ERR_INVALID_RESERVE_RATE');
 
-    const tp = t.mul(p);
-    const rq = r.mul(q);
+    const tq = t.mul(q);
+    const rp = r.mul(p);
 
     if (t.eq(s)) {
-        return normalizedWeights(tp, rq);
+        return normalizedWeights(tq, rp);
     }
 
     const x = s.div(t).ln();
-    const y = W(x.mul(tp).div(rq));
+    const y = W(x.mul(tq).div(rp));
     return normalizedWeights(y, x);
 };
 
