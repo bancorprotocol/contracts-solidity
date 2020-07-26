@@ -585,7 +585,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             uint256 x = stakedBalances[primaryReserveToken].mul(AMPLIFICATION_FACTOR);
             uint256 y = reserveAmplifiedBalance(primaryReserveToken);
             (uint256 min, uint256 max) = x < y ? (x, y) : (y, x);
-            return _amount.mul(stakedBalance.mul(min)).div(totalSupply.mul(max));
+            return _amount.mul(stakedBalance).div(totalSupply).mul(min).div(max);
         }
         return stakedBalance;
     }
