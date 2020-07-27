@@ -664,6 +664,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 // increase the secondary reserve external price
                 const newOracleBPrice = INITIAL_ORACLE_B_PRICE.add(new BN(15000));
+                await updateChainlinkOracle(converter, chainlinkPriceOracleA, INITIAL_ORACLE_A_PRICE);
                 await updateChainlinkOracle(converter, chainlinkPriceOracleB, newOracleBPrice);
 
                 const reserve1StakedBalance = await converter.reserveStakedBalance.call(getReserve1Address(isETHReserve));
@@ -734,6 +735,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 // decrease the secondary reserve external price
                 const newOracleBPrice = INITIAL_ORACLE_B_PRICE.sub(new BN(5000));
+                await updateChainlinkOracle(converter, chainlinkPriceOracleA, INITIAL_ORACLE_A_PRICE);
                 await updateChainlinkOracle(converter, chainlinkPriceOracleB, newOracleBPrice);
 
                 const reserve1StakedBalance = await converter.reserveStakedBalance.call(getReserve1Address(isETHReserve));
@@ -775,6 +777,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                         const conversionFee = new BN(3000);
                         const converter = await initConverter(true, true, 5000);
                         await converter.setConversionFee(conversionFee);
+                        await updateChainlinkOracle(converter, chainlinkPriceOracleA, INITIAL_ORACLE_A_PRICE);
+                        await updateChainlinkOracle(converter, chainlinkPriceOracleB, INITIAL_ORACLE_B_PRICE);
 
                         const [expectedWeights, adjustedFee] = getExpectedWeights(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
@@ -804,10 +808,12 @@ contract('LiquidityPoolV2Converter', accounts => {
                     // eslint-disable-next-line max-len
                     it('verifies that targetAmountAndFee returns the correct target amount and fee when there was an external price change', async () => {
                         const conversionFee = new BN(3000);
+                        const oracleAPrice = new BN(15000);
                         const converter = await initConverter(true, true, 5000);
                         await converter.setConversionFee(conversionFee);
+                        await updateChainlinkOracle(converter, chainlinkPriceOracleA, oracleAPrice);
+                        await updateChainlinkOracle(converter, chainlinkPriceOracleB, INITIAL_ORACLE_B_PRICE);
 
-                        const oracleAPrice = new BN(15000);
 
                         const [expectedWeights, adjustedFee] = getExpectedWeights(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
@@ -829,8 +835,6 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                         const normalFee = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
 
-                        await updateChainlinkOracle(converter, chainlinkPriceOracleA, oracleAPrice);
-
                         const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
 
                         expectAlmostEqual(expectedTargetAmount, res[0]);
@@ -841,6 +845,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                         const conversionFee = new BN(3000);
                         const converter = await initConverter(true, true, 5000);
                         await converter.setConversionFee(conversionFee);
+                        await updateChainlinkOracle(converter, chainlinkPriceOracleA, INITIAL_ORACLE_A_PRICE);
+                        await updateChainlinkOracle(converter, chainlinkPriceOracleB, INITIAL_ORACLE_B_PRICE);
 
                         const [expectedWeights, adjustedFee] = getExpectedWeights(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
@@ -862,10 +868,11 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                     it('verifies that convert returns valid amount after converting when there was an external price change', async () => {
                         const conversionFee = new BN(3000);
+                        const newOracleAPrice = new BN(17000);
                         const converter = await initConverter(true, true, 5000);
                         await converter.setConversionFee(conversionFee);
-
-                        const newOracleAPrice = new BN(17000);
+                        await updateChainlinkOracle(converter, chainlinkPriceOracleA, newOracleAPrice);
+                        await updateChainlinkOracle(converter, chainlinkPriceOracleB, INITIAL_ORACLE_B_PRICE);
 
                         const [expectedWeights, adjustedFee] = getExpectedWeights(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
@@ -879,8 +886,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                             expectedWeights[0], expectedWeights[1], adjustedFee, amount
                         );
 
-                        await updateChainlinkOracle(converter, chainlinkPriceOracleA, newOracleAPrice);
-
                         const actualTargetAmount = await convertAndReturnTargetAmount(sender, converter, reserveToken,
                             getReserve1Address(isETHReserve), reserveToken2.address, amount);
 
@@ -891,6 +896,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                         const conversionFee = new BN(3500);
                         const converter = await initConverter(true, true, 5000);
                         await converter.setConversionFee(conversionFee);
+                        await updateChainlinkOracle(converter, chainlinkPriceOracleA, INITIAL_ORACLE_A_PRICE);
+                        await updateChainlinkOracle(converter, chainlinkPriceOracleB, INITIAL_ORACLE_B_PRICE);
 
                         const [expectedWeights, adjustedFee] = getExpectedWeights(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
@@ -1304,6 +1311,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 const conversionFee = new BN(3000);
                                 const converter = await initConverter(true, !isEmpty, 5000, primaryReserveAddress);
                                 await converter.setConversionFee(conversionFee);
+                                await updateChainlinkOracle(converter, chainlinkPriceOracleA, INITIAL_ORACLE_A_PRICE);
+                                await updateChainlinkOracle(converter, chainlinkPriceOracleB, INITIAL_ORACLE_B_PRICE);
 
                                 // approve the amount if needed
                                 let value = 0;
@@ -1465,6 +1474,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 const conversionFee = new BN(3000);
                                 const converter = await initConverter(true, true, 5000, primaryReserveAddress);
                                 await converter.setConversionFee(conversionFee);
+                                await updateChainlinkOracle(converter, chainlinkPriceOracleA, INITIAL_ORACLE_A_PRICE);
+                                await updateChainlinkOracle(converter, chainlinkPriceOracleB, INITIAL_ORACLE_B_PRICE);
 
                                 // get the pool token
                                 const poolToken = isPoolToken1 ? poolToken1 : poolToken2;
@@ -1621,6 +1632,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                                 const conversionFee = new BN(4000);
                                                 const converter = await initConverter(true, false, 5000);
                                                 await converter.setConversionFee(conversionFee);
+                                                await updateChainlinkOracle(converter, chainlinkPriceOracleA, INITIAL_ORACLE_A_PRICE);
+                                                await updateChainlinkOracle(converter, chainlinkPriceOracleB, INITIAL_ORACLE_B_PRICE);
 
                                                 // add liquidity
                                                 const reserve1Liquidity = toReserve1(new BN(liquidity1));
