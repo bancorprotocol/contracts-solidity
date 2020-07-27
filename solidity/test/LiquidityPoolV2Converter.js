@@ -693,7 +693,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
                 expectAlmostEqual(expectedTargetAmount, res[0]);
-                expect(normalFee).to.be.bignumber.lt(res[1]);
+                expect(normalFee).to.be.bignumber.lte(res[1]);
             });
 
             it('verifies that targetAmountAndFee does not return a decreased fee when the secondary reserve is in surplus', async () => {
