@@ -328,8 +328,8 @@ contract('BancorFormula', () => {
                     for (let q = 0; q < 5; q++) {
                         for (let p = 0; p < 5; p++) {
                             it(`balancedWeights(${[t, s, r, q, p]})`, async () => {
-                                let expected = balancedWeightsExpected(t, s, r, q, p);
-                                let actual = await balancedWeightsActual(t, s, r, q, p);
+                                const expected = balancedWeightsExpected(t, s, r, q, p);
+                                const actual = await balancedWeightsActual(t, s, r, q, p);
                                 if (Array.isArray(actual)) {
                                     const ratio = getRatio(actual[0], actual[1], expected[0], expected[1]);
                                     expect(ratio.gte('0.932714') && ratio.lte('1.078991')).to.be.true(`ratio = ${ratio}`);
