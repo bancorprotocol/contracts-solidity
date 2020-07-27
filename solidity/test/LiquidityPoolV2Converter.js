@@ -153,10 +153,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                     rate.d
                 );
 
-                if (!isReserve1Primary) {
-                    newWeights = newWeights.reverse();
-                }
-
                 const weights = newWeights.map(w => new BN(w.toFixed()));
                 if (isReserve1Primary) {
                     const x = reserve1StakedBalance.mul(rate.n).mul(weights[1]);
@@ -167,7 +163,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                         return [weights, conversionFee.mul(new BN(2))];
                     return [weights, conversionFee.mul(y).div(x.mul(AMPLIFICATION_FACTOR).sub(y.mul(AMPLIFICATION_FACTOR.sub(new BN(1)))))];
                 }
-                return [weights, conversionFee];
+                return [[weights[1], weights[0]], conversionFee];
             };
 
             const convertAndReturnTargetAmount = async (account, converter, sourceToken, sourceTokenAddress, targetTokenAddress, amount) => {
