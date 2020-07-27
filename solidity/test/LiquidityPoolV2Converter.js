@@ -159,8 +159,8 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 const weights = newWeights.map(w => new BN(w.toFixed()));
                 if (isReserve1Primary) {
-                    const x = reserve1StakedBalance.mul(rate.n).mul(weights[0]);
-                    const y = reserve2StakedBalance.mul(rate.d).mul(weights[1]);
+                    const x = reserve1StakedBalance.mul(rate.n).mul(weights[1]);
+                    const y = reserve2StakedBalance.mul(rate.d).mul(weights[0]);
                     if (x.mul(AMPLIFICATION_FACTOR).gte(y.mul(AMPLIFICATION_FACTOR.add(new BN(1)))))
                         return [weights, conversionFee.div(new BN(2))];
                     if (x.mul(AMPLIFICATION_FACTOR).mul(new BN(2)).lte(y.mul(AMPLIFICATION_FACTOR).mul(new BN(2)).sub(new BN(1))))
