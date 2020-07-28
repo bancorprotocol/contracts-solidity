@@ -72,10 +72,11 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     /**
       * @dev triggered when the converter is activated
       *
+      * @param _type        converter type
       * @param _anchor      converter anchor
       * @param _activated   true if the converter was activated, false if it was deactivated
     */
-    event Activation(IConverterAnchor _anchor, bool _activated);
+    event Activation(uint16 indexed _type, IConverterAnchor indexed _anchor, bool indexed _activated);
 
     /**
       * @dev triggered when a conversion between two tokens occurs
@@ -347,7 +348,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
         IConverterUpgrader converterUpgrader = IConverterUpgrader(addressOf(CONVERTER_UPGRADER));
 
         // trigger de-activation event
-        emit Activation(anchor, false);
+        emit Activation(converterType(), anchor, false);
 
         transferOwnership(converterUpgrader);
         converterUpgrader.upgrade(version);

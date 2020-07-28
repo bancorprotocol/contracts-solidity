@@ -139,7 +139,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             rebalance();
         }
 
-        emit Activation(anchor, true);
+        emit Activation(converterType(), anchor, true);
     }
 
     /**

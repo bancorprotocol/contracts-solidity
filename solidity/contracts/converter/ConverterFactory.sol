@@ -15,10 +15,11 @@ contract ConverterFactory is IConverterFactory, Owned {
     /**
       * @dev triggered when a new converter is created
       *
+      * @param _type        converter type, see ConverterBase contract main doc
       * @param _converter   new converter address
       * @param _owner       converter owner address
     */
-    event NewConverter(address indexed _converter, address indexed _owner);
+    event NewConverter(uint16 indexed _type, address indexed _converter, address indexed _owner);
 
     mapping (uint16 => ITypedConverterFactory) public converterFactories;
     mapping (uint16 => ITypedConverterAnchorFactory) public anchorFactories;
@@ -99,7 +100,7 @@ contract ConverterFactory is IConverterFactory, Owned {
         converter.acceptOwnership();
         converter.transferOwnership(msg.sender);
 
-        emit NewConverter(converter, msg.sender);
+        emit NewConverter(_type, converter, msg.sender);
         return converter;
     }
 }
