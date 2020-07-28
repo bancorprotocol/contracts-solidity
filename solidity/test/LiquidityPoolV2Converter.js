@@ -422,6 +422,19 @@ contract('LiquidityPoolV2Converter', accounts => {
                     chainlinkPriceOracleB.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
             });
 
+            it('should revert when attempting to activate the converter while it does not own the anchor', async () => {
+                anchor = await PoolTokensContainer.new('Pool', 'POOL', poolTokenDecimals);
+                anchorAddress = anchor.address;
+
+                const converter = await createConverter(anchorAddress, contractRegistry.address, 30000);
+                await converter.addReserve(getReserve1Address(isETHReserve), 500000);
+                await converter.addReserve(reserveToken2.address, 500000);
+                await anchor.transferOwnership(converter.address);
+
+                await expectRevert(converter.activate(getReserve1Address(isETHReserve),
+                    chainlinkPriceOracleA.address, chainlinkPriceOracleB.address), 'ERR_ANCHOR_NOT_OWNED');
+            });
+
             it('should revert when attempting to activate the converter with an invalid primary reserve', async () => {
                 const converter = await initConverter(false, false);
                 const token = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
