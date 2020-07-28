@@ -1945,7 +1945,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                                     let referenceRate = normalizedRate;
                                     let lastConversionRate = normalizedRate;
 
-                                    for (let i = 1; i < 40; ++i) {
+                                    for (let i = 1; i < 10; ++i) {
                                         const totalTimeElapsed = timeElapsed.add(new BN(i));
                                         await converter.setReferenceRateUpdateTime(now.sub(totalTimeElapsed));
 
