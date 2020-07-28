@@ -115,6 +115,18 @@ contract('LiquidTokenConverter', accounts => {
         erc20Token = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
     });
 
+    it('verifies the Activation event after converter activation', async () => {
+        const converter = await initConverter(false, false);
+        await token.transferOwnership(converter.address);
+        const res = await converter.acceptTokenOwnership();
+
+        expectEvent(res, 'Activation', {
+            _type: new BN(0),
+            _anchor: tokenAddress,
+            _activated: true
+        });
+    });
+
     // eslint-disable-next-line max-len
     it('should revert when attempting to buy without first approving the network to transfer from the buyer account in the reserve contract', async () => {
         await initConverter(true, false);

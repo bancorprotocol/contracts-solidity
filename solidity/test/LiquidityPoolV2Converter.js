@@ -372,6 +372,17 @@ contract('LiquidityPoolV2Converter', accounts => {
                 await converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
             });
 
+            it('verifies the Activation event after converter activation', async () => {
+                const converter = await initConverter(false, false);
+                const res = await converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
+
+                expectEvent(res, 'Activation', {
+                    _type: new BN(2),
+                    _anchor: anchorAddress,
+                    _activated: true
+                });
+            });
+
             it('verifies that the primary / secondary reserves are set correctly when activating with the 1st reserve as primary', async () => {
                 const converter = await initConverter(false, false);
                 await converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
@@ -409,6 +420,19 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 await expectRevert(converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address,
                     chainlinkPriceOracleB.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            });
+
+            it('should revert when attempting to activate the converter while it does not own the anchor', async () => {
+                anchor = await PoolTokensContainer.new('Pool', 'POOL', poolTokenDecimals);
+                anchorAddress = anchor.address;
+
+                const converter = await createConverter(anchorAddress, contractRegistry.address, 30000);
+                await converter.addReserve(getReserve1Address(isETHReserve), 500000);
+                await converter.addReserve(reserveToken2.address, 500000);
+                await anchor.transferOwnership(converter.address);
+
+                await expectRevert(converter.activate(getReserve1Address(isETHReserve),
+                    chainlinkPriceOracleA.address, chainlinkPriceOracleB.address), 'ERR_ANCHOR_NOT_OWNED');
             });
 
             it('should revert when attempting to activate the converter with an invalid primary reserve', async () => {

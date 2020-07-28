@@ -100,7 +100,9 @@ contract('ConverterFactory', accounts => {
 
         const smartToken = await SmartToken.new('Smart1', 'SMART1', 2);
 
-        const res = await converterFactory.createConverter(await factory.converterType.call(), smartToken.address,
+        const converterType = await factory.converterType.call();
+
+        const res = await converterFactory.createConverter(converterType, smartToken.address,
             contractRegistry.address, MAX_CONVERSION_FEE);
         const converterAddress = await converterFactory.createdConverter.call();
         const converter = await ConverterBase.at(converterAddress);
@@ -111,6 +113,6 @@ contract('ConverterFactory', accounts => {
         expect(await converter.owner.call()).to.be.eql(converterFactory.address);
         expect(await converter.newOwner.call()).to.be.eql(owner);
 
-        expectEvent(res, 'NewConverter', { _converter: converter.address, _owner: owner });
+        expectEvent(res, 'NewConverter', { _type: converterType, _converter: converter.address, _owner: owner });
     });
 });

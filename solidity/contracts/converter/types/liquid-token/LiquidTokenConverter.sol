@@ -46,7 +46,7 @@ contract LiquidTokenConverter is ConverterBase {
     function acceptAnchorOwnership() public ownerOnly {
         super.acceptAnchorOwnership();
 
-        emit Activation(anchor, true);
+        emit Activation(converterType(), anchor, true);
     }
 
     /**
