@@ -312,15 +312,17 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint32 sourceTokenWeight;
         uint32 targetTokenWeight;
 
-        // if the rate already already checked in this block, use the current weights.
+        // if the rate was already checked in this block, use the current weights.
         // otherwise, get the new weights
+        Fraction memory rate;
         if (referenceRateUpdateTime == time()) {
+            rate = referenceRate;
             sourceTokenWeight = reserves[_sourceToken].weight;
             targetTokenWeight = reserves[_targetToken].weight;
         }
         else {
             // get the new rate / reserve weights
-            Fraction memory rate = _effectiveTokensRate();
+            rate = _effectiveTokensRate();
             (uint32 primaryReserveWeight, uint32 secondaryReserveWeight) = effectiveReserveWeights(rate);
 
             if (_sourceToken == primaryReserveToken) {
