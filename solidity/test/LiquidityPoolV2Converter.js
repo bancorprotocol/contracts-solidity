@@ -372,6 +372,17 @@ contract('LiquidityPoolV2Converter', accounts => {
                 await converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
             });
 
+            it('verifies the Activation event after converter activation', async () => {
+                const converter = await initConverter(false, false);
+                const res = await converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
+
+                expectEvent(res, 'Activation', {
+                    _type: new BN(2),
+                    _anchor: anchorAddress,
+                    _activated: true
+                });
+            });
+
             it('verifies that the primary / secondary reserves are set correctly when activating with the 1st reserve as primary', async () => {
                 const converter = await initConverter(false, false);
                 await converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);

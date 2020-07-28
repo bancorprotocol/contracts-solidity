@@ -118,6 +118,18 @@ contract('LiquidityPoolV1Converter', accounts => {
         reserveToken3 = await ERC20Token.new('ERC Token 3', 'ERC3', 18, 1500000000);
     });
 
+    it('verifies the Activation event after converter activation', async () => {
+        const converter = await initConverter(false, false);
+        await token.transferOwnership(converter.address);
+        const res = await converter.acceptTokenOwnership();
+
+        expectEvent(res, 'Activation', {
+            _type: new BN(1),
+            _anchor: tokenAddress,
+            _activated: true
+        });
+    });
+
     it('verifies the TokenRateUpdate event after adding liquidity', async () => {
         const converter = await initConverter(true, false);
 

@@ -100,6 +100,9 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         validAddress(_primaryReserveOracle)
         validAddress(_secondaryReserveOracle)
     {
+        // validate anchor ownership
+        require(anchor.owner() == address(this), "ERR_ANCHOR_NOT_OWNED");
+
         // validate oracles
         IWhitelist oracleWhitelist = IWhitelist(addressOf(CHAINLINK_ORACLE_WHITELIST));
         require(oracleWhitelist.isWhitelisted(_primaryReserveOracle), "ERR_INVALID_ORACLE");
