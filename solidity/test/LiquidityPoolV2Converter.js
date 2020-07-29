@@ -145,7 +145,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const primaryReserveData = isReserve1Primary ? reserve1Data : reserve2Data;
                 const secondaryReserveData = isReserve1Primary ? reserve2Data : reserve1Data;
 
-                let newWeights = balancedWeights(
+                const newWeights = balancedWeights(
                     primaryReserveData[0].mul(AMPLIFICATION_FACTOR),
                     primaryReserveData[1],
                     secondaryReserveData[1],
@@ -157,10 +157,12 @@ contract('LiquidityPoolV2Converter', accounts => {
                 if (isReserve1Primary) {
                     const x = reserve1StakedBalance.mul(rate.n).mul(weights[1]);
                     const y = reserve2StakedBalance.mul(rate.d).mul(weights[0]);
-                    if (x.mul(AMPLIFICATION_FACTOR).gte(y.mul(AMPLIFICATION_FACTOR.add(new BN(1)))))
+                    if (x.mul(AMPLIFICATION_FACTOR).gte(y.mul(AMPLIFICATION_FACTOR.add(new BN(1))))) {
                         return [weights, conversionFee.div(new BN(2))];
-                    if (x.mul(AMPLIFICATION_FACTOR.mul(new BN(2))).lte(y.mul(AMPLIFICATION_FACTOR.mul(new BN(2)).sub(new BN(1)))))
+                    }
+                    if (x.mul(AMPLIFICATION_FACTOR.mul(new BN(2))).lte(y.mul(AMPLIFICATION_FACTOR.mul(new BN(2)).sub(new BN(1))))) {
                         return [weights, conversionFee.mul(new BN(2))];
+                    }
                     return [weights, conversionFee.mul(y).div(x.mul(AMPLIFICATION_FACTOR).sub(y.mul(AMPLIFICATION_FACTOR.sub(new BN(1)))))];
                 }
                 return [[weights[1], weights[0]], conversionFee];
@@ -1352,7 +1354,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 }
 
                                 // get expected weights
-                                const [expectedWeights, adjustedFee] = getExpectedWeights(
+                                const [expectedWeights] = getExpectedWeights(
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, isReserve1Primary
@@ -1515,7 +1517,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 }
 
                                 // get expected weights
-                                const [expectedWeights, adjustedFee] = getExpectedWeights(
+                                const [expectedWeights] = getExpectedWeights(
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, isReserve1Primary
