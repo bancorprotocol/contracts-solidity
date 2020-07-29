@@ -1354,7 +1354,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 }
 
                                 // get expected weights
-                                const [expectedWeights, adjustedFee] = getExpectedWeights(
+                                const [expectedWeights] = getExpectedWeights(
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, isReserve1Primary
@@ -1517,7 +1517,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 }
 
                                 // get expected weights
-                                const [expectedWeights, adjustedFee] = getExpectedWeights(
+                                const [expectedWeights] = getExpectedWeights(
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, isReserve1Primary
@@ -1774,7 +1774,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 });
             }
 
-            describe('internal rate', () => {
+            describe.only('internal rate', () => {
                 for (const isReserve1Primary of [true, false]) {
                     describe(`${isReserve1Primary ? 'reserve1 is primary' : 'reserve2 is primary'}`, () => {
                         const convertAndReturnRates = async (amount) => {
