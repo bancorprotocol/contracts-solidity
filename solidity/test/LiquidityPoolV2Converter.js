@@ -201,6 +201,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
             const updateChainlinkOracle = async (converter, oracle, answer) => {
                 await oracle.setAnswer(answer);
+                await oracle.setTimestamp(await converter.currentTime.call());
 
                 await converter.setReferenceRateUpdateTime(now.sub(duration.seconds(1)));
             };
@@ -539,8 +540,11 @@ contract('LiquidityPoolV2Converter', accounts => {
             it('should revert when the owner attempts to set the staked balance when the owner is not the converter upgrader', async () => {
                 const converter = await initConverter(true, false);
 
+                await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, sender);
+
                 const amount = toReserve1(new BN(2500));
-                await expectRevert(converter.setReserveStakedBalance(getReserve1Address(isETHReserve), amount), 'ERR_ACCESS_DENIED');
+                await expectRevert(converter.setReserveStakedBalance(getReserve1Address(isETHReserve), amount,
+                    { from: sender2 }), 'ERR_ACCESS_DENIED');
             });
 
             // eslint-disable-next-line max-len
@@ -1784,6 +1788,31 @@ contract('LiquidityPoolV2Converter', accounts => {
                             return { referenceRate, lastConversionRate };
                         };
 
+                        const getExpectedReferenceRate = (referenceRate, lastConversionRate, timeElapsed) => {
+                            if (timeElapsed.eq(new BN(0))) {
+                                return { referenceRate };
+                            }
+
+                            if (timeElapsed.gte(RATE_PROPAGATION_PERIOD)) {
+                                return { referenceRate: lastConversionRate };
+                            }
+
+                            const newReferenceRateN = referenceRate.n.mul(lastConversionRate.d).mul(RATE_PROPAGATION_PERIOD.sub(timeElapsed))
+                                .add(referenceRate.d.mul(lastConversionRate.n).mul(timeElapsed));
+                            const newReferenceRateD = RATE_PROPAGATION_PERIOD.mul(referenceRate.d).mul(lastConversionRate.d);
+
+                            return { referenceRate: { n: newReferenceRateN, d: newReferenceRateD } };
+                        };
+
+                        const expectRatesAlmostEqual = (rate, newRate) => {
+                            const rate1 = Decimal(rate.n.toString()).div(Decimal(rate.d.toString()));
+                            const rate2 = Decimal(newRate.n.toString()).div(Decimal(newRate.d.toString()));
+
+                            const ratio = rate1.div(rate2);
+                            expect(ratio.gte(0.999998)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
+                            expect(ratio.lte(1.000002)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
+                        };
+
                         let converter;
                         beforeEach(async () => {
                             const reserve1Data = [getReserve1(isETHReserve), getReserve1Address(isETHReserve)];
@@ -1802,28 +1831,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                             expect(referenceRate.d).to.be.bignumber.equal(rate.d);
                             expect(lastConversionRate.n).to.be.bignumber.equal(rate.n);
                             expect(lastConversionRate.d).to.be.bignumber.equal(rate.d);
-                        });
-
-                        it('should reset to the external oracle rate after its update', async () => {
-                            const amount = toReserve1(new BN(1000));
-
-                            let { referenceRate } = await convertAndReturnRates(amount);
-
-                            const normalizedRate = normalizeRates(INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, isReserve1Primary);
-
-                            expect(referenceRate.n).to.be.bignumber.equal(normalizedRate.n);
-                            expect(referenceRate.d).to.be.bignumber.equal(normalizedRate.d);
-
-                            const rateN = new BN(15000);
-                            const rateD = new BN(22000);
-                            await updateChainlinkOracle(converter, chainlinkPriceOracleA, rateN);
-                            await updateChainlinkOracle(converter, chainlinkPriceOracleB, rateD);
-
-                            ({ referenceRate } = await convertAndReturnRates(amount));
-
-                            const expectedNormalizedRate = normalizeRates(rateN, rateD, isReserve1Primary);
-                            expect(referenceRate.n).to.be.bignumber.equal(expectedNormalizedRate.n);
-                            expect(referenceRate.d).to.be.bignumber.equal(expectedNormalizedRate.d);
                         });
 
                         it('should only change on rate changing conversion in the same block', async () => {
@@ -1847,6 +1854,49 @@ contract('LiquidityPoolV2Converter', accounts => {
                             expect(lastConversionRate.d).to.be.bignumber.equal(prevLastConversionRate.d);
                         });
 
+                        context('after external oracle update', async () => {
+                            const amount = toReserve1(new BN(1000));
+                            const newRateN = new BN(15000);
+                            const newRateD = new BN(22000);
+
+                            beforeEach(async () => {
+                                const { referenceRate } = await convertAndReturnRates(amount);
+
+                                const normalizedRate = normalizeRates(INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, isReserve1Primary);
+
+                                expect(referenceRate.n).to.be.bignumber.equal(normalizedRate.n);
+                                expect(referenceRate.d).to.be.bignumber.equal(normalizedRate.d);
+
+                                await updateChainlinkOracle(converter, chainlinkPriceOracleA, newRateN);
+                                await updateChainlinkOracle(converter, chainlinkPriceOracleB, newRateD);
+                            });
+
+                            it('should reset to the external oracle rate after external oracle rate update', async () => {
+                                const { referenceRate } = await convertAndReturnRates(amount);
+
+                                expect(await converter.referenceRateUpdateTime.call()).to.be.bignumber.equal(now);
+
+                                const expectedNormalizedRate = normalizeRates(newRateN, newRateD, isReserve1Primary);
+                                expect(referenceRate.n).to.be.bignumber.equal(expectedNormalizedRate.n);
+                                expect(referenceRate.d).to.be.bignumber.equal(expectedNormalizedRate.d);
+                            });
+
+                            it('should continue calculating the rate after external oracle rate update', async () => {
+                                // Increase the time by 1 second and verify that the internal rate calculation continues.
+                                const delta = duration.seconds(1);
+                                const time = now.add(delta);
+                                await converter.setTime(time);
+
+                                const { referenceRate, lastConversionRate } = await convertAndReturnRates(amount);
+
+                                const { referenceRate: expectedReferenceRate } = getExpectedReferenceRate(referenceRate,
+                                    lastConversionRate, delta);
+
+                                expect(await converter.referenceRateUpdateTime.call()).to.be.bignumber.equal(time);
+                                expectRatesAlmostEqual(referenceRate, expectedReferenceRate);
+                            });
+                        });
+
                         [
                             duration.seconds(0),
                             duration.seconds(1),
@@ -1859,15 +1909,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                             duration.seconds(400),
                             duration.seconds(500)
                         ].forEach((timeElapsed) => {
-                            const expectRatesAlmostEqual = (rate, newRate) => {
-                                const rate1 = Decimal(rate.n.toString()).div(Decimal(rate.d.toString()));
-                                const rate2 = Decimal(newRate.n.toString()).div(Decimal(newRate.d.toString()));
-
-                                const ratio = rate1.div(rate2);
-                                expect(ratio.gte(0.997)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
-                                expect(ratio.lte(1.003)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
-                            };
-
                             const getLastConversionRate = async (timeElapsed) => {
                                 if (timeElapsed.eq(new BN(0))) {
                                     return { lastConversionRate: await converter.referenceRate.call() };
@@ -1893,22 +1934,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 return { lastConversionRate: { n: secondaryBalance.mul(primaryWeight), d: primaryBalance.mul(secondaryWeight) } };
                             };
 
-                            const getReferenceRate = (referenceRate, lastConversionRate, timeElapsed) => {
-                                if (timeElapsed.eq(new BN(0))) {
-                                    return { referenceRate };
-                                }
-
-                                if (timeElapsed.gte(RATE_PROPAGATION_PERIOD)) {
-                                    return { referenceRate: lastConversionRate };
-                                }
-
-                                const newReferenceRateN = referenceRate.n.mul(lastConversionRate.d).mul(RATE_PROPAGATION_PERIOD.sub(timeElapsed))
-                                    .add(referenceRate.d.mul(lastConversionRate.n).mul(timeElapsed));
-                                const newReferenceRateD = RATE_PROPAGATION_PERIOD.mul(referenceRate.d).mul(lastConversionRate.d);
-
-                                return { referenceRate: { n: newReferenceRateN, d: newReferenceRateD } };
-                            };
-
                             context(`with conversion after ${timeElapsed.toString()} seconds`, async () => {
                                 beforeEach(async () => {
                                     // Set the external oracle update time to the past to trigger the update of the internal
@@ -1926,13 +1951,14 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                                     const normalizedRate = normalizeRates(INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, isReserve1Primary);
 
-                                    const { referenceRate: expectedReferenceRate } = getReferenceRate(normalizedRate,
+                                    const { referenceRate: expectedReferenceRate } = getExpectedReferenceRate(normalizedRate,
                                         normalizedRate, timeElapsed);
                                     const { referenceRate, lastConversionRate } = await convertAndReturnRates(amount);
                                     const { lastConversionRate: expectedLastConversionRate } = await getLastConversionRate(timeElapsed);
 
                                     expectRatesAlmostEqual(referenceRate, expectedReferenceRate);
-                                    expectRatesAlmostEqual(lastConversionRate, expectedLastConversionRate);
+                                    expect(lastConversionRate.n).to.be.bignumber.equal(expectedLastConversionRate.n);
+                                    expect(lastConversionRate.d).to.be.bignumber.equal(expectedLastConversionRate.d);
                                 });
 
                                 it('should not change more than once in a block', async () => {
@@ -1960,18 +1986,22 @@ contract('LiquidityPoolV2Converter', accounts => {
                                     let referenceRate = normalizedRate;
                                     let lastConversionRate = normalizedRate;
 
-                                    for (let i = 1; i < 10; ++i) {
-                                        const totalTimeElapsed = timeElapsed.add(new BN(i));
-                                        await converter.setReferenceRateUpdateTime(now.sub(totalTimeElapsed));
+                                    for (let i = 0; i < 10; ++i) {
+                                        // Increase the current time by a second and verify that the internal rate is updated accordingly.
+                                        const delta = duration.seconds(10).mul(new BN(i));
+                                        const totalElapsedTime = timeElapsed.add(delta);
+                                        const time = now.add(delta);
+                                        await converter.setTime(time);
 
-                                        const { referenceRate: expectedReferenceRate } = getReferenceRate(referenceRate,
-                                            lastConversionRate, timeElapsed);
+                                        const { referenceRate: expectedReferenceRate } = getExpectedReferenceRate(referenceRate,
+                                            lastConversionRate, totalElapsedTime);
 
                                         ({ referenceRate, lastConversionRate } = await convertAndReturnRates(amount));
 
-                                        const { lastConversionRate: expectedLastConversionRate } = await getLastConversionRate(totalTimeElapsed);
-
+                                        expect(await converter.referenceRateUpdateTime.call()).to.be.bignumber.equal(time);
                                         expectRatesAlmostEqual(referenceRate, expectedReferenceRate);
+
+                                        const { lastConversionRate: expectedLastConversionRate } = await getLastConversionRate(totalElapsedTime);
                                         expectRatesAlmostEqual(lastConversionRate, expectedLastConversionRate);
                                     }
                                 });

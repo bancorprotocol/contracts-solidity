@@ -2,7 +2,7 @@ pragma solidity 0.4.26;
 import "../converter/types/liquidity-pool-v2/LiquidityPoolV2Converter.sol";
 
 contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
-    uint256 private currentTime;
+    uint256 public currentTime;
 
     constructor(IPoolTokensContainer _token, IContractRegistry _registry, uint32 _maxConversionFee)
         public LiquidityPoolV2Converter(_token, _registry, _maxConversionFee) {
