@@ -540,8 +540,11 @@ contract('LiquidityPoolV2Converter', accounts => {
             it('should revert when the owner attempts to set the staked balance when the owner is not the converter upgrader', async () => {
                 const converter = await initConverter(true, false);
 
+                await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, sender);
+
                 const amount = toReserve1(new BN(2500));
-                await expectRevert(converter.setReserveStakedBalance(getReserve1Address(isETHReserve), amount), 'ERR_ACCESS_DENIED');
+                await expectRevert(converter.setReserveStakedBalance(getReserve1Address(isETHReserve), amount,
+                    { from: sender2 }), 'ERR_ACCESS_DENIED');
             });
 
             // eslint-disable-next-line max-len
