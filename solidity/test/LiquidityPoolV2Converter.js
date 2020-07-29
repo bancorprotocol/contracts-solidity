@@ -1774,7 +1774,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 });
             }
 
-            describe.only('internal rate', () => {
+            describe('internal rate', () => {
                 for (const isReserve1Primary of [true, false]) {
                     describe(`${isReserve1Primary ? 'reserve1 is primary' : 'reserve2 is primary'}`, () => {
                         const convertAndReturnRates = async (amount) => {
