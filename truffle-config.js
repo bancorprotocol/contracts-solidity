@@ -50,7 +50,8 @@ module.exports = {
         }
     },
     mocha: {
-        timeout: 0,
+        before_timeout: 600000,
+        timeout: 600000,
         useColors: true,
         reporter: 'list'
     }
