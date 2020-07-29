@@ -15,7 +15,6 @@ const ContractRegistry = artifacts.require('ContractRegistry');
 const ERC20Token = artifacts.require('ERC20Token');
 const TestNonStandardToken = artifacts.require('TestNonStandardToken');
 const ConverterFactory = artifacts.require('ConverterFactory');
-const ConverterUpgrader = artifacts.require('ConverterUpgrader');
 
 const LiquidityPoolV2Converter = artifacts.require('TestLiquidityPoolV2Converter');
 const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
@@ -238,7 +237,6 @@ contract('LiquidityPoolV2Converter', accounts => {
             let contractRegistry;
             let reserveToken;
             let reserveToken2;
-            let upgrader;
             let poolToken1;
             let poolToken2;
             let chainlinkPriceOracleA;
@@ -279,9 +277,6 @@ contract('LiquidityPoolV2Converter', accounts => {
             beforeEach(async () => {
                 bancorNetwork = await BancorNetwork.new(contractRegistry.address);
                 await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
-
-                upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
-                await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
                 oracleWhitelist = await Whitelist.new();
                 await contractRegistry.registerAddress(registry.CHAINLINK_ORACLE_WHITELIST, oracleWhitelist.address);
@@ -539,8 +534,6 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 const balance2 = await converter.reserveStakedBalance.call(getReserve1Address(isETHReserve));
                 expect(balance2).to.be.bignumber.equal(amount);
-
-                await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
             });
 
             it('should revert when the owner attempts to set the staked balance when the owner is not the converter upgrader', async () => {
@@ -559,8 +552,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const amount = toReserve1(new BN(2500));
                 await expectRevert(converter.setReserveStakedBalance(getReserve1Address(isETHReserve), amount,
                     { from: sender2 }), 'ERR_ACCESS_DENIED');
-
-                await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
             });
 
             it('should revert when attempting to set the staked balance with an invalid reserve address', async () => {
@@ -571,8 +562,6 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 const amount = toReserve1(new BN(2500));
                 await expectRevert(converter.setReserveStakedBalance(token.address, amount), 'ERR_INVALID_RESERVE');
-
-                await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
             });
 
             it('verifies that the owner can set the max staked balance', async () => {
