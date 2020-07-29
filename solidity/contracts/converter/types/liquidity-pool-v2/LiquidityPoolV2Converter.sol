@@ -754,7 +754,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         (uint256 externalRateN, uint256 externalRateD, uint256 updateTime) = priceOracle.latestRateAndUpdateTime(primaryReserveToken, secondaryReserveToken);
 
         // if the external rate was recently updated - prefer it over the internal rate
-        if (updateTime >= referenceRateUpdateTime) {
+        if (updateTime > referenceRateUpdateTime) {
             return Fraction({ n: externalRateN, d: externalRateD });
         }
 

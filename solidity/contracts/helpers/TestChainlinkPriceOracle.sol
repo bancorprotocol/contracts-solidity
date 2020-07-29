@@ -10,7 +10,6 @@ contract TestChainlinkPriceOracle is IChainlinkPriceOracle {
 
     function setAnswer(int256 _answer) public {
         answer = _answer;
-        setTimestamp(now);
     }
 
     function setTimestamp(uint256 _timestamp) public {
