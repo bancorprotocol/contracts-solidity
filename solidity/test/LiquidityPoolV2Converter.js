@@ -381,6 +381,12 @@ contract('LiquidityPoolV2Converter', accounts => {
                 });
             });
 
+            it('verifies that amplificationFactor returns the correct value', async () => {
+                const converter = await initConverter(false, false);
+                const factor = await converter.amplificationFactor.call();
+                expect(factor).to.be.bignumber.equal(AMPLIFICATION_FACTOR);
+            });
+
             it('verifies that the primary / secondary reserves are set correctly when activating with the 1st reserve as primary', async () => {
                 const converter = await initConverter(false, false);
                 await converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
