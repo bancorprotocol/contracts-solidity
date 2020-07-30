@@ -258,6 +258,8 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
 
     /**
       * @dev returns true if the converter is active, false otherwise
+      *
+      * @return true if the converter is active, false otherwise
     */
     function isActive() public view returns (bool) {
         return anchor.owner() == address(this);

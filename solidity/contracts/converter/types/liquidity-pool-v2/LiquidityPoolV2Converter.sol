@@ -75,9 +75,20 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
     /**
       * @dev returns true if the converter is active, false otherwise
+      *
+      * @return true if the converter is active, false otherwise
     */
     function isActive() public view returns (bool) {
         return super.isActive() && priceOracle != address(0);
+    }
+
+    /**
+      * @dev returns the liquidity amplification factor in the pool
+      *
+      * @return liquidity amplification factor
+    */
+    function amplificationFactor() public pure returns (uint8) {
+        return AMPLIFICATION_FACTOR;
     }
 
     /**
