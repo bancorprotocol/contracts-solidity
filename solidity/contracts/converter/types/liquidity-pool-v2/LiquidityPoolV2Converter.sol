@@ -532,7 +532,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 initialPoolSupply = _poolToken.totalSupply();
 
         // get the reserve token return before burning the caller's shares
-        (uint256 reserveAmount, ) = removeLiquidityAmountAndFee(_poolToken, _amount);
+        (uint256 reserveAmount, ) = removeLiquidityReturnAndFee(_poolToken, _amount);
         require(reserveAmount >= _minReturn, "ERR_RETURN_TOO_LOW");
 
         // get the reserve token associated with the pool token
@@ -579,7 +579,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @return amount after fee and fee, in reserve token units
     */
-    function removeLiquidityAmountAndFee(ISmartToken _poolToken, uint256 _amount)
+    function removeLiquidityReturnAndFee(ISmartToken _poolToken, uint256 _amount)
         public
         view
         returns (uint256, uint256)
