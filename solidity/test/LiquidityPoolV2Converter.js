@@ -1619,16 +1619,20 @@ contract('LiquidityPoolV2Converter', accounts => {
                             const x = oldStakedBalance.mul(AMPLIFICATION_FACTOR);
                             const y = oldStakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(oldActualBalance);
                             const [min, max] = x.lt(y) ? [x, y] : [y, x];
-                            const fee = poolTokenAmount.mul(oldStakedBalance.mul(min)).div(oldTotalSupply.mul(max));
+                            const expectedAmountBeforeFee = poolTokenAmount.mul(oldStakedBalance).div(oldTotalSupply);
+                            const expectedAmountAfterFee = expectedAmountBeforeFee.mul(min).div(max);
+                            const actualAmountAfterFeeAndFee = await converter.removeLiquidityReturnAndFee.call(poolToken1.address, poolTokenAmount);
                             await converter.removeLiquidity(poolToken1.address, poolTokenAmount, MIN_RETURN, { from: sender });
                             const newTotalSupply = await poolToken1.totalSupply.call();
                             const newUserBalance = await reserveToken.balanceOf.call(sender);
                             const newActualBalance = await reserveToken.balanceOf.call(converter.address);
                             const newStakedBalance = await converter.reserveStakedBalance.call(reserveToken.address);
                             expect(newTotalSupply).to.be.bignumber.equal(oldTotalSupply.sub(poolTokenAmount));
-                            expect(newUserBalance).to.be.bignumber.equal(oldUserBalance.add(fee));
-                            expect(newActualBalance).to.be.bignumber.equal(oldActualBalance.sub(fee));
-                            expect(newStakedBalance).to.be.bignumber.equal(oldStakedBalance.sub(fee));
+                            expect(newUserBalance).to.be.bignumber.equal(oldUserBalance.add(expectedAmountAfterFee));
+                            expect(newActualBalance).to.be.bignumber.equal(oldActualBalance.sub(expectedAmountAfterFee));
+                            expect(newStakedBalance).to.be.bignumber.equal(oldStakedBalance.sub(expectedAmountAfterFee));
+                            expect(actualAmountAfterFeeAndFee[0]).to.be.bignumber.equal(expectedAmountAfterFee);
+                            expect(actualAmountAfterFeeAndFee[1]).to.be.bignumber.equal(expectedAmountBeforeFee.sub(expectedAmountAfterFee));
                         });
                     }
                 });
