@@ -532,7 +532,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 initialPoolSupply = _poolToken.totalSupply();
 
         // get the reserve token return before burning the caller's shares
-        uint256 reserveAmount = removeLiquidityReturn(_poolToken, _amount);
+        (uint256 reserveAmount, ) = removeLiquidityAmountAndFee(_poolToken, _amount);
         require(reserveAmount >= _minReturn, "ERR_RETURN_TOO_LOW");
 
         // get the reserve token associated with the pool token
@@ -572,16 +572,17 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
     /**
       * @dev calculates the amount of reserve tokens entitled for a given amount of pool tokens
+      * note that a fee is applied according to the equilibrium level of the primary reserve token
       *
       * @param _poolToken   address of the pool token
       * @param _amount      amount of pool tokens
       *
-      * @return amount of reserve tokens
+      * @return amount after fee and fee, in reserve token units
     */
-    function removeLiquidityReturn(ISmartToken _poolToken, uint256 _amount)
+    function removeLiquidityAmountAndFee(ISmartToken _poolToken, uint256 _amount)
         public
         view
-        returns (uint256)
+        returns (uint256, uint256)
     {
         uint256 totalSupply = _poolToken.totalSupply();
         uint256 stakedBalance = stakedBalances[poolTokensToReserves[_poolToken]];
@@ -590,9 +591,11 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             uint256 x = stakedBalances[primaryReserveToken].mul(AMPLIFICATION_FACTOR);
             uint256 y = reserveAmplifiedBalance(primaryReserveToken);
             (uint256 min, uint256 max) = x < y ? (x, y) : (y, x);
-            return _amount.mul(stakedBalance).div(totalSupply).mul(min).div(max);
+            uint256 amountBeforeFee = _amount.mul(stakedBalance).div(totalSupply);
+            uint256 amountAfterFee = amountBeforeFee.mul(min).div(max);
+            return (amountAfterFee, amountBeforeFee - amountAfterFee);
         }
-        return stakedBalance;
+        return (stakedBalance, 0);
     }
 
     /**
