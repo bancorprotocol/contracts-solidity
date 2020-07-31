@@ -1,3 +1,8 @@
+### 0.6.8 (2020-07-31)
+Converters
+* Updated version number
+
+
 ### 0.6.7 (2020-07-31)
 General
 * Added LiquidityPoolV2Converter
