@@ -1,3 +1,18 @@
+### 0.6.7 (2020-07-31)
+General
+* Added LiquidityPoolV2Converter
+* Added a Chainlink price oracle proxy contract
+* Moved converter types into dedicated folders
+* Many other minor changes and cleanups
+
+Converters
+* Added the converter type to the `Activation` event
+
+Converter Factory
+* Added support for custom factory for converter types
+* Added the converter type to the `NewConverter` event
+
+
 ### 0.6.6 (2020-07-16)
 General
 * Updated truffle to 5.1.32
