@@ -43,7 +43,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     using SafeMath for uint256;
 
     uint32 internal constant WEIGHT_RESOLUTION = 1000000;
-    uint64 internal constant CONVERSION_FEE_RESOLUTION = 1000000;
+    uint32 internal constant CONVERSION_FEE_RESOLUTION = 1000000;
     address internal constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     struct Reserve {
@@ -57,7 +57,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     /**
       * @dev version number
     */
-    uint16 public constant version = 31;
+    uint16 public constant version = 32;
 
     IConverterAnchor public anchor;                 // converter anchor contract
     IWhitelist public conversionWhitelist;          // whitelist contract with list of addresses that are allowed to use the converter
