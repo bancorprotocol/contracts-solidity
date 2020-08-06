@@ -292,26 +292,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                 reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', reserveToken2Decimals, toReserve2(new BN(2000000000000)));
             });
 
-            describe('adjusted-fee', () => {
-                const bntStaked = AMPLIFICATION_FACTOR.mul(new BN(4));
-                const tknWeight = new BN(1);
-                const bntWeight = new BN(1);
-                const tknRate = new BN(1);
-                const bntRate = new BN(1);
-                const fee = new BN(100000);
-
-                for (let n = -3; n <= 5; n++) {
-                    const expected = BN.min(BN.max(fee.div(new BN(2)), fee.mul(new BN(4)).div(new BN(4 + n))), fee.mul(new BN(2)));
-                    it(`calculateAdjustedFee should return ${expected.toString()}`, async () => {
-                        const tknStaked = bntStaked.add(new BN(n));
-                        const converter = await initConverter(true, true);
-                        const actual = await converter.calculateAdjustedFeeTest.call(tknStaked, bntStaked, tknWeight,
-                            bntWeight, tknRate, bntRate, fee);
-                        expect(actual).to.be.bignumber.equal(expected);
-                    });
-                }
-            });
-
             describe('min-return', () => {
                 it('addLiquidity should revert when min-return is zero', async () => {
                     const amount = toReserve2(new BN(100));
