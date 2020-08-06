@@ -53,17 +53,6 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     event DynamicFeeFactorUpdate(uint256 _prevFactor, uint256 _newFactor);
 
     /**
-      * @dev updates the current dynamic fee factor
-      * can only be called by the contract owner
-      *
-      * @param _dynamicFeeFactor new dynamic fee factor, represented in ppm
-    */
-    function setDynamicFeeFactor(uint256 _dynamicFeeFactor) public ownerOnly {
-        emit DynamicFeeFactorUpdate(dynamicFeeFactor, _dynamicFeeFactor);
-        dynamicFeeFactor = _dynamicFeeFactor;
-    }
-
-    /**
       * @dev initializes a new LiquidityPoolV2Converter instance
       *
       * @param  _poolTokensContainer    pool tokens container governed by the converter
@@ -176,6 +165,17 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         }
 
         emit Activation(converterType(), anchor, true);
+    }
+
+    /**
+      * @dev updates the current dynamic fee factor
+      * can only be called by the contract owner
+      *
+      * @param _dynamicFeeFactor new dynamic fee factor, represented in ppm
+    */
+    function setDynamicFeeFactor(uint256 _dynamicFeeFactor) public ownerOnly {
+        emit DynamicFeeFactorUpdate(dynamicFeeFactor, _dynamicFeeFactor);
+        dynamicFeeFactor = _dynamicFeeFactor;
     }
 
     /**
