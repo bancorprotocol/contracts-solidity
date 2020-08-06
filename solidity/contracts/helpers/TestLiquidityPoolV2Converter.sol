@@ -27,7 +27,7 @@ contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
         uint256 _secondaryReserveWeight,
         uint256 _primaryReserveRate,
         uint256 _secondaryReserveRate,
-        uint256 _conversionFee)
+        uint256 _dynamicFeeFactor)
         external
         pure
         returns (uint256)
@@ -39,7 +39,7 @@ contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
             _secondaryReserveWeight,
             _primaryReserveRate,
             _secondaryReserveRate,
-            _conversionFee);
+            _dynamicFeeFactor);
     }
 
     function setReserveWeight(IERC20Token _reserveToken, uint32 _weight)
