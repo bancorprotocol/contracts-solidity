@@ -7,7 +7,7 @@ import FormulaNativePython
 MIN = 0
 MAX = 2 ** 256 - 1
 
-FEE_RESOLUTION = 1000000
+PPM_RESOLUTION = 1000000
 
 def add(a, b):
     assert a + b <= MAX, 'error {} + {}'.format(a, b)
@@ -115,8 +115,8 @@ class Pool():
         )
         sFee = self.fee
         dFee = self._adjustedFee()
-        sAmount = div(mul(targetAmount, sFee), FEE_RESOLUTION)
-        dAmount = div(mul(targetAmount, dFee), FEE_RESOLUTION)
+        sAmount = div(mul(targetAmount, sFee), PPM_RESOLUTION)
+        dAmount = div(mul(targetAmount, dFee), PPM_RESOLUTION)
         sourceBranch.reserveToken.transfer(user, self.id, amount)
         targetBranch.reserveToken.transfer(self.id, user, sub(targetAmount, dAmount))
         targetBranch.reserveStaked = add(targetBranch.reserveStaked, sAmount)
@@ -153,11 +153,11 @@ class Pool():
         sideBranch = self.branches[self.sideSymbol]
         x = mul(mul(mainBranch.reserveStaked, mainBranch.reserveRate), sideBranch.reserveWeight)
         y = mul(mul(sideBranch.reserveStaked, sideBranch.reserveRate), mainBranch.reserveWeight)
-        return div(mul(mul(sub(y, x), self.amp), self.factor), mul(y, FEE_RESOLUTION)) if y > 0 else 0
+        return div(mul(mul(sub(y, x), self.amp), self.factor), mul(y, PPM_RESOLUTION)) if y > 0 else 0
     def serialize(self):
         return {
-            'fee': self.fee,
             'amp': self.amp,
+            'fee': self.fee,
             'factor': self.factor,
             self.mainSymbol: self.branches[self.mainSymbol].serialize(),
             self.sideSymbol: self.branches[self.sideSymbol].serialize(),
