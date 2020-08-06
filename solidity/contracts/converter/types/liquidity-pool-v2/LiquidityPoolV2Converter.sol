@@ -174,6 +174,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _dynamicFeeFactor new dynamic fee factor, represented in ppm
     */
     function setDynamicFeeFactor(uint256 _dynamicFeeFactor) public ownerOnly {
+        require(_dynamicFeeFactor <= DYNAMIC_FEE_FACTOR_RESOLUTION, "ERR_INVALID_DYNAMIC_FEE_FACTOR");
         emit DynamicFeeFactorUpdate(dynamicFeeFactor, _dynamicFeeFactor);
         dynamicFeeFactor = _dynamicFeeFactor;
     }
