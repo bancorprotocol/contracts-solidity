@@ -474,7 +474,7 @@ contract('LiquidityPoolV2Converter', accounts => {
             });
 
             it('verifies the owner can update the dynamic-fee factor', async () => {
-                const converter = await initConverter(type, false, isETHReserve, 0);
+                const converter = await initConverter(false, false);
 
                 const newFee = MAX_DYNAMIC_FEE_FACTOR.sub(new BN(10));
                 await converter.setDynamicFeeFactor(newFee);
@@ -484,21 +484,21 @@ contract('LiquidityPoolV2Converter', accounts => {
             });
 
             it('should revert when attempting to update the dynamic-fee factor to an invalid value', async () => {
-                const converter = await initConverter(type, false, isETHReserve, 0);
+                const converter = await initConverter(false, false);
 
                 await expectRevert(converter.setDynamicFeeFactor(MAX_DYNAMIC_FEE_FACTOR.add(new BN(1))),
                     'ERR_INVALID_DYNAMIC_FEE_FACTOR');
             });
 
             it('should revert when a non owner attempts to update the dynamic-fee factor', async () => {
-                const converter = await initConverter(type, false, isETHReserve, 0);
+                const converter = await initConverter(false, false);
 
                 const newFee = new BN(30000);
                 await expectRevert(converter.setDynamicFeeFactor(newFee, { from: nonOwner }), 'ERR_ACCESS_DENIED');
             });
 
             it('verifies that an event is fired when the owner updates the dynamic-fee factor', async () => {
-                const converter = await initConverter(type, false, isETHReserve, 0);
+                const converter = await initConverter(false, false);
 
                 const newFee = new BN(30000);
 
@@ -507,7 +507,7 @@ contract('LiquidityPoolV2Converter', accounts => {
             });
 
             it('verifies that an event is fired when the owner updates the dynamic-fee factor multiple times', async () => {
-                const converter = await initConverter(type, false, isETHReserve, 0);
+                const converter = await initConverter(false, false);
 
                 let prevFee = new BN(0);
                 for (let i = 1; i <= 10; ++i) {
