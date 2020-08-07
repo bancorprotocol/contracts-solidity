@@ -509,7 +509,7 @@ contract('LiquidityPoolV2Converter', accounts => {
             it('verifies that an event is fired when the owner updates the dynamic-fee factor multiple times', async () => {
                 const converter = await initConverter(false, false);
 
-                let prevFactor = new BN(0);
+                let prevFactor = DYNAMIC_FEE_FACTOR;
                 for (let i = 1; i <= 10; ++i) {
                     const newFactor = new BN(10000 * i);
 
