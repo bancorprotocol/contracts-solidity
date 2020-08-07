@@ -245,6 +245,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
             const CONVERSION_FEE_RESOLUTION = new BN(1000000);
             const DYNAMIC_FEE_FACTOR = new BN(10000);
+            const MAX_DYNAMIC_FEE_FACTOR = new BN(100000);
             const AMPLIFICATION_FACTOR = new BN(20);
             const MIN_RETURN = new BN(1);
 
@@ -470,6 +471,53 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 await expectRevert(converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address, chainlinkPriceOracleB.address),
                     'ERR_INVALID_ORACLE');
+            });
+
+            it('verifies the owner can update the dynamic-fee factor', async () => {
+                const converter = await initConverter(type, false, isETHReserve, 0);
+
+                const newFee = MAX_DYNAMIC_FEE_FACTOR.sub(new BN(10));
+                await converter.setDynamicFeeFactor(newFee);
+
+                const dynamicFeeFactor = await converter.dynamicFeeFactor.call();
+                expect(dynamicFeeFactor).to.be.bignumber.equal(newFee);
+            });
+
+            it('should revert when attempting to update the dynamic-fee factor to an invalid value', async () => {
+                const converter = await initConverter(type, false, isETHReserve, 0);
+
+                await expectRevert(converter.setDynamicFeeFactor(MAX_DYNAMIC_FEE_FACTOR.add(new BN(1))),
+                    'ERR_INVALID_DYNAMIC_FEE_FACTOR');
+            });
+
+            it('should revert when a non owner attempts to update the dynamic-fee factor', async () => {
+                const converter = await initConverter(type, false, isETHReserve, 0);
+
+                const newFee = new BN(30000);
+                await expectRevert(converter.setDynamicFeeFactor(newFee, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            });
+
+            it('verifies that an event is fired when the owner updates the dynamic-fee factor', async () => {
+                const converter = await initConverter(type, false, isETHReserve, 0);
+
+                const newFee = new BN(30000);
+
+                const res = await converter.setDynamicFeeFactor(newFee);
+                expectEvent(res, 'DynamicFeeFactorUpdate', { _prevFee: new BN(0), _newFee: newFee });
+            });
+
+            it('verifies that an event is fired when the owner updates the dynamic-fee factor multiple times', async () => {
+                const converter = await initConverter(type, false, isETHReserve, 0);
+
+                let prevFee = new BN(0);
+                for (let i = 1; i <= 10; ++i) {
+                    const newFee = new BN(10000 * i);
+
+                    const res = await converter.setDynamicFeeFactor(newFee);
+                    expectEvent(res, 'DynamicFeeFactorUpdate', { _prevFee: prevFee, _newFee: newFee });
+
+                    prevFee = newFee;
+                }
             });
 
             it('verifies that reserveStakedBalance returns the correct balance', async () => {
