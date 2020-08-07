@@ -17,7 +17,7 @@ import "../../../utility/interfaces/IPriceOracle.sol";
 contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     uint8 internal constant AMPLIFICATION_FACTOR = 20;  // factor to use for conversion calculations (reduces slippage)
     uint32 internal constant MAX_DYNAMIC_FEE_FACTOR = 100000; // maximum dynamic-fee factor; must be <= CONVERSION_FEE_RESOLUTION
-    
+
     struct Fraction {
         uint256 n;  // numerator
         uint256 d;  // denominator
