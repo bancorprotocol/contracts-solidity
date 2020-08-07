@@ -1,3 +1,8 @@
+### 0.6.10 (2020-08-07)
+LiquidityPoolV2Converter
+* Fixed an issue in the upgrade process
+
+
 ### 0.6.9 (2020-08-07)
 LiquidityPoolV2Converter
 * Upgraded dynamic fee mechanism
