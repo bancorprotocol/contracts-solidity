@@ -476,11 +476,11 @@ contract('LiquidityPoolV2Converter', accounts => {
             it('verifies the owner can update the dynamic-fee factor', async () => {
                 const converter = await initConverter(false, false);
 
-                const newFee = MAX_DYNAMIC_FEE_FACTOR.sub(new BN(10));
-                await converter.setDynamicFeeFactor(newFee);
+                const newFactor = MAX_DYNAMIC_FEE_FACTOR.sub(new BN(10));
+                await converter.setDynamicFeeFactor(newFactor);
 
                 const dynamicFeeFactor = await converter.dynamicFeeFactor.call();
-                expect(dynamicFeeFactor).to.be.bignumber.equal(newFee);
+                expect(dynamicFeeFactor).to.be.bignumber.equal(newFactor);
             });
 
             it('should revert when attempting to update the dynamic-fee factor to an invalid value', async () => {
@@ -493,17 +493,17 @@ contract('LiquidityPoolV2Converter', accounts => {
             it('should revert when a non owner attempts to update the dynamic-fee factor', async () => {
                 const converter = await initConverter(false, false);
 
-                const newFee = new BN(30000);
-                await expectRevert(converter.setDynamicFeeFactor(newFee, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+                const newFactor = new BN(30000);
+                await expectRevert(converter.setDynamicFeeFactor(newFactor, { from: nonOwner }), 'ERR_ACCESS_DENIED');
             });
 
             it('verifies that an event is fired when the owner updates the dynamic-fee factor', async () => {
                 const converter = await initConverter(false, false);
 
-                const newFee = new BN(30000);
+                const newFactor = new BN(30000);
 
-                const res = await converter.setDynamicFeeFactor(newFee);
-                expectEvent(res, 'DynamicFeeFactorUpdate', { _prevFee: new BN(0), _newFee: newFee });
+                const res = await converter.setDynamicFeeFactor(newFactor);
+                expectEvent(res, 'DynamicFeeFactorUpdate', { _prevFactor: new BN(0), _newFactor: newFactor });
             });
 
             it('verifies that an event is fired when the owner updates the dynamic-fee factor multiple times', async () => {
