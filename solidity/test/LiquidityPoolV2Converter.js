@@ -687,11 +687,11 @@ contract('LiquidityPoolV2Converter', accounts => {
                     expectedWeights[0], expectedWeights[1], fullFee, amount
                 );
 
-                const normalFee = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
+                const feeAmount = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
 
                 const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
                 expectAlmostEqual(expectedTargetAmount, res[0]);
-                expect(normalFee).to.be.bignumber.lte(res[1]);
+                expect(feeAmount).to.be.bignumber.lte(res[1]);
             });
 
             it('verifies that targetAmountAndFee does not return a decreased fee when the secondary reserve is in surplus', async () => {
@@ -757,11 +757,11 @@ contract('LiquidityPoolV2Converter', accounts => {
                     expectedWeights[0], expectedWeights[1], fullFee, amount
                 );
 
-                const normalFee = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
+                const feeAmount = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
 
                 const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
                 expectAlmostEqual(expectedTargetAmount, res[0]);
-                expect(normalFee).to.be.bignumber.equal(res[1]);
+                expect(feeAmount).to.be.bignumber.equal(res[1]);
             });
 
             for (const tokenAmount of [1000, 1000000, 1000000000]) {
@@ -825,14 +825,14 @@ contract('LiquidityPoolV2Converter', accounts => {
                             expectedWeights[0], expectedWeights[1], fullFee, amount
                         );
 
-                        const normalFee = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
+                        const feeAmount = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
 
                         await updateChainlinkOracle(converter, chainlinkPriceOracleA, oracleAPrice);
 
                         const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
 
                         expectAlmostEqual(expectedTargetAmount, res[0]);
-                        expect(normalFee).to.be.bignumber.equal(res[1]);
+                        expect(feeAmount).to.be.bignumber.equal(res[1]);
                     });
 
                     it('verifies that convert returns valid amount after converting when there was no external price change', async () => {
