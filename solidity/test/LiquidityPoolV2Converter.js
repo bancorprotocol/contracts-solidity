@@ -155,7 +155,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const weights = newWeights.map(w => new BN(w.toFixed()));
                 const x = reserve1StakedBalance.mul(rate.n).mul(weights[1]);
                 const y = reserve2StakedBalance.mul(rate.d).mul(weights[0]);
-                const dynamicFee = y.gt(x) ? y.sub(x).mul(_dynamicFeeFactor).mul(AMPLIFICATION_FACTOR).div(y) : new BN(0);
+                const dynamicFee = y.gt(x) ? y.sub(x).mul(DYNAMIC_FEE_FACTOR).mul(AMPLIFICATION_FACTOR).div(y) : new BN(0);
                 return [[weights[1], weights[0]], conversionFee.add(dynamicFee)];
             };
 
@@ -240,6 +240,7 @@ contract('LiquidityPoolV2Converter', accounts => {
             const sender2 = accounts[9];
 
             const CONVERSION_FEE_RESOLUTION = new BN(1000000);
+            const DYNAMIC_FEE_FACTOR = new BN(10000);
             const AMPLIFICATION_FACTOR = new BN(20);
             const MIN_RETURN = new BN(1);
 
