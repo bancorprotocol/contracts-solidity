@@ -16,7 +16,8 @@ import "../../../utility/interfaces/IPriceOracle.sol";
 */
 contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     uint8 internal constant AMPLIFICATION_FACTOR = 20;  // factor to use for conversion calculations (reduces slippage)
-
+    uint32 internal constant MAX_DYNAMIC_FEE_FACTOR = 100000; // maximum dynamic-fee factor; must be <= CONVERSION_FEE_RESOLUTION
+    
     struct Fraction {
         uint256 n;  // numerator
         uint256 d;  // denominator
@@ -40,6 +41,16 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     // used by the temp liquidity limit mechanism during the pilot
     mapping (address => uint256) public maxStakedBalances;
     bool public maxStakedBalanceEnabled = true;
+
+    uint256 public dynamicFeeFactor = 70000; // initial dynamic fee factor is 7%, represented in ppm
+
+    /**
+      * @dev triggered when the dynamic fee factor is updated
+      *
+      * @param  _prevFactor    previous factor percentage, represented in ppm
+      * @param  _newFactor     new factor percentage, represented in ppm
+    */
+    event DynamicFeeFactorUpdate(uint256 _prevFactor, uint256 _newFactor);
 
     /**
       * @dev initializes a new LiquidityPoolV2Converter instance
@@ -154,6 +165,18 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         }
 
         emit Activation(converterType(), anchor, true);
+    }
+
+    /**
+      * @dev updates the current dynamic fee factor
+      * can only be called by the contract owner
+      *
+      * @param _dynamicFeeFactor new dynamic fee factor, represented in ppm
+    */
+    function setDynamicFeeFactor(uint256 _dynamicFeeFactor) public ownerOnly {
+        require(_dynamicFeeFactor <= MAX_DYNAMIC_FEE_FACTOR, "ERR_INVALID_DYNAMIC_FEE_FACTOR");
+        emit DynamicFeeFactorUpdate(dynamicFeeFactor, _dynamicFeeFactor);
+        dynamicFeeFactor = _dynamicFeeFactor;
     }
 
     /**
@@ -349,7 +372,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             }
         }
 
-        // return the target amount and the adjusted fee using the updated reserve weights
+        // return the target amount and the conversion fee using the updated reserve weights
         (uint256 targetAmount, , uint256 fee) = targetAmountAndFees(_sourceToken, _targetToken, sourceTokenWeight, targetTokenWeight, rate, _amount);
         return (targetAmount, fee);
     }
@@ -410,7 +433,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         (bool rateUpdated, Fraction memory rate) = handleRateChange();
 
         // get expected target amount and fees
-        (uint256 amount, uint256 normalFee, uint256 adjustedFee) = targetAmountAndFees(_sourceToken, _targetToken, 0, 0, rate, _amount);
+        (uint256 amount, uint256 standardFee, uint256 dynamicFee) = targetAmountAndFees(_sourceToken, _targetToken, 0, 0, rate, _amount);
 
         // ensure that the trade gives something in return
         require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
@@ -430,14 +453,14 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         reserves[_targetToken].balance = targetReserveBalance.sub(amount);
 
         // update the target staked balance with the fee
-        stakedBalances[_targetToken] = stakedBalances[_targetToken].add(normalFee);
+        stakedBalances[_targetToken] = stakedBalances[_targetToken].add(standardFee);
 
         // update the last conversion rate
         if (rateUpdated) {
             lastConversionRate = tokensRate(primaryReserveToken, secondaryReserveToken, 0, 0);
         }
 
-        return (amount, adjustedFee);
+        return (amount, dynamicFee);
     }
 
     /**
@@ -621,8 +644,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _amount          amount of tokens received from the user
       *
       * @return expected target amount
-      * @return expected fee (normal)
-      * @return expected fee (adjusted)
+      * @return expected standard conversion fee
+      * @return expected dynamic conversion fee
     */
     function targetAmountAndFees(
         IERC20Token _sourceToken,
@@ -633,7 +656,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 _amount)
         private
         view
-        returns (uint256 targetAmount, uint256 normalFee, uint256 adjustedFee)
+        returns (uint256 targetAmount, uint256 standardFee, uint256 dynamicFee)
     {
         if (_sourceWeight == 0)
             _sourceWeight = reserves[_sourceToken].weight;
@@ -653,14 +676,14 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             _amount
         );
 
-        // return the target amount minus the conversion fee and the conversion fee
-        normalFee = super.calculateFee(targetAmount);
-        adjustedFee = calculateFee(_targetToken, _sourceWeight, _targetWeight, _rate, targetAmount);
-        targetAmount -= adjustedFee;
+        // return a tuple of [target amount minus dynamic conversion fee, standard conversion fee, dynamic conversion fee]
+        standardFee = calculateFee(targetAmount);
+        dynamicFee = calculateDynamicFee(_targetToken, _sourceWeight, _targetWeight, _rate, targetAmount).add(standardFee);
+        targetAmount = targetAmount.sub(dynamicFee);
     }
 
     /**
-      * @dev returns the conversion fee for a given target amount
+      * @dev returns the dynamic fee for a given target amount
       *
       * @param _targetToken     contract address of the target reserve token
       * @param _sourceWeight    source reserve token weight
@@ -668,9 +691,9 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _rate            rate of 1 primary token in secondary tokens
       * @param _targetAmount    target amount
       *
-      * @return conversion fee
+      * @return dynamic fee
     */
-    function calculateFee(
+    function calculateDynamicFee(
         IERC20Token _targetToken,
         uint32 _sourceWeight,
         uint32 _targetWeight,
@@ -678,29 +701,34 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 _targetAmount)
         internal view returns (uint256)
     {
-        // conversions to the primary reserve apply normal fees
-        if (_targetToken == primaryReserveToken) {
-            return super.calculateFee(_targetAmount);
+        uint256 fee;
+
+        if (_targetToken == secondaryReserveToken) {
+            fee = calculateFeeToEquilibrium(
+                stakedBalances[primaryReserveToken],
+                stakedBalances[secondaryReserveToken],
+                _sourceWeight,
+                _targetWeight,
+                _rate.n,
+                _rate.d,
+                dynamicFeeFactor);
+        }
+        else {
+            fee = calculateFeeToEquilibrium(
+                stakedBalances[primaryReserveToken],
+                stakedBalances[secondaryReserveToken],
+                _targetWeight,
+                _sourceWeight,
+                _rate.n,
+                _rate.d,
+                dynamicFeeFactor);
         }
 
-        // get the adjusted fee
-        uint256 fee = calculateAdjustedFee(
-            stakedBalances[primaryReserveToken],
-            stakedBalances[secondaryReserveToken],
-            _sourceWeight,
-            _targetWeight,
-            _rate.n,
-            _rate.d,
-            conversionFee);
-
-        // calculate the fee based on the adjusted value
         return _targetAmount.mul(fee).div(CONVERSION_FEE_RESOLUTION);
     }
 
     /**
-      * @dev returns the fee required for mitigating the secondary reserve distance from equilibrium
-      *
-      * assumption: _conversionFee * 2 <= CONVERSION_FEE_RESOLUTION
+      * @dev returns the relative fee required for mitigating the secondary reserve distance from equilibrium
       *
       * @param _primaryReserveStaked    primary reserve staked balance
       * @param _secondaryReserveStaked  secondary reserve staked balance
@@ -708,32 +736,27 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _secondaryReserveWeight  secondary reserve weight
       * @param _primaryReserveRate      primary reserve rate
       * @param _secondaryReserveRate    secondary reserve rate
-      * @param _conversionFee           conversion fee
+      * @param _dynamicFeeFactor        dynamic fee factor
       *
-      * @return adjusted fee
+      * @return relative fee, represented in ppm
     */
-    function calculateAdjustedFee(
+    function calculateFeeToEquilibrium(
         uint256 _primaryReserveStaked,
         uint256 _secondaryReserveStaked,
         uint256 _primaryReserveWeight,
         uint256 _secondaryReserveWeight,
         uint256 _primaryReserveRate,
         uint256 _secondaryReserveRate,
-        uint256 _conversionFee)
+        uint256 _dynamicFeeFactor)
         internal
         pure
         returns (uint256)
     {
         uint256 x = _primaryReserveStaked.mul(_primaryReserveRate).mul(_secondaryReserveWeight);
         uint256 y = _secondaryReserveStaked.mul(_secondaryReserveRate).mul(_primaryReserveWeight);
-
-        if (x.mul(AMPLIFICATION_FACTOR) >= y.mul(AMPLIFICATION_FACTOR + 1))
-            return _conversionFee / 2;
-
-        if (x.mul(AMPLIFICATION_FACTOR * 2) <= y.mul(AMPLIFICATION_FACTOR * 2 - 1))
-            return _conversionFee * 2;
-
-        return _conversionFee.mul(y).div(x.mul(AMPLIFICATION_FACTOR).sub(y.mul(AMPLIFICATION_FACTOR - 1)));
+        if (y > x)
+            return (y - x).mul(_dynamicFeeFactor).mul(AMPLIFICATION_FACTOR).div(y);
+        return 0;
     }
 
     /**

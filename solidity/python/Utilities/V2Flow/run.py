@@ -19,7 +19,7 @@ def execute(commands):
     for command in commands:
         print(command)
         if command['operation'] == 'newPool':
-            pool = newPool(command['amp'], command['fee'], command['mainToken'], command['sideToken'], command['numOfUsers'], command['initialAmount'])
+            pool = newPool(command['amp'], command['fee'], command['factor'], command['mainToken'], command['sideToken'], command['numOfUsers'], command['initialAmount'])
         elif command['operation'] == 'setRates':
             pool.setRates(command['mainRate'], command['sideRate'])
         elif command['operation'] == 'addLiquidity':

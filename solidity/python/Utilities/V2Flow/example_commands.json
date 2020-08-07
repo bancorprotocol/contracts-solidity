@@ -1,5 +1,5 @@
 [
-    {"operation": "newPool", "amp": 20, "fee": 1000, "mainToken": "TKN", "sideToken": "BNT", "numOfUsers": 3, "initialAmount": 1000000},
+    {"operation": "newPool", "amp": 20, "fee": 1000, "factor": 10000, "mainToken": "TKN", "sideToken": "BNT", "numOfUsers": 3, "initialAmount": 1000000},
     {"operation": "setRates", "mainRate": 1, "sideRate": 1},
     {"operation": "addLiquidity", "token": "TKN", "user": "user1", "amount": 100000},
     {"operation": "addLiquidity", "token": "BNT", "user": "user1", "amount": 100000},

@@ -7,7 +7,7 @@ import FormulaNativePython
 MIN = 0
 MAX = 2 ** 256 - 1
 
-FEE_RESOLUTION = 1000000
+PPM_RESOLUTION = 1000000
 
 def add(a, b):
     assert a + b <= MAX, 'error {} + {}'.format(a, b)
@@ -83,10 +83,11 @@ class Branch():
         }
 
 class Pool():
-    def __init__(self, id, amp, fee, mainToken, sideToken):
+    def __init__(self, id, amp, fee, factor, mainToken, sideToken):
         self.id = id
         self.amp = amp
         self.fee = fee
+        self.factor = factor
         self.mainSymbol = mainToken.symbol
         self.sideSymbol = sideToken.symbol
         self.branches = {token.symbol: Branch(token) for token in [mainToken, sideToken]} 
@@ -113,9 +114,9 @@ class Pool():
             amount
         )
         sFee = self.fee
-        dFee = self._adjustedFee(targetSymbol)
-        sAmount = div(mul(targetAmount, sFee), FEE_RESOLUTION)
-        dAmount = div(mul(targetAmount, dFee), FEE_RESOLUTION)
+        dFee = add(sFee, self._adjustedFee())
+        sAmount = div(mul(targetAmount, sFee), PPM_RESOLUTION)
+        dAmount = div(mul(targetAmount, dFee), PPM_RESOLUTION)
         sourceBranch.reserveToken.transfer(user, self.id, amount)
         targetBranch.reserveToken.transfer(self.id, user, sub(targetAmount, dAmount))
         targetBranch.reserveStaked = add(targetBranch.reserveStaked, sAmount)
@@ -147,28 +148,23 @@ class Pool():
             )
             mainBranch.reserveWeight = mainWeight
             sideBranch.reserveWeight = sideWeight
-    def _adjustedFee(self, targetSymbol):
-        if targetSymbol == self.sideSymbol:
-            mainBranch = self.branches[self.mainSymbol]
-            sideBranch = self.branches[self.sideSymbol]
-            x = mul(mul(mainBranch.reserveStaked, mainBranch.reserveRate), sideBranch.reserveWeight)
-            y = mul(mul(sideBranch.reserveStaked, sideBranch.reserveRate), mainBranch.reserveWeight)
-            if mul(x, self.amp) >= mul(y, self.amp + 1):
-                return div(self.fee, 2)
-            if mul(x, self.amp * 2) <= mul(y, self.amp * 2 - 1):
-                return mul(self.fee, 2)
-            return div(mul(self.fee, y), sub(mul(x, self.amp), mul(y, self.amp - 1)))
-        return self.fee
+    def _adjustedFee(self):
+        mainBranch = self.branches[self.mainSymbol]
+        sideBranch = self.branches[self.sideSymbol]
+        x = mul(mul(mainBranch.reserveStaked, mainBranch.reserveRate), sideBranch.reserveWeight)
+        y = mul(mul(sideBranch.reserveStaked, sideBranch.reserveRate), mainBranch.reserveWeight)
+        return div(mul(mul(sub(y, x), self.amp), self.factor), mul(y, PPM_RESOLUTION)) if y > 0 else 0
     def serialize(self):
         return {
-            'fee': self.fee,
             'amp': self.amp,
+            'fee': self.fee,
+            'factor': self.factor,
             self.mainSymbol: self.branches[self.mainSymbol].serialize(),
             self.sideSymbol: self.branches[self.sideSymbol].serialize(),
         }
 
-def newPool(amp, fee, mainSymbol, sideSymbol, numOfUsers, initialAmount):
-    pool = Pool('pool', amp, fee, Token(mainSymbol), Token(sideSymbol))
+def newPool(amp, fee, factor, mainSymbol, sideSymbol, numOfUsers, initialAmount):
+    pool = Pool('pool', amp, fee, factor, Token(mainSymbol), Token(sideSymbol))
     for symbol in [mainSymbol, sideSymbol]:
         pool.branches[symbol].reserveToken.register(pool.id)
         for i in range(numOfUsers):
