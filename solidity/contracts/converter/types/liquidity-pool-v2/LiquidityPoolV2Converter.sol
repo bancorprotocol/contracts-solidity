@@ -371,7 +371,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             }
         }
 
-        // return the target amount and the adjusted fee using the updated reserve weights
+        // return the target amount and the conversion fee using the updated reserve weights
         (uint256 targetAmount, , uint256 fee) = targetAmountAndFees(_sourceToken, _targetToken, sourceTokenWeight, targetTokenWeight, rate, _amount);
         return (targetAmount, fee);
     }
@@ -432,7 +432,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         (bool rateUpdated, Fraction memory rate) = handleRateChange();
 
         // get expected target amount and fees
-        (uint256 amount, uint256 normalFee, uint256 adjustedFee) = targetAmountAndFees(_sourceToken, _targetToken, 0, 0, rate, _amount);
+        (uint256 amount, uint256 stakedFee, uint256 fullFee) = targetAmountAndFees(_sourceToken, _targetToken, 0, 0, rate, _amount);
 
         // ensure that the trade gives something in return
         require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
@@ -452,14 +452,14 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         reserves[_targetToken].balance = targetReserveBalance.sub(amount);
 
         // update the target staked balance with the fee
-        stakedBalances[_targetToken] = stakedBalances[_targetToken].add(normalFee);
+        stakedBalances[_targetToken] = stakedBalances[_targetToken].add(stakedFee);
 
         // update the last conversion rate
         if (rateUpdated) {
             lastConversionRate = tokensRate(primaryReserveToken, secondaryReserveToken, 0, 0);
         }
 
-        return (amount, adjustedFee);
+        return (amount, fullFee);
     }
 
     /**
@@ -643,8 +643,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _amount          amount of tokens received from the user
       *
       * @return expected target amount
-      * @return expected fee (normal)
-      * @return expected fee (adjusted)
+      * @return expected staked conversion fee
+      * @return expected full conversion fee
     */
     function targetAmountAndFees(
         IERC20Token _sourceToken,
@@ -655,7 +655,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 _amount)
         private
         view
-        returns (uint256 targetAmount, uint256 normalFee, uint256 adjustedFee)
+        returns (uint256 targetAmount, uint256 stakedFee, uint256 fullFee)
     {
         if (_sourceWeight == 0)
             _sourceWeight = reserves[_sourceToken].weight;
@@ -675,10 +675,10 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             _amount
         );
 
-        // return the target amount minus the conversion fee and the conversion fee
-        normalFee = calculateFee(targetAmount);
-        adjustedFee = calculateDynamicFee(_targetToken, _sourceWeight, _targetWeight, _rate, targetAmount).add(normalFee);
-        targetAmount = targetAmount.sub(adjustedFee);
+        // return a tuple of [target amount minus full conversion fee, staked conversion fee, full conversion fee]
+        stakedFee = calculateFee(targetAmount);
+        fullFee = calculateDynamicFee(_targetToken, _sourceWeight, _targetWeight, _rate, targetAmount).add(stakedFee);
+        targetAmount = targetAmount.sub(fullFee);
     }
 
     /**
