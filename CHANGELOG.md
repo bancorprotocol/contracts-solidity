@@ -1,3 +1,8 @@
+### 0.6.9 (2020-08-07)
+Converters
+* Upgraded dynamic fee mechanism
+
+
 ### 0.6.8 (2020-07-31)
 Converters
 * Updated version number
