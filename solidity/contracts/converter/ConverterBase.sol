@@ -42,8 +42,7 @@ import "../bancorx/interfaces/IBancorX.sol";
 contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
 
-    uint32 internal constant WEIGHT_RESOLUTION = 1000000;
-    uint32 internal constant CONVERSION_FEE_RESOLUTION = 1000000;
+    uint32 internal constant PPM_RESOLUTION = 1000000;
     address internal constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     struct Reserve {
@@ -184,7 +183,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
 
     // error message binary size optimization
     function _validConversionFee(uint32 _conversionFee) internal pure {
-        require(_conversionFee <= CONVERSION_FEE_RESOLUTION, "ERR_INVALID_CONVERSION_FEE");
+        require(_conversionFee <= PPM_RESOLUTION, "ERR_INVALID_CONVERSION_FEE");
     }
 
     // validates reserve weight
@@ -195,7 +194,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
 
     // error message binary size optimization
     function _validReserveWeight(uint32 _weight) internal pure {
-        require(_weight > 0 && _weight <= WEIGHT_RESOLUTION, "ERR_INVALID_RESERVE_WEIGHT");
+        require(_weight > 0 && _weight <= PPM_RESOLUTION, "ERR_INVALID_RESERVE_WEIGHT");
     }
 
     /**
@@ -384,7 +383,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     {
         // validate input
         require(_token != address(anchor) && !reserves[_token].isSet, "ERR_INVALID_RESERVE");
-        require(_weight <= WEIGHT_RESOLUTION - reserveRatio, "ERR_INVALID_RESERVE_WEIGHT");
+        require(_weight <= PPM_RESOLUTION - reserveRatio, "ERR_INVALID_RESERVE_WEIGHT");
         require(reserveTokenCount() < uint16(-1), "ERR_INVALID_RESERVE_COUNT");
 
         Reserve storage newReserve = reserves[_token];
@@ -490,7 +489,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @return conversion fee
     */
     function calculateFee(uint256 _targetAmount) internal view returns (uint256) {
-        return _targetAmount.mul(conversionFee).div(CONVERSION_FEE_RESOLUTION);
+        return _targetAmount.mul(conversionFee).div(PPM_RESOLUTION);
     }
 
     /**

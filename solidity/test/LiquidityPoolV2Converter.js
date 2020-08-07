@@ -125,7 +125,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 const targetAmount = new BN(crossReserveTargetAmount(sourceBalance, sourceWeight, targetBalance, targetWeight,
                     amount).round().toString());
-                const expectedFee = targetAmount.mul(new BN(conversionFee)).div(CONVERSION_FEE_RESOLUTION);
+                const expectedFee = targetAmount.mul(new BN(conversionFee)).div(PPM_RESOLUTION);
 
                 return targetAmount.sub(expectedFee);
             };
@@ -239,7 +239,7 @@ contract('LiquidityPoolV2Converter', accounts => {
             const nonOwner = accounts[1];
             const sender2 = accounts[9];
 
-            const CONVERSION_FEE_RESOLUTION = new BN(1000000);
+            const PPM_RESOLUTION = new BN(1000000);
             const AMPLIFICATION_FACTOR = new BN(20);
             const MIN_RETURN = new BN(1);
 
