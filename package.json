@@ -1,6 +1,6 @@
 {
   "name": "@bancor/contracts-solidity",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "description": "The solidity version of the Bancor smart contracts is composed of many different components that work together to create the Bancor Network deployment.",
   "repository": {
     "type": "git",
