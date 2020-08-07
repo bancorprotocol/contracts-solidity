@@ -28,11 +28,11 @@ const Whitelist = artifacts.require('Whitelist');
 contract('LiquidityPoolV2Converter', accounts => {
     [
         [new BN(18), new BN(18), true],
-        /*[new BN(18), new BN(18), false],
+        [new BN(18), new BN(18), false],
         [new BN(18), new BN(8), true],
         [new BN(18), new BN(8), false],
         [new BN(8), new BN(18), false],
-        [new BN(8), new BN(8), false]*/
+        [new BN(8), new BN(8), false]
     ].forEach(spec => {
         const [reserveToken1Decimals, reserveToken2Decimals, isETHReserve] = spec;
         const poolTokenDecimals = new BN(10);
