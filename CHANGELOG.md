@@ -1,5 +1,5 @@
 ### 0.6.9 (2020-08-07)
-Converters
+LiquidityPoolV2Converter
 * Upgraded dynamic fee mechanism
 
 
