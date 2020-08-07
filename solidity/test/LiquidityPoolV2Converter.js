@@ -503,7 +503,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const newFactor = new BN(30000);
 
                 const res = await converter.setDynamicFeeFactor(newFactor);
-                expectEvent(res, 'DynamicFeeFactorUpdate', { _prevFactor: new BN(0), _newFactor: newFactor });
+                expectEvent(res, 'DynamicFeeFactorUpdate', { _prevFactor: DYNAMIC_FEE_FACTOR, _newFactor: newFactor });
             });
 
             it('verifies that an event is fired when the owner updates the dynamic-fee factor multiple times', async () => {
