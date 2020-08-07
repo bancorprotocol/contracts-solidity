@@ -20,7 +20,7 @@ contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
         currentTime = _currentTime;
     }
 
-    function calculateAdjustedFeeTest(
+    function calculateFeeToEquilibriumTest(
         uint256 _primaryReserveStaked,
         uint256 _secondaryReserveStaked,
         uint256 _primaryReserveWeight,
@@ -32,7 +32,7 @@ contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
         pure
         returns (uint256)
     {
-        return calculateAdjustedFee(
+        return calculateFeeToEquilibrium(
             _primaryReserveStaked,
             _secondaryReserveStaked,
             _primaryReserveWeight,

@@ -11,7 +11,7 @@ contract('LiquidityPoolV2ConverterStateless', accounts => {
         converter = await LiquidityPoolV2Converter.new(DUMMY_ADDRESS, DUMMY_ADDRESS, 0);
     });
 
-    describe('adjusted-fee', () => {
+    describe('function calculateFeeToEquilibrium', () => {
         const AMPLIFICATION_FACTOR = new BN(20);
         const bntStaked = AMPLIFICATION_FACTOR.mul(new BN(4));
         const tknWeight = new BN(1);
@@ -22,9 +22,9 @@ contract('LiquidityPoolV2ConverterStateless', accounts => {
 
         for (let n = -3; n <= 5; n++) {
             const expected = BN.min(BN.max(feeFactor.div(new BN(2)), feeFactor.mul(new BN(4)).div(new BN(4 + n))), feeFactor.mul(new BN(2)));
-            it(`calculateAdjustedFee should return ${expected.toString()}`, async () => {
+            it(`should return ${expected.toString()}`, async () => {
                 const tknStaked = bntStaked.add(new BN(n));
-                const actual = await converter.calculateAdjustedFeeTest.call(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, feeFactor);
+                const actual = await converter.calculateFeeToEquilibriumTest.call(tknStaked, bntStaked, tknWeight, bntWeight, tknRate, bntRate, feeFactor);
                 expect(actual).to.be.bignumber.equal(expected);
             });
         }

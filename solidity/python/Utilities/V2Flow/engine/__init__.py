@@ -114,7 +114,7 @@ class Pool():
             amount
         )
         sFee = self.fee
-        dFee = self._adjustedFee()
+        dFee = add(sFee, self._adjustedFee())
         sAmount = div(mul(targetAmount, sFee), PPM_RESOLUTION)
         dAmount = div(mul(targetAmount, dFee), PPM_RESOLUTION)
         sourceBranch.reserveToken.transfer(user, self.id, amount)

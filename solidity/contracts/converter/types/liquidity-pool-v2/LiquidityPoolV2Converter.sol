@@ -16,7 +16,6 @@ import "../../../utility/interfaces/IPriceOracle.sol";
 */
 contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     uint8 internal constant AMPLIFICATION_FACTOR = 20;  // factor to use for conversion calculations (reduces slippage)
-    uint32 internal constant DYNAMIC_FEE_FACTOR_RESOLUTION = 1000000;
 
     struct Fraction {
         uint256 n;  // numerator
@@ -174,7 +173,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _dynamicFeeFactor new dynamic fee factor, represented in ppm
     */
     function setDynamicFeeFactor(uint256 _dynamicFeeFactor) public ownerOnly {
-        require(_dynamicFeeFactor <= DYNAMIC_FEE_FACTOR_RESOLUTION, "ERR_INVALID_DYNAMIC_FEE_FACTOR");
+        require(_dynamicFeeFactor.mul(AMPLIFICATION_FACTOR) <= CONVERSION_FEE_RESOLUTION, "ERR_INVALID_DYNAMIC_FEE_FACTOR");
         emit DynamicFeeFactorUpdate(dynamicFeeFactor, _dynamicFeeFactor);
         dynamicFeeFactor = _dynamicFeeFactor;
     }
@@ -677,13 +676,13 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         );
 
         // return the target amount minus the conversion fee and the conversion fee
-        normalFee = super.calculateFee(targetAmount);
-        adjustedFee = calculateFee(_targetToken, _sourceWeight, _targetWeight, _rate, targetAmount);
-        targetAmount -= adjustedFee;
+        normalFee = calculateFee(targetAmount);
+        adjustedFee = calculateDynamicFee(_targetToken, _sourceWeight, _targetWeight, _rate, targetAmount).add(normalFee);
+        targetAmount = targetAmount.sub(adjustedFee);
     }
 
     /**
-      * @dev returns the conversion fee for a given target amount
+      * @dev returns the dynamic fee for a given target amount
       *
       * @param _targetToken     contract address of the target reserve token
       * @param _sourceWeight    source reserve token weight
@@ -691,9 +690,9 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _rate            rate of 1 primary token in secondary tokens
       * @param _targetAmount    target amount
       *
-      * @return conversion fee
+      * @return dynamic fee
     */
-    function calculateFee(
+    function calculateDynamicFee(
         IERC20Token _targetToken,
         uint32 _sourceWeight,
         uint32 _targetWeight,
@@ -704,7 +703,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 fee;
 
         if (_targetToken == secondaryReserveToken) {
-            fee = calculateAdjustedFee(
+            fee = calculateFeeToEquilibrium(
                 stakedBalances[primaryReserveToken],
                 stakedBalances[secondaryReserveToken],
                 _sourceWeight,
@@ -714,7 +713,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
                 dynamicFeeFactor);
         }
         else {
-            fee = calculateAdjustedFee(
+            fee = calculateFeeToEquilibrium(
                 stakedBalances[primaryReserveToken],
                 stakedBalances[secondaryReserveToken],
                 _targetWeight,
@@ -724,12 +723,11 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
                 dynamicFeeFactor);
         }
 
-        // calculate the fee based on the adjusted value
         return _targetAmount.mul(fee).div(CONVERSION_FEE_RESOLUTION);
     }
 
     /**
-      * @dev returns the fee required for mitigating the secondary reserve distance from equilibrium
+      * @dev returns the relative fee required for mitigating the secondary reserve distance from equilibrium
       *
       * @param _primaryReserveStaked    primary reserve staked balance
       * @param _secondaryReserveStaked  secondary reserve staked balance
@@ -739,9 +737,9 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _secondaryReserveRate    secondary reserve rate
       * @param _dynamicFeeFactor        dynamic fee factor
       *
-      * @return adjusted fee
+      * @return relative fee, represented in ppm
     */
-    function calculateAdjustedFee(
+    function calculateFeeToEquilibrium(
         uint256 _primaryReserveStaked,
         uint256 _secondaryReserveStaked,
         uint256 _primaryReserveWeight,
@@ -756,7 +754,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 x = _primaryReserveStaked.mul(_primaryReserveRate).mul(_secondaryReserveWeight);
         uint256 y = _secondaryReserveStaked.mul(_secondaryReserveRate).mul(_primaryReserveWeight);
         if (y > x)
-            return (y - x).mul(_dynamicFeeFactor).mul(AMPLIFICATION_FACTOR).div(y.mul(DYNAMIC_FEE_FACTOR_RESOLUTION));
+            return (y - x).mul(_dynamicFeeFactor).mul(AMPLIFICATION_FACTOR).div(y);
         return 0;
     }
 
