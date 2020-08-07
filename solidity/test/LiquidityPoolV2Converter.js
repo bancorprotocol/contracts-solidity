@@ -244,8 +244,8 @@ contract('LiquidityPoolV2Converter', accounts => {
             const sender2 = accounts[9];
 
             const CONVERSION_FEE_RESOLUTION = new BN(1000000);
-            const DEF_DYNAMIC_FEE_FACTOR = new BN(10000);
             const MAX_DYNAMIC_FEE_FACTOR = new BN(100000);
+            const DEF_DYNAMIC_FEE_FACTOR = new BN(10000);
             const AMPLIFICATION_FACTOR = new BN(20);
             const MIN_RETURN = new BN(1);
 
