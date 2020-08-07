@@ -767,13 +767,18 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     */
     function createPoolTokens() internal {
         IPoolTokensContainer container = IPoolTokensContainer(anchor);
-        if (container.poolTokens().length != 0) {
-            return;
-        }
+        ISmartToken[] memory poolTokens = container.poolTokens();
+        bool initialSetup = poolTokens.length == 0;
 
         uint256 reserveCount = reserveTokens.length;
         for (uint256 i = 0; i < reserveCount; i++) {
-            ISmartToken reservePoolToken = container.createToken();
+            ISmartToken reservePoolToken;
+            if (initialSetup) {
+                reservePoolToken = container.createToken();
+            }
+            else {
+                reservePoolToken = poolTokens[i];
+            }
 
             // cache the pool token address (gas optimization)
             reservesToPoolTokens[reserveTokens[i]] = reservePoolToken;
