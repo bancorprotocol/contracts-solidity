@@ -542,6 +542,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param _reserveWeight   reserve weight
     */
     function dispatchPoolTokenRateEvent(uint256 _poolTokenSupply, IERC20Token _reserveToken, uint256 _reserveBalance, uint32 _reserveWeight) private {
-        emit TokenRateUpdate(anchor, _reserveToken, _reserveBalance.mul(WEIGHT_RESOLUTION), _poolTokenSupply.mul(_reserveWeight));
+        emit TokenRateUpdate(anchor, _reserveToken, _reserveBalance.mul(PPM_RESOLUTION), _poolTokenSupply.mul(_reserveWeight));
     }
 }

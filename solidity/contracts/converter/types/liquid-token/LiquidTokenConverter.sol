@@ -119,7 +119,7 @@ contract LiquidTokenConverter is ConverterBase {
         // dispatch rate update for the liquid token
         uint256 totalSupply = ISmartToken(anchor).totalSupply();
         uint32 reserveWeight = reserves[reserveToken].weight;
-        emit TokenRateUpdate(anchor, reserveToken, reserveBalance(reserveToken).mul(WEIGHT_RESOLUTION), totalSupply.mul(reserveWeight));
+        emit TokenRateUpdate(anchor, reserveToken, reserveBalance(reserveToken).mul(PPM_RESOLUTION), totalSupply.mul(reserveWeight));
 
         return targetAmount;
     }
@@ -140,9 +140,9 @@ contract LiquidTokenConverter is ConverterBase {
     {
         uint256 totalSupply = ISmartToken(anchor).totalSupply();
 
-        // special case for buying the initial supply
+        // if the current supply is zero, then return the input amount divided by the normalized reserve-weight
         if (totalSupply == 0)
-            return (_amount, 0);
+            return (_amount.mul(PPM_RESOLUTION).div(reserves[reserveToken].weight), 0);
 
         IERC20Token reserveToken = reserveTokens[0];
         uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).purchaseTargetAmount(
@@ -175,7 +175,7 @@ contract LiquidTokenConverter is ConverterBase {
 
         IERC20Token reserveToken = reserveTokens[0];
 
-        // special case for selling the entire supply - return the entire reserve
+        // if selling the entire supply, then return the entire reserve
         if (totalSupply == _amount)
             return (reserveBalance(reserveToken), 0);
 
