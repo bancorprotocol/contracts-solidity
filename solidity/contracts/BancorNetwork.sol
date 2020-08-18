@@ -39,8 +39,7 @@ contract ILegacyConverter {
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
 
-    uint256 private constant CONVERSION_FEE_RESOLUTION = 1000000;
-    uint256 private constant AFFILIATE_FEE_RESOLUTION = 1000000;
+    uint256 private constant PPM_RESOLUTION = 1000000;
     address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     struct ConversionStep {
@@ -94,7 +93,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         public
         ownerOnly
     {
-        require(_maxAffiliateFee <= AFFILIATE_FEE_RESOLUTION, "ERR_INVALID_AFFILIATE_FEE");
+        require(_maxAffiliateFee <= PPM_RESOLUTION, "ERR_INVALID_AFFILIATE_FEE");
         maxAffiliateFee = _maxAffiliateFee;
     }
 
@@ -171,7 +170,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 balance = converter.getConnectorBalance(sourceToken);
                 (, weight, , , ) = converter.connectors(sourceToken);
                 amount = formula.purchaseTargetAmount(supply, balance, weight, amount);
-                fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
+                fee = amount.mul(converter.conversionFee()).div(PPM_RESOLUTION);
                 amount -= fee;
 
                 // update the smart token supply for the next iteration
@@ -186,7 +185,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 balance = converter.getConnectorBalance(targetToken);
                 (, weight, , , ) = converter.connectors(targetToken);
                 amount = formula.saleTargetAmount(supply, balance, weight, amount);
-                fee = amount.mul(converter.conversionFee()).div(CONVERSION_FEE_RESOLUTION);
+                fee = amount.mul(converter.conversionFee()).div(PPM_RESOLUTION);
                 amount -= fee;
 
                 // update the smart token supply for the next iteration
@@ -408,7 +407,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
             // pay affiliate-fee if needed
             if (stepData.processAffiliateFee) {
-                uint256 affiliateAmount = toAmount.mul(_affiliateFee).div(AFFILIATE_FEE_RESOLUTION);
+                uint256 affiliateAmount = toAmount.mul(_affiliateFee).div(PPM_RESOLUTION);
                 require(stepData.targetToken.transfer(_affiliateAccount, affiliateAmount), "ERR_FEE_TRANSFER_FAILED");
                 toAmount -= affiliateAmount;
             }

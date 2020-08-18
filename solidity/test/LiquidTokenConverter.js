@@ -83,9 +83,9 @@ contract('LiquidTokenConverter', accounts => {
     const beneficiary = accounts[2];
 
     const MIN_RETURN = new BN(1);
-    const WEIGHT_RESOLUTION = new BN(1000000);
     const WEIGHT_10_PERCENT = new BN(100000);
     const WEIGHT_20_PERCENT = new BN(200000);
+    const WEIGHT_100_PERCENT = new BN(1000000);
 
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
@@ -307,7 +307,7 @@ contract('LiquidTokenConverter', accounts => {
                 const { args: { _token1, _token2, _rateN, _rateD } } = events[0];
                 expect(_token1).to.eql(tokenAddress);
                 expect(_token2).to.eql(getReserve1Address(isETHReserve));
-                expect(_rateN).to.be.bignumber.equal(reserveBalance.mul(WEIGHT_RESOLUTION));
+                expect(_rateN).to.be.bignumber.equal(reserveBalance.mul(WEIGHT_100_PERCENT));
                 expect(_rateD).to.be.bignumber.equal(supply.mul(reserveWeight));
             });
 

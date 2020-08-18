@@ -212,9 +212,8 @@ const run = async () => {
         await execute(converterRegistry.methods.newConverter(type, name, symbol, decimals, '1000000', tokens, weights));
         const anchor = deployed(web3, 'IConverterAnchor', (await converterRegistry.methods.getAnchors().call()).slice(-1)[0]);
         const converterBase = deployed(web3, 'ConverterBase', await anchor.methods.owner().call());
-        await execute(converterBase.methods.setConversionFee(fee));
         await execute(converterBase.methods.acceptOwnership());
-        
+        await execute(converterBase.methods.setConversionFee(fee));
 
         if (type !== 0 && amounts.every(amount => amount > 0)) {
             for (let i = 0; i < converter.reserves.length; i++) {

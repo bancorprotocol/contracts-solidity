@@ -16,7 +16,9 @@ import "../../../utility/interfaces/IPriceOracle.sol";
 */
 contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     uint8 internal constant AMPLIFICATION_FACTOR = 20;  // factor to use for conversion calculations (reduces slippage)
-    uint32 internal constant MAX_DYNAMIC_FEE_FACTOR = 100000; // maximum dynamic-fee factor; must be <= CONVERSION_FEE_RESOLUTION
+    uint32 internal constant HIGH_FEE_UPPER_BOUND = 997500; // high fee upper bound in PPM units
+    uint256 internal constant RATE_PROPAGATION_PERIOD = 10 minutes;  // the time it takes for the external rate to fully take effect
+    uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
 
     struct Fraction {
         uint256 n;  // numerator
@@ -30,27 +32,25 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     mapping (address => ISmartToken) private reservesToPoolTokens;  // maps each reserve to its pool token
     mapping (address => IERC20Token) private poolTokensToReserves;  // maps each pool token to its reserve
 
-    // the period of time it takes to the last rate to fully take effect
-    uint256 private constant RATE_PROPAGATION_PERIOD = 10 minutes;
+    uint256 public prevConversionTime;  // previous conversion time in seconds
 
-    Fraction public referenceRate;              // reference rate from the previous block(s) of 1 primary token in secondary tokens
-    uint256 public referenceRateUpdateTime;     // last time when the reference rate was updated (in seconds)
+    // factors used in fee calculations
+    uint32 public lowFeeFactor = 200000;
+    uint32 public highFeeFactor = 800000;
 
-    Fraction public lastConversionRate;         // last conversion rate of 1 primary token in secondary tokens
-
-    // used by the temp liquidity limit mechanism during the pilot
+    // used by the temp liquidity limit mechanism during the beta
     mapping (address => uint256) public maxStakedBalances;
     bool public maxStakedBalanceEnabled = true;
 
-    uint256 public dynamicFeeFactor = 70000; // initial dynamic fee factor is 7%, represented in ppm
-
     /**
-      * @dev triggered when the dynamic fee factor is updated
+      * @dev triggered when the fee factors are updated
       *
-      * @param  _prevFactor    previous factor percentage, represented in ppm
-      * @param  _newFactor     new factor percentage, represented in ppm
+      * @param  _prevLowFactor    previous low factor percentage, represented in ppm
+      * @param  _newLowFactor     new low factor percentage, represented in ppm
+      * @param  _prevHighFactor    previous high factor percentage, represented in ppm
+      * @param  _newHighFactor     new high factor percentage, represented in ppm
     */
-    event DynamicFeeFactorUpdate(uint256 _prevFactor, uint256 _newFactor);
+    event FeeFactorsUpdate(uint256 _prevLowFactor, uint256 _newLowFactor, uint256 _prevHighFactor, uint256 _newHighFactor);
 
     /**
       * @dev initializes a new LiquidityPoolV2Converter instance
@@ -112,7 +112,10 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _primaryReserveOracle    address of a chainlink price oracle for the primary reserve token
       * @param _secondaryReserveOracle  address of a chainlink price oracle for the secondary reserve token
     */
-    function activate(IERC20Token _primaryReserveToken, IChainlinkPriceOracle _primaryReserveOracle, IChainlinkPriceOracle _secondaryReserveOracle)
+    function activate(
+        IERC20Token _primaryReserveToken,
+        IChainlinkPriceOracle _primaryReserveOracle,
+        IChainlinkPriceOracle _secondaryReserveOracle)
         public
         inactive
         ownerOnly
@@ -127,8 +130,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         // validate oracles
         IWhitelist oracleWhitelist = IWhitelist(addressOf(CHAINLINK_ORACLE_WHITELIST));
-        require(oracleWhitelist.isWhitelisted(_primaryReserveOracle), "ERR_INVALID_ORACLE");
-        require(oracleWhitelist.isWhitelisted(_secondaryReserveOracle), "ERR_INVALID_ORACLE");
+        require(oracleWhitelist.isWhitelisted(_primaryReserveOracle) &&
+                oracleWhitelist.isWhitelisted(_secondaryReserveOracle), "ERR_INVALID_ORACLE");
 
         // create the converter's pool tokens if they don't already exist
         createPoolTokens();
@@ -143,12 +146,11 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // creates and initalizes the price oracle and sets initial rates
         LiquidityPoolV2ConverterCustomFactory customFactory =
             LiquidityPoolV2ConverterCustomFactory(IConverterFactory(addressOf(CONVERTER_FACTORY)).customFactories(converterType()));
-        priceOracle = customFactory.createPriceOracle(_primaryReserveToken, secondaryReserveToken, _primaryReserveOracle, _secondaryReserveOracle);
-
-        (referenceRate.n, referenceRate.d) = priceOracle.latestRate(primaryReserveToken, secondaryReserveToken);
-        lastConversionRate = referenceRate;
-
-        referenceRateUpdateTime = time();
+        priceOracle = customFactory.createPriceOracle(
+            _primaryReserveToken,
+            secondaryReserveToken,
+            _primaryReserveOracle,
+            _secondaryReserveOracle);
 
         // if we are upgrading from an older converter, make sure that reserve balances are in-sync and rebalance
         uint256 primaryReserveStakedBalance = reserveStakedBalance(primaryReserveToken);
@@ -165,18 +167,6 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         }
 
         emit Activation(converterType(), anchor, true);
-    }
-
-    /**
-      * @dev updates the current dynamic fee factor
-      * can only be called by the contract owner
-      *
-      * @param _dynamicFeeFactor new dynamic fee factor, represented in ppm
-    */
-    function setDynamicFeeFactor(uint256 _dynamicFeeFactor) public ownerOnly {
-        require(_dynamicFeeFactor <= MAX_DYNAMIC_FEE_FACTOR, "ERR_INVALID_DYNAMIC_FEE_FACTOR");
-        emit DynamicFeeFactorUpdate(dynamicFeeFactor, _dynamicFeeFactor);
-        dynamicFeeFactor = _dynamicFeeFactor;
     }
 
     /**
@@ -208,7 +198,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         validReserve(_reserveToken)
         returns (uint256)
     {
-        return stakedBalances[_reserveToken].mul(AMPLIFICATION_FACTOR - 1).add(reserveBalance(_reserveToken));
+        return amplifiedBalance(_reserveToken);
     }
 
     /**
@@ -229,7 +219,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
     /**
       * @dev sets the max staked balance for both reserves
-      * available as a temporary mechanism during the pilot
+      * available as a temporary mechanism during the beta
       * can only be called by the owner
       *
       * @param _reserve1MaxStakedBalance    max staked balance for reserve 1
@@ -242,7 +232,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
     /**
       * @dev disables the max staked balance mechanism
-      * available as a temporary mechanism during the pilot
+      * available as a temporary mechanism during the beta
       * once disabled, it cannot be re-enabled
       * can only be called by the owner
     */
@@ -302,7 +292,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @return rate of 1 primary token in secondary tokens (denominator)
     */
     function effectiveTokensRate() public view returns (uint256, uint256) {
-        Fraction memory rate = _effectiveTokensRate();
+        Fraction memory rate = rateFromPrimaryWeight(effectivePrimaryWeight());
         return (rate.n, rate.d);
     }
 
@@ -313,14 +303,29 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @return reserve2 weight
     */
     function effectiveReserveWeights() public view returns (uint256, uint256) {
-        Fraction memory rate = _effectiveTokensRate();
-        (uint32 primaryReserveWeight, uint32 secondaryReserveWeight) = effectiveReserveWeights(rate);
-
+        uint32 primaryReserveWeight = effectivePrimaryWeight();
         if (primaryReserveToken == reserveTokens[0]) {
-            return (primaryReserveWeight, secondaryReserveWeight);
+            return (primaryReserveWeight, inverseWeight(primaryReserveWeight));
         }
 
-        return (secondaryReserveWeight, primaryReserveWeight);
+        return (inverseWeight(primaryReserveWeight), primaryReserveWeight);
+    }
+
+    /**
+      * @dev updates the fee factors
+      * can only be called by the contract owner
+      *
+      * @param _lowFactor   new low fee factor, represented in ppm
+      * @param _highFactor  new high fee factor, represented in ppm
+    */
+    function setFeeFactors(uint32 _lowFactor, uint32 _highFactor) public ownerOnly {
+        require(_lowFactor <= PPM_RESOLUTION, "ERR_INVALID_FEE_FACTOR");
+        require(_highFactor <= PPM_RESOLUTION, "ERR_INVALID_FEE_FACTOR");
+
+        emit FeeFactorsUpdate(lowFeeFactor, _lowFactor, highFeeFactor, _highFactor);
+
+        lowFeeFactor = _lowFactor;
+        highFeeFactor = _highFactor;
     }
 
     /**
@@ -337,44 +342,32 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         public
         view
         active
+        validReserve(_sourceToken)
+        validReserve(_targetToken)
         returns (uint256, uint256)
     {
         // validate input
-        // not using the `validReserve` modifier to circumvent `stack too deep` compiler error
-        _validReserve(_sourceToken);
-        _validReserve(_targetToken);
         require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET");
 
-        // check if rebalance is required (some of this code is duplicated for gas optimization)
-        uint32 sourceTokenWeight;
-        uint32 targetTokenWeight;
+        // get the external rate between the reserves along with its update time
+        Fraction memory externalRate;
+        uint256 externalRateUpdateTime;
+        (externalRate.n, externalRate.d, externalRateUpdateTime) =
+            priceOracle.latestRateAndUpdateTime(primaryReserveToken, secondaryReserveToken);
 
-        // if the rate was already checked in this block, use the current weights.
-        // otherwise, get the new weights
-        Fraction memory rate;
-        if (referenceRateUpdateTime == time()) {
-            rate = referenceRate;
-            sourceTokenWeight = reserves[_sourceToken].weight;
-            targetTokenWeight = reserves[_targetToken].weight;
-        }
-        else {
-            // get the new rate / reserve weights
-            rate = _effectiveTokensRate();
-            (uint32 primaryReserveWeight, uint32 secondaryReserveWeight) = effectiveReserveWeights(rate);
-
-            if (_sourceToken == primaryReserveToken) {
-                sourceTokenWeight = primaryReserveWeight;
-                targetTokenWeight = secondaryReserveWeight;
-            }
-            else {
-                sourceTokenWeight = secondaryReserveWeight;
-                targetTokenWeight = primaryReserveWeight;
-            }
+        // get the source token effective / external weights
+        (uint32 sourceTokenWeight, uint32 externalSourceTokenWeight) = effectiveAndExternalPrimaryWeight(externalRate, externalRateUpdateTime);
+        if (_targetToken == primaryReserveToken) {
+            sourceTokenWeight = inverseWeight(sourceTokenWeight);
+            externalSourceTokenWeight = inverseWeight(externalSourceTokenWeight);
         }
 
-        // return the target amount and the conversion fee using the updated reserve weights
-        (uint256 targetAmount, , uint256 fee) = targetAmountAndFees(_sourceToken, _targetToken, sourceTokenWeight, targetTokenWeight, rate, _amount);
-        return (targetAmount, fee);
+        // return the target amount and the fee using the updated reserve weights
+        return targetAmountAndFee(
+            _sourceToken, _targetToken,
+            sourceTokenWeight, inverseWeight(sourceTokenWeight),
+            externalRate, inverseWeight(externalSourceTokenWeight),
+            _amount);
     }
 
     /**
@@ -396,8 +389,11 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         validReserve(_targetToken)
         returns (uint256)
     {
-        // convert the amount and return the resulted amount and fee
+        // convert and get the target amount and fee
         (uint256 amount, uint256 fee) = doConvert(_sourceToken, _targetToken, _amount);
+
+        // update the previous conversion time
+        prevConversionTime = time();
 
         // transfer funds to the beneficiary in the to reserve token
         if (_targetToken == ETH_RESERVE_ADDRESS) {
@@ -425,42 +421,40 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _targetToken target ERC20 token
       * @param _amount      amount of tokens to convert (in units of the source token)
       *
-      * @return amount of tokens received (in units of the target token)
-      * @return expected fee
+      * @return amount of target tokens received
+      * @return fee amount
     */
     function doConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) private returns (uint256, uint256) {
-        // check if the rate has changed and rebalance the pool if needed (once in a block)
-        (bool rateUpdated, Fraction memory rate) = handleRateChange();
+        // get the external rate between the reserves along with its update time
+        Fraction memory externalRate;
+        uint256 externalRateUpdateTime;
+        (externalRate.n, externalRate.d, externalRateUpdateTime) = priceOracle.latestRateAndUpdateTime(primaryReserveToken, secondaryReserveToken);
 
-        // get expected target amount and fees
-        (uint256 amount, uint256 standardFee, uint256 dynamicFee) = targetAmountAndFees(_sourceToken, _targetToken, 0, 0, rate, _amount);
+        // pre-conversion preparation - update the weights if needed and get the target amount and feee
+        (uint256 targetAmount, uint256 fee) = prepareConversion(_sourceToken, _targetToken, _amount, externalRate, externalRateUpdateTime);
 
         // ensure that the trade gives something in return
-        require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
+        require(targetAmount != 0, "ERR_ZERO_TARGET_AMOUNT");
 
         // ensure that the trade won't deplete the reserve balance
-        uint256 targetReserveBalance = reserveBalance(_targetToken);
-        require(amount < targetReserveBalance, "ERR_TARGET_AMOUNT_TOO_HIGH");
+        uint256 targetReserveBalance = reserves[_targetToken].balance;
+        require(targetAmount < targetReserveBalance, "ERR_TARGET_AMOUNT_TOO_HIGH");
 
         // ensure that the input amount was already deposited
         if (_sourceToken == ETH_RESERVE_ADDRESS)
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
         else
-            require(msg.value == 0 && _sourceToken.balanceOf(this).sub(reserveBalance(_sourceToken)) >= _amount, "ERR_INVALID_AMOUNT");
+            require(msg.value == 0 && _sourceToken.balanceOf(this).sub(reserves[_sourceToken].balance) >= _amount, "ERR_INVALID_AMOUNT");
 
         // sync the reserve balances
         syncReserveBalance(_sourceToken);
-        reserves[_targetToken].balance = targetReserveBalance.sub(amount);
+        reserves[_targetToken].balance = targetReserveBalance.sub(targetAmount);
 
-        // update the target staked balance with the fee
-        stakedBalances[_targetToken] = stakedBalances[_targetToken].add(standardFee);
+        // if the pool is in deficit, add half the fee to the target staked balance, otherwise add all
+        stakedBalances[_targetToken] = stakedBalances[_targetToken].add(calculateDeficit(externalRate) == 0 ? fee : fee / 2);
 
-        // update the last conversion rate
-        if (rateUpdated) {
-            lastConversionRate = tokensRate(primaryReserveToken, secondaryReserveToken, 0, 0);
-        }
-
-        return (amount, dynamicFee);
+        // return a tuple of [target amount (excluding fee), fee]
+        return (targetAmount, fee);
     }
 
     /**
@@ -495,7 +489,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // get the reserve staked balance before adding the liquidity to it
         uint256 initialStakedBalance = stakedBalances[_reserveToken];
 
-        // during the pilot, ensure that the new staked balance isn't greater than the max limit
+        // during the beta, ensure that the new staked balance isn't greater than the max limit
         if (maxStakedBalanceEnabled) {
             require(maxStakedBalances[_reserveToken] == 0 || initialStakedBalance.add(_amount) <= maxStakedBalances[_reserveToken], "ERR_MAX_STAKED_BALANCE_REACHED");
         }
@@ -507,6 +501,9 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // for non ETH reserve, transfer the funds from the user to the pool
         if (_reserveToken != ETH_RESERVE_ADDRESS)
             safeTransferFrom(_reserveToken, msg.sender, this, _amount);
+
+        // get the rate before updating the staked balance
+        Fraction memory rate = rebalanceRate();
 
         // sync the reserve balance / staked balance
         reserves[_reserveToken].balance = reserves[_reserveToken].balance.add(_amount);
@@ -526,7 +523,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         IPoolTokensContainer(anchor).mint(reservePoolToken, msg.sender, poolTokenAmount);
 
         // rebalance the pool's reserve weights
-        rebalance();
+        rebalance(rate);
 
         // dispatch the LiquidityAdded event
         emit LiquidityAdded(msg.sender, _reserveToken, _amount, initialStakedBalance.add(_amount), poolTokenSupply.add(poolTokenAmount));
@@ -575,6 +572,9 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // burn the caller's pool tokens
         IPoolTokensContainer(anchor).burn(_poolToken, msg.sender, _amount);
 
+        // get the rate before updating the staked balance
+        Fraction memory rate = rebalanceRate();
+
         // sync the reserve balance / staked balance
         reserves[reserveToken].balance = reserves[reserveToken].balance.sub(reserveAmount);
         uint256 newStakedBalance = stakedBalances[reserveToken].sub(reserveAmount);
@@ -587,7 +587,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             safeTransfer(reserveToken, msg.sender, reserveAmount);
 
         // rebalance the pool's reserve weights
-        rebalance();
+        rebalance(rate);
 
         uint256 newPoolTokenSupply = initialPoolSupply.sub(_amount);
 
@@ -613,18 +613,12 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @return amount after fee and fee, in reserve token units
     */
-    function removeLiquidityReturnAndFee(ISmartToken _poolToken, uint256 _amount)
-        public
-        view
-        returns (uint256, uint256)
-    {
+    function removeLiquidityReturnAndFee(ISmartToken _poolToken, uint256 _amount) public view returns (uint256, uint256) {
         uint256 totalSupply = _poolToken.totalSupply();
         uint256 stakedBalance = stakedBalances[poolTokensToReserves[_poolToken]];
 
         if (_amount < totalSupply) {
-            uint256 x = stakedBalances[primaryReserveToken].mul(AMPLIFICATION_FACTOR);
-            uint256 y = reserveAmplifiedBalance(primaryReserveToken);
-            (uint256 min, uint256 max) = x < y ? (x, y) : (y, x);
+            (uint256 min, uint256 max) = tokensRateAccuracy();
             uint256 amountBeforeFee = _amount.mul(stakedBalance).div(totalSupply);
             uint256 amountAfterFee = amountBeforeFee.mul(min).div(max);
             return (amountAfterFee, amountBeforeFee - amountAfterFee);
@@ -633,42 +627,51 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev returns the expected target amount of converting one reserve to another along with the fees
+      * @dev calculates the tokens-rate accuracy
+      *
+      * @return the tokens-rate accuracy as a tuple of numerator and denominator
+    */
+    function tokensRateAccuracy() internal view returns (uint256, uint256) {
+        uint32 weight = reserves[primaryReserveToken].weight;
+        Fraction memory poolRate = tokensRate(primaryReserveToken, secondaryReserveToken, weight, inverseWeight(weight));
+        (uint256 n, uint256 d) = effectiveTokensRate();
+        (uint256 x, uint256 y) = reducedRatio(poolRate.n.mul(d), poolRate.d.mul(n), MAX_RATE_FACTOR_LOWER_BOUND);
+        return x < y ? (x, y) : (y, x);
+    }
+
+    /**
+      * @dev returns the expected target amount of converting one reserve to another along with the fee
       * this version of the function expects the reserve weights as an input (gas optimization)
       *
-      * @param _sourceToken     contract address of the source reserve token
-      * @param _targetToken     contract address of the target reserve token
-      * @param _sourceWeight    source reserve token weight or 0 to read it from storage
-      * @param _targetWeight    target reserve token weight or 0 to read it from storage
-      * @param _rate            rate between the reserve tokens
-      * @param _amount          amount of tokens received from the user
+      * @param _sourceToken             contract address of the source reserve token
+      * @param _targetToken             contract address of the target reserve token
+      * @param _sourceWeight            source reserve token weight
+      * @param _targetWeight            target reserve token weight
+      * @param _externalRate            external rate of 1 primary token in secondary tokens
+      * @param _targetExternalWeight    target reserve token weight based on external rate
+      * @param _amount                  amount of tokens received from the user
       *
       * @return expected target amount
-      * @return expected standard conversion fee
-      * @return expected dynamic conversion fee
+      * @return expected fee
     */
-    function targetAmountAndFees(
+    function targetAmountAndFee(
         IERC20Token _sourceToken,
         IERC20Token _targetToken,
         uint32 _sourceWeight,
         uint32 _targetWeight,
-        Fraction memory _rate,
+        Fraction memory _externalRate,
+        uint32 _targetExternalWeight,
         uint256 _amount)
         private
         view
-        returns (uint256 targetAmount, uint256 standardFee, uint256 dynamicFee)
+        returns (uint256, uint256)
     {
-        if (_sourceWeight == 0)
-            _sourceWeight = reserves[_sourceToken].weight;
-        if (_targetWeight == 0)
-            _targetWeight = reserves[_targetToken].weight;
-
         // get the tokens amplified balances
-        uint256 sourceBalance = reserveAmplifiedBalance(_sourceToken);
-        uint256 targetBalance = reserveAmplifiedBalance(_targetToken);
+        uint256 sourceBalance = amplifiedBalance(_sourceToken);
+        uint256 targetBalance = amplifiedBalance(_targetToken);
 
         // get the target amount
-        targetAmount = IBancorFormula(addressOf(BANCOR_FORMULA)).crossReserveTargetAmount(
+        uint256 targetAmount = IBancorFormula(addressOf(BANCOR_FORMULA)).crossReserveTargetAmount(
             sourceBalance,
             _sourceWeight,
             targetBalance,
@@ -676,87 +679,137 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             _amount
         );
 
-        // return a tuple of [target amount minus dynamic conversion fee, standard conversion fee, dynamic conversion fee]
-        standardFee = calculateFee(targetAmount);
-        dynamicFee = calculateDynamicFee(_targetToken, _sourceWeight, _targetWeight, _rate, targetAmount).add(standardFee);
-        targetAmount = targetAmount.sub(dynamicFee);
+        // if the target amount is larger than the target reserve balance, return 0
+        // this can happen due to the amplification
+        require(targetAmount <= reserves[_targetToken].balance, "ERR_TARGET_AMOUNT_TOO_HIGH");
+
+        // return a tuple of [target amount (excluding fee), fee]
+        uint256 fee = calculateFee(_sourceToken, _targetToken, _sourceWeight, _targetWeight, _externalRate, _targetExternalWeight, targetAmount);
+        return (targetAmount - fee, fee);
     }
 
     /**
-      * @dev returns the dynamic fee for a given target amount
+      * @dev returns the fee amount for a given target amount
       *
-      * @param _targetToken     contract address of the target reserve token
-      * @param _sourceWeight    source reserve token weight
-      * @param _targetWeight    target reserve token weight
-      * @param _rate            rate of 1 primary token in secondary tokens
-      * @param _targetAmount    target amount
+      * @param _sourceToken             contract address of the source reserve token
+      * @param _targetToken             contract address of the target reserve token
+      * @param _sourceWeight            source reserve token weight
+      * @param _targetWeight            target reserve token weight
+      * @param _externalRate            external rate of 1 primary token in secondary tokens
+      * @param _targetExternalWeight    target reserve token weight based on external rate
+      * @param _targetAmount            target amount
       *
-      * @return dynamic fee
+      * @return fee amount
     */
-    function calculateDynamicFee(
+    function calculateFee(
+        IERC20Token _sourceToken,
         IERC20Token _targetToken,
         uint32 _sourceWeight,
         uint32 _targetWeight,
-        Fraction memory _rate,
+        Fraction memory _externalRate,
+        uint32 _targetExternalWeight,
         uint256 _targetAmount)
         internal view returns (uint256)
     {
-        uint256 fee;
-
-        if (_targetToken == secondaryReserveToken) {
-            fee = calculateFeeToEquilibrium(
-                stakedBalances[primaryReserveToken],
-                stakedBalances[secondaryReserveToken],
-                _sourceWeight,
-                _targetWeight,
-                _rate.n,
-                _rate.d,
-                dynamicFeeFactor);
+        // get the external rate of 1 source token in target tokens
+        Fraction memory targetExternalRate;
+        if (_targetToken == primaryReserveToken) {
+            (targetExternalRate.n, targetExternalRate.d) = (_externalRate.n, _externalRate.d);
         }
         else {
-            fee = calculateFeeToEquilibrium(
-                stakedBalances[primaryReserveToken],
-                stakedBalances[secondaryReserveToken],
-                _targetWeight,
-                _sourceWeight,
-                _rate.n,
-                _rate.d,
-                dynamicFeeFactor);
+            (targetExternalRate.n, targetExternalRate.d) = (_externalRate.d, _externalRate.n);
         }
 
-        return _targetAmount.mul(fee).div(CONVERSION_FEE_RESOLUTION);
+        // get the token pool rate
+        Fraction memory currentRate = tokensRate(_targetToken, _sourceToken, _targetWeight, _sourceWeight);
+        if (compareRates(currentRate, targetExternalRate) < 0) {
+            uint256 lo = currentRate.n.mul(targetExternalRate.d);
+            uint256 hi = targetExternalRate.n.mul(currentRate.d);
+            (lo, hi) = reducedRatio(hi - lo, hi, MAX_RATE_FACTOR_LOWER_BOUND);
+
+            // apply the high fee only if the ratio between the effective weight and the external (target) weight is below the high fee upper bound
+            uint32 feeFactor;
+            if (uint256(_targetWeight).mul(PPM_RESOLUTION) < uint256(_targetExternalWeight).mul(HIGH_FEE_UPPER_BOUND)) {
+                feeFactor = highFeeFactor;
+            }
+            else {
+                feeFactor = lowFeeFactor;
+            }
+
+            return _targetAmount.mul(lo).mul(feeFactor).div(hi.mul(PPM_RESOLUTION));
+        }
+
+        return 0;
     }
 
     /**
-      * @dev returns the relative fee required for mitigating the secondary reserve distance from equilibrium
+      * @dev calculates the deficit in the pool (in secondary reserve token amount)
       *
-      * @param _primaryReserveStaked    primary reserve staked balance
-      * @param _secondaryReserveStaked  secondary reserve staked balance
-      * @param _primaryReserveWeight    primary reserve weight
-      * @param _secondaryReserveWeight  secondary reserve weight
-      * @param _primaryReserveRate      primary reserve rate
-      * @param _secondaryReserveRate    secondary reserve rate
-      * @param _dynamicFeeFactor        dynamic fee factor
+      * @param _externalRate    external rate of 1 primary token in secondary tokens
       *
-      * @return relative fee, represented in ppm
+      * @return the deficit in the pool
     */
-    function calculateFeeToEquilibrium(
-        uint256 _primaryReserveStaked,
-        uint256 _secondaryReserveStaked,
-        uint256 _primaryReserveWeight,
-        uint256 _secondaryReserveWeight,
-        uint256 _primaryReserveRate,
-        uint256 _secondaryReserveRate,
-        uint256 _dynamicFeeFactor)
-        internal
-        pure
-        returns (uint256)
-    {
-        uint256 x = _primaryReserveStaked.mul(_primaryReserveRate).mul(_secondaryReserveWeight);
-        uint256 y = _secondaryReserveStaked.mul(_secondaryReserveRate).mul(_primaryReserveWeight);
-        if (y > x)
-            return (y - x).mul(_dynamicFeeFactor).mul(AMPLIFICATION_FACTOR).div(y);
+    function calculateDeficit(Fraction memory _externalRate) internal view returns (uint256) {
+        IERC20Token primaryReserveTokenLocal = primaryReserveToken; // gas optimization
+        IERC20Token secondaryReserveTokenLocal = secondaryReserveToken; // gas optimization
+
+        // get the amount of primary balances in secondary tokens using the external rate
+        uint256 primaryBalanceInSecondary = reserves[primaryReserveTokenLocal].balance.mul(_externalRate.n).div(_externalRate.d);
+        uint256 primaryStakedInSecondary = stakedBalances[primaryReserveTokenLocal].mul(_externalRate.n).div(_externalRate.d);
+
+        // if the total balance is lower than the total staked balance, return the delta
+        uint256 totalBalance = primaryBalanceInSecondary.add(reserves[secondaryReserveTokenLocal].balance);
+        uint256 totalStaked = primaryStakedInSecondary.add(stakedBalances[secondaryReserveTokenLocal]);
+        if (totalBalance < totalStaked) {
+            return totalStaked - totalBalance;
+        }
+
         return 0;
+    }
+
+    /**
+      * @dev updates the weights based on the effective weights calculation if needed
+      * and returns the target amount and fee
+      *
+      * @param _sourceToken             source ERC20 token
+      * @param _targetToken             target ERC20 token
+      * @param _amount                  amount of tokens to convert (in units of the source token)
+      * @param _externalRate            external rate of 1 primary token in secondary tokens
+      * @param _externalRateUpdateTime  external rate update time
+      *
+      * @return expected target amount
+      * @return expected fee
+    */
+    function prepareConversion(
+        IERC20Token _sourceToken,
+        IERC20Token _targetToken,
+        uint256 _amount,
+        Fraction memory _externalRate,
+        uint256 _externalRateUpdateTime)
+        internal
+        returns (uint256, uint256)
+    {
+        // get the source token effective / external weights
+        (uint32 effectiveSourceReserveWeight, uint32 externalSourceReserveWeight) =
+            effectiveAndExternalPrimaryWeight(_externalRate, _externalRateUpdateTime);
+        if (_targetToken == primaryReserveToken) {
+            effectiveSourceReserveWeight = inverseWeight(effectiveSourceReserveWeight);
+            externalSourceReserveWeight = inverseWeight(externalSourceReserveWeight);
+        }
+
+        // check if the weights need to be updated
+        if (reserves[_sourceToken].weight != effectiveSourceReserveWeight) {
+            // update the weights
+            reserves[_sourceToken].weight = effectiveSourceReserveWeight;
+            reserves[_targetToken].weight = inverseWeight(effectiveSourceReserveWeight);
+        }
+
+        // get expected target amount and fee
+        return targetAmountAndFee(
+            _sourceToken, _targetToken,
+            effectiveSourceReserveWeight, inverseWeight(effectiveSourceReserveWeight),
+            _externalRate, inverseWeight(externalSourceReserveWeight),
+            _amount);
     }
 
     /**
@@ -787,117 +840,181 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev returns the effective rate between the two reserve tokens
+      * @dev returns the effective primary reserve token weight
       *
-      * @return rate
+      * @return effective primary reserve weight
     */
-    function _effectiveTokensRate() private view returns (Fraction memory) {
-        // get the external rate between the reserves
-        (uint256 externalRateN, uint256 externalRateD, uint256 updateTime) = priceOracle.latestRateAndUpdateTime(primaryReserveToken, secondaryReserveToken);
-
-        // if the external rate was recently updated - prefer it over the internal rate
-        if (updateTime > referenceRateUpdateTime) {
-            return Fraction({ n: externalRateN, d: externalRateD });
-        }
-
-        // get the elapsed time between the current and the last conversion
-        uint256 timeElapsed = time() - referenceRateUpdateTime;
-
-        // if both of the conversions are in the same block - use the reference rate
-        if (timeElapsed == 0) {
-            return referenceRate;
-        }
-
-        // given N as the sampling window, the new internal rate is calculated according to the following formula:
-        //   newRate = referenceRate + timeElapsed * [lastConversionRate - referenceRate] / N
-
-        // if a long period of time, since the last update, has passed - the last rate should fully take effect
-        if (timeElapsed >= RATE_PROPAGATION_PERIOD) {
-            return lastConversionRate;
-        }
-
-        // calculate the numerator and the denumerator of the new rate
-        Fraction memory ref = referenceRate;
-        Fraction memory last = lastConversionRate;
-
-        uint256 x = ref.d.mul(last.n);
-        uint256 y = ref.n.mul(last.d);
-
-        // since we know that timeElapsed < RATE_PROPAGATION_PERIOD, we can avoid using SafeMath:
-        uint256 newRateN = y.mul(RATE_PROPAGATION_PERIOD - timeElapsed).add(x.mul(timeElapsed));
-        uint256 newRateD = ref.d.mul(last.d).mul(RATE_PROPAGATION_PERIOD);
-
-        return reduceRate(newRateN, newRateD);
+    function effectivePrimaryWeight() internal view returns (uint32) {
+        // get the external rate between the reserves along with its update time
+        Fraction memory externalRate;
+        uint256 externalRateUpdateTime;
+        (externalRate.n, externalRate.d, externalRateUpdateTime) = priceOracle.latestRateAndUpdateTime(primaryReserveToken, secondaryReserveToken);
+        (uint32 effectiveWeight,) = effectiveAndExternalPrimaryWeight(externalRate, externalRateUpdateTime);
+        return effectiveWeight;
     }
 
     /**
-      * @dev checks if the rate has changed and if so, rebalances the weights
-      * note that rebalancing based on rate change only happens once per block
+      * @dev returns the effective and the external primary reserve token weights
       *
-      * @return whether the rate was updated
-      * @return rate between the reserve tokens
+      * @param _externalRate            external rate of 1 primary token in secondary tokens
+      * @param _externalRateUpdateTime  external rate update time
+      *
+      * @return effective primary reserve weight
+      * @return external primary reserve weight
     */
-    function handleRateChange() private returns (bool, Fraction memory) {
+    function effectiveAndExternalPrimaryWeight(Fraction memory _externalRate, uint256 _externalRateUpdateTime)
+        internal
+        view
+        returns
+        (uint32, uint32)
+    {
+        // get the external rate primary reserve weight
+        uint32 externalPrimaryReserveWeight = primaryWeightFromRate(_externalRate);
+
+        // get the primary reserve weight
+        IERC20Token primaryReserveTokenLocal = primaryReserveToken; // gas optimization
+        uint32 primaryReserveWeight = reserves[primaryReserveTokenLocal].weight;
+
+        // if the weights are already at their target, return current weights
+        if (primaryReserveWeight == externalPrimaryReserveWeight) {
+            return (primaryReserveWeight, externalPrimaryReserveWeight);
+        }
+
+        // get the elapsed time since the last conversion time and the external rate update time
+        uint256 referenceTime = prevConversionTime;
+        if (referenceTime < _externalRateUpdateTime) {
+            referenceTime = _externalRateUpdateTime;
+        }
+
+        // limit the reference time by current time
         uint256 currentTime = time();
-
-        // avoid updating the rate more than once per block
-        if (referenceRateUpdateTime == currentTime) {
-            return (false, referenceRate);
+        if (referenceTime > currentTime) {
+            referenceTime = currentTime;
         }
 
-        // get and store the effective rate between the reserves
-        Fraction memory newRate = _effectiveTokensRate();
-
-        // if the rate has changed, update it and rebalance the pool
-        Fraction memory ref = referenceRate;
-        if (newRate.n == ref.n && newRate.d == ref.d) {
-            return (false, newRate);
+        // if no time has passed since the reference time, return current weights (also ensures a single update per block)
+        uint256 elapsedTime = currentTime - referenceTime;
+        if (elapsedTime == 0) {
+            return (primaryReserveWeight, externalPrimaryReserveWeight);
         }
 
-        referenceRate = newRate;
-        referenceRateUpdateTime = currentTime;
+        // find the token whose weight is lower than the target weight and get its pool rate - if it's
+        // lower than external rate, update the weights
+        Fraction memory poolRate = tokensRate(
+            primaryReserveTokenLocal,
+            secondaryReserveToken,
+            primaryReserveWeight,
+            inverseWeight(primaryReserveWeight));
 
-        rebalance();
+        bool updateWeights = false;
+        if (primaryReserveWeight < externalPrimaryReserveWeight) {
+            updateWeights = compareRates(poolRate, _externalRate) < 0;
+        }
+        else {
+            updateWeights = compareRates(poolRate, _externalRate) > 0;
+        }
 
-        return (true, newRate);
+        if (!updateWeights) {
+            return (primaryReserveWeight, externalPrimaryReserveWeight);
+        }
+
+        // if the elapsed time since the reference rate is equal or larger than the propagation period,
+        // the external rate should take full effect
+        if (elapsedTime >= RATE_PROPAGATION_PERIOD) {
+            return (externalPrimaryReserveWeight, externalPrimaryReserveWeight);
+        }
+
+        // move the weights towards their target by the same proportion of elapsed time out of the RATE_PROPAGATION_PERIOD
+        primaryReserveWeight = uint32(weightedAverageIntegers(
+            primaryReserveWeight, externalPrimaryReserveWeight,
+            elapsedTime, RATE_PROPAGATION_PERIOD));
+        return (primaryReserveWeight, externalPrimaryReserveWeight);
     }
 
     /**
-      * @dev updates the pool's reserve weights with new values in order to push the current primary
-      * reserve token balance to its staked balance
+      * @dev returns the current rate for add/remove liquidity rebalancing
+      * only used to circumvent the `stack too deep` compiler error
+      *
+      * @return effective rate
+    */
+    function rebalanceRate() private view returns (Fraction memory) {
+        // if one of the balances is 0, return the external rate
+        if (reserves[primaryReserveToken].balance == 0 || reserves[secondaryReserveToken].balance == 0) {
+            Fraction memory externalRate;
+            (externalRate.n, externalRate.d) = priceOracle.latestRate(primaryReserveToken, secondaryReserveToken);
+            return externalRate;
+        }
+
+        // return the rate based on the current rate
+        return tokensRate(primaryReserveToken, secondaryReserveToken, 0, 0);
+    }
+
+    /**
+      * @dev updates the reserve weights based on the external rate
     */
     function rebalance() private {
-        // get the new reserve weights
-        (uint32 primaryReserveWeight, uint32 secondaryReserveWeight) = effectiveReserveWeights(referenceRate);
+        // get the external rate
+        Fraction memory externalRate;
+        (externalRate.n, externalRate.d) = priceOracle.latestRate(primaryReserveToken, secondaryReserveToken);
 
-        // update the reserve weights with the new values
-        reserves[primaryReserveToken].weight = primaryReserveWeight;
-        reserves[secondaryReserveToken].weight = secondaryReserveWeight;
+        // rebalance the weights based on the external rate
+        rebalance(externalRate);
     }
 
     /**
-      * @dev returns the effective reserve weights based on the staked balance, current balance and oracle price
+      * @dev updates the reserve weights based on the given rate
       *
-      * @param _rate    rate between the reserve tokens
-      *
-      * @return new primary reserve weight
-      * @return new secondary reserve weight
+      * @param _rate    rate of 1 primary token in secondary tokens
     */
-    function effectiveReserveWeights(Fraction memory _rate) private view returns (uint32, uint32) {
-        // get the primary reserve staked balance
-        uint256 primaryStakedBalance = stakedBalances[primaryReserveToken];
+    function rebalance(Fraction memory _rate) private {
+        // get the new primary reserve weight
+        uint256 a = amplifiedBalance(primaryReserveToken).mul(_rate.n);
+        uint256 b = amplifiedBalance(secondaryReserveToken).mul(_rate.d);
+        (uint256 x, uint256 y) = normalizedRatio(a, b, PPM_RESOLUTION);
 
-        // get the tokens amplified balances
-        uint256 primaryBalance = reserveAmplifiedBalance(primaryReserveToken);
-        uint256 secondaryBalance = reserveAmplifiedBalance(secondaryReserveToken);
+        // update the reserve weights with the new values
+        reserves[primaryReserveToken].weight = uint32(x);
+        reserves[secondaryReserveToken].weight = uint32(y);
+    }
 
-        // get the new weights
-        return IBancorFormula(addressOf(BANCOR_FORMULA)).balancedWeights(
-            primaryStakedBalance.mul(AMPLIFICATION_FACTOR),
-            primaryBalance,
-            secondaryBalance,
-            _rate.n,
-            _rate.d);
+    /**
+      * @dev returns the amplified balance of a given reserve token
+      * this version skips the input validation (gas optimization)
+      *
+      * @param _reserveToken   reserve token address
+      *
+      * @return amplified balance
+    */
+    function amplifiedBalance(IERC20Token _reserveToken) internal view returns (uint256) {
+        return stakedBalances[_reserveToken].mul(AMPLIFICATION_FACTOR - 1).add(reserves[_reserveToken].balance);
+    }
+
+    /**
+      * @dev returns the effective primary reserve weight based on the staked balance, current balance and given rate
+      *
+      * @param _rate    rate of 1 primary token in secondary tokens
+      *
+      * @return primary reserve weight
+    */
+    function primaryWeightFromRate(Fraction memory _rate) private view returns (uint32) {
+        uint256 a = stakedBalances[primaryReserveToken].mul(_rate.n);
+        uint256 b = stakedBalances[secondaryReserveToken].mul(_rate.d);
+        (uint256 x,) = normalizedRatio(a, b, PPM_RESOLUTION);
+        return uint32(x);
+    }
+
+    /**
+      * @dev returns the effective rate based on the staked balance, current balance and given primary reserve weight
+      *
+      * @param _primaryReserveWeight    primary reserve weight
+      *
+      * @return effective rate of 1 primary token in secondary tokens
+    */
+    function rateFromPrimaryWeight(uint32 _primaryReserveWeight) private view returns (Fraction memory) {
+        uint256 n = stakedBalances[secondaryReserveToken].mul(_primaryReserveWeight);
+        uint256 d = stakedBalances[primaryReserveToken].mul(inverseWeight(_primaryReserveWeight));
+        (n, d) = reducedRatio(n, d, MAX_RATE_FACTOR_LOWER_BOUND);
+        return Fraction(n, d);
     }
 
     /**
@@ -911,20 +1028,18 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @return rate
     */
     function tokensRate(IERC20Token _token1, IERC20Token _token2, uint32 _token1Weight, uint32 _token2Weight) private view returns (Fraction memory) {
-        // apply the amplification factor
-        uint256 token1Balance = reserveAmplifiedBalance(_token1);
-        uint256 token2Balance = reserveAmplifiedBalance(_token2);
-
-        // get reserve weights
         if (_token1Weight == 0) {
             _token1Weight = reserves[_token1].weight;
         }
 
         if (_token2Weight == 0) {
-            _token2Weight = reserves[_token2].weight;
+            _token2Weight = inverseWeight(_token1Weight);
         }
 
-        return Fraction({ n: token2Balance.mul(_token1Weight), d: token1Balance.mul(_token2Weight) });
+        uint256 n = amplifiedBalance(_token2).mul(_token1Weight);
+        uint256 d = amplifiedBalance(_token1).mul(_token2Weight);
+        (n, d) = reducedRatio(n, d, MAX_RATE_FACTOR_LOWER_BOUND);
+        return Fraction(n, d);
     }
 
     /**
@@ -975,6 +1090,19 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         emit TokenRateUpdate(_poolToken, _reserveToken, stakedBalances[_reserveToken], _poolTokenSupply);
     }
 
+    // utilities
+
+    /**
+      * @dev returns the inverse weight for a given weight
+      *
+      * @param _weight  reserve token weight
+      *
+      * @return reserve weight
+    */
+    function inverseWeight(uint32 _weight) internal pure returns (uint32) {
+        return PPM_RESOLUTION - _weight;
+    }
+
     /**
       * @dev returns the current time
     */
@@ -982,39 +1110,87 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         return now;
     }
 
-    uint256 private constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
-    uint256 private constant MAX_RATE_FACTOR_UPPER_BOUND = uint256(-1) / MAX_RATE_FACTOR_LOWER_BOUND;
-
     /**
-      * @dev reduces the numerator and denominator while maintaining the ratio between them as accurately as possible
+      * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)".
     */
-    function reduceRate(uint256 _n, uint256 _d) internal pure returns (Fraction memory) {
-        if (_n >= _d) {
-            return reduceFactors(_n, _d);
-        }
-
-        Fraction memory rate = reduceFactors(_d, _n);
-        return Fraction({ n: rate.d, d: rate.n });
+    function normalizedRatio(uint256 _a, uint256 _b, uint256 _scale) internal pure returns (uint256, uint256) {
+        if (_a == _b)
+            return (_scale / 2, _scale / 2);
+        if (_a < _b)
+            return accurateRatio(_a, _b, _scale);
+        (uint256 y, uint256 x) = accurateRatio(_b, _a, _scale);
+        return (x, y);
     }
 
     /**
-      * @dev reduces the factors while maintaining the ratio between them as accurately as possible
+      * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)", assuming that "a < b".
     */
-    function reduceFactors(uint256 _max, uint256 _min) internal pure returns (Fraction memory) {
-        if (_min > MAX_RATE_FACTOR_UPPER_BOUND) {
-            return Fraction({
-                n: MAX_RATE_FACTOR_LOWER_BOUND,
-                d: _min / (_max / MAX_RATE_FACTOR_LOWER_BOUND)
-            });
+    function accurateRatio(uint256 _a, uint256 _b, uint256 _scale) internal pure returns (uint256, uint256) {
+        uint256 maxVal = uint256(-1) / _scale;
+        if (_a > maxVal) {
+            uint256 c = _a / (maxVal + 1) + 1;
+            _a /= c;
+            _b /= c;
         }
+        uint256 x = roundDiv(_a * _scale, _a.add(_b));
+        uint256 y = _scale - x;
+        return (x, y);
+    }
 
-        if (_max > MAX_RATE_FACTOR_LOWER_BOUND) {
-            return Fraction({
-                n: MAX_RATE_FACTOR_LOWER_BOUND,
-                d: _min * MAX_RATE_FACTOR_LOWER_BOUND / _max
-            });
-        }
+    /**
+      * @dev computes a reduced-scalar ratio
+      *
+      * @param _n   ratio numerator
+      * @param _d   ratio denominator
+      * @param _max maximum desired scalar
+      *
+      * @return ratio's numerator and denominator
+    */
+    function reducedRatio(uint256 _n, uint256 _d, uint256 _max) internal pure returns (uint256, uint256) {
+        if (_n > _max || _d > _max)
+            return normalizedRatio(_n, _d, _max);
+        return (_n, _d);
+    }
 
-        return Fraction({ n: _max, d: _min });
+    /**
+      * @dev computes the nearest integer to a given quotient without overflowing or underflowing.
+    */
+    function roundDiv(uint256 _n, uint256 _d) internal pure returns (uint256) {
+        return _n / _d + _n % _d / (_d - _d / 2);
+    }
+
+    /**
+      * @dev calculates the weighted-average of two integers
+      *
+      * @param _x   first integer
+      * @param _y   second integer
+      * @param _n   factor numerator
+      * @param _d   factor denominator
+      *
+      * @return the weighted-average of the given integers
+    */
+    function weightedAverageIntegers(uint256 _x, uint256 _y, uint256 _n, uint256 _d) internal pure returns (uint256) {
+        return _x.mul(_d).add(_y.mul(_n)).sub(_x.mul(_n)).div(_d);
+    }
+
+    /**
+      * @dev compares two rates
+      *
+      * @param _rate1   first rate to compare
+      * @param _rate2   second rate to compare
+      *
+      * @return `-1` if `_rate1` is lower than `_rate2`, `1` if `_rate1` is higher than `_rate2`, 0 if the rates are identical
+    */
+    function compareRates(Fraction memory _rate1, Fraction memory _rate2) internal pure returns (int8) {
+        uint256 x = _rate1.n.mul(_rate2.d);
+        uint256 y = _rate2.n.mul(_rate1.d);
+
+        if (x < y)
+            return -1;
+
+        if (x > y)
+            return 1;
+
+        return 0;
     }
 }
