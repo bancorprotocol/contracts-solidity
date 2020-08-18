@@ -1,3 +1,11 @@
+### 0.6.11 (2020-08-18)
+LiquidityPoolV2Converter
+* Updated weights/fees logic
+
+LiquidTokenConverter
+* Initial purchase/supply now takes the reserve weight into account
+
+
 ### 0.6.10 (2020-08-07)
 LiquidityPoolV2Converter
 * Fixed an issue in the upgrade process
