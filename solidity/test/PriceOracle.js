@@ -117,19 +117,19 @@ contract('PriceOracle', accounts => {
         await expectRevert(oracle.latestRate.call(tokenA.address, tokenA.address), 'ERR_SAME_ADDRESS');
     });
 
-    it('verifies that lastUpdateTime returns the earliest timestamp', async () => {
+    it('verifies that lastUpdateTime returns the latest timestamp', async () => {
         const now = await latest();
         const timestampA = now;
         let timestampB = timestampA.add(duration.hours(3));
         await chainlinkOracleA.setTimestamp(timestampA);
         await chainlinkOracleB.setTimestamp(timestampB);
 
-        expect(await oracle.lastUpdateTime.call()).to.be.bignumber.equal(BN.min(timestampA, timestampB));
+        expect(await oracle.lastUpdateTime.call()).to.be.bignumber.equal(BN.max(timestampA, timestampB));
 
         timestampB = timestampA.sub(duration.days(1));
         await chainlinkOracleB.setTimestamp(timestampB);
 
-        expect(await oracle.lastUpdateTime.call()).to.be.bignumber.equal(BN.min(timestampA, timestampB));
+        expect(await oracle.lastUpdateTime.call()).to.be.bignumber.equal(BN.max(timestampA, timestampB));
     });
 
     for (const decimalsA of [4, 8, 10, 18]) {
@@ -174,7 +174,7 @@ contract('PriceOracle', accounts => {
                     expect(rate2[1]).to.be.bignumber.equal(expectedRate.n);
                 });
 
-                it('verifies that latestRateAndUpdateTime returns the rate and earliest timestamp in the correct order', async () => {
+                it('verifies that latestRateAndUpdateTime returns the rate and latest timestamp in the correct order', async () => {
                     const now = await latest();
                     const timestampA = now;
                     let timestampB = timestampA.add(duration.hours(3));
@@ -185,7 +185,7 @@ contract('PriceOracle', accounts => {
                     const rateAndStatus = await oracle.latestRateAndUpdateTime.call(tokenA.address, tokenB.address);
                     expect(rateAndStatus[0]).to.be.bignumber.equal(expectedRate.n);
                     expect(rateAndStatus[1]).to.be.bignumber.equal(expectedRate.d);
-                    expect(rateAndStatus[2]).to.be.bignumber.equal(BN.min(timestampA, timestampB));
+                    expect(rateAndStatus[2]).to.be.bignumber.equal(BN.max(timestampA, timestampB));
 
                     const newRateA = new BN(4700000);
                     const newRateB = new BN(28000);
@@ -199,7 +199,7 @@ contract('PriceOracle', accounts => {
                     const rateAndStatus2 = await oracle.latestRateAndUpdateTime.call(tokenB.address, tokenA.address);
                     expect(rateAndStatus2[0]).to.be.bignumber.equal(expectedRate.d);
                     expect(rateAndStatus2[1]).to.be.bignumber.equal(expectedRate.n);
-                    expect(rateAndStatus2[2]).to.be.bignumber.equal(BN.min(timestampA, timestampB));
+                    expect(rateAndStatus2[2]).to.be.bignumber.equal(BN.max(timestampA, timestampB));
                 });
             });
         }

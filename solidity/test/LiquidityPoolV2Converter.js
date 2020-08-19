@@ -790,6 +790,39 @@ contract('LiquidityPoolV2Converter', accounts => {
                 await expectRevert(converter.disableMaxStakedBalances({ from: nonOwner }), 'ERR_ACCESS_DENIED');
             });
 
+            it('verifies the owner can update the external rate propagation time', async () => {
+                const converter = await initConverter(true, true);
+
+                const prevPropagationTime = await converter.externalRatePropagationTime.call();
+                const delta = new BN(100000);
+                await converter.setExternalRatePropagationTime(prevPropagationTime.add(delta));
+
+                const newPropagationTime = await converter.externalRatePropagationTime.call();
+                expect(newPropagationTime).to.be.bignumber.equal(prevPropagationTime.add(delta));
+            });
+
+            it('should revert when a non owner attempts to update the external rate propagation time', async () => {
+                const converter = await initConverter(true, true);
+
+                const prevPropagationTime = await converter.externalRatePropagationTime.call();
+                const delta = new BN(100000);
+
+                await expectRevert(converter.setExternalRatePropagationTime(prevPropagationTime.add(delta), { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            });
+
+            it('verifies that an event is fired when the owner updates the external rate propagation time', async () => {
+                const converter = await initConverter(true, true);
+
+                const prevPropagationTime = await converter.externalRatePropagationTime.call();
+                const delta = new BN(100000);
+
+                const res = await converter.setExternalRatePropagationTime(prevPropagationTime.add(delta));
+                expectEvent(res, 'ExternalRatePropagationTimeUpdate', {
+                    _prevPropagationTime: prevPropagationTime,
+                    _newPropagationTime: prevPropagationTime.add(delta)
+                });
+            });
+
             it('verifies the owner can update the fee factors', async () => {
                 const converter = await initConverter(true, true);
 

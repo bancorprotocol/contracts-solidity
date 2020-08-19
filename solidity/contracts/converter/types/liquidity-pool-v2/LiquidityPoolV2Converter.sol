@@ -17,7 +17,6 @@ import "../../../utility/interfaces/IPriceOracle.sol";
 contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     uint8 internal constant AMPLIFICATION_FACTOR = 20;  // factor to use for conversion calculations (reduces slippage)
     uint32 internal constant HIGH_FEE_UPPER_BOUND = 997500; // high fee upper bound in PPM units
-    uint256 internal constant RATE_PROPAGATION_PERIOD = 10 minutes;  // the time it takes for the external rate to fully take effect
     uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
 
     struct Fraction {
@@ -32,6 +31,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     mapping (address => ISmartToken) private reservesToPoolTokens;  // maps each reserve to its pool token
     mapping (address => IERC20Token) private poolTokensToReserves;  // maps each pool token to its reserve
 
+    uint256 public externalRatePropagationTime = 1 hours;  // the time it takes for the external rate to fully take effect
     uint256 public prevConversionTime;  // previous conversion time in seconds
 
     // factors used in fee calculations
@@ -41,6 +41,14 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     // used by the temp liquidity limit mechanism during the beta
     mapping (address => uint256) public maxStakedBalances;
     bool public maxStakedBalanceEnabled = true;
+
+     /**
+      * @dev triggered when the external rate propagation time is updated
+      *
+      * @param  _prevPropagationTime    previous external rate propagation time, in seconds
+      * @param  _newPropagationTime     new external rate propagation time, in seconds
+    */
+    event ExternalRatePropagationTimeUpdate(uint256 _prevPropagationTime, uint256 _newPropagationTime);
 
     /**
       * @dev triggered when the fee factors are updated
@@ -309,6 +317,17 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         }
 
         return (inverseWeight(primaryReserveWeight), primaryReserveWeight);
+    }
+
+    /**
+      * @dev updates the external rate propagation time
+      * can only be called by the contract owner
+      *
+      * @param _propagationTime rate propagation time, in seconds
+    */
+    function setExternalRatePropagationTime(uint256 _propagationTime) public ownerOnly {
+        emit ExternalRatePropagationTimeUpdate(externalRatePropagationTime, _propagationTime);
+        externalRatePropagationTime = _propagationTime;
     }
 
     /**
@@ -918,16 +937,16 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             return (primaryReserveWeight, externalPrimaryReserveWeight);
         }
 
-        // if the elapsed time since the reference rate is equal or larger than the propagation period,
+        // if the elapsed time since the reference rate is equal or larger than the propagation time,
         // the external rate should take full effect
-        if (elapsedTime >= RATE_PROPAGATION_PERIOD) {
+        if (elapsedTime >= externalRatePropagationTime) {
             return (externalPrimaryReserveWeight, externalPrimaryReserveWeight);
         }
 
-        // move the weights towards their target by the same proportion of elapsed time out of the RATE_PROPAGATION_PERIOD
+        // move the weights towards their target by the same proportion of elapsed time out of the rate propagation time
         primaryReserveWeight = uint32(weightedAverageIntegers(
             primaryReserveWeight, externalPrimaryReserveWeight,
-            elapsedTime, RATE_PROPAGATION_PERIOD));
+            elapsedTime, externalRatePropagationTime));
         return (primaryReserveWeight, externalPrimaryReserveWeight);
     }
 

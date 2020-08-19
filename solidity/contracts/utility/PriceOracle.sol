@@ -120,8 +120,7 @@ contract PriceOracle is IPriceOracle, Utils {
     }
 
     /**
-      * @dev returns the timestamp of the last price update the rates are returned as numerator (token1) and denominator
-      * (token2) for accuracy
+      * @dev returns the timestamp of the last price update
       *
       * @return timestamp
     */
@@ -133,7 +132,7 @@ contract PriceOracle is IPriceOracle, Utils {
         uint256 timestampA = tokenAOracle.latestTimestamp();
         uint256 timestampB = tokenBOracle.latestTimestamp();
 
-        return  timestampA < timestampB ? timestampA : timestampB;
+        return  timestampA > timestampB ? timestampA : timestampB;
     }
 
     /**

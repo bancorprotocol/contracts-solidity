@@ -1,3 +1,11 @@
+### 0.6.12 (2020-08-19)
+LiquidityPoolV2Converter
+* Allow the owner to update the external rate propagation time
+
+PriceOracle
+* Fixed `lastUpdateTime` to return the latest time between the oracles
+
+
 ### 0.6.11 (2020-08-18)
 LiquidityPoolV2Converter
 * Updated weights/fees logic
