@@ -31,7 +31,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     mapping (address => ISmartToken) private reservesToPoolTokens;  // maps each reserve to its pool token
     mapping (address => IERC20Token) private poolTokensToReserves;  // maps each pool token to its reserve
 
-    uint256 public externalRatePropagationTime = 10 minutes;  // the time it takes for the external rate to fully take effect
+    uint256 public externalRatePropagationTime = 1 hours;  // the time it takes for the external rate to fully take effect
     uint256 public prevConversionTime;  // previous conversion time in seconds
 
     // factors used in fee calculations
