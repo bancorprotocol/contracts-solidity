@@ -140,12 +140,12 @@ contract LiquidTokenConverter is ConverterBase {
         returns (uint256, uint256)
     {
         uint256 totalSupply = ISmartToken(anchor).totalSupply();
+        IERC20Token reserveToken = reserveTokens[0];
 
         // if the current supply is zero, then return the input amount divided by the normalized reserve-weight
         if (totalSupply == 0)
             return (_amount.mul(PPM_RESOLUTION).div(reserves[reserveToken].weight), 0);
 
-        IERC20Token reserveToken = reserveTokens[0];
         uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).purchaseTargetAmount(
             totalSupply,
             reserveBalance(reserveToken),
