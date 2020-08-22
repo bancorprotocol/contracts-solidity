@@ -1,3 +1,8 @@
+### 0.6.13 (2020-08-22)
+LiquidityPoolV2Converter
+* Allow the owner to update the amplification factor
+
+
 ### 0.6.12 (2020-08-19)
 LiquidityPoolV2Converter
 * Allow the owner to update the external rate propagation time
