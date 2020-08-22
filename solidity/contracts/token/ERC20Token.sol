@@ -68,7 +68,7 @@ contract ERC20Token is IERC20Token, Utils {
     function transfer(address _to, uint256 _value)
         public
         validAddress(_to)
-        returns (bool success)
+        returns (bool)
     {
         balanceOf[msg.sender] = balanceOf[msg.sender].sub(_value);
         balanceOf[_to] = balanceOf[_to].add(_value);
@@ -90,7 +90,7 @@ contract ERC20Token is IERC20Token, Utils {
         public
         validAddress(_from)
         validAddress(_to)
-        returns (bool success)
+        returns (bool)
     {
         allowance[_from][msg.sender] = allowance[_from][msg.sender].sub(_value);
         balanceOf[_from] = balanceOf[_from].sub(_value);
@@ -115,7 +115,7 @@ contract ERC20Token is IERC20Token, Utils {
     function approve(address _spender, uint256 _value)
         public
         validAddress(_spender)
-        returns (bool success)
+        returns (bool)
     {
         // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal
         require(_value == 0 || allowance[msg.sender][_spender] == 0, "ERR_INVALID_AMOUNT");

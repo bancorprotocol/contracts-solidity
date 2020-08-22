@@ -13,7 +13,7 @@ contract IERC20Token {
     function balanceOf(address _owner) public view returns (uint256) {_owner; this;}
     function allowance(address _owner, address _spender) public view returns (uint256) {_owner; _spender; this;}
 
-    function transfer(address _to, uint256 _value) public returns (bool success);
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success);
-    function approve(address _spender, uint256 _value) public returns (bool success);
+    function transfer(address _to, uint256 _value) public returns (bool);
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool);
+    function approve(address _spender, uint256 _value) public returns (bool);
 }

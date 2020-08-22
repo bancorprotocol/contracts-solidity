@@ -102,7 +102,7 @@ contract EtherToken is IEtherToken, ERC20Token {
     function transfer(address _to, uint256 _value)
         public
         notThis(_to)
-        returns (bool success)
+        returns (bool)
     {
         assert(super.transfer(_to, _value));
         return true;
@@ -121,7 +121,7 @@ contract EtherToken is IEtherToken, ERC20Token {
     function transferFrom(address _from, address _to, uint256 _value)
         public
         notThis(_to)
-        returns (bool success)
+        returns (bool)
     {
         assert(super.transferFrom(_from, _to, _value));
         return true;

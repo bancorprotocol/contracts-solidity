@@ -34,8 +34,6 @@ contract NonStandardToken is Utils {
       *
       * @param _to      target address
       * @param _value   transfer amount
-      *
-      * @return true if the transfer was successful, false if it wasn't
     */
     function _transfer(address _to, uint256 _value)
         internal
@@ -53,8 +51,6 @@ contract NonStandardToken is Utils {
       * @param _from    source address
       * @param _to      target address
       * @param _value   transfer amount
-      *
-      * @return true if the transfer was successful, false if it wasn't
     */
     function _transferFrom(address _from, address _to, uint256 _value)
         internal
@@ -77,8 +73,6 @@ contract NonStandardToken is Utils {
       *
       * @param _spender approved address
       * @param _value   allowance amount
-      *
-      * @return true if the approval was successful, false if it wasn't
     */
     function _approve(address _spender, uint256 _value)
         internal
