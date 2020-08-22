@@ -518,30 +518,10 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         return true;
     }
 
-    bytes4 private constant CONNECTORS_FUNC_SELECTOR = bytes4(keccak256("connectors(address)"));
-
-    // assembly is used since older converters didn't have the `getReserveWeight` function, so getting the weight
-    // requires calling the `connectors` property function, however that results in the `stack too deep` compiler
-    // error so using assembly to circumvent that issue
+    // utility to get the reserve weight (including from older converters that don't support the new getReserveWeight function)
     function getReserveWeight(address _converter, address _reserveToken) private view returns (uint32) {
-        uint256[2] memory ret;
-        bytes memory data = abi.encodeWithSelector(CONNECTORS_FUNC_SELECTOR, _reserveToken);
-
-        assembly {
-            let success := staticcall(
-                gas,           // gas remaining
-                _converter,    // destination address
-                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
-                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
-                ret,           // output buffer
-                64             // output length
-            )
-            if iszero(success) {
-                revert(0, 0)
-            }
-        }
-
-        return uint32(ret[1]);
+        (, uint32 weight,,,) = _converter.connectors(_reserveToken);
+        return weight;
     }
 
     /**

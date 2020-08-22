@@ -130,7 +130,7 @@ contract EtherToken is IEtherToken, ERC20Token {
     /**
       * @dev deposit ether in the account
     */
-    function() external payable {
+    receive() external payable {
         deposit();
     }
 }

@@ -14,7 +14,7 @@ import "./token/interfaces/ISmartToken.sol";
 import "./bancorx/interfaces/IBancorX.sol";
 
 // interface of older converters for backward compatibility
-contract ILegacyConverter {
+interface ILegacyConverter {
     function change(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn) public returns (uint256);
 }
 
@@ -637,49 +637,37 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
 
-    // using assembly code since older converter versions have different return values
+    // using a static call to get the return from older converters
     function getReturn(address _dest, address _sourceToken, address _targetToken, uint256 _amount) internal view returns (uint256, uint256) {
-        uint256[2] memory ret;
         bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _sourceToken, _targetToken, _amount);
+        (bool success, bytes memory returnData) = _dest.staticcall(data);
 
-        assembly {
-            let success := staticcall(
-                gas,           // gas remaining
-                _dest,         // destination address
-                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
-                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
-                ret,           // output buffer
-                64             // output length
-            )
-            if iszero(success) {
-                revert(0, 0)
+        if (success) {
+            if (success && returnData.length == 64) {
+                return abi.decode(returnData, (uint256,uint256));
+            }
+
+            if (success && returnData.length == 32) {
+                return (abi.decode(returnData, (uint256)), 0);
             }
         }
 
-        return (ret[0], ret[1]);
+        return (0, 0);
     }
 
     bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
 
-    // using assembly code to identify converter version
+    // using a static call to identify converter version
     // can't rely on the version number since the function had a different signature in older converters
     function isV28OrHigherConverter(IConverter _converter) internal view returns (bool) {
-        bool success;
-        uint256[1] memory ret;
         bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);
+        (bool success, bytes memory returnData) = _converter.staticcall.gas(4000)(data);
 
-        assembly {
-            success := staticcall(
-                5000,          // isV28OrHigher consumes 190 gas, but just for extra safety
-                _converter,    // destination address
-                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
-                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
-                ret,           // output buffer
-                32             // output length
-            )
+        if (success && returnData.length == 32) {
+            return abi.decode(returnData, (bool));
         }
 
-        return success && ret[0] != 0;
+        return false;
     }
 
     /**

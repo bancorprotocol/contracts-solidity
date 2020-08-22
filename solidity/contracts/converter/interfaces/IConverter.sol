@@ -24,7 +24,7 @@ contract IConverter is IOwned {
     function conversionFee() public view returns (uint32) {this;}
     function maxConversionFee() public view returns (uint32) {this;}
     function reserveBalance(IERC20Token _reserveToken) public view returns (uint256);
-    function() external payable;
+    receive() external payable;
 
     function transferAnchorOwnership(address _newOwner) public;
     function acceptAnchorOwnership() public;

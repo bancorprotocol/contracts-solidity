@@ -38,7 +38,7 @@ contract ConverterV27OrLowerWithoutFallback {
 }
 
 contract ConverterV27OrLowerWithFallback {
-    function() external payable {
+    receive() external payable {
     }
 }
 
@@ -53,7 +53,7 @@ contract ConverterV28OrHigherWithFallback {
         return true;
     }
 
-    function() external payable {
+    receive() external payable {
         revert();
     }
 }
