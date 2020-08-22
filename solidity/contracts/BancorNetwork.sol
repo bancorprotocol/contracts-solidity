@@ -122,7 +122,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       *
       * @return conversion path between the two tokens
     */
-    function conversionPath(IERC20Token _sourceToken, IERC20Token _targetToken) public view returns (address[]) {
+    function conversionPath(IERC20Token _sourceToken, IERC20Token _targetToken) public view returns (address[] memory) {
         IConversionPathFinder pathFinder = IConversionPathFinder(addressOf(CONVERSION_PATH_FINDER));
         return pathFinder.findPath(_sourceToken, _targetToken);
     }
@@ -136,7 +136,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       *
       * @return expected target amount
     */
-    function rateByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256) {
+    function rateByPath(IERC20Token[] memory _path, uint256 _amount) public view returns (uint256) {
         uint256 amount;
         uint256 fee;
         uint256 supply;
@@ -215,7 +215,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       *
       * @return amount of tokens received from the conversion
     */
-    function convertByPath(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary, address _affiliateAccount, uint256 _affiliateFee)
+    function convertByPath(IERC20Token[] memory _path, uint256 _amount, uint256 _minReturn, address _beneficiary, address _affiliateAccount, uint256 _affiliateFee)
         public
         payable
         protected
@@ -268,7 +268,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @return the amount of BNT received from this conversion
     */
     function xConvert(
-        IERC20Token[] _path,
+        IERC20Token[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
         bytes32 _targetBlockchain,
@@ -299,7 +299,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @return the amount of BNT received from this conversion
     */
     function xConvert2(
-        IERC20Token[] _path,
+        IERC20Token[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
         bytes32 _targetBlockchain,
@@ -346,7 +346,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       *
       * @return amount of tokens received from the conversion
     */
-    function completeXConversion(IERC20Token[] _path, IBancorX _bancorX, uint256 _conversionId, uint256 _minReturn, address _beneficiary)
+    function completeXConversion(IERC20Token[] memory _path, IBancorX _bancorX, uint256 _conversionId, uint256 _minReturn, address _beneficiary)
         public returns (uint256)
     {
         // verify that the source token is the BancorX token
@@ -371,7 +371,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @return amount of tokens received from the conversion
     */
     function doConversion(
-        ConversionStep[] _data,
+        ConversionStep[] memory _data,
         uint256 _amount,
         uint256 _minReturn,
         address _affiliateAccount,
@@ -473,7 +473,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @param _amount      conversion target amount
       * @param _beneficiary wallet to receive the conversion result
     */
-    function handleTargetToken(ConversionStep[] _data, uint256 _amount, address _beneficiary) private {
+    function handleTargetToken(ConversionStep[] memory _data, uint256 _amount, address _beneficiary) private {
         ConversionStep memory stepData = _data[_data.length - 1];
 
         // network contract doesn't hold the tokens, do nothing
@@ -505,7 +505,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       *
       * @return cached conversion data to be ingested later on by the conversion flow
     */
-    function createConversionData(IERC20Token[] _conversionPath, address _beneficiary, bool _affiliateFeeEnabled) private view returns (ConversionStep[]) {
+    function createConversionData(IERC20Token[] memory _conversionPath, address _beneficiary, bool _affiliateFeeEnabled) private view returns (ConversionStep[] memory) {
         ConversionStep[] memory data = new ConversionStep[](_conversionPath.length / 2);
 
         bool affiliateFeeProcessed = false;
@@ -673,14 +673,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
       * @dev deprecated, backward compatibility
     */
-    function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
+    function getReturnByPath(IERC20Token[] memory _path, uint256 _amount) public view returns (uint256, uint256) {
         return (rateByPath(_path, _amount), 0);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function convert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256) {
+    function convert(IERC20Token[] memory _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256) {
         return convertByPath(_path, _amount, _minReturn, address(0), address(0), 0);
     }
 
@@ -688,7 +688,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @dev deprecated, backward compatibility
     */
     function convert2(
-        IERC20Token[] _path,
+        IERC20Token[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
         address _affiliateAccount,
@@ -704,7 +704,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
       * @dev deprecated, backward compatibility
     */
-    function convertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary) public payable returns (uint256) {
+    function convertFor(IERC20Token[] memory _path, uint256 _amount, uint256 _minReturn, address _beneficiary) public payable returns (uint256) {
         return convertByPath(_path, _amount, _minReturn, _beneficiary, address(0), 0);
     }
 
@@ -712,7 +712,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @dev deprecated, backward compatibility
     */
     function convertFor2(
-        IERC20Token[] _path,
+        IERC20Token[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
         address _beneficiary,
@@ -730,7 +730,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
       * @dev deprecated, backward compatibility
     */
-    function claimAndConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+    function claimAndConvert(IERC20Token[] memory _path, uint256 _amount, uint256 _minReturn) public returns (uint256) {
         return convertByPath(_path, _amount, _minReturn, address(0), address(0), 0);
     }
 
@@ -738,7 +738,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @dev deprecated, backward compatibility
     */
     function claimAndConvert2(
-        IERC20Token[] _path,
+        IERC20Token[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
         address _affiliateAccount,
@@ -753,7 +753,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
       * @dev deprecated, backward compatibility
     */
-    function claimAndConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary) public returns (uint256) {
+    function claimAndConvertFor(IERC20Token[] memory _path, uint256 _amount, uint256 _minReturn, address _beneficiary) public returns (uint256) {
         return convertByPath(_path, _amount, _minReturn, _beneficiary, address(0), 0);
     }
 
@@ -761,7 +761,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @dev deprecated, backward compatibility
     */
     function claimAndConvertFor2(
-        IERC20Token[] _path,
+        IERC20Token[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
         address _beneficiary,

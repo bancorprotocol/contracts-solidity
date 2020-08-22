@@ -6,8 +6,8 @@ pragma solidity >=0.6.12 <0.7.0;
 */
 contract IERC20Token {
     // these functions aren't abstract since the compiler emits automatically generated getter functions as external
-    function name() public view returns (string) {this;}
-    function symbol() public view returns (string) {this;}
+    function name() public view returns (string memory) {this;}
+    function symbol() public view returns (string memory) {this;}
     function decimals() public view returns (uint8) {this;}
     function totalSupply() public view returns (uint256) {this;}
     function balanceOf(address _owner) public view returns (uint256) {_owner; this;}

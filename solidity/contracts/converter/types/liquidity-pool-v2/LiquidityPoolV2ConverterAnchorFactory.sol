@@ -26,7 +26,7 @@ contract LiquidityPoolV2ConverterAnchorFactory is ITypedConverterAnchorFactory {
       *
       * @return new anchor
     */
-    function createAnchor(string _name, string _symbol, uint8 _decimals) public returns (IConverterAnchor) {
+    function createAnchor(string memory _name, string memory _symbol, uint8 _decimals) public returns (IConverterAnchor) {
         IPoolTokensContainer container = new PoolTokensContainer(_name, _symbol, _decimals);
         container.transferOwnership(msg.sender);
         return container;

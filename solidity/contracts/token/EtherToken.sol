@@ -32,7 +32,7 @@ contract EtherToken is IEtherToken, ERC20Token {
       * @param _name        token name
       * @param _symbol      token symbol
     */
-    constructor(string _name, string _symbol)
+    constructor(string memory _name, string memory _symbol)
         public
         ERC20Token(_name, _symbol, 18, 0) {
     }

@@ -7,7 +7,7 @@ import "../token/SmartToken.sol";
 contract TestTypedConverterAnchorFactory is ITypedConverterAnchorFactory {
     string public name;
 
-    constructor(string _name) public {
+    constructor(string memory _name) public {
         name = _name;
     }
 
@@ -15,7 +15,7 @@ contract TestTypedConverterAnchorFactory is ITypedConverterAnchorFactory {
         return 8;
     }
 
-    function createAnchor(string /*_name */, string _symbol, uint8 _decimals) public returns (IConverterAnchor) {
+    function createAnchor(string memory /*_name */, string memory _symbol, uint8 _decimals) public returns (IConverterAnchor) {
         IConverterAnchor anchor = new SmartToken(name, _symbol, _decimals);
 
         anchor.transferOwnership(msg.sender);

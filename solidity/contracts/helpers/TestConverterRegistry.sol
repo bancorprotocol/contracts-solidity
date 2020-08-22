@@ -13,8 +13,8 @@ contract TestConverterRegistry is ConverterRegistry {
 
     function newConverter(
         uint16 _type,
-        string _name,
-        string _symbol,
+        string memory _name,
+        string memory _symbol,
         uint8 _decimals,
         uint32 _maxConversionFee,
         IERC20Token[] memory _reserveTokens,

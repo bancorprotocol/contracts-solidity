@@ -38,7 +38,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
       * @param _symbol     token short symbol, minimum 1 character
       * @param _decimals   for display purposes only
     */
-    constructor(string _name, string _symbol, uint8 _decimals)
+    constructor(string memory _name, string memory _symbol, uint8 _decimals)
         public
         ERC20Token(_name, _symbol, _decimals, 0)
     {

@@ -67,7 +67,7 @@ contract ConverterFactory is IConverterFactory, Owned {
       *
       * @return new converter anchor
     */
-    function createAnchor(uint16 _converterType, string _name, string _symbol, uint8 _decimals) public returns (IConverterAnchor) {
+    function createAnchor(uint16 _converterType, string memory _name, string memory _symbol, uint8 _decimals) public returns (IConverterAnchor) {
         IConverterAnchor anchor;
         ITypedConverterAnchorFactory factory = anchorFactories[_converterType];
 

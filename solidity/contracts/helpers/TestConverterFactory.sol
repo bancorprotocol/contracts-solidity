@@ -9,7 +9,7 @@ contract TestConverterFactory is ConverterFactory {
     IConverter public createdConverter;
     IConverterAnchor public createdAnchor;
 
-    function createAnchor(uint16 _converterType, string _name, string _symbol, uint8 _decimals) public returns (IConverterAnchor) {
+    function createAnchor(uint16 _converterType, string memory _name, string memory _symbol, uint8 _decimals) public returns (IConverterAnchor) {
         createdAnchor = super.createAnchor(_converterType, _name, _symbol, _decimals);
 
         return createdAnchor;

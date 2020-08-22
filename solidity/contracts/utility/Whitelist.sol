@@ -57,7 +57,7 @@ contract Whitelist is IWhitelist, Owned, Utils {
       *
       * @param _addresses addresses to add
     */
-    function addAddresses(address[] _addresses) public {
+    function addAddresses(address[] memory _addresses) public {
         for (uint256 i = 0; i < _addresses.length; i++) {
             addAddress(_addresses[i]);
         }
@@ -81,7 +81,7 @@ contract Whitelist is IWhitelist, Owned, Utils {
       *
       * @param _addresses addresses to remove
     */
-    function removeAddresses(address[] _addresses) public {
+    function removeAddresses(address[] memory _addresses) public {
         for (uint256 i = 0; i < _addresses.length; i++) {
             removeAddress(_addresses[i]);
         }

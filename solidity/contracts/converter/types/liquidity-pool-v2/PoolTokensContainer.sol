@@ -27,7 +27,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       * @param  _symbol     pool symbol, also used as a prefix for the underlying pool token symbols
       * @param  _decimals   used for the underlying pool token decimals
     */
-    constructor(string _name, string _symbol, uint8 _decimals) public {
+    constructor(string memory _name, string memory _symbol, uint8 _decimals) public {
          // validate input
         require(bytes(_name).length > 0, "ERR_INVALID_NAME");
         require(bytes(_symbol).length > 0, "ERR_INVALID_SYMBOL");
@@ -94,7 +94,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       * @param _digit   digit
       * @return concatenated string
     */
-    function concatStrDigit(string _str, uint8 _digit) private pure returns (string) {
+    function concatStrDigit(string memory _str, uint8 _digit) private pure returns (string memory) {
         return string(abi.encodePacked(_str, uint8(bytes1('0')) + _digit));
     }
 }

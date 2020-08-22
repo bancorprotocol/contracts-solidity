@@ -129,7 +129,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       *
       * @return list of smart tokens
     */
-    function getSmartTokens() external view returns (address[]) {
+    function getSmartTokens() external view returns (address[] memory) {
         return smartTokens.array;
     }
 
@@ -167,7 +167,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       *
       * @return list of liquidity pools
     */
-    function getLiquidityPools() external view returns (address[]) {
+    function getLiquidityPools() external view returns (address[] memory) {
         return liquidityPools.array;
     }
 
@@ -205,7 +205,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       *
       * @return list of convertible tokens
     */
-    function getConvertibleTokens() external view returns (address[]) {
+    function getConvertibleTokens() external view returns (address[] memory) {
         return convertibleTokens.array;
     }
 
@@ -245,7 +245,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       * @param _convertibleToken convertible token
       * @return list of smart tokens associated with the given convertible token
     */
-    function getConvertibleTokenSmartTokens(address _convertibleToken) external view returns (address[]) {
+    function getConvertibleTokenSmartTokens(address _convertibleToken) external view returns (address[] memory) {
         return convertibleTokens.table[_convertibleToken].items.array;
     }
 

@@ -291,7 +291,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
       *
       * @param _reporters    new list of reporters
     */
-    function upgrade(address[] _reporters) public ownerOnly {
+    function upgrade(address[] memory _reporters) public ownerOnly {
         IBancorXUpgrader bancorXUpgrader = IBancorXUpgrader(addressOf(BANCOR_X_UPGRADER));
 
         transferOwnership(bancorXUpgrader);

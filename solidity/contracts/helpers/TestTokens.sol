@@ -99,7 +99,7 @@ contract NonStandardTokenDetailed is NonStandardToken {
       * @param _decimals    decimal points
       * @param _supply      initial supply
     */
-    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply)
+    constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _supply)
         internal
         NonStandardToken(_supply)
     {
@@ -112,7 +112,7 @@ contract NonStandardTokenDetailed is NonStandardToken {
 contract TestNonStandardToken is NonStandardTokenDetailed {
     bool public ok;
 
-    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
+    constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _supply) public
         NonStandardTokenDetailed(_name, _symbol, _decimals, _supply) {
         set(true);
     }
@@ -141,7 +141,7 @@ contract TestNonStandardTokenWithoutDecimals is NonStandardToken {
     string public name;
     string public symbol;
 
-    constructor(string _name, string _symbol, uint256 _supply) public
+    constructor(string memory _name, string memory _symbol, uint256 _supply) public
         NonStandardToken(_supply) {
         name = _name;
         symbol = _symbol;
@@ -164,7 +164,7 @@ contract TestStandardToken is NonStandardTokenDetailed {
     bool public ok;
     bool public ret;
 
-    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
+    constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _supply) public
         NonStandardTokenDetailed(_name, _symbol, _decimals, _supply) {
         set(true, true);
     }

@@ -7,5 +7,5 @@ import "./IConverterAnchor.sol";
 */
 contract ITypedConverterAnchorFactory {
     function converterType() public pure returns (uint16);
-    function createAnchor(string _name, string _symbol, uint8 _decimals) public returns (IConverterAnchor);
+    function createAnchor(string memory _name, string memory _symbol, uint8 _decimals) public returns (IConverterAnchor);
 }

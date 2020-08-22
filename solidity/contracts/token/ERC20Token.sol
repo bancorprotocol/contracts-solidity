@@ -44,7 +44,7 @@ contract ERC20Token is IERC20Token, Utils {
       * @param _decimals    decimal points, for display purposes
       * @param _totalSupply total supply of token units
     */
-    constructor(string _name, string _symbol, uint8 _decimals, uint256 _totalSupply) public {
+    constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _totalSupply) public {
         // validate input
         require(bytes(_name).length > 0, "ERR_INVALID_NAME");
         require(bytes(_symbol).length > 0, "ERR_INVALID_SYMBOL");
