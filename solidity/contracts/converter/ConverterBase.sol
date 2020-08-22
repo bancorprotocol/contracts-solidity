@@ -57,7 +57,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     /**
       * @dev version number
     */
-    uint16 public constant version = 34;
+    uint16 public constant version = 35;
 
     IConverterAnchor public anchor;                 // converter anchor contract
     IWhitelist public conversionWhitelist;          // whitelist contract with list of addresses that are allowed to use the converter

@@ -124,8 +124,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const reserve2Weight = weights[1];
 
                 // apply amplification factor
-                reserve1Balance = reserve1StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve1Balance);
-                reserve2Balance = reserve2StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve2Balance);
+                reserve1Balance = reserve1StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve1Balance);
+                reserve2Balance = reserve2StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve2Balance);
 
                 return { n: reserve2Balance.mul(reserve1Weight), d: reserve1Balance.mul(reserve2Weight) };
             };
@@ -140,8 +140,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 targetWeight = new BN(targetWeight);
                 amount = new BN(amount);
 
-                sourceBalance = sourceStakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(sourceBalance);
-                targetBalance = targetStakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(targetBalance);
+                sourceBalance = sourceStakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(sourceBalance);
+                targetBalance = targetStakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(targetBalance);
 
                 return new BN(crossReserveTargetAmount(sourceBalance, sourceWeight, targetBalance, targetWeight,
                     amount).round().toString());
@@ -223,8 +223,8 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 reserve1StakedBalance = new BN(reserve1StakedBalance);
                 reserve2StakedBalance = new BN(reserve2StakedBalance);
-                reserve1Balance = reserve1StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(new BN(reserve1Balance));
-                reserve2Balance = reserve2StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(new BN(reserve2Balance));
+                reserve1Balance = reserve1StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(new BN(reserve1Balance));
+                reserve2Balance = reserve2StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(new BN(reserve2Balance));
 
                 const reserve1Data = [reserve1StakedBalance, reserve1Balance];
                 const reserve2Data = [reserve2StakedBalance, reserve2Balance];
@@ -232,7 +232,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const secondaryReserveData = isReserve1Primary ? reserve2Data : reserve1Data;
 
                 const newWeights = balancedWeights(
-                    primaryReserveData[0].mul(AMPLIFICATION_FACTOR),
+                    primaryReserveData[0].mul(DEFAULT_AMPLIFICATION_FACTOR),
                     primaryReserveData[1],
                     secondaryReserveData[1],
                     rate.n,
@@ -260,13 +260,13 @@ contract('LiquidityPoolV2Converter', accounts => {
                 if (isReserve1Primary) {
                     const x = reserve1StakedBalance.mul(rate.n).mul(weights[1]);
                     const y = reserve2StakedBalance.mul(rate.d).mul(weights[0]);
-                    if (x.mul(AMPLIFICATION_FACTOR).gte(y.mul(AMPLIFICATION_FACTOR.add(new BN(1))))) {
+                    if (x.mul(DEFAULT_AMPLIFICATION_FACTOR).gte(y.mul(DEFAULT_AMPLIFICATION_FACTOR.add(new BN(1))))) {
                         return [weights, conversionFee.div(new BN(2))];
                     }
-                    if (x.mul(AMPLIFICATION_FACTOR.mul(new BN(2))).lte(y.mul(AMPLIFICATION_FACTOR.mul(new BN(2)).sub(new BN(1))))) {
+                    if (x.mul(DEFAULT_AMPLIFICATION_FACTOR.mul(new BN(2))).lte(y.mul(DEFAULT_AMPLIFICATION_FACTOR.mul(new BN(2)).sub(new BN(1))))) {
                         return [weights, conversionFee.mul(new BN(2))];
                     }
-                    return [weights, conversionFee.mul(y).div(x.mul(AMPLIFICATION_FACTOR).sub(y.mul(AMPLIFICATION_FACTOR.sub(new BN(1)))))];
+                    return [weights, conversionFee.mul(y).div(x.mul(DEFAULT_AMPLIFICATION_FACTOR).sub(y.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1)))))];
                 }
                 return [weights, conversionFee];
             };
@@ -292,8 +292,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 token2StakedBalance = new BN(token2StakedBalance);
 
                 // apply amplification factor
-                token1Balance = token1StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(token1Balance);
-                token2Balance = token2StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(token2Balance);
+                token1Balance = token1StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(token1Balance);
+                token2Balance = token2StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(token2Balance);
 
                 return { n: token2Balance.mul(token1Weight), d: token1Balance.mul(token2Weight) };
             };
@@ -395,7 +395,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
             const MAX_RATE_FACTOR_LOWER_BOUND = Decimal(10).pow(30);
             const PPM_RESOLUTION = new BN(1000000);
-            const AMPLIFICATION_FACTOR = new BN(20);
+            const DEFAULT_AMPLIFICATION_FACTOR = new BN(20);
             const DEFAULT_LOW_FEE_FACTOR = new BN(200000);
             const DEFAULT_HIGH_FEE_FACTOR = new BN(800000);
             const HIGH_FEE_UPPER_BOUND = new BN(997500);
@@ -486,7 +486,7 @@ contract('LiquidityPoolV2Converter', accounts => {
             it('verifies that amplificationFactor returns the correct value', async () => {
                 const converter = await initConverter(false, false);
                 const factor = await converter.amplificationFactor.call();
-                expect(factor).to.be.bignumber.equal(AMPLIFICATION_FACTOR);
+                expect(factor).to.be.bignumber.equal(DEFAULT_AMPLIFICATION_FACTOR);
             });
 
             it('verifies that lowFeeFactor returns the correct value', async () => {
@@ -788,6 +788,35 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const converter = await initConverter(true, true);
 
                 await expectRevert(converter.disableMaxStakedBalances({ from: nonOwner }), 'ERR_ACCESS_DENIED');
+            });
+
+            it('verifies the owner can update the amplification factor', async () => {
+                const converter = await initConverter(true, true);
+
+                const prevAmplificationFactor = await converter.amplificationFactor.call();
+                await converter.setAmplificationFactor(new BN(5));
+
+                const newAmplificationFactor = await converter.amplificationFactor.call();
+                expect(prevAmplificationFactor).not.to.be.bignumber.equal(newAmplificationFactor);
+                expect(newAmplificationFactor).to.be.bignumber.equal(new BN(5));
+            });
+
+            it('should revert when a non owner attempts to update the amplification factorr', async () => {
+                const converter = await initConverter(true, true);
+
+                await expectRevert(converter.setAmplificationFactor(new BN(5), { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            });
+
+            it.only('verifies that an event is fired when the owner updates the amplification factor', async () => {
+                const converter = await initConverter(true, true);
+
+                const prevAmplificationFactor = await converter.amplificationFactor.call();
+
+                const res = await converter.setAmplificationFactor(new BN(5));
+                expectEvent(res, 'AmplificationFactorUpdate', {
+                    _prevAmplificationFactor: prevAmplificationFactor,
+                    _newAmplificationFactor: new BN(5)
+                });
             });
 
             it('verifies the owner can update the external rate propagation time', async () => {
@@ -1413,8 +1442,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const poolTokenSupply = await poolToken2.totalSupply.call();
 
                 // apply amplification factor
-                const n = reserve2StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve2Balance).mul(reserve1Weight);
-                const d = reserve1StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve1Balance).mul(reserve2Weight);
+                const n = reserve2StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve2Balance).mul(reserve1Weight);
+                const d = reserve1StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve1Balance).mul(reserve2Weight);
                 const ratio = MathUtils.reducedRatio(n.toString(), d.toString(), MAX_RATE_FACTOR_LOWER_BOUND);
                 const [rateN, rateD] = ratio.map(x => new BN(x));
 
@@ -1448,8 +1477,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const poolTokenSupply = await poolToken1.totalSupply.call();
 
                 // apply amplification factor
-                const n = reserve2StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve2Balance).mul(reserve1Weight);
-                const d = reserve1StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve1Balance).mul(reserve2Weight);
+                const n = reserve2StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve2Balance).mul(reserve1Weight);
+                const d = reserve1StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve1Balance).mul(reserve2Weight);
                 const ratio = MathUtils.reducedRatio(n.toString(), d.toString(), MAX_RATE_FACTOR_LOWER_BOUND);
                 const [rateN, rateD] = ratio.map(x => new BN(x));
 
