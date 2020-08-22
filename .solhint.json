@@ -9,7 +9,7 @@
         "mark-callable-contracts": "off",
         "compiler-version": [
             "error",
-            "0.4.26"
+            "0.6.12"
         ]
     }
 }

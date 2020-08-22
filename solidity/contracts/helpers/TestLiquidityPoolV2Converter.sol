@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity >=0.6.12 <0.7.0;
 import "../converter/types/liquidity-pool-v2/LiquidityPoolV2Converter.sol";
 
 contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {

@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity >=0.6.12 <0.7.0;
 import "../../../interfaces/IConverterAnchor.sol";
 import "../../../../token/interfaces/ISmartToken.sol";
 
