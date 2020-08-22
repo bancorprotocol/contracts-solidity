@@ -15,7 +15,6 @@ import "../../../utility/interfaces/IPriceOracle.sol";
   * This type of liquidity pool always has 2 reserves and the reserve weights are dynamic.
 */
 contract LiquidityPoolV2Converter is LiquidityPoolConverter {
-    uint8 internal constant AMPLIFICATION_FACTOR = 20;  // factor to use for conversion calculations (reduces slippage)
     uint32 internal constant HIGH_FEE_UPPER_BOUND = 997500; // high fee upper bound in PPM units
     uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
 
@@ -31,6 +30,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     mapping (address => ISmartToken) private reservesToPoolTokens;  // maps each reserve to its pool token
     mapping (address => IERC20Token) private poolTokensToReserves;  // maps each pool token to its reserve
 
+    uint8 public amplificationFactor = 20;  // factor to use for conversion calculations (reduces slippage)
     uint256 public externalRatePropagationTime = 1 hours;  // the time it takes for the external rate to fully take effect
     uint256 public prevConversionTime;  // previous conversion time in seconds
 
@@ -42,7 +42,15 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     mapping (address => uint256) public maxStakedBalances;
     bool public maxStakedBalanceEnabled = true;
 
-     /**
+    /**
+      * @dev triggered when the amplification factor is updated
+      *
+      * @param  _prevAmplificationFactor    previous amplification factor
+      * @param  _newAmplificationFactor     new amplification factor
+    */
+    event AmplificationFactorUpdate(uint8 _prevAmplificationFactor, uint8 _newAmplificationFactor);
+
+    /**
       * @dev triggered when the external rate propagation time is updated
       *
       * @param  _prevPropagationTime    previous external rate propagation time, in seconds
@@ -99,15 +107,6 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     */
     function isActive() public view returns (bool) {
         return super.isActive() && priceOracle != address(0);
-    }
-
-    /**
-      * @dev returns the liquidity amplification factor in the pool
-      *
-      * @return liquidity amplification factor
-    */
-    function amplificationFactor() public pure returns (uint8) {
-        return AMPLIFICATION_FACTOR;
     }
 
     /**
@@ -320,10 +319,21 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     }
 
     /**
+      * @dev updates the amplification factor
+      * can only be called by the contract owner
+      *
+      * @param _amplificationFactor new amplification factor
+    */
+    function setAmplificationFactor(uint8 _amplificationFactor) public ownerOnly {
+        emit AmplificationFactorUpdate(amplificationFactor, _amplificationFactor);
+        amplificationFactor = _amplificationFactor;
+    }
+
+    /**
       * @dev updates the external rate propagation time
       * can only be called by the contract owner
       *
-      * @param _propagationTime rate propagation time, in seconds
+      * @param _propagationTime new rate propagation time, in seconds
     */
     function setExternalRatePropagationTime(uint256 _propagationTime) public ownerOnly {
         emit ExternalRatePropagationTimeUpdate(externalRatePropagationTime, _propagationTime);
@@ -1005,7 +1015,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @return amplified balance
     */
     function amplifiedBalance(IERC20Token _reserveToken) internal view returns (uint256) {
-        return stakedBalances[_reserveToken].mul(AMPLIFICATION_FACTOR - 1).add(reserves[_reserveToken].balance);
+        return stakedBalances[_reserveToken].mul(amplificationFactor - 1).add(reserves[_reserveToken].balance);
     }
 
     /**
