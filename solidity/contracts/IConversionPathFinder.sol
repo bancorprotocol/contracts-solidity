@@ -5,6 +5,6 @@ import "./token/interfaces/IERC20Token.sol";
 /*
     Conversion Path Finder interface
 */
-contract IConversionPathFinder {
-    function findPath(address _sourceToken, address _targetToken) public view returns (address[] memory);
+abstract contract IConversionPathFinder {
+    function findPath(IERC20Token _sourceToken, IERC20Token _targetToken) public virtual view returns (address[] memory);
 }

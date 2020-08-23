@@ -17,7 +17,7 @@ contract TokenHandler {
       * @param _value   allowance amount
     */
     function safeApprove(IERC20Token _token, address _spender, uint256 _value) internal {
-        (bool success, bytes memory data) = _token.call(abi.encodeWithSelector(APPROVE_FUNC_SELECTOR, _spender, _value));
+        (bool success, bytes memory data) = address(_token).call(abi.encodeWithSelector(APPROVE_FUNC_SELECTOR, _spender, _value));
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'ERR_APPROVE_FAILED');
     }
 
@@ -31,7 +31,7 @@ contract TokenHandler {
       * @param _value   transfer amount
     */
     function safeTransfer(IERC20Token _token, address _to, uint256 _value) internal {
-       (bool success, bytes memory data) = _token.call(abi.encodeWithSelector(TRANSFER_FUNC_SELECTOR, _to, _value));
+       (bool success, bytes memory data) = address(_token).call(abi.encodeWithSelector(TRANSFER_FUNC_SELECTOR, _to, _value));
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'ERR_TRANSFER_FAILED');
     }
 
@@ -46,7 +46,7 @@ contract TokenHandler {
       * @param _value   transfer amount
     */
     function safeTransferFrom(IERC20Token _token, address _from, address _to, uint256 _value) internal {
-       (bool success, bytes memory data) = _token.call(abi.encodeWithSelector(TRANSFER_FROM_FUNC_SELECTOR, _from, _to, _value));
+       (bool success, bytes memory data) = address(_token).call(abi.encodeWithSelector(TRANSFER_FROM_FUNC_SELECTOR, _from, _to, _value));
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'ERR_TRANSFER_FROM_FAILED');
     }
 }

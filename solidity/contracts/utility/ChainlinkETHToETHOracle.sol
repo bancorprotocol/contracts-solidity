@@ -14,7 +14,7 @@ contract ChainlinkETHToETHOracle is IChainlinkPriceOracle {
       *
       * @return always returns the trivial rate of 1
     */
-    function latestAnswer() external view returns (int256) {
+    function latestAnswer() external override view returns (int256) {
         return ETH_RATE;
     }
 
@@ -23,7 +23,7 @@ contract ChainlinkETHToETHOracle is IChainlinkPriceOracle {
       *
       * @return always returns current block's timestamp
     */
-    function latestTimestamp() external view returns (uint256) {
+    function latestTimestamp() external override view returns (uint256) {
         return now;
     }
 }

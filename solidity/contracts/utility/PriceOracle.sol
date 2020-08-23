@@ -18,13 +18,13 @@ contract PriceOracle is IPriceOracle, Utils {
     address private constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint8 private constant ETH_DECIMALS = 18;
 
-    IERC20Token public tokenA;                  // token A the oracle supports
-    IERC20Token public tokenB;                  // token B the oracle supports
-    mapping (address => uint8) public tokenDecimals; // token -> token decimals
+    IERC20Token public tokenA;  // token A the oracle supports
+    IERC20Token public tokenB;  // token B the oracle supports
+    mapping (IERC20Token => uint8) public tokenDecimals;    // token -> token decimals
 
-    IChainlinkPriceOracle public tokenAOracle;  // token A chainlink price oracle
-    IChainlinkPriceOracle public tokenBOracle;  // token B chainlink price oracle
-    mapping (address => IChainlinkPriceOracle) public tokensToOracles;  // token -> price oracle for easier access
+    IChainlinkPriceOracle public override tokenAOracle;  // token A chainlink price oracle
+    IChainlinkPriceOracle public override tokenBOracle;  // token B chainlink price oracle
+    mapping (IERC20Token => IChainlinkPriceOracle) public tokensToOracles;  // token -> price oracle for easier access
 
     /**
       * @dev initializes a new PriceOracle instance
@@ -37,8 +37,8 @@ contract PriceOracle is IPriceOracle, Utils {
     */
     constructor(IERC20Token _tokenA, IERC20Token _tokenB, IChainlinkPriceOracle _tokenAOracle, IChainlinkPriceOracle _tokenBOracle)
         public
-        validUniqueAddresses(_tokenA, _tokenB)
-        validUniqueAddresses(_tokenAOracle, _tokenBOracle)
+        validUniqueAddresses(address(_tokenA), address(_tokenB))
+        validUniqueAddresses(address(_tokenAOracle), address(_tokenBOracle))
     {
         tokenA = _tokenA;
         tokenB = _tokenB;
@@ -72,8 +72,8 @@ contract PriceOracle is IPriceOracle, Utils {
 
     // error message binary size optimization
     function _supportedTokens(IERC20Token _tokenA, IERC20Token _tokenB) internal view {
-        _validUniqueAddresses(_tokenA, _tokenB);
-        require(tokensToOracles[_tokenA] != address(0) && tokensToOracles[_tokenB] != address(0), "ERR_UNSUPPORTED_TOKEN");
+        _validUniqueAddresses(address(_tokenA), address(_tokenB));
+        require(address(tokensToOracles[_tokenA]) != address(0) && address(tokensToOracles[_tokenB]) != address(0), "ERR_UNSUPPORTED_TOKEN");
     }
 
     /**
@@ -90,6 +90,7 @@ contract PriceOracle is IPriceOracle, Utils {
     */
     function latestRate(IERC20Token _tokenA, IERC20Token _tokenB)
         public
+        override
         view
         supportedTokens(_tokenA, _tokenB)
         returns (uint256, uint256)
@@ -127,6 +128,7 @@ contract PriceOracle is IPriceOracle, Utils {
     */
     function lastUpdateTime()
         public
+        override
         view
         returns (uint256) {
         // returns the oldest timestamp between the two
@@ -148,6 +150,7 @@ contract PriceOracle is IPriceOracle, Utils {
     */
     function latestRateAndUpdateTime(IERC20Token _tokenA, IERC20Token _tokenB)
         public
+        override
         view
         returns (uint256, uint256, uint256)
     {
@@ -158,7 +161,7 @@ contract PriceOracle is IPriceOracle, Utils {
 
     /** @dev returns the decimals of a given token */
     function decimals(IERC20Token _token) private view returns (uint8) {
-        if (_token == ETH_ADDRESS) {
+        if (address(_token) == ETH_ADDRESS) {
             return ETH_DECIMALS;
         }
 

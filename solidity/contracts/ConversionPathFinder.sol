@@ -13,7 +13,7 @@ import "./converter/interfaces/IConverterRegistry.sol";
   * See the BancorNetwork contract for conversion path format.
 */
 contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
-    address public anchorToken;
+    IERC20Token public anchorToken;
 
     /**
       * @dev initializes a new ConversionPathFinder instance
@@ -28,7 +28,7 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
       *
       * @param _anchorToken address of the anchor token
     */
-    function setAnchorToken(address _anchorToken) public ownerOnly {
+    function setAnchorToken(IERC20Token _anchorToken) public ownerOnly {
         anchorToken = _anchorToken;
     }
 
@@ -40,7 +40,7 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
       *
       * @return a path from the source token to the target token
     */
-    function findPath(address _sourceToken, address _targetToken) public view returns (address[] memory) {
+    function findPath(IERC20Token _sourceToken, IERC20Token _targetToken) public override view returns (address[] memory) {
         IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
         address[] memory sourcePath = getPath(_sourceToken, converterRegistry);
         address[] memory targetPath = getPath(_targetToken, converterRegistry);
@@ -55,25 +55,25 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
       *
       * @return a path from the input token to the anchor token
     */
-    function getPath(address _token, IConverterRegistry _converterRegistry) private view returns (address[] memory) {
+    function getPath(IERC20Token _token, IConverterRegistry _converterRegistry) private view returns (address[] memory) {
         if (_token == anchorToken)
-            return getInitialArray(_token);
+            return getInitialArray(address(_token));
 
         address[] memory anchors;
-        if (_converterRegistry.isAnchor(_token))
-            anchors = getInitialArray(_token);
+        if (_converterRegistry.isAnchor(address(_token)))
+            anchors = getInitialArray(address(_token));
         else
             anchors = _converterRegistry.getConvertibleTokenAnchors(_token);
 
         for (uint256 n = 0; n < anchors.length; n++) {
-            IConverter converter = IConverter(IConverterAnchor(anchors[n]).owner());
+            IConverter converter = IConverter(payable(IConverterAnchor(anchors[n]).owner()));
             uint256 connectorTokenCount = converter.connectorTokenCount();
             for (uint256 i = 0; i < connectorTokenCount; i++) {
-                address connectorToken = converter.connectorTokens(i);
+                IERC20Token connectorToken = converter.connectorTokens(i);
                 if (connectorToken != _token) {
                     address[] memory path = getPath(connectorToken, _converterRegistry);
                     if (path.length > 0)
-                        return getExtendedArray(_token, anchors[n], path);
+                        return getExtendedArray(address(_token), anchors[n], path);
                 }
             }
         }

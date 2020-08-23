@@ -42,7 +42,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       *
       * @return list of pool tokens
     */
-    function poolTokens() public view returns (ISmartToken[] memory) {
+    function poolTokens() external override view returns (ISmartToken[] memory) {
         return _poolTokens;
     }
 
@@ -51,7 +51,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       *
       * @return new pool token address
     */
-    function createToken() public ownerOnly returns (ISmartToken) {
+    function createToken() external override ownerOnly returns (ISmartToken) {
         // verify that the max limit wasn't reached
         require(_poolTokens.length < MAX_POOL_TOKENS, "ERR_MAX_LIMIT_REACHED");
 
@@ -71,7 +71,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       * @param _to      account to receive the newly minted tokens
       * @param _amount  amount to mint
     */
-    function mint(ISmartToken _token, address _to, uint256 _amount) public ownerOnly {
+    function mint(ISmartToken _token, address _to, uint256 _amount) external override ownerOnly {
         _token.issue(_to, _amount);
     }
 
@@ -83,7 +83,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       * @param _from    account to remove the tokens from
       * @param _amount  amount to burn
     */
-    function burn(ISmartToken _token, address _from, uint256 _amount) public ownerOnly {
+    function burn(ISmartToken _token, address _from, uint256 _amount) external override ownerOnly {
         _token.destroy(_from, _amount);
     }
 

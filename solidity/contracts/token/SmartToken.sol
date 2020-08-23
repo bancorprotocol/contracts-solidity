@@ -61,7 +61,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
       *
       * @param _disable    true to disable transfers, false to enable them
     */
-    function disableTransfers(bool _disable) public ownerOnly {
+    function disableTransfers(bool _disable) public override ownerOnly {
         transfersEnabled = !_disable;
     }
 
@@ -74,6 +74,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     */
     function issue(address _to, uint256 _amount)
         public
+        override
         ownerOnly
         validAddress(_to)
         notThis(_to)
@@ -92,7 +93,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
       * @param _from    account to remove the amount from
       * @param _amount  amount to decrease the supply by
     */
-    function destroy(address _from, uint256 _amount) public ownerOnly {
+    function destroy(address _from, uint256 _amount) public override ownerOnly {
         balanceOf[_from] = balanceOf[_from].sub(_amount);
         totalSupply = totalSupply.sub(_amount);
 
@@ -112,9 +113,13 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
       *
       * @return true if the transfer was successful, false if it wasn't
     */
-    function transfer(address _to, uint256 _value) public transfersAllowed returns (bool) {
-        assert(super.transfer(_to, _value));
-        return true;
+    function transfer(address _to, uint256 _value)
+        public
+        override(IERC20Token, ERC20Token)
+        transfersAllowed
+        returns (bool)
+    {
+        return super.transfer(_to, _value);
     }
 
     /**
@@ -128,8 +133,12 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
       *
       * @return true if the transfer was successful, false if it wasn't
     */
-    function transferFrom(address _from, address _to, uint256 _value) public transfersAllowed returns (bool) {
-        assert(super.transferFrom(_from, _to, _value));
-        return true;
+    function transferFrom(address _from, address _to, uint256 _value)
+        public
+        override(IERC20Token, ERC20Token)
+        transfersAllowed
+        returns (bool) 
+    {
+        return super.transferFrom(_from, _to, _value);
     }
 }

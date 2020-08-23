@@ -33,7 +33,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _converter   converter address
       * @param _owner       new owner - local upgrader address
     */
-    event ConverterOwned(address indexed _converter, address indexed _owner);
+    event ConverterOwned(IConverter indexed _converter, address indexed _owner);
 
     /**
       * @dev triggered when the upgrading process is done
@@ -61,7 +61,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       *
       * @param _version old converter version
     */
-    function upgrade(bytes32 _version) public {
+    function upgrade(bytes32 _version) public override {
         upgradeOld(IConverter(msg.sender), _version);
     }
 
@@ -74,8 +74,8 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       *
       * @param _version old converter version
     */
-    function upgrade(uint16 _version) public {
-        upgradeOld(IConverter(msg.sender), bytes32(_version));
+    function upgrade(uint16 _version) public override {
+        upgradeOld(IConverter(msg.sender), bytes32(uint256(_version)));
     }
 
     /**
@@ -102,7 +102,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         bool activate = isV28OrHigherConverter(converter) && converter.isActive();
 
         if (anchor.owner() == address(converter)) {
-            converter.transferTokenOwnership(newConverter);
+            converter.transferTokenOwnership(address(newConverter));
             newConverter.acceptAnchorOwnership();
         }
 
@@ -124,7 +124,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     */
     function acceptConverterOwnership(IConverter _oldConverter) private {
         _oldConverter.acceptOwnership();
-        emit ConverterOwned(_oldConverter, this);
+        emit ConverterOwned(_oldConverter, address(this));
     }
 
     /**
@@ -167,15 +167,15 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 
         for (uint16 i = 0; i < reserveTokenCount; i++) {
-            address reserveAddress = _oldConverter.connectorTokens(i);
+            IERC20Token reserveAddress = _oldConverter.connectorTokens(i);
             (, uint32 weight, , , ) = _oldConverter.connectors(reserveAddress);
 
             // Ether reserve
-            if (reserveAddress == ETH_RESERVE_ADDRESS) {
+            if (address(reserveAddress) == ETH_RESERVE_ADDRESS) {
                 _newConverter.addReserve(IERC20Token(ETH_RESERVE_ADDRESS), weight);
             }
             // Ether reserve token
-            else if (reserveAddress == address(etherToken)) {
+            else if (reserveAddress == etherToken) {
                 _newConverter.addReserve(IERC20Token(ETH_RESERVE_ADDRESS), weight);
             }
             // ERC20 reserve token
@@ -209,21 +209,21 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 
         for (uint16 i = 0; i < reserveTokenCount; i++) {
-            address reserveAddress = _oldConverter.connectorTokens(i);
+            IERC20Token reserveAddress = _oldConverter.connectorTokens(i);
             // Ether reserve
-            if (reserveAddress == ETH_RESERVE_ADDRESS) {
+            if (address(reserveAddress) == ETH_RESERVE_ADDRESS) {
                 _oldConverter.withdrawETH(address(_newConverter));
             }
             // Ether reserve token
-            else if (reserveAddress == address(etherToken)) {
-                reserveBalance = etherToken.balanceOf(_oldConverter);
+            else if (reserveAddress == etherToken) {
+                reserveBalance = etherToken.balanceOf(address(_oldConverter));
                 _oldConverter.withdrawTokens(etherToken, address(this), reserveBalance);
                 etherToken.withdrawTo(address(_newConverter), reserveBalance);
             }
             // ERC20 reserve token
             else {
-                IERC20Token connector = IERC20Token(reserveAddress);
-                reserveBalance = connector.balanceOf(_oldConverter);
+                IERC20Token connector = reserveAddress;
+                reserveBalance = connector.balanceOf(address(_oldConverter));
                 _oldConverter.withdrawTokens(connector, address(_newConverter), reserveBalance);
             }
         }
@@ -242,12 +242,15 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
 
         uint16 converterType = _oldConverter.converterType();
         if (converterType == 2) {
-            uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
+            ILiquidityPoolV2Converter oldConverter = ILiquidityPoolV2Converter(address(_oldConverter));
+            ILiquidityPoolV2Converter newConverter = ILiquidityPoolV2Converter(address(_newConverter));
+
+            uint16 reserveTokenCount = oldConverter.connectorTokenCount();
             for (uint16 i = 0; i < reserveTokenCount; i++) {
                 // copy reserve staked balance
-                IERC20Token reserveTokenAddress = _oldConverter.connectorTokens(i);
-                uint256 balance = ILiquidityPoolV2Converter(_oldConverter).reserveStakedBalance(reserveTokenAddress);
-                ILiquidityPoolV2Converter(_newConverter).setReserveStakedBalance(reserveTokenAddress, balance);
+                IERC20Token reserveTokenAddress = oldConverter.connectorTokens(i);
+                uint256 balance = oldConverter.reserveStakedBalance(reserveTokenAddress);
+                newConverter.setReserveStakedBalance(reserveTokenAddress, balance);
             }
 
             if (!_activate) {
@@ -255,15 +258,15 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
             }
 
             // get the primary reserve token
-            IERC20Token primaryReserveToken = ILiquidityPoolV2Converter(_oldConverter).primaryReserveToken();
+            IERC20Token primaryReserveToken = oldConverter.primaryReserveToken();
 
             // get the chainlink price oracles
-            IPriceOracle priceOracle = ILiquidityPoolV2Converter(_oldConverter).priceOracle();
+            IPriceOracle priceOracle = oldConverter.priceOracle();
             IChainlinkPriceOracle oracleA = priceOracle.tokenAOracle();
             IChainlinkPriceOracle oracleB = priceOracle.tokenBOracle();
 
             // activate the new converter
-            ILiquidityPoolV2Converter(_newConverter).activate(primaryReserveToken, oracleA, oracleB);
+            newConverter.activate(primaryReserveToken, oracleA, oracleB);
         }
     }
 
@@ -273,7 +276,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     // can't rely on the version number since the function had a different signature in older converters
     function isV28OrHigherConverter(IConverter _converter) internal view returns (bool) {
         bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);
-        (bool success, bytes memory returnData) = _converter.staticcall.gas(4000)(data);
+        (bool success, bytes memory returnData) = address(_converter).staticcall{ gas: 4000 }(data);
 
         if (success && returnData.length == 32) {
             return abi.decode(returnData, (bool));

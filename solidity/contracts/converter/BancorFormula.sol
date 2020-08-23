@@ -327,7 +327,7 @@ contract BancorFormula is IBancorFormula {
                                   uint256 _reserveBalance,
                                   uint32 _reserveWeight,
                                   uint256 _amount)
-                                  public view returns (uint256)
+                                  public override view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -368,7 +368,7 @@ contract BancorFormula is IBancorFormula {
                               uint256 _reserveBalance,
                               uint32 _reserveWeight,
                               uint256 _amount)
-                              public view returns (uint256)
+                              public override view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -417,7 +417,7 @@ contract BancorFormula is IBancorFormula {
                                       uint256 _targetReserveBalance,
                                       uint32 _targetReserveWeight,
                                       uint256 _amount)
-                                      public view returns (uint256)
+                                      public override view returns (uint256)
     {
         // validate input
         require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -455,7 +455,7 @@ contract BancorFormula is IBancorFormula {
                       uint256 _reserveBalance,
                       uint32 _reserveRatio,
                       uint256 _amount)
-                      public view returns (uint256)
+                      public override view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -496,7 +496,7 @@ contract BancorFormula is IBancorFormula {
                               uint256 _reserveBalance,
                               uint32 _reserveRatio,
                               uint256 _amount)
-                              public view returns (uint256)
+                              public override view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -537,7 +537,7 @@ contract BancorFormula is IBancorFormula {
                                     uint256 _reserveBalance,
                                     uint32 _reserveRatio,
                                     uint256 _amount)
-                                    public view returns (uint256)
+                                    public override view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -610,7 +610,7 @@ contract BancorFormula is IBancorFormula {
                              uint256 _secondaryReserveBalance,
                              uint256 _reserveRateNumerator,
                              uint256 _reserveRateDenominator)
-                             public view returns (uint32, uint32)
+                             public override view returns (uint32, uint32)
     {
         if (_primaryReserveStakedBalance == _primaryReserveBalance)
             require(_primaryReserveStakedBalance > 0 || _secondaryReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");

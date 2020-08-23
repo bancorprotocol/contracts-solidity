@@ -72,10 +72,10 @@ contract TestBancorNetwork is BancorNetwork {
     }
 
     function getReturnOld() external view returns (uint256, uint256) {
-        return getReturn(address(oldConverter), IERC20Token(0), IERC20Token(0), uint256(0));
+        return getReturn(IConverter(payable(address(oldConverter))), IERC20Token(0), IERC20Token(0), uint256(0));
     }
 
     function getReturnNew() external view returns (uint256, uint256) {
-        return getReturn(address(newConverter), IERC20Token(0), IERC20Token(0), uint256(0));
+        return getReturn(IConverter(payable(address(newConverter))), IERC20Token(0), IERC20Token(0), uint256(0));
     }
 }

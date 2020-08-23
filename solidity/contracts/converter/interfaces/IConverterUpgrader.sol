@@ -4,7 +4,7 @@ pragma solidity >=0.6.12 <0.7.0;
 /*
     Converter Upgrader interface
 */
-contract IConverterUpgrader {
-    function upgrade(bytes32 _version) public;
-    function upgrade(uint16 _version) public;
+abstract contract IConverterUpgrader {
+    function upgrade(bytes32 _version) public virtual;
+    function upgrade(uint16 _version) public virtual;
 }

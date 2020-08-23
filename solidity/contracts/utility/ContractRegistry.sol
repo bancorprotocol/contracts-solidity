@@ -48,7 +48,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
       *
       * @return contract address
     */
-    function addressOf(bytes32 _contractName) public view returns (address) {
+    function addressOf(bytes32 _contractName) public override view returns (address) {
         return items[_contractName].contractAddress;
     }
 
@@ -72,10 +72,11 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
             return;
 
         if (currentAddress == address(0)) {
-            // add the contract name to the name list
-            uint256 i = contractNames.push(bytes32ToString(_contractName));
             // update the item's index in the list
-            items[_contractName].nameIndex = i - 1;
+            items[_contractName].nameIndex = contractNames.length;
+
+            // add the contract name to the name list
+            contractNames.push(bytes32ToString(_contractName));
         }
 
         // update the address in the registry
@@ -111,7 +112,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
         }
 
         // remove the last element from the name list
-        contractNames.length--;
+        contractNames.pop();
         // zero the deleted element's index
         items[_contractName].nameIndex = 0;
 

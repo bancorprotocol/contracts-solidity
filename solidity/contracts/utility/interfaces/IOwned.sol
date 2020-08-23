@@ -4,10 +4,10 @@ pragma solidity >=0.6.12 <0.7.0;
 /*
     Owned contract interface
 */
-contract IOwned {
+abstract contract IOwned {
     // this function isn't abstract since the compiler emits automatically generated getter functions as external
-    function owner() public view returns (address) {this;}
+    function owner() external virtual view returns (address);
 
-    function transferOwnership(address _newOwner) public;
-    function acceptOwnership() public;
+    function transferOwnership(address _newOwner) public virtual;
+    function acceptOwnership() public virtual;
 }

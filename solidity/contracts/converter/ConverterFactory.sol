@@ -20,11 +20,11 @@ contract ConverterFactory is IConverterFactory, Owned {
       * @param _converter   new converter address
       * @param _owner       converter owner address
     */
-    event NewConverter(uint16 indexed _type, address indexed _converter, address indexed _owner);
+    event NewConverter(uint16 indexed _type, IConverter indexed _converter, address indexed _owner);
 
     mapping (uint16 => ITypedConverterFactory) public converterFactories;
     mapping (uint16 => ITypedConverterAnchorFactory) public anchorFactories;
-    mapping (uint16 => ITypedConverterCustomFactory) public customFactories;
+    mapping (uint16 => ITypedConverterCustomFactory) public override customFactories;
 
     /**
       * @dev initializes the factory with a specific typed converter factory
@@ -67,11 +67,15 @@ contract ConverterFactory is IConverterFactory, Owned {
       *
       * @return new converter anchor
     */
-    function createAnchor(uint16 _converterType, string memory _name, string memory _symbol, uint8 _decimals) public returns (IConverterAnchor) {
+    function createAnchor(uint16 _converterType, string memory _name, string memory _symbol, uint8 _decimals)
+        external
+        override
+        returns (IConverterAnchor)
+    {
         IConverterAnchor anchor;
         ITypedConverterAnchorFactory factory = anchorFactories[_converterType];
 
-        if (factory == address(0)) {
+        if (address(factory) == address(0)) {
             // create default anchor (SmartToken)
             anchor = new SmartToken(_name, _symbol, _decimals);
         }
@@ -96,7 +100,11 @@ contract ConverterFactory is IConverterFactory, Owned {
       *
       * @return new converter
     */
-    function createConverter(uint16 _type, IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) public returns (IConverter) {
+    function createConverter(uint16 _type, IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee)
+        external
+        override
+        returns (IConverter)
+    {
         IConverter converter = converterFactories[_type].createConverter(_anchor, _registry, _maxConversionFee);
         converter.acceptOwnership();
         converter.transferOwnership(msg.sender);

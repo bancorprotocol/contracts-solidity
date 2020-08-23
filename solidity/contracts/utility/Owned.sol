@@ -6,7 +6,7 @@ import "./interfaces/IOwned.sol";
   * @dev Provides support and utilities for contract ownership
 */
 contract Owned is IOwned {
-    address public owner;
+    address public override owner;
     address public newOwner;
 
     /**
@@ -42,7 +42,7 @@ contract Owned is IOwned {
       *
       * @param _newOwner    new contract owner
     */
-    function transferOwnership(address _newOwner) public ownerOnly {
+    function transferOwnership(address _newOwner) public override ownerOnly {
         require(_newOwner != owner, "ERR_SAME_OWNER");
         newOwner = _newOwner;
     }
@@ -50,7 +50,7 @@ contract Owned is IOwned {
     /**
       * @dev used by a new owner to accept an ownership transfer
     */
-    function acceptOwnership() public {
+    function acceptOwnership() override public {
         require(msg.sender == newOwner, "ERR_ACCESS_DENIED");
         emit OwnerUpdate(owner, newOwner);
         owner = newOwner;

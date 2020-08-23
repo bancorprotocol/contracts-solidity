@@ -14,7 +14,7 @@ contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
       *
       * @return converter type
     */
-    function converterType() public pure returns (uint16) {
+    function converterType() external override pure returns (uint16) {
         return 1;
     }
 
@@ -28,8 +28,8 @@ contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
       *
       * @return a new converter
     */
-    function createConverter(IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) public returns (IConverter) {
-        IConverter converter = new LiquidityPoolV1Converter(ISmartToken(_anchor), _registry, _maxConversionFee);
+    function createConverter(IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) external override returns (IConverter) {
+        IConverter converter = new LiquidityPoolV1Converter(ISmartToken(address(_anchor)), _registry, _maxConversionFee);
         converter.transferOwnership(msg.sender);
         return converter;
     }

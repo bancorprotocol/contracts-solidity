@@ -1,27 +1,34 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity >=0.6.12 <0.7.0;
+import "./IConverterAnchor.sol";
 
 interface IConverterRegistryData {
-    function addSmartToken(address _smartToken) external;
-    function removeSmartToken(address _smartToken) external;
-    function addLiquidityPool(address _liquidityPool) external;
-    function removeLiquidityPool(address _liquidityPool) external;
-    function addConvertibleToken(address _convertibleToken, address _smartToken) external;
-    function removeConvertibleToken(address _convertibleToken, address _smartToken) external;
+    function addSmartToken(IConverterAnchor _anchor) external;
+    function removeSmartToken(IConverterAnchor _anchor) external;
+
+    function addLiquidityPool(IConverterAnchor _liquidityPoolAnchor) external;
+    function removeLiquidityPool(IConverterAnchor _liquidityPoolAnchor) external;
+
+    function addConvertibleToken(IERC20Token _convertibleToken, IConverterAnchor _anchor) external;
+    function removeConvertibleToken(IERC20Token _convertibleToken, IConverterAnchor _anchor) external;
+
     function getSmartTokenCount() external view returns (uint256);
     function getSmartTokens() external view returns (address[] memory);
-    function getSmartToken(uint256 _index) external view returns (address);
+    function getSmartToken(uint256 _index) external view returns (IConverterAnchor);
     function isSmartToken(address _value) external view returns (bool);
+
     function getLiquidityPoolCount() external view returns (uint256);
     function getLiquidityPools() external view returns (address[] memory);
-    function getLiquidityPool(uint256 _index) external view returns (address);
+    function getLiquidityPool(uint256 _index) external view returns (IConverterAnchor);
     function isLiquidityPool(address _value) external view returns (bool);
+
     function getConvertibleTokenCount() external view returns (uint256);
     function getConvertibleTokens() external view returns (address[] memory);
-    function getConvertibleToken(uint256 _index) external view returns (address);
+    function getConvertibleToken(uint256 _index) external view returns (IERC20Token);
     function isConvertibleToken(address _value) external view returns (bool);
-    function getConvertibleTokenSmartTokenCount(address _convertibleToken) external view returns (uint256);
-    function getConvertibleTokenSmartTokens(address _convertibleToken) external view returns (address[] memory);
-    function getConvertibleTokenSmartToken(address _convertibleToken, uint256 _index) external view returns (address);
-    function isConvertibleTokenSmartToken(address _convertibleToken, address _value) external view returns (bool);
+
+    function getConvertibleTokenSmartTokenCount(IERC20Token _convertibleToken) external view returns (uint256);
+    function getConvertibleTokenSmartTokens(IERC20Token _convertibleToken) external view returns (address[] memory);
+    function getConvertibleTokenSmartToken(IERC20Token _convertibleToken, uint256 _index) external view returns (IConverterAnchor);
+    function isConvertibleTokenSmartToken(IERC20Token _convertibleToken, address _value) external view returns (bool);
 }

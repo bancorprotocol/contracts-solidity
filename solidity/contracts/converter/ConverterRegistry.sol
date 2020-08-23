@@ -6,6 +6,7 @@ import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterFactory.sol";
 import "./interfaces/IConverterRegistry.sol";
 import "./interfaces/IConverterRegistryData.sol";
+import "../token/interfaces/ISmartToken.sol";
 
 /**
   * @dev The ConverterRegistry maintains a list of all active converters in the Bancor Network.
@@ -33,28 +34,28 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @param _anchor smart token
     */
-    event ConverterAnchorAdded(address indexed _anchor);
+    event ConverterAnchorAdded(IConverterAnchor indexed _anchor);
 
     /**
       * @dev triggered when a converter anchor is removed from the registry
       *
       * @param _anchor smart token
     */
-    event ConverterAnchorRemoved(address indexed _anchor);
+    event ConverterAnchorRemoved(IConverterAnchor indexed _anchor);
 
     /**
       * @dev triggered when a liquidity pool is added to the registry
       *
       * @param _liquidityPool liquidity pool
     */
-    event LiquidityPoolAdded(address indexed _liquidityPool);
+    event LiquidityPoolAdded(IConverterAnchor indexed _liquidityPool);
 
     /**
       * @dev triggered when a liquidity pool is removed from the registry
       *
       * @param _liquidityPool liquidity pool
     */
-    event LiquidityPoolRemoved(address indexed _liquidityPool);
+    event LiquidityPoolRemoved(IConverterAnchor indexed _liquidityPool);
 
     /**
       * @dev triggered when a convertible token is added to the registry
@@ -62,7 +63,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
-    event ConvertibleTokenAdded(address indexed _convertibleToken, address indexed _smartToken);
+    event ConvertibleTokenAdded(IERC20Token indexed _convertibleToken, IConverterAnchor indexed _smartToken);
 
     /**
       * @dev triggered when a convertible token is removed from the registry
@@ -70,17 +71,17 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _convertibleToken convertible token
       * @param _smartToken associated smart token
     */
-    event ConvertibleTokenRemoved(address indexed _convertibleToken, address indexed _smartToken);
+    event ConvertibleTokenRemoved(IERC20Token indexed _convertibleToken, IConverterAnchor indexed _smartToken);
 
     /**
       * @dev deprecated, backward compatibility, use `ConverterAnchorAdded`
     */
-    event SmartTokenAdded(address indexed _smartToken);
+    event SmartTokenAdded(IConverterAnchor indexed _smartToken);
 
     /**
       * @dev deprecated, backward compatibility, use `ConverterAnchorRemoved`
     */
-    event SmartTokenRemoved(address indexed _smartToken);
+    event SmartTokenRemoved(IConverterAnchor indexed _smartToken);
 
     /**
       * @dev initializes a new ConverterRegistry instance
@@ -112,7 +113,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         IERC20Token[] memory _reserveTokens,
         uint32[] memory _reserveWeights
     )
-    public returns (IConverter)
+    public virtual returns (IConverter)
     {
         uint256 length = _reserveTokens.length;
         require(length == _reserveWeights.length, "ERR_INVALID_RESERVES");
@@ -128,7 +129,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         for (uint256 i = 0; i < length; i++)
             converter.addReserve(_reserveTokens[i], _reserveWeights[i]);
 
-        anchor.transferOwnership(converter);
+        anchor.transferOwnership(address(converter));
         converter.acceptAnchorOwnership();
         converter.transferOwnership(msg.sender);
 
@@ -164,7 +165,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @return number of anchors
     */
-    function getAnchorCount() public view returns (uint256) {
+    function getAnchorCount() public override view returns (uint256) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getSmartTokenCount();
     }
 
@@ -173,7 +174,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @return list of anchors
     */
-    function getAnchors() public view returns (address[] memory) {
+    function getAnchors() public override view returns (address[] memory) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getSmartTokens();
     }
 
@@ -183,7 +184,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _index index
       * @return anchor at the given index
     */
-    function getAnchor(uint256 _index) public view returns (address) {
+    function getAnchor(uint256 _index) public override view returns (IConverterAnchor) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getSmartToken(_index);
     }
 
@@ -193,7 +194,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _value value
       * @return true if the given value is an anchor, false if not
     */
-    function isAnchor(address _value) public view returns (bool) {
+    function isAnchor(address _value) public override view returns (bool) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).isSmartToken(_value);
     }
 
@@ -202,7 +203,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @return number of liquidity pools
     */
-    function getLiquidityPoolCount() public view returns (uint256) {
+    function getLiquidityPoolCount() public override view returns (uint256) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getLiquidityPoolCount();
     }
 
@@ -211,7 +212,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @return list of liquidity pools
     */
-    function getLiquidityPools() public view returns (address[] memory) {
+    function getLiquidityPools() public override view returns (address[] memory) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getLiquidityPools();
     }
 
@@ -221,7 +222,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _index index
       * @return liquidity pool at the given index
     */
-    function getLiquidityPool(uint256 _index) public view returns (address) {
+    function getLiquidityPool(uint256 _index) public override view returns (IConverterAnchor) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getLiquidityPool(_index);
     }
 
@@ -231,7 +232,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _value value
       * @return true if the given value is a liquidity pool, false if not
     */
-    function isLiquidityPool(address _value) public view returns (bool) {
+    function isLiquidityPool(address _value) public override view returns (bool) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).isLiquidityPool(_value);
     }
 
@@ -240,7 +241,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @return number of convertible tokens
     */
-    function getConvertibleTokenCount() public view returns (uint256) {
+    function getConvertibleTokenCount() public override view returns (uint256) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokenCount();
     }
 
@@ -249,7 +250,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @return list of convertible tokens
     */
-    function getConvertibleTokens() public view returns (address[] memory) {
+    function getConvertibleTokens() public override view returns (address[] memory) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokens();
     }
 
@@ -259,7 +260,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _index index
       * @return convertible token at the given index
     */
-    function getConvertibleToken(uint256 _index) public view returns (address) {
+    function getConvertibleToken(uint256 _index) public override view returns (IERC20Token) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleToken(_index);
     }
 
@@ -269,7 +270,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _value value
       * @return true if the given value is a convertible token, false if not
     */
-    function isConvertibleToken(address _value) public view returns (bool) {
+    function isConvertibleToken(address _value) public override view returns (bool) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).isConvertibleToken(_value);
     }
 
@@ -279,7 +280,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _convertibleToken convertible token
       * @return number of anchors associated with the given convertible token
     */
-    function getConvertibleTokenAnchorCount(address _convertibleToken) public view returns (uint256) {
+    function getConvertibleTokenAnchorCount(IERC20Token _convertibleToken) public override view returns (uint256) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokenCount(_convertibleToken);
     }
 
@@ -289,7 +290,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _convertibleToken convertible token
       * @return list of anchors associated with the given convertible token
     */
-    function getConvertibleTokenAnchors(address _convertibleToken) public view returns (address[] memory) {
+    function getConvertibleTokenAnchors(IERC20Token _convertibleToken) public override view returns (address[] memory) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokens(_convertibleToken);
     }
 
@@ -299,7 +300,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _index index
       * @return anchor associated with the given convertible token at the given index
     */
-    function getConvertibleTokenAnchor(address _convertibleToken, uint256 _index) public view returns (address) {
+    function getConvertibleTokenAnchor(IERC20Token _convertibleToken, uint256 _index) public override view returns (IConverterAnchor) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartToken(_convertibleToken, _index);
     }
 
@@ -310,7 +311,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _value value
       * @return true if the given value is an anchor of the given convertible token, false if not
     */
-    function isConvertibleTokenAnchor(address _convertibleToken, address _value) public view returns (bool) {
+    function isConvertibleTokenAnchor(IERC20Token _convertibleToken, address _value) public override view returns (bool) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).isConvertibleTokenSmartToken(_convertibleToken, _value);
     }
 
@@ -321,11 +322,11 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _anchors list of converter anchors
       * @return list of converters
     */
-    function getConvertersByAnchors(address[] memory _anchors) public view returns (address[] memory) {
-        address[] memory converters = new address[](_anchors.length);
+    function getConvertersByAnchors(address[] memory _anchors) public view returns (IConverter[] memory) {
+        IConverter[] memory converters = new IConverter[](_anchors.length);
 
         for (uint256 i = 0; i < _anchors.length; i++)
-            converters[i] = IConverterAnchor(_anchors[i]).owner();
+            converters[i] = IConverter(payable(IConverterAnchor(_anchors[i]).owner()));
 
         return converters;
     }
@@ -379,7 +380,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
             // search for a converter with the same configuration
             for (uint256 i = 0; i < convertibleTokenAnchors.length; i++) {
                 IConverterAnchor anchor = IConverterAnchor(convertibleTokenAnchors[i]);
-                IConverter converter = IConverter(anchor.owner());
+                IConverter converter = IConverter(payable(anchor.owner()));
                 if (isConverterReserveConfigEqual(converter, _type, _reserveTokens, _reserveWeights))
                     return anchor;
             }
@@ -393,7 +394,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @param _anchor converter anchor
     */
-    function addAnchor(IConverterRegistryData _converterRegistryData, address _anchor) internal {
+    function addAnchor(IConverterRegistryData _converterRegistryData, IConverterAnchor _anchor) internal {
         _converterRegistryData.addSmartToken(_anchor);
         emit ConverterAnchorAdded(_anchor);
         emit SmartTokenAdded(_anchor);
@@ -404,7 +405,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @param _anchor converter anchor
     */
-    function removeAnchor(IConverterRegistryData _converterRegistryData, address _anchor) internal {
+    function removeAnchor(IConverterRegistryData _converterRegistryData, IConverterAnchor _anchor) internal {
         _converterRegistryData.removeSmartToken(_anchor);
         emit ConverterAnchorRemoved(_anchor);
         emit SmartTokenRemoved(_anchor);
@@ -413,21 +414,21 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     /**
       * @dev adds a liquidity pool to the registry
       *
-      * @param _liquidityPool liquidity pool
+      * @param _liquidityPoolAnchor liquidity pool converter anchor
     */
-    function addLiquidityPool(IConverterRegistryData _converterRegistryData, address _liquidityPool) internal {
-        _converterRegistryData.addLiquidityPool(_liquidityPool);
-        emit LiquidityPoolAdded(_liquidityPool);
+    function addLiquidityPool(IConverterRegistryData _converterRegistryData, IConverterAnchor _liquidityPoolAnchor) internal {
+        _converterRegistryData.addLiquidityPool(_liquidityPoolAnchor);
+        emit LiquidityPoolAdded(_liquidityPoolAnchor);
     }
 
     /**
       * @dev removes a liquidity pool from the registry
       *
-      * @param _liquidityPool liquidity pool
+      * @param _liquidityPoolAnchor liquidity pool converter anchor
     */
-    function removeLiquidityPool(IConverterRegistryData _converterRegistryData, address _liquidityPool) internal {
-        _converterRegistryData.removeLiquidityPool(_liquidityPool);
-        emit LiquidityPoolRemoved(_liquidityPool);
+    function removeLiquidityPool(IConverterRegistryData _converterRegistryData, IConverterAnchor _liquidityPoolAnchor) internal {
+        _converterRegistryData.removeLiquidityPool(_liquidityPoolAnchor);
+        emit LiquidityPoolRemoved(_liquidityPoolAnchor);
     }
 
     /**
@@ -436,7 +437,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _convertibleToken    convertible token
       * @param _anchor              associated converter anchor
     */
-    function addConvertibleToken(IConverterRegistryData _converterRegistryData, address _convertibleToken, address _anchor) internal {
+    function addConvertibleToken(IConverterRegistryData _converterRegistryData, IERC20Token _convertibleToken, IConverterAnchor _anchor) internal {
         _converterRegistryData.addConvertibleToken(_convertibleToken, _anchor);
         emit ConvertibleTokenAdded(_convertibleToken, _anchor);
     }
@@ -447,7 +448,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _convertibleToken    convertible token
       * @param _anchor              associated converter anchor
     */
-    function removeConvertibleToken(IConverterRegistryData _converterRegistryData, address _convertibleToken, address _anchor) internal {
+    function removeConvertibleToken(IConverterRegistryData _converterRegistryData, IERC20Token _convertibleToken, IConverterAnchor _anchor) internal {
         _converterRegistryData.removeConvertibleToken(_convertibleToken, _anchor);
         emit ConvertibleTokenRemoved(_convertibleToken, _anchor);
     }
@@ -462,7 +463,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         if (reserveTokenCount > 1)
             addLiquidityPool(converterRegistryData, anchor);
         else
-            addConvertibleToken(converterRegistryData, anchor, anchor);
+            addConvertibleToken(converterRegistryData, ISmartToken(address(anchor)), anchor);
 
         // add all reserve tokens
         for (uint256 i = 0; i < reserveTokenCount; i++)
@@ -479,7 +480,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         if (reserveTokenCount > 1)
             removeLiquidityPool(converterRegistryData, anchor);
         else
-            removeConvertibleToken(converterRegistryData, anchor, anchor);
+            removeConvertibleToken(converterRegistryData, ISmartToken(address(anchor)), anchor);
 
         // remove all reserve tokens
         for (uint256 i = 0; i < reserveTokenCount; i++)
@@ -519,7 +520,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     }
 
     // utility to get the reserve weight (including from older converters that don't support the new getReserveWeight function)
-    function getReserveWeight(address _converter, address _reserveToken) private view returns (uint32) {
+    function getReserveWeight(IConverter _converter, IERC20Token _reserveToken) private view returns (uint32) {
         (, uint32 weight,,,) = _converter.connectors(_reserveToken);
         return weight;
     }
@@ -541,7 +542,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     /**
       * @dev deprecated, backward compatibility, use `getAnchor`
     */
-    function getSmartToken(uint256 _index) public view returns (address) {
+    function getSmartToken(uint256 _index) public view returns (IConverterAnchor) {
         return getAnchor(_index);
     }
 
@@ -555,35 +556,35 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     /**
       * @dev deprecated, backward compatibility, use `getConvertibleTokenAnchorCount`
     */
-    function getConvertibleTokenSmartTokenCount(address _convertibleToken) public view returns (uint256) {
+    function getConvertibleTokenSmartTokenCount(IERC20Token _convertibleToken) public view returns (uint256) {
         return getConvertibleTokenAnchorCount(_convertibleToken);
     }
 
     /**
       * @dev deprecated, backward compatibility, use `getConvertibleTokenAnchors`
     */
-    function getConvertibleTokenSmartTokens(address _convertibleToken) public view returns (address[] memory) {
+    function getConvertibleTokenSmartTokens(IERC20Token _convertibleToken) public view returns (address[] memory) {
         return getConvertibleTokenAnchors(_convertibleToken);
     }
 
     /**
       * @dev deprecated, backward compatibility, use `getConvertibleTokenAnchor`
     */
-    function getConvertibleTokenSmartToken(address _convertibleToken, uint256 _index) public view returns (address) {
+    function getConvertibleTokenSmartToken(IERC20Token _convertibleToken, uint256 _index) public view returns (IConverterAnchor) {
         return getConvertibleTokenAnchor(_convertibleToken, _index);
     }
 
     /**
       * @dev deprecated, backward compatibility, use `isConvertibleTokenAnchor`
     */
-    function isConvertibleTokenSmartToken(address _convertibleToken, address _value) public view returns (bool) {
+    function isConvertibleTokenSmartToken(IERC20Token _convertibleToken, address _value) public view returns (bool) {
         return isConvertibleTokenAnchor(_convertibleToken, _value);
     }
 
     /**
       * @dev deprecated, backward compatibility, use `getConvertersByAnchors`
     */
-    function getConvertersBySmartTokens(address[] memory _smartTokens) public view returns (address[] memory) {
+    function getConvertersBySmartTokens(address[] memory _smartTokens) public view returns (IConverter[] memory) {
         return getConvertersByAnchors(_smartTokens);
     }
 

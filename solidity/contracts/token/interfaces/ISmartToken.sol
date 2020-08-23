@@ -7,8 +7,8 @@ import "../../utility/interfaces/IOwned.sol";
 /*
     Smart Token interface
 */
-contract ISmartToken is IConverterAnchor, IERC20Token {
-    function disableTransfers(bool _disable) public;
-    function issue(address _to, uint256 _amount) public;
-    function destroy(address _from, uint256 _amount) public;
+abstract contract ISmartToken is IConverterAnchor, IERC20Token {
+    function disableTransfers(bool _disable) public virtual;
+    function issue(address _to, uint256 _amount) public virtual;
+    function destroy(address _from, uint256 _amount) public virtual;
 }
