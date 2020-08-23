@@ -68,7 +68,8 @@ contract ConverterFactory is IConverterFactory, Owned {
       * @return new converter anchor
     */
     function createAnchor(uint16 _converterType, string memory _name, string memory _symbol, uint8 _decimals)
-        external
+        public
+        virtual
         override
         returns (IConverterAnchor)
     {
@@ -101,7 +102,8 @@ contract ConverterFactory is IConverterFactory, Owned {
       * @return new converter
     */
     function createConverter(uint16 _type, IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee)
-        external
+        public
+        virtual
         override
         returns (IConverter)
     {
