@@ -648,11 +648,11 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         (bool success, bytes memory returnData) = address(_dest).staticcall(data);
 
         if (success) {
-            if (success && returnData.length == 64) {
+            if (returnData.length == 64) {
                 return abi.decode(returnData, (uint256,uint256));
             }
 
-            if (success && returnData.length == 32) {
+            if (returnData.length == 32) {
                 return (abi.decode(returnData, (uint256)), 0);
             }
         }
