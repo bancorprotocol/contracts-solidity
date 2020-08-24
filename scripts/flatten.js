@@ -32,7 +32,12 @@ const getSourceCode = (pathName) => {
     const result = spawnSync('node', [NODE_DIR + '/truffle-flattener/index.js', pathName], {
         cwd: WORK_DIR
     });
-    return result.output.toString().slice(1, -1);
+
+    // removing all occurrences of SPDX license identifiers except first
+    // TODO: this is only ok if all files have the same license
+    let i = 0;
+    const source = result.output.toString().replace(/\/\/ SPDX-License-Identifier.*/g, m  => !i++ ? m : '');
+    return source.slice(1, -1);
 };
 
 run();
