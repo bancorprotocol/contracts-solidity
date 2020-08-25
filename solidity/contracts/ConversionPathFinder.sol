@@ -40,7 +40,7 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
       *
       * @return a path from the source token to the target token
     */
-    function findPath(IERC20Token _sourceToken, IERC20Token _targetToken) public override view returns (address[] memory) {
+    function findPath(IERC20Token _sourceToken, IERC20Token _targetToken) external override view returns (address[] memory) {
         IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
         address[] memory sourcePath = getPath(_sourceToken, converterRegistry);
         address[] memory targetPath = getPath(_targetToken, converterRegistry);
