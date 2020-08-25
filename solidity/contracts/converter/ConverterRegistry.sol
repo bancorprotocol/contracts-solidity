@@ -27,8 +27,6 @@ import "../token/interfaces/ISmartToken.sol";
   * The contract is upgradable.
 */
 contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenHandler {
-    address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     /**
       * @dev triggered when a converter anchor is added to the registry
       *

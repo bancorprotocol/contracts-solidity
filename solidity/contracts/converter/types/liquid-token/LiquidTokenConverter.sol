@@ -212,7 +212,7 @@ contract LiquidTokenConverter is ConverterBase {
         IERC20Token reserveToken = reserveTokens[0];
 
         // ensure that the input amount was already deposited
-        if (address(reserveToken) == ETH_RESERVE_ADDRESS)
+        if (reserveToken == ETH_RESERVE_ADDRESS)
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
         else
             require(msg.value == 0 && reserveToken.balanceOf(address(this)).sub(reserveBalance(reserveToken)) >= _amount, "ERR_INVALID_AMOUNT");
@@ -262,7 +262,7 @@ contract LiquidTokenConverter is ConverterBase {
         reserves[reserveToken].balance = reserves[reserveToken].balance.sub(amount);
 
         // transfer funds to the beneficiary in the reserve token
-        if (address(reserveToken) == ETH_RESERVE_ADDRESS)
+        if (reserveToken == ETH_RESERVE_ADDRESS)
             _beneficiary.transfer(amount);
         else
             safeTransfer(reserveToken, _beneficiary, amount);

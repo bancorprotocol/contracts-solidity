@@ -43,7 +43,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     using SafeMath for uint256;
 
     uint32 internal constant PPM_RESOLUTION = 1000000;
-    address internal constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     struct Reserve {
         uint256 balance;    // reserve balance
@@ -202,7 +202,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
       * can only be called if the converter has an ETH reserve
     */
     receive() external override payable {
-        require(reserves[IERC20Token(ETH_RESERVE_ADDRESS)].isSet, "ERR_INVALID_RESERVE"); // require(hasETHReserve(), "ERR_INVALID_RESERVE");
+        require(reserves[ETH_RESERVE_ADDRESS].isSet, "ERR_INVALID_RESERVE"); // require(hasETHReserve(), "ERR_INVALID_RESERVE");
         // a workaround for a problem when running solidity-coverage
         // see https://github.com/sc-forks/solidity-coverage/issues/487
     }
@@ -220,7 +220,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
         override
         protected
         ownerOnly
-        validReserve(IERC20Token(ETH_RESERVE_ADDRESS))
+        validReserve(ETH_RESERVE_ADDRESS)
     {
         address converterUpgrader = addressOf(CONVERTER_UPGRADER);
 
@@ -229,7 +229,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
         _to.transfer(address(this).balance);
 
         // sync the ETH reserve balance
-        syncReserveBalance(IERC20Token(ETH_RESERVE_ADDRESS));
+        syncReserveBalance(ETH_RESERVE_ADDRESS);
     }
 
     /**
@@ -445,7 +445,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
       * @return true if the converter has an ETH reserve, false otherwise
     */
     function hasETHReserve() public view returns (bool) {
-        return reserves[IERC20Token(ETH_RESERVE_ADDRESS)].isSet;
+        return reserves[ETH_RESERVE_ADDRESS].isSet;
     }
 
     /**
@@ -518,7 +518,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
       * @param _reserveToken    address of the reserve token
     */
     function syncReserveBalance(IERC20Token _reserveToken) internal validReserve(_reserveToken) {
-        if (address(_reserveToken) == ETH_RESERVE_ADDRESS)
+        if (_reserveToken == ETH_RESERVE_ADDRESS)
             reserves[_reserveToken].balance = address(this).balance;
         else
             reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this));

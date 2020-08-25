@@ -132,7 +132,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         assert(amount < targetReserveBalance);
 
         // ensure that the input amount was already deposited
-        if (address(_sourceToken) == ETH_RESERVE_ADDRESS)
+        if (_sourceToken == ETH_RESERVE_ADDRESS)
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
         else
             require(msg.value == 0 && _sourceToken.balanceOf(address(this)).sub(reserveBalance(_sourceToken)) >= _amount, "ERR_INVALID_AMOUNT");
@@ -142,7 +142,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         reserves[_targetToken].balance = reserves[_targetToken].balance.sub(amount);
 
         // transfer funds to the beneficiary in the to reserve token
-        if (address(_targetToken) == ETH_RESERVE_ADDRESS)
+        if (_targetToken == ETH_RESERVE_ADDRESS)
             _beneficiary.transfer(amount);
         else
             safeTransfer(_targetToken, _beneficiary, amount);
@@ -175,12 +175,12 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
         for (uint256 i = 0; i < _reserveTokens.length; i++)
-            if (address(_reserveTokens[i]) == ETH_RESERVE_ADDRESS)
+            if (_reserveTokens[i] == ETH_RESERVE_ADDRESS)
                 require(_reserveAmounts[i] == msg.value, "ERR_ETH_AMOUNT_MISMATCH");
 
         // if the input value of ETH is larger than zero, then verify that one of the reserves is ETH
         if (msg.value > 0) {
-            require(reserves[IERC20Token(ETH_RESERVE_ADDRESS)].isSet, "ERR_NO_ETH_RESERVE");
+            require(reserves[ETH_RESERVE_ADDRESS].isSet, "ERR_NO_ETH_RESERVE");
         }
 
         // get the total supply
@@ -232,7 +232,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     */
     function fund(uint256 _amount) public payable protected {
         syncReserveBalances();
-        reserves[IERC20Token(ETH_RESERVE_ADDRESS)].balance = reserves[IERC20Token(ETH_RESERVE_ADDRESS)].balance.sub(msg.value);
+        reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
 
         uint256 supply = ISmartToken(address(anchor)).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
@@ -246,7 +246,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             uint256 reserveAmount = formula.fundCost(supply, rsvBalance, reserveRatio, _amount);
 
             // transfer funds from the caller in the reserve token
-            if (address(reserveToken) == ETH_RESERVE_ADDRESS) {
+            if (reserveToken == ETH_RESERVE_ADDRESS) {
                 if (msg.value > reserveAmount) {
                     msg.sender.transfer(msg.value - reserveAmount);
                 }
@@ -363,7 +363,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         // transfer each one of the reserve amounts from the user to the pool
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
-            if (address(_reserveTokens[i]) != ETH_RESERVE_ADDRESS) // ETH has already been transferred as part of the transaction
+            if (_reserveTokens[i] != ETH_RESERVE_ADDRESS) // ETH has already been transferred as part of the transaction
                 safeTransferFrom(_reserveTokens[i], msg.sender, address(this), _reserveAmounts[i]);
 
             reserves[_reserveTokens[i]].balance = _reserveAmounts[i];
@@ -390,7 +390,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         returns (uint256)
     {
         syncReserveBalances();
-        reserves[IERC20Token(ETH_RESERVE_ADDRESS)].balance = reserves[IERC20Token(ETH_RESERVE_ADDRESS)].balance.sub(msg.value);
+        reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
 
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         uint256 amount = getMinShare(formula, _totalSupply, _reserveTokens, _reserveAmounts);
@@ -404,7 +404,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             assert(reserveAmount <= _reserveAmounts[i]);
 
             // transfer each one of the reserve amounts from the user to the pool
-            if (address(reserveToken) != ETH_RESERVE_ADDRESS) // ETH has already been transferred as part of the transaction
+            if (reserveToken != ETH_RESERVE_ADDRESS) // ETH has already been transferred as part of the transaction
                 safeTransferFrom(reserveToken, msg.sender, address(this), reserveAmount);
             else if (_reserveAmounts[i] > reserveAmount) // transfer the extra amount of ETH back to the user
                 msg.sender.transfer(_reserveAmounts[i] - reserveAmount);
@@ -448,7 +448,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             reserves[reserveToken].balance = newReserveBalance;
 
             // transfer each one of the reserve amounts from the pool to the user
-            if (address(reserveToken) == ETH_RESERVE_ADDRESS)
+            if (reserveToken == ETH_RESERVE_ADDRESS)
                 msg.sender.transfer(reserveAmount);
             else
                 safeTransfer(reserveToken, msg.sender, reserveAmount);

@@ -40,7 +40,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
 
     uint256 private constant PPM_RESOLUTION = 1000000;
-    address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     struct ConversionStep {
         IConverter converter;
@@ -81,7 +81,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
       * @param _registry    address of a contract registry contract
     */
     constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
-        etherTokens[IERC20Token(ETH_RESERVE_ADDRESS)] = true;
+        etherTokens[ETH_RESERVE_ADDRESS] = true;
     }
 
     /**
@@ -448,7 +448,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             // note that it can still be a non ETH converter if the path is wrong
             // but such conversion will simply revert
             if (!isNewerConverter)
-                IEtherToken(getConverterEtherTokenAddress(firstConverter)).deposit{ value: msg.value }();
+                IEtherToken(address(getConverterEtherTokenAddress(firstConverter))).deposit{ value: msg.value }();
         }
         // EtherToken
         else if (etherTokens[_sourceToken]) {
@@ -553,10 +553,10 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         if (etherTokens[stepData.sourceToken]) {
             // newer converter - replace the source token address with ETH reserve address
             if (stepData.isV28OrHigherConverter)
-                stepData.sourceToken = IERC20Token(ETH_RESERVE_ADDRESS);
+                stepData.sourceToken = ETH_RESERVE_ADDRESS;
             // older converter - replace the source token with the EtherToken address used by the converter
             else
-                stepData.sourceToken = IERC20Token(getConverterEtherTokenAddress(stepData.converter));
+                stepData.sourceToken = getConverterEtherTokenAddress(stepData.converter);
         }
 
         // target is ETH
@@ -564,10 +564,10 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         if (etherTokens[stepData.targetToken]) {
             // newer converter - replace the target token address with ETH reserve address
             if (stepData.isV28OrHigherConverter)
-                stepData.targetToken = IERC20Token(ETH_RESERVE_ADDRESS);
+                stepData.targetToken = ETH_RESERVE_ADDRESS;
             // older converter - replace the target token with the EtherToken address used by the converter
             else
-                stepData.targetToken = IERC20Token(getConverterEtherTokenAddress(stepData.converter));
+                stepData.targetToken = getConverterEtherTokenAddress(stepData.converter);
         }
 
         // set the beneficiary for each step
@@ -617,12 +617,12 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
     }
 
     // legacy - returns the address of an EtherToken used by the converter
-    function getConverterEtherTokenAddress(IConverter _converter) private view returns (address) {
+    function getConverterEtherTokenAddress(IConverter _converter) private view returns (IERC20Token) {
         uint256 reserveCount = _converter.connectorTokenCount();
         for (uint256 i = 0; i < reserveCount; i++) {
             IERC20Token reserveTokenAddress = _converter.connectorTokens(i);
             if (etherTokens[reserveTokenAddress])
-                return address(reserveTokenAddress);
+                return reserveTokenAddress;
         }
 
         return ETH_RESERVE_ADDRESS;
@@ -635,9 +635,9 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             return _token;
 
         if (isV28OrHigherConverter(_converter))
-            return IERC20Token(ETH_RESERVE_ADDRESS);
+            return ETH_RESERVE_ADDRESS;
 
-        return IERC20Token(getConverterEtherTokenAddress(_converter));
+        return getConverterEtherTokenAddress(_converter);
     }
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));

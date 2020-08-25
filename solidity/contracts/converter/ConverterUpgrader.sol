@@ -24,7 +24,7 @@ import "./types/liquidity-pool-v2/interfaces/ILiquidityPoolV2Converter.sol";
   * and then the upgrader 'upgrade' function should be executed directly.
 */
 contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
-    address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     IEtherToken public etherToken;
 
     /**
@@ -171,16 +171,16 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
             (, uint32 weight, , , ) = _oldConverter.connectors(reserveAddress);
 
             // Ether reserve
-            if (address(reserveAddress) == ETH_RESERVE_ADDRESS) {
-                _newConverter.addReserve(IERC20Token(ETH_RESERVE_ADDRESS), weight);
+            if (reserveAddress == ETH_RESERVE_ADDRESS) {
+                _newConverter.addReserve(ETH_RESERVE_ADDRESS, weight);
             }
             // Ether reserve token
             else if (reserveAddress == etherToken) {
-                _newConverter.addReserve(IERC20Token(ETH_RESERVE_ADDRESS), weight);
+                _newConverter.addReserve(ETH_RESERVE_ADDRESS, weight);
             }
             // ERC20 reserve token
             else {
-                _newConverter.addReserve(IERC20Token(reserveAddress), weight);
+                _newConverter.addReserve(reserveAddress, weight);
             }
         }
     }
@@ -211,7 +211,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         for (uint16 i = 0; i < reserveTokenCount; i++) {
             IERC20Token reserveAddress = _oldConverter.connectorTokens(i);
             // Ether reserve
-            if (address(reserveAddress) == ETH_RESERVE_ADDRESS) {
+            if (reserveAddress == ETH_RESERVE_ADDRESS) {
                 _oldConverter.withdrawETH(address(_newConverter));
             }
             // Ether reserve token

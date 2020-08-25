@@ -428,7 +428,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         prevConversionTime = time();
 
         // transfer funds to the beneficiary in the to reserve token
-        if (address(_targetToken) == ETH_RESERVE_ADDRESS) {
+        if (_targetToken == ETH_RESERVE_ADDRESS) {
             _beneficiary.transfer(amount);
         }
         else {
@@ -473,7 +473,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         require(targetAmount < targetReserveBalance, "ERR_TARGET_AMOUNT_TOO_HIGH");
 
         // ensure that the input amount was already deposited
-        if (address(_sourceToken) == ETH_RESERVE_ADDRESS)
+        if (_sourceToken == ETH_RESERVE_ADDRESS)
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
         else
             require(msg.value == 0 && _sourceToken.balanceOf(address(this)).sub(reserves[_sourceToken].balance) >= _amount, "ERR_INVALID_AMOUNT");
@@ -509,14 +509,14 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         returns (uint256)
     {
         // verify that msg.value is identical to the provided amount for ETH reserve, or 0 otherwise
-        require(address(_reserveToken) == ETH_RESERVE_ADDRESS ? msg.value == _amount : msg.value == 0, "ERR_ETH_AMOUNT_MISMATCH");
+        require(_reserveToken == ETH_RESERVE_ADDRESS ? msg.value == _amount : msg.value == 0, "ERR_ETH_AMOUNT_MISMATCH");
 
         // sync the reserve balances just in case
         syncReserveBalances();
 
         // for ETH reserve, deduct the amount that was just synced (since it's already in the converter)
-        if (address(_reserveToken) == ETH_RESERVE_ADDRESS) {
-            reserves[IERC20Token(ETH_RESERVE_ADDRESS)].balance = reserves[IERC20Token(ETH_RESERVE_ADDRESS)].balance.sub(msg.value);
+        if (_reserveToken == ETH_RESERVE_ADDRESS) {
+            reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
         }
 
         // get the reserve staked balance before adding the liquidity to it
@@ -532,7 +532,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 poolTokenSupply = reservePoolToken.totalSupply();
 
         // for non ETH reserve, transfer the funds from the user to the pool
-        if (address(_reserveToken) != ETH_RESERVE_ADDRESS)
+        if (_reserveToken != ETH_RESERVE_ADDRESS)
             safeTransferFrom(_reserveToken, msg.sender, address(this), _amount);
 
         // get the rate before updating the staked balance
@@ -614,7 +614,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         stakedBalances[reserveToken] = newStakedBalance;
 
         // transfer the reserve amount to the caller
-        if (address(reserveToken) == ETH_RESERVE_ADDRESS)
+        if (reserveToken == ETH_RESERVE_ADDRESS)
             msg.sender.transfer(reserveAmount);
         else
             safeTransfer(reserveToken, msg.sender, reserveAmount);
