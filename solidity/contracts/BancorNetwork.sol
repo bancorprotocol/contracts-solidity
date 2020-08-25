@@ -649,7 +649,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
 
         if (success) {
             if (returnData.length == 64) {
-                return abi.decode(returnData, (uint256,uint256));
+                return abi.decode(returnData, (uint256, uint256));
             }
 
             if (returnData.length == 32) {
