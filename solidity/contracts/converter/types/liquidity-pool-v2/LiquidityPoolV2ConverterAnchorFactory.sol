@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./PoolTokensContainer.sol";
 import "../../interfaces/ITypedConverterAnchorFactory.sol";
 
@@ -11,7 +12,7 @@ contract LiquidityPoolV2ConverterAnchorFactory is ITypedConverterAnchorFactory {
       *
       * @return converter type
     */
-    function converterType() public pure returns (uint16) {
+    function converterType() external override pure returns (uint16) {
         return 2;
     }
 
@@ -25,7 +26,7 @@ contract LiquidityPoolV2ConverterAnchorFactory is ITypedConverterAnchorFactory {
       *
       * @return new anchor
     */
-    function createAnchor(string _name, string _symbol, uint8 _decimals) public returns (IConverterAnchor) {
+    function createAnchor(string memory _name, string memory _symbol, uint8 _decimals) external override returns (IConverterAnchor) {
         IPoolTokensContainer container = new PoolTokensContainer(_name, _symbol, _decimals);
         container.transferOwnership(msg.sender);
         return container;

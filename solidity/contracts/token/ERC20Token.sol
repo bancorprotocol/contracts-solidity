@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./interfaces/IERC20Token.sol";
 import "../utility/Utils.sol";
 import "../utility/SafeMath.sol";
@@ -10,12 +11,12 @@ contract ERC20Token is IERC20Token, Utils {
     using SafeMath for uint256;
 
 
-    string public name;
-    string public symbol;
-    uint8 public decimals;
-    uint256 public totalSupply;
-    mapping (address => uint256) public balanceOf;
-    mapping (address => mapping (address => uint256)) public allowance;
+    string public override name;
+    string public override symbol;
+    uint8 public override decimals;
+    uint256 public override totalSupply;
+    mapping (address => uint256) public override balanceOf;
+    mapping (address => mapping (address => uint256)) public override allowance;
 
     /**
       * @dev triggered when tokens are transferred between wallets
@@ -43,7 +44,7 @@ contract ERC20Token is IERC20Token, Utils {
       * @param _decimals    decimal points, for display purposes
       * @param _totalSupply total supply of token units
     */
-    constructor(string _name, string _symbol, uint8 _decimals, uint256 _totalSupply) public {
+    constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _totalSupply) public {
         // validate input
         require(bytes(_name).length > 0, "ERR_INVALID_NAME");
         require(bytes(_symbol).length > 0, "ERR_INVALID_SYMBOL");
@@ -66,8 +67,10 @@ contract ERC20Token is IERC20Token, Utils {
     */
     function transfer(address _to, uint256 _value)
         public
+        virtual
+        override
         validAddress(_to)
-        returns (bool success)
+        returns (bool)
     {
         balanceOf[msg.sender] = balanceOf[msg.sender].sub(_value);
         balanceOf[_to] = balanceOf[_to].add(_value);
@@ -87,9 +90,11 @@ contract ERC20Token is IERC20Token, Utils {
     */
     function transferFrom(address _from, address _to, uint256 _value)
         public
+        override
+        virtual
         validAddress(_from)
         validAddress(_to)
-        returns (bool success)
+        returns (bool)
     {
         allowance[_from][msg.sender] = allowance[_from][msg.sender].sub(_value);
         balanceOf[_from] = balanceOf[_from].sub(_value);
@@ -113,8 +118,10 @@ contract ERC20Token is IERC20Token, Utils {
     */
     function approve(address _spender, uint256 _value)
         public
+        override
+        virtual
         validAddress(_spender)
-        returns (bool success)
+        returns (bool)
     {
         // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal
         require(_value == 0 || allowance[msg.sender][_spender] == 0, "ERR_INVALID_AMOUNT");

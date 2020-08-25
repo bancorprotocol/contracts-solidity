@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./PoolTokensContainer.sol";
 import "./LiquidityPoolV2ConverterCustomFactory.sol";
 import "../../LiquidityPoolConverter.sol";
@@ -23,12 +24,12 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 d;  // denominator
     }
 
-    IPriceOracle public priceOracle;                                // external price oracle
-    IERC20Token public primaryReserveToken;                         // primary reserve in the pool
-    IERC20Token public secondaryReserveToken;                       // secondary reserve in the pool (cache)
-    mapping (address => uint256) private stakedBalances;            // tracks the staked liquidity in the pool plus the fees
-    mapping (address => ISmartToken) private reservesToPoolTokens;  // maps each reserve to its pool token
-    mapping (address => IERC20Token) private poolTokensToReserves;  // maps each pool token to its reserve
+    IPriceOracle public priceOracle;                                    // external price oracle
+    IERC20Token public primaryReserveToken;                             // primary reserve in the pool
+    IERC20Token public secondaryReserveToken;                           // secondary reserve in the pool (cache)
+    mapping (IERC20Token => uint256) private stakedBalances;            // tracks the staked liquidity in the pool plus the fees
+    mapping (IERC20Token => ISmartToken) private reservesToPoolTokens;  // maps each reserve to its pool token
+    mapping (ISmartToken => IERC20Token) private poolTokensToReserves;  // maps each pool token to its reserve
 
     uint8 public amplificationFactor = 20;  // factor to use for conversion calculations (reduces slippage)
     uint256 public externalRatePropagationTime = 1 hours;  // the time it takes for the external rate to fully take effect
@@ -39,7 +40,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     uint32 public highFeeFactor = 800000;
 
     // used by the temp liquidity limit mechanism during the beta
-    mapping (address => uint256) public maxStakedBalances;
+    mapping (IERC20Token => uint256) public maxStakedBalances;
     bool public maxStakedBalanceEnabled = true;
 
     /**
@@ -88,7 +89,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
     // error message binary size optimization
     function _validPoolToken(ISmartToken _address) internal view {
-        require(poolTokensToReserves[_address] != address(0), "ERR_INVALID_POOL_TOKEN");
+        require(address(poolTokensToReserves[_address]) != address(0), "ERR_INVALID_POOL_TOKEN");
     }
 
     /**
@@ -96,7 +97,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @return see the converter types in the the main contract doc
     */
-    function converterType() public pure returns (uint16) {
+    function converterType() public override pure returns (uint16) {
         return 2;
     }
 
@@ -105,8 +106,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @return true if the converter is active, false otherwise
     */
-    function isActive() public view returns (bool) {
-        return super.isActive() && priceOracle != address(0);
+    function isActive() public override view returns (bool) {
+        return super.isActive() && address(priceOracle) != address(0);
     }
 
     /**
@@ -127,18 +128,18 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         inactive
         ownerOnly
         validReserve(_primaryReserveToken)
-        notThis(_primaryReserveOracle)
-        notThis(_secondaryReserveOracle)
-        validAddress(_primaryReserveOracle)
-        validAddress(_secondaryReserveOracle)
+        notThis(address(_primaryReserveOracle))
+        notThis(address(_secondaryReserveOracle))
+        validAddress(address(_primaryReserveOracle))
+        validAddress(address(_secondaryReserveOracle))
     {
         // validate anchor ownership
         require(anchor.owner() == address(this), "ERR_ANCHOR_NOT_OWNED");
 
         // validate oracles
         IWhitelist oracleWhitelist = IWhitelist(addressOf(CHAINLINK_ORACLE_WHITELIST));
-        require(oracleWhitelist.isWhitelisted(_primaryReserveOracle) &&
-                oracleWhitelist.isWhitelisted(_secondaryReserveOracle), "ERR_INVALID_ORACLE");
+        require(oracleWhitelist.isWhitelisted(address(_primaryReserveOracle)) &&
+                oracleWhitelist.isWhitelisted(address(_secondaryReserveOracle)), "ERR_INVALID_ORACLE");
 
         // create the converter's pool tokens if they don't already exist
         createPoolTokens();
@@ -152,7 +153,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         // creates and initalizes the price oracle and sets initial rates
         LiquidityPoolV2ConverterCustomFactory customFactory =
-            LiquidityPoolV2ConverterCustomFactory(IConverterFactory(addressOf(CONVERTER_FACTORY)).customFactories(converterType()));
+            LiquidityPoolV2ConverterCustomFactory(address(IConverterFactory(addressOf(CONVERTER_FACTORY)).customFactories(converterType())));
         priceOracle = customFactory.createPriceOracle(
             _primaryReserveToken,
             secondaryReserveToken,
@@ -286,7 +287,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _token   address of the reserve token
       * @param _weight  reserve weight, represented in ppm, 1-1000000
     */
-    function addReserve(IERC20Token _token, uint32 _weight) public {
+    function addReserve(IERC20Token _token, uint32 _weight) public override ownerOnly {
         // verify that the converter doesn't have 2 reserves yet
         require(reserveTokenCount() < 2, "ERR_INVALID_RESERVE_COUNT");
         super.addReserve(_token, _weight);
@@ -369,6 +370,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     */
     function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount)
         public
+        override
         view
         active
         validReserve(_sourceToken)
@@ -411,8 +413,9 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @return amount of tokens received (in units of the target token)
     */
-    function doConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary)
+    function doConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address payable _beneficiary)
         internal
+        override
         active
         validReserve(_sourceToken)
         validReserve(_targetToken)
@@ -473,7 +476,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         if (_sourceToken == ETH_RESERVE_ADDRESS)
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
         else
-            require(msg.value == 0 && _sourceToken.balanceOf(this).sub(reserves[_sourceToken].balance) >= _amount, "ERR_INVALID_AMOUNT");
+            require(msg.value == 0 && _sourceToken.balanceOf(address(this)).sub(reserves[_sourceToken].balance) >= _amount, "ERR_INVALID_AMOUNT");
 
         // sync the reserve balances
         syncReserveBalance(_sourceToken);
@@ -512,8 +515,9 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         syncReserveBalances();
 
         // for ETH reserve, deduct the amount that was just synced (since it's already in the converter)
-        if (_reserveToken == ETH_RESERVE_ADDRESS)
+        if (_reserveToken == ETH_RESERVE_ADDRESS) {
             reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
+        }
 
         // get the reserve staked balance before adding the liquidity to it
         uint256 initialStakedBalance = stakedBalances[_reserveToken];
@@ -529,7 +533,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         // for non ETH reserve, transfer the funds from the user to the pool
         if (_reserveToken != ETH_RESERVE_ADDRESS)
-            safeTransferFrom(_reserveToken, msg.sender, this, _amount);
+            safeTransferFrom(_reserveToken, msg.sender, address(this), _amount);
 
         // get the rate before updating the staked balance
         Fraction memory rate = rebalanceRate();
@@ -549,7 +553,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         require(poolTokenAmount >= _minReturn, "ERR_RETURN_TOO_LOW");
 
         // mint new pool tokens to the caller
-        IPoolTokensContainer(anchor).mint(reservePoolToken, msg.sender, poolTokenAmount);
+        IPoolTokensContainer(address(anchor)).mint(reservePoolToken, msg.sender, poolTokenAmount);
 
         // rebalance the pool's reserve weights
         rebalance(rate);
@@ -599,7 +603,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         IERC20Token reserveToken = poolTokensToReserves[_poolToken];
 
         // burn the caller's pool tokens
-        IPoolTokensContainer(anchor).burn(_poolToken, msg.sender, _amount);
+        IPoolTokensContainer(address(anchor)).burn(_poolToken, msg.sender, _amount);
 
         // get the rate before updating the staked balance
         Fraction memory rate = rebalanceRate();
@@ -848,7 +852,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
     */
     function createPoolTokens() internal {
-        IPoolTokensContainer container = IPoolTokensContainer(anchor);
+        IPoolTokensContainer container = IPoolTokensContainer(address(anchor));
         ISmartToken[] memory poolTokens = container.poolTokens();
         bool initialSetup = poolTokens.length == 0;
 
@@ -1135,7 +1139,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     /**
       * @dev returns the current time
     */
-    function time() internal view returns (uint256) {
+    function time() internal virtual view returns (uint256) {
         return now;
     }
 

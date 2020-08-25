@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./interfaces/IPoolTokensContainer.sol";
 import "../../../utility/Owned.sol";
 import "../../../utility/TokenHolder.sol";
@@ -26,7 +27,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       * @param  _symbol     pool symbol, also used as a prefix for the underlying pool token symbols
       * @param  _decimals   used for the underlying pool token decimals
     */
-    constructor(string _name, string _symbol, uint8 _decimals) public {
+    constructor(string memory _name, string memory _symbol, uint8 _decimals) public {
          // validate input
         require(bytes(_name).length > 0, "ERR_INVALID_NAME");
         require(bytes(_symbol).length > 0, "ERR_INVALID_SYMBOL");
@@ -41,7 +42,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       *
       * @return list of pool tokens
     */
-    function poolTokens() public view returns (ISmartToken[] memory) {
+    function poolTokens() external override view returns (ISmartToken[] memory) {
         return _poolTokens;
     }
 
@@ -50,7 +51,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       *
       * @return new pool token address
     */
-    function createToken() public ownerOnly returns (ISmartToken) {
+    function createToken() external override ownerOnly returns (ISmartToken) {
         // verify that the max limit wasn't reached
         require(_poolTokens.length < MAX_POOL_TOKENS, "ERR_MAX_LIMIT_REACHED");
 
@@ -70,7 +71,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       * @param _to      account to receive the newly minted tokens
       * @param _amount  amount to mint
     */
-    function mint(ISmartToken _token, address _to, uint256 _amount) public ownerOnly {
+    function mint(ISmartToken _token, address _to, uint256 _amount) external override ownerOnly {
         _token.issue(_to, _amount);
     }
 
@@ -82,7 +83,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       * @param _from    account to remove the tokens from
       * @param _amount  amount to burn
     */
-    function burn(ISmartToken _token, address _from, uint256 _amount) public ownerOnly {
+    function burn(ISmartToken _token, address _from, uint256 _amount) external override ownerOnly {
         _token.destroy(_from, _amount);
     }
 
@@ -93,7 +94,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       * @param _digit   digit
       * @return concatenated string
     */
-    function concatStrDigit(string _str, uint8 _digit) private pure returns (string) {
+    function concatStrDigit(string memory _str, uint8 _digit) private pure returns (string memory) {
         return string(abi.encodePacked(_str, uint8(bytes1('0')) + _digit));
     }
 }

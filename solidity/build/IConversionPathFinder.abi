@@ -1,1 +1,1 @@
-[{"constant":true,"inputs":[{"name":"_sourceToken","type":"address"},{"name":"_targetToken","type":"address"}],"name":"findPath","outputs":[{"name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"}]
+[{"inputs":[{"internalType":"contract IERC20Token","name":"_sourceToken","type":"address"},{"internalType":"contract IERC20Token","name":"_targetToken","type":"address"}],"name":"findPath","outputs":[{"internalType":"address[]","name":"","type":"address[]"}],"stateMutability":"view","type":"function"}]

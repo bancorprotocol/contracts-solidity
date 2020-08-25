@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "../../interfaces/ITypedConverterCustomFactory.sol";
 import "../../../utility/PriceOracle.sol";
 
@@ -11,7 +12,7 @@ contract LiquidityPoolV2ConverterCustomFactory is ITypedConverterCustomFactory {
       *
       * @return converter type
     */
-    function converterType() public pure returns (uint16) {
+    function converterType() external override pure returns (uint16) {
         return 2;
     }
 

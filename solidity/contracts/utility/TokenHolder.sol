@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./Owned.sol";
 import "./Utils.sol";
 import "./TokenHandler.sol";
@@ -27,8 +28,10 @@ contract TokenHolder is ITokenHolder, TokenHandler, Owned, Utils {
     */
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount)
         public
+        virtual
+        override
         ownerOnly
-        validAddress(_token)
+        validAddress(address(_token))
         validAddress(_to)
         notThis(_to)
     {

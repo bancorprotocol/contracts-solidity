@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./LiquidityPoolV2Converter.sol";
 import "./interfaces/IPoolTokensContainer.sol";
 import "../../interfaces/ITypedConverterFactory.sol";
@@ -12,7 +13,7 @@ contract LiquidityPoolV2ConverterFactory is ITypedConverterFactory {
       *
       * @return converter type
     */
-    function converterType() public pure returns (uint16) {
+    function converterType() external override pure returns (uint16) {
         return 2;
     }
 
@@ -26,8 +27,8 @@ contract LiquidityPoolV2ConverterFactory is ITypedConverterFactory {
       *
       * @return new converter
     */
-    function createConverter(IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) public returns (IConverter) {
-        ConverterBase converter = new LiquidityPoolV2Converter(IPoolTokensContainer(_anchor), _registry, _maxConversionFee);
+    function createConverter(IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) external override returns (IConverter) {
+        ConverterBase converter = new LiquidityPoolV2Converter(IPoolTokensContainer(address(_anchor)), _registry, _maxConversionFee);
         converter.transferOwnership(msg.sender);
         return converter;
     }

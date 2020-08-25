@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "../BancorNetwork.sol";
 
 contract OldConverter {
@@ -37,7 +38,7 @@ contract ConverterV27OrLowerWithoutFallback {
 }
 
 contract ConverterV27OrLowerWithFallback {
-    function() external payable {
+    receive() external payable {
     }
 }
 
@@ -52,7 +53,7 @@ contract ConverterV28OrHigherWithFallback {
         return true;
     }
 
-    function() external payable {
+    receive() external payable {
         revert();
     }
 }
@@ -71,10 +72,10 @@ contract TestBancorNetwork is BancorNetwork {
     }
 
     function getReturnOld() external view returns (uint256, uint256) {
-        return getReturn(address(oldConverter), IERC20Token(0), IERC20Token(0), uint256(0));
+        return getReturn(IConverter(payable(address(oldConverter))), IERC20Token(0), IERC20Token(0), uint256(0));
     }
 
     function getReturnNew() external view returns (uint256, uint256) {
-        return getReturn(address(newConverter), IERC20Token(0), IERC20Token(0), uint256(0));
+        return getReturn(IConverter(payable(address(newConverter))), IERC20Token(0), IERC20Token(0), uint256(0));
     }
 }

@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./ERC20Token.sol";
 import "./interfaces/IEtherToken.sol";
 import "../utility/SafeMath.sol";
@@ -31,7 +32,7 @@ contract EtherToken is IEtherToken, ERC20Token {
       * @param _name        token name
       * @param _symbol      token symbol
     */
-    constructor(string _name, string _symbol)
+    constructor(string memory _name, string memory _symbol)
         public
         ERC20Token(_name, _symbol, 18, 0) {
     }
@@ -39,7 +40,7 @@ contract EtherToken is IEtherToken, ERC20Token {
     /**
       * @dev deposit ether on behalf of the sender
     */
-    function deposit() public payable {
+    function deposit() public override payable {
         depositTo(msg.sender);
     }
 
@@ -48,7 +49,7 @@ contract EtherToken is IEtherToken, ERC20Token {
       *
       * @param _amount  amount of ether to withdraw
     */
-    function withdraw(uint256 _amount) public {
+    function withdraw(uint256 _amount) public override {
         withdrawTo(msg.sender, _amount);
     }
 
@@ -59,6 +60,7 @@ contract EtherToken is IEtherToken, ERC20Token {
     */
     function depositTo(address _to)
         public
+        override
         payable
         notThis(_to)
     {
@@ -66,7 +68,7 @@ contract EtherToken is IEtherToken, ERC20Token {
         totalSupply = totalSupply.add(msg.value); // increase the total supply
 
         emit Issuance(msg.value);
-        emit Transfer(this, _to, msg.value);
+        emit Transfer(address(this), _to, msg.value);
     }
 
     /**
@@ -75,15 +77,16 @@ contract EtherToken is IEtherToken, ERC20Token {
       * @param _to      account to receive the ether
       * @param _amount  amount of ether to withdraw
     */
-    function withdrawTo(address _to, uint256 _amount)
+    function withdrawTo(address payable _to, uint256 _amount)
         public
+        override
         notThis(_to)
     {
         balanceOf[msg.sender] = balanceOf[msg.sender].sub(_amount); // deduct the amount from the account balance
         totalSupply = totalSupply.sub(_amount); // decrease the total supply
         _to.transfer(_amount); // send the amount to the target account
 
-        emit Transfer(msg.sender, this, _amount);
+        emit Transfer(msg.sender, address(this), _amount);
         emit Destruction(_amount);
     }
 
@@ -100,11 +103,11 @@ contract EtherToken is IEtherToken, ERC20Token {
     */
     function transfer(address _to, uint256 _value)
         public
+        override(IERC20Token, ERC20Token)
         notThis(_to)
-        returns (bool success)
+        returns (bool)
     {
-        assert(super.transfer(_to, _value));
-        return true;
+        return super.transfer(_to, _value);
     }
 
     /**
@@ -119,17 +122,17 @@ contract EtherToken is IEtherToken, ERC20Token {
     */
     function transferFrom(address _from, address _to, uint256 _value)
         public
+        override(IERC20Token, ERC20Token)
         notThis(_to)
-        returns (bool success)
+        returns (bool)
     {
-        assert(super.transferFrom(_from, _to, _value));
-        return true;
+        return super.transferFrom(_from, _to, _value);
     }
 
     /**
       * @dev deposit ether in the account
     */
-    function() external payable {
+    receive() external payable {
         deposit();
     }
 }

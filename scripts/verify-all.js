@@ -12,7 +12,7 @@ const input = JSON.parse(fs.readFileSync(INPUT_FILE, { encoding: 'utf8' }));
 //  {
 //      "network"        : "api", // use "api" for mainnet or "api-<testnet>" for testnet
 //      "apiKey"         : "",    // generate this value at https://etherscan.io/myapikey
-//      "compilerVersion": "v0.4.26+commit.4563c3fc",
+//      "compilerVersion": "v0.6.12+commit.27d51765",
 //      "optimization"   : {"used": 1, "runs": 200},
 //      "contracts"      : {
 //          "ContractA1": {"name": "ContractA", "addr": "0x0000000000000000000000000000000000000001", "args": "<abi-encoded constructor arguments>"},
@@ -48,7 +48,12 @@ const getPathNames = (dirName) => {
 
 const getSourceCode = (pathName) => {
     const result = spawnSync('node', [NODE_DIR + '/truffle-flattener/index.js', pathName], { cwd: WORK_DIR });
-    return result.output.toString().slice(1, -1);
+
+    // removing all occurrences of SPDX license identifiers except first
+    // TODO: this is only ok if all files have the same license
+    let i = 0;
+    const source = result.output.toString().replace(/\/\/ SPDX-License-Identifier.*/g, m => !i++ ? m : '');
+    return source.slice(1, -1);
 };
 
 const post = (contractId, sourceCode) => {

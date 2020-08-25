@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./ConverterBase.sol";
 
 /**
@@ -12,7 +13,7 @@ import "./ConverterBase.sol";
   * Note that TokenRateUpdate events are dispatched for pool tokens as well.
   * The pool token is the first token in the event in that case.
 */
-contract LiquidityPoolConverter is ConverterBase {
+abstract contract LiquidityPoolConverter is ConverterBase {
     /**
       * @dev triggered after liquidity is added
       *
@@ -24,7 +25,7 @@ contract LiquidityPoolConverter is ConverterBase {
     */
     event LiquidityAdded(
         address indexed _provider,
-        address indexed _reserveToken,
+        IERC20Token indexed _reserveToken,
         uint256 _amount,
         uint256 _newBalance,
         uint256 _newSupply
@@ -41,7 +42,7 @@ contract LiquidityPoolConverter is ConverterBase {
     */
     event LiquidityRemoved(
         address indexed _provider,
-        address indexed _reserveToken,
+        IERC20Token indexed _reserveToken,
         uint256 _amount,
         uint256 _newBalance,
         uint256 _newSupply
@@ -70,7 +71,7 @@ contract LiquidityPoolConverter is ConverterBase {
       * can only be called by the contract owner
       * note that prior to version 28, you should use 'acceptTokenOwnership' instead
     */
-    function acceptAnchorOwnership() public {
+    function acceptAnchorOwnership() public virtual override {
         // verify that the converter has at least 2 reserves
         require(reserveTokenCount() > 1, "ERR_INVALID_RESERVE_COUNT");
         super.acceptAnchorOwnership();

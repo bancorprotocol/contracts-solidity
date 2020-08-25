@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./Owned.sol";
 import "./Utils.sol";
 import "./interfaces/IWhitelist.sol";
@@ -30,7 +31,7 @@ contract Whitelist is IWhitelist, Owned, Utils {
       *
       * @return true if the address is whitelisted, false if not
     */
-    function isWhitelisted(address _address) public view returns (bool) {
+    function isWhitelisted(address _address) public override view returns (bool) {
         return whitelist[_address];
     }
 
@@ -56,7 +57,7 @@ contract Whitelist is IWhitelist, Owned, Utils {
       *
       * @param _addresses addresses to add
     */
-    function addAddresses(address[] _addresses) public {
+    function addAddresses(address[] memory _addresses) public {
         for (uint256 i = 0; i < _addresses.length; i++) {
             addAddress(_addresses[i]);
         }
@@ -80,7 +81,7 @@ contract Whitelist is IWhitelist, Owned, Utils {
       *
       * @param _addresses addresses to remove
     */
-    function removeAddresses(address[] _addresses) public {
+    function removeAddresses(address[] memory _addresses) public {
         for (uint256 i = 0; i < _addresses.length; i++) {
             removeAddress(_addresses[i]);
         }

@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./Owned.sol";
 import "./Utils.sol";
 import "./interfaces/IContractRegistry.sol";
@@ -44,7 +45,7 @@ contract ContractRegistryClient is Owned, Utils {
       *
       * @param  _registry   address of a contract-registry contract
     */
-    constructor(IContractRegistry _registry) internal validAddress(_registry) {
+    constructor(IContractRegistry _registry) internal validAddress(address(_registry)) {
         registry = IContractRegistry(_registry);
         prevRegistry = IContractRegistry(_registry);
     }
@@ -60,7 +61,7 @@ contract ContractRegistryClient is Owned, Utils {
         IContractRegistry newRegistry = IContractRegistry(addressOf(CONTRACT_REGISTRY));
 
         // verify that the new contract-registry is different and not zero
-        require(newRegistry != address(registry) && newRegistry != address(0), "ERR_INVALID_REGISTRY");
+        require(newRegistry != registry && address(newRegistry) != address(0), "ERR_INVALID_REGISTRY");
 
         // verify that the new contract-registry is pointing to a non-zero contract-registry
         require(newRegistry.addressOf(CONTRACT_REGISTRY) != address(0), "ERR_INVALID_REGISTRY");

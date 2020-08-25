@@ -1,3 +1,8 @@
+### 0.6.14 (2020-08-25)
+General
+* Upgraded contracts/solidity compiler to v0.6.12
+
+
 ### 0.6.13 (2020-08-22)
 LiquidityPoolV2Converter
 * Allow the owner to update the amplification factor

@@ -1,11 +1,9 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 
 /*
     Contract Registry interface
 */
-contract IContractRegistry {
-    function addressOf(bytes32 _contractName) public view returns (address);
-
-    // deprecated, backward compatibility
-    function getAddress(bytes32 _contractName) public view returns (address);
+abstract contract IContractRegistry {
+    function addressOf(bytes32 _contractName) public virtual view returns (address);
 }

@@ -1,9 +1,10 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 
 /*
     Converter Upgrader interface
 */
-contract IConverterUpgrader {
-    function upgrade(bytes32 _version) public;
-    function upgrade(uint16 _version) public;
+abstract contract IConverterUpgrader {
+    function upgrade(bytes32 _version) public virtual;
+    function upgrade(uint16 _version) public virtual;
 }

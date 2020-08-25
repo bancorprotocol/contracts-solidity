@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "../utility/interfaces/IChainlinkPriceOracle.sol";
 
 /*
@@ -16,11 +17,11 @@ contract TestChainlinkPriceOracle is IChainlinkPriceOracle {
         timestamp = _timestamp;
     }
 
-    function latestAnswer() external view returns (int256) {
+    function latestAnswer() external override view returns (int256) {
         return answer;
     }
 
-    function latestTimestamp() external view returns (uint256) {
+    function latestTimestamp() external override view returns (uint256) {
         return timestamp;
     }
 }

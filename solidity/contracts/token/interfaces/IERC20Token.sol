@@ -1,18 +1,18 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 
 /*
     ERC20 Standard Token interface
 */
-contract IERC20Token {
-    // these functions aren't abstract since the compiler emits automatically generated getter functions as external
-    function name() public view returns (string) {this;}
-    function symbol() public view returns (string) {this;}
-    function decimals() public view returns (uint8) {this;}
-    function totalSupply() public view returns (uint256) {this;}
-    function balanceOf(address _owner) public view returns (uint256) {_owner; this;}
-    function allowance(address _owner, address _spender) public view returns (uint256) {_owner; _spender; this;}
+interface IERC20Token {
+    function name() external view returns (string memory);
+    function symbol() external view returns (string memory);
+    function decimals() external view returns (uint8);
+    function totalSupply() external view returns (uint256);
+    function balanceOf(address _owner) external view returns (uint256);
+    function allowance(address _owner, address _spender) external view returns (uint256);
 
-    function transfer(address _to, uint256 _value) public returns (bool success);
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success);
-    function approve(address _spender, uint256 _value) public returns (bool success);
+    function transfer(address _to, uint256 _value) external returns (bool);
+    function transferFrom(address _from, address _to, uint256 _value) external returns (bool);
+    function approve(address _spender, uint256 _value) external returns (bool);
 }

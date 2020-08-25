@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "../utility/Utils.sol";
 import "../utility/SafeMath.sol";
 
@@ -33,8 +34,6 @@ contract NonStandardToken is Utils {
       *
       * @param _to      target address
       * @param _value   transfer amount
-      *
-      * @return true if the transfer was successful, false if it wasn't
     */
     function _transfer(address _to, uint256 _value)
         internal
@@ -52,8 +51,6 @@ contract NonStandardToken is Utils {
       * @param _from    source address
       * @param _to      target address
       * @param _value   transfer amount
-      *
-      * @return true if the transfer was successful, false if it wasn't
     */
     function _transferFrom(address _from, address _to, uint256 _value)
         internal
@@ -76,8 +73,6 @@ contract NonStandardToken is Utils {
       *
       * @param _spender approved address
       * @param _value   allowance amount
-      *
-      * @return true if the approval was successful, false if it wasn't
     */
     function _approve(address _spender, uint256 _value)
         internal
@@ -104,7 +99,7 @@ contract NonStandardTokenDetailed is NonStandardToken {
       * @param _decimals    decimal points
       * @param _supply      initial supply
     */
-    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply)
+    constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _supply)
         internal
         NonStandardToken(_supply)
     {
@@ -117,7 +112,7 @@ contract NonStandardTokenDetailed is NonStandardToken {
 contract TestNonStandardToken is NonStandardTokenDetailed {
     bool public ok;
 
-    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
+    constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _supply) public
         NonStandardTokenDetailed(_name, _symbol, _decimals, _supply) {
         set(true);
     }
@@ -146,7 +141,7 @@ contract TestNonStandardTokenWithoutDecimals is NonStandardToken {
     string public name;
     string public symbol;
 
-    constructor(string _name, string _symbol, uint256 _supply) public
+    constructor(string memory _name, string memory _symbol, uint256 _supply) public
         NonStandardToken(_supply) {
         name = _name;
         symbol = _symbol;
@@ -169,7 +164,7 @@ contract TestStandardToken is NonStandardTokenDetailed {
     bool public ok;
     bool public ret;
 
-    constructor(string _name, string _symbol, uint8 _decimals, uint256 _supply) public
+    constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _supply) public
         NonStandardTokenDetailed(_name, _symbol, _decimals, _supply) {
         set(true, true);
     }

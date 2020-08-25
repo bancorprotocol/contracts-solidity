@@ -807,7 +807,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 await expectRevert(converter.setAmplificationFactor(new BN(5), { from: nonOwner }), 'ERR_ACCESS_DENIED');
             });
 
-            it.only('verifies that an event is fired when the owner updates the amplification factor', async () => {
+            it('verifies that an event is fired when the owner updates the amplification factor', async () => {
                 const converter = await initConverter(true, true);
 
                 const prevAmplificationFactor = await converter.amplificationFactor.call();

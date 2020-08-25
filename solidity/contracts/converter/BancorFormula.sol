@@ -1,52 +1,39 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./interfaces/IBancorFormula.sol";
 import "../utility/SafeMath.sol";
 
 contract BancorFormula is IBancorFormula {
     using SafeMath for uint256;
 
-    uint16 public constant version = 8;
-
     uint256 private constant ONE = 1;
     uint32 private constant MAX_WEIGHT = 1000000;
     uint8 private constant MIN_PRECISION = 32;
     uint8 private constant MAX_PRECISION = 127;
 
-    /**
-      * Auto-generated via 'PrintIntScalingFactors.py'
-    */
+    // Auto-generated via 'PrintIntScalingFactors.py'
     uint256 private constant FIXED_1 = 0x080000000000000000000000000000000;
     uint256 private constant FIXED_2 = 0x100000000000000000000000000000000;
     uint256 private constant MAX_NUM = 0x200000000000000000000000000000000;
 
-    /**
-      * Auto-generated via 'PrintLn2ScalingFactors.py'
-    */
+    // Auto-generated via 'PrintLn2ScalingFactors.py'
     uint256 private constant LN2_NUMERATOR   = 0x3f80fe03f80fe03f80fe03f80fe03f8;
     uint256 private constant LN2_DENOMINATOR = 0x5b9de1d10bf4103d647b0955897ba80;
 
-    /**
-      * Auto-generated via 'PrintFunctionOptimalLog.py' and 'PrintFunctionOptimalExp.py'
-    */
+    // Auto-generated via 'PrintFunctionOptimalLog.py' and 'PrintFunctionOptimalExp.py'
     uint256 private constant OPT_LOG_MAX_VAL = 0x15bf0a8b1457695355fb8ac404e7a79e3;
     uint256 private constant OPT_EXP_MAX_VAL = 0x800000000000000000000000000000000;
 
-    /**
-      * Auto-generated via 'PrintLambertFactors.py'
-    */
+    // Auto-generated via 'PrintLambertFactors.py'
     uint256 private constant LAMBERT_CONV_RADIUS = 0x002f16ac6c59de6f8d5d6f63c1482a7c86;
     uint256 private constant LAMBERT_POS2_SAMPLE = 0x0003060c183060c183060c183060c18306;
     uint256 private constant LAMBERT_POS2_MAXVAL = 0x01af16ac6c59de6f8d5d6f63c1482a7c80;
     uint256 private constant LAMBERT_POS3_MAXVAL = 0x6b22d43e72c326539cceeef8bb48f255ff;
 
-    /**
-      * Auto-generated via 'PrintWeightFactors.py'
-    */
+    // Auto-generated via 'PrintWeightFactors.py'
     uint256 private constant MAX_UNF_WEIGHT = 0x10c6f7a0b5ed8d36b4c7f34938583621fafc8b0079a2834d26fa3fcc9ea9;
 
-    /**
-      * Auto-generated via 'PrintMaxExpArray.py'
-    */
+    // Auto-generated via 'PrintMaxExpArray.py'
     uint256[128] private maxExpArray;
     function initMaxExpArray() private {
     //  maxExpArray[  0] = 0x6bffffffffffffffffffffffffffffffff;
@@ -179,9 +166,7 @@ contract BancorFormula is IBancorFormula {
         maxExpArray[127] = 0x00857ddf0117efa215952912839f6473e6;
     }
 
-    /**
-      * Auto-generated via 'PrintLambertArray.py'
-    */
+    // Auto-generated via 'PrintLambertArray.py'
     uint256[128] private lambertArray;
     function initLambertArray() private {
         lambertArray[  0] = 0x60e393c68d20b1bd09deaabc0373b9c5;
@@ -340,7 +325,7 @@ contract BancorFormula is IBancorFormula {
                                   uint256 _reserveBalance,
                                   uint32 _reserveWeight,
                                   uint256 _amount)
-                                  public view returns (uint256)
+                                  public override view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -381,7 +366,7 @@ contract BancorFormula is IBancorFormula {
                               uint256 _reserveBalance,
                               uint32 _reserveWeight,
                               uint256 _amount)
-                              public view returns (uint256)
+                              public override view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -430,7 +415,7 @@ contract BancorFormula is IBancorFormula {
                                       uint256 _targetReserveBalance,
                                       uint32 _targetReserveWeight,
                                       uint256 _amount)
-                                      public view returns (uint256)
+                                      public override view returns (uint256)
     {
         // validate input
         require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -468,7 +453,7 @@ contract BancorFormula is IBancorFormula {
                       uint256 _reserveBalance,
                       uint32 _reserveRatio,
                       uint256 _amount)
-                      public view returns (uint256)
+                      public override view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -509,7 +494,7 @@ contract BancorFormula is IBancorFormula {
                               uint256 _reserveBalance,
                               uint32 _reserveRatio,
                               uint256 _amount)
-                              public view returns (uint256)
+                              public override view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -550,7 +535,7 @@ contract BancorFormula is IBancorFormula {
                                     uint256 _reserveBalance,
                                     uint32 _reserveRatio,
                                     uint256 _amount)
-                                    public view returns (uint256)
+                                    public override view returns (uint256)
     {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
@@ -623,7 +608,7 @@ contract BancorFormula is IBancorFormula {
                              uint256 _secondaryReserveBalance,
                              uint256 _reserveRateNumerator,
                              uint256 _reserveRateDenominator)
-                             public view returns (uint32, uint32)
+                             public override view returns (uint32, uint32)
     {
         if (_primaryReserveStakedBalance == _primaryReserveBalance)
             require(_primaryReserveStakedBalance > 0 || _secondaryReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");

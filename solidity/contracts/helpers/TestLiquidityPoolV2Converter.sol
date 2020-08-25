@@ -1,4 +1,5 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "../converter/types/liquidity-pool-v2/LiquidityPoolV2Converter.sol";
 
 contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
@@ -8,7 +9,7 @@ contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
         public LiquidityPoolV2Converter(_token, _registry, _maxConversionFee) {
     }
 
-    function time() internal view returns (uint256) {
+    function time() internal override view returns (uint256) {
         return currentTime != 0 ? currentTime : now;
     }
 

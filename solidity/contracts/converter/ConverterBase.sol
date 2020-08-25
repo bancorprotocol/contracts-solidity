@@ -1,9 +1,9 @@
-pragma solidity 0.4.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterAnchor.sol";
 import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IBancorFormula.sol";
-import "../IBancorNetwork.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/ReentrancyGuard.sol";
 import "../utility/SafeMath.sol";
@@ -39,11 +39,11 @@ import "../bancorx/interfaces/IBancorX.sol";
   *
   * Note that converters don't currently support tokens with transfer fees.
 */
-contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistryClient, ReentrancyGuard {
+abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
 
     uint32 internal constant PPM_RESOLUTION = 1000000;
-    address internal constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     struct Reserve {
         uint256 balance;    // reserve balance
@@ -56,17 +56,17 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     /**
       * @dev version number
     */
-    uint16 public constant version = 35;
+    uint16 public constant version = 36;
 
-    IConverterAnchor public anchor;                 // converter anchor contract
-    IWhitelist public conversionWhitelist;          // whitelist contract with list of addresses that are allowed to use the converter
-    IERC20Token[] public reserveTokens;             // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
-    mapping (address => Reserve) public reserves;   // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
-    uint32 public reserveRatio = 0;                 // ratio between the reserves and the market cap, equal to the total reserve weights
-    uint32 public maxConversionFee = 0;             // maximum conversion fee for the lifetime of the contract,
-                                                    // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
-    uint32 public conversionFee = 0;                // current conversion fee, represented in ppm, 0...maxConversionFee
-    bool public constant conversionsEnabled = true; // deprecated, backward compatibility
+    IConverterAnchor public override anchor;            // converter anchor contract
+    IWhitelist public override conversionWhitelist;     // whitelist contract with list of addresses that are allowed to use the converter
+    IERC20Token[] public reserveTokens;                 // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
+    mapping (IERC20Token => Reserve) public reserves;   // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
+    uint32 public reserveRatio = 0;                     // ratio between the reserves and the market cap, equal to the total reserve weights
+    uint32 public override maxConversionFee = 0;        // maximum conversion fee for the lifetime of the contract,
+                                                        // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
+    uint32 public override conversionFee = 0;           // current conversion fee, represented in ppm, 0...maxConversionFee
+    bool public constant conversionsEnabled = true;     // deprecated, backward compatibility
 
     /**
       * @dev triggered when the converter is activated
@@ -88,8 +88,8 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @param _conversionFee   conversion fee
     */
     event Conversion(
-        address indexed _fromToken,
-        address indexed _toToken,
+        IERC20Token indexed _fromToken,
+        IERC20Token indexed _toToken,
         address indexed _trader,
         uint256 _amount,
         uint256 _return,
@@ -107,8 +107,8 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @param  _rateD  rate of 1 unit of `_token1` in `_token2` (denominator)
     */
     event TokenRateUpdate(
-        address indexed _token1,
-        address indexed _token2,
+        IERC20Token indexed _token1,
+        IERC20Token indexed _token2,
         uint256 _rateN,
         uint256 _rateD
     );
@@ -133,7 +133,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
         IContractRegistry _registry,
         uint32 _maxConversionFee
     )
-        validAddress(_anchor)
+        validAddress(address(_anchor))
         ContractRegistryClient(_registry)
         internal
         validConversionFee(_maxConversionFee)
@@ -201,7 +201,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @dev deposits ether
       * can only be called if the converter has an ETH reserve
     */
-    function() external payable {
+    receive() external override payable {
         require(reserves[ETH_RESERVE_ADDRESS].isSet, "ERR_INVALID_RESERVE"); // require(hasETHReserve(), "ERR_INVALID_RESERVE");
         // a workaround for a problem when running solidity-coverage
         // see https://github.com/sc-forks/solidity-coverage/issues/487
@@ -215,11 +215,12 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       *
       * @param _to  address to send the ETH to
     */
-    function withdrawETH(address _to)
+    function withdrawETH(address payable _to)
         public
+        override
         protected
         ownerOnly
-        validReserve(IERC20Token(ETH_RESERVE_ADDRESS))
+        validReserve(ETH_RESERVE_ADDRESS)
     {
         address converterUpgrader = addressOf(CONVERTER_UPGRADER);
 
@@ -228,7 +229,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
         _to.transfer(address(this).balance);
 
         // sync the ETH reserve balance
-        syncReserveBalance(IERC20Token(ETH_RESERVE_ADDRESS));
+        syncReserveBalance(ETH_RESERVE_ADDRESS);
     }
 
     /**
@@ -249,8 +250,9 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     */
     function setConversionWhitelist(IWhitelist _whitelist)
         public
+        override
         ownerOnly
-        notThis(_whitelist)
+        notThis(address(_whitelist))
     {
         conversionWhitelist = _whitelist;
     }
@@ -260,7 +262,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       *
       * @return true if the converter is active, false otherwise
     */
-    function isActive() public view returns (bool) {
+    function isActive() public virtual override view returns (bool) {
         return anchor.owner() == address(this);
     }
 
@@ -274,6 +276,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     */
     function transferAnchorOwnership(address _newOwner)
         public
+        override
         ownerOnly
         only(CONVERTER_UPGRADER)
     {
@@ -286,7 +289,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * can only be called by the contract owner
       * note that prior to version 28, you should use 'acceptTokenOwnership' instead
     */
-    function acceptAnchorOwnership() public ownerOnly {
+    function acceptAnchorOwnership() public virtual override ownerOnly {
         // verify the the converter has at least one reserve
         require(reserveTokenCount() > 0, "ERR_INVALID_RESERVE_COUNT");
         anchor.acceptOwnership();
@@ -311,7 +314,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       *
       * @param _conversionFee new conversion fee, represented in ppm
     */
-    function setConversionFee(uint32 _conversionFee) public ownerOnly {
+    function setConversionFee(uint32 _conversionFee) public override ownerOnly {
         require(_conversionFee <= maxConversionFee, "ERR_INVALID_CONVERSION_FEE");
         emit ConversionFeeUpdate(conversionFee, _conversionFee);
         conversionFee = _conversionFee;
@@ -327,7 +330,12 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       * @param _to      account to receive the new amount
       * @param _amount  amount to withdraw
     */
-    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public protected ownerOnly {
+    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount)
+        public
+        override(IConverter, TokenHolder)
+        protected
+        ownerOnly
+    {
         address converterUpgrader = addressOf(CONVERTER_UPGRADER);
 
         // if the token is not a reserve token, allow withdrawal
@@ -351,7 +359,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
         // trigger de-activation event
         emit Activation(converterType(), anchor, false);
 
-        transferOwnership(converterUpgrader);
+        transferOwnership(address(converterUpgrader));
         converterUpgrader.upgrade(version);
         acceptOwnership();
     }
@@ -375,14 +383,16 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     */
     function addReserve(IERC20Token _token, uint32 _weight)
         public
+        virtual
+        override
         ownerOnly
         inactive
-        validAddress(_token)
-        notThis(_token)
+        validAddress(address(_token))
+        notThis(address(_token))
         validReserveWeight(_weight)
     {
         // validate input
-        require(_token != address(anchor) && !reserves[_token].isSet, "ERR_INVALID_RESERVE");
+        require(address(_token) != address(anchor) && !reserves[_token].isSet, "ERR_INVALID_RESERVE");
         require(_weight <= PPM_RESOLUTION - reserveRatio, "ERR_INVALID_RESERVE_WEIGHT");
         require(reserveTokenCount() < uint16(-1), "ERR_INVALID_RESERVE_COUNT");
 
@@ -421,6 +431,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     */
     function reserveBalance(IERC20Token _reserveToken)
         public
+        override
         view
         validReserve(_reserveToken)
         returns (uint256)
@@ -449,8 +460,9 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       *
       * @return amount of tokens received (in units of the target token)
     */
-    function convert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary)
+    function convert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address payable _beneficiary)
         public
+        override
         payable
         protected
         only(BANCOR_NETWORK)
@@ -460,7 +472,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
         require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET");
 
         // if a whitelist is set, verify that both and trader and the beneficiary are whitelisted
-        require(conversionWhitelist == address(0) ||
+        require(address(conversionWhitelist) == address(0) ||
                 (conversionWhitelist.isWhitelisted(_trader) && conversionWhitelist.isWhitelisted(_beneficiary)),
                 "ERR_NOT_WHITELISTED");
 
@@ -479,7 +491,15 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
       *
       * @return amount of tokens received (in units of the target token)
     */
-    function doConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, address _trader, address _beneficiary) internal returns (uint256);
+    function doConvert(
+        IERC20Token _sourceToken,
+        IERC20Token _targetToken,
+        uint256 _amount,
+        address _trader,
+        address payable _beneficiary)
+        internal
+        virtual
+        returns (uint256);
 
     /**
       * @dev returns the conversion fee for a given target amount
@@ -501,7 +521,7 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
         if (_reserveToken == ETH_RESERVE_ADDRESS)
             reserves[_reserveToken].balance = address(this).balance;
         else
-            reserves[_reserveToken].balance = _reserveToken.balanceOf(this);
+            reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this));
     }
 
     /**
@@ -542,28 +562,28 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     /**
       * @dev deprecated since version 28, backward compatibility - use only for earlier versions
     */
-    function token() public view returns (IConverterAnchor) {
+    function token() public override view returns (IConverterAnchor) {
         return anchor;
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function transferTokenOwnership(address _newOwner) public ownerOnly {
+    function transferTokenOwnership(address _newOwner) public override ownerOnly {
         transferAnchorOwnership(_newOwner);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function acceptTokenOwnership() public ownerOnly {
+    function acceptTokenOwnership() public override ownerOnly {
         acceptAnchorOwnership();
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function connectors(address _address) public view returns (uint256, uint32, bool, bool, bool) {
+    function connectors(IERC20Token _address) public override view returns (uint256, uint32, bool, bool, bool) {
         Reserve memory reserve = reserves[_address];
         return(reserve.balance, reserve.weight, false, false, reserve.isSet);
     }
@@ -571,21 +591,21 @@ contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistr
     /**
       * @dev deprecated, backward compatibility
     */
-    function connectorTokens(uint256 _index) public view returns (IERC20Token) {
+    function connectorTokens(uint256 _index) public override view returns (IERC20Token) {
         return ConverterBase.reserveTokens[_index];
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function connectorTokenCount() public view returns (uint16) {
+    function connectorTokenCount() public override view returns (uint16) {
         return reserveTokenCount();
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function getConnectorBalance(IERC20Token _connectorToken) public view returns (uint256) {
+    function getConnectorBalance(IERC20Token _connectorToken) public override view returns (uint256) {
         return reserveBalance(_connectorToken);
     }
 

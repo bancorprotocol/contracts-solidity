@@ -1,5 +1,5 @@
-pragma solidity 0.4.26;
-import "./IBancorNetwork.sol";
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.6.12;
 import "./IConversionPathFinder.sol";
 import "./converter/interfaces/IConverter.sol";
 import "./converter/interfaces/IConverterAnchor.sol";
@@ -13,8 +13,8 @@ import "./token/interfaces/ISmartToken.sol";
 import "./bancorx/interfaces/IBancorX.sol";
 
 // interface of older converters for backward compatibility
-contract ILegacyConverter {
-    function change(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn) public returns (uint256);
+interface ILegacyConverter {
+    function change(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount, uint256 _minReturn) external returns (uint256);
 }
 
 /**
@@ -36,25 +36,25 @@ contract ILegacyConverter {
   * Format:
   * [source token, converter anchor, target token, converter anchor, target token...]
 */
-contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, ReentrancyGuard {
+contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
 
     uint256 private constant PPM_RESOLUTION = 1000000;
-    address private constant ETH_RESERVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     struct ConversionStep {
         IConverter converter;
         IConverterAnchor anchor;
         IERC20Token sourceToken;
         IERC20Token targetToken;
-        address beneficiary;
+        address payable beneficiary;
         bool isV28OrHigherConverter;
         bool processAffiliateFee;
     }
 
     uint256 public maxAffiliateFee = 30000;     // maximum affiliate-fee
 
-    mapping (address => bool) public etherTokens;       // list of all supported ether tokens
+    mapping (IERC20Token => bool) public etherTokens;   // list of all supported ether tokens
 
     /**
       * @dev triggered when a conversion between two tokens occurs
@@ -67,9 +67,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @param _trader      wallet that initiated the trade
     */
     event Conversion(
-        address indexed _smartToken,
-        address indexed _fromToken,
-        address indexed _toToken,
+        IConverterAnchor indexed _smartToken,
+        IERC20Token indexed _fromToken,
+        IERC20Token indexed _toToken,
         uint256 _fromAmount,
         uint256 _toAmount,
         address _trader
@@ -106,8 +106,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     function registerEtherToken(IEtherToken _token, bool _register)
         public
         ownerOnly
-        validAddress(_token)
-        notThis(_token)
+        validAddress(address(_token))
+        notThis(address(_token))
     {
         etherTokens[_token] = _register;
     }
@@ -121,7 +121,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       *
       * @return conversion path between the two tokens
     */
-    function conversionPath(IERC20Token _sourceToken, IERC20Token _targetToken) public view returns (address[]) {
+    function conversionPath(IERC20Token _sourceToken, IERC20Token _targetToken) public view returns (address[] memory) {
         IConversionPathFinder pathFinder = IConversionPathFinder(addressOf(CONVERSION_PATH_FINDER));
         return pathFinder.findPath(_sourceToken, _targetToken);
     }
@@ -135,7 +135,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       *
       * @return expected target amount
     */
-    function rateByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256) {
+    function rateByPath(address[] memory _path, uint256 _amount) public view returns (uint256) {
         uint256 amount;
         uint256 fee;
         uint256 supply;
@@ -151,17 +151,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
         // iterate over the conversion path
         for (uint256 i = 2; i < _path.length; i += 2) {
-            IERC20Token sourceToken = _path[i - 2];
-            IERC20Token anchor = _path[i - 1];
-            IERC20Token targetToken = _path[i];
+            IERC20Token sourceToken = IERC20Token(_path[i - 2]);
+            address anchor = _path[i - 1];
+            IERC20Token targetToken = IERC20Token(_path[i]);
 
-            converter = IConverter(IConverterAnchor(anchor).owner());
+            converter = IConverter(payable(IConverterAnchor(anchor).owner()));
 
             // backward compatibility
             sourceToken = getConverterTokenAddress(converter, sourceToken);
             targetToken = getConverterTokenAddress(converter, targetToken);
 
-            if (targetToken == anchor) { // buy the smart token
+            if (address(targetToken) == anchor) { // buy the smart token
                 // check if the current smart token has changed
                 if (i < 3 || anchor != _path[i - 3])
                     supply = ISmartToken(anchor).totalSupply();
@@ -176,7 +176,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 // update the smart token supply for the next iteration
                 supply = supply.add(amount);
             }
-            else if (sourceToken == anchor) { // sell the smart token
+            else if (address(sourceToken) == anchor) { // sell the smart token
                 // check if the current smart token has changed
                 if (i < 3 || anchor != _path[i - 3])
                     supply = ISmartToken(anchor).totalSupply();
@@ -214,7 +214,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       *
       * @return amount of tokens received from the conversion
     */
-    function convertByPath(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary, address _affiliateAccount, uint256 _affiliateFee)
+    function convertByPath(
+        address[] memory _path,
+        uint256 _amount,
+        uint256 _minReturn,
+        address payable _beneficiary,
+        address _affiliateAccount,
+        uint256 _affiliateFee)
         public
         payable
         protected
@@ -225,11 +231,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         require(_path.length > 2 && _path.length % 2 == 1, "ERR_INVALID_PATH");
 
         // validate msg.value and prepare the source token for the conversion
-        handleSourceToken(_path[0], IConverterAnchor(_path[1]), _amount);
+        handleSourceToken(IERC20Token(_path[0]), IConverterAnchor(_path[1]), _amount);
 
         // check if affiliate fee is enabled
         bool affiliateFeeEnabled = false;
-        if (address(_affiliateAccount) == 0) {
+        if (address(_affiliateAccount) == address(0)) {
             require(_affiliateFee == 0, "ERR_INVALID_AFFILIATE_FEE");
         }
         else {
@@ -238,7 +244,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         }
 
         // check if beneficiary is set
-        address beneficiary = msg.sender;
+        address payable beneficiary = msg.sender;
         if (_beneficiary != address(0))
             beneficiary = _beneficiary;
 
@@ -267,7 +273,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @return the amount of BNT received from this conversion
     */
     function xConvert(
-        IERC20Token[] _path,
+        address[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
         bytes32 _targetBlockchain,
@@ -298,7 +304,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @return the amount of BNT received from this conversion
     */
     function xConvert2(
-        IERC20Token[] _path,
+        address[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
         bytes32 _targetBlockchain,
@@ -312,17 +318,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         greaterThanZero(_minReturn)
         returns (uint256)
     {
-        IERC20Token targetToken = _path[_path.length - 1];
+        IERC20Token targetToken = IERC20Token(_path[_path.length - 1]);
         IBancorX bancorX = IBancorX(addressOf(BANCOR_X));
 
         // verify that the destination token is BNT
-        require(targetToken == addressOf(BNT_TOKEN), "ERR_INVALID_TARGET_TOKEN");
+        require(targetToken == IERC20Token(addressOf(BNT_TOKEN)), "ERR_INVALID_TARGET_TOKEN");
 
         // convert and get the resulting amount
-        uint256 amount = convertByPath(_path, _amount, _minReturn, this, _affiliateAccount, _affiliateFee);
+        uint256 amount = convertByPath(_path, _amount, _minReturn, payable(address(this)), _affiliateAccount, _affiliateFee);
 
         // grant BancorX allowance
-        ensureAllowance(targetToken, bancorX, amount);
+        ensureAllowance(targetToken, address(bancorX), amount);
 
         // transfer the resulting amount to BancorX
         bancorX.xTransfer(_targetBlockchain, _targetAccount, amount, _conversionId);
@@ -345,11 +351,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       *
       * @return amount of tokens received from the conversion
     */
-    function completeXConversion(IERC20Token[] _path, IBancorX _bancorX, uint256 _conversionId, uint256 _minReturn, address _beneficiary)
+    function completeXConversion(address[] memory _path, IBancorX _bancorX, uint256 _conversionId, uint256 _minReturn, address payable _beneficiary)
         public returns (uint256)
     {
         // verify that the source token is the BancorX token
-        require(_path[0] == _bancorX.token(), "ERR_INVALID_SOURCE_TOKEN");
+        require(IERC20Token(_path[0]) == _bancorX.token(), "ERR_INVALID_SOURCE_TOKEN");
 
         // get conversion amount from BancorX contract
         uint256 amount = _bancorX.getXTransferAmount(_conversionId, msg.sender);
@@ -370,7 +376,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @return amount of tokens received from the conversion
     */
     function doConversion(
-        ConversionStep[] _data,
+        ConversionStep[] memory _data,
         uint256 _amount,
         uint256 _minReturn,
         address _affiliateAccount,
@@ -388,20 +394,20 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 // transfer the tokens to the converter only if the network contract currently holds the tokens
                 // not needed with ETH or if it's the first conversion step
                 if (i != 0 && _data[i - 1].beneficiary == address(this) && !etherTokens[stepData.sourceToken])
-                    safeTransfer(stepData.sourceToken, stepData.converter, fromAmount);
+                    safeTransfer(stepData.sourceToken, address(stepData.converter), fromAmount);
             }
             // older converter
             // if the source token is the smart token, no need to do any transfers as the converter controls it
-            else if (stepData.sourceToken != ISmartToken(stepData.anchor)) {
+            else if (stepData.sourceToken != ISmartToken(address(stepData.anchor))) {
                 // grant allowance for it to transfer the tokens from the network contract
-                ensureAllowance(stepData.sourceToken, stepData.converter, fromAmount);
+                ensureAllowance(stepData.sourceToken, address(stepData.converter), fromAmount);
             }
 
             // do the conversion
             if (!stepData.isV28OrHigherConverter)
-                toAmount = ILegacyConverter(stepData.converter).change(stepData.sourceToken, stepData.targetToken, fromAmount, 1);
+                toAmount = ILegacyConverter(address(stepData.converter)).change(stepData.sourceToken, stepData.targetToken, fromAmount, 1);
             else if (etherTokens[stepData.sourceToken])
-                toAmount = stepData.converter.convert.value(msg.value)(stepData.sourceToken, stepData.targetToken, fromAmount, msg.sender, stepData.beneficiary);
+                toAmount = stepData.converter.convert{ value: msg.value }(stepData.sourceToken, stepData.targetToken, fromAmount, msg.sender, stepData.beneficiary);
             else
                 toAmount = stepData.converter.convert(stepData.sourceToken, stepData.targetToken, fromAmount, msg.sender, stepData.beneficiary);
 
@@ -430,7 +436,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @param _amount      amount to convert from, in the source token
     */
     function handleSourceToken(IERC20Token _sourceToken, IConverterAnchor _anchor, uint256 _amount) private {
-        IConverter firstConverter = IConverter(_anchor.owner());
+        IConverter firstConverter = IConverter(payable(_anchor.owner()));
         bool isNewerConverter = isV28OrHigherConverter(firstConverter);
 
         // ETH
@@ -442,26 +448,26 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
             // note that it can still be a non ETH converter if the path is wrong
             // but such conversion will simply revert
             if (!isNewerConverter)
-                IEtherToken(getConverterEtherTokenAddress(firstConverter)).deposit.value(msg.value)();
+                IEtherToken(address(getConverterEtherTokenAddress(firstConverter))).deposit{ value: msg.value }();
         }
         // EtherToken
         else if (etherTokens[_sourceToken]) {
             // claim the tokens - if the source token is ETH reserve, this call will fail
             // since in that case the transaction must be sent with msg.value
-            safeTransferFrom(_sourceToken, msg.sender, this, _amount);
+            safeTransferFrom(_sourceToken, msg.sender, address(this), _amount);
 
             // ETH converter - withdraw the ETH
             if (isNewerConverter)
-                IEtherToken(_sourceToken).withdraw(_amount);
+                IEtherToken(address(_sourceToken)).withdraw(_amount);
         }
         // other ERC20 token
         else {
             // newer converter - transfer the tokens from the sender directly to the converter
             // otherwise claim the tokens
             if (isNewerConverter)
-                safeTransferFrom(_sourceToken, msg.sender, firstConverter, _amount);
+                safeTransferFrom(_sourceToken, msg.sender, address(firstConverter), _amount);
             else
-                safeTransferFrom(_sourceToken, msg.sender, this, _amount);
+                safeTransferFrom(_sourceToken, msg.sender, address(this), _amount);
         }
     }
 
@@ -472,7 +478,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @param _amount      conversion target amount
       * @param _beneficiary wallet to receive the conversion result
     */
-    function handleTargetToken(ConversionStep[] _data, uint256 _amount, address _beneficiary) private {
+    function handleTargetToken(ConversionStep[] memory _data, uint256 _amount, address payable _beneficiary) private {
         ConversionStep memory stepData = _data[_data.length - 1];
 
         // network contract doesn't hold the tokens, do nothing
@@ -487,7 +493,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
             assert(!stepData.isV28OrHigherConverter);
 
             // EtherToken converter - withdraw the ETH and transfer to the beneficiary
-            IEtherToken(targetToken).withdrawTo(_beneficiary, _amount);
+            IEtherToken(address(targetToken)).withdrawTo(_beneficiary, _amount);
         }
         // other ERC20 token
         else {
@@ -504,17 +510,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       *
       * @return cached conversion data to be ingested later on by the conversion flow
     */
-    function createConversionData(IERC20Token[] _conversionPath, address _beneficiary, bool _affiliateFeeEnabled) private view returns (ConversionStep[]) {
+    function createConversionData(address[] memory _conversionPath, address payable _beneficiary, bool _affiliateFeeEnabled) private view returns (ConversionStep[] memory) {
         ConversionStep[] memory data = new ConversionStep[](_conversionPath.length / 2);
 
         bool affiliateFeeProcessed = false;
-        address bntToken = addressOf(BNT_TOKEN);
+        IERC20Token bntToken = IERC20Token(addressOf(BNT_TOKEN));
         // iterate the conversion path and create the conversion data for each step
         uint256 i;
         for (i = 0; i < _conversionPath.length - 1; i += 2) {
             IConverterAnchor anchor = IConverterAnchor(_conversionPath[i + 1]);
-            IConverter converter = IConverter(anchor.owner());
-            IERC20Token targetToken = _conversionPath[i + 2];
+            IConverter converter = IConverter(payable(anchor.owner()));
+            IERC20Token targetToken = IERC20Token(_conversionPath[i + 2]);
 
             // check if the affiliate fee should be processed in this step
             bool processAffiliateFee = _affiliateFeeEnabled && !affiliateFeeProcessed && targetToken == bntToken;
@@ -529,7 +535,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 converter: converter,
 
                 // set the source/target tokens
-                sourceToken: _conversionPath[i],
+                sourceToken: IERC20Token(_conversionPath[i]),
                 targetToken: targetToken,
 
                 // requires knowledge about the next step, so initialize in the next phase
@@ -547,10 +553,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         if (etherTokens[stepData.sourceToken]) {
             // newer converter - replace the source token address with ETH reserve address
             if (stepData.isV28OrHigherConverter)
-                stepData.sourceToken = IERC20Token(ETH_RESERVE_ADDRESS);
+                stepData.sourceToken = ETH_RESERVE_ADDRESS;
             // older converter - replace the source token with the EtherToken address used by the converter
             else
-                stepData.sourceToken = IERC20Token(getConverterEtherTokenAddress(stepData.converter));
+                stepData.sourceToken = getConverterEtherTokenAddress(stepData.converter);
         }
 
         // target is ETH
@@ -558,10 +564,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         if (etherTokens[stepData.targetToken]) {
             // newer converter - replace the target token address with ETH reserve address
             if (stepData.isV28OrHigherConverter)
-                stepData.targetToken = IERC20Token(ETH_RESERVE_ADDRESS);
+                stepData.targetToken = ETH_RESERVE_ADDRESS;
             // older converter - replace the target token with the EtherToken address used by the converter
             else
-                stepData.targetToken = IERC20Token(getConverterEtherTokenAddress(stepData.converter));
+                stepData.targetToken = getConverterEtherTokenAddress(stepData.converter);
         }
 
         // set the beneficiary for each step
@@ -572,20 +578,20 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
             if (stepData.isV28OrHigherConverter) {
                 // if affiliate fee is processed in this step, beneficiary is the network contract
                 if (stepData.processAffiliateFee)
-                    stepData.beneficiary = this;
+                    stepData.beneficiary = payable(address(this));
                 // if it's the last step, beneficiary is the final beneficiary
                 else if (i == data.length - 1)
                     stepData.beneficiary = _beneficiary;
                 // if the converter in the next step is newer, beneficiary is the next converter
                 else if (data[i + 1].isV28OrHigherConverter)
-                    stepData.beneficiary = data[i + 1].converter;
+                    stepData.beneficiary = address(data[i + 1].converter);
                 // the converter in the next step is older, beneficiary is the network contract
                 else
-                    stepData.beneficiary = this;
+                    stepData.beneficiary = payable(address(this));
             }
             else {
                 // converter in this step is older, beneficiary is the network contract
-                stepData.beneficiary = this;
+                stepData.beneficiary = payable(address(this));
             }
         }
 
@@ -602,7 +608,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @param _value   allowance amount
     */
     function ensureAllowance(IERC20Token _token, address _spender, uint256 _value) private {
-        uint256 allowance = _token.allowance(this, _spender);
+        uint256 allowance = _token.allowance(address(this), _spender);
         if (allowance < _value) {
             if (allowance > 0)
                 safeApprove(_token, _spender, 0);
@@ -611,10 +617,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     }
 
     // legacy - returns the address of an EtherToken used by the converter
-    function getConverterEtherTokenAddress(IConverter _converter) private view returns (address) {
+    function getConverterEtherTokenAddress(IConverter _converter) private view returns (IERC20Token) {
         uint256 reserveCount = _converter.connectorTokenCount();
         for (uint256 i = 0; i < reserveCount; i++) {
-            address reserveTokenAddress = _converter.connectorTokens(i);
+            IERC20Token reserveTokenAddress = _converter.connectorTokens(i);
             if (etherTokens[reserveTokenAddress])
                 return reserveTokenAddress;
         }
@@ -629,69 +635,57 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
             return _token;
 
         if (isV28OrHigherConverter(_converter))
-            return IERC20Token(ETH_RESERVE_ADDRESS);
+            return ETH_RESERVE_ADDRESS;
 
-        return IERC20Token(getConverterEtherTokenAddress(_converter));
+        return getConverterEtherTokenAddress(_converter);
     }
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
 
-    // using assembly code since older converter versions have different return values
-    function getReturn(address _dest, address _sourceToken, address _targetToken, uint256 _amount) internal view returns (uint256, uint256) {
-        uint256[2] memory ret;
+    // using a static call to get the return from older converters
+    function getReturn(IConverter _dest, IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) internal view returns (uint256, uint256) {
         bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _sourceToken, _targetToken, _amount);
+        (bool success, bytes memory returnData) = address(_dest).staticcall(data);
 
-        assembly {
-            let success := staticcall(
-                gas,           // gas remaining
-                _dest,         // destination address
-                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
-                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
-                ret,           // output buffer
-                64             // output length
-            )
-            if iszero(success) {
-                revert(0, 0)
+        if (success) {
+            if (returnData.length == 64) {
+                return abi.decode(returnData, (uint256, uint256));
+            }
+
+            if (returnData.length == 32) {
+                return (abi.decode(returnData, (uint256)), 0);
             }
         }
 
-        return (ret[0], ret[1]);
+        return (0, 0);
     }
 
     bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
 
-    // using assembly code to identify converter version
+    // using a static call to identify converter version
     // can't rely on the version number since the function had a different signature in older converters
     function isV28OrHigherConverter(IConverter _converter) internal view returns (bool) {
-        bool success;
-        uint256[1] memory ret;
         bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);
+        (bool success, bytes memory returnData) = address(_converter).staticcall{ gas: 4000 }(data);
 
-        assembly {
-            success := staticcall(
-                5000,          // isV28OrHigher consumes 190 gas, but just for extra safety
-                _converter,    // destination address
-                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
-                mload(data),   // input length (loaded from the first 32 bytes in the `data` array)
-                ret,           // output buffer
-                32             // output length
-            )
+        if (success && returnData.length == 32) {
+            return abi.decode(returnData, (bool));
         }
 
-        return success && ret[0] != 0;
+        return false;
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256, uint256) {
+    function getReturnByPath(address[] memory _path, uint256 _amount) public view returns (uint256, uint256) {
         return (rateByPath(_path, _amount), 0);
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function convert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256) {
+    function convert(address[] memory _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256) {
         return convertByPath(_path, _amount, _minReturn, address(0), address(0), 0);
     }
 
@@ -699,7 +693,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @dev deprecated, backward compatibility
     */
     function convert2(
-        IERC20Token[] _path,
+        address[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
         address _affiliateAccount,
@@ -715,7 +709,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
       * @dev deprecated, backward compatibility
     */
-    function convertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary) public payable returns (uint256) {
+    function convertFor(address[] memory _path, uint256 _amount, uint256 _minReturn, address payable _beneficiary) public payable returns (uint256) {
         return convertByPath(_path, _amount, _minReturn, _beneficiary, address(0), 0);
     }
 
@@ -723,10 +717,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @dev deprecated, backward compatibility
     */
     function convertFor2(
-        IERC20Token[] _path,
+        address[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
-        address _beneficiary,
+        address payable _beneficiary,
         address _affiliateAccount,
         uint256 _affiliateFee
     )
@@ -741,7 +735,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
       * @dev deprecated, backward compatibility
     */
-    function claimAndConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+    function claimAndConvert(address[] memory _path, uint256 _amount, uint256 _minReturn) public returns (uint256) {
         return convertByPath(_path, _amount, _minReturn, address(0), address(0), 0);
     }
 
@@ -749,7 +743,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @dev deprecated, backward compatibility
     */
     function claimAndConvert2(
-        IERC20Token[] _path,
+        address[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
         address _affiliateAccount,
@@ -764,7 +758,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
       * @dev deprecated, backward compatibility
     */
-    function claimAndConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary) public returns (uint256) {
+    function claimAndConvertFor(address[] memory _path, uint256 _amount, uint256 _minReturn, address payable _beneficiary) public returns (uint256) {
         return convertByPath(_path, _amount, _minReturn, _beneficiary, address(0), 0);
     }
 
@@ -772,10 +766,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       * @dev deprecated, backward compatibility
     */
     function claimAndConvertFor2(
-        IERC20Token[] _path,
+        address[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
-        address _beneficiary,
+        address payable _beneficiary,
         address _affiliateAccount,
         uint256 _affiliateFee
     )
