@@ -3,41 +3,29 @@ MAX_WEIGHT = 1000000;
 MIN_PRECISION = 32;
 MAX_PRECISION = 127;
 
-'''
-    Auto-generated via 'PrintIntScalingFactors.py'
-'''
+# Auto-generated via 'PrintIntScalingFactors.py'
 FIXED_1 = 0x080000000000000000000000000000000;
 FIXED_2 = 0x100000000000000000000000000000000;
 MAX_NUM = 0x200000000000000000000000000000000;
 
-'''
-    Auto-generated via 'PrintLn2ScalingFactors.py'
-'''
+# Auto-generated via 'PrintLn2ScalingFactors.py'
 LN2_NUMERATOR   = 0x3f80fe03f80fe03f80fe03f80fe03f8;
 LN2_DENOMINATOR = 0x5b9de1d10bf4103d647b0955897ba80;
 
-'''
-    Auto-generated via 'PrintFunctionOptimalLog.py' and 'PrintFunctionOptimalExp.py'
-'''
+# Auto-generated via 'PrintFunctionOptimalLog.py' and 'PrintFunctionOptimalExp.py'
 OPT_LOG_MAX_VAL = 0x15bf0a8b1457695355fb8ac404e7a79e3;
 OPT_EXP_MAX_VAL = 0x800000000000000000000000000000000;
 
-'''
-    Auto-generated via 'PrintLambertFactors.py'
-'''
+# Auto-generated via 'PrintLambertFactors.py'
 LAMBERT_CONV_RADIUS = 0x002f16ac6c59de6f8d5d6f63c1482a7c86;
 LAMBERT_POS2_SAMPLE = 0x0003060c183060c183060c183060c18306;
 LAMBERT_POS2_MAXVAL = 0x01af16ac6c59de6f8d5d6f63c1482a7c80;
 LAMBERT_POS3_MAXVAL = 0x6b22d43e72c326539cceeef8bb48f255ff;
 
-'''
-    Auto-generated via 'PrintWeightFactors.py'
-'''
+# Auto-generated via 'PrintWeightFactors.py'
 MAX_UNF_WEIGHT = 0x10c6f7a0b5ed8d36b4c7f34938583621fafc8b0079a2834d26fa3fcc9ea9;
 
-'''
-    Auto-generated via 'PrintMaxExpArray.py'
-'''
+# Auto-generated via 'PrintMaxExpArray.py'
 maxExpArray = [0] * 128;
 def initMaxExpArray():
 #   maxExpArray[  0] = 0x6bffffffffffffffffffffffffffffffff;
@@ -169,9 +157,7 @@ def initMaxExpArray():
     maxExpArray[126] = 0x008b380f3558668c46c91c49a2f8e967b9;
     maxExpArray[127] = 0x00857ddf0117efa215952912839f6473e6;
 
-'''
-    Auto-generated via 'PrintLambertArray.py'
-'''
+# Auto-generated via 'PrintLambertArray.py'
 lambertArray = [0] * 128;
 def initLambertArray():
     lambertArray[  0] = 0x60e393c68d20b1bd09deaabc0373b9c5;
