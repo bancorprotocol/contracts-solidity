@@ -438,7 +438,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
 
-        // dispatch rate updates for the reserve tokens
+        // dispatch the `TokenRateUpdate` event for the reserve tokens
         dispatchTokenRateUpdateEvent(_sourceToken, _targetToken, reserves[_sourceToken].weight, reserves[_targetToken].weight);
 
         // dispatch the `TokenRateUpdate` event for the pool token
@@ -1081,7 +1081,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev dispatches token rate update event
+      * @dev dispatches token rate update event for the reserve tokens
       *
       * @param _token1          contract address of the token to calculate the rate of one unit of
       * @param _token2          contract address of the token to calculate the rate of one `_token1` unit in
@@ -1089,14 +1089,12 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _token2Weight    reserve weight of token2
     */
     function dispatchTokenRateUpdateEvent(IERC20Token _token1, IERC20Token _token2, uint32 _token1Weight, uint32 _token2Weight) private {
-        // dispatch token rate update event
         Fraction memory rate = tokensRate(_token1, _token2, _token1Weight, _token2Weight);
-
         emit TokenRateUpdate(_token1, _token2, rate.n, rate.d);
     }
 
     /**
-      * @dev dispatches the `TokenRateUpdate` for the pool token
+      * @dev dispatches token rate update event for the pool token
       *
       * @param _poolToken       address of the pool token
       * @param _poolTokenSupply total pool token supply
