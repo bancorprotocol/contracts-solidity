@@ -62,8 +62,9 @@ contract('LiquidityPoolV2Converter', accounts => {
                         await converter.activate(primaryReserveAddress, chainlinkPriceOracleB.address, chainlinkPriceOracleA.address);
                     }
 
-                    poolToken1 = await SmartToken.at(await converter.poolToken.call(getReserve1Address(isETHReserve)));
-                    poolToken2 = await SmartToken.at(await converter.poolToken.call(reserveToken2.address));
+                    const poolTokens = await anchor.poolTokens.call();
+                    poolToken1 = await SmartToken.at(poolTokens[0]);
+                    poolToken2 = await SmartToken.at(poolTokens[1]);
                 }
 
                 if (addLiquidity) {
