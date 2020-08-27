@@ -66,7 +66,8 @@ const send = async (web3, account, transaction) => {
             const signed = await web3.eth.accounts.signTransaction(options, account.privateKey);
             const receipt = await web3.eth.sendSignedTransaction(signed.rawTransaction);
             return receipt;
-        } catch (error) {
+        }
+        catch (error) {
             console.log(error.message);
             const receipt = await getTransactionReceipt(web3);
             if (receipt) {

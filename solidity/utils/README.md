@@ -131,5 +131,4 @@ Here is an example of the initial configuration file which should be provided to
         }
     ]
 }
-
 ```
