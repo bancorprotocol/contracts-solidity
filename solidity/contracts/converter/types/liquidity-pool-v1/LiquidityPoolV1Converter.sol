@@ -270,8 +270,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            uint32 reserveWeight = reserves[reserveToken].weight;
-            dispatchPoolTokenRateEvent(newPoolTokenSupply, reserveToken, newReserveBalance, reserveWeight);
+            emit TokenRateUpdate(ISmartToken(address(anchor)), reserveToken, newReserveBalance.mul(PPM_RESOLUTION), newPoolTokenSupply.mul(reserves[reserveToken].weight));
         }
 
         // issue new funds to the caller in the pool token
@@ -363,16 +362,18 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         // transfer each one of the reserve amounts from the user to the pool
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
-            if (_reserveTokens[i] != ETH_RESERVE_ADDRESS) // ETH has already been transferred as part of the transaction
-                safeTransferFrom(_reserveTokens[i], msg.sender, address(this), _reserveAmounts[i]);
+            IERC20Token reserveToken = _reserveTokens[i];
+            uint256 reserveAmount = _reserveAmounts[i];
 
-            reserves[_reserveTokens[i]].balance = _reserveAmounts[i];
+            if (reserveToken != ETH_RESERVE_ADDRESS) // ETH has already been transferred as part of the transaction
+                safeTransferFrom(reserveToken, msg.sender, address(this), reserveAmount);
 
-            emit LiquidityAdded(msg.sender, _reserveTokens[i], _reserveAmounts[i], _reserveAmounts[i], amount);
+            reserves[reserveToken].balance = reserveAmount;
+
+            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, reserveAmount, amount);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            uint32 reserveWeight = reserves[_reserveTokens[i]].weight;
-            dispatchPoolTokenRateEvent(amount, _reserveTokens[i], _reserveAmounts[i], reserveWeight);
+            emit TokenRateUpdate(ISmartToken(address(anchor)), reserveToken, reserveAmount.mul(PPM_RESOLUTION), amount.mul(reserves[reserveToken].weight));
         }
 
         return amount;
@@ -415,8 +416,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            uint32 reserveWeight = reserves[_reserveTokens[i]].weight;
-            dispatchPoolTokenRateEvent(newPoolTokenSupply, _reserveTokens[i], newReserveBalance, reserveWeight);
+            emit TokenRateUpdate(ISmartToken(address(anchor)), reserveToken, newReserveBalance.mul(PPM_RESOLUTION), newPoolTokenSupply.mul(reserves[reserveToken].weight));
         }
 
         return amount;
@@ -456,8 +456,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            uint32 reserveWeight = reserves[reserveToken].weight;
-            dispatchPoolTokenRateEvent(newPoolTokenSupply, reserveToken, newReserveBalance, reserveWeight);
+            emit TokenRateUpdate(ISmartToken(address(anchor)), reserveToken, newReserveBalance.mul(PPM_RESOLUTION), newPoolTokenSupply.mul(reserves[reserveToken].weight));
         }
     }
 
@@ -528,24 +527,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         emit TokenRateUpdate(_sourceToken, _targetToken, rateN, rateD);
 
         // dispatch the `TokenRateUpdate` event for the pool token
-        dispatchPoolTokenRateEvent(poolTokenSupply, _sourceToken, sourceReserveBalance, sourceReserveWeight);
-        dispatchPoolTokenRateEvent(poolTokenSupply, _targetToken, targetReserveBalance, targetReserveWeight);
+        emit TokenRateUpdate(ISmartToken(address(anchor)), _sourceToken, sourceReserveBalance.mul(PPM_RESOLUTION), poolTokenSupply.mul(sourceReserveWeight));
+        emit TokenRateUpdate(ISmartToken(address(anchor)), _targetToken, targetReserveBalance.mul(PPM_RESOLUTION), poolTokenSupply.mul(targetReserveWeight));
 
         // dispatch price data update events (deprecated events)
         emit PriceDataUpdate(_sourceToken, poolTokenSupply, sourceReserveBalance, sourceReserveWeight);
         emit PriceDataUpdate(_targetToken, poolTokenSupply, targetReserveBalance, targetReserveWeight);
-    }
-
-    /**
-      * @dev dispatches the `TokenRateUpdate` for the pool token
-      * only used to circumvent the `stack too deep` compiler error
-      *
-      * @param _poolTokenSupply total pool token supply
-      * @param _reserveToken    address of the reserve token
-      * @param _reserveBalance  reserve balance
-      * @param _reserveWeight   reserve weight
-    */
-    function dispatchPoolTokenRateEvent(uint256 _poolTokenSupply, IERC20Token _reserveToken, uint256 _reserveBalance, uint32 _reserveWeight) private {
-        emit TokenRateUpdate(ISmartToken(address(anchor)), _reserveToken, _reserveBalance.mul(PPM_RESOLUTION), _poolTokenSupply.mul(_reserveWeight));
     }
 }
