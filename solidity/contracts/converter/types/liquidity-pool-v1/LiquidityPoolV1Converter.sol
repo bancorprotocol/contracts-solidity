@@ -146,27 +146,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         else
             safeTransfer(_targetToken, _beneficiary, amount);
 
-        uint256 poolTokenSupply = ISmartToken(address(anchor)).totalSupply();
-        uint256 sourceReserveBalance = reserveBalance(_sourceToken);
-        uint256 targetReserveBalance = reserveBalance(_targetToken);
-        uint32 sourceReserveWeight = reserves[_sourceToken].weight;
-        uint32 targetReserveWeight = reserves[_targetToken].weight;
-
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
 
-        // dispatch token rate update event
-        uint256 rateN = targetReserveBalance.mul(sourceReserveWeight);
-        uint256 rateD = sourceReserveBalance.mul(targetReserveWeight);
-        emit TokenRateUpdate(_sourceToken, _targetToken, rateN, rateD);
-
-        // dispatch the `TokenRateUpdate` event for the pool token
-        dispatchPoolTokenRateEvent(poolTokenSupply, _sourceToken, sourceReserveBalance, sourceReserveWeight);
-        dispatchPoolTokenRateEvent(poolTokenSupply, _targetToken, targetReserveBalance, targetReserveWeight);
-
-        // dispatch price data update events (deprecated events)
-        emit PriceDataUpdate(_sourceToken, poolTokenSupply, sourceReserveBalance, sourceReserveWeight);
-        emit PriceDataUpdate(_targetToken, poolTokenSupply, targetReserveBalance, targetReserveWeight);
+        // dispatch rate updates
+        dispatchRateEvents(_sourceToken, _targetToken);
 
         return amount;
     }
@@ -520,6 +504,33 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         for (uint256 i = 0; i < length; i++)
             numOfDigits += decimalLength(_values[i]);
         return uint256(10) ** (roundDiv(numOfDigits, length) - 1);
+    }
+
+     /**
+      * @dev dispatches rate events for both reserves / pool tokens
+      *
+      * @param _sourceToken address of the source reserve token
+      * @param _targetToken address of the target reserve token
+    */
+    function dispatchRateEvents(IERC20Token _sourceToken, IERC20Token _targetToken) private {
+        uint256 poolTokenSupply = ISmartToken(address(anchor)).totalSupply();
+        uint256 sourceReserveBalance = reserveBalance(_sourceToken);
+        uint256 targetReserveBalance = reserveBalance(_targetToken);
+        uint32 sourceReserveWeight = reserves[_sourceToken].weight;
+        uint32 targetReserveWeight = reserves[_targetToken].weight;
+
+        // dispatch token rate update event
+        uint256 rateN = targetReserveBalance.mul(sourceReserveWeight);
+        uint256 rateD = sourceReserveBalance.mul(targetReserveWeight);
+        emit TokenRateUpdate(_sourceToken, _targetToken, rateN, rateD);
+
+        // dispatch the `TokenRateUpdate` event for the pool token
+        dispatchPoolTokenRateEvent(poolTokenSupply, _sourceToken, sourceReserveBalance, sourceReserveWeight);
+        dispatchPoolTokenRateEvent(poolTokenSupply, _targetToken, targetReserveBalance, targetReserveWeight);
+
+        // dispatch price data update events (deprecated events)
+        emit PriceDataUpdate(_sourceToken, poolTokenSupply, sourceReserveBalance, sourceReserveWeight);
+        emit PriceDataUpdate(_targetToken, poolTokenSupply, targetReserveBalance, targetReserveWeight);
     }
 
     /**
