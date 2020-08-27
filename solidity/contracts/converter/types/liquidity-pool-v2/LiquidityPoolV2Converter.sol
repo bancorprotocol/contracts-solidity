@@ -249,6 +249,17 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     }
 
     /**
+      * @dev returns the pool token address by the reserve token address
+      *
+      * @param _reserveToken    reserve token address
+      *
+      * @return pool token address
+    */
+    function poolToken(IERC20Token _reserveToken) public view returns (ISmartToken) {
+        return reservesToPoolTokens[_reserveToken];
+    }
+
+    /**
       * @dev returns the maximum number of pool tokens that can currently be liquidated
       *
       * @param _poolToken   address of the pool token
