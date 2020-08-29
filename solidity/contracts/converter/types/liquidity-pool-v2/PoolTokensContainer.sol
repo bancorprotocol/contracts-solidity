@@ -42,7 +42,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       *
       * @return list of pool tokens
     */
-    function poolTokens() external override view returns (ISmartToken[] memory) {
+    function poolTokens() external view override returns (ISmartToken[] memory) {
         return _poolTokens;
     }
 

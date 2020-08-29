@@ -17,11 +17,11 @@ contract TestChainlinkPriceOracle is IChainlinkPriceOracle {
         timestamp = _timestamp;
     }
 
-    function latestAnswer() external override view returns (int256) {
+    function latestAnswer() external view override returns (int256) {
         return answer;
     }
 
-    function latestTimestamp() external override view returns (uint256) {
+    function latestTimestamp() external view override returns (uint256) {
         return timestamp;
     }
 }

@@ -68,9 +68,6 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     uint32 public override conversionFee = 0;           // current conversion fee, represented in ppm, 0...maxConversionFee
     bool public constant conversionsEnabled = true;     // deprecated, backward compatibility
 
-    function converterType() public virtual override pure returns (uint16);
-    function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public virtual override view returns (uint256, uint256);
-
     /**
       * @dev triggered when the converter is activated
       *
@@ -144,6 +141,17 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
         anchor = _anchor;
         maxConversionFee = _maxConversionFee;
     }
+
+    // overrides interface declaration
+    function converterType() public pure virtual override returns (uint16);
+
+    // overrides interface declaration
+    function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount)
+        public
+        view
+        virtual
+        override
+        returns (uint256, uint256);
 
     // ensures that the converter is active
     modifier active() {
@@ -265,7 +273,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
       *
       * @return true if the converter is active, false otherwise
     */
-    function isActive() public virtual override view returns (bool) {
+    function isActive() public view virtual override returns (bool) {
         return anchor.owner() == address(this);
     }
 
@@ -565,7 +573,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     /**
       * @dev deprecated since version 28, backward compatibility - use only for earlier versions
     */
-    function token() public override view returns (IConverterAnchor) {
+    function token() public view override returns (IConverterAnchor) {
         return anchor;
     }
 
@@ -586,7 +594,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     /**
       * @dev deprecated, backward compatibility
     */
-    function connectors(IERC20Token _address) public override view returns (uint256, uint32, bool, bool, bool) {
+    function connectors(IERC20Token _address) public view override returns (uint256, uint32, bool, bool, bool) {
         Reserve memory reserve = reserves[_address];
         return(reserve.balance, reserve.weight, false, false, reserve.isSet);
     }
@@ -594,21 +602,21 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     /**
       * @dev deprecated, backward compatibility
     */
-    function connectorTokens(uint256 _index) public override view returns (IERC20Token) {
+    function connectorTokens(uint256 _index) public view override returns (IERC20Token) {
         return ConverterBase.reserveTokens[_index];
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function connectorTokenCount() public override view returns (uint16) {
+    function connectorTokenCount() public view override returns (uint16) {
         return reserveTokenCount();
     }
 
     /**
       * @dev deprecated, backward compatibility
     */
-    function getConnectorBalance(IERC20Token _connectorToken) public override view returns (uint256) {
+    function getConnectorBalance(IERC20Token _connectorToken) public view override returns (uint256) {
         return reserveBalance(_connectorToken);
     }
 

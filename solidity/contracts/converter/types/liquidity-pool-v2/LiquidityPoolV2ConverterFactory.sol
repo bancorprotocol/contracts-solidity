@@ -13,7 +13,7 @@ contract LiquidityPoolV2ConverterFactory is ITypedConverterFactory {
       *
       * @return converter type
     */
-    function converterType() external override pure returns (uint16) {
+    function converterType() external pure override returns (uint16) {
         return 2;
     }
 

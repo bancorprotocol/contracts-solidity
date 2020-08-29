@@ -9,7 +9,7 @@ contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
         public LiquidityPoolV2Converter(_token, _registry, _maxConversionFee) {
     }
 
-    function time() internal override view returns (uint256) {
+    function time() internal view override returns (uint256) {
         return currentTime != 0 ? currentTime : now;
     }
 

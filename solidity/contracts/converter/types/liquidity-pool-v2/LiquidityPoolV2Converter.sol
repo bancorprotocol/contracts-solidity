@@ -97,7 +97,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @return see the converter types in the the main contract doc
     */
-    function converterType() public override pure returns (uint16) {
+    function converterType() public pure override returns (uint16) {
         return 2;
     }
 
@@ -106,7 +106,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @return true if the converter is active, false otherwise
     */
-    function isActive() public override view returns (bool) {
+    function isActive() public view override returns (bool) {
         return super.isActive() && address(priceOracle) != address(0);
     }
 
@@ -370,8 +370,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     */
     function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount)
         public
-        override
         view
+        override
         active
         validReserve(_sourceToken)
         validReserve(_targetToken)
@@ -1139,7 +1139,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     /**
       * @dev returns the current time
     */
-    function time() internal virtual view returns (uint256) {
+    function time() internal view virtual returns (uint256) {
         return now;
     }
 
