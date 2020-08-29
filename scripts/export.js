@@ -15,6 +15,7 @@ fileList.forEach((filename) => {
         const data = fs.readFileSync(path.join(CONTRACTS_DIR, filename));
         const jsonData = JSON.parse(data);
         const { abi, bytecode } = jsonData;
+
         if (abi) {
             fs.writeFileSync(path.format({
                 dir: BUILD_DIR, name: basename, ext: ABI_EXT

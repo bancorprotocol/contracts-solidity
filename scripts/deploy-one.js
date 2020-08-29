@@ -25,11 +25,9 @@ const getGasPrice = async (web3) => {
         if (/^\d+$/.test(userGasPrice)) {
             return userGasPrice;
         }
-
         if (userGasPrice === '') {
             return nodeGasPrice;
         }
-
         console.log('Illegal gas-price');
     }
 };
