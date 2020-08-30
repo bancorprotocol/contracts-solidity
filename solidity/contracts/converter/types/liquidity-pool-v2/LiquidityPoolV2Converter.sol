@@ -506,11 +506,6 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
             externalSourceReserveWeight = inverseWeight(externalSourceReserveWeight);
         }
 
-        if (_targetToken == primaryReserveToken) {
-            effectiveSourceReserveWeight = inverseWeight(effectiveSourceReserveWeight);
-            externalSourceReserveWeight = inverseWeight(externalSourceReserveWeight);
-        }
-
         // update the weights if needed
         if (reserves[_sourceToken].weight != effectiveSourceReserveWeight) {
             reserves[_sourceToken].weight = effectiveSourceReserveWeight;
