@@ -11,7 +11,7 @@ contract TestTypedConverterAnchorFactory is ITypedConverterAnchorFactory {
         name = _name;
     }
 
-    function converterType() external override pure returns (uint16) {
+    function converterType() external pure override returns (uint16) {
         return 8;
     }
 

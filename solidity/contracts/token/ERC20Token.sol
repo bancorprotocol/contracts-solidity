@@ -90,8 +90,8 @@ contract ERC20Token is IERC20Token, Utils {
     */
     function transferFrom(address _from, address _to, uint256 _value)
         public
-        override
         virtual
+        override
         validAddress(_from)
         validAddress(_to)
         returns (bool)
@@ -118,8 +118,8 @@ contract ERC20Token is IERC20Token, Utils {
     */
     function approve(address _spender, uint256 _value)
         public
-        override
         virtual
+        override
         validAddress(_spender)
         returns (bool)
     {

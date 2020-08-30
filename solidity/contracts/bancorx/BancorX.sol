@@ -424,7 +424,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
       *
       * @return amount that was sent in xTransfer corresponding to _xTransferId
     */
-    function getXTransferAmount(uint256 _xTransferId, address _for) public override view returns (uint256) {
+    function getXTransferAmount(uint256 _xTransferId, address _for) public view override returns (uint256) {
         // xTransferId -> txId -> Transaction
         Transaction memory transaction = transactions[transactionIds[_xTransferId]];
 

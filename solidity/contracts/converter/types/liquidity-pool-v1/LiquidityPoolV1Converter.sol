@@ -53,7 +53,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       *
       * @return see the converter types in the the main contract doc
     */
-    function converterType() public override pure returns (uint16) {
+    function converterType() public pure override returns (uint16) {
         return 1;
     }
 
@@ -81,8 +81,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     */
     function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount)
         public
-        override
         view
+        override
         active
         validReserve(_sourceToken)
         validReserve(_targetToken)
