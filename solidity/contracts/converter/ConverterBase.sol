@@ -142,17 +142,6 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
         maxConversionFee = _maxConversionFee;
     }
 
-    // overrides interface declaration
-    function converterType() public pure virtual override returns (uint16);
-
-    // overrides interface declaration
-    function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount)
-        public
-        view
-        virtual
-        override
-        returns (uint256, uint256);
-
     // ensures that the converter is active
     modifier active() {
         _active();
@@ -207,6 +196,17 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     function _validReserveWeight(uint32 _weight) internal pure {
         require(_weight > 0 && _weight <= PPM_RESOLUTION, "ERR_INVALID_RESERVE_WEIGHT");
     }
+
+    // overrides interface declaration
+    function converterType() public pure virtual override returns (uint16);
+
+    // overrides interface declaration
+    function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount)
+        public
+        view
+        virtual
+        override
+        returns (uint256, uint256);
 
     /**
       * @dev deposits ether
