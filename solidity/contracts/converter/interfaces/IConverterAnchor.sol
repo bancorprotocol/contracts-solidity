@@ -6,5 +6,5 @@ import "../../utility/interfaces/ITokenHolder.sol";
 /*
     Converter Anchor interface
 */
-abstract contract IConverterAnchor is IOwned, ITokenHolder {
+interface IConverterAnchor is IOwned, ITokenHolder {
 }

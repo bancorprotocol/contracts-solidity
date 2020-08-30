@@ -68,6 +68,9 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     uint32 public override conversionFee = 0;           // current conversion fee, represented in ppm, 0...maxConversionFee
     bool public constant conversionsEnabled = true;     // deprecated, backward compatibility
 
+    function converterType() public virtual override pure returns (uint16);
+    function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public virtual override view returns (uint256, uint256);
+
     /**
       * @dev triggered when the converter is activated
       *
