@@ -468,7 +468,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev converts a specific amount of source tokens to target tokens
+      * @dev updates the weights based on the effective weights calculation if needed
       * can only be called by the bancor network contract
       *
       * @param _sourceToken source ERC20 token
@@ -480,13 +480,53 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @return external rate
     */
     function doConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) private returns (uint256, uint256, Fraction memory) {
-        // get the external rate between the reserves along with its update time
         Fraction memory externalRate;
-        uint256 externalRateUpdateTime;
-        (externalRate.n, externalRate.d, externalRateUpdateTime) = priceOracle.latestRateAndUpdateTime(primaryReserveToken, secondaryReserveToken);
+        uint32 effectiveSourceReserveWeight;
+        uint32 externalSourceReserveWeight;
 
-        // pre-conversion preparation - update the weights if needed and get the target amount and feee
-        (uint256 targetAmount, uint256 fee) = prepareConversion(_sourceToken, _targetToken, _amount, externalRate, externalRateUpdateTime);
+        if (_sourceToken == primaryReserveToken) {
+            uint256 externalRateUpdateTime;
+
+            // get the external rate between the reserves along with its update time
+            (externalRate.n, externalRate.d, externalRateUpdateTime) = priceOracle.latestRateAndUpdateTime(_sourceToken, _targetToken);
+
+            // get the source token effective / external weights
+            (effectiveSourceReserveWeight, externalSourceReserveWeight) = effectiveAndExternalPrimaryWeight(externalRate, externalRateUpdateTime);
+        }
+        else {
+            uint256 externalRateUpdateTime;
+
+            // get the external rate between the reserves along with its update time
+            (externalRate.n, externalRate.d, externalRateUpdateTime) = priceOracle.latestRateAndUpdateTime(_targetToken, _sourceToken);
+
+            // get the source token effective / external weights
+            (effectiveSourceReserveWeight, externalSourceReserveWeight) = effectiveAndExternalPrimaryWeight(externalRate, externalRateUpdateTime);
+
+            effectiveSourceReserveWeight = inverseWeight(effectiveSourceReserveWeight);
+            externalSourceReserveWeight = inverseWeight(externalSourceReserveWeight);
+        }
+
+        if (_targetToken == primaryReserveToken) {
+            effectiveSourceReserveWeight = inverseWeight(effectiveSourceReserveWeight);
+            externalSourceReserveWeight = inverseWeight(externalSourceReserveWeight);
+        }
+
+        // update the weights if needed
+        if (reserves[_sourceToken].weight != effectiveSourceReserveWeight) {
+            reserves[_sourceToken].weight = effectiveSourceReserveWeight;
+            reserves[_targetToken].weight = inverseWeight(effectiveSourceReserveWeight);
+        }
+
+        // get the expected target amount and fee
+        (uint256 targetAmount, uint256 fee) = targetAmountAndFee(
+            _sourceToken,
+            _targetToken,
+            effectiveSourceReserveWeight,
+            inverseWeight(effectiveSourceReserveWeight),
+            externalRate,
+            inverseWeight(externalSourceReserveWeight),
+            _amount
+        );
 
         // return a tuple of [target amount (excluding fee), fee, external rate]
         return (targetAmount, fee, externalRate);
@@ -801,51 +841,6 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         }
 
         return 0;
-    }
-
-    /**
-      * @dev updates the weights based on the effective weights calculation if needed
-      * and returns the target amount and fee
-      *
-      * @param _sourceToken             source ERC20 token
-      * @param _targetToken             target ERC20 token
-      * @param _amount                  amount of tokens to convert (in units of the source token)
-      * @param _externalRate            external rate of 1 primary token in secondary tokens
-      * @param _externalRateUpdateTime  external rate update time
-      *
-      * @return expected target amount
-      * @return expected fee
-    */
-    function prepareConversion(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
-        uint256 _amount,
-        Fraction memory _externalRate,
-        uint256 _externalRateUpdateTime)
-        internal
-        returns (uint256, uint256)
-    {
-        // get the source token effective / external weights
-        (uint32 effectiveSourceReserveWeight, uint32 externalSourceReserveWeight) =
-            effectiveAndExternalPrimaryWeight(_externalRate, _externalRateUpdateTime);
-        if (_targetToken == primaryReserveToken) {
-            effectiveSourceReserveWeight = inverseWeight(effectiveSourceReserveWeight);
-            externalSourceReserveWeight = inverseWeight(externalSourceReserveWeight);
-        }
-
-        // check if the weights need to be updated
-        if (reserves[_sourceToken].weight != effectiveSourceReserveWeight) {
-            // update the weights
-            reserves[_sourceToken].weight = effectiveSourceReserveWeight;
-            reserves[_targetToken].weight = inverseWeight(effectiveSourceReserveWeight);
-        }
-
-        // get expected target amount and fee
-        return targetAmountAndFee(
-            _sourceToken, _targetToken,
-            effectiveSourceReserveWeight, inverseWeight(effectiveSourceReserveWeight),
-            _externalRate, inverseWeight(externalSourceReserveWeight),
-            _amount);
     }
 
     /**
