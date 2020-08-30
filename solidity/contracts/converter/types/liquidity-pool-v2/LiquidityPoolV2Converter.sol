@@ -480,17 +480,30 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @return external rate
     */
     function doConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) private returns (uint256, uint256, Fraction memory) {
-        // get the external rate between the reserves along with its update time
         Fraction memory externalRate;
         uint32 effectiveSourceReserveWeight;
         uint32 externalSourceReserveWeight;
 
-        {
+        if (_sourceToken == primaryReserveToken) {
             uint256 externalRateUpdateTime;
-            (externalRate.n, externalRate.d, externalRateUpdateTime) = priceOracle.latestRateAndUpdateTime(primaryReserveToken, secondaryReserveToken);
+
+            // get the external rate between the reserves along with its update time
+            (externalRate.n, externalRate.d, externalRateUpdateTime) = priceOracle.latestRateAndUpdateTime(_sourceToken, _targetToken);
 
             // get the source token effective / external weights
             (effectiveSourceReserveWeight, externalSourceReserveWeight) = effectiveAndExternalPrimaryWeight(externalRate, externalRateUpdateTime);
+        }
+        else {
+            uint256 externalRateUpdateTime;
+
+            // get the external rate between the reserves along with its update time
+            (externalRate.n, externalRate.d, externalRateUpdateTime) = priceOracle.latestRateAndUpdateTime(_targetToken, _sourceToken);
+
+            // get the source token effective / external weights
+            (effectiveSourceReserveWeight, externalSourceReserveWeight) = effectiveAndExternalPrimaryWeight(externalRate, externalRateUpdateTime);
+
+            effectiveSourceReserveWeight = inverseWeight(effectiveSourceReserveWeight);
+            externalSourceReserveWeight = inverseWeight(externalSourceReserveWeight);
         }
 
         if (_targetToken == primaryReserveToken) {
