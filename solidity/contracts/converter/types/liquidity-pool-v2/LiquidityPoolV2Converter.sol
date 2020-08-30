@@ -421,8 +421,24 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         validReserve(_targetToken)
         returns (uint256)
     {
-        // convert and get the target amount and fee
-        (uint256 amount, uint256 fee) = doConvert(_sourceToken, _targetToken, _amount);
+        // get the target amount and fee alongside the external rate
+        (uint256 amount, uint256 fee, Fraction memory externalRate) = doConvert(_sourceToken, _targetToken, _amount);
+
+        // ensure that the trade gives something in return
+        require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
+
+        // ensure that the input amount was already deposited
+        if (_sourceToken == ETH_RESERVE_ADDRESS)
+            require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
+        else
+            require(msg.value == 0 && _sourceToken.balanceOf(address(this)).sub(reserves[_sourceToken].balance) >= _amount, "ERR_INVALID_AMOUNT");
+
+        // sync the reserve balances
+        syncReserveBalance(_sourceToken);
+        reserves[_targetToken].balance = reserves[_targetToken].balance.sub(amount);
+
+        // if the pool is in deficit, add half the fee to the target staked balance, otherwise add all
+        stakedBalances[_targetToken] = stakedBalances[_targetToken].add(calculateDeficit(externalRate) == 0 ? fee : fee / 2);
 
         // update the previous conversion time
         prevConversionTime = time();
@@ -461,8 +477,9 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @return amount of target tokens received
       * @return fee amount
+      * @return external rate
     */
-    function doConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) private returns (uint256, uint256) {
+    function doConvert(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) private returns (uint256, uint256, Fraction memory) {
         // get the external rate between the reserves along with its update time
         Fraction memory externalRate;
         uint256 externalRateUpdateTime;
@@ -471,28 +488,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // pre-conversion preparation - update the weights if needed and get the target amount and feee
         (uint256 targetAmount, uint256 fee) = prepareConversion(_sourceToken, _targetToken, _amount, externalRate, externalRateUpdateTime);
 
-        // ensure that the trade gives something in return
-        require(targetAmount != 0, "ERR_ZERO_TARGET_AMOUNT");
-
-        // ensure that the trade won't deplete the reserve balance
-        uint256 targetReserveBalance = reserves[_targetToken].balance;
-        require(targetAmount < targetReserveBalance, "ERR_TARGET_AMOUNT_TOO_HIGH");
-
-        // ensure that the input amount was already deposited
-        if (_sourceToken == ETH_RESERVE_ADDRESS)
-            require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
-        else
-            require(msg.value == 0 && _sourceToken.balanceOf(address(this)).sub(reserves[_sourceToken].balance) >= _amount, "ERR_INVALID_AMOUNT");
-
-        // sync the reserve balances
-        syncReserveBalance(_sourceToken);
-        reserves[_targetToken].balance = targetReserveBalance.sub(targetAmount);
-
-        // if the pool is in deficit, add half the fee to the target staked balance, otherwise add all
-        stakedBalances[_targetToken] = stakedBalances[_targetToken].add(calculateDeficit(externalRate) == 0 ? fee : fee / 2);
-
-        // return a tuple of [target amount (excluding fee), fee]
-        return (targetAmount, fee);
+        // return a tuple of [target amount (excluding fee), fee, external rate]
+        return (targetAmount, fee, externalRate);
     }
 
     /**
