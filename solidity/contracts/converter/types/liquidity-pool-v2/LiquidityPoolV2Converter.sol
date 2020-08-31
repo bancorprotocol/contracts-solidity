@@ -513,7 +513,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         }
 
         // get the expected target amount and fee
-        (uint256 targetAmount, uint256 fee) = targetAmountAndFee(
+        (uint256 amount, uint256 fee) = targetAmountAndFee(
             _sourceToken,
             _targetToken,
             effectiveSourceReserveWeight,
@@ -524,7 +524,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         );
 
         // return a tuple of [target amount (excluding fee), fee, external rate]
-        return (targetAmount, fee, externalRate);
+        return (amount, fee, externalRate);
     }
 
     /**
