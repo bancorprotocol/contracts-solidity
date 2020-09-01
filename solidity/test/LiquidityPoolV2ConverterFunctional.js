@@ -60,6 +60,12 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
         converter = await LiquidityPoolV2Converter.new(container.address, contractRegistry.address, 0);
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
+        priceOracles = [];
+        for (let i = 0; i < 2; i++) {
+            priceOracles[i] = await ChainlinkPriceOracle.new();
+            await whitelist.addAddress(priceOracles[i].address);
+        }
+
         await timeIncrease(1);
         await bancorFormula.init();
 
@@ -110,12 +116,6 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
             [sTokenId]: await ERC20Token.new(sTokenId, sTokenId, 0, totalSupply),
         };
 
-        priceOracles = [];
-        for (let i = 0; i < 2; i++) {
-            priceOracles[i] = await ChainlinkPriceOracle.new();
-            await whitelist.addAddress(priceOracles[i].address);
-        }
-
         await converter.addReserve(reserveTokens[pTokenId].address, percentageToPPM('50%'));
         await converter.addReserve(reserveTokens[sTokenId].address, percentageToPPM('50%'));
         await container.transferOwnership(converter.address);
@@ -123,8 +123,8 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
         await converter.activate(reserveTokens[pTokenId].address, priceOracles[0].address, priceOracles[1].address);
 
         for (const account of accounts.slice(1, numOfUsers + 1)) {
-            reserveTokens[pTokenId].transfer(account, initBalance);
-            reserveTokens[sTokenId].transfer(account, initBalance);
+            await reserveTokens[pTokenId].transfer(account, initBalance);
+            await reserveTokens[sTokenId].transfer(account, initBalance);
         }
 
         poolTokens = {
