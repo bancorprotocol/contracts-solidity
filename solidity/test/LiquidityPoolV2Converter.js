@@ -3,11 +3,9 @@ const { expectRevert, expectEvent, constants, BN, balance, time } = require('@op
 
 const Decimal = require('decimal.js');
 
-const MathUtils = require('./helpers/MathUtils');
-
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
-const { latest, duration } = time;
+const { duration, latest } = time;
 const { ZERO_ADDRESS } = constants;
 
 const { crossReserveTargetAmount, balancedWeights } = require('./helpers/FormulaFunctions');
@@ -23,7 +21,6 @@ const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2Conver
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 const PoolTokensContainer = artifacts.require('PoolTokensContainer');
-const PriceOracle = artifacts.require('PriceOracle');
 const SmartToken = artifacts.require('SmartToken');
 const ChainlinkPriceOracle = artifacts.require('TestChainlinkPriceOracle');
 const Whitelist = artifacts.require('Whitelist');
@@ -54,6 +51,9 @@ contract('LiquidityPoolV2Converter', accounts => {
                 await anchor.transferOwnership(converter.address);
                 await converter.acceptAnchorOwnership();
 
+                now = await latest();
+                await converter.setTime(now);
+
                 if (activate) {
                     if (primaryReserveAddress === getReserve1Address(isETHReserve)) {
                         await converter.activate(primaryReserveAddress, chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
@@ -77,10 +77,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                         { value: isETHReserve ? INITIAL_RESERVE1_LIQUIDITY : 0 });
                     await converter.addLiquidity(reserveToken2.address, INITIAL_RESERVE2_LIQUIDITY, MIN_RETURN);
                 }
-
-                const now = await latest();
-                await converter.setTime(now);
-                await converter.setPrevConversionTime(now);
 
                 return converter;
             };
@@ -114,117 +110,40 @@ contract('LiquidityPoolV2Converter', accounts => {
                 return bancorNetwork.convertByPath(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, options);
             };
 
-            const getPoolRate = async (converter) => {
-                const reserve1StakedBalance = await converter.reserveStakedBalance.call(getReserve1Address(isETHReserve));
-                const reserve2StakedBalance = await converter.reserveStakedBalance.call(reserveToken2.address);
-                let reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
-                let reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-                const weights = await converter.effectiveReserveWeights.call();
-                const reserve1Weight = weights[0];
-                const reserve2Weight = weights[1];
-
-                // apply amplification factor
-                reserve1Balance = reserve1StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve1Balance);
-                reserve2Balance = reserve2StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve2Balance);
-
-                return { n: reserve2Balance.mul(reserve1Weight), d: reserve1Balance.mul(reserve2Weight) };
-            };
-
-            const getExpectedTargetAmountFull = (sourceStakedBalance, targetStakedBalance, sourceBalance, targetBalance, sourceWeight, targetWeight,
-                amount) => {
+            const getExpectedTargetAmount = (sourceStakedBalance, targetStakedBalance, sourceBalance, targetBalance, sourceWeight, targetWeight,
+                weightSpreadFactor, totalFee, amount) => {
                 sourceStakedBalance = new BN(sourceStakedBalance);
                 targetStakedBalance = new BN(targetStakedBalance);
                 sourceBalance = new BN(sourceBalance);
                 targetBalance = new BN(targetBalance);
                 sourceWeight = new BN(sourceWeight);
                 targetWeight = new BN(targetWeight);
+                weightSpreadFactor = new BN(weightSpreadFactor);
+                totalFee = new BN(totalFee);
                 amount = new BN(amount);
 
-                sourceBalance = sourceStakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(sourceBalance);
-                targetBalance = targetStakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(targetBalance);
+                sourceBalance = sourceStakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(sourceBalance);
+                targetBalance = targetStakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(targetBalance);
 
-                return new BN(crossReserveTargetAmount(sourceBalance, sourceWeight, targetBalance, targetWeight,
+                const weightSpread = sourceWeight.mul(weightSpreadFactor).div(CONVERSION_FEE_RESOLUTION);
+                sourceWeight = sourceWeight.sub(weightSpread);
+                targetWeight = targetWeight.add(weightSpread);
+
+                const targetAmount = new BN(crossReserveTargetAmount(sourceBalance, sourceWeight, targetBalance, targetWeight,
                     amount).round().toString());
-            };
-
-            const getExpectedTargetAmount = (sourceStakedBalance, targetStakedBalance, sourceBalance, targetBalance, sourceWeight, targetWeight,
-                conversionFee, amount) => {
-                const targetAmount = getExpectedTargetAmountFull(
-                    sourceStakedBalance, targetStakedBalance,
-                    sourceBalance, targetBalance,
-                    sourceWeight, targetWeight,
-                    amount
-                );
-                const expectedFee = targetAmount.mul(new BN(conversionFee)).div(PPM_RESOLUTION);
+                const expectedFee = targetAmount.mul(totalFee).div(CONVERSION_FEE_RESOLUTION);
 
                 return targetAmount.sub(expectedFee);
             };
 
-            const getExpectedTargetAmountAndFee = (sourceStakedBalance, targetStakedBalance, sourceBalance, targetBalance,
-                sourceWeight, targetWeight, sourceOraclePrice, targetOraclePrice, lowFeeFactor, highFeeFactor, isSourcePrimary, amount) => {
-                const targetAmount = getExpectedTargetAmountFull(
-                    sourceStakedBalance, targetStakedBalance,
-                    sourceBalance, targetBalance,
-                    sourceWeight, targetWeight,
-                    amount
-                );
-
-                const fee = getFee(
-                    sourceStakedBalance, targetStakedBalance,
-                    sourceBalance, targetBalance,
-                    sourceWeight, targetWeight,
-                    sourceOraclePrice, targetOraclePrice,
-                    lowFeeFactor, highFeeFactor,
-                    isSourcePrimary, targetAmount
-                );
-
-                return {
-                    targetAmount: targetAmount.sub(fee),
-                    fee
-                };
-            };
-
-            const getFee = (sourceStakedBalance, targetStakedBalance, sourceBalance, targetBalance, sourceWeight, targetWeight,
-                sourceOraclePrice, targetOraclePrice, lowFeeFactor, highFeeFactor, isSourcePrimary, targetAmount) => {
-                sourceBalance = new BN(sourceBalance);
-                targetBalance = new BN(targetBalance);
-                targetAmount = new BN(targetAmount);
-
-                const targetPoolRate = getExpectedPoolRate(targetStakedBalance, sourceStakedBalance, targetBalance, sourceBalance,
-                    targetWeight, sourceWeight);
-                const targetOracleRate = { n: targetOraclePrice, d: sourceOraclePrice };
-
-                const targetExternalWeight = weightFromRate(targetStakedBalance, sourceStakedBalance, targetOraclePrice, sourceOraclePrice);
-
-                if (compareRates(targetPoolRate, targetOracleRate) < 0) {
-                    let lo = targetPoolRate.n.mul(targetOracleRate.d);
-                    let hi = targetOracleRate.n.mul(targetPoolRate.d);
-                    const ratio = MathUtils.reducedRatio(hi.sub(lo).toString(), hi.toString(), MAX_RATE_FACTOR_LOWER_BOUND);
-                    [lo, hi] = ratio.map(x => new BN(x));
-
-                    // apply the high fee only if the ratio between the effective weight and the external (target) weight is below the high fee upper bound
-                    let feeFactor;
-                    if ((targetWeight).mul(PPM_RESOLUTION).lt((targetExternalWeight).mul(HIGH_FEE_UPPER_BOUND))) {
-                        feeFactor = highFeeFactor;
-                    }
-                    else {
-                        feeFactor = lowFeeFactor;
-                    }
-
-                    return targetAmount.mul(lo).mul(feeFactor).div(hi.mul(PPM_RESOLUTION));
-                }
-
-                return new BN(0);
-            };
-
             const getExpectedWeights = (reserve1StakedBalance, reserve2StakedBalance, reserve1Balance, reserve2Balance,
-                oracleAPrice, oracleBPrice, isReserve1Primary = true) => {
+                oracleAPrice, oracleBPrice, conversionFee, oracleDeviationFee, isReserve1Primary = true) => {
                 const rate = normalizeRates(oracleAPrice, oracleBPrice, isReserve1Primary);
 
                 reserve1StakedBalance = new BN(reserve1StakedBalance);
                 reserve2StakedBalance = new BN(reserve2StakedBalance);
-                reserve1Balance = reserve1StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(new BN(reserve1Balance));
-                reserve2Balance = reserve2StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(new BN(reserve2Balance));
+                reserve1Balance = reserve1StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(new BN(reserve1Balance));
+                reserve2Balance = reserve2StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(new BN(reserve2Balance));
 
                 const reserve1Data = [reserve1StakedBalance, reserve1Balance];
                 const reserve2Data = [reserve2StakedBalance, reserve2Balance];
@@ -232,52 +151,28 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const secondaryReserveData = isReserve1Primary ? reserve2Data : reserve1Data;
 
                 const newWeights = balancedWeights(
-                    primaryReserveData[0].mul(DEFAULT_AMPLIFICATION_FACTOR),
+                    primaryReserveData[0].mul(AMPLIFICATION_FACTOR),
                     primaryReserveData[1],
                     secondaryReserveData[1],
                     rate.n,
                     rate.d
                 );
 
-                const weights = newWeights.map(w => new BN(w.toFixed()));
-                if (isReserve1Primary) {
-                    return weights;
+                let weights = newWeights.map(w => new BN(w.toFixed()));
+                if (!isReserve1Primary) {
+                    [weights[0], weights[1]] = [weights[1], weights[0]];
                 }
 
-                return weights.reverse();
+                return [weights, conversionFee.add(oracleDeviationFee)];
             };
 
-            const getExpectedWeightsAndFee = (reserve1StakedBalance, reserve2StakedBalance, reserve1Balance, reserve2Balance,
-                oracleAPrice, oracleBPrice, conversionFee, isReserve1Primary = true) => {
-                const rate = normalizeRates(oracleAPrice, oracleBPrice, isReserve1Primary);
-
-                reserve1StakedBalance = new BN(reserve1StakedBalance);
-                reserve2StakedBalance = new BN(reserve2StakedBalance);
-
-                const weights = getExpectedWeights(reserve1StakedBalance, reserve2StakedBalance, reserve1Balance, reserve2Balance,
-                    oracleAPrice, oracleBPrice, isReserve1Primary);
-
-                if (isReserve1Primary) {
-                    const x = reserve1StakedBalance.mul(rate.n).mul(weights[1]);
-                    const y = reserve2StakedBalance.mul(rate.d).mul(weights[0]);
-                    if (x.mul(DEFAULT_AMPLIFICATION_FACTOR).gte(y.mul(DEFAULT_AMPLIFICATION_FACTOR.add(new BN(1))))) {
-                        return [weights, conversionFee.div(new BN(2))];
-                    }
-                    if (x.mul(DEFAULT_AMPLIFICATION_FACTOR.mul(new BN(2))).lte(y.mul(DEFAULT_AMPLIFICATION_FACTOR.mul(new BN(2)).sub(new BN(1))))) {
-                        return [weights, conversionFee.mul(new BN(2))];
-                    }
-                    return [weights, conversionFee.mul(y).div(x.mul(DEFAULT_AMPLIFICATION_FACTOR).sub(y.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1)))))];
-                }
-                return [weights, conversionFee];
-            };
-
-            const convertAndReturnTargetAmount = async (converter, sourceToken, sourceTokenAddress, targetTokenAddress, amount) => {
+            const convertAndReturnTargetAmount = async (account, converter, sourceToken, sourceTokenAddress, targetTokenAddress, amount) => {
                 let value = 0;
                 if (sourceTokenAddress === ETH_RESERVE_ADDRESS) {
                     value = amount;
                 }
                 else {
-                    await sourceToken.approve(bancorNetwork.address, amount);
+                    await sourceToken.approve(bancorNetwork.address, amount, { from: account });
                 }
 
                 const prevTargetReserveBalance = await converter.reserveBalance.call(targetTokenAddress);
@@ -287,69 +182,27 @@ contract('LiquidityPoolV2Converter', accounts => {
                 return prevTargetReserveBalance.sub(newTargetReserveBalance);
             };
 
-            const getExpectedPoolRate = (token1StakedBalance, token2StakedBalance, token1Balance, token2Balance, token1Weight, token2Weight) => {
-                token1StakedBalance = new BN(token1StakedBalance);
-                token2StakedBalance = new BN(token2StakedBalance);
-
-                // apply amplification factor
-                token1Balance = token1StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(token1Balance);
-                token2Balance = token2StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(token2Balance);
-
-                return { n: token2Balance.mul(token1Weight), d: token1Balance.mul(token2Weight) };
-            };
-
-            const compareRates = (rate1, rate2) => {
-                const x = rate1.n.mul(rate2.d);
-                const y = rate2.n.mul(rate1.d);
-
-                if (x.lt(y)) {
-                    return -1;
-                }
-
-                if (x.gt(y)) {
-                    return 1;
-                }
-
-                return 0;
-            };
-
             const expectAlmostEqual = (amount1, amount2) => {
-                const x = amount1.toString();
-                const y = amount2.toString();
-                if (x === y) {
-                    return;
-                }
-
-                const min = 0.98;
-                const max = 1.02;
-                const ratio = Decimal(x).div(Decimal(y));
-
-                expect(ratio.gte(min)).to.be.true(`${ratio.toString()} is below ${min}`);
-                expect(ratio.lte(max)).to.be.true(`${ratio.toString()} is above ${max}`);
+                const ratio = Decimal(amount1.toString()).div(Decimal(amount2.toString()));
+                expect(ratio.gte(0.99)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
+                expect(ratio.lte(1.01)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
             };
 
             const createChainlinkOracle = async (answer) => {
                 const chainlinkOracle = await ChainlinkPriceOracle.new();
                 await chainlinkOracle.setAnswer(answer);
 
+                // Set the last update time to a far enough future in order for the external oracle price to always take effect.
+                await chainlinkOracle.setTimestamp((await latest()).add(duration.years(1)));
+
                 return chainlinkOracle;
             };
 
-            const weightFromRate = (token1Staked, token2Staked, token1Rate, token2Rate) => {
-                const a = token1Staked.mul(token1Rate);
-                const b = token2Staked.mul(token2Rate);
-                const ratio = MathUtils.normalizedRatio(a.toString(), b.toString(), PPM_RESOLUTION.toString());
-                return new BN(ratio[0]);
-            };
+            const updateChainlinkOracle = async (converter, oracle, answer) => {
+                await oracle.setAnswer(answer);
+                await oracle.setTimestamp(await converter.currentTime.call());
 
-            const getTokensRateAccuracy = async (converter) => {
-                const poolRate = await getPoolRate(converter);
-                const effectiveTokensRate = await converter.effectiveTokensRate();
-                const a = poolRate.n.mul(effectiveTokensRate[1]);
-                const b = poolRate.d.mul(effectiveTokensRate[0]);
-                const ratio = MathUtils.reducedRatio(a.toString(), b.toString(), MAX_RATE_FACTOR_LOWER_BOUND);
-                const [x, y] = ratio.map(z => new BN(z));
-                return x.lt(y) ? [x, y] : [y, x];
+                await converter.setExternalRateUpdateTime(now.sub(duration.seconds(1)));
             };
 
             const normalizeRates = (rate1, rate2, isReserve1Primary = true) => {
@@ -375,9 +228,9 @@ contract('LiquidityPoolV2Converter', accounts => {
 
             const toReserve1 = (amount) => amount.mul(new BN(10).pow(reserveToken1Decimals));
             const toReserve2 = (amount) => amount.mul(new BN(10).pow(reserveToken2Decimals));
-            const toReserve = (isReserve1, amount) => isReserve1 ? toReserve1(amount) : toReserve2(amount);
             const toPool = (amount) => amount.mul(new BN(10).pow(poolTokenDecimals));
 
+            let now;
             let bancorNetwork;
             let anchor;
             let anchorAddress;
@@ -393,18 +246,19 @@ contract('LiquidityPoolV2Converter', accounts => {
             const nonOwner = accounts[1];
             const sender2 = accounts[9];
 
-            const MAX_RATE_FACTOR_LOWER_BOUND = Decimal(10).pow(30);
-            const PPM_RESOLUTION = new BN(1000000);
-            const DEFAULT_AMPLIFICATION_FACTOR = new BN(20);
-            const DEFAULT_LOW_FEE_FACTOR = new BN(200000);
-            const DEFAULT_HIGH_FEE_FACTOR = new BN(800000);
-            const HIGH_FEE_UPPER_BOUND = new BN(997500);
+            const CONVERSION_FEE_RESOLUTION = new BN(1000000);
+            const DEF_ORACLE_DEVIATION_FEE = new BN(0);
+            const DEF_WEIGHT_SPREAD_FACTOR = new BN(0);
+            const DEF_RATE_PROPAGATION_PERIOD = new BN(600);
+            const AMPLIFICATION_FACTOR = new BN(20);
             const MIN_RETURN = new BN(1);
 
-            const INITIAL_RESERVE1_LIQUIDITY = toReserve1(new BN(4000000));
-            const INITIAL_RESERVE2_LIQUIDITY = toReserve2(new BN(8500000));
+            const INITIAL_RESERVE1_LIQUIDITY = toReserve1(new BN(10000000000));
+            const INITIAL_RESERVE2_LIQUIDITY = toReserve2(new BN(12000000000));
             const INITIAL_ORACLE_A_PRICE = new BN(10000);
             const INITIAL_ORACLE_B_PRICE = new BN(20000);
+
+            const RATE_PROPAGATION_PERIOD = duration.minutes(10);
 
             before(async () => {
                 // The following contracts are unaffected by the underlying tests, this can be shared.
@@ -483,24 +337,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                 expect(oracle).to.eql(ZERO_ADDRESS);
             });
 
-            it('verifies that amplificationFactor returns the correct value', async () => {
-                const converter = await initConverter(false, false);
-                const factor = await converter.amplificationFactor.call();
-                expect(factor).to.be.bignumber.equal(DEFAULT_AMPLIFICATION_FACTOR);
-            });
-
-            it('verifies that lowFeeFactor returns the correct value', async () => {
-                const converter = await initConverter(false, false);
-                const factor = await converter.lowFeeFactor.call();
-                expect(factor).to.be.bignumber.equal(DEFAULT_LOW_FEE_FACTOR);
-            });
-
-            it('verifies that highFeeFactor returns the correct value', async () => {
-                const converter = await initConverter(false, false);
-                const factor = await converter.highFeeFactor.call();
-                expect(factor).to.be.bignumber.equal(DEFAULT_HIGH_FEE_FACTOR);
-            });
-
             it('verifies that isActive returns false before calling activate', async () => {
                 const converter = await initConverter(false, false);
                 expect(await converter.isActive.call()).to.be.false();
@@ -550,39 +386,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                 await converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address, chainlinkPriceOracleB.address);
                 const oracle = await converter.priceOracle.call();
                 expect(oracle).not.to.be.eql(ZERO_ADDRESS);
-            });
-
-            it('verifies that the pool rate is identical to the oracle rate after adding the initial liquidity', async () => {
-                const converter = await initConverter(true, true);
-                const externalRate = normalizeRates(INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, true);
-                const poolRate = await getPoolRate(converter);
-                const poolRateD = Decimal(poolRate.n.toString()).div(poolRate.d.toString());
-                const externalRateD = Decimal(externalRate.n.toString()).div(externalRate.d.toString());
-                expectAlmostEqual(poolRateD, externalRateD);
-            });
-
-            it('verifies that the pool rate does not change after adding liquidity', async () => {
-                const converter = await initConverter(true, true);
-                const prevPoolRate = await getPoolRate(converter);
-
-                const newLiquidity2 = toReserve2(new BN(500000));
-                await reserveToken2.approve(converter.address, newLiquidity2);
-                await converter.addLiquidity(reserveToken2.address, newLiquidity2, MIN_RETURN);
-
-                const newPoolRate = await getPoolRate(converter);
-
-                const prevPoolRateD = Decimal(prevPoolRate.n.toString()).div(prevPoolRate.d.toString());
-                const newPoolRateD = Decimal(newPoolRate.n.toString()).div(newPoolRate.d.toString());
-                expectAlmostEqual(prevPoolRateD, newPoolRateD);
-            });
-
-            it('verifies that the pool rate is identical to the effective rate after adding the initial liquidity', async () => {
-                const converter = await initConverter(true, true);
-                const effectiveRate = await converter.effectiveTokensRate();
-                const poolRate = await getPoolRate(converter);
-                const poolRateD = Decimal(poolRate.n.toString()).div(poolRate.d.toString());
-                const effectiveRateD = Decimal(effectiveRate[0].toString()).div(effectiveRate[1].toString());
-                expectAlmostEqual(poolRateD, effectiveRateD);
             });
 
             it('should revert when attempting to activate an active converter', async () => {
@@ -666,6 +469,53 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 await expectRevert(converter.activate(getReserve1Address(isETHReserve), chainlinkPriceOracleA.address, chainlinkPriceOracleB.address),
                     'ERR_INVALID_ORACLE');
+            });
+
+            it('verifies the owner can update the oracle-deviation fee', async () => {
+                const converter = await initConverter(false, false);
+
+                const newFee = CONVERSION_FEE_RESOLUTION.sub(new BN(10));
+                await converter.setOracleDeviationFee(newFee);
+
+                const oracleDeviationFee = await converter.oracleDeviationFee.call();
+                expect(oracleDeviationFee).to.be.bignumber.equal(newFee);
+            });
+
+            it('should revert when attempting to update the oracle-deviation fee to an invalid value', async () => {
+                const converter = await initConverter(false, false);
+
+                await expectRevert(converter.setOracleDeviationFee(CONVERSION_FEE_RESOLUTION.add(new BN(1))),
+                    'ERR_INVALID_ORACLE_DEVIATION_FEE');
+            });
+
+            it('should revert when a non owner attempts to update the oracle-deviation fee', async () => {
+                const converter = await initConverter(false, false);
+
+                const newFee = new BN(30000);
+                await expectRevert(converter.setOracleDeviationFee(newFee, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            });
+
+            it('verifies that an event is fired when the owner updates the oracle-deviation fee', async () => {
+                const converter = await initConverter(false, false);
+
+                const newFee = new BN(30000);
+
+                const res = await converter.setOracleDeviationFee(newFee);
+                expectEvent(res, 'OracleDeviationFeeUpdate', { _prevFee: DEF_ORACLE_DEVIATION_FEE, _newFee: newFee });
+            });
+
+            it('verifies that an event is fired when the owner updates the oracle-deviation fee multiple times', async () => {
+                const converter = await initConverter(false, false);
+
+                let prevFee = DEF_ORACLE_DEVIATION_FEE;
+                for (let i = 1; i <= 10; ++i) {
+                    const newFee = new BN(10000 * i);
+
+                    const res = await converter.setOracleDeviationFee(newFee);
+                    expectEvent(res, 'OracleDeviationFeeUpdate', { _prevFee: prevFee, _newFee: newFee });
+
+                    prevFee = newFee;
+                }
             });
 
             it('verifies that reserveStakedBalance returns the correct balance', async () => {
@@ -790,138 +640,6 @@ contract('LiquidityPoolV2Converter', accounts => {
                 await expectRevert(converter.disableMaxStakedBalances({ from: nonOwner }), 'ERR_ACCESS_DENIED');
             });
 
-            it('verifies the owner can update the amplification factor', async () => {
-                const converter = await initConverter(true, true);
-
-                const prevAmplificationFactor = await converter.amplificationFactor.call();
-                await converter.setAmplificationFactor(new BN(5));
-
-                const newAmplificationFactor = await converter.amplificationFactor.call();
-                expect(prevAmplificationFactor).not.to.be.bignumber.equal(newAmplificationFactor);
-                expect(newAmplificationFactor).to.be.bignumber.equal(new BN(5));
-            });
-
-            it('should revert when a non owner attempts to update the amplification factorr', async () => {
-                const converter = await initConverter(true, true);
-
-                await expectRevert(converter.setAmplificationFactor(new BN(5), { from: nonOwner }), 'ERR_ACCESS_DENIED');
-            });
-
-            it('verifies that an event is fired when the owner updates the amplification factor', async () => {
-                const converter = await initConverter(true, true);
-
-                const prevAmplificationFactor = await converter.amplificationFactor.call();
-
-                const res = await converter.setAmplificationFactor(new BN(5));
-                expectEvent(res, 'AmplificationFactorUpdate', {
-                    _prevAmplificationFactor: prevAmplificationFactor,
-                    _newAmplificationFactor: new BN(5)
-                });
-            });
-
-            it('verifies the owner can update the external rate propagation time', async () => {
-                const converter = await initConverter(true, true);
-
-                const prevPropagationTime = await converter.externalRatePropagationTime.call();
-                const delta = new BN(100000);
-                await converter.setExternalRatePropagationTime(prevPropagationTime.add(delta));
-
-                const newPropagationTime = await converter.externalRatePropagationTime.call();
-                expect(newPropagationTime).to.be.bignumber.equal(prevPropagationTime.add(delta));
-            });
-
-            it('should revert when a non owner attempts to update the external rate propagation time', async () => {
-                const converter = await initConverter(true, true);
-
-                const prevPropagationTime = await converter.externalRatePropagationTime.call();
-                const delta = new BN(100000);
-
-                await expectRevert(converter.setExternalRatePropagationTime(prevPropagationTime.add(delta), { from: nonOwner }), 'ERR_ACCESS_DENIED');
-            });
-
-            it('verifies that an event is fired when the owner updates the external rate propagation time', async () => {
-                const converter = await initConverter(true, true);
-
-                const prevPropagationTime = await converter.externalRatePropagationTime.call();
-                const delta = new BN(100000);
-
-                const res = await converter.setExternalRatePropagationTime(prevPropagationTime.add(delta));
-                expectEvent(res, 'ExternalRatePropagationTimeUpdate', {
-                    _prevPropagationTime: prevPropagationTime,
-                    _newPropagationTime: prevPropagationTime.add(delta)
-                });
-            });
-
-            it('verifies the owner can update the fee factors', async () => {
-                const converter = await initConverter(true, true);
-
-                const newFactor = PPM_RESOLUTION.sub(new BN(10));
-                await converter.setFeeFactors(newFactor, newFactor);
-
-                const lowFeeFactor = await converter.lowFeeFactor.call();
-                const highFeeFactor = await converter.highFeeFactor.call();
-                expect(lowFeeFactor).to.be.bignumber.equal(newFactor);
-                expect(highFeeFactor).to.be.bignumber.equal(newFactor);
-            });
-
-            it('should revert when attempting to update the low fee factor to an invalid value', async () => {
-                const converter = await initConverter(true, true);
-
-                await expectRevert(converter.setFeeFactors(PPM_RESOLUTION.add(new BN(1)), PPM_RESOLUTION),
-                    'ERR_INVALID_FEE_FACTOR');
-            });
-
-            it('should revert when attempting to update the high fee factor to an invalid value', async () => {
-                const converter = await initConverter(true, true);
-
-                await expectRevert(converter.setFeeFactors(PPM_RESOLUTION, PPM_RESOLUTION.add(new BN(1))),
-                    'ERR_INVALID_FEE_FACTOR');
-            });
-
-            it('should revert when a non owner attempts to update the fee factors', async () => {
-                const converter = await initConverter(true, true);
-
-                const newFactor = new BN(30000);
-                await expectRevert(converter.setFeeFactors(newFactor, newFactor, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-            });
-
-            it('verifies that an event is fired when the owner updates the fee factors', async () => {
-                const converter = await initConverter(true, true);
-
-                const prevLowFactor = await converter.lowFeeFactor.call();
-                const prevHighFactor = await converter.highFeeFactor.call();
-                const newFactor = new BN(30000);
-
-                const res = await converter.setFeeFactors(newFactor, newFactor);
-                expectEvent(res, 'FeeFactorsUpdate', {
-                    _prevLowFactor: prevLowFactor,
-                    _newLowFactor: newFactor,
-                    _prevHighFactor: prevHighFactor,
-                    _newHighFactor: newFactor
-                });
-            });
-
-            it('verifies that an event is fired when the owner updates the fee factors multiple times', async () => {
-                const converter = await initConverter(true, true);
-
-                let prevLowFactor = await converter.lowFeeFactor.call();
-                let prevHighFactor = await converter.highFeeFactor.call();
-                for (let i = 1; i <= 10; ++i) {
-                    const newFactor = new BN(10000 * i);
-
-                    const res = await converter.setFeeFactors(newFactor, newFactor);
-                    expectEvent(res, 'FeeFactorsUpdate', {
-                        _prevLowFactor: prevLowFactor,
-                        _newLowFactor: newFactor,
-                        _prevHighFactor: prevHighFactor,
-                        _newHighFactor: newFactor
-                    });
-
-                    prevLowFactor = newFactor;
-                    prevHighFactor = newFactor;
-                }
-            });
-
             it('verifies that liquidationLimit returns the correct amount', async () => {
                 const converter = await initConverter(true, true);
 
@@ -956,65 +674,12 @@ contract('LiquidityPoolV2Converter', accounts => {
                 await expectRevert(converter.addReserve(token.address, 2000), 'ERR_INVALID_RESERVE_COUNT');
             });
 
-            describe('weights & fees', async () => {
-                const getConvereterTargetAmountAndFee = async (buyingPrimary, amount) => {
-                    if (buyingPrimary) {
-                        return converter.targetAmountAndFee.call(reserveToken2.address, getReserve1Address(isETHReserve), amount);
-                    }
-
-                    return converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
-                };
-
-                const convert = async (buyingPrimary, amount) => {
-                    if (buyingPrimary) {
-                        return convertAndReturnTargetAmount(converter, reserveToken2, reserveToken2.address,
-                            getReserve1Address(isETHReserve), amount);
-                    }
-
-                    return convertAndReturnTargetAmount(converter, reserveToken, getReserve1Address(isETHReserve),
-                        reserveToken2.address, amount);
-                };
-
-                const getExpectedConverterTargetAmountAndFee = async (sourceTokenAddress, targetTokenAddress, sourceOraclePrice,
-                    targetOraclePrice, amount) => {
-                    const sourceStakedBalance = await converter.reserveStakedBalance.call(sourceTokenAddress);
-                    const targetStakedBalance = await converter.reserveStakedBalance.call(targetTokenAddress);
-                    const sourceBalance = await converter.reserveBalance.call(sourceTokenAddress);
-                    const targetBalance = await converter.reserveBalance.call(targetTokenAddress);
-
-                    let effectiveWeights = await converter.effectiveReserveWeights.call();
-                    const reserve2Address = await converter.reserveTokens.call(1);
-                    if (sourceTokenAddress === reserve2Address) {
-                        effectiveWeights = [effectiveWeights[1], effectiveWeights[0]];
-                    }
-
-                    const primary = await converter.primaryReserveToken.call();
-
-                    return getExpectedTargetAmountAndFee(sourceStakedBalance, targetStakedBalance,
-                        sourceBalance, targetBalance, effectiveWeights[0], effectiveWeights[1], sourceOraclePrice, targetOraclePrice,
-                        lowFeeFactor, highFeeFactor, primary === sourceTokenAddress, amount);
-                };
-
-                const getConverterExpectedTargetAmountAndFee = async (buyingPrimary, amount) => {
-                    const priceOracle = await PriceOracle.at(await converter.priceOracle.call());
-                    const latestRate = await priceOracle.latestRate.call(getReserve1Address(isETHReserve), reserveToken2.address);
-                    if (buyingPrimary) {
-                        return getExpectedConverterTargetAmountAndFee(reserveToken2.address, getReserve1Address(isETHReserve),
-                            latestRate[1], latestRate[0], amount);
-                    }
-
-                    return getExpectedConverterTargetAmountAndFee(getReserve1Address(isETHReserve), reserveToken2.address,
-                        latestRate[0], latestRate[1], amount);
-                };
-
-                const lowFeeFactor = DEFAULT_LOW_FEE_FACTOR;
-                const highFeeFactor = DEFAULT_HIGH_FEE_FACTOR;
-                let converter;
-                let reserveWeight;
-
-                beforeEach(async () => {
-                    converter = await initConverter(true, true, new BN(0));
-                    await converter.setFeeFactors(DEFAULT_LOW_FEE_FACTOR, DEFAULT_HIGH_FEE_FACTOR);
+            for (const oracleDeviationFee of [1, 2, 5, 10].map(x => new BN(x * 10000))) {
+                it('verifies that targetAmountAndFee returns an increased fee when the secondary reserve is in deficit', async () => {
+                    const conversionFee = new BN(25000);
+                    const converter = await initConverter(true, true, conversionFee);
+                    await converter.setConversionFee(conversionFee);
+                    await converter.setOracleDeviationFee(oracleDeviationFee);
 
                     // increase liquidity so that the fee will have more significant effect
                     const newLiquidity1 = toReserve1(new BN(10000000));
@@ -1033,269 +698,353 @@ contract('LiquidityPoolV2Converter', accounts => {
                     const newLiquidity2 = toReserve2(new BN(12000000));
                     await reserveToken2.approve(converter.address, newLiquidity2);
                     await converter.addLiquidity(reserveToken2.address, newLiquidity2, MIN_RETURN);
-                });
 
-                context('fees', async () => {
-                    for (const increasePrimaryRate of [true, false]) {
-                        context(`when ${increasePrimaryRate ? 'increasing' : 'decreasing'} the primary pool rate`, async () => {
-                            for (const buyingPrimary of [true, false]) {
-                                context(`when buying the ${buyingPrimary ? 'primary' : 'secondary'} reserve`, async () => {
-                                    beforeEach(async () => {
-                                        reserveWeight = (await converter.effectiveReserveWeights.call())[0];
+                    const amount = toReserve1(new BN(2000000));
 
-                                        if (increasePrimaryRate) {
-                                            // buy primary token (removes primary tokens from the pool)
-                                            await convert(true, toReserve2(new BN(2500)));
-                                        }
-                                        else {
-                                            // buy secondary token (brings extra primary tokens to the pool)
-                                            await convert(false, toReserve1(new BN(2500)));
-                                        }
-                                    });
-
-                                    // fee is applied whenever the target pool rate is lower than the external rate
-                                    const feeEnabled =
-                                        (increasePrimaryRate && !buyingPrimary) ||
-                                        (!increasePrimaryRate && buyingPrimary);
-                                    const amount = toReserve(!buyingPrimary, new BN(20000));
-
-                                    if (feeEnabled) {
-                                        it('targetAmountAndFee should return the correct fee amount', async () => {
-                                            const { targetAmount, fee } =
-                                                await getConverterExpectedTargetAmountAndFee(buyingPrimary, amount);
-                                            expect(fee).to.be.bignumber.above(new BN(0));
-
-                                            const res = await getConvereterTargetAmountAndFee(buyingPrimary, amount);
-                                            expectAlmostEqual(targetAmount, res[0]);
-                                            expectAlmostEqual(fee, res[1]);
-                                        });
-
-                                        it('should convert with fee', async () => {
-                                            const { targetAmount, fee } =
-                                                await getConverterExpectedTargetAmountAndFee(buyingPrimary, amount);
-                                            expect(fee).to.be.bignumber.above(new BN(0));
-
-                                            const actualTargetAmount = await convert(buyingPrimary, amount);
-                                            expectAlmostEqual(actualTargetAmount, targetAmount);
-                                        });
-
-                                        // eslint-disable-next-line max-len
-                                        it('should increase the staked balance with by the entire fee amount if the pool is not in deficit', async () => {
-                                            const { fee } = await getConverterExpectedTargetAmountAndFee(buyingPrimary, amount);
-
-                                            let prevStakedBalance;
-                                            if (buyingPrimary) {
-                                                prevStakedBalance = await converter.reserveStakedBalance(getReserve1Address(isETHReserve));
-                                            }
-                                            else {
-                                                prevStakedBalance = await converter.reserveStakedBalance(reserveToken2.address);
-                                            }
-
-                                            await convert(buyingPrimary, amount);
-
-                                            let newStakedBalance;
-                                            if (buyingPrimary) {
-                                                newStakedBalance = await converter.reserveStakedBalance(getReserve1Address(isETHReserve));
-                                            }
-                                            else {
-                                                newStakedBalance = await converter.reserveStakedBalance(reserveToken2.address);
-                                            }
-
-                                            expectAlmostEqual(newStakedBalance, prevStakedBalance.add(fee));
-                                        });
-
-                                        it('should increase the staked balance by half the fee amount if the pool is in deficit', async () => {
-                                            const { fee } = await getConverterExpectedTargetAmountAndFee(buyingPrimary, amount);
-
-                                            if (buyingPrimary) {
-                                                // increase primary external rate
-                                                await chainlinkPriceOracleA.setAnswer(INITIAL_ORACLE_A_PRICE.mul(new BN(3)));
-                                            }
-                                            else {
-                                                // decrease primary external rate
-                                                await chainlinkPriceOracleB.setAnswer(INITIAL_ORACLE_B_PRICE.mul(new BN(3)));
-                                            }
-
-                                            let prevStakedBalance;
-                                            if (buyingPrimary) {
-                                                prevStakedBalance = await converter.reserveStakedBalance(getReserve1Address(isETHReserve));
-                                            }
-                                            else {
-                                                prevStakedBalance = await converter.reserveStakedBalance(reserveToken2.address);
-                                            }
-
-                                            await convert(buyingPrimary, amount);
-
-                                            let newStakedBalance;
-                                            if (buyingPrimary) {
-                                                newStakedBalance = await converter.reserveStakedBalance(getReserve1Address(isETHReserve));
-                                            }
-                                            else {
-                                                newStakedBalance = await converter.reserveStakedBalance(reserveToken2.address);
-                                            }
-
-                                            expectAlmostEqual(newStakedBalance, prevStakedBalance.add(fee));
-                                        });
-                                    }
-                                    else {
-                                        it('targetAmountAndFee should not include any fee', async () => {
-                                            const { targetAmount } =
-                                                await getConverterExpectedTargetAmountAndFee(buyingPrimary, amount);
-                                            const res = await getConvereterTargetAmountAndFee(buyingPrimary, amount);
-                                            expectAlmostEqual(targetAmount, res[0]);
-                                            expect(res[1]).to.be.bignumber.equal(new BN(0));
-                                        });
-
-                                        it('should convert with no fee', async () => {
-                                            const { targetAmount } =
-                                                await getConverterExpectedTargetAmountAndFee(buyingPrimary, amount);
-                                            const actualTargetAmount = await convert(buyingPrimary, amount);
-                                            expectAlmostEqual(actualTargetAmount, targetAmount);
-                                        });
-                                    }
-                                });
-                            }
-                        });
+                    // convert from the primary reserve to the secondary reserve
+                    value = 0;
+                    if (isETHReserve) {
+                        value = amount;
                     }
-                });
-
-                context('weights', async () => {
-                    let now;
-                    const increaseTime = async (delta) => {
-                        now = now.add(delta);
-                        await converter.setTime(now);
-                    };
-
-                    let externalRate;
-                    let effectiveRate;
-                    let effectiveReserveWeight;
-
-                    for (const rateChange of [-1, 1, 0]) {
-                        // eslint-disable-next-line max-len
-                        context(`when the primary external rate ${rateChange === -1 ? 'decreases' : rateChange === 1 ? 'increases' : 'does not change'}`, async () => {
-                            for (const buyingPrimary of [true, false]) {
-                                context(`when buying the ${buyingPrimary ? 'primary' : 'secondary'} reserve`, async () => {
-                                    for (const minutes of [0, 1]) {
-                                        context(`when ${minutes === 0 ? 'no' : 'some'} time has passed`, async () => {
-                                            beforeEach(async () => {
-                                                // ensuring that all previous propagation is complete
-                                                now = await latest();
-                                                const hour = duration.minutes(60);
-                                                await increaseTime(hour);
-                                                await convert(true, toReserve2(new BN(1)));
-
-                                                externalRate = normalizeRates(INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, true);
-                                                effectiveRate = await converter.effectiveTokensRate();
-                                                effectiveRate = {
-                                                    n: effectiveRate[0],
-                                                    d: effectiveRate[1]
-                                                };
-                                                reserveWeight = await converter.reserveWeight.call(getReserve1Address(isETHReserve));
-                                                effectiveReserveWeight = (await converter.effectiveReserveWeights.call())[0];
-
-                                                if (rateChange === -1) {
-                                                    // decrease primary external rate
-                                                    externalRate.d = externalRate.d.mul(new BN(3));
-                                                    await chainlinkPriceOracleB.setAnswer(externalRate.d);
-                                                    await chainlinkPriceOracleB.setTimestamp(now);
-                                                }
-                                                else if (rateChange === 1) {
-                                                    // increase primary external rate
-                                                    externalRate.n = externalRate.n.mul(new BN(3));
-                                                    await chainlinkPriceOracleA.setAnswer(externalRate.n);
-                                                    await chainlinkPriceOracleA.setTimestamp(now);
-                                                }
-
-                                                if (minutes > 0) {
-                                                    const elapsed = duration.minutes(minutes);
-                                                    await increaseTime(elapsed);
-                                                }
-
-                                                if (buyingPrimary) {
-                                                    // buy primary token (removes primary tokens from the pool)
-                                                    await convert(true, toReserve2(new BN(250)));
-                                                }
-                                                else {
-                                                    // buy secondary token (brings extra primary tokens to the pool)
-                                                    await convert(false, toReserve1(new BN(250)));
-                                                }
-
-                                                // verify that the pool rate is indeed below the external rate
-                                                const poolRate = await getPoolRate(converter);
-                                                if (buyingPrimary) {
-                                                    expect(compareRates(poolRate, externalRate) < 0);
-                                                }
-                                                else {
-                                                    expect(compareRates(poolRate, externalRate) > 0);
-                                                }
-                                            });
-
-                                            if (rateChange === 0 || minutes === 0) {
-                                                it('should not change the effective rate', async () => {
-                                                    let newEffectiveRate = await converter.effectiveTokensRate();
-                                                    newEffectiveRate = {
-                                                        n: newEffectiveRate[0],
-                                                        d: newEffectiveRate[1]
-                                                    };
-                                                    expect(compareRates(newEffectiveRate, effectiveRate) === 0);
-                                                });
-
-                                                it('should not move the effective reserve weights', async () => {
-                                                    const newEffectiveWeight = (await converter.effectiveReserveWeights.call())[0];
-                                                    expect(newEffectiveWeight).to.be.bignumber.equal(effectiveReserveWeight);
-                                                });
-
-                                                it('should not change the reserve weights', async () => {
-                                                    const newReserveWeight = await converter.reserveWeight.call(getReserve1Address(isETHReserve));
-                                                    expect(reserveWeight).to.be.bignumber.equal(newReserveWeight);
-                                                });
-                                            }
-                                            else {
-                                                it('should move the effective rate in the right direction', async () => {
-                                                    let newEffectiveRate = await converter.effectiveTokensRate();
-                                                    newEffectiveRate = {
-                                                        n: newEffectiveRate[0],
-                                                        d: newEffectiveRate[1]
-                                                    };
-
-                                                    if (rateChange === 1) {
-                                                        expect(compareRates(newEffectiveRate, effectiveRate) > 0);
-                                                    }
-                                                    else {
-                                                        expect(compareRates(newEffectiveRate, effectiveRate) < 0);
-                                                    }
-                                                });
-
-                                                it('should move the effective reserve weights in the right direction', async () => {
-                                                    const newEffectiveWeight = (await converter.effectiveReserveWeights.call())[0];
-
-                                                    if (rateChange === 1) {
-                                                        expect(newEffectiveWeight).to.be.bignumber.gt(effectiveReserveWeight);
-                                                    }
-                                                    else {
-                                                        expect(newEffectiveWeight).to.be.bignumber.lt(effectiveReserveWeight);
-                                                    }
-                                                });
-
-                                                it('should move the reserve weights in the right direction', async () => {
-                                                    const newReserveWeight = await converter.reserveWeight.call(getReserve1Address(isETHReserve));
-
-                                                    if (rateChange === 1) {
-                                                        expect(newReserveWeight).to.be.bignumber.gt(reserveWeight);
-                                                    }
-                                                    else {
-                                                        expect(newReserveWeight).to.be.bignumber.lt(reserveWeight);
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
+                    else {
+                        await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                     }
+
+                    await convert([getReserve1Address(isETHReserve), anchorAddress, reserveToken2.address], amount, MIN_RETURN, { value });
+
+                    // increase the secondary reserve external price
+                    const newOracleBPrice = INITIAL_ORACLE_B_PRICE.add(new BN(15000));
+                    await updateChainlinkOracle(converter, chainlinkPriceOracleB, newOracleBPrice);
+
+                    const reserve1StakedBalance = await converter.reserveStakedBalance.call(getReserve1Address(isETHReserve));
+                    const reserve2StakedBalance = await converter.reserveStakedBalance.call(reserveToken2.address);
+                    const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
+                    const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
+
+                    const [expectedWeights, totalFee] = getExpectedWeights(
+                        reserve1StakedBalance, reserve2StakedBalance,
+                        reserve1Balance, reserve2Balance,
+                        INITIAL_ORACLE_A_PRICE, newOracleBPrice, conversionFee, oracleDeviationFee
+                    );
+
+                    const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
+                        reserve1StakedBalance, reserve2StakedBalance,
+                        reserve1Balance, reserve2Balance,
+                        expectedWeights[0], expectedWeights[1], 0, 0, amount
+                    );
+
+                    const expectedTargetAmount = getExpectedTargetAmount(
+                        reserve1StakedBalance, reserve2StakedBalance,
+                        reserve1Balance, reserve2Balance,
+                        expectedWeights[0], expectedWeights[1], 0, totalFee, amount
+                    );
+
+                    const feeAmount = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
+
+                    const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
+                    expectAlmostEqual(expectedTargetAmount, res[0]);
+                    expectAlmostEqual(feeAmount, res[1]);
                 });
-            });
+
+                it('verifies that targetAmountAndFee returns an increased fee when the secondary reserve is in surplus', async () => {
+                    const conversionFee = new BN(25000);
+                    const converter = await initConverter(true, true, conversionFee);
+                    await converter.setConversionFee(conversionFee);
+                    await converter.setOracleDeviationFee(oracleDeviationFee);
+
+                    // increase liquidity so that the fee will have more significant effect
+                    const newLiquidity1 = toReserve1(new BN(10000000));
+
+                    // approve the amount if needed
+                    let value = 0;
+                    if (isETHReserve) {
+                        value = newLiquidity1;
+                    }
+                    else {
+                        await reserveToken.approve(converter.address, newLiquidity1);
+                    }
+
+                    await converter.addLiquidity(getReserve1Address(isETHReserve), newLiquidity1, MIN_RETURN, { value });
+
+                    const newLiquidity2 = toReserve2(new BN(12000000));
+                    await reserveToken2.approve(converter.address, newLiquidity2);
+                    await converter.addLiquidity(reserveToken2.address, newLiquidity2, MIN_RETURN);
+
+                    const amount = toReserve1(new BN(2000000));
+
+                    // convert from the primary reserve to the secondary reserve
+                    value = 0;
+                    if (isETHReserve) {
+                        value = amount;
+                    }
+                    else {
+                        await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
+                    }
+
+                    await convert([getReserve1Address(isETHReserve), anchorAddress, reserveToken2.address], amount, MIN_RETURN, { value });
+
+                    // decrease the secondary reserve external price
+                    const newOracleBPrice = INITIAL_ORACLE_B_PRICE.sub(new BN(5000));
+                    await updateChainlinkOracle(converter, chainlinkPriceOracleB, newOracleBPrice);
+
+                    const reserve1StakedBalance = await converter.reserveStakedBalance.call(getReserve1Address(isETHReserve));
+                    const reserve2StakedBalance = await converter.reserveStakedBalance.call(reserveToken2.address);
+                    const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
+                    const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
+
+                    const [expectedWeights, totalFee] = getExpectedWeights(
+                        reserve1StakedBalance, reserve2StakedBalance,
+                        reserve1Balance, reserve2Balance,
+                        INITIAL_ORACLE_A_PRICE, newOracleBPrice, conversionFee, oracleDeviationFee
+                    );
+
+                    const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
+                        reserve1StakedBalance, reserve2StakedBalance,
+                        reserve1Balance, reserve2Balance,
+                        expectedWeights[0], expectedWeights[1], 0, 0, amount
+                    );
+
+                    const expectedTargetAmount = getExpectedTargetAmount(
+                        reserve1StakedBalance, reserve2StakedBalance,
+                        reserve1Balance, reserve2Balance,
+                        expectedWeights[0], expectedWeights[1], 0, totalFee, amount
+                    );
+
+                    const feeAmount = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
+
+                    const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
+                    expectAlmostEqual(expectedTargetAmount, res[0]);
+                    expect(feeAmount).to.be.bignumber.equal(res[1]);
+                });
+            }
+
+            for (const tokenAmount of [1000, 1000000, 1000000000]) {
+                context(`converting ${tokenAmount} tokens`, async () => {
+                    const amount = toReserve1(new BN(tokenAmount));
+
+                    // eslint-disable-next-line max-len
+                    it('verifies that targetAmountAndFee returns the correct target amount and fee when there was no external price change', async () => {
+                        const conversionFee = new BN(3000);
+                        const converter = await initConverter(true, true, 5000);
+                        await converter.setConversionFee(conversionFee);
+
+                        const [expectedWeights, totalFee] = getExpectedWeights(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE
+                        );
+
+                        const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            expectedWeights[0], expectedWeights[1], 0, 0, amount
+                        );
+
+                        const expectedTargetAmount = getExpectedTargetAmount(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            expectedWeights[0], expectedWeights[1], 0, totalFee, amount
+                        );
+
+                        const expectedFee = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
+                        const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
+
+                        expectAlmostEqual(expectedTargetAmount, res[0]);
+                        expect(expectedFee).to.be.bignumber.equal(res[1]);
+                    });
+
+                    // eslint-disable-next-line max-len
+                    it('verifies that targetAmountAndFee returns the correct target amount and fee when there was an external price change', async () => {
+                        const conversionFee = new BN(3000);
+                        const converter = await initConverter(true, true, 5000);
+                        await converter.setConversionFee(conversionFee);
+
+                        const oracleAPrice = new BN(15000);
+
+                        const [expectedWeights, totalFee] = getExpectedWeights(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            oracleAPrice, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE
+                        );
+
+                        const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            expectedWeights[0], expectedWeights[1], 0, 0, amount
+                        );
+
+                        const expectedTargetAmount = getExpectedTargetAmount(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            expectedWeights[0], expectedWeights[1], 0, totalFee, amount
+                        );
+
+                        const feeAmount = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
+
+                        await updateChainlinkOracle(converter, chainlinkPriceOracleA, oracleAPrice);
+
+                        const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
+
+                        expectAlmostEqual(expectedTargetAmount, res[0]);
+                        expect(feeAmount).to.be.bignumber.equal(res[1]);
+                    });
+
+                    it('verifies that convert returns valid amount after converting when there was no external price change', async () => {
+                        const conversionFee = new BN(3000);
+                        const converter = await initConverter(true, true, 5000);
+                        await converter.setConversionFee(conversionFee);
+
+                        const [expectedWeights, totalFee] = getExpectedWeights(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE
+                        );
+
+                        const expectedTargetAmount = getExpectedTargetAmount(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            expectedWeights[0], expectedWeights[1], 0, totalFee, amount
+                        );
+
+                        const actualTargetAmount = await convertAndReturnTargetAmount(sender, converter, reserveToken,
+                            getReserve1Address(isETHReserve), reserveToken2.address, amount);
+
+                        expectAlmostEqual(expectedTargetAmount, actualTargetAmount);
+                    });
+
+                    it('verifies that convert returns valid amount after converting when there was an external price change', async () => {
+                        const conversionFee = new BN(3000);
+                        const converter = await initConverter(true, true, 5000);
+                        await converter.setConversionFee(conversionFee);
+
+                        const newOracleAPrice = new BN(17000);
+
+                        const [expectedWeights, totalFee] = getExpectedWeights(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            newOracleAPrice, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE
+                        );
+
+                        const expectedTargetAmount = getExpectedTargetAmount(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            expectedWeights[0], expectedWeights[1], 0, totalFee, amount
+                        );
+
+                        await updateChainlinkOracle(converter, chainlinkPriceOracleA, newOracleAPrice);
+
+                        const actualTargetAmount = await convertAndReturnTargetAmount(sender, converter, reserveToken,
+                            getReserve1Address(isETHReserve), reserveToken2.address, amount);
+
+                        expectAlmostEqual(expectedTargetAmount, actualTargetAmount);
+                    });
+
+                    it('verifies balances after conversion', async () => {
+                        const conversionFee = new BN(3500);
+                        const converter = await initConverter(true, true, 5000);
+                        await converter.setConversionFee(conversionFee);
+
+                        const [expectedWeights, totalFee] = getExpectedWeights(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE
+                        );
+
+                        const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            expectedWeights[0], expectedWeights[1], 0, 0, amount
+                        );
+
+                        const expectedTargetAmount = getExpectedTargetAmount(
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
+                            expectedWeights[0], expectedWeights[1], 0, totalFee, amount
+                        );
+
+                        const expectedFee = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
+
+                        let value = 0;
+                        if (isETHReserve) {
+                            value = amount;
+                        }
+                        else {
+                            await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
+                        }
+
+                        const prevSourceBalance = await getBalance(getReserve1(isETHReserve), getReserve1Address(isETHReserve), sender);
+                        const prevTargetBalance = await getBalance(reserveToken2, reserveToken2.address, sender);
+                        const prevConverterSourceBalance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
+                        const prevConverterTargetBalance = await converter.reserveBalance.call(reserveToken2.address);
+                        const prevConverterTargetStakedBalance = await converter.reserveStakedBalance.call(reserveToken2.address);
+
+                        const res = await convert([getReserve1Address(isETHReserve), anchorAddress, reserveToken2.address], amount,
+                            MIN_RETURN, { value });
+
+                        const newSourceBalance = await getBalance(getReserve1(isETHReserve), getReserve1Address(isETHReserve), sender);
+                        const newTargetBalance = await getBalance(reserveToken2, reserveToken2.address, sender);
+                        const newConverterSourceBalance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
+                        const newConverterTargetBalance = await converter.reserveBalance.call(reserveToken2.address);
+                        const newConverterTargetStakedBalance = await converter.reserveStakedBalance.call(reserveToken2.address);
+
+                        let transactionCost = new BN(0);
+                        if (isETHReserve) {
+                            transactionCost = await getTransactionCost(res);
+                        }
+
+                        // check balances
+                        expectAlmostEqual(prevSourceBalance.sub(transactionCost).sub(amount), newSourceBalance);
+                        expectAlmostEqual(prevTargetBalance.add(expectedTargetAmount), newTargetBalance);
+                        expectAlmostEqual(prevConverterSourceBalance.add(amount), newConverterSourceBalance);
+                        expectAlmostEqual(prevConverterTargetBalance.sub(expectedTargetAmount), newConverterTargetBalance);
+                        expectAlmostEqual(prevConverterTargetStakedBalance.add(expectedFee), newConverterTargetStakedBalance);
+                    });
+
+                    it('verifies the TokenRateUpdate events after conversion', async () => {
+                        const converter = await initConverter(true, true, 5000);
+
+                        let value = 0;
+                        if (isETHReserve) {
+                            value = amount;
+                        }
+                        else {
+                            await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
+                        }
+
+                        const res = await convert([getReserve1Address(isETHReserve), anchorAddress, reserveToken2.address], amount,
+                            MIN_RETURN, { value });
+
+                        const sourceStakedBalance = await converter.reserveStakedBalance.call(getReserve1Address(isETHReserve));
+                        const targetStakedBalance = await converter.reserveStakedBalance.call(reserveToken2.address);
+                        let sourceBalance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
+                        let targetBalance = await converter.reserveBalance.call(reserveToken2.address);
+                        const sourceWeight = await converter.reserveWeight.call(getReserve1Address(isETHReserve));
+                        const targetWeight = await converter.reserveWeight.call(reserveToken2.address);
+                        const poolTokenSupply = await poolToken2.totalSupply.call();
+
+                        // apply amplification factor
+                        sourceBalance = sourceStakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(sourceBalance);
+                        targetBalance = targetStakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(targetBalance);
+
+                        const events = await converter.getPastEvents('TokenRateUpdate', {
+                            fromBlock: res.receipt.blockNumber,
+                            toBlock: res.receipt.blockNumber
+                        });
+
+                        const { args: event1 } = events[0];
+                        expect(event1._token1).to.eql(getReserve1Address(isETHReserve));
+                        expect(event1._token2).to.eql(reserveToken2.address);
+                        expect(event1._rateN).to.be.bignumber.equal(targetBalance.mul(sourceWeight));
+                        expect(event1._rateD).to.be.bignumber.equal(sourceBalance.mul(targetWeight));
+
+                        const { args: event2 } = events[1];
+                        expect(event2._token1).to.eql(poolToken2.address);
+                        expect(event2._token2).to.eql(reserveToken2.address);
+                        expect(event2._rateN).to.be.bignumber.equal(targetStakedBalance);
+                        expect(event2._rateD).to.be.bignumber.equal(poolTokenSupply);
+                    });
+                });
+            }
 
             it('should revert when attempting to convert when the return is smaller than the minimum requested amount', async () => {
                 await initConverter(true, true);
@@ -1349,7 +1098,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 }
 
                 await expectRevert(convert([getReserve1Address(isETHReserve), anchorAddress, reserveToken2.address], amount,
-                    MIN_RETURN, { value }), 'ERR_TARGET_AMOUNT_TOO_HIGH');
+                    MIN_RETURN, { value }), 'ERR_UNDERFLOW');
             });
 
             it('should revert when attempting to convert when source reserve is invalid', async () => {
@@ -1435,17 +1184,15 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 const reserve1StakedBalance = await converter.reserveStakedBalance.call(getReserve1Address(isETHReserve));
                 const reserve2StakedBalance = await converter.reserveStakedBalance.call(reserveToken2.address);
-                const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
-                const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
+                let reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
+                let reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
                 const reserve1Weight = await converter.reserveWeight.call(getReserve1Address(isETHReserve));
                 const reserve2Weight = await converter.reserveWeight.call(reserveToken2.address);
                 const poolTokenSupply = await poolToken2.totalSupply.call();
 
                 // apply amplification factor
-                const n = reserve2StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve2Balance).mul(reserve1Weight);
-                const d = reserve1StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve1Balance).mul(reserve2Weight);
-                const ratio = MathUtils.reducedRatio(n.toString(), d.toString(), MAX_RATE_FACTOR_LOWER_BOUND);
-                const [rateN, rateD] = ratio.map(x => new BN(x));
+                reserve1Balance = reserve1StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve1Balance);
+                reserve2Balance = reserve2StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve2Balance);
 
                 expectEvent(res, 'TokenRateUpdate', {
                     _token1: poolToken2.address,
@@ -1457,8 +1204,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 expectEvent(res, 'TokenRateUpdate', {
                     _token1: getReserve1Address(isETHReserve),
                     _token2: reserveToken2.address,
-                    _rateN: rateN,
-                    _rateD: rateD
+                    _rateN: reserve2Balance.mul(reserve1Weight),
+                    _rateD: reserve1Balance.mul(reserve2Weight)
                 });
             });
 
@@ -1470,17 +1217,15 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 const reserve1StakedBalance = await converter.reserveStakedBalance.call(getReserve1Address(isETHReserve));
                 const reserve2StakedBalance = await converter.reserveStakedBalance.call(reserveToken2.address);
-                const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
-                const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
+                let reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
+                let reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
                 const reserve1Weight = await converter.reserveWeight.call(getReserve1Address(isETHReserve));
                 const reserve2Weight = await converter.reserveWeight.call(reserveToken2.address);
                 const poolTokenSupply = await poolToken1.totalSupply.call();
 
                 // apply amplification factor
-                const n = reserve2StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve2Balance).mul(reserve1Weight);
-                const d = reserve1StakedBalance.mul(DEFAULT_AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve1Balance).mul(reserve2Weight);
-                const ratio = MathUtils.reducedRatio(n.toString(), d.toString(), MAX_RATE_FACTOR_LOWER_BOUND);
-                const [rateN, rateD] = ratio.map(x => new BN(x));
+                reserve1Balance = reserve1StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve1Balance);
+                reserve2Balance = reserve2StakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(reserve2Balance);
 
                 expectEvent(res, 'TokenRateUpdate', {
                     _token1: poolToken1.address,
@@ -1492,8 +1237,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                 expectEvent(res, 'TokenRateUpdate', {
                     _token1: getReserve1Address(isETHReserve),
                     _token2: reserveToken2.address,
-                    _rateN: rateN,
-                    _rateD: rateD
+                    _rateN: reserve2Balance.mul(reserve1Weight),
+                    _rateD: reserve1Balance.mul(reserve2Weight)
                 });
             });
 
@@ -1635,18 +1380,18 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 }
 
                                 // get expected weights
-                                const expectedWeights = getExpectedWeights(
+                                const [expectedWeights] = getExpectedWeights(
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     reserve1StakedBalance, reserve2StakedBalance,
-                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, isReserve1Primary
+                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE, isReserve1Primary
                                 );
 
                                 const reserveWeight1 = await converter.reserveWeight.call(reserve1Data[1]);
                                 const reserveWeight2 = await converter.reserveWeight.call(reserve2Data[1]);
 
                                 // compare expected weights vs the actual weights
-                                expectAlmostEqual(reserveWeight1, expectedWeights[0]);
-                                expectAlmostEqual(reserveWeight2, expectedWeights[1]);
+                                expect(reserveWeight1).to.be.bignumber.equal(expectedWeights[0]);
+                                expect(reserveWeight2).to.be.bignumber.equal(expectedWeights[1]);
                             });
                         });
                     }
@@ -1798,17 +1543,17 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 }
 
                                 // get expected weights
-                                const expectedWeights = getExpectedWeights(
+                                const [expectedWeights] = getExpectedWeights(
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     reserve1StakedBalance, reserve2StakedBalance,
-                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, isReserve1Primary
+                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE, isReserve1Primary
                                 );
 
                                 const reserveWeight1 = await converter.reserveWeight.call(getReserve1Address(isETHReserve));
                                 const reserveWeight2 = await converter.reserveWeight.call(reserveToken2.address);
 
-                                expectAlmostEqual(reserveWeight1, expectedWeights[0]);
-                                expectAlmostEqual(reserveWeight2, expectedWeights[1]);
+                                expect(reserveWeight1).to.be.bignumber.equal(expectedWeights[0]);
+                                expect(reserveWeight2).to.be.bignumber.equal(expectedWeights[1]);
                             });
                         });
                     }
@@ -1883,7 +1628,7 @@ contract('LiquidityPoolV2Converter', accounts => {
             });
 
             if (!isETHReserve) {
-                describe('exit fee', () => {
+                describe('exit-fee', () => {
                     for (let i = 1; i <= 5; i++) {
                         const reserveTokenAmount = toReserve1(new BN(123 * i));
                         const poolTokenAmount = toPool(new BN(456 * i));
@@ -1891,28 +1636,24 @@ contract('LiquidityPoolV2Converter', accounts => {
                         // eslint-disable-next-line max-len
                         it(`convert ${reserveTokenAmount.toString()} reserve tokens and then remove ${poolTokenAmount.toString()} pool tokens`, async () => {
                             const converter = await initConverter(true, true);
-
                             await reserveToken.approve(bancorNetwork.address, reserveTokenAmount, { from: sender });
                             await convert([reserveToken.address, anchorAddress, reserveToken2.address], reserveTokenAmount,
                                 MIN_RETURN, { from: sender });
-
                             const oldTotalSupply = await poolToken1.totalSupply.call();
                             const oldUserBalance = await reserveToken.balanceOf.call(sender);
                             const oldActualBalance = await reserveToken.balanceOf.call(converter.address);
                             const oldStakedBalance = await converter.reserveStakedBalance.call(reserveToken.address);
-
-                            const tokensRateAccuracy = await getTokensRateAccuracy(converter);
+                            const x = oldStakedBalance.mul(AMPLIFICATION_FACTOR);
+                            const y = oldStakedBalance.mul(AMPLIFICATION_FACTOR.sub(new BN(1))).add(oldActualBalance);
+                            const [min, max] = x.lt(y) ? [x, y] : [y, x];
                             const expectedAmountBeforeFee = poolTokenAmount.mul(oldStakedBalance).div(oldTotalSupply);
-                            const expectedAmountAfterFee = expectedAmountBeforeFee.mul(tokensRateAccuracy[0]).div(tokensRateAccuracy[1]);
+                            const expectedAmountAfterFee = expectedAmountBeforeFee.mul(min).div(max);
                             const actualAmountAfterFeeAndFee = await converter.removeLiquidityReturnAndFee.call(poolToken1.address, poolTokenAmount);
-
                             await converter.removeLiquidity(poolToken1.address, poolTokenAmount, MIN_RETURN, { from: sender });
-
                             const newTotalSupply = await poolToken1.totalSupply.call();
                             const newUserBalance = await reserveToken.balanceOf.call(sender);
                             const newActualBalance = await reserveToken.balanceOf.call(converter.address);
                             const newStakedBalance = await converter.reserveStakedBalance.call(reserveToken.address);
-
                             expect(newTotalSupply).to.be.bignumber.equal(oldTotalSupply.sub(poolTokenAmount));
                             expect(newUserBalance).to.be.bignumber.equal(oldUserBalance.add(expectedAmountAfterFee));
                             expect(newActualBalance).to.be.bignumber.equal(oldActualBalance.sub(expectedAmountAfterFee));
@@ -1947,10 +1688,10 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                                                 let reserve1Balance = new BN(reserve1Liquidity);
                                                 let reserve2Balance = new BN(reserve2Liquidity);
-                                                const [expectedWeights, adjustedFee] = getExpectedWeightsAndFee(
+                                                const [expectedWeights, totalFee] = getExpectedWeights(
                                                     reserve1Liquidity, reserve2Liquidity,
                                                     reserve1Liquidity, reserve2Liquidity,
-                                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee
+                                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE
                                                 );
 
                                                 // Conversion #1
@@ -1975,16 +1716,16 @@ contract('LiquidityPoolV2Converter', accounts => {
                                                     sourceStakedBalance, targetStakedBalance,
                                                     sourceBalance, targetBalance,
                                                     sourceWeight, targetWeight,
-                                                    adjustedFee, amount
+                                                    0, totalFee, amount
                                                 );
 
                                                 // not enough balance to complete the trade, should fail on chain
                                                 if (expectedTargetAmount.gt(targetBalance)) {
-                                                    return expectRevert(convertAndReturnTargetAmount(converter, sourceToken,
-                                                        sourceTokenAddress, targetTokenAddress, amount), 'ERR_TARGET_AMOUNT_TOO_HIGH');
+                                                    return expectRevert(convertAndReturnTargetAmount(sender, converter, sourceToken,
+                                                        sourceTokenAddress, targetTokenAddress, amount), 'ERR_UNDERFLOW');
                                                 }
 
-                                                const actualTargetAmount = await convertAndReturnTargetAmount(converter, sourceToken,
+                                                const actualTargetAmount = await convertAndReturnTargetAmount(sender, converter, sourceToken,
                                                     sourceTokenAddress, targetTokenAddress, amount);
                                                 expectAlmostEqual(expectedTargetAmount, actualTargetAmount, 'conversion #1');
 
@@ -2020,16 +1761,16 @@ contract('LiquidityPoolV2Converter', accounts => {
                                                     sourceStakedBalance, targetStakedBalance,
                                                     sourceBalance, targetBalance,
                                                     sourceWeight, targetWeight,
-                                                    adjustedFee, amount
+                                                    0, totalFee, amount
                                                 );
 
                                                 // not enough balance to complete the trade, should fail on chain
                                                 if (expectedTargetAmount2.gt(targetBalance)) {
-                                                    return expectRevert(convertAndReturnTargetAmount(converter, sourceToken,
-                                                        sourceTokenAddress, targetTokenAddress, amount), 'ERR_TARGET_AMOUNT_TOO_HIGH');
+                                                    return expectRevert(convertAndReturnTargetAmount(sender, converter, sourceToken,
+                                                        sourceTokenAddress, targetTokenAddress, amount), 'ERR_UNDERFLOW');
                                                 }
 
-                                                const actualTargetAmount2 = await convertAndReturnTargetAmount(converter, sourceToken,
+                                                const actualTargetAmount2 = await convertAndReturnTargetAmount(sender, converter, sourceToken,
                                                     sourceTokenAddress, targetTokenAddress, amount);
                                                 expectAlmostEqual(expectedTargetAmount2, actualTargetAmount2);
                                             });
