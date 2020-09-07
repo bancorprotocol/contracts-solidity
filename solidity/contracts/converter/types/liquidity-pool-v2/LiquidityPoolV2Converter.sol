@@ -30,14 +30,14 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     mapping (IERC20Token => ISmartToken) private reservesToPoolTokens;  // maps each reserve to its pool token
     mapping (ISmartToken => IERC20Token) private poolTokensToReserves;  // maps each pool token to its reserve
 
-    Fraction public externalRate;           // conversion rate of 1 primary token in secondary tokens
-    uint256 public externalRateUpdateTime;  // last time the conversion rate was updated (in seconds)
+    Fraction public externalRate;           // external rate of 1 primary token in secondary tokens
+    uint256 public externalRateUpdateTime;  // last time the external rate was updated (in seconds)
 
     // used by the temp liquidity limit mechanism during the beta
     mapping (IERC20Token => uint256) public maxStakedBalances;
     bool public maxStakedBalanceEnabled = true;
 
-    uint32 public oracleDeviationFee = 0; // initial oracle deviation fee, represented in ppm
+    uint32 public oracleDeviationFee = 0; // oracle deviation fee, represented in ppm
 
     /**
       * @dev triggered when the oracle deviation fee is updated
@@ -342,7 +342,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // if the rate was already checked in this block, use the current weights; otherwise, get the new weights
         if (externalRateUpdateTime == time()) {
             sourceTokenWeight = reserves[_sourceToken].weight;
-            targetTokenWeight = reserves[_targetToken].weight;
+            targetTokenWeight = PPM_RESOLUTION - sourceTokenWeight;
         }
         else {
             Fraction memory rate = _effectiveTokensRate();
@@ -391,7 +391,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         }
 
         uint32 sourceTokenWeight = reserves[_sourceToken].weight;
-        uint32 targetTokenWeight = reserves[_targetToken].weight;
+        uint32 targetTokenWeight = PPM_RESOLUTION - sourceTokenWeight;
 
         // get expected target amount and fees
         (uint256 amount, uint256 standardFee, uint256 totalFee) = targetAmountAndFees(_sourceToken, _targetToken, sourceTokenWeight, targetTokenWeight, _amount);
@@ -502,7 +502,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // rebalance the pool's reserve weights
         rebalance();
 
-        // dispatch the liquidity-added event
+        // dispatch the `LiquidityAdded` event
         emit LiquidityAdded(msg.sender, _reserveToken, _amount, initialStakedBalance.add(_amount), poolTokenSupply.add(poolTokenAmount));
 
         // dispatch the rate event for the relevant pool token
@@ -565,7 +565,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         uint256 newPoolTokenSupply = initialPoolSupply.sub(_amount);
 
-        // dispatch the liquidity-removed event
+        // dispatch the `LiquidityRemoved` event
         emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newStakedBalance, newPoolTokenSupply);
 
         // dispatch the rate event for the relevant pool token
@@ -593,7 +593,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         if (_amount < totalSupply) {
             uint256 x = stakedBalances[primaryReserveToken].mul(AMPLIFICATION_FACTOR);
-            uint256 y = reserveAmplifiedBalance(primaryReserveToken);
+            uint256 y = amplifiedBalance(primaryReserveToken);
             (uint256 min, uint256 max) = x < y ? (x, y) : (y, x);
             uint256 amountBeforeFee = _amount.mul(stakedBalance).div(totalSupply);
             uint256 amountAfterFee = amountBeforeFee.mul(min).div(max);
@@ -716,8 +716,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         uint256 primaryStakedBalance = stakedBalances[primaryReserveToken];
 
         // get the tokens amplified balances
-        uint256 primaryBalance = reserveAmplifiedBalance(primaryReserveToken);
-        uint256 secondaryBalance = reserveAmplifiedBalance(secondaryReserveToken);
+        uint256 primaryBalance = amplifiedBalance(primaryReserveToken);
+        uint256 secondaryBalance = amplifiedBalance(secondaryReserveToken);
 
         // get the new weights
         return IBancorFormula(addressOf(BANCOR_FORMULA)).balancedWeights(
@@ -738,8 +738,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     */
     function dispatchTokenRateUpdateEvent(IERC20Token _token1, IERC20Token _token2, uint32 _token1Weight, uint32 _token2Weight) private {
         // get the amplified balances
-        uint256 token1Balance = reserveAmplifiedBalance(_token1);
-        uint256 token2Balance = reserveAmplifiedBalance(_token2);
+        uint256 token1Balance = amplifiedBalance(_token1);
+        uint256 token2Balance = amplifiedBalance(_token2);
 
         // get the first token weight
         if (_token1Weight == 0) {
