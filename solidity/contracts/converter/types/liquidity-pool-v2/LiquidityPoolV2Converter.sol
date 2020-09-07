@@ -37,7 +37,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     mapping (IERC20Token => uint256) public maxStakedBalances;
     bool public maxStakedBalanceEnabled = true;
 
-    uint32 public oracleDeviationFee = 0; // oracle deviation fee, represented in ppm
+    uint32 public oracleDeviationFee = 10000; // oracle deviation fee, represented in ppm
 
     /**
       * @dev triggered when the oracle deviation fee is updated

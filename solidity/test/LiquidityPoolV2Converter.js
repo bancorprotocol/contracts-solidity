@@ -247,7 +247,7 @@ contract('LiquidityPoolV2Converter', accounts => {
 
             const INITIAL_RESERVE1_LIQUIDITY = toReserve1(new BN(10000000000));
             const INITIAL_RESERVE2_LIQUIDITY = toReserve2(new BN(12000000000));
-            const INITIAL_ORACLE_DEVIATION_FEE = new BN(0);
+            const INITIAL_ORACLE_DEVIATION_FEE = new BN(10000);
             const INITIAL_ORACLE_A_PRICE = new BN(10000);
             const INITIAL_ORACLE_B_PRICE = new BN(20000);
 
