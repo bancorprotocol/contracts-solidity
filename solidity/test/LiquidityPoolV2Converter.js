@@ -110,7 +110,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 return bancorNetwork.convertByPath(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, options);
             };
 
-            const getExpectedTargetAmount = (sourceStakedBalance, targetStakedBalance, sourceBalance, targetBalance, sourceWeight, targetWeight,
+            const getExpectedTargetAmountAndFee = (sourceStakedBalance, targetStakedBalance, sourceBalance, targetBalance, sourceWeight, targetWeight,
                 conversionFee, oracleDeviationFee, amount) => {
                 sourceStakedBalance = new BN(sourceStakedBalance);
                 targetStakedBalance = new BN(targetStakedBalance);
@@ -719,7 +719,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                         INITIAL_ORACLE_A_PRICE, newOracleBPrice
                     );
 
-                    const [expectedTargetAmount, feeAmount] = getExpectedTargetAmount(
+                    const [expectedTargetAmount, feeAmount] = getExpectedTargetAmountAndFee(
                         reserve1StakedBalance, reserve2StakedBalance,
                         reserve1Balance, reserve2Balance,
                         expectedWeights[0], expectedWeights[1], conversionFee, oracleDeviationFee, amount
@@ -782,7 +782,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                         INITIAL_ORACLE_A_PRICE, newOracleBPrice
                     );
 
-                    const [expectedTargetAmount, feeAmount] = getExpectedTargetAmount(
+                    const [expectedTargetAmount, feeAmount] = getExpectedTargetAmountAndFee(
                         reserve1StakedBalance, reserve2StakedBalance,
                         reserve1Balance, reserve2Balance,
                         expectedWeights[0], expectedWeights[1], conversionFee, oracleDeviationFee, amount
@@ -810,7 +810,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                             INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE
                         );
 
-                        const [expectedTargetAmount, expectedFee] = getExpectedTargetAmount(
+                        const [expectedTargetAmount, expectedFee] = getExpectedTargetAmountAndFee(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             expectedWeights[0], expectedWeights[1], conversionFee, INITIAL_ORACLE_DEVIATION_FEE, amount
@@ -836,7 +836,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                             oracleAPrice, INITIAL_ORACLE_B_PRICE
                         );
 
-                        const [expectedTargetAmount, feeAmount] = getExpectedTargetAmount(
+                        const [expectedTargetAmount, feeAmount] = getExpectedTargetAmountAndFee(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             expectedWeights[0], expectedWeights[1], conversionFee, INITIAL_ORACLE_DEVIATION_FEE, amount
@@ -861,7 +861,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                             INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE
                         );
 
-                        const [expectedTargetAmount, feeAmount] = getExpectedTargetAmount(
+                        const [expectedTargetAmount, feeAmount] = getExpectedTargetAmountAndFee(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             expectedWeights[0], expectedWeights[1], conversionFee, INITIAL_ORACLE_DEVIATION_FEE, amount
@@ -886,7 +886,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                             newOracleAPrice, INITIAL_ORACLE_B_PRICE
                         );
 
-                        const [expectedTargetAmount, feeAmount] = getExpectedTargetAmount(
+                        const [expectedTargetAmount, feeAmount] = getExpectedTargetAmountAndFee(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             expectedWeights[0], expectedWeights[1], conversionFee, INITIAL_ORACLE_DEVIATION_FEE, amount
@@ -911,7 +911,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                             INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE
                         );
 
-                        const [expectedTargetAmount, expectedFee] = getExpectedTargetAmount(
+                        const [expectedTargetAmount, expectedFee] = getExpectedTargetAmountAndFee(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             expectedWeights[0], expectedWeights[1], conversionFee, INITIAL_ORACLE_DEVIATION_FEE, amount
@@ -1665,7 +1665,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                                                 let amount = sourceBalance.mul(new BN(amountPercentage)).div(new BN(100));
 
                                                 // get expected target amount and fee
-                                                const [expectedTargetAmount, feeAmount] = getExpectedTargetAmount(
+                                                const [expectedTargetAmount, feeAmount] = getExpectedTargetAmountAndFee(
                                                     sourceStakedBalance, targetStakedBalance,
                                                     sourceBalance, targetBalance,
                                                     sourceWeight, targetWeight,
@@ -1710,7 +1710,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                                                 amount = sourceBalance.mul(new BN(amountPercentage2)).div(new BN(100));
 
                                                 // get expected target amount and fee
-                                                const [expectedTargetAmount2, feeAmount2] = getExpectedTargetAmount(
+                                                const [expectedTargetAmount2, feeAmount2] = getExpectedTargetAmountAndFee(
                                                     sourceStakedBalance, targetStakedBalance,
                                                     sourceBalance, targetBalance,
                                                     sourceWeight, targetWeight,
