@@ -386,7 +386,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // avoid updating the rate more than once per block
         if (externalRateUpdateTime < time()) {
             externalRateUpdateTime = time();
-            (externalRate.n, externalRate.d) = priceOracle.latestRate(primaryReserveToken, secondaryReserveToken);
+            externalRate = _effectiveTokensRate();
             rebalance();
         }
 
