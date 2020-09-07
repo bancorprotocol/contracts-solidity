@@ -242,7 +242,7 @@ contract('LiquidityPoolV2Converter', accounts => {
             const sender2 = accounts[9];
 
             const CONVERSION_FEE_RESOLUTION = new BN(1000000);
-            const DEF_ORACLE_DEVIATION_FEE = new BN(0);
+            const INITIAL_ORACLE_DEVIATION_FEE = new BN(0);
             const AMPLIFICATION_FACTOR = new BN(20);
             const MIN_RETURN = new BN(1);
 
@@ -494,13 +494,13 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const newFee = new BN(30000);
 
                 const res = await converter.setOracleDeviationFee(newFee);
-                expectEvent(res, 'OracleDeviationFeeUpdate', { _prevFee: DEF_ORACLE_DEVIATION_FEE, _newFee: newFee });
+                expectEvent(res, 'OracleDeviationFeeUpdate', { _prevFee: INITIAL_ORACLE_DEVIATION_FEE, _newFee: newFee });
             });
 
             it('verifies that an event is fired when the owner updates the oracle-deviation fee multiple times', async () => {
                 const converter = await initConverter(false, false);
 
-                let prevFee = DEF_ORACLE_DEVIATION_FEE;
+                let prevFee = INITIAL_ORACLE_DEVIATION_FEE;
                 for (let i = 1; i <= 10; ++i) {
                     const newFee = new BN(10000 * i);
 
@@ -824,7 +824,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                         const [expectedWeights, totalFee] = getExpectedWeights(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
-                            INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE
+                            INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, INITIAL_ORACLE_DEVIATION_FEE
                         );
 
                         const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
@@ -857,7 +857,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                         const [expectedWeights, totalFee] = getExpectedWeights(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
-                            oracleAPrice, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE
+                            oracleAPrice, INITIAL_ORACLE_B_PRICE, conversionFee, INITIAL_ORACLE_DEVIATION_FEE
                         );
 
                         const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
@@ -890,7 +890,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                         const [expectedWeights, totalFee] = getExpectedWeights(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
-                            INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE
+                            INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, INITIAL_ORACLE_DEVIATION_FEE
                         );
 
                         const expectedTargetAmount = getExpectedTargetAmount(
@@ -915,7 +915,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                         const [expectedWeights, totalFee] = getExpectedWeights(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
-                            newOracleAPrice, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE
+                            newOracleAPrice, INITIAL_ORACLE_B_PRICE, conversionFee, INITIAL_ORACLE_DEVIATION_FEE
                         );
 
                         const expectedTargetAmount = getExpectedTargetAmount(
@@ -940,7 +940,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                         const [expectedWeights, totalFee] = getExpectedWeights(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
-                            INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE
+                            INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, INITIAL_ORACLE_DEVIATION_FEE
                         );
 
                         const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
@@ -1376,7 +1376,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 const [expectedWeights] = getExpectedWeights(
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     reserve1StakedBalance, reserve2StakedBalance,
-                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE, isReserve1Primary
+                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, INITIAL_ORACLE_DEVIATION_FEE, isReserve1Primary
                                 );
 
                                 const reserveWeight1 = await converter.reserveWeight.call(reserve1Data[1]);
@@ -1539,7 +1539,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                                 const [expectedWeights] = getExpectedWeights(
                                     reserve1StakedBalance, reserve2StakedBalance,
                                     reserve1StakedBalance, reserve2StakedBalance,
-                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE, isReserve1Primary
+                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, INITIAL_ORACLE_DEVIATION_FEE, isReserve1Primary
                                 );
 
                                 const reserveWeight1 = await converter.reserveWeight.call(getReserve1Address(isETHReserve));
@@ -1684,7 +1684,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                                                 const [expectedWeights, totalFee] = getExpectedWeights(
                                                     reserve1Liquidity, reserve2Liquidity,
                                                     reserve1Liquidity, reserve2Liquidity,
-                                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, DEF_ORACLE_DEVIATION_FEE
+                                                    INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE, conversionFee, INITIAL_ORACLE_DEVIATION_FEE
                                                 );
 
                                                 // Conversion #1
