@@ -242,16 +242,14 @@ contract('LiquidityPoolV2Converter', accounts => {
             const sender2 = accounts[9];
 
             const CONVERSION_FEE_RESOLUTION = new BN(1000000);
-            const INITIAL_ORACLE_DEVIATION_FEE = new BN(0);
             const AMPLIFICATION_FACTOR = new BN(20);
             const MIN_RETURN = new BN(1);
 
             const INITIAL_RESERVE1_LIQUIDITY = toReserve1(new BN(10000000000));
             const INITIAL_RESERVE2_LIQUIDITY = toReserve2(new BN(12000000000));
+            const INITIAL_ORACLE_DEVIATION_FEE = new BN(0);
             const INITIAL_ORACLE_A_PRICE = new BN(10000);
             const INITIAL_ORACLE_B_PRICE = new BN(20000);
-
-            const RATE_PROPAGATION_PERIOD = duration.minutes(10);
 
             before(async () => {
                 // The following contracts are unaffected by the underlying tests, this can be shared.
