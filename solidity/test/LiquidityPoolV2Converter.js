@@ -127,8 +127,8 @@ contract('LiquidityPoolV2Converter', accounts => {
 
                 const targetAmount = new BN(crossReserveTargetAmount(sourceBalance, sourceWeight, targetBalance, targetWeight,
                     amount).round().toString());
-                const standardFee = targetAmount.mul(conversionFee).div(CONVERSION_FEE_RESOLUTION);
-                const totalFee = targetAmount.mul(oracleDeviationFee).div(CONVERSION_FEE_RESOLUTION).add(standardFee);
+                const standardFee = targetAmount.mul(conversionFee).div(PPM_RESOLUTION);
+                const totalFee = targetAmount.mul(oracleDeviationFee).div(PPM_RESOLUTION).add(standardFee);
 
                 return [targetAmount.sub(totalFee), totalFee];
             };
@@ -242,7 +242,7 @@ contract('LiquidityPoolV2Converter', accounts => {
             const nonOwner = accounts[1];
             const sender2 = accounts[9];
 
-            const CONVERSION_FEE_RESOLUTION = new BN(1000000);
+            const PPM_RESOLUTION = new BN(1000000);
             const AMPLIFICATION_FACTOR = new BN(20);
             const MIN_RETURN = new BN(1);
 
@@ -466,7 +466,7 @@ contract('LiquidityPoolV2Converter', accounts => {
             it('verifies the owner can update the oracle-deviation fee', async () => {
                 const converter = await initConverter(false, false);
 
-                const newFee = CONVERSION_FEE_RESOLUTION.sub(new BN(10));
+                const newFee = PPM_RESOLUTION.sub(new BN(10));
                 await converter.setOracleDeviationFee(newFee);
 
                 const oracleDeviationFee = await converter.oracleDeviationFee.call();
@@ -476,7 +476,7 @@ contract('LiquidityPoolV2Converter', accounts => {
             it('should revert when attempting to update the oracle-deviation fee to an invalid value', async () => {
                 const converter = await initConverter(false, false);
 
-                await expectRevert(converter.setOracleDeviationFee(CONVERSION_FEE_RESOLUTION.add(new BN(1))),
+                await expectRevert(converter.setOracleDeviationFee(PPM_RESOLUTION.add(new BN(1))),
                     'ERR_INVALID_ORACLE_DEVIATION_FEE');
             });
 
