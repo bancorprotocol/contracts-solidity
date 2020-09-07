@@ -37,7 +37,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     mapping (IERC20Token => uint256) public maxStakedBalances;
     bool public maxStakedBalanceEnabled = true;
 
-    uint256 public oracleDeviationFee = 0; // initial oracle deviation fee, represented in ppm
+    uint32 public oracleDeviationFee = 0; // initial oracle deviation fee, represented in ppm
 
     /**
       * @dev triggered when the oracle deviation fee is updated
@@ -45,7 +45,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param  _prevFee    previous fee percentage, represented in ppm
       * @param  _newFee     new fee percentage, represented in ppm
     */
-    event OracleDeviationFeeUpdate(uint256 _prevFee, uint256 _newFee);
+    event OracleDeviationFeeUpdate(uint32 _prevFee, uint32 _newFee);
 
     /**
       * @dev initializes a new LiquidityPoolV2Converter instance
@@ -164,7 +164,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @param _oracleDeviationFee new oracle deviation fee, represented in ppm
     */
-    function setOracleDeviationFee(uint256 _oracleDeviationFee) public ownerOnly {
+    function setOracleDeviationFee(uint32 _oracleDeviationFee) public ownerOnly {
         require(_oracleDeviationFee <= PPM_RESOLUTION, "ERR_INVALID_ORACLE_DEVIATION_FEE");
         emit OracleDeviationFeeUpdate(oracleDeviationFee, _oracleDeviationFee);
         oracleDeviationFee = _oracleDeviationFee;
