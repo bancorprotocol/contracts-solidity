@@ -502,10 +502,10 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // rebalance the pool's reserve weights
         rebalance();
 
-        // dispatch the `LiquidityAdded` event
+        // dispatch the liquidity-added event
         emit LiquidityAdded(msg.sender, _reserveToken, _amount, initialStakedBalance.add(_amount), poolTokenSupply.add(poolTokenAmount));
 
-        // dispatch the rate event for the pool token
+        // dispatch the rate event for the relevant pool token
         dispatchPoolTokenRateUpdateEvent(reservePoolToken, poolTokenSupply.add(poolTokenAmount), _reserveToken);
 
         // dispatch the rate event for the reserve tokens
@@ -565,10 +565,10 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         uint256 newPoolTokenSupply = initialPoolSupply.sub(_amount);
 
-        // dispatch the `LiquidityRemoved` event
+        // dispatch the liquidity-removed event
         emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newStakedBalance, newPoolTokenSupply);
 
-        // dispatch the rate event for the pool token
+        // dispatch the rate event for the relevant pool token
         dispatchPoolTokenRateUpdateEvent(_poolToken, newPoolTokenSupply, reserveToken);
 
         // dispatch the rate event for the reserve tokens
@@ -769,7 +769,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev dispatches token rate update event for the pool token
+      * @dev dispatches token rate update event for one of the pool tokens
       *
       * @param _poolToken       address of the pool token
       * @param _poolTokenSupply total pool token supply
