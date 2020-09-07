@@ -729,33 +729,6 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev calculates and returns the rate between two reserve tokens
-      *
-      * @param _token1          contract address of the token to calculate the rate of one unit of
-      * @param _token2          contract address of the token to calculate the rate of one `_token1` unit in
-      * @param _token1Weight    reserve weight of token1
-      * @param _token2Weight    reserve weight of token2
-      *
-      * @return rate
-    */
-    function tokensRate(IERC20Token _token1, IERC20Token _token2, uint32 _token1Weight, uint32 _token2Weight) private view returns (Fraction memory) {
-        // apply the amplification factor
-        uint256 token1Balance = reserveAmplifiedBalance(_token1);
-        uint256 token2Balance = reserveAmplifiedBalance(_token2);
-
-        // get reserve weights
-        if (_token1Weight == 0) {
-            _token1Weight = reserves[_token1].weight;
-        }
-
-        if (_token2Weight == 0) {
-            _token2Weight = PPM_RESOLUTION - _token1Weight;
-        }
-
-        return Fraction({ n: token2Balance.mul(_token1Weight), d: token1Balance.mul(_token2Weight) });
-    }
-
-    /**
       * @dev dispatches token rate update event for the reserve tokens
       *
       * @param _token1          contract address of the token to calculate the rate of one unit of
@@ -764,8 +737,21 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _token2Weight    reserve weight of token2
     */
     function dispatchTokenRateUpdateEvent(IERC20Token _token1, IERC20Token _token2, uint32 _token1Weight, uint32 _token2Weight) private {
-        Fraction memory rate = tokensRate(_token1, _token2, _token1Weight, _token2Weight);
-        emit TokenRateUpdate(_token1, _token2, rate.n, rate.d);
+        // get the amplified balances
+        uint256 token1Balance = reserveAmplifiedBalance(_token1);
+        uint256 token2Balance = reserveAmplifiedBalance(_token2);
+
+        // get the first token weight
+        if (_token1Weight == 0) {
+            _token1Weight = reserves[_token1].weight;
+        }
+
+        // get the second token weight
+        if (_token2Weight == 0) {
+            _token2Weight = PPM_RESOLUTION - _token1Weight;
+        }
+
+        emit TokenRateUpdate(_token1, _token2, token2Balance.mul(_token1Weight), token1Balance.mul(_token2Weight));
     }
 
     /**
