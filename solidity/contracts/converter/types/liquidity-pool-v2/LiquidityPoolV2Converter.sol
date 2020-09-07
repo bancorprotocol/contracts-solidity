@@ -756,26 +756,6 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev dispatches rate events for both reserve tokens and for the target pool token
-      * only used to circumvent the `stack too deep` compiler error
-      *
-      * @param _sourceToken     contract address of the source reserve token
-      * @param _targetToken     contract address of the target reserve token
-      * @param _sourceWeight    source reserve token weight
-      * @param _targetWeight    target reserve token weight
-    */
-    function dispatchRateEvents(IERC20Token _sourceToken, IERC20Token _targetToken, uint32 _sourceWeight, uint32 _targetWeight) private {
-        dispatchTokenRateUpdateEvent(_sourceToken, _targetToken, _sourceWeight, _targetWeight);
-
-        // dispatch the `TokenRateUpdate` event for the pool token
-        // the target reserve pool token rate is the only one that's affected
-        // by conversions since conversion fees are applied to the target reserve
-        ISmartToken targetPoolToken = poolToken(_targetToken);
-        uint256 targetPoolTokenSupply = targetPoolToken.totalSupply();
-        dispatchPoolTokenRateUpdateEvent(targetPoolToken, targetPoolTokenSupply, _targetToken);
-    }
-
-    /**
       * @dev dispatches token rate update event for the reserve tokens
       *
       * @param _token1          contract address of the token to calculate the rate of one unit of
