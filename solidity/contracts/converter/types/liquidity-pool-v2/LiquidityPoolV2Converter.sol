@@ -423,14 +423,8 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, totalFee);
 
-        // dispatch the `TokenRateUpdate` event for the reserve tokens
-        dispatchTokenRateUpdateEvent(_sourceToken, _targetToken, sourceTokenWeight, targetTokenWeight);
-
-        // dispatch the `TokenRateUpdate` event for the pool token
-        // the target reserve pool token rate is the only one that's affected
-        // by conversions since conversion fees are applied to the target reserve
-        ISmartToken targetPoolToken = reservesToPoolTokens[_targetToken];
-        dispatchPoolTokenRateUpdateEvent(targetPoolToken, targetPoolToken.totalSupply(), _targetToken);
+        // dispatch the rate events
+        dispatchRateEvents(_sourceToken, _targetToken, sourceTokenWeight, targetTokenWeight);
 
         // return the conversion result amount
         return amount;
@@ -765,14 +759,14 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _targetWeight    target reserve token weight
     */
     function dispatchRateEvents(IERC20Token _sourceToken, IERC20Token _targetToken, uint32 _sourceWeight, uint32 _targetWeight) private {
+        // dispatch the `TokenRateUpdate` event for the reserve tokens
         dispatchTokenRateUpdateEvent(_sourceToken, _targetToken, _sourceWeight, _targetWeight);
 
         // dispatch the `TokenRateUpdate` event for the pool token
         // the target reserve pool token rate is the only one that's affected
         // by conversions since conversion fees are applied to the target reserve
-        ISmartToken targetPoolToken = poolToken(_targetToken);
-        uint256 targetPoolTokenSupply = targetPoolToken.totalSupply();
-        dispatchPoolTokenRateUpdateEvent(targetPoolToken, targetPoolTokenSupply, _targetToken);
+        ISmartToken targetPoolToken = reservesToPoolTokens[_targetToken];
+        dispatchPoolTokenRateUpdateEvent(targetPoolToken, targetPoolToken.totalSupply(), _targetToken);
     }
 
     /**
