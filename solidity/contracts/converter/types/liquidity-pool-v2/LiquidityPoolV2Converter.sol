@@ -423,10 +423,10 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, totalFee);
 
-        // dispatch the `TokenRateUpdate` event for the reserve tokens
+        // dispatch the rate event for the reserve tokens
         dispatchTokenRateUpdateEvent(_sourceToken, _targetToken, sourceTokenWeight, targetTokenWeight);
 
-        // dispatch the `TokenRateUpdate` event for the pool token
+        // dispatch the rate event for the target reserve pool token
         // the target reserve pool token rate is the only one that's affected
         // by conversions since conversion fees are applied to the target reserve
         ISmartToken targetPoolToken = reservesToPoolTokens[_targetToken];
@@ -502,13 +502,13 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // rebalance the pool's reserve weights
         rebalance();
 
-        // dispatch the LiquidityAdded event
+        // dispatch the `LiquidityAdded` event
         emit LiquidityAdded(msg.sender, _reserveToken, _amount, initialStakedBalance.add(_amount), poolTokenSupply.add(poolTokenAmount));
 
-        // dispatch the `TokenRateUpdate` event for the pool token
+        // dispatch the rate event for the pool token
         dispatchPoolTokenRateUpdateEvent(reservePoolToken, poolTokenSupply.add(poolTokenAmount), _reserveToken);
 
-        // dispatch the `TokenRateUpdate` event for the reserve tokens
+        // dispatch the rate event for the reserve tokens
         dispatchTokenRateUpdateEvent(reserveTokens[0], reserveTokens[1], 0, 0);
 
         // return the amount of pool tokens minted
@@ -565,13 +565,13 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         uint256 newPoolTokenSupply = initialPoolSupply.sub(_amount);
 
-        // dispatch the LiquidityRemoved event
+        // dispatch the `LiquidityRemoved` event
         emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newStakedBalance, newPoolTokenSupply);
 
-        // dispatch the `TokenRateUpdate` event for the pool token
+        // dispatch the rate event for the pool token
         dispatchPoolTokenRateUpdateEvent(_poolToken, newPoolTokenSupply, reserveToken);
 
-        // dispatch the `TokenRateUpdate` event for the reserve tokens
+        // dispatch the rate event for the reserve tokens
         dispatchTokenRateUpdateEvent(reserveTokens[0], reserveTokens[1], 0, 0);
 
         // return the amount of liquidity removed
