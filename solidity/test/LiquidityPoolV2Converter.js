@@ -130,7 +130,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                 const standardFee = targetAmount.mul(conversionFee).div(CONVERSION_FEE_RESOLUTION);
                 const totalFee = targetAmount.mul(oracleDeviationFee).div(CONVERSION_FEE_RESOLUTION).add(standardFee);
 
-                return targetAmount.sub(totalFee);
+                return [targetAmount.sub(totalFee), totalFee];
             };
 
             const getExpectedWeights = (reserve1StakedBalance, reserve2StakedBalance, reserve1Balance, reserve2Balance,
@@ -719,19 +719,11 @@ contract('LiquidityPoolV2Converter', accounts => {
                         INITIAL_ORACLE_A_PRICE, newOracleBPrice
                     );
 
-                    const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
-                        reserve1StakedBalance, reserve2StakedBalance,
-                        reserve1Balance, reserve2Balance,
-                        expectedWeights[0], expectedWeights[1], 0, 0, amount
-                    );
-
-                    const expectedTargetAmount = getExpectedTargetAmount(
+                    const [expectedTargetAmount, feeAmount] = getExpectedTargetAmount(
                         reserve1StakedBalance, reserve2StakedBalance,
                         reserve1Balance, reserve2Balance,
                         expectedWeights[0], expectedWeights[1], conversionFee, oracleDeviationFee, amount
                     );
-
-                    const feeAmount = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
 
                     const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
                     expectAlmostEqual(expectedTargetAmount, res[0]);
@@ -790,19 +782,11 @@ contract('LiquidityPoolV2Converter', accounts => {
                         INITIAL_ORACLE_A_PRICE, newOracleBPrice
                     );
 
-                    const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
-                        reserve1StakedBalance, reserve2StakedBalance,
-                        reserve1Balance, reserve2Balance,
-                        expectedWeights[0], expectedWeights[1], 0, 0, amount
-                    );
-
-                    const expectedTargetAmount = getExpectedTargetAmount(
+                    const [expectedTargetAmount, feeAmount] = getExpectedTargetAmount(
                         reserve1StakedBalance, reserve2StakedBalance,
                         reserve1Balance, reserve2Balance,
                         expectedWeights[0], expectedWeights[1], conversionFee, oracleDeviationFee, amount
                     );
-
-                    const feeAmount = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
 
                     const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
                     expectAlmostEqual(expectedTargetAmount, res[0]);
@@ -826,19 +810,12 @@ contract('LiquidityPoolV2Converter', accounts => {
                             INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE
                         );
 
-                        const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
-                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
-                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
-                            expectedWeights[0], expectedWeights[1], 0, 0, amount
-                        );
-
-                        const expectedTargetAmount = getExpectedTargetAmount(
+                        const [expectedTargetAmount, expectedFee] = getExpectedTargetAmount(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             expectedWeights[0], expectedWeights[1], conversionFee, INITIAL_ORACLE_DEVIATION_FEE, amount
                         );
 
-                        const expectedFee = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
                         const res = await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount);
 
                         expectAlmostEqual(expectedTargetAmount, res[0]);
@@ -859,19 +836,11 @@ contract('LiquidityPoolV2Converter', accounts => {
                             oracleAPrice, INITIAL_ORACLE_B_PRICE
                         );
 
-                        const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
-                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
-                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
-                            expectedWeights[0], expectedWeights[1], 0, 0, amount
-                        );
-
-                        const expectedTargetAmount = getExpectedTargetAmount(
+                        const [expectedTargetAmount, feeAmount] = getExpectedTargetAmount(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             expectedWeights[0], expectedWeights[1], conversionFee, INITIAL_ORACLE_DEVIATION_FEE, amount
                         );
-
-                        const feeAmount = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
 
                         await updateChainlinkOracle(converter, chainlinkPriceOracleA, oracleAPrice);
 
@@ -892,7 +861,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                             INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE
                         );
 
-                        const expectedTargetAmount = getExpectedTargetAmount(
+                        const [expectedTargetAmount, feeAmount] = getExpectedTargetAmount(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             expectedWeights[0], expectedWeights[1], conversionFee, INITIAL_ORACLE_DEVIATION_FEE, amount
@@ -917,7 +886,7 @@ contract('LiquidityPoolV2Converter', accounts => {
                             newOracleAPrice, INITIAL_ORACLE_B_PRICE
                         );
 
-                        const expectedTargetAmount = getExpectedTargetAmount(
+                        const [expectedTargetAmount, feeAmount] = getExpectedTargetAmount(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             expectedWeights[0], expectedWeights[1], conversionFee, INITIAL_ORACLE_DEVIATION_FEE, amount
@@ -942,19 +911,11 @@ contract('LiquidityPoolV2Converter', accounts => {
                             INITIAL_ORACLE_A_PRICE, INITIAL_ORACLE_B_PRICE
                         );
 
-                        const expectedTargetAmountWithNoFee = getExpectedTargetAmount(
-                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
-                            INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
-                            expectedWeights[0], expectedWeights[1], 0, 0, amount
-                        );
-
-                        const expectedTargetAmount = getExpectedTargetAmount(
+                        const [expectedTargetAmount, expectedFee] = getExpectedTargetAmount(
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             INITIAL_RESERVE1_LIQUIDITY, INITIAL_RESERVE2_LIQUIDITY,
                             expectedWeights[0], expectedWeights[1], conversionFee, INITIAL_ORACLE_DEVIATION_FEE, amount
                         );
-
-                        const expectedFee = expectedTargetAmountWithNoFee.sub(expectedTargetAmount);
 
                         let value = 0;
                         if (isETHReserve) {
@@ -1703,8 +1664,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                                 // get amount (and mitigate rounding errors)
                                                 let amount = sourceBalance.mul(new BN(amountPercentage)).div(new BN(100));
 
-                                                // get expected target amount
-                                                const expectedTargetAmount = getExpectedTargetAmount(
+                                                // get expected target amount and fee
+                                                const [expectedTargetAmount, feeAmount] = getExpectedTargetAmount(
                                                     sourceStakedBalance, targetStakedBalance,
                                                     sourceBalance, targetBalance,
                                                     sourceWeight, targetWeight,
@@ -1748,8 +1709,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                                                 // get amount (and mitigate rounding errors)
                                                 amount = sourceBalance.mul(new BN(amountPercentage2)).div(new BN(100));
 
-                                                // get expected target amount
-                                                const expectedTargetAmount2 = getExpectedTargetAmount(
+                                                // get expected target amount and fee
+                                                const [expectedTargetAmount2, feeAmount2] = getExpectedTargetAmount(
                                                     sourceStakedBalance, targetStakedBalance,
                                                     sourceBalance, targetBalance,
                                                     sourceWeight, targetWeight,
