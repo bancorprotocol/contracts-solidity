@@ -5,9 +5,9 @@ import "./IERC20Token.sol";
 /*
     Ether Token interface
 */
-abstract contract IEtherToken is IERC20Token {
-    function deposit() public virtual payable;
-    function withdraw(uint256 _amount) public virtual;
-    function depositTo(address _to) public virtual payable;
-    function withdrawTo(address payable _to, uint256 _amount) public virtual;
+interface IEtherToken is IERC20Token {
+    function deposit() external payable;
+    function withdraw(uint256 _amount) external;
+    function depositTo(address _to) external payable;
+    function withdrawTo(address payable _to, uint256 _amount) external;
 }

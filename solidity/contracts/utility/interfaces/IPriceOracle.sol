@@ -6,11 +6,11 @@ import "../../token/interfaces/IERC20Token.sol";
 /*
     Price Oracle interface
 */
-abstract contract IPriceOracle {
-    function tokenAOracle() external virtual view returns (IChainlinkPriceOracle);
-    function tokenBOracle() external virtual view returns (IChainlinkPriceOracle);
+interface IPriceOracle {
+    function tokenAOracle() external view returns (IChainlinkPriceOracle);
+    function tokenBOracle() external view returns (IChainlinkPriceOracle);
 
-    function latestRate(IERC20Token _tokenA, IERC20Token _tokenB) public virtual view returns (uint256, uint256);
-    function lastUpdateTime() public virtual view returns (uint256);
-    function latestRateAndUpdateTime(IERC20Token _tokenA, IERC20Token _tokenB) public virtual view returns (uint256, uint256, uint256);
+    function latestRate(IERC20Token _tokenA, IERC20Token _tokenB) external view returns (uint256, uint256);
+    function lastUpdateTime() external view returns (uint256);
+    function latestRateAndUpdateTime(IERC20Token _tokenA, IERC20Token _tokenB) external view returns (uint256, uint256, uint256);
 }

@@ -34,7 +34,7 @@ contract LiquidTokenConverter is ConverterBase {
       *
       * @return see the converter types in the the main contract doc
     */
-    function converterType() public override pure returns (uint16) {
+    function converterType() public pure override returns (uint16) {
         return 0;
     }
 
@@ -75,7 +75,7 @@ contract LiquidTokenConverter is ConverterBase {
       * @return expected target amount
       * @return expected fee
     */
-    function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public override view returns (uint256, uint256) {
+    function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view override returns (uint256, uint256) {
         if (_targetToken == ISmartToken(address(anchor)) && reserves[_sourceToken].isSet)
             return purchaseTargetAmount(_amount);
         if (_sourceToken == ISmartToken(address(anchor)) && reserves[_targetToken].isSet)

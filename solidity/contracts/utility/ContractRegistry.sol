@@ -48,7 +48,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
       *
       * @return contract address
     */
-    function addressOf(bytes32 _contractName) public override view returns (address) {
+    function addressOf(bytes32 _contractName) public view override returns (address) {
         return items[_contractName].contractAddress;
     }
 

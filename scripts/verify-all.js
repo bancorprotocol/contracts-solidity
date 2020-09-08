@@ -113,7 +113,8 @@ const get = (contractId, guid) => {
 const parse = (str) => {
     try {
         return JSON.parse(str);
-    } catch (error) {
+    }
+    catch (error) {
         return {};
     }
 };

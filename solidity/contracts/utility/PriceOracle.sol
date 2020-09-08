@@ -90,8 +90,8 @@ contract PriceOracle is IPriceOracle, Utils {
     */
     function latestRate(IERC20Token _tokenA, IERC20Token _tokenB)
         public
-        override
         view
+        override
         supportedTokens(_tokenA, _tokenB)
         returns (uint256, uint256)
     {
@@ -128,8 +128,8 @@ contract PriceOracle is IPriceOracle, Utils {
     */
     function lastUpdateTime()
         public
-        override
         view
+        override
         returns (uint256) {
         // returns the oldest timestamp between the two
         uint256 timestampA = tokenAOracle.latestTimestamp();
@@ -150,8 +150,8 @@ contract PriceOracle is IPriceOracle, Utils {
     */
     function latestRateAndUpdateTime(IERC20Token _tokenA, IERC20Token _tokenB)
         public
-        override
         view
+        override
         returns (uint256, uint256, uint256)
     {
         (uint256 numerator, uint256 denominator) = latestRate(_tokenA, _tokenB);

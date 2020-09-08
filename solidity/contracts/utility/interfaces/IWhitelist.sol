@@ -4,6 +4,6 @@ pragma solidity 0.6.12;
 /*
     Whitelist interface
 */
-abstract contract IWhitelist {
-    function isWhitelisted(address _address) public virtual view returns (bool);
+interface IWhitelist {
+    function isWhitelisted(address _address) external view returns (bool);
 }

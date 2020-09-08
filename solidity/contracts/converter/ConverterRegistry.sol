@@ -163,7 +163,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @return number of anchors
     */
-    function getAnchorCount() public override view returns (uint256) {
+    function getAnchorCount() public view override returns (uint256) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getSmartTokenCount();
     }
 
@@ -172,7 +172,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @return list of anchors
     */
-    function getAnchors() public override view returns (address[] memory) {
+    function getAnchors() public view override returns (address[] memory) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getSmartTokens();
     }
 
@@ -182,7 +182,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _index index
       * @return anchor at the given index
     */
-    function getAnchor(uint256 _index) public override view returns (IConverterAnchor) {
+    function getAnchor(uint256 _index) public view override returns (IConverterAnchor) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getSmartToken(_index);
     }
 
@@ -192,7 +192,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _value value
       * @return true if the given value is an anchor, false if not
     */
-    function isAnchor(address _value) public override view returns (bool) {
+    function isAnchor(address _value) public view override returns (bool) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).isSmartToken(_value);
     }
 
@@ -201,7 +201,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @return number of liquidity pools
     */
-    function getLiquidityPoolCount() public override view returns (uint256) {
+    function getLiquidityPoolCount() public view override returns (uint256) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getLiquidityPoolCount();
     }
 
@@ -210,7 +210,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @return list of liquidity pools
     */
-    function getLiquidityPools() public override view returns (address[] memory) {
+    function getLiquidityPools() public view override returns (address[] memory) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getLiquidityPools();
     }
 
@@ -220,7 +220,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _index index
       * @return liquidity pool at the given index
     */
-    function getLiquidityPool(uint256 _index) public override view returns (IConverterAnchor) {
+    function getLiquidityPool(uint256 _index) public view override returns (IConverterAnchor) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getLiquidityPool(_index);
     }
 
@@ -230,7 +230,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _value value
       * @return true if the given value is a liquidity pool, false if not
     */
-    function isLiquidityPool(address _value) public override view returns (bool) {
+    function isLiquidityPool(address _value) public view override returns (bool) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).isLiquidityPool(_value);
     }
 
@@ -239,7 +239,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @return number of convertible tokens
     */
-    function getConvertibleTokenCount() public override view returns (uint256) {
+    function getConvertibleTokenCount() public view override returns (uint256) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokenCount();
     }
 
@@ -248,7 +248,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       *
       * @return list of convertible tokens
     */
-    function getConvertibleTokens() public override view returns (address[] memory) {
+    function getConvertibleTokens() public view override returns (address[] memory) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokens();
     }
 
@@ -258,7 +258,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _index index
       * @return convertible token at the given index
     */
-    function getConvertibleToken(uint256 _index) public override view returns (IERC20Token) {
+    function getConvertibleToken(uint256 _index) public view override returns (IERC20Token) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleToken(_index);
     }
 
@@ -268,7 +268,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _value value
       * @return true if the given value is a convertible token, false if not
     */
-    function isConvertibleToken(address _value) public override view returns (bool) {
+    function isConvertibleToken(address _value) public view override returns (bool) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).isConvertibleToken(_value);
     }
 
@@ -278,7 +278,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _convertibleToken convertible token
       * @return number of anchors associated with the given convertible token
     */
-    function getConvertibleTokenAnchorCount(IERC20Token _convertibleToken) public override view returns (uint256) {
+    function getConvertibleTokenAnchorCount(IERC20Token _convertibleToken) public view override returns (uint256) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokenCount(_convertibleToken);
     }
 
@@ -288,7 +288,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _convertibleToken convertible token
       * @return list of anchors associated with the given convertible token
     */
-    function getConvertibleTokenAnchors(IERC20Token _convertibleToken) public override view returns (address[] memory) {
+    function getConvertibleTokenAnchors(IERC20Token _convertibleToken) public view override returns (address[] memory) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartTokens(_convertibleToken);
     }
 
@@ -298,7 +298,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _index index
       * @return anchor associated with the given convertible token at the given index
     */
-    function getConvertibleTokenAnchor(IERC20Token _convertibleToken, uint256 _index) public override view returns (IConverterAnchor) {
+    function getConvertibleTokenAnchor(IERC20Token _convertibleToken, uint256 _index) public view override returns (IConverterAnchor) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).getConvertibleTokenSmartToken(_convertibleToken, _index);
     }
 
@@ -309,7 +309,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @param _value value
       * @return true if the given value is an anchor of the given convertible token, false if not
     */
-    function isConvertibleTokenAnchor(IERC20Token _convertibleToken, address _value) public override view returns (bool) {
+    function isConvertibleTokenAnchor(IERC20Token _convertibleToken, address _value) public view override returns (bool) {
         return IConverterRegistryData(addressOf(CONVERTER_REGISTRY_DATA)).isConvertibleTokenSmartToken(_convertibleToken, _value);
     }
 
