@@ -1,14 +1,23 @@
-### 0.6.14 (2020-08-25)
+### 0.6.15
+General
+* Updated all "contract interfaces" to real interfaces
+* Cleaned up conventions
+
+LiquidityPoolV2Converter
+* Updated the fee structure to standard fee / oracle deviation fee
+
+
+### 0.6.14
 General
 * Upgraded contracts/solidity compiler to v0.6.12
 
 
-### 0.6.13 (2020-08-22)
+### 0.6.13
 LiquidityPoolV2Converter
 * Allow the owner to update the amplification factor
 
 
-### 0.6.12 (2020-08-19)
+### 0.6.12
 LiquidityPoolV2Converter
 * Allow the owner to update the external rate propagation time
 
@@ -16,7 +25,7 @@ PriceOracle
 * Fixed `lastUpdateTime` to return the latest time between the oracles
 
 
-### 0.6.11 (2020-08-18)
+### 0.6.11
 LiquidityPoolV2Converter
 * Updated weights/fees logic
 
@@ -24,22 +33,22 @@ LiquidTokenConverter
 * Initial purchase/supply now takes the reserve weight into account
 
 
-### 0.6.10 (2020-08-07)
+### 0.6.10
 LiquidityPoolV2Converter
 * Fixed an issue in the upgrade process
 
 
-### 0.6.9 (2020-08-07)
+### 0.6.9
 LiquidityPoolV2Converter
 * Upgraded dynamic fee mechanism
 
 
-### 0.6.8 (2020-07-31)
+### 0.6.8
 Converters
 * Updated version number
 
 
-### 0.6.7 (2020-07-31)
+### 0.6.7
 General
 * Added LiquidityPoolV2Converter
 * Added a Chainlink price oracle proxy contract
@@ -54,7 +63,7 @@ Converter Factory
 * Added the converter type to the `NewConverter` event
 
 
-### 0.6.6 (2020-07-16)
+### 0.6.6
 General
 * Updated truffle to 5.1.32
 * Updated web3.js to 1.2.9
@@ -66,7 +75,7 @@ General
 * Various tests updates and improvements
 
 
-### 0.6.5 (2020-06-29)
+### 0.6.5
 General
 * Renamed `rate` related functions to `targetAmount` for clarity
 
@@ -74,12 +83,12 @@ LiquidityPoolV1Converter
 * Fixed an issue when adding liquidity that only added a fraction of the requested amount
 
 
-### 0.6.4 (2020-06-18)
+### 0.6.4
 TokenHandler
 * Fixed a security vulnerability that allowed any wallet to invoke the transfer functions
 
 
-### 0.6.3 (2020-06-17)
+### 0.6.3
 BancorNetwork
 * Fixed an issue in the backward compatibility layer for older converters
 
@@ -87,17 +96,17 @@ ConverterUpgrader
 * Fixed an issue in the backward compatibility layer for older converters
 
 
-### 0.6.2 (2020-06-16)
+### 0.6.2
 BancorNetwork
 * Added backward compatibility to `rateByPath`
 
 
-### 0.6.1 (2020-06-16)
+### 0.6.1
 ConverterRegistry
 * Fixed a bug that prevented removal of older converters from the registry
 
 
-### 0.6.0 (2020-06-15)
+### 0.6.0
 General
 * Major upgrade, many improvements and design changes (new backward compatibility layer still supports most of older interfaces)
 * Major gas optimization on conversions
@@ -135,17 +144,17 @@ BancorX
 * Removed support for smart tokens for security reasons. Allowance should be used instead
 
 
-### 0.5.19 (2020-04-18)
+### 0.5.19
 BancorConverter
 * Added re-entrancy protection
 
 
-### 0.5.18 (2020-03-05)
+### 0.5.18
 BancorConverterRegistry
 * Reverted the signature change of `getLiquidityPoolByReserveConfig` (logic is still intact)
 
 
-### 0.5.16 (2020-03-05)
+### 0.5.16
 BancorConverter
 * Removed `Manager` permission/code
 * `totalReserveRatio` is now public
@@ -154,12 +163,12 @@ BancorConverterRegistry
 * Fixed a bug with identifying converters with similar configurations
 
 
-### 0.5.15 (2020-01-23)
+### 0.5.15
 EtherToken
 * Name & symbol are now constructor args
 
 
-### 0.5.14 (2020-01-21)
+### 0.5.14
 BancorNetwork
 * Removed signature/gas price limit logic
 
@@ -176,7 +185,7 @@ EtherToken
 * Added `depositTo` function for direct depositing to another account for gas optimization
 
 
-### 0.5.13 (2020-01-09)
+### 0.5.13
 BancorNetwork
 * Added a new Conversion event that gets emitted for any conversion in the network
 
@@ -186,7 +195,7 @@ BancorConverter
 * Removed the virtual balance mechanism
 
 
-### 0.5.12 (2019-12-19)
+### 0.5.12
 General
 * Better handling for non standard ERC20 tokens's transfer function (removed NonStandardTokenRegistry contract, gas optimization)
 
@@ -194,7 +203,7 @@ BancorConverterRegistry
 * Fixed an issue that allowed adding duplicate pools to the registry in certain situations
 
 
-### 0.5.11 (2019-12-17)
+### 0.5.11
 General
 * Added the BancorNetworkPathFinder contract, now compatible with the new converter registry contract
 
@@ -207,12 +216,12 @@ BancorConverterRegistry
 * Added a utility function that returns a list of converters for a given list of smart tokens
 
 
-### 0.5.8-10 (2019-12-12)
+### 0.5.8-10
 General
 * Minor cleanups
 
 
-### 0.5.7 (2019-12-12)
+### 0.5.7
 General:
 * Added ContractRegistryClient contract for common contract registry behavior and cleaner access, and updated all registry clients
 
@@ -227,13 +236,13 @@ BancorFormula:
 * Added calculations for fund/liquidate in non 50%/50% reserves
 
 
-### 0.5.6 (2019-11-18)
+### 0.5.6
 BancorConverter:
 * Updated the virtual balances mechanism - it now scales all reserve balances by the same factor
 and is only relevant to cross reserve conversions
 
 
-### 0.5.5 (2019-11-05)
+### 0.5.5
 BancorNetwork:
 * Added affiliate fee support in xConvert & xConvertPrioritized
 
@@ -241,7 +250,7 @@ SmartTokenController:
 * Removed the disableTokenTransfers function
 
 
-### 0.5.4 (2019-11-03)
+### 0.5.4
 General:
 * Added a testnet/private chain deployment script/migration
 * Updated the readme file with more tutorials on the various scripts
@@ -250,7 +259,7 @@ ERC20Token:
 * Cleaned up construction, added the total supply as a constructor arg
 
 
-### 0.5.3 (2019-10-22)
+### 0.5.3
 General:
 * Cleaned up all compilation warnings
 
@@ -258,13 +267,13 @@ BancorConverter:
 * Added a protection against activation with no token supply
 
 
-### 0.5.2 (2019-10-07)
+### 0.5.2
 BancorConverterRegistry
 * Added events when adding/removing tokens
 * Removing the last converter of a token will now also remove the token from the list of tokens
 
 
-### 0.5.1 (2019-10-07)
+### 0.5.1
 General:
 * Added the BancorNetworkPathFinder contract
 
@@ -273,19 +282,19 @@ BancorConverterFactory
 * Removing the last converter for a token will now also remove the token from the list of tokens
 
 
-### 0.5.0 (2019-09-25)
+### 0.5.0
 General:
 * Terminology changes (Connector -> Reserve, Weight -> Ratio)
 * Compiler upgraded to 0.4.26
 * Truffle upgraded to 4.1.16
 
 
-### 0.4.12 (2019-09-01)
+### 0.4.12
 General:
 * Fixed line breaks in documentation
 
 
-### 0.4.11 (2019-08-29)
+### 0.4.11
 BancorNetwork:
 * Added support for affilate fee
 
@@ -293,17 +302,17 @@ BancorConverter:
 * Minor cleanups / bug fixes
 
 
-### 0.4.10 (2019-08-21)
+### 0.4.10
 BancorX:
 * Added support for any ERC20/Smart token (was previously BNT specific)
 
 
-### 0.4.9 (2019-08-18)
+### 0.4.9
 Converters:
 * Fixed a rounding error in the `fund` function
 
 
-### 0.4.8 (2019-07-20)
+### 0.4.8
 General:
 * Added support for auto generation of documentation
 * Updated contract documentation
@@ -313,11 +322,11 @@ Network:
 * Fixed an issue that caused getReturnByPath to fail if the path contained old converters
 
 
-### 0.4.7 (2019-05-11)
+### 0.4.7
 * added the ConverterRegistry contract
 
 
-### 0.4.6 (2019-01-29)
+### 0.4.6
 General:
 * Added support for non standard ERC-20 tokens
 * Added NonStandardTokenRegistry contract to support non standard ERC-20 tokens
@@ -326,7 +335,7 @@ Network:
 * Removed `convertForMultiple`
 
 
-### 0.4.5 (2019-01-23)
+### 0.4.5
 General:
 * Minor cleanups / bug fixes
 * Moved to SafeMath
@@ -344,7 +353,7 @@ Network:
 * Added `convertForPrioritized3` with backwards compatibility to now receive a custom value along with the amount for verifying trusted senders
 
 
-### 0.4.4 (2018-06-23)
+### 0.4.4
 General:
 * Minor cleanups / bug fixes
 * Upgraded compiler version to 0.4.24
@@ -363,7 +372,7 @@ Registry:
 * Fixed item removal
 
 
-### 0.4.3 (2018-06-23)
+### 0.4.3
 General:
 * Upgraded compiler version to 0.4.23
 * Updated all contracts to make use of the new `constructor` keyword
@@ -373,7 +382,7 @@ Utilities:
 * ContractRegistry - added support for querying the number of items/contract names in the registry
 
 
-### 0.4.2 (2018-06-10)
+### 0.4.2
 General:
 * Added more predefined contract ids
 
@@ -381,12 +390,12 @@ Bug fixes:
 * Fixed a crash in BancorConverterUpgrader when trying to upgrade converters with virtual connector balance
 
 
-### 0.4.1 (2018-06-07)
+### 0.4.1
 Bug fixes:
 * Fixed BancorNetwork contract backward compatibility with older converters
 
 
-### 0.4.0 (2018-06-06)
+### 0.4.0
 General:
  * Restructured contract folders
  * Upgraded compiler version to 0.4.21
