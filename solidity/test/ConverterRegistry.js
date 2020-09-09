@@ -83,6 +83,7 @@ contract('ConverterRegistry', (accounts) => {
             return testEvents(res, converter, 'Added');
         };
 
+        let converter1;
         let converter2;
         let converter3;
         let converter4;
@@ -116,6 +117,7 @@ contract('ConverterRegistry', (accounts) => {
             tokenC = await SmartToken.new('TokenC', 'TKNC', 18);
             tokenE = await SmartToken.new('TokenE', 'TKNE', 18);
 
+            converter1 = await ConverterHelper.new(0, token1.address, contractRegistry.address, 0, etherToken.address, 0x1000, 23);
             converter2 = await ConverterHelper.new(0, token2.address, contractRegistry.address, 0, token4.address, 0x2400, 23);
             converter3 = await ConverterHelper.new(0, token3.address, contractRegistry.address, 0, token6.address, 0x3600, 23);
             converter4 = await ConverterHelper.new(0, token4.address, contractRegistry.address, 0, token8.address, 0x4800, 23);
@@ -130,6 +132,7 @@ contract('ConverterRegistry', (accounts) => {
             await converter6.addReserve(token1.address, 0x6100);
             await converter7.addReserve(token2.address, 0x7200);
 
+            await token1.issue(accounts[0], 1);
             await token2.issue(accounts[0], 1);
             await token3.issue(accounts[0], 1);
             await token4.issue(accounts[0], 1);
@@ -137,6 +140,7 @@ contract('ConverterRegistry', (accounts) => {
             await token6.issue(accounts[0], 1);
             await token7.issue(accounts[0], 1);
 
+            await token1.transferOwnership(converter1.address);
             await token2.transferOwnership(converter2.address);
             await token3.transferOwnership(converter3.address);
             await token4.transferOwnership(converter4.address);
@@ -144,6 +148,7 @@ contract('ConverterRegistry', (accounts) => {
             await token6.transferOwnership(converter6.address);
             await token7.transferOwnership(converter7.address);
 
+            await converter1.acceptTokenOwnership();
             await converter2.acceptTokenOwnership();
             await converter3.acceptTokenOwnership();
             await converter4.acceptTokenOwnership();
@@ -153,6 +158,7 @@ contract('ConverterRegistry', (accounts) => {
         });
 
         const addConverters = async () => {
+            await testAdd(converter1);
             await testAdd(converter2);
             await testAdd(converter3);
             await testAdd(converter4);
@@ -162,6 +168,7 @@ contract('ConverterRegistry', (accounts) => {
         };
 
         const removeConverters = async () => {
+            await testRemove(converter1);
             await testRemove(converter2);
             await testRemove(converter3);
             await testRemove(converter4);
@@ -180,6 +187,7 @@ contract('ConverterRegistry', (accounts) => {
             });
 
             it('should not allow to add the same converter twice', async () => {
+                await expectRevert(converterRegistry.addConverter(converter1.address), 'ERR_INVALID_ITEM');
                 await expectRevert(converterRegistry.addConverter(converter2.address), 'ERR_INVALID_ITEM');
                 await expectRevert(converterRegistry.addConverter(converter3.address), 'ERR_INVALID_ITEM');
                 await expectRevert(converterRegistry.addConverter(converter4.address), 'ERR_INVALID_ITEM');
@@ -242,8 +250,8 @@ contract('ConverterRegistry', (accounts) => {
             });
 
             it('should return a list of converters for a list of tokens', async () => {
-                const tokens = [token2.address, token3.address];
-                const expected = [converter2.address, converter3.address];
+                const tokens = [token1.address, token2.address, token3.address];
+                const expected = [converter1.address, converter2.address, converter3.address];
                 const actual = await converterRegistry.getConvertersByAnchors.call(tokens);
                 expect(actual).to.deep.eql(expected);
             });
@@ -258,6 +266,7 @@ contract('ConverterRegistry', (accounts) => {
                 });
 
                 it('should not allow to remove the same converter twice', async () => {
+                    await expectRevert(converterRegistry.removeConverter(converter1.address), 'ERR_INVALID_ITEM');
                     await expectRevert(converterRegistry.removeConverter(converter2.address), 'ERR_INVALID_ITEM');
                     await expectRevert(converterRegistry.removeConverter(converter3.address), 'ERR_INVALID_ITEM');
                     await expectRevert(converterRegistry.removeConverter(converter4.address), 'ERR_INVALID_ITEM');
