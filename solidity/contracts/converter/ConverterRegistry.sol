@@ -526,10 +526,10 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     bytes4 private constant CONVERTER_TYPE_FUNC_SELECTOR = bytes4(keccak256("converterType()"));
 
     // utility to get the converter type (including from older converters that don't support the new converterType function)
-    function getConverterType(IConverter _converter) private view returns (uint8) {
+    function getConverterType(IConverter _converter) private view returns (uint16) {
         (bool success, bytes memory returnData) = address(_converter).staticcall(abi.encodeWithSelector(CONVERTER_TYPE_FUNC_SELECTOR));
-        if (success) 
-            return abi.decode(returnData, (uint8));
+        if (success && returnData.length == 32) 
+            return abi.decode(returnData, (uint16));
         return 1;
     }
 
