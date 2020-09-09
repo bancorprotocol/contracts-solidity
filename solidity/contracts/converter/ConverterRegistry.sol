@@ -359,7 +359,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         }
 
         // return if a liquidity pool with the same configuration is already registered
-        return getLiquidityPoolByConfig(_converter.converterType(), reserveTokens, reserveWeights) != IConverterAnchor(0);
+        return getLiquidityPoolByConfig(getConverterType(_converter), reserveTokens, reserveWeights) != IConverterAnchor(0);
     }
 
     /**
@@ -503,7 +503,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     }
 
     function isConverterReserveConfigEqual(IConverter _converter, uint16 _type, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) private view returns (bool) {
-        if (_type != _converter.converterType())
+        if (_type != getConverterType(_converter))
             return false;
 
         if (_reserveTokens.length != _converter.connectorTokenCount())
@@ -521,6 +521,16 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     function getReserveWeight(IConverter _converter, IERC20Token _reserveToken) private view returns (uint32) {
         (, uint32 weight,,,) = _converter.connectors(_reserveToken);
         return weight;
+    }
+
+    bytes4 private constant CONVERTER_TYPE_FUNC_SELECTOR = bytes4(keccak256("converterType()"));
+
+    // utility to get the converter type (including from older converters that don't support the new converterType function)
+    function getConverterType(IConverter _converter) private view returns (uint8) {
+        (bool success, bytes memory returnData) = address(_converter).staticcall(abi.encodeWithSelector(CONVERTER_TYPE_FUNC_SELECTOR));
+        if (success) 
+            return abi.decode(returnData, (uint8));
+        return 1;
     }
 
     /**
