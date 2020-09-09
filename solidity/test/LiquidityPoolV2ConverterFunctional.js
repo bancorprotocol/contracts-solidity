@@ -57,7 +57,7 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
 
         whitelist = await Whitelist.new();
         container = await PoolTokensContainer.new('pool', 'pool', 0);
-        converter = await LiquidityPoolV2Converter.new(container.address, contractRegistry.address, 0);
+        converter = await LiquidityPoolV2Converter.new(container.address, contractRegistry.address, percentageToPPM('100%'));
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
         priceOracles = [];
@@ -89,8 +89,8 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
             case 'setRates':
                 await setRates(command.pTokenRate, command.sTokenRate);
                 break;
-            case 'setFeeFactors':
-                await setFeeFactors(command.lowFeeFactor, command.highFeeFactor);
+            case 'setFees':
+                await setFees(command.conversionFee, command.oracleDeviationFee);
                 break;
             case 'addLiquidity':
                 await addLiquidity(command.tokenId, command.userId, command.inputAmount, command.outputAmount);
@@ -140,8 +140,9 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
         await priceOracles[1].setTimestamp(timestamp);
     }
 
-    async function setFeeFactors(lowFeeFactor, highFeeFactor) {
-        await converter.setFeeFactors(percentageToPPM(lowFeeFactor), percentageToPPM(highFeeFactor));
+    async function setFees(conversionFee, oracleDeviationFee) {
+        await converter.setConversionFee(percentageToPPM(conversionFee));
+        await converter.setOracleDeviationFee(percentageToPPM(oracleDeviationFee));
     }
 
     async function addLiquidity(tokenId, userId, inputAmount, outputAmount) {
