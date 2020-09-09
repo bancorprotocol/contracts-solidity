@@ -602,6 +602,6 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @dev deprecated, backward compatibility, use `getLiquidityPoolByConfig`
     */
     function getLiquidityPoolByReserveConfig(IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) public view returns (IConverterAnchor) {
-        return getLiquidityPoolByConfig(1, _reserveTokens, _reserveWeights);
+        return getLiquidityPoolByConfig(_reserveTokens.length > 1 ? 1 : 0, _reserveTokens, _reserveWeights);
     }
 }
