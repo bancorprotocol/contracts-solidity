@@ -64,6 +64,7 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
         for (let i = 0; i < 2; i++) {
             priceOracles[i] = await ChainlinkPriceOracle.new();
             await whitelist.addAddress(priceOracles[i].address);
+            await priceOracles[i].setAnswer(1);
         }
 
         await timeIncrease(1);
