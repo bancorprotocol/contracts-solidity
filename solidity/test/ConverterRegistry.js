@@ -322,7 +322,7 @@ contract('ConverterRegistry', (accounts) => {
         });
     });
 
-    describe('add converters', () => {
+    describe('add new converters', () => {
         const testAdd = async (converter) => {
             const res = await converterRegistry.addConverter(converter.address);
 
@@ -577,7 +577,7 @@ contract('ConverterRegistry', (accounts) => {
         });
     });
 
-    describe('create converters', () => {
+    describe('create new converters', () => {
         const testCreate = async (type, name, symbol, decimals, maxConversionFee, reserveTokens, reserveWeights) => {
             const res = await converterRegistry.newConverter(type, name, symbol, decimals, maxConversionFee,
                 reserveTokens, reserveWeights);
