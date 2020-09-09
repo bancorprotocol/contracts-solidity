@@ -197,7 +197,7 @@ contract('ConverterRegistry', (accounts) => {
             });
 
             it('should find liquidity pool by its configuration', async () => {
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [etherToken.address], [0x1000]))
+                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000]))
                     .to.eql(ZERO_ADDRESS);
                 expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token4.address], [0x2400, 0x2100]))
                     .to.eql(ZERO_ADDRESS);
@@ -276,7 +276,7 @@ contract('ConverterRegistry', (accounts) => {
                 });
 
                 it('should not be able to find liquidity pool by its configuration', async () => {
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [etherToken.address], [0x1000]))
+                    expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000]))
                         .to.eql(ZERO_ADDRESS);
                     expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token4.address], [0x2400, 0x2100]))
                         .to.eql(ZERO_ADDRESS);
@@ -452,7 +452,7 @@ contract('ConverterRegistry', (accounts) => {
             });
 
             it('should find liquidity pool by its configuration', async () => {
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [etherToken.address], [0x1000]))
+                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000]))
                     .to.eql(ZERO_ADDRESS);
                 expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor4.address], [0x2400, 0x2100]))
                     .to.eql(ZERO_ADDRESS);
@@ -531,7 +531,7 @@ contract('ConverterRegistry', (accounts) => {
                 });
 
                 it('should not be able to find liquidity pool by its configuration', async () => {
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [etherToken.address], [0x1000]))
+                    expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000]))
                         .to.eql(ZERO_ADDRESS);
                     expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor4.address], [0x2400, 0x2100]))
                         .to.eql(ZERO_ADDRESS);
@@ -646,11 +646,11 @@ contract('ConverterRegistry', (accounts) => {
             });
 
             it('should find liquidity pool by its configuration', async () => {
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [ETH_RESERVE_ADDRESS], [0x1000]))
+                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [ETH_RESERVE_ADDRESS], [0x1000]))
                     .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [erc20Token1.address], [0x2100]))
+                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [erc20Token1.address], [0x2100]))
                     .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [erc20Token2.address], [0x3200]))
+                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [erc20Token2.address], [0x3200]))
                     .to.eql(ZERO_ADDRESS);
                 expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]))
                     .to.eql(anchors[3]);
@@ -680,11 +680,11 @@ contract('ConverterRegistry', (accounts) => {
                 });
 
                 it('should not be able to find liquidity pool by its configuration', async () => {
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [ETH_RESERVE_ADDRESS], [0x1000]))
+                    expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [ETH_RESERVE_ADDRESS], [0x1000]))
                         .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [erc20Token1.address], [0x2100]))
+                    expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [erc20Token1.address], [0x2100]))
                         .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [erc20Token2.address], [0x3200]))
+                    expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [erc20Token2.address], [0x3200]))
                         .to.eql(ZERO_ADDRESS);
                     expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]))
                         .to.eql(ZERO_ADDRESS);
