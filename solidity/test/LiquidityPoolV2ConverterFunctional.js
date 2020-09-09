@@ -86,11 +86,11 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
             case 'newPool':
                 await newPool(command.pTokenId, command.sTokenId, command.numOfUsers);
                 break;
-            case 'setRates':
-                await setRates(command.pTokenRate, command.sTokenRate);
-                break;
             case 'setFees':
                 await setFees(command.conversionFee, command.oracleDeviationFee);
+                break;
+            case 'setRates':
+                await setRates(command.pTokenRate, command.sTokenRate);
                 break;
             case 'addLiquidity':
                 await addLiquidity(command.tokenId, command.userId, command.inputAmount, command.outputAmount);
@@ -133,16 +133,16 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
         };
     }
 
+    async function setFees(conversionFee, oracleDeviationFee) {
+        await converter.setConversionFee(percentageToPPM(conversionFee));
+        await converter.setOracleDeviationFee(percentageToPPM(oracleDeviationFee));
+    }
+
     async function setRates(pTokenRate, sTokenRate) {
         await priceOracles[0].setAnswer(pTokenRate);
         await priceOracles[1].setAnswer(sTokenRate);
         await priceOracles[0].setTimestamp(timestamp);
         await priceOracles[1].setTimestamp(timestamp);
-    }
-
-    async function setFees(conversionFee, oracleDeviationFee) {
-        await converter.setConversionFee(percentageToPPM(conversionFee));
-        await converter.setOracleDeviationFee(percentageToPPM(oracleDeviationFee));
     }
 
     async function addLiquidity(tokenId, userId, inputAmount, outputAmount) {
