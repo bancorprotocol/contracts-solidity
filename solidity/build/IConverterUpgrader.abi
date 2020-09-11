@@ -1,1 +1,0 @@
-[{"inputs":[{"internalType":"uint16","name":"_version","type":"uint16"}],"name":"upgrade","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"_version","type":"bytes32"}],"name":"upgrade","outputs":[],"stateMutability":"nonpayable","type":"function"}]
