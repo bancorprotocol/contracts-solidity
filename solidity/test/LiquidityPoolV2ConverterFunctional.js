@@ -57,13 +57,14 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
 
         whitelist = await Whitelist.new();
         container = await PoolTokensContainer.new('pool', 'pool', 0);
-        converter = await LiquidityPoolV2Converter.new(container.address, contractRegistry.address, 0);
+        converter = await LiquidityPoolV2Converter.new(container.address, contractRegistry.address, percentageToPPM('100%'));
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
         priceOracles = [];
         for (let i = 0; i < 2; i++) {
             priceOracles[i] = await ChainlinkPriceOracle.new();
             await whitelist.addAddress(priceOracles[i].address);
+            await priceOracles[i].setAnswer(1);
         }
 
         await timeIncrease(1);
@@ -86,11 +87,11 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
             case 'newPool':
                 await newPool(command.pTokenId, command.sTokenId, command.numOfUsers);
                 break;
+            case 'setFees':
+                await setFees(command.conversionFee, command.oracleDeviationFee);
+                break;
             case 'setRates':
                 await setRates(command.pTokenRate, command.sTokenRate);
-                break;
-            case 'setFeeFactors':
-                await setFeeFactors(command.lowFeeFactor, command.highFeeFactor);
                 break;
             case 'addLiquidity':
                 await addLiquidity(command.tokenId, command.userId, command.inputAmount, command.outputAmount);
@@ -133,15 +134,16 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
         };
     }
 
+    async function setFees(conversionFee, oracleDeviationFee) {
+        await converter.setConversionFee(percentageToPPM(conversionFee));
+        await converter.setOracleDeviationFee(percentageToPPM(oracleDeviationFee));
+    }
+
     async function setRates(pTokenRate, sTokenRate) {
         await priceOracles[0].setAnswer(pTokenRate);
         await priceOracles[1].setAnswer(sTokenRate);
         await priceOracles[0].setTimestamp(timestamp);
         await priceOracles[1].setTimestamp(timestamp);
-    }
-
-    async function setFeeFactors(lowFeeFactor, highFeeFactor) {
-        await converter.setFeeFactors(percentageToPPM(lowFeeFactor), percentageToPPM(highFeeFactor));
     }
 
     async function addLiquidity(tokenId, userId, inputAmount, outputAmount) {

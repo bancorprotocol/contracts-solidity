@@ -83,14 +83,17 @@ class Branch():
         }
 
 class Pool():
-    def __init__(self, id, amp, fee, factor, mainToken, sideToken):
+    def __init__(self, id, amp, mainToken, sideToken):
         self.id = id
         self.amp = amp
-        self.fee = fee
-        self.factor = factor
+        self.cFee = 0
+        self.dFee = 0
         self.mainSymbol = mainToken.symbol
         self.sideSymbol = sideToken.symbol
         self.branches = {token.symbol: Branch(token) for token in [mainToken, sideToken]} 
+    def setFees(self, cFee, dFee):
+        self.cFee = cFee
+        self.dFee = dFee
     def setRates(self, mainRate, sideRate):
         self.branches[self.mainSymbol].reserveRate = mainRate
         self.branches[self.sideSymbol].reserveRate = sideRate
@@ -113,13 +116,11 @@ class Pool():
             targetBranch.reserveWeight,
             amount
         )
-        sFee = self.fee
-        dFee = add(sFee, self._adjustedFee())
-        sAmount = div(mul(targetAmount, sFee), PPM_RESOLUTION)
-        dAmount = div(mul(targetAmount, dFee), PPM_RESOLUTION)
+        cAmount = div(mul(targetAmount, self.cFee), PPM_RESOLUTION)
+        dAmount = div(mul(targetAmount, self.dFee), PPM_RESOLUTION)
         sourceBranch.reserveToken.transfer(user, self.id, amount)
         targetBranch.reserveToken.transfer(self.id, user, sub(targetAmount, dAmount))
-        targetBranch.reserveStaked = add(targetBranch.reserveStaked, sAmount)
+        targetBranch.reserveStaked = add(targetBranch.reserveStaked, cAmount)
     def closeArbitrage(self, user):
         self._updateWeights()
         mainBranch = self.branches[self.mainSymbol]
@@ -148,23 +149,17 @@ class Pool():
             )
             mainBranch.reserveWeight = mainWeight
             sideBranch.reserveWeight = sideWeight
-    def _adjustedFee(self):
-        mainBranch = self.branches[self.mainSymbol]
-        sideBranch = self.branches[self.sideSymbol]
-        x = mul(mul(mainBranch.reserveStaked, mainBranch.reserveRate), sideBranch.reserveWeight)
-        y = mul(mul(sideBranch.reserveStaked, sideBranch.reserveRate), mainBranch.reserveWeight)
-        return div(mul(mul(sub(y, x), self.amp), self.factor), mul(y, PPM_RESOLUTION)) if y > 0 else 0
     def serialize(self):
         return {
             'amp': self.amp,
-            'fee': self.fee,
-            'factor': self.factor,
+            'cFee': self.cFee,
+            'dFee': self.dFee,
             self.mainSymbol: self.branches[self.mainSymbol].serialize(),
             self.sideSymbol: self.branches[self.sideSymbol].serialize(),
         }
 
-def newPool(amp, fee, factor, mainSymbol, sideSymbol, numOfUsers, initialAmount):
-    pool = Pool('pool', amp, fee, factor, Token(mainSymbol), Token(sideSymbol))
+def newPool(amp, mainSymbol, sideSymbol, numOfUsers, initialAmount):
+    pool = Pool('pool', amp, Token(mainSymbol), Token(sideSymbol))
     for symbol in [mainSymbol, sideSymbol]:
         pool.branches[symbol].reserveToken.register(pool.id)
         for i in range(numOfUsers):

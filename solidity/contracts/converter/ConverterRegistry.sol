@@ -359,7 +359,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         }
 
         // return if a liquidity pool with the same configuration is already registered
-        return getLiquidityPoolByConfig(_converter.converterType(), reserveTokens, reserveWeights) != IConverterAnchor(0);
+        return getLiquidityPoolByConfig(getConverterType(_converter, reserveTokenCount), reserveTokens, reserveWeights) != IConverterAnchor(0);
     }
 
     /**
@@ -503,10 +503,12 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     }
 
     function isConverterReserveConfigEqual(IConverter _converter, uint16 _type, IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) private view returns (bool) {
-        if (_type != _converter.converterType())
+        uint256 reserveTokenCount = _converter.connectorTokenCount();
+
+        if (_type != getConverterType(_converter, reserveTokenCount))
             return false;
 
-        if (_reserveTokens.length != _converter.connectorTokenCount())
+        if (_reserveTokens.length != reserveTokenCount)
             return false;
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
@@ -521,6 +523,16 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     function getReserveWeight(IConverter _converter, IERC20Token _reserveToken) private view returns (uint32) {
         (, uint32 weight,,,) = _converter.connectors(_reserveToken);
         return weight;
+    }
+
+    bytes4 private constant CONVERTER_TYPE_FUNC_SELECTOR = bytes4(keccak256("converterType()"));
+
+    // utility to get the converter type (including from older converters that don't support the new converterType function)
+    function getConverterType(IConverter _converter, uint256 _reserveTokenCount) private view returns (uint16) {
+        (bool success, bytes memory returnData) = address(_converter).staticcall(abi.encodeWithSelector(CONVERTER_TYPE_FUNC_SELECTOR));
+        if (success && returnData.length == 32) 
+            return abi.decode(returnData, (uint16));
+        return _reserveTokenCount > 1 ? 1 : 0;
     }
 
     /**
@@ -590,6 +602,6 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @dev deprecated, backward compatibility, use `getLiquidityPoolByConfig`
     */
     function getLiquidityPoolByReserveConfig(IERC20Token[] memory _reserveTokens, uint32[] memory _reserveWeights) public view returns (IConverterAnchor) {
-        return getLiquidityPoolByConfig(1, _reserveTokens, _reserveWeights);
+        return getLiquidityPoolByConfig(_reserveTokens.length > 1 ? 1 : 0, _reserveTokens, _reserveWeights);
     }
 }
