@@ -1,4 +1,7 @@
 ### 0.6.16
+General
+* Removed binaries from the repo
+
 ConverterRegistry
 * Fixed an issue that prevented creating a new pool if an old pool had one of the new pool's reserves
 
