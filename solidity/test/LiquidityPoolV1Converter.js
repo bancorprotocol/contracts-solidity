@@ -1,11 +1,14 @@
 const { expect } = require('chai');
-const { expectRevert, expectEvent, constants, BN, balance } = require('@openzeppelin/test-helpers');
+const { expectRevert, expectEvent, constants, BN, balance, time } = require('@openzeppelin/test-helpers');
+const Decimal = require('decimal.js');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 const { ZERO_ADDRESS } = constants;
 
+const { duration, latest } = time;
+
 const BancorNetwork = artifacts.require('BancorNetwork');
-const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
+const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
 const SmartToken = artifacts.require('SmartToken');
 const BancorFormula = artifacts.require('BancorFormula');
@@ -20,13 +23,13 @@ contract('LiquidityPoolV1Converter', accounts => {
         return LiquidityPoolV1Converter.new(tokenAddress, registryAddress, maxConversionFee);
     };
 
-    const initConverter = async (activate, isETHReserve, maxConversionFee = 0) => {
+    const initConverter = async (activate, isETHReserve, maxConversionFee = 0, isStandardPool = false) => {
         token = await SmartToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
         const converter = await createConverter(tokenAddress, contractRegistry.address, maxConversionFee);
-        await converter.addReserve(getReserve1Address(isETHReserve), 250000);
-        await converter.addReserve(reserveToken2.address, 150000);
+        await converter.addReserve(getReserve1Address(isETHReserve), isStandardPool ? 500000 : 250000);
+        await converter.addReserve(reserveToken2.address, isStandardPool ? 500000: 150000);
         await reserveToken2.transfer(converter.address, 8000);
         await token.issue(sender, 20000);
 
@@ -41,6 +44,9 @@ contract('LiquidityPoolV1Converter', accounts => {
             await token.transferOwnership(converter.address);
             await converter.acceptTokenOwnership();
         }
+
+        now = await latest();
+        await converter.setTime(now);
 
         return converter;
     };
@@ -75,6 +81,7 @@ contract('LiquidityPoolV1Converter', accounts => {
         return dm.div.negative !== 0 ? dm.div.isubn(1) : dm.div.iaddn(1);
     };
 
+    let now;
     let bancorNetwork;
     let token;
     let tokenAddress;
@@ -666,6 +673,149 @@ contract('LiquidityPoolV1Converter', accounts => {
                     expect(balance2).to.be.bignumber.equal(amount);
                 });
             }
+        }
+    });
+
+    describe.only('recent average rate', () => {
+        const AVERAGE_RATE_PERIOD = duration.minutes(10);
+
+        let converter;
+        beforeEach(async () => {
+            converter = await initConverter(true, true, 5000, true);
+        });
+
+        const getExpectedAverageRate = (prevAverageRate, currentRate, timeElapsed) => {
+            if (timeElapsed.eq(new BN(0))) {
+                return prevAverageRate;
+            }
+
+            if (timeElapsed.gte(AVERAGE_RATE_PERIOD)) {
+                return currentRate;
+            }
+
+            const newAverageRateN = prevAverageRate.n.mul(currentRate.d).mul(AVERAGE_RATE_PERIOD.sub(timeElapsed))
+                .add(prevAverageRate.d.mul(currentRate.n).mul(timeElapsed));
+            const newAverageRateD = AVERAGE_RATE_PERIOD.mul(prevAverageRate.d).mul(currentRate.d);
+
+            return { n: newAverageRateN, d: newAverageRateD };
+        };
+
+        const expectRatesAlmostEqual = (rate, newRate) => {
+            const rate1 = Decimal(rate.n.toString()).div(Decimal(rate.d.toString()));
+            const rate2 = Decimal(newRate.n.toString()).div(Decimal(newRate.d.toString()));
+
+            const ratio = rate1.div(rate2);
+            expect(ratio.gte(0.999998)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
+            expect(ratio.lte(1.000002)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
+        };
+
+        const getCurrentRate = async (reserve1Address, reserve2Address) => {
+            const rate = await converter.tokensRate.call(reserve1Address, reserve2Address);
+            return { n: rate[0], d: rate[1] };
+        };
+
+        const getAverageRate = async (reserveAddress) => {
+            const averageRate = await converter.recentAverageRate.call(reserveAddress);
+            return { n: averageRate[0], d: averageRate[1] };
+        };
+
+        const getPrevAverageRate = async () => {
+            const prevAverageRate = await converter.prevAverageRate.call();
+            return { n: prevAverageRate[0], d: prevAverageRate[1] };
+        };
+
+        it('should be initially equal to the current rate', async () => {
+            const averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
+            const currentRate = await getCurrentRate(ETH_RESERVE_ADDRESS, reserveToken2.address);
+            const prevAverageRateUpdateTime = await converter.prevAverageRateUpdateTime.call();
+
+            expect(averageRate.n).to.be.bignumber.equal(currentRate.n);
+            expect(averageRate.d).to.be.bignumber.equal(currentRate.d);
+            expect(prevAverageRateUpdateTime).to.be.bignumber.equal(new BN(0));
+        });
+
+        it('should change after a conversion', async () => {
+            const amount = new BN(500);
+
+            await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+            const prevAverageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
+            const prevAverageRateUpdateTime = await converter.prevAverageRateUpdateTime.call();
+
+            await converter.setTime(now.add(duration.seconds(10)));
+
+            await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+            const averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
+            const averageRateUpdateTime = await converter.prevAverageRateUpdateTime.call()
+            
+            expect(averageRate.n).not.to.be.bignumber.equal(prevAverageRate.n);
+            expect(averageRate.d).not.to.be.bignumber.equal(prevAverageRate.d);
+            expect(averageRateUpdateTime).not.to.be.bignumber.equal(prevAverageRateUpdateTime);
+        });
+
+        for (const seconds of [0, 1, 2, 3, 10, 100, 200, 300, 400, 500]) {
+            const timeElapsed = duration.seconds(seconds);
+            context(`${timeElapsed.toString()} seconds after conversion`, async () => {
+                beforeEach(async () => {
+                    const amount = new BN(500);
+
+                    // set initial rate (a second ago)
+                    await converter.setTime(now.sub(duration.seconds(1)));
+                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+
+                    // reset converter time to current time
+                    await converter.setTime(now);
+
+                    // convert
+                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+
+                    // increase the current time
+                    await converter.setTime(now.add(timeElapsed));
+                });
+
+                it('should properly calculate the average rate', async () => {
+                    const amount = new BN(1000);
+
+                    const prevAverageRate = await getPrevAverageRate();
+                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+                    const currentRate = await getCurrentRate(ETH_RESERVE_ADDRESS, reserveToken2.address);
+                    const expectedAverageRate = getExpectedAverageRate(prevAverageRate, currentRate, timeElapsed);
+                    const averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
+                    
+                    expectRatesAlmostEqual(averageRate, expectedAverageRate);
+                });
+
+                it('should not change more than once in a block', async () => {
+                    const amount = new BN(1000);
+
+                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+                    const averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
+
+                    for (let i = 0; i < 5; i++) {
+                        await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+                        let averageRate2 = await getAverageRate(ETH_RESERVE_ADDRESS);
+
+                        expect(averageRate.n).to.be.bignumber.equal(averageRate2.n);
+                        expect(averageRate.d).to.be.bignumber.equal(averageRate2.d);
+                    }
+                });
+
+                it('should change after some time with no conversions', async () => {
+                    const prevAverageRate = await getPrevAverageRate();
+                    const currentRate = await getCurrentRate(ETH_RESERVE_ADDRESS, reserveToken2.address);
+
+                    for (let i = 0; i < 10; i++) {
+                        // increase the current time and verify that the average rate is updated accordingly
+                        const delta = duration.seconds(10).mul(new BN(i));
+                        const totalElapsedTime = timeElapsed.add(delta);
+                        await converter.setTime(now.add(totalElapsedTime));
+
+                        const expectedAverageRate = getExpectedAverageRate(prevAverageRate, currentRate, totalElapsedTime);
+                        const averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
+
+                        expectRatesAlmostEqual(averageRate, expectedAverageRate);
+                    }
+                });
+            });
         }
     });
 });

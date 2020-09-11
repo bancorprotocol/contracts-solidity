@@ -9,11 +9,23 @@ import "../../../token/interfaces/ISmartToken.sol";
   * The liquidity pool v1 converter is a specialized version of a converter that manages
   * a classic bancor liquidity pool.
   *
-  * Even though classic pools can have many reserves, the most common configuration of
-  * the pool has 2 reserves with 50%/50% weights.
+  * Even though pools can have many reserves, the standard pool configuration
+  * is 2 reserves with 50%/50% weights.
 */
 contract LiquidityPoolV1Converter is LiquidityPoolConverter {
+    struct Fraction {
+        uint256 n;  // numerator
+        uint256 d;  // denominator
+    }
+
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
+    
+    // the period of time taken into account when calculating the recent averate rate
+    uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
+
+    // only used in standard pools
+    Fraction public prevAverageRate;          // average rate after the previous conversion (1 reserve token 0 in reserve token 1 units)
+    uint256 public prevAverageRateUpdateTime; // last time when the previous rate was updated (in seconds)
 
     /**
       * @dev triggered after a conversion with new price data
@@ -67,6 +79,25 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         super.acceptAnchorOwnership();
 
         emit Activation(converterType(), anchor, true);
+    }
+
+    /**
+      * @dev returns the rate of 1 `_token1` in `_token2` units
+      * note that the rate can only be queried for the reserves
+      *
+      * @param _token1  reserve token to get the rate of one unit of
+      * @param _token2  reserve token to get the rate of one `_token1` unit in
+      *
+      * @return rate (numerator)
+      * @return rate (denominator)
+    */
+    function tokensRate(IERC20Token _token1, IERC20Token _token2) public view returns (uint256, uint256) {
+        uint256 token1Balance = reserves[_token1].balance;
+        uint256 token2Balance = reserves[_token2].balance;
+        uint32 token1Weight = reserves[_token1].weight;
+        uint32 token2Weight = reserves[_token2].weight;
+
+        return (token2Balance.mul(token1Weight), token1Balance.mul(token2Weight));
     }
 
     /**
@@ -146,6 +177,12 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         else
             safeTransfer(_targetToken, _beneficiary, amount);
 
+        // update the recent average rate
+        if (prevAverageRateUpdateTime < time() && isStandardPool()) {
+            prevAverageRate = recentAverageRate();
+            prevAverageRateUpdateTime = time();
+        }
+
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
 
@@ -153,6 +190,67 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         dispatchTokenRateUpdateEvents(_sourceToken, _targetToken);
 
         return amount;
+    }
+
+    /**
+      * @dev returns the recent average rate of 1 `_token` in the other reserve token units
+      * note that the rate can only be queried for reserves in a standard pool
+      *
+      * @param _token   token to get the rate for
+      * @return recent average rate between the reserves (numerator)
+      * @return recent average rate between the reserves (denominator)
+    */
+    function recentAverageRate(IERC20Token _token) external view returns (uint256, uint256) {
+        // if the pool isn't standard, return 0, 0
+        if (!isStandardPool()) {
+            return (0, 0);
+        }
+
+        // get the recent average rate of reserve 0
+        Fraction memory rate = recentAverageRate();
+        if (_token == reserveTokens[0]) {
+            return (rate.n, rate.d);
+        }
+
+        return (rate.d, rate.n);
+    }
+
+    /**
+      * @dev returns the recent average rate of 1 reserve token 0 in reserve token 1 units
+      *
+      * @return recent average rate between the reserves
+    */
+    function recentAverageRate() internal view returns (Fraction memory) {
+        // get the elapsed time since the previous average rate was calculated
+        uint256 timeElapsed = time() - prevAverageRateUpdateTime;
+
+        // if the previous average rate was calculated in the current block, return it
+        if (timeElapsed == 0) {
+            return prevAverageRate;
+        }
+
+        // get the current rate between the reserves
+        (uint256 currentRateN, uint256 currentRateD) = tokensRate(reserveTokens[0], reserveTokens[1]);
+
+        // if the previous average rate was calculated a while ago, the average rate is equal to the current rate
+        if (timeElapsed >= AVERAGE_RATE_PERIOD) {
+            return Fraction({ n: currentRateN, d: currentRateD });
+        }
+
+        // given N as the sampling window, the new rate is calculated according to the following formula:
+        // newRate = prevAverageRate + timeElapsed * [currentRate - prevAverageRate] / N
+
+        // calculate the numerator and the denumerator of the new rate
+        Fraction memory prevAverage = prevAverageRate;
+
+        uint256 x = prevAverage.d.mul(currentRateN);
+        uint256 y = prevAverage.n.mul(currentRateD);
+
+        // since we know that timeElapsed < AVERAGE_RATE_PERIOD, we can avoid using SafeMath:
+        uint256 newRateN = y.mul(AVERAGE_RATE_PERIOD - timeElapsed).add(x.mul(timeElapsed));
+        uint256 newRateD = prevAverage.d.mul(currentRateD).mul(AVERAGE_RATE_PERIOD);
+
+        return reduceRate(newRateN, newRateD);
     }
 
     /**
@@ -469,7 +567,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev calculates the number of decimal digits in a given value
+      * @dev returns the number of decimal digits in a given value
       *
       * @param _x   value (assumed positive)
       * @return the number of decimal digits in the given value
@@ -482,7 +580,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev calculates the nearest integer to a given quotient
+      * @dev returns the nearest integer to a given quotient
       *
       * @param _n   quotient numerator
       * @param _d   quotient denominator
@@ -493,7 +591,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev calculates the average number of decimal digits in a given list of values
+      * @dev returns the average number of decimal digits in a given list of values
       *
       * @param _values  list of values (each of which assumed positive)
       * @return the average number of decimal digits in the given list of values
@@ -506,7 +604,18 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         return uint256(10) ** (roundDiv(numOfDigits, length) - 1);
     }
 
-     /**
+    /**
+      * @dev checks if the pool is a 2 reserves / 50%/50% weights pool
+      *
+      * @return true if the pool is standard, false otherwise
+    */
+    function isStandardPool() internal view returns (bool) {
+        return reserveTokens.length == 2 &&
+            reserves[reserveTokens[0]].weight == 500000 &&
+            reserves[reserveTokens[1]].weight == 500000;
+    }
+
+    /**
       * @dev dispatches token rate update events for the reserve tokens and the pool token
       *
       * @param _sourceToken address of the source reserve token
@@ -543,5 +652,49 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     */
     function dispatchPoolTokenRateUpdateEvent(uint256 _poolTokenSupply, IERC20Token _reserveToken, uint256 _reserveBalance, uint32 _reserveWeight) private {
         emit TokenRateUpdate(ISmartToken(address(anchor)), _reserveToken, _reserveBalance.mul(PPM_RESOLUTION), _poolTokenSupply.mul(_reserveWeight));
+    }
+
+    /**
+      * @dev returns the current time
+      * utility to allow overrides for tests
+    */
+    function time() internal view virtual returns (uint256) {
+        return now;
+    }
+
+    uint256 private constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
+    uint256 private constant MAX_RATE_FACTOR_UPPER_BOUND = uint256(-1) / MAX_RATE_FACTOR_LOWER_BOUND;
+
+    /**
+      * @dev reduces the numerator and denominator while maintaining the ratio between them as accurately as possible
+    */
+    function reduceRate(uint256 _n, uint256 _d) internal pure returns (Fraction memory) {
+        if (_n >= _d) {
+            return reduceFactors(_n, _d);
+        }
+
+        Fraction memory rate = reduceFactors(_d, _n);
+        return Fraction({ n: rate.d, d: rate.n });
+    }
+
+    /**
+      * @dev reduces the factors while maintaining the ratio between them as accurately as possible
+    */
+    function reduceFactors(uint256 _max, uint256 _min) internal pure returns (Fraction memory) {
+        if (_min > MAX_RATE_FACTOR_UPPER_BOUND) {
+            return Fraction({
+                n: MAX_RATE_FACTOR_LOWER_BOUND,
+                d: _min / (_max / MAX_RATE_FACTOR_LOWER_BOUND)
+            });
+        }
+
+        if (_max > MAX_RATE_FACTOR_LOWER_BOUND) {
+            return Fraction({
+                n: MAX_RATE_FACTOR_LOWER_BOUND,
+                d: _min * MAX_RATE_FACTOR_LOWER_BOUND / _max
+            });
+        }
+
+        return Fraction({ n: _max, d: _min });
     }
 }
