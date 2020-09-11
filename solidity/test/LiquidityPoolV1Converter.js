@@ -676,7 +676,7 @@ contract('LiquidityPoolV1Converter', accounts => {
         }
     });
 
-    describe.only('recent average rate', () => {
+    describe('recent average rate', () => {
         const AVERAGE_RATE_PERIOD = duration.minutes(10);
 
         let converter;
