@@ -1,3 +1,8 @@
+### 0.6.16
+ConverterRegistry
+* Fixed an issue that prevented creating a new pool if an old pool had one of the new pool's reserves
+
+
 ### 0.6.15
 General
 * Updated all "contract interfaces" to real interfaces
