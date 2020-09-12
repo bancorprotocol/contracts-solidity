@@ -752,6 +752,30 @@ contract('LiquidityPoolV1Converter', accounts => {
             expect(averageRateUpdateTime).not.to.be.bignumber.equal(prevAverageRateUpdateTime);
         });
 
+        it('should be identical to the current rate after the full average rate period has passed', async () => {
+            const amount = new BN(500);
+
+            // set initial rate
+            await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+
+            let converterTime = now.add(duration.seconds(10));
+            await converter.setTime(converterTime);
+            await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+
+            const currentRate = await getCurrentRate(ETH_RESERVE_ADDRESS, reserveToken2.address);
+            let averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
+
+            expect(averageRate.n).not.to.be.bignumber.equal(currentRate.n);
+            expect(averageRate.d).not.to.be.bignumber.equal(currentRate.d);
+            
+            converterTime = converterTime.add(AVERAGE_RATE_PERIOD);
+            await converter.setTime(converterTime);
+            averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
+            
+            expect(averageRate.n).to.be.bignumber.equal(currentRate.n);
+            expect(averageRate.d).to.be.bignumber.equal(currentRate.d);
+        });
+
         for (const seconds of [0, 1, 2, 3, 10, 100, 200, 300, 400, 500]) {
             const timeElapsed = duration.seconds(seconds);
             context(`${timeElapsed.toString()} seconds after conversion`, async () => {
