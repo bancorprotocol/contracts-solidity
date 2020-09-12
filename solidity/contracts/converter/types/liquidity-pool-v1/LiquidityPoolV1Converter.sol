@@ -19,6 +19,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
+    uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
     
     // the period of time taken into account when calculating the recent averate rate
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
@@ -250,7 +251,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint256 newRateN = y.mul(AVERAGE_RATE_PERIOD - timeElapsed).add(x.mul(timeElapsed));
         uint256 newRateD = prevAverage.d.mul(currentRateD).mul(AVERAGE_RATE_PERIOD);
 
-        return reduceRate(newRateN, newRateD);
+        (newRateN, newRateD) = reducedRatio(newRateN, newRateD, MAX_RATE_FACTOR_LOWER_BOUND);
+        return Fraction({ n: newRateN, d: newRateD });
     }
 
     /**
@@ -662,39 +664,45 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         return now;
     }
 
-    uint256 private constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
-    uint256 private constant MAX_RATE_FACTOR_UPPER_BOUND = uint256(-1) / MAX_RATE_FACTOR_LOWER_BOUND;
-
     /**
-      * @dev reduces the numerator and denominator while maintaining the ratio between them as accurately as possible
+      * @dev computes a reduced-scalar ratio
+      *
+      * @param _n   ratio numerator
+      * @param _d   ratio denominator
+      * @param _max maximum desired scalar
+      *
+      * @return ratio's numerator and denominator
     */
-    function reduceRate(uint256 _n, uint256 _d) internal pure returns (Fraction memory) {
-        if (_n >= _d) {
-            return reduceFactors(_n, _d);
-        }
-
-        Fraction memory rate = reduceFactors(_d, _n);
-        return Fraction({ n: rate.d, d: rate.n });
+    function reducedRatio(uint256 _n, uint256 _d, uint256 _max) internal pure returns (uint256, uint256) {
+        if (_n > _max || _d > _max)
+            return normalizedRatio(_n, _d, _max);
+        return (_n, _d);
     }
 
     /**
-      * @dev reduces the factors while maintaining the ratio between them as accurately as possible
+      * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)".
     */
-    function reduceFactors(uint256 _max, uint256 _min) internal pure returns (Fraction memory) {
-        if (_min > MAX_RATE_FACTOR_UPPER_BOUND) {
-            return Fraction({
-                n: MAX_RATE_FACTOR_LOWER_BOUND,
-                d: _min / (_max / MAX_RATE_FACTOR_LOWER_BOUND)
-            });
-        }
+    function normalizedRatio(uint256 _a, uint256 _b, uint256 _scale) internal pure returns (uint256, uint256) {
+        if (_a == _b)
+            return (_scale / 2, _scale / 2);
+        if (_a < _b)
+            return accurateRatio(_a, _b, _scale);
+        (uint256 y, uint256 x) = accurateRatio(_b, _a, _scale);
+        return (x, y);
+    }
 
-        if (_max > MAX_RATE_FACTOR_LOWER_BOUND) {
-            return Fraction({
-                n: MAX_RATE_FACTOR_LOWER_BOUND,
-                d: _min * MAX_RATE_FACTOR_LOWER_BOUND / _max
-            });
+    /**
+      * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)", assuming that "a < b".
+    */
+    function accurateRatio(uint256 _a, uint256 _b, uint256 _scale) internal pure returns (uint256, uint256) {
+        uint256 maxVal = uint256(-1) / _scale;
+        if (_a > maxVal) {
+            uint256 c = _a / (maxVal + 1) + 1;
+            _a /= c;
+            _b /= c;
         }
-
-        return Fraction({ n: _max, d: _min });
+        uint256 x = roundDiv(_a * _scale, _a.add(_b));
+        uint256 y = _scale - x;
+        return (x, y);
     }
 }
