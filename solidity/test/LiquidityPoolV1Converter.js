@@ -705,8 +705,8 @@ contract('LiquidityPoolV1Converter', accounts => {
             const rate2 = Decimal(newRate.n.toString()).div(Decimal(newRate.d.toString()));
 
             const ratio = rate1.div(rate2);
-            expect(ratio.gte(0.999998)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
-            expect(ratio.lte(1.000002)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
+            expect(ratio.gte('0.999998')).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
+            expect(ratio.lte('1.000002')).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
         };
 
         const getCurrentRate = async (reserve1Address, reserve2Address) => {
