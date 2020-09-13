@@ -20,7 +20,8 @@ contract('ConverterLiquidity', accounts => {
                 await converter.addReserve(ETH_RESERVE_ADDRESS, weights[i] * 10000);
             }
             else {
-                await converter.addReserve(erc20Tokens[i].address, weights[i] * 10000);
+                const erc20Token = await ERC20Token.new('name', 'symbol', 0, -1);
+                await converter.addReserve(erc20Token.address, weights[i] * 10000);
             }
         }
 
@@ -31,28 +32,23 @@ contract('ConverterLiquidity', accounts => {
     };
 
     let contractRegistry;
-    let erc20Tokens;
     const owner = accounts[0];
 
     const MIN_RETURN = new BN(1);
 
     before(async () => {
-        // The following contracts are unaffected by the underlying tests, this can be shared.
+        // The following contracts are unaffected by the underlying tests, thus can be shared
         contractRegistry = await ContractRegistry.new();
-
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
     });
 
-    beforeEach(async () => {
-        erc20Tokens = await Promise.all([...Array(5).keys()].map(i => ERC20Token.new('name', 'symbol', 0, -1)));
-    });
-
     describe('auxiliary functions', () => {
         let converter;
 
-        beforeEach(async () => {
+        before(async () => {
+            // The following contract is unaffected by the underlying tests, thus can be shared
             converter = await LiquidityPoolV1Converter.new(ETH_RESERVE_ADDRESS, contractRegistry.address, 0);
         });
 
@@ -173,13 +169,13 @@ contract('ConverterLiquidity', accounts => {
 
                     for (let i = 0; i < allowances.length; i++) {
                         const diff = Decimal(allowances[i].toString()).div(reserveAmounts[i].toString());
-                        expect(diff.toNumber()).to.be.gte(0).and.lte(0.0000005);
+                        expect(diff.gte('0') && diff.lte('0.0000005')).to.be.true();
                     }
 
                     const actual = balances.map(balance => Decimal(balance.toString()).div(supply.toString()));
                     for (let i = 0; i < expected.length; i++) {
                         const diff = expected[i].div(actual[i]);
-                        expect(diff.toNumber()).to.be.gte(0.996).and.lte(1);
+                        expect(diff.gte('0.996') && diff.lte('1')).to.be.true();
                     }
 
                     expected = actual;
@@ -191,7 +187,7 @@ contract('ConverterLiquidity', accounts => {
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                     for (let i = 0; i < balances.length; i++) {
                         const diff = Decimal(state[n - 1].balances[i].toString()).div(Decimal(balances[i].toString()));
-                        expect(diff.toNumber()).to.be.gte(0.999999996).and.lte(1);
+                        expect(diff.gte('0.999999996') && diff.lte('1')).to.be.true();
                     }
                 }
 
