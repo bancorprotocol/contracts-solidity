@@ -98,9 +98,7 @@ const run = async () => {
             args: transaction.encodeABI().slice(options.data.length)
         }
     }));
-    if (web3.currentProvider.constructor.name === 'WebsocketProvider') {
-        web3.currentProvider.connection.close();
-    }
+    web3.currentProvider.disconnect();
 };
 
 run();
