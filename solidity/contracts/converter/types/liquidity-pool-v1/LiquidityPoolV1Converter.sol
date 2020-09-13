@@ -24,6 +24,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     // the period of time taken into account when calculating the recent averate rate
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
 
+    // true if the pool is a 2 reserves / 50%/50% weights pool, false otherwise
+    bool public isStandardPool = false;
+
     // only used in standard pools
     Fraction public prevAverageRate;          // average rate after the previous conversion (1 reserve token 0 in reserve token 1 units)
     uint256 public prevAverageRateUpdateTime; // last time when the previous rate was updated (in seconds)
@@ -80,6 +83,22 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         super.acceptAnchorOwnership();
 
         emit Activation(converterType(), anchor, true);
+    }
+
+    /**
+      * @dev defines a new reserve token for the converter
+      * can only be called by the owner while the converter is inactive
+      *
+      * @param _token   address of the reserve token
+      * @param _weight  reserve weight, represented in ppm, 1-1000000
+    */
+    function addReserve(IERC20Token _token, uint32 _weight) public override ownerOnly {
+        super.addReserve(_token, _weight);
+
+        isStandardPool =
+            reserveTokens.length == 2 &&
+            reserves[reserveTokens[0]].weight == 500000 &&
+            reserves[reserveTokens[1]].weight == 500000;
     }
 
     /**
@@ -179,7 +198,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             safeTransfer(_targetToken, _beneficiary, amount);
 
         // update the recent average rate
-        if (prevAverageRateUpdateTime < time() && isStandardPool()) {
+        if (isStandardPool && prevAverageRateUpdateTime < time()) {
             prevAverageRate = recentAverageRate();
             prevAverageRateUpdateTime = time();
         }
@@ -203,7 +222,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     */
     function recentAverageRate(IERC20Token _token) external view returns (uint256, uint256) {
         // if the pool isn't standard, return 0, 0
-        if (!isStandardPool()) {
+        if (!isStandardPool) {
             return (0, 0);
         }
 
@@ -604,17 +623,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         for (uint256 i = 0; i < length; i++)
             numOfDigits += decimalLength(_values[i]);
         return uint256(10) ** (roundDiv(numOfDigits, length) - 1);
-    }
-
-    /**
-      * @dev checks if the pool is a 2 reserves / 50%/50% weights pool
-      *
-      * @return true if the pool is standard, false otherwise
-    */
-    function isStandardPool() internal view returns (bool) {
-        return reserveTokens.length == 2 &&
-            reserves[reserveTokens[0]].weight == 500000 &&
-            reserves[reserveTokens[1]].weight == 500000;
     }
 
     /**
