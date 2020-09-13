@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 import "../../LiquidityPoolConverter.sol";
 import "../../../token/interfaces/ISmartToken.sol";
+import "../../../utility/Types.sol";
 
 /**
   * @dev Liquidity Pool v1 Converter
@@ -13,11 +14,6 @@ import "../../../token/interfaces/ISmartToken.sol";
   * is 2 reserves with 50%/50% weights.
 */
 contract LiquidityPoolV1Converter is LiquidityPoolConverter {
-    struct Fraction {
-        uint256 n;  // numerator
-        uint256 d;  // denominator
-    }
-
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
     uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
     
