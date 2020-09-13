@@ -255,9 +255,7 @@ const run = async () => {
     await execute(conversionPathFinder.methods.setAnchorToken(addresses.BNT));
     await execute(bancorFormula.methods.init());
 
-    if (web3.currentProvider.constructor.name === 'WebsocketProvider') {
-        web3.currentProvider.connection.close();
-    }
+    web3.currentProvider.disconnect();
 };
 
 run();
