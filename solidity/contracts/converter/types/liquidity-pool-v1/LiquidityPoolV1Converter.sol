@@ -112,10 +112,12 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @return rate (denominator)
     */
     function tokensRate(IERC20Token _token1, IERC20Token _token2) public view returns (uint256, uint256) {
-        uint256 token1Balance = reserves[_token1].balance;
-        uint256 token2Balance = reserves[_token2].balance;
-        uint32 token1Weight = reserves[_token1].weight;
-        uint32 token2Weight = reserves[_token2].weight;
+        Reserve storage reserve1 = reserves[_token1];
+        Reserve storage reserve2 = reserves[_token2];
+        uint256 token1Balance = reserve1.balance;
+        uint256 token2Balance = reserve2.balance;
+        uint32 token1Weight = reserve1.weight;
+        uint32 token2Weight = reserve2.weight;
 
         return (token2Balance.mul(token1Weight), token1Balance.mul(token2Weight));
     }
