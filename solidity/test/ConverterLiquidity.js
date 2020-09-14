@@ -181,21 +181,28 @@ contract('ConverterLiquidity', accounts => {
                     expected = actual;
                 }
 
+                let prevBalances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
+
                 for (let n = state.length - 1; n > 0; n--) {
                     const supplyAmount = state[n].supply.sub(new BN(state[n - 1].supply));
+                    const reserveAmounts = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
                     await converter.removeLiquidity(supplyAmount, reserveTokens, reserveTokens.map(reserveTokens => 1));
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                     for (let i = 0; i < balances.length; i++) {
                         const diff = Decimal(state[n - 1].balances[i].toString()).div(Decimal(balances[i].toString()));
                         expect(diff.gte('0.999999996') && diff.lte('1')).to.be.true();
+                        expect(prevBalances[i].sub(balances[i])).to.be.bignumber.equal(reserveAmounts[i]);
                     }
+                    prevBalances = balances;
                 }
 
                 const supplyAmount = state[0].supply;
+                const reserveAmounts = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
                 await converter.removeLiquidity(supplyAmount, reserveTokens, reserveTokens.map(reserveTokens => 1));
                 const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                 for (let i = 0; i < balances.length; i++) {
                     expect(balances[i]).to.be.bignumber.equal(new BN(0));
+                    expect(prevBalances[i].sub(balances[i])).to.be.bignumber.equal(reserveAmounts[i]);
                 }
             });
         };
