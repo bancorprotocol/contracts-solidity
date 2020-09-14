@@ -298,6 +298,20 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
+      * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
+      *
+      * @param _amount          amount of pool tokens
+      * @param _reserveTokens   address of each reserve token
+      *
+      * @return the amount of each reserve token entitled for the given amount of pool tokens
+    */
+    function removeLiquidityReturn(uint256 _amount, IERC20Token[] memory _reserveTokens) public view returns (uint256[] memory) {
+        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+        return removeLiquidityReserveAmounts(_amount, _reserveTokens, totalSupply, formula);
+    }
+
+    /**
       * @dev verifies that a given array of tokens is identical to the converter's array of reserve tokens
       * we take this input in order to allow specifying the corresponding reserve amounts in any order
       *
@@ -422,6 +436,56 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
+      * @dev given the amount of one of the reserve tokens to add liquidity of,
+      * returns the required amount of each one of the other reserve tokens
+      * since an empty pool can be funded with any list of non-zero input amounts,
+      * this function assumes that the pool is not empty (has already been funded)
+      *
+      * @param _reserveTokens       address of each reserve token
+      * @param _reserveTokenIndex   index of the relevant reserve token
+      * @param _reserveAmount       amount of the relevant reserve token
+      *
+      * @return the required amount of each one of the reserve tokens
+    */
+    function addLiquidityCost(IERC20Token[] memory _reserveTokens, uint256 _reserveTokenIndex, uint256 _reserveAmount)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        uint256[] memory reserveAmounts = new uint256[](_reserveTokens.length);
+
+        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+        uint256 amount = formula.fundSupplyAmount(totalSupply, reserves[_reserveTokens[_reserveTokenIndex]].balance, reserveRatio, _reserveAmount);
+
+        for (uint256 i = 0; i < reserveAmounts.length; i++)
+            reserveAmounts[i] = formula.fundCost(totalSupply, reserves[_reserveTokens[i]].balance, reserveRatio, amount);
+
+        return reserveAmounts;
+    }
+
+    /**
+      * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
+      *
+      * @param _amount          amount of pool tokens
+      * @param _reserveTokens   address of each reserve token
+      * @param _totalSupply     token total supply
+      * @param _formula         formula contract
+      *
+      * @return the amount of each reserve token entitled for the given amount of pool tokens
+    */
+    function removeLiquidityReserveAmounts(uint256 _amount, IERC20Token[] memory _reserveTokens, uint256 _totalSupply, IBancorFormula _formula)
+        private
+        view
+        returns (uint256[] memory)
+    {
+        uint256[] memory reserveAmounts = new uint256[](_reserveTokens.length);
+        for (uint256 i = 0; i < reserveAmounts.length; i++)
+            reserveAmounts[i] = _formula.liquidateReserveAmount(_totalSupply, reserves[_reserveTokens[i]].balance, reserveRatio, _amount);
+        return reserveAmounts;
+    }
+
+    /**
       * @dev removes liquidity (reserve) from the pool
       *
       * @param _reserveTokens           address of each reserve token
@@ -436,14 +500,14 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         uint256 newPoolTokenSupply = _totalSupply.sub(_amount);
+        uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, _reserveTokens, _totalSupply, formula);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
-            uint256 rsvBalance = reserves[reserveToken].balance;
-            uint256 reserveAmount = formula.liquidateReserveAmount(_totalSupply, rsvBalance, reserveRatio, _amount);
+            uint256 reserveAmount = reserveAmounts[i];
             require(reserveAmount >= _reserveMinReturnAmounts[i], "ERR_ZERO_TARGET_AMOUNT");
 
-            uint256 newReserveBalance = rsvBalance.sub(reserveAmount);
+            uint256 newReserveBalance = reserves[reserveToken].balance.sub(reserveAmount);
             reserves[reserveToken].balance = newReserveBalance;
 
             // transfer each one of the reserve amounts from the pool to the user
