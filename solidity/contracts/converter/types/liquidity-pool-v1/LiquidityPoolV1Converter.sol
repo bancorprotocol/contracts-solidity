@@ -298,7 +298,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev calculates the amount of each reserve token entitled for a given amount of pool tokens
+      * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
       *
       * @param _amount          amount of pool tokens
       * @param _reserveTokens   address of each reserve token
