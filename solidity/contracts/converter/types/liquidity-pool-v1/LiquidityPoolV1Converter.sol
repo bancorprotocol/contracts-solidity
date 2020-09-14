@@ -437,7 +437,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev given the amount of one of the reserve tokens to add liquidity of,
-      * calculates the required amount of each one of the other reserve tokens
+      * returns the required amount of each one of the other reserve tokens
       * since an empty pool can be funded with any list of non-zero input amounts,
       * this function assumes that the pool is not empty (has already been funded)
       *
@@ -465,7 +465,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev calculates the amount of each reserve token entitled for a given amount of pool tokens
+      * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
       *
       * @param _amount          amount of pool tokens
       * @param _reserveTokens   address of each reserve token
