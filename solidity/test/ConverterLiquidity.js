@@ -155,6 +155,7 @@ contract('ConverterLiquidity', accounts => {
 
                 const state = [];
                 let expected = [];
+                let prevBalances = reserveTokens.map(reserveToken => new BN(0));
 
                 for (const supplyAmount of [1000000000, 1000000, 2000000, 3000000, 4000000]) {
                     const reserveAmounts = reserveTokens.map((reserveToken, i) => new BN(supplyAmount).mul(new BN(100 + i)).div(new BN(100)));
@@ -179,9 +180,8 @@ contract('ConverterLiquidity', accounts => {
                     }
 
                     expected = actual;
+                    prevBalances = balances;
                 }
-
-                let prevBalances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
 
                 for (let n = state.length - 1; n > 0; n--) {
                     const supplyAmount = state[n].supply.sub(new BN(state[n - 1].supply));
