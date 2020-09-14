@@ -504,9 +504,10 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev calculates the number of decimal digits in a given value
+      * @dev returns the number of decimal digits in a given value
       *
       * @param _x   value (assumed positive)
+      *
       * @return the number of decimal digits in the given value
     */
     function decimalLength(uint256 _x) public pure returns (uint256) {
@@ -517,10 +518,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev calculates the nearest integer to a given quotient
+      * @dev returns the nearest integer to a given quotient
       *
       * @param _n   quotient numerator
       * @param _d   quotient denominator
+      *
       * @return the nearest integer to the given quotient
     */
     function roundDiv(uint256 _n, uint256 _d) public pure returns (uint256) {
@@ -528,9 +530,10 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev calculates the average number of decimal digits in a given list of values
+      * @dev returns the average number of decimal digits in a given list of values
       *
       * @param _values  list of values (each of which assumed positive)
+      *
       * @return the average number of decimal digits in the given list of values
     */
     function geometricMean(uint256[] memory _values) public pure returns (uint256) {
