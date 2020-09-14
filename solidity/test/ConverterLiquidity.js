@@ -161,6 +161,7 @@ contract('ConverterLiquidity', accounts => {
                     const reserveAmounts = reserveTokens.map((reserveToken, i) => new BN(supplyAmount).mul(new BN(100 + i)).div(new BN(100)));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(new BN(0)))));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(new BN(1)))));
+                    const liquidityCosts = await getLiquidityCosts(state.length == 0, converter, reserveTokens, reserveAmounts);
                     await converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, { value: hasETH ? reserveAmounts.slice(-1)[0] : 0 });
                     const allowances = await Promise.all(reserveTokens.map(reserveToken => getAllowance(reserveToken, converter)));
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
@@ -177,6 +178,9 @@ contract('ConverterLiquidity', accounts => {
                     for (let i = 0; i < expected.length; i++) {
                         const diff = expected[i].div(actual[i]);
                         expect(diff.gte('0.996') && diff.lte('1')).to.be.true();
+                        for (const liquidityCost of liquidityCosts) {
+                            expect(liquidityCost[i]).to.be.bignumber.equal(balances[i].sub(prevBalances[i]));
+                        }
                     }
 
                     expected = actual;
@@ -237,6 +241,14 @@ contract('ConverterLiquidity', accounts => {
 
         const token = await ERC20Token.at(reserveToken);
         return token.approve(converter.address, amount);
+    };
+
+    const getLiquidityCosts = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+        if (firstTime) {
+            return reserveAmounts.map((reserveAmount, i) => reserveAmounts);
+        }
+
+        return await Promise.all(reserveAmounts.map((reserveAmount, i) => converter.addLiquidityCost(reserveTokens, i, reserveAmount)));
     };
 
     const getAllowance = async (reserveToken, converter) => {
