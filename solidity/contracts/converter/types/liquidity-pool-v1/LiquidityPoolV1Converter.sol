@@ -298,6 +298,35 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
+      * @dev given the amount of one of the reserve tokens to add liquidity of,
+      * returns the required amount of each one of the other reserve tokens
+      * since an empty pool can be funded with any list of non-zero input amounts,
+      * this function assumes that the pool is not empty (has already been funded)
+      *
+      * @param _reserveTokens       address of each reserve token
+      * @param _reserveTokenIndex   index of the relevant reserve token
+      * @param _reserveAmount       amount of the relevant reserve token
+      *
+      * @return the required amount of each one of the reserve tokens
+    */
+    function addLiquidityCost(IERC20Token[] memory _reserveTokens, uint256 _reserveTokenIndex, uint256 _reserveAmount)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        uint256[] memory reserveAmounts = new uint256[](_reserveTokens.length);
+
+        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
+        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
+        uint256 amount = formula.fundSupplyAmount(totalSupply, reserves[_reserveTokens[_reserveTokenIndex]].balance, reserveRatio, _reserveAmount);
+
+        for (uint256 i = 0; i < reserveAmounts.length; i++)
+            reserveAmounts[i] = formula.fundCost(totalSupply, reserves[_reserveTokens[i]].balance, reserveRatio, amount);
+
+        return reserveAmounts;
+    }
+
+    /**
       * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
       *
       * @param _amount          amount of pool tokens
@@ -433,35 +462,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         }
 
         return amount;
-    }
-
-    /**
-      * @dev given the amount of one of the reserve tokens to add liquidity of,
-      * returns the required amount of each one of the other reserve tokens
-      * since an empty pool can be funded with any list of non-zero input amounts,
-      * this function assumes that the pool is not empty (has already been funded)
-      *
-      * @param _reserveTokens       address of each reserve token
-      * @param _reserveTokenIndex   index of the relevant reserve token
-      * @param _reserveAmount       amount of the relevant reserve token
-      *
-      * @return the required amount of each one of the reserve tokens
-    */
-    function addLiquidityCost(IERC20Token[] memory _reserveTokens, uint256 _reserveTokenIndex, uint256 _reserveAmount)
-        public
-        view
-        returns (uint256[] memory)
-    {
-        uint256[] memory reserveAmounts = new uint256[](_reserveTokens.length);
-
-        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
-        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-        uint256 amount = formula.fundSupplyAmount(totalSupply, reserves[_reserveTokens[_reserveTokenIndex]].balance, reserveRatio, _reserveAmount);
-
-        for (uint256 i = 0; i < reserveAmounts.length; i++)
-            reserveAmounts[i] = formula.fundCost(totalSupply, reserves[_reserveTokens[i]].balance, reserveRatio, amount);
-
-        return reserveAmounts;
     }
 
     /**
