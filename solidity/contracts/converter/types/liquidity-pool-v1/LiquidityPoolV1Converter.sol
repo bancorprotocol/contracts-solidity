@@ -229,7 +229,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       *
       * @param _amount  amount to increase the supply by (in the pool token)
     */
-    function fund(uint256 _amount) public payable protected {
+    function fund(uint256 _amount)
+        public
+        payable
+        protected
+    {
         syncReserveBalances();
         reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
 
@@ -284,7 +288,10 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       *
       * @param _amount  amount to liquidate (in the pool token)
     */
-    function liquidate(uint256 _amount) public protected {
+    function liquidate(uint256 _amount)
+        public
+        protected
+    {
         require(_amount > 0, "ERR_ZERO_AMOUNT");
 
         uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
@@ -334,7 +341,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       *
       * @return the amount of each reserve token entitled for the given amount of pool tokens
     */
-    function removeLiquidityReturn(uint256 _amount, IERC20Token[] memory _reserveTokens) public view returns (uint256[] memory) {
+    function removeLiquidityReturn(uint256 _amount, IERC20Token[] memory _reserveTokens)
+        public
+        view
+        returns (uint256[] memory)
+    {
         uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         return removeLiquidityReserveAmounts(_amount, _reserveTokens, totalSupply, formula);
@@ -348,7 +359,10 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param _reserveAmounts  array of reserve amounts
       * @param _amount          token amount
     */
-    function verifyLiquidityInput(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _amount) private view {
+    function verifyLiquidityInput(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _amount)
+        private
+        view
+    {
         uint256 i;
         uint256 j;
 
