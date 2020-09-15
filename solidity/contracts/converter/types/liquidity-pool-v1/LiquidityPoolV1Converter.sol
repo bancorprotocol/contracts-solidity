@@ -162,12 +162,15 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
       * @param _minReturn       token minimum return-amount
+      *
+      * @return amount of pool tokens issued
     */
     function addLiquidity(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _minReturn)
         public
         payable
         protected
         active
+        returns (uint256)
     {
         // verify the user input
         verifyLiquidityInput(_reserveTokens, _reserveAmounts, _minReturn);
@@ -193,6 +196,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         // issue the tokens to the user
         ISmartToken(address(anchor)).issue(msg.sender, amount);
+
+        // return the amount of pool tokens issued
+        return amount;
     }
 
     /**
@@ -202,11 +208,14 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param _amount                  token amount
       * @param _reserveTokens           address of each reserve token
       * @param _reserveMinReturnAmounts minimum return-amount of each reserve token
+      *
+      * @return the amount of each reserve token granted for the given amount of pool tokens
     */
     function removeLiquidity(uint256 _amount, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts)
         public
         protected
         active
+        returns (uint256[] memory)
     {
         // verify the user input
         verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
@@ -218,7 +227,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         ISmartToken(address(anchor)).destroy(msg.sender, _amount);
 
         // transfer to the user an equivalent amount of each one of the reserve tokens
-        removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _amount);
+        return removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _amount);
     }
 
     /**
@@ -228,11 +237,14 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * note that starting from version 28, you should use 'addLiquidity' instead
       *
       * @param _amount  amount to increase the supply by (in the pool token)
+      *
+      * @return amount of pool tokens issued
     */
     function fund(uint256 _amount)
         public
         payable
         protected
+        returns (uint256)
     {
         syncReserveBalances();
         reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
@@ -278,6 +290,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         // issue new funds to the caller in the pool token
         ISmartToken(address(anchor)).issue(msg.sender, _amount);
+
+        // return the amount of pool tokens issued
+        return _amount;
     }
 
     /**
@@ -287,10 +302,13 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * note that starting from version 28, you should use 'removeLiquidity' instead
       *
       * @param _amount  amount to liquidate (in the pool token)
+      *
+      * @return the amount of each reserve token granted for the given amount of pool tokens
     */
     function liquidate(uint256 _amount)
         public
         protected
+        returns (uint256[] memory)
     {
         require(_amount > 0, "ERR_ZERO_AMOUNT");
 
@@ -301,7 +319,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         for (uint256 i = 0; i < reserveMinReturnAmounts.length; i++)
             reserveMinReturnAmounts[i] = 1;
 
-        removeLiquidityFromPool(reserveTokens, reserveMinReturnAmounts, totalSupply, _amount);
+        return removeLiquidityFromPool(reserveTokens, reserveMinReturnAmounts, totalSupply, _amount);
     }
 
     /**
@@ -393,6 +411,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
       * @param _totalSupply     token total supply
+      *
+      * @return amount of pool tokens issued
     */
     function addLiquidityToPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
         private
@@ -408,6 +428,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       *
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
+      *
+      * @return amount of pool tokens issued
     */
     function addLiquidityToEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)
         private
@@ -432,6 +454,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             dispatchPoolTokenRateUpdateEvent(amount, reserveToken, reserveAmount, reserves[reserveToken].weight);
         }
 
+        // return the amount of pool tokens issued
         return amount;
     }
 
@@ -441,6 +464,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
       * @param _totalSupply     token total supply
+      *
+      * @return amount of pool tokens issued
     */
     function addLiquidityToNonEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
         private
@@ -475,6 +500,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             dispatchPoolTokenRateUpdateEvent(newPoolTokenSupply, reserveToken, newReserveBalance, reserves[reserveToken].weight);
         }
 
+        // return the amount of pool tokens issued
         return amount;
     }
 
@@ -506,9 +532,12 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param _reserveMinReturnAmounts minimum return-amount of each reserve token
       * @param _totalSupply             token total supply
       * @param _amount                  token amount
+      *
+      * @return the amount of each reserve token granted for the given amount of pool tokens
     */
     function removeLiquidityFromPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _totalSupply, uint256 _amount)
         private
+        returns (uint256[] memory)
     {
         syncReserveBalances();
 
@@ -535,6 +564,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             // dispatch the `TokenRateUpdate` event for the pool token
             dispatchPoolTokenRateUpdateEvent(newPoolTokenSupply, reserveToken, newReserveBalance, reserves[reserveToken].weight);
         }
+
+        // return the amount of each reserve token granted for the given amount of pool tokens
+        return reserveAmounts;
     }
 
     function getMinShare(IBancorFormula formula, uint256 _totalSupply, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts) private view returns (uint256) {
