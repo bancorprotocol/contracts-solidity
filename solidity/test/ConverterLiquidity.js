@@ -250,24 +250,6 @@ contract('ConverterLiquidity', accounts => {
         return token.approve(converter.address, amount);
     };
 
-    const getLiquidityCosts = async (firstTime, converter, reserveTokens, reserveAmounts) => {
-        if (firstTime) {
-            return reserveAmounts.map((reserveAmount, i) => reserveAmounts);
-        }
-
-        return await Promise.all(reserveAmounts.map((reserveAmount, i) => converter.addLiquidityCost(reserveTokens, i, reserveAmount)));
-    };
-
-    const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
-        if (firstTime) {
-            const length = Math.round(reserveAmounts.map(reserveAmount => reserveAmount.toString()).join('').length / reserveAmounts.length);
-            const retVal = new BN('1'.padEnd(length, '0'));
-            return reserveAmounts.map((reserveAmount, i) => retVal);
-        }
-
-        return await Promise.all(reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount)));
-    };
-
     const getAllowance = async (reserveToken, converter) => {
         if (reserveToken === ETH_RESERVE_ADDRESS) {
             return new BN(0);
@@ -284,5 +266,23 @@ contract('ConverterLiquidity', accounts => {
 
         const token = await ERC20Token.at(reserveToken);
         return await token.balanceOf.call(converter.address);
+    };
+
+    const getLiquidityCosts = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+        if (firstTime) {
+            return reserveAmounts.map((reserveAmount, i) => reserveAmounts);
+        }
+
+        return await Promise.all(reserveAmounts.map((reserveAmount, i) => converter.addLiquidityCost(reserveTokens, i, reserveAmount)));
+    };
+
+    const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+        if (firstTime) {
+            const length = Math.round(reserveAmounts.map(reserveAmount => reserveAmount.toString()).join('').length / reserveAmounts.length);
+            const retVal = new BN('1'.padEnd(length, '0'));
+            return reserveAmounts.map((reserveAmount, i) => retVal);
+        }
+
+        return await Promise.all(reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount)));
     };
 });
