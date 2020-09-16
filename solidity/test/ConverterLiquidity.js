@@ -155,6 +155,7 @@ contract('ConverterLiquidity', accounts => {
 
                 const state = [];
                 let expected = [];
+                let prevSupply = new BN(0);
                 let prevBalances = reserveTokens.map(reserveToken => new BN(0));
 
                 for (const supplyAmount of [1000000000, 1000000, 2000000, 3000000, 4000000]) {
@@ -162,6 +163,7 @@ contract('ConverterLiquidity', accounts => {
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(new BN(0)))));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(new BN(1)))));
                     const liquidityCosts = await getLiquidityCosts(state.length == 0, converter, reserveTokens, reserveAmounts);
+                    const liquidityReturns = await getLiquidityReturns(state.length == 0, converter, reserveTokens, reserveAmounts);
                     await converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, { value: hasETH ? reserveAmounts.slice(-1)[0] : 0 });
                     const allowances = await Promise.all(reserveTokens.map(reserveToken => getAllowance(reserveToken, converter)));
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
@@ -183,7 +185,12 @@ contract('ConverterLiquidity', accounts => {
                         }
                     }
 
+                    for (const liquidityReturn of liquidityReturns) {
+                        expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
+                    }
+
                     expected = actual;
+                    prevSupply = supply;
                     prevBalances = balances;
                 }
 
@@ -249,6 +256,16 @@ contract('ConverterLiquidity', accounts => {
         }
 
         return await Promise.all(reserveAmounts.map((reserveAmount, i) => converter.addLiquidityCost(reserveTokens, i, reserveAmount)));
+    };
+
+    const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+        if (firstTime) {
+            const length = Math.round(reserveAmounts.map(reserveAmount => reserveAmount.toString()).join('').length / reserveAmounts.length);
+            const retVal = new BN('1'.padEnd(length, '0'));
+            return reserveAmounts.map((reserveAmount, i) => retVal);
+        }
+
+        return await Promise.all(reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount)));
     };
 
     const getAllowance = async (reserveToken, converter) => {
