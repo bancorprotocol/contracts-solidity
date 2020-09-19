@@ -710,8 +710,9 @@ contract('LiquidityPoolV1Converter', accounts => {
         };
 
         const getCurrentRate = async (reserve1Address, reserve2Address) => {
-            const rate = await converter.tokensRate.call(reserve1Address, reserve2Address);
-            return { n: rate[0], d: rate[1] };
+            const balance1 = await converter.reserveBalance.call(reserve1Address);
+            const balance2 = await converter.reserveBalance.call(reserve2Address);
+            return { n: balance2, d: balance1 };
         };
 
         const getAverageRate = async (reserveAddress) => {

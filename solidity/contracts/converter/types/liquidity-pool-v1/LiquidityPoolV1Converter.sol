@@ -98,27 +98,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-      * @dev returns the rate of 1 `_token1` in `_token2` units
-      * note that the rate can only be queried for the reserves
-      *
-      * @param _token1  reserve token to get the rate of one unit of
-      * @param _token2  reserve token to get the rate of one `_token1` unit in
-      *
-      * @return rate (numerator)
-      * @return rate (denominator)
-    */
-    function tokensRate(IERC20Token _token1, IERC20Token _token2) public view returns (uint256, uint256) {
-        Reserve storage reserve1 = reserves[_token1];
-        Reserve storage reserve2 = reserves[_token2];
-        uint256 token1Balance = reserve1.balance;
-        uint256 token2Balance = reserve2.balance;
-        uint32 token1Weight = reserve1.weight;
-        uint32 token2Weight = reserve2.weight;
-
-        return (token2Balance.mul(token1Weight), token1Balance.mul(token2Weight));
-    }
-
-    /**
       * @dev returns the expected target amount of converting one reserve to another along with the fee
       *
       * @param _sourceToken contract address of the source reserve token
@@ -248,7 +227,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         }
 
         // get the current rate between the reserves
-        (uint256 currentRateN, uint256 currentRateD) = tokensRate(reserveTokens[0], reserveTokens[1]);
+        uint256 currentRateN = reserves[reserveTokens[1]].balance;
+        uint256 currentRateD = reserves[reserveTokens[0]].balance;
 
         // if the previous average rate was calculated a while ago, the average rate is equal to the current rate
         if (timeElapsed >= AVERAGE_RATE_PERIOD) {
