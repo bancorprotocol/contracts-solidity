@@ -198,10 +198,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @return recent average rate between the reserves (denominator)
     */
     function recentAverageRate(IERC20Token _token) external view returns (uint256, uint256) {
-        // if the pool isn't standard, return 0, 0
-        if (!isStandardPool) {
-            return (0, 0);
-        }
+        // verify that the pool is standard
+        require(isStandardPool, "ERR_NON_STANDARD_POOL");
 
         // get the recent average rate of reserve 0
         Fraction memory rate = recentAverageRate();
