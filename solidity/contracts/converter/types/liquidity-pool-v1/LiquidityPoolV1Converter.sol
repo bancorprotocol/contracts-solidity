@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 import "../../LiquidityPoolConverter.sol";
 import "../../../token/interfaces/ISmartToken.sol";
+import "../../../utility/Types.sol";
 
 /**
   * @dev Liquidity Pool v1 Converter
@@ -9,11 +10,22 @@ import "../../../token/interfaces/ISmartToken.sol";
   * The liquidity pool v1 converter is a specialized version of a converter that manages
   * a classic bancor liquidity pool.
   *
-  * Even though classic pools can have many reserves, the most common configuration of
-  * the pool has 2 reserves with 50%/50% weights.
+  * Even though pools can have many reserves, the standard pool configuration
+  * is 2 reserves with 50%/50% weights.
 */
 contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
+    uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
+    
+    // the period of time taken into account when calculating the recent averate rate
+    uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
+
+    // true if the pool is a 2 reserves / 50%/50% weights pool, false otherwise
+    bool public isStandardPool = false;
+
+    // only used in standard pools
+    Fraction public prevAverageRate;          // average rate after the previous conversion (1 reserve token 0 in reserve token 1 units)
+    uint256 public prevAverageRateUpdateTime; // last time when the previous rate was updated (in seconds)
 
     /**
       * @dev triggered after a conversion with new price data
@@ -67,6 +79,22 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         super.acceptAnchorOwnership();
 
         emit Activation(converterType(), anchor, true);
+    }
+
+    /**
+      * @dev defines a new reserve token for the converter
+      * can only be called by the owner while the converter is inactive
+      *
+      * @param _token   address of the reserve token
+      * @param _weight  reserve weight, represented in ppm, 1-1000000
+    */
+    function addReserve(IERC20Token _token, uint32 _weight) public override ownerOnly {
+        super.addReserve(_token, _weight);
+
+        isStandardPool =
+            reserveTokens.length == 2 &&
+            reserves[reserveTokens[0]].weight == 500000 &&
+            reserves[reserveTokens[1]].weight == 500000;
     }
 
     /**
@@ -146,6 +174,12 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         else
             safeTransfer(_targetToken, _beneficiary, amount);
 
+        // update the recent average rate
+        if (isStandardPool && prevAverageRateUpdateTime < time()) {
+            prevAverageRate = recentAverageRate();
+            prevAverageRateUpdateTime = time();
+        }
+
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
 
@@ -153,6 +187,67 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         dispatchTokenRateUpdateEvents(_sourceToken, _targetToken);
 
         return amount;
+    }
+
+    /**
+      * @dev returns the recent average rate of 1 `_token` in the other reserve token units
+      * note that the rate can only be queried for reserves in a standard pool
+      *
+      * @param _token   token to get the rate for
+      * @return recent average rate between the reserves (numerator)
+      * @return recent average rate between the reserves (denominator)
+    */
+    function recentAverageRate(IERC20Token _token) external view returns (uint256, uint256) {
+        // verify that the pool is standard
+        require(isStandardPool, "ERR_NON_STANDARD_POOL");
+
+        // get the recent average rate of reserve 0
+        Fraction memory rate = recentAverageRate();
+        if (_token == reserveTokens[0]) {
+            return (rate.n, rate.d);
+        }
+
+        return (rate.d, rate.n);
+    }
+
+    /**
+      * @dev returns the recent average rate of 1 reserve token 0 in reserve token 1 units
+      *
+      * @return recent average rate between the reserves
+    */
+    function recentAverageRate() internal view returns (Fraction memory) {
+        // get the elapsed time since the previous average rate was calculated
+        uint256 timeElapsed = time() - prevAverageRateUpdateTime;
+
+        // if the previous average rate was calculated in the current block, return it
+        if (timeElapsed == 0) {
+            return prevAverageRate;
+        }
+
+        // get the current rate between the reserves
+        uint256 currentRateN = reserves[reserveTokens[1]].balance;
+        uint256 currentRateD = reserves[reserveTokens[0]].balance;
+
+        // if the previous average rate was calculated a while ago, the average rate is equal to the current rate
+        if (timeElapsed >= AVERAGE_RATE_PERIOD) {
+            return Fraction({ n: currentRateN, d: currentRateD });
+        }
+
+        // given N as the sampling window, the new rate is calculated according to the following formula:
+        // newRate = prevAverageRate + timeElapsed * [currentRate - prevAverageRate] / N
+
+        // calculate the numerator and the denumerator of the new rate
+        Fraction memory prevAverage = prevAverageRate;
+
+        uint256 x = prevAverage.d.mul(currentRateN);
+        uint256 y = prevAverage.n.mul(currentRateD);
+
+        // since we know that timeElapsed < AVERAGE_RATE_PERIOD, we can avoid using SafeMath:
+        uint256 newRateN = y.mul(AVERAGE_RATE_PERIOD - timeElapsed).add(x.mul(timeElapsed));
+        uint256 newRateD = prevAverage.d.mul(currentRateD).mul(AVERAGE_RATE_PERIOD);
+
+        (newRateN, newRateD) = reducedRatio(newRateN, newRateD, MAX_RATE_FACTOR_LOWER_BOUND);
+        return Fraction({ n: newRateN, d: newRateD });
     }
 
     /**
@@ -640,7 +735,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         return uint256(10) ** (roundDiv(numOfDigits, length) - 1);
     }
 
-     /**
+    /**
       * @dev dispatches token rate update events for the reserve tokens and the pool token
       *
       * @param _sourceToken address of the source reserve token
@@ -677,5 +772,55 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     */
     function dispatchPoolTokenRateUpdateEvent(uint256 _poolTokenSupply, IERC20Token _reserveToken, uint256 _reserveBalance, uint32 _reserveWeight) private {
         emit TokenRateUpdate(ISmartToken(address(anchor)), _reserveToken, _reserveBalance.mul(PPM_RESOLUTION), _poolTokenSupply.mul(_reserveWeight));
+    }
+
+    /**
+      * @dev returns the current time
+      * utility to allow overrides for tests
+    */
+    function time() internal view virtual returns (uint256) {
+        return now;
+    }
+
+    /**
+      * @dev computes a reduced-scalar ratio
+      *
+      * @param _n   ratio numerator
+      * @param _d   ratio denominator
+      * @param _max maximum desired scalar
+      *
+      * @return ratio's numerator and denominator
+    */
+    function reducedRatio(uint256 _n, uint256 _d, uint256 _max) internal pure returns (uint256, uint256) {
+        if (_n > _max || _d > _max)
+            return normalizedRatio(_n, _d, _max);
+        return (_n, _d);
+    }
+
+    /**
+      * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)".
+    */
+    function normalizedRatio(uint256 _a, uint256 _b, uint256 _scale) internal pure returns (uint256, uint256) {
+        if (_a == _b)
+            return (_scale / 2, _scale / 2);
+        if (_a < _b)
+            return accurateRatio(_a, _b, _scale);
+        (uint256 y, uint256 x) = accurateRatio(_b, _a, _scale);
+        return (x, y);
+    }
+
+    /**
+      * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)", assuming that "a < b".
+    */
+    function accurateRatio(uint256 _a, uint256 _b, uint256 _scale) internal pure returns (uint256, uint256) {
+        uint256 maxVal = uint256(-1) / _scale;
+        if (_a > maxVal) {
+            uint256 c = _a / (maxVal + 1) + 1;
+            _a /= c;
+            _b /= c;
+        }
+        uint256 x = roundDiv(_a * _scale, _a.add(_b));
+        uint256 y = _scale - x;
+        return (x, y);
     }
 }
