@@ -1,3 +1,9 @@
+### 0.6.17
+LiquidityPoolV1Converter
+* Added the ability to query the recent average rate
+* Added the ability to query the return amount for adding/removing liquidity
+
+
 ### 0.6.16
 General
 * Removed binaries from the repo
