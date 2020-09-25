@@ -5,6 +5,7 @@ import "./LiquidityPoolV2ConverterCustomFactory.sol";
 import "../../LiquidityPoolConverter.sol";
 import "../../interfaces/IConverterFactory.sol";
 import "../../../utility/interfaces/IPriceOracle.sol";
+import "../../../utility/Types.sol";
 
 /**
   * @dev Liquidity Pool v2 Converter
@@ -17,11 +18,6 @@ import "../../../utility/interfaces/IPriceOracle.sol";
 */
 contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     uint8 internal constant AMPLIFICATION_FACTOR = 20;  // factor to use for conversion calculations (reduces slippage)
-
-    struct Fraction {
-        uint256 n;  // numerator
-        uint256 d;  // denominator
-    }
 
     IPriceOracle public priceOracle;                                    // external price oracle
     IERC20Token public primaryReserveToken;                             // primary reserve in the pool

@@ -20,7 +20,8 @@ contract('ConverterLiquidity', accounts => {
                 await converter.addReserve(ETH_RESERVE_ADDRESS, weights[i] * 10000);
             }
             else {
-                await converter.addReserve(erc20Tokens[i].address, weights[i] * 10000);
+                const erc20Token = await ERC20Token.new('name', 'symbol', 0, -1);
+                await converter.addReserve(erc20Token.address, weights[i] * 10000);
             }
         }
 
@@ -31,28 +32,23 @@ contract('ConverterLiquidity', accounts => {
     };
 
     let contractRegistry;
-    let erc20Tokens;
     const owner = accounts[0];
 
     const MIN_RETURN = new BN(1);
 
     before(async () => {
-        // The following contracts are unaffected by the underlying tests, this can be shared.
+        // The following contracts are unaffected by the underlying tests, thus can be shared
         contractRegistry = await ContractRegistry.new();
-
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
     });
 
-    beforeEach(async () => {
-        erc20Tokens = await Promise.all([...Array(5).keys()].map(i => ERC20Token.new('name', 'symbol', 0, -1)));
-    });
-
     describe('auxiliary functions', () => {
         let converter;
 
-        beforeEach(async () => {
+        before(async () => {
+            // The following contract is unaffected by the underlying tests, thus can be shared
             converter = await LiquidityPoolV1Converter.new(ETH_RESERVE_ADDRESS, contractRegistry.address, 0);
         });
 
@@ -159,11 +155,15 @@ contract('ConverterLiquidity', accounts => {
 
                 const state = [];
                 let expected = [];
+                let prevSupply = new BN(0);
+                let prevBalances = reserveTokens.map(reserveToken => new BN(0));
 
                 for (const supplyAmount of [1000000000, 1000000, 2000000, 3000000, 4000000]) {
                     const reserveAmounts = reserveTokens.map((reserveToken, i) => new BN(supplyAmount).mul(new BN(100 + i)).div(new BN(100)));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(new BN(0)))));
                     await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(new BN(1)))));
+                    const liquidityCosts = await getLiquidityCosts(state.length == 0, converter, reserveTokens, reserveAmounts);
+                    const liquidityReturns = await getLiquidityReturns(state.length == 0, converter, reserveTokens, reserveAmounts);
                     await converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, { value: hasETH ? reserveAmounts.slice(-1)[0] : 0 });
                     const allowances = await Promise.all(reserveTokens.map(reserveToken => getAllowance(reserveToken, converter)));
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
@@ -173,33 +173,47 @@ contract('ConverterLiquidity', accounts => {
 
                     for (let i = 0; i < allowances.length; i++) {
                         const diff = Decimal(allowances[i].toString()).div(reserveAmounts[i].toString());
-                        expect(diff.toNumber()).to.be.gte(0).and.lte(0.0000005);
+                        expect(diff.gte('0') && diff.lte('0.0000005')).to.be.true();
                     }
 
                     const actual = balances.map(balance => Decimal(balance.toString()).div(supply.toString()));
                     for (let i = 0; i < expected.length; i++) {
                         const diff = expected[i].div(actual[i]);
-                        expect(diff.toNumber()).to.be.gte(0.996).and.lte(1);
+                        expect(diff.gte('0.996') && diff.lte('1')).to.be.true();
+                        for (const liquidityCost of liquidityCosts) {
+                            expect(liquidityCost[i]).to.be.bignumber.equal(balances[i].sub(prevBalances[i]));
+                        }
+                    }
+
+                    for (const liquidityReturn of liquidityReturns) {
+                        expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
                     }
 
                     expected = actual;
+                    prevSupply = supply;
+                    prevBalances = balances;
                 }
 
                 for (let n = state.length - 1; n > 0; n--) {
                     const supplyAmount = state[n].supply.sub(new BN(state[n - 1].supply));
+                    const reserveAmounts = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
                     await converter.removeLiquidity(supplyAmount, reserveTokens, reserveTokens.map(reserveTokens => 1));
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                     for (let i = 0; i < balances.length; i++) {
                         const diff = Decimal(state[n - 1].balances[i].toString()).div(Decimal(balances[i].toString()));
-                        expect(diff.toNumber()).to.be.gte(0.999999996).and.lte(1);
+                        expect(diff.gte('0.999999996') && diff.lte('1')).to.be.true();
+                        expect(prevBalances[i].sub(balances[i])).to.be.bignumber.equal(reserveAmounts[i]);
                     }
+                    prevBalances = balances;
                 }
 
                 const supplyAmount = state[0].supply;
+                const reserveAmounts = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
                 await converter.removeLiquidity(supplyAmount, reserveTokens, reserveTokens.map(reserveTokens => 1));
                 const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
                 for (let i = 0; i < balances.length; i++) {
                     expect(balances[i]).to.be.bignumber.equal(new BN(0));
+                    expect(prevBalances[i].sub(balances[i])).to.be.bignumber.equal(reserveAmounts[i]);
                 }
             });
         };
@@ -252,5 +266,23 @@ contract('ConverterLiquidity', accounts => {
 
         const token = await ERC20Token.at(reserveToken);
         return await token.balanceOf.call(converter.address);
+    };
+
+    const getLiquidityCosts = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+        if (firstTime) {
+            return reserveAmounts.map((reserveAmount, i) => reserveAmounts);
+        }
+
+        return await Promise.all(reserveAmounts.map((reserveAmount, i) => converter.addLiquidityCost(reserveTokens, i, reserveAmount)));
+    };
+
+    const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+        if (firstTime) {
+            const length = Math.round(reserveAmounts.map(reserveAmount => reserveAmount.toString()).join('').length / reserveAmounts.length);
+            const retVal = new BN('1'.padEnd(length, '0'));
+            return reserveAmounts.map((reserveAmount, i) => retVal);
+        }
+
+        return await Promise.all(reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount)));
     };
 });
