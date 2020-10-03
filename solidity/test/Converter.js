@@ -271,46 +271,6 @@ contract('Converter', accounts => {
                     );
                 });
 
-                it('verifies that the owner can withdraw other tokens from the anchor', async () => {
-                    const converter = await initConverter(type, true, isETHReserve);
-                    const ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 100000);
-
-                    const prevBalance = await ercToken.balanceOf.call(owner);
-
-                    const value = new BN(100);
-                    await ercToken.transfer(anchorAddress, value);
-
-                    let balance = await ercToken.balanceOf.call(owner);
-                    expect(balance).to.be.bignumber.equal(prevBalance.sub(value));
-
-                    await converter.withdrawFromAnchor(ercToken.address, owner, value);
-
-                    balance = await ercToken.balanceOf.call(owner);
-                    expect(balance).to.be.bignumber.equal(prevBalance);
-                });
-
-                it('should revert when the owner attempts to withdraw other tokens from the anchor while the converter is not active', async () => {
-                    const converter = await initConverter(type, false, isETHReserve);
-                    const ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 100000);
-
-                    const value = new BN(222);
-                    await ercToken.transfer(anchor.address, value);
-
-                    await expectRevert(converter.withdrawFromAnchor(ercToken.address, owner, value),
-                        'ERR_ACCESS_DENIED');
-                });
-
-                it('should revert when a non owner attempts to withdraw other tokens from the anchor', async () => {
-                    const converter = await initConverter(type, true, isETHReserve);
-                    const ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 100000);
-
-                    const value = new BN(11);
-                    await ercToken.transfer(anchor.address, value);
-
-                    await expectRevert(converter.withdrawFromAnchor(ercToken.address, owner, value, { from: nonOwner }),
-                        'ERR_ACCESS_DENIED');
-                });
-
                 it('verifies the owner can update the conversion whitelist contract address', async () => {
                     const converter = await initConverter(type, false, isETHReserve);
                     const prevWhitelist = await converter.conversionWhitelist.call();

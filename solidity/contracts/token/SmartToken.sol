@@ -3,14 +3,12 @@ pragma solidity 0.6.12;
 import "./ERC20Token.sol";
 import "./interfaces/ISmartToken.sol";
 import "../utility/Owned.sol";
-import "../utility/TokenHolder.sol";
 
 /**
   * @dev Smart Token
   *
-  * 'Owned' is specified here for readability reasons
 */
-contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
+contract SmartToken is ISmartToken, ERC20Token, Owned {
     using SafeMath for uint256;
 
     /**

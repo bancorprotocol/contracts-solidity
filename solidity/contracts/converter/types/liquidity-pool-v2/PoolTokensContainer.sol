@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 import "./interfaces/IPoolTokensContainer.sol";
 import "../../../utility/Owned.sol";
-import "../../../utility/TokenHolder.sol";
 import "../../../token/SmartToken.sol";
 
 /**
@@ -12,7 +11,7 @@ import "../../../token/SmartToken.sol";
   *
   * It maintains and provides a list of the underlying pool tokens.
  */
-contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
+contract PoolTokensContainer is IPoolTokensContainer, Owned {
     uint8 internal constant MAX_POOL_TOKENS = 5;    // maximum pool tokens in the container
 
     string public name;                 // pool name
