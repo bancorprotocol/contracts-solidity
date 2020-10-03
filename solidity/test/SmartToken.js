@@ -34,18 +34,6 @@ contract('SmartToken', accounts => {
         await expectRevert(SmartToken.new(name, '', decimals), 'ERR_INVALID_SYMBOL');
     });
 
-    it('verifies that the owner can disable & re-enable transfers', async () => {
-        await token.disableTransfers(true);
-        expect(await token.transfersEnabled.call()).to.be.false();
-
-        await token.disableTransfers(false);
-        expect(await token.transfersEnabled.call()).to.be.true();
-    });
-
-    it('should revert when a non owner attempts to disable transfers', async () => {
-        await expectRevert(token.disableTransfers(true, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-    });
-
     it('verifies that issue tokens updates the target balance and the total supply', async () => {
         const value = new BN(100);
         await token.issue(receiver, value);
