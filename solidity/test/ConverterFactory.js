@@ -6,7 +6,7 @@ const ConverterFactory = artifacts.require('TestConverterFactory');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
 const TypedConverterAnchorFactory = artifacts.require('TestTypedConverterAnchorFactory');
 const ConverterBase = artifacts.require('ConverterBase');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 
 contract('ConverterFactory', accounts => {
     let contractRegistry;
@@ -74,12 +74,12 @@ contract('ConverterFactory', accounts => {
         await converterFactory.createAnchor(await anchorFactory.converterType.call(), name, 'ANCHOR1', 2);
 
         const anchorAddress = await converterFactory.createdAnchor.call();
-        const smartToken = await SmartToken.at(anchorAddress);
+        const anchor = await DSToken.at(anchorAddress);
 
-        expect(await smartToken.name.call()).to.not.be.eql(name);
-        expect(await smartToken.name.call()).to.be.eql(await anchorFactory.name.call());
-        expect(await smartToken.owner.call()).to.be.eql(converterFactory.address);
-        expect(await smartToken.newOwner.call()).to.be.eql(owner);
+        expect(await anchor.name.call()).to.not.be.eql(name);
+        expect(await anchor.name.call()).to.be.eql(await anchorFactory.name.call());
+        expect(await anchor.owner.call()).to.be.eql(converterFactory.address);
+        expect(await anchor.newOwner.call()).to.be.eql(owner);
     });
 
     it('should create an achor using custom settings', async () => {
@@ -87,27 +87,27 @@ contract('ConverterFactory', accounts => {
         await converterFactory.createAnchor(11, name, 'ANCHOR1', 2);
 
         const anchorAddress = await converterFactory.createdAnchor.call();
-        const smartToken = await SmartToken.at(anchorAddress);
+        const anchor = await DSToken.at(anchorAddress);
 
-        expect(await smartToken.name.call()).to.be.eql(name);
-        expect(await smartToken.name.call()).not.to.be.eql(await anchorFactory.name.call());
-        expect(await smartToken.owner.call()).to.be.eql(converterFactory.address);
-        expect(await smartToken.newOwner.call()).to.be.eql(owner);
+        expect(await anchor.name.call()).to.be.eql(name);
+        expect(await anchor.name.call()).not.to.be.eql(await anchorFactory.name.call());
+        expect(await anchor.owner.call()).to.be.eql(converterFactory.address);
+        expect(await anchor.newOwner.call()).to.be.eql(owner);
     });
 
     it('should create converter', async () => {
         await converterFactory.registerTypedConverterFactory(factory.address);
 
-        const smartToken = await SmartToken.new('Smart1', 'SMART1', 2);
+        const anchor = await DSToken.new('Token1', 'TKN1', 2);
 
         const converterType = await factory.converterType.call();
 
-        const res = await converterFactory.createConverter(converterType, smartToken.address,
+        const res = await converterFactory.createConverter(converterType, anchor.address,
             contractRegistry.address, MAX_CONVERSION_FEE);
         const converterAddress = await converterFactory.createdConverter.call();
         const converter = await ConverterBase.at(converterAddress);
 
-        expect(await converter.anchor.call()).to.be.eql(smartToken.address);
+        expect(await converter.anchor.call()).to.be.eql(anchor.address);
         expect(await converter.registry.call()).to.be.eql(contractRegistry.address);
         expect(await converter.maxConversionFee.call()).to.be.bignumber.equal(MAX_CONVERSION_FEE);
         expect(await converter.owner.call()).to.be.eql(converterFactory.address);

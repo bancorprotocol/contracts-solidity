@@ -3,9 +3,9 @@ const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
 const { ZERO_ADDRESS } = constants;
 
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 
-contract('SmartToken', accounts => {
+contract('DSToken', accounts => {
     let token;
     const name = 'Token1';
     const symbol = 'TKN1';
@@ -17,7 +17,7 @@ contract('SmartToken', accounts => {
     const nonOwner = accounts[3];
 
     beforeEach(async () => {
-        token = await SmartToken.new(name, symbol, decimals);
+        token = await DSToken.new(name, symbol, decimals);
     });
 
     it('verifies the token name, symbol and decimal units after construction', async () => {
@@ -27,11 +27,11 @@ contract('SmartToken', accounts => {
     });
 
     it('should revert when attempting to construct a token with no name', async () => {
-        await expectRevert(SmartToken.new('', symbol, decimals), 'ERR_INVALID_NAME');
+        await expectRevert(DSToken.new('', symbol, decimals), 'ERR_INVALID_NAME');
     });
 
     it('should revert when attempting to construct a token with no symbol', async () => {
-        await expectRevert(SmartToken.new(name, '', decimals), 'ERR_INVALID_SYMBOL');
+        await expectRevert(DSToken.new(name, '', decimals), 'ERR_INVALID_SYMBOL');
     });
 
     it('verifies that issue tokens updates the target balance and the total supply', async () => {

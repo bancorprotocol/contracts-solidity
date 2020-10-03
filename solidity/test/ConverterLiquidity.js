@@ -5,15 +5,15 @@ const Decimal = require('decimal.js');
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 const ERC20Token = artifacts.require('ERC20Token');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
 
 contract('ConverterLiquidity', accounts => {
     const initLiquidityPool = async (hasETH, ...weights) => {
-        const smartToken = await SmartToken.new('name', 'symbol', 0);
-        const converter = await LiquidityPoolV1Converter.new(smartToken.address, contractRegistry.address, 0);
+        const poolToken = await DSToken.new('name', 'symbol', 0);
+        const converter = await LiquidityPoolV1Converter.new(poolToken.address, contractRegistry.address, 0);
 
         for (let i = 0; i < weights.length; i++) {
             if (hasETH && i === weights.length - 1) {
@@ -25,10 +25,10 @@ contract('ConverterLiquidity', accounts => {
             }
         }
 
-        await smartToken.transferOwnership(converter.address);
+        await poolToken.transferOwnership(converter.address);
         await converter.acceptAnchorOwnership();
 
-        return [converter, smartToken];
+        return [converter, poolToken];
     };
 
     let contractRegistry;
@@ -84,7 +84,7 @@ contract('ConverterLiquidity', accounts => {
 
     describe('security assertion', () => {
         let converter;
-        let smartToken;
+        let poolToken;
         let reserveTokens;
 
         const weights = [1, 2, 3, 4, 5];
@@ -92,7 +92,7 @@ contract('ConverterLiquidity', accounts => {
 
         context('without ether reserve', async () => {
             beforeEach(async () => {
-                [converter, smartToken] = await initLiquidityPool(false, ...weights);
+                [converter, poolToken] = await initLiquidityPool(false, ...weights);
                 reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
             });
 
@@ -105,7 +105,7 @@ contract('ConverterLiquidity', accounts => {
             });
 
             it('should revert if any of the input reserve tokens is not one of the reserve tokens', async () => {
-                await expectRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), smartToken.address], reserveAmounts,
+                await expectRevert(converter.addLiquidity([...reserveTokens.slice(0, -1), poolToken.address], reserveAmounts,
                     MIN_RETURN), 'ERR_INVALID_RESERVE');
             });
 
@@ -136,7 +136,7 @@ contract('ConverterLiquidity', accounts => {
 
         context('with ether reserve', async () => {
             beforeEach(async () => {
-                [converter, smartToken] = await initLiquidityPool(true, ...weights);
+                [converter, poolToken] = await initLiquidityPool(true, ...weights);
                 reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
             });
 
@@ -150,7 +150,7 @@ contract('ConverterLiquidity', accounts => {
     describe('functionality assertion', () => {
         const test = (hasETH, ...weights) => {
             it(`hasETH = ${hasETH}, weights = [${weights.join('%, ')}%]`, async () => {
-                const [converter, smartToken] = await initLiquidityPool(hasETH, ...weights);
+                const [converter, poolToken] = await initLiquidityPool(hasETH, ...weights);
                 const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
 
                 const state = [];
@@ -167,7 +167,7 @@ contract('ConverterLiquidity', accounts => {
                     await converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, { value: hasETH ? reserveAmounts.slice(-1)[0] : 0 });
                     const allowances = await Promise.all(reserveTokens.map(reserveToken => getAllowance(reserveToken, converter)));
                     const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
-                    const supply = await smartToken.totalSupply.call();
+                    const supply = await poolToken.totalSupply.call();
 
                     state.push({ supply: supply, balances: balances });
 

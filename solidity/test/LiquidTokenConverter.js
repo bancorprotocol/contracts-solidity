@@ -7,7 +7,7 @@ const { ZERO_ADDRESS } = constants;
 const BancorNetwork = artifacts.require('BancorNetwork');
 const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ERC20Token = artifacts.require('ERC20Token');
@@ -21,7 +21,7 @@ contract('LiquidTokenConverter', accounts => {
     };
 
     const initConverter = async (activate, isETHReserve, maxConversionFee = 0) => {
-        token = await SmartToken.new('Token1', 'TKN1', 2);
+        token = await DSToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
         const converter = await createConverter(tokenAddress, contractRegistry.address, maxConversionFee);
@@ -108,7 +108,7 @@ contract('LiquidTokenConverter', accounts => {
         upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
-        const token = await SmartToken.new('Token1', 'TKN1', 2);
+        const token = await DSToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
         reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);

@@ -3,6 +3,7 @@ ERC20Token
 * Removed the approve frontrunning protection
 
 SmartToken
+* Renamed to DSToken
 * Removed the owner's ability to disable transfers
 * Removed the owner's ability to withdraw other tokens from the contract
 

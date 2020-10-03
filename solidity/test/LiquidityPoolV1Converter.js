@@ -10,7 +10,7 @@ const { duration, latest } = time;
 const BancorNetwork = artifacts.require('BancorNetwork');
 const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ERC20Token = artifacts.require('ERC20Token');
@@ -24,7 +24,7 @@ contract('LiquidityPoolV1Converter', accounts => {
     };
 
     const initConverter = async (activate, isETHReserve, maxConversionFee = 0, isStandardPool = false) => {
-        token = await SmartToken.new('Token1', 'TKN1', 2);
+        token = await DSToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
         const converter = await createConverter(tokenAddress, contractRegistry.address, maxConversionFee);
@@ -117,7 +117,7 @@ contract('LiquidityPoolV1Converter', accounts => {
         upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
-        const token = await SmartToken.new('Token1', 'TKN1', 2);
+        const token = await DSToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
         reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
@@ -597,7 +597,7 @@ contract('LiquidityPoolV1Converter', accounts => {
         ];
 
         beforeEach(async () => {
-            const token = await SmartToken.new('Token', 'TKN', 0);
+            const token = await DSToken.new('Token', 'TKN', 0);
             converter = await LiquidityPoolV1Converter.new(token.address, contractRegistry.address, 0);
             reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
             reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
@@ -644,7 +644,7 @@ contract('LiquidityPoolV1Converter', accounts => {
         for (const amounts of addAmounts) {
             for (const percents of removePercents) {
                 it(`(amounts = ${amounts}, percents = ${percents})`, async () => {
-                    const token = await SmartToken.new('Token', 'TKN', 0);
+                    const token = await DSToken.new('Token', 'TKN', 0);
                     const converter = await LiquidityPoolV1Converter.new(token.address, contractRegistry.address, 0);
                     const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
                     const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);

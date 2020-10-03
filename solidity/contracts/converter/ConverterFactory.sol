@@ -7,7 +7,7 @@ import "./interfaces/ITypedConverterAnchorFactory.sol";
 import "./interfaces/ITypedConverterCustomFactory.sol";
 import "../utility/Owned.sol";
 import "../utility/interfaces/IContractRegistry.sol";
-import "../token/SmartToken.sol";
+import "../token/DSToken.sol";
 
 /*
     Converter Factory
@@ -77,8 +77,8 @@ contract ConverterFactory is IConverterFactory, Owned {
         ITypedConverterAnchorFactory factory = anchorFactories[_converterType];
 
         if (address(factory) == address(0)) {
-            // create default anchor (SmartToken)
-            anchor = new SmartToken(_name, _symbol, _decimals);
+            // create default anchor (DSToken)
+            anchor = new DSToken(_name, _symbol, _decimals);
         }
         else {
             // create custom anchor

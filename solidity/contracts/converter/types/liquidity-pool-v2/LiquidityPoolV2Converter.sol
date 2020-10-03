@@ -19,12 +19,12 @@ import "../../../utility/Types.sol";
 contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     uint8 internal constant AMPLIFICATION_FACTOR = 20;  // factor to use for conversion calculations (reduces slippage)
 
-    IPriceOracle public priceOracle;                                    // external price oracle
-    IERC20Token public primaryReserveToken;                             // primary reserve in the pool
-    IERC20Token public secondaryReserveToken;                           // secondary reserve in the pool (cache)
-    mapping (IERC20Token => uint256) private stakedBalances;            // tracks the staked liquidity in the pool plus the fees
-    mapping (IERC20Token => ISmartToken) private reservesToPoolTokens;  // maps each reserve to its pool token
-    mapping (ISmartToken => IERC20Token) private poolTokensToReserves;  // maps each pool token to its reserve
+    IPriceOracle public priceOracle;                                // external price oracle
+    IERC20Token public primaryReserveToken;                         // primary reserve in the pool
+    IERC20Token public secondaryReserveToken;                       // secondary reserve in the pool (cache)
+    mapping (IERC20Token => uint256) private stakedBalances;        // tracks the staked liquidity in the pool plus the fees
+    mapping (IERC20Token => IDSToken) private reservesToPoolTokens; // maps each reserve to its pool token
+    mapping (IDSToken => IERC20Token) private poolTokensToReserves; // maps each pool token to its reserve
 
     Fraction public externalRate;           // external rate of 1 primary token in secondary tokens
     uint256 public externalRateUpdateTime;  // last time the external rate was updated (in seconds)
@@ -56,13 +56,13 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     }
 
     // ensures the address is a pool token
-    modifier validPoolToken(ISmartToken _address) {
+    modifier validPoolToken(IDSToken _address) {
         _validPoolToken(_address);
         _;
     }
 
     // error message binary size optimization
-    function _validPoolToken(ISmartToken _address) internal view {
+    function _validPoolToken(IDSToken _address) internal view {
         require(address(poolTokensToReserves[_address]) != address(0), "ERR_INVALID_POOL_TOKEN");
     }
 
@@ -244,7 +244,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @return pool token address
     */
-    function poolToken(IERC20Token _reserveToken) public view returns (ISmartToken) {
+    function poolToken(IERC20Token _reserveToken) public view returns (IDSToken) {
         return reservesToPoolTokens[_reserveToken];
     }
 
@@ -255,7 +255,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @return liquidation limit
     */
-    function liquidationLimit(ISmartToken _poolToken) public view returns (uint256) {
+    function liquidationLimit(IDSToken _poolToken) public view returns (uint256) {
         // get the pool token supply
         uint256 poolTokenSupply = _poolToken.totalSupply();
 
@@ -425,7 +425,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // dispatch the rate event for the target reserve pool token
         // the target reserve pool token rate is the only one that's affected
         // by conversions since conversion fees are applied to the target reserve
-        ISmartToken targetPoolToken = reservesToPoolTokens[_targetToken];
+        IDSToken targetPoolToken = reservesToPoolTokens[_targetToken];
         dispatchPoolTokenRateUpdateEvent(targetPoolToken, targetPoolToken.totalSupply(), _targetToken);
 
         // return the conversion result amount
@@ -471,7 +471,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         }
 
         // get the pool token associated with the reserve and its supply
-        ISmartToken reservePoolToken = reservesToPoolTokens[_reserveToken];
+        IDSToken reservePoolToken = reservesToPoolTokens[_reserveToken];
         uint256 poolTokenSupply = reservePoolToken.totalSupply();
 
         // for non ETH reserve, transfer the funds from the user to the pool
@@ -520,7 +520,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @return amount of liquidity removed
     */
-    function removeLiquidity(ISmartToken _poolToken, uint256 _amount, uint256 _minReturn)
+    function removeLiquidity(IDSToken _poolToken, uint256 _amount, uint256 _minReturn)
         public
         protected
         active
@@ -583,7 +583,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       *
       * @return amount after fee and fee, in reserve token units
     */
-    function removeLiquidityReturnAndFee(ISmartToken _poolToken, uint256 _amount) public view returns (uint256, uint256) {
+    function removeLiquidityReturnAndFee(IDSToken _poolToken, uint256 _amount) public view returns (uint256, uint256) {
         uint256 totalSupply = _poolToken.totalSupply();
         uint256 stakedBalance = stakedBalances[poolTokensToReserves[_poolToken]];
 
@@ -650,12 +650,12 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
     */
     function createPoolTokens() internal {
         IPoolTokensContainer container = IPoolTokensContainer(address(anchor));
-        ISmartToken[] memory poolTokens = container.poolTokens();
+        IDSToken[] memory poolTokens = container.poolTokens();
         bool initialSetup = poolTokens.length == 0;
 
         uint256 reserveCount = reserveTokens.length;
         for (uint256 i = 0; i < reserveCount; i++) {
-            ISmartToken reservePoolToken;
+            IDSToken reservePoolToken;
             if (initialSetup) {
                 reservePoolToken = container.createToken();
             }
@@ -757,7 +757,7 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param _poolTokenSupply total pool token supply
       * @param _reserveToken    address of the reserve token
     */
-    function dispatchPoolTokenRateUpdateEvent(ISmartToken _poolToken, uint256 _poolTokenSupply, IERC20Token _reserveToken) private {
+    function dispatchPoolTokenRateUpdateEvent(IDSToken _poolToken, uint256 _poolTokenSupply, IERC20Token _reserveToken) private {
         emit TokenRateUpdate(_poolToken, _reserveToken, stakedBalances[_reserveToken], _poolTokenSupply);
     }
 

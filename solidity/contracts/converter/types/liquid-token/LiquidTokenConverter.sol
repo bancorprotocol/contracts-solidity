@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 import "../../ConverterBase.sol";
-import "../../../token/interfaces/ISmartToken.sol";
+import "../../../token/interfaces/IDSToken.sol";
 
 /**
   * @dev Liquid Token Converter
@@ -20,7 +20,7 @@ contract LiquidTokenConverter is ConverterBase {
       * @param  _maxConversionFee   maximum conversion fee, represented in ppm
     */
     constructor(
-        ISmartToken _token,
+        IDSToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee
     )
@@ -76,9 +76,9 @@ contract LiquidTokenConverter is ConverterBase {
       * @return expected fee
     */
     function targetAmountAndFee(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view override returns (uint256, uint256) {
-        if (_targetToken == ISmartToken(address(anchor)) && reserves[_sourceToken].isSet)
+        if (_targetToken == IDSToken(address(anchor)) && reserves[_sourceToken].isSet)
             return purchaseTargetAmount(_amount);
-        if (_sourceToken == ISmartToken(address(anchor)) && reserves[_targetToken].isSet)
+        if (_sourceToken == IDSToken(address(anchor)) && reserves[_targetToken].isSet)
             return saleTargetAmount(_amount);
 
         // invalid input
@@ -105,11 +105,11 @@ contract LiquidTokenConverter is ConverterBase {
         uint256 targetAmount;
         IERC20Token reserveToken;
 
-        if (_targetToken == ISmartToken(address(anchor)) && reserves[_sourceToken].isSet) {
+        if (_targetToken == IDSToken(address(anchor)) && reserves[_sourceToken].isSet) {
             reserveToken = _sourceToken;
             targetAmount = buy(_amount, _trader, _beneficiary);
         }
-        else if (_sourceToken == ISmartToken(address(anchor)) && reserves[_targetToken].isSet) {
+        else if (_sourceToken == IDSToken(address(anchor)) && reserves[_targetToken].isSet) {
             reserveToken = _targetToken;
             targetAmount = sell(_amount, _trader, _beneficiary);
         }
@@ -119,9 +119,9 @@ contract LiquidTokenConverter is ConverterBase {
         }
 
         // dispatch rate update for the liquid token
-        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
+        uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
         uint32 reserveWeight = reserves[reserveToken].weight;
-        emit TokenRateUpdate(ISmartToken(address(anchor)), reserveToken, reserveBalance(reserveToken).mul(PPM_RESOLUTION), totalSupply.mul(reserveWeight));
+        emit TokenRateUpdate(IDSToken(address(anchor)), reserveToken, reserveBalance(reserveToken).mul(PPM_RESOLUTION), totalSupply.mul(reserveWeight));
 
         return targetAmount;
     }
@@ -140,7 +140,7 @@ contract LiquidTokenConverter is ConverterBase {
         active
         returns (uint256, uint256)
     {
-        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
+        uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
         IERC20Token reserveToken = reserveTokens[0];
 
         // if the current supply is zero, then return the input amount divided by the normalized reserve-weight
@@ -173,7 +173,7 @@ contract LiquidTokenConverter is ConverterBase {
         active
         returns (uint256, uint256)
     {
-        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
+        uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
 
         IERC20Token reserveToken = reserveTokens[0];
 
@@ -221,10 +221,10 @@ contract LiquidTokenConverter is ConverterBase {
         syncReserveBalance(reserveToken);
 
         // issue new funds to the beneficiary in the liquid token
-        ISmartToken(address(anchor)).issue(_beneficiary, amount);
+        IDSToken(address(anchor)).issue(_beneficiary, amount);
 
         // dispatch the conversion event
-        dispatchConversionEvent(reserveToken, ISmartToken(address(anchor)), _trader, _amount, amount, fee);
+        dispatchConversionEvent(reserveToken, IDSToken(address(anchor)), _trader, _amount, amount, fee);
 
         return amount;
     }
@@ -240,7 +240,7 @@ contract LiquidTokenConverter is ConverterBase {
     */
     function sell(uint256 _amount, address _trader, address payable _beneficiary) internal returns (uint256) {
         // ensure that the input amount was already deposited
-        require(_amount <= ISmartToken(address(anchor)).balanceOf(address(this)), "ERR_INVALID_AMOUNT");
+        require(_amount <= IDSToken(address(anchor)).balanceOf(address(this)), "ERR_INVALID_AMOUNT");
 
         // get expected target amount and fee
         (uint256 amount, uint256 fee) = saleTargetAmount(_amount);
@@ -251,12 +251,12 @@ contract LiquidTokenConverter is ConverterBase {
         IERC20Token reserveToken = reserveTokens[0];
 
         // ensure that the trade will only deplete the reserve balance if the total supply is depleted as well
-        uint256 tokenSupply = ISmartToken(address(anchor)).totalSupply();
+        uint256 tokenSupply = IDSToken(address(anchor)).totalSupply();
         uint256 rsvBalance = reserveBalance(reserveToken);
         assert(amount < rsvBalance || (amount == rsvBalance && _amount == tokenSupply));
 
         // destroy the tokens from the converter balance in the liquid token
-        ISmartToken(address(anchor)).destroy(address(this), _amount);
+        IDSToken(address(anchor)).destroy(address(this), _amount);
 
         // update the reserve balance
         reserves[reserveToken].balance = reserves[reserveToken].balance.sub(amount);
@@ -268,7 +268,7 @@ contract LiquidTokenConverter is ConverterBase {
             safeTransfer(reserveToken, _beneficiary, amount);
 
         // dispatch the conversion event
-        dispatchConversionEvent(ISmartToken(address(anchor)), reserveToken, _trader, _amount, amount, fee);
+        dispatchConversionEvent(IDSToken(address(anchor)), reserveToken, _trader, _amount, amount, fee);
 
         return amount;
     }

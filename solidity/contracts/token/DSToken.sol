@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 import "./ERC20Token.sol";
-import "./interfaces/ISmartToken.sol";
+import "./interfaces/IDSToken.sol";
 import "../utility/Owned.sol";
 
 /**
-  * @dev Smart Token
+  * @dev DSToken represents a token with dynamic supply.
+  * The owner of the token can mint/burn tokens to/from any account.
   *
 */
-contract SmartToken is ISmartToken, ERC20Token, Owned {
+contract DSToken is IDSToken, ERC20Token, Owned {
     using SafeMath for uint256;
 
     /**
@@ -26,7 +27,7 @@ contract SmartToken is ISmartToken, ERC20Token, Owned {
     event Destruction(uint256 _amount);
 
     /**
-      * @dev initializes a new SmartToken instance
+      * @dev initializes a new DSToken instance
       *
       * @param _name       token name
       * @param _symbol     token short symbol, minimum 1 character

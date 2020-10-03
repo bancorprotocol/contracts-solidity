@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 import "../converter/interfaces/IConverterAnchor.sol";
 import "../converter/interfaces/ITypedConverterAnchorFactory.sol";
-import "../token/SmartToken.sol";
+import "../token/DSToken.sol";
 
 contract TestTypedConverterAnchorFactory is ITypedConverterAnchorFactory {
     string public name;
@@ -16,7 +16,7 @@ contract TestTypedConverterAnchorFactory is ITypedConverterAnchorFactory {
     }
 
     function createAnchor(string memory /*_name */, string memory _symbol, uint8 _decimals) external override returns (IConverterAnchor) {
-        IConverterAnchor anchor = new SmartToken(name, _symbol, _decimals);
+        IConverterAnchor anchor = new DSToken(name, _symbol, _decimals);
         anchor.transferOwnership(msg.sender);
         return anchor;
     }

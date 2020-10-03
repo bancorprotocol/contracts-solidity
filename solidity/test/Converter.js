@@ -24,7 +24,7 @@ const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1Conver
 const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 const PoolTokensContainer = artifacts.require('PoolTokensContainer');
 const ChainlinkPriceOracle = artifacts.require('TestChainlinkPriceOracle');
 const Whitelist = artifacts.require('Whitelist');
@@ -116,11 +116,11 @@ contract('Converter', accounts => {
     const createAnchor = async (type) => {
         switch (type) {
             case 0:
-                anchor = await SmartToken.new('Token1', 'TKN1', 2);
+                anchor = await DSToken.new('Token1', 'TKN1', 2);
                 break;
 
             case 1:
-                anchor = await SmartToken.new('Pool1', 'POOL1', 2);
+                anchor = await DSToken.new('Pool1', 'POOL1', 2);
                 break;
 
             case 2:
@@ -442,7 +442,7 @@ contract('Converter', accounts => {
 
                     await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
                     const anchorAddress = await converter.anchor.call();
-                    const token = await SmartToken.at(anchorAddress);
+                    const token = await DSToken.at(anchorAddress);
                     const newOwner = await token.newOwner.call();
                     expect(newOwner).to.eql(nonOwner);
                 });

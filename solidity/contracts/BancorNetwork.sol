@@ -9,7 +9,7 @@ import "./utility/ReentrancyGuard.sol";
 import "./utility/TokenHolder.sol";
 import "./utility/SafeMath.sol";
 import "./token/interfaces/IEtherToken.sol";
-import "./token/interfaces/ISmartToken.sol";
+import "./token/interfaces/IDSToken.sol";
 import "./bancorx/interfaces/IBancorX.sol";
 
 // interface of older converters for backward compatibility
@@ -161,10 +161,10 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             sourceToken = getConverterTokenAddress(converter, sourceToken);
             targetToken = getConverterTokenAddress(converter, targetToken);
 
-            if (address(targetToken) == anchor) { // buy the smart token
-                // check if the current smart token has changed
+            if (address(targetToken) == anchor) { // buy the anchor
+                // check if the current anchor has changed
                 if (i < 3 || anchor != _path[i - 3])
-                    supply = ISmartToken(anchor).totalSupply();
+                    supply = IDSToken(anchor).totalSupply();
 
                 // get the amount & the conversion fee
                 balance = converter.getConnectorBalance(sourceToken);
@@ -173,13 +173,13 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
                 fee = amount.mul(converter.conversionFee()).div(PPM_RESOLUTION);
                 amount -= fee;
 
-                // update the smart token supply for the next iteration
+                // update the anchor supply for the next iteration
                 supply = supply.add(amount);
             }
-            else if (address(sourceToken) == anchor) { // sell the smart token
-                // check if the current smart token has changed
+            else if (address(sourceToken) == anchor) { // sell the anchor
+                // check if the current anchor has changed
                 if (i < 3 || anchor != _path[i - 3])
-                    supply = ISmartToken(anchor).totalSupply();
+                    supply = IDSToken(anchor).totalSupply();
 
                 // get the amount & the conversion fee
                 balance = converter.getConnectorBalance(targetToken);
@@ -188,7 +188,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
                 fee = amount.mul(converter.conversionFee()).div(PPM_RESOLUTION);
                 amount -= fee;
 
-                // update the smart token supply for the next iteration
+                // update the anchor supply for the next iteration
                 supply = supply.sub(amount);
             }
             else { // cross reserve conversion
@@ -397,8 +397,8 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
                     safeTransfer(stepData.sourceToken, address(stepData.converter), fromAmount);
             }
             // older converter
-            // if the source token is the smart token, no need to do any transfers as the converter controls it
-            else if (stepData.sourceToken != ISmartToken(address(stepData.anchor))) {
+            // if the source token is the liquid token, no need to do any transfers as the converter controls it
+            else if (stepData.sourceToken != IDSToken(address(stepData.anchor))) {
                 // grant allowance for it to transfer the tokens from the network contract
                 ensureAllowance(stepData.sourceToken, address(stepData.converter), fromAmount);
             }

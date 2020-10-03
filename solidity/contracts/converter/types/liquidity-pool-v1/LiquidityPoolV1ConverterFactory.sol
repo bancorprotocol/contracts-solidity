@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 import "./LiquidityPoolV1Converter.sol";
 import "../../interfaces/IConverter.sol";
 import "../../interfaces/ITypedConverterFactory.sol";
-import "../../../token/interfaces/ISmartToken.sol";
+import "../../../token/interfaces/IDSToken.sol";
 
 /*
     LiquidityPoolV1Converter Factory
@@ -29,7 +29,7 @@ contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
       * @return a new converter
     */
     function createConverter(IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) external override returns (IConverter) {
-        IConverter converter = new LiquidityPoolV1Converter(ISmartToken(address(_anchor)), _registry, _maxConversionFee);
+        IConverter converter = new LiquidityPoolV1Converter(IDSToken(address(_anchor)), _registry, _maxConversionFee);
         converter.transferOwnership(msg.sender);
         return converter;
     }

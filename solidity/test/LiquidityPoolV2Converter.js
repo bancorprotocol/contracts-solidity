@@ -21,7 +21,7 @@ const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2Conver
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 const PoolTokensContainer = artifacts.require('PoolTokensContainer');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 const ChainlinkPriceOracle = artifacts.require('TestChainlinkPriceOracle');
 const Whitelist = artifacts.require('Whitelist');
 
@@ -62,8 +62,8 @@ contract('LiquidityPoolV2Converter', accounts => {
                         await converter.activate(primaryReserveAddress, chainlinkPriceOracleB.address, chainlinkPriceOracleA.address);
                     }
 
-                    poolToken1 = await SmartToken.at(await converter.poolToken.call(getReserve1Address(isETHReserve)));
-                    poolToken2 = await SmartToken.at(await converter.poolToken.call(reserveToken2.address));
+                    poolToken1 = await DSToken.at(await converter.poolToken.call(getReserve1Address(isETHReserve)));
+                    poolToken2 = await DSToken.at(await converter.poolToken.call(reserveToken2.address));
                 }
 
                 if (addLiquidity) {
