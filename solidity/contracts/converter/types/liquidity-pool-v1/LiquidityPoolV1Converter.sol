@@ -710,13 +710,14 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev returns the nearest integer to a given quotient
+      * the computation is overflow-safe assuming that the input is sufficiently small
       *
       * @param _n   quotient numerator
       * @param _d   quotient denominator
       *
       * @return the nearest integer to the given quotient
     */
-    function roundDiv(uint256 _n, uint256 _d) public pure returns (uint256) {
+    function roundDivUnsafe(uint256 _n, uint256 _d) public pure returns (uint256) {
         return (_n + _d / 2) / _d;
     }
 
@@ -732,7 +733,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint256 length = _values.length;
         for (uint256 i = 0; i < length; i++)
             numOfDigits += decimalLength(_values[i]);
-        return uint256(10) ** (roundDiv(numOfDigits, length) - 1);
+        return uint256(10) ** (roundDivUnsafe(numOfDigits, length) - 1);
     }
 
     /**
@@ -822,5 +823,12 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint256 x = roundDiv(_a * _scale, _a.add(_b));
         uint256 y = _scale - x;
         return (x, y);
+    }
+
+    /**
+      * @dev computes the nearest integer to a given quotient without overflowing or underflowing.
+    */
+    function roundDiv(uint256 _n, uint256 _d) internal pure returns (uint256) {
+        return _n / _d + _n % _d / (_d - _d / 2);
     }
 }

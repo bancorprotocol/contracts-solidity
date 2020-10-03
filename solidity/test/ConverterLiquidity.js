@@ -65,9 +65,9 @@ contract('ConverterLiquidity', accounts => {
 
         for (let n = 1; n <= 15; n++) {
             for (let d = 1; d <= 15; d++) {
-                it(`roundDiv(${n}, ${d})`, async () => {
+                it(`roundDivUnsafe(${n}, ${d})`, async () => {
                     const expected = Math.round(n / d);
-                    const actual = await converter.roundDiv.call(n, d);
+                    const actual = await converter.roundDivUnsafe.call(n, d);
                     expect(actual).to.be.bignumber.equal(new BN(expected));
                 });
             }
