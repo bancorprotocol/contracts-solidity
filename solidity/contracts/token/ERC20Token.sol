@@ -107,10 +107,6 @@ contract ERC20Token is IERC20Token, Utils {
       * @dev allows another account/contract to transfers tokens on behalf of the caller
       * throws on any error rather then return a false flag to minimize user errors
       *
-      * also, to minimize the risk of the approve/transferFrom attack vector
-      * (see https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), approve has to be called twice
-      * in 2 separate transactions - once to change the allowance to 0 and secondly to change it to the new allowance value
-      *
       * @param _spender approved address
       * @param _value   allowance amount
       *
@@ -123,9 +119,6 @@ contract ERC20Token is IERC20Token, Utils {
         validAddress(_spender)
         returns (bool)
     {
-        // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal
-        require(_value == 0 || allowance[msg.sender][_spender] == 0, "ERR_INVALID_AMOUNT");
-
         allowance[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
