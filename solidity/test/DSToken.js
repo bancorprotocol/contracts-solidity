@@ -111,17 +111,6 @@ contract('DSToken', accounts => {
         expect(receiverBalance).to.be.bignumber.equal(value2);
     });
 
-    it('should revert when attempting to transfer while transfers are disabled', async () => {
-        const value = new BN(1000);
-        await token.issue(owner, value);
-
-        const value2 = 100;
-        await token.transfer(receiver, value2);
-
-        await token.disableTransfers(true);
-        await expectRevert(token.transfer(receiver, new BN(1)), 'ERR_TRANSFERS_DISABLED');
-    });
-
     it('verifies the allowance after an approval', async () => {
         const value = new BN(1000);
         await token.issue(owner, value);
@@ -131,22 +120,5 @@ contract('DSToken', accounts => {
 
         const allowance = await token.allowance.call(owner, receiver);
         expect(allowance).to.be.bignumber.equal(value2);
-    });
-
-    it('should revert when attempting to transfer from while transfers are disabled', async () => {
-        const value = new BN(1000);
-        await token.issue(owner, value);
-
-        const value2 = new BN(888);
-        await token.approve(receiver, value2);
-
-        const allowance = await token.allowance.call(owner, receiver);
-        expect(allowance).to.be.bignumber.equal(value2);
-
-        const value3 = new BN(50);
-        await token.transferFrom(owner, receiver2, value3, { from: receiver });
-
-        await token.disableTransfers(true);
-        await expectRevert(token.transfer(receiver, new BN(1), { from: receiver }), 'ERR_TRANSFERS_DISABLED');
     });
 });
