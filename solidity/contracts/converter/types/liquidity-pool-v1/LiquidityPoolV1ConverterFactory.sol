@@ -28,7 +28,12 @@ contract LiquidityPoolV1ConverterFactory is ITypedConverterFactory {
       *
       * @return a new converter
     */
-    function createConverter(IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) external override returns (IConverter) {
+    function createConverter(IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee)
+        external
+        virtual
+        override
+        returns (IConverter)
+    {
         IConverter converter = new LiquidityPoolV1Converter(IDSToken(address(_anchor)), _registry, _maxConversionFee);
         converter.transferOwnership(msg.sender);
         return converter;
