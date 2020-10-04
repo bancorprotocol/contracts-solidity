@@ -179,9 +179,10 @@ contract('LiquidityPoolV2Converter', accounts => {
             };
 
             const expectAlmostEqual = (amount1, amount2) => {
-                const ratio = Decimal(amount1.toString()).div(Decimal(amount2.toString()));
-                expect(ratio.gte(0.99)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
-                expect(ratio.lte(1.01)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
+                if (!amount1.eq(amount2)) {
+                    const error = Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
+                    expect(error.lte('0.01')).to.be.true(`error = ${error.mul(100).toFixed(2)}%`);
+                }
             };
 
             const createChainlinkOracle = async (answer) => {
