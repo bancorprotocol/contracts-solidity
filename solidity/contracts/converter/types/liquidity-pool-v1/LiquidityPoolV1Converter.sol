@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 import "../../LiquidityPoolConverter.sol";
 import "../../../token/interfaces/IDSToken.sol";
+import "../../../utility/Math.sol";
 import "../../../utility/Types.sol";
 
 /**
@@ -14,6 +15,8 @@ import "../../../utility/Types.sol";
   * is 2 reserves with 50%/50% weights.
 */
 contract LiquidityPoolV1Converter is LiquidityPoolConverter {
+    using Math for *;
+
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
     uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
     
@@ -246,7 +249,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint256 newRateN = y.mul(AVERAGE_RATE_PERIOD - timeElapsed).add(x.mul(timeElapsed));
         uint256 newRateD = prevAverage.d.mul(currentRateD).mul(AVERAGE_RATE_PERIOD);
 
-        (newRateN, newRateD) = reducedRatio(newRateN, newRateD, MAX_RATE_FACTOR_LOWER_BOUND);
+        (newRateN, newRateD) = Math.reducedRatio(newRateN, newRateD, MAX_RATE_FACTOR_LOWER_BOUND);
         return Fraction({ n: newRateN, d: newRateD });
     }
 
@@ -781,54 +784,5 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     */
     function time() internal view virtual returns (uint256) {
         return now;
-    }
-
-    /**
-      * @dev computes a reduced-scalar ratio
-      *
-      * @param _n   ratio numerator
-      * @param _d   ratio denominator
-      * @param _max maximum desired scalar
-      *
-      * @return ratio's numerator and denominator
-    */
-    function reducedRatio(uint256 _n, uint256 _d, uint256 _max) internal pure returns (uint256, uint256) {
-        if (_n > _max || _d > _max)
-            return normalizedRatio(_n, _d, _max);
-        return (_n, _d);
-    }
-
-    /**
-      * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)".
-    */
-    function normalizedRatio(uint256 _a, uint256 _b, uint256 _scale) internal pure returns (uint256, uint256) {
-        if (_a == _b)
-            return (_scale / 2, _scale / 2);
-        if (_a < _b)
-            return accurateRatio(_a, _b, _scale);
-        (uint256 y, uint256 x) = accurateRatio(_b, _a, _scale);
-        return (x, y);
-    }
-
-    /**
-      * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)", assuming that "a < b".
-    */
-    function accurateRatio(uint256 _a, uint256 _b, uint256 _scale) internal pure returns (uint256, uint256) {
-        uint256 maxVal = uint256(-1) / _scale;
-        if (_a > maxVal) {
-            uint256 c = _a / (maxVal + 1) + 1;
-            _a /= c;
-            _b /= c;
-        }
-        uint256 x = roundDiv(_a * _scale, _a.add(_b));
-        uint256 y = _scale - x;
-        return (x, y);
-    }
-
-    /**
-      * @dev computes the nearest integer to a given quotient without overflowing or underflowing.
-    */
-    function roundDiv(uint256 _n, uint256 _d) internal pure returns (uint256) {
-        return _n / _d + _n % _d / (_d - _d / 2);
     }
 }
