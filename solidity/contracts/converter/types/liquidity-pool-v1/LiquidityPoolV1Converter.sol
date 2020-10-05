@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 import "../../LiquidityPoolConverter.sol";
-import "../../../token/interfaces/ISmartToken.sol";
+import "../../../token/interfaces/IDSToken.sol";
+import "../../../utility/Math.sol";
 import "../../../utility/Types.sol";
 
 /**
@@ -14,6 +15,8 @@ import "../../../utility/Types.sol";
   * is 2 reserves with 50%/50% weights.
 */
 contract LiquidityPoolV1Converter is LiquidityPoolConverter {
+    using Math for *;
+
     IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
     uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
     
@@ -32,7 +35,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * deprecated, use `TokenRateUpdate` from version 28 and up
       *
       * @param  _connectorToken     reserve token
-      * @param  _tokenSupply        smart token supply
+      * @param  _tokenSupply        pool token supply
       * @param  _connectorBalance   reserve balance
       * @param  _connectorWeight    reserve weight
     */
@@ -51,7 +54,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param  _maxConversionFee   maximum conversion fee, represented in ppm
     */
     constructor(
-        ISmartToken _token,
+        IDSToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee
     )
@@ -246,7 +249,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint256 newRateN = y.mul(AVERAGE_RATE_PERIOD - timeElapsed).add(x.mul(timeElapsed));
         uint256 newRateD = prevAverage.d.mul(currentRateD).mul(AVERAGE_RATE_PERIOD);
 
-        (newRateN, newRateD) = reducedRatio(newRateN, newRateD, MAX_RATE_FACTOR_LOWER_BOUND);
+        (newRateN, newRateD) = Math.reducedRatio(newRateN, newRateD, MAX_RATE_FACTOR_LOWER_BOUND);
         return Fraction({ n: newRateN, d: newRateD });
     }
 
@@ -281,7 +284,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         }
 
         // get the total supply
-        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
+        uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
 
         // transfer from the user an equally-worth amount of each one of the reserve tokens
         uint256 amount = addLiquidityToPool(_reserveTokens, _reserveAmounts, totalSupply);
@@ -290,7 +293,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         require(amount >= _minReturn, "ERR_RETURN_TOO_LOW");
 
         // issue the tokens to the user
-        ISmartToken(address(anchor)).issue(msg.sender, amount);
+        IDSToken(address(anchor)).issue(msg.sender, amount);
 
         // return the amount of pool tokens issued
         return amount;
@@ -316,10 +319,10 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
 
         // get the total supply BEFORE destroying the user tokens
-        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
+        uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
 
         // destroy the user tokens
-        ISmartToken(address(anchor)).destroy(msg.sender, _amount);
+        IDSToken(address(anchor)).destroy(msg.sender, _amount);
 
         // transfer to the user an equivalent amount of each one of the reserve tokens
         return removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _amount);
@@ -344,7 +347,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         syncReserveBalances();
         reserves[ETH_RESERVE_ADDRESS].balance = reserves[ETH_RESERVE_ADDRESS].balance.sub(msg.value);
 
-        uint256 supply = ISmartToken(address(anchor)).totalSupply();
+        uint256 supply = IDSToken(address(anchor)).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
 
         // iterate through the reserve tokens and transfer a percentage equal to the weight between
@@ -384,7 +387,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         }
 
         // issue new funds to the caller in the pool token
-        ISmartToken(address(anchor)).issue(msg.sender, _amount);
+        IDSToken(address(anchor)).issue(msg.sender, _amount);
 
         // return the amount of pool tokens issued
         return _amount;
@@ -407,8 +410,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     {
         require(_amount > 0, "ERR_ZERO_AMOUNT");
 
-        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
-        ISmartToken(address(anchor)).destroy(msg.sender, _amount);
+        uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
+        IDSToken(address(anchor)).destroy(msg.sender, _amount);
 
         uint256[] memory reserveMinReturnAmounts = new uint256[](reserveTokens.length);
         for (uint256 i = 0; i < reserveMinReturnAmounts.length; i++)
@@ -436,7 +439,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     {
         uint256[] memory reserveAmounts = new uint256[](_reserveTokens.length);
 
-        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
+        uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         uint256 amount = formula.fundSupplyAmount(totalSupply, reserves[_reserveTokens[_reserveTokenIndex]].balance, reserveRatio, _reserveAmount);
 
@@ -462,7 +465,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         view
         returns (uint256)
     {
-        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
+        uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         return formula.fundSupplyAmount(totalSupply, reserves[_reserveToken].balance, reserveRatio, _reserveAmount);
     }
@@ -480,7 +483,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         view
         returns (uint256[] memory)
     {
-        uint256 totalSupply = ISmartToken(address(anchor)).totalSupply();
+        uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         return removeLiquidityReserveAmounts(_amount, _reserveTokens, totalSupply, formula);
     }
@@ -710,13 +713,14 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev returns the nearest integer to a given quotient
+      * the computation is overflow-safe assuming that the input is sufficiently small
       *
       * @param _n   quotient numerator
       * @param _d   quotient denominator
       *
       * @return the nearest integer to the given quotient
     */
-    function roundDiv(uint256 _n, uint256 _d) public pure returns (uint256) {
+    function roundDivUnsafe(uint256 _n, uint256 _d) public pure returns (uint256) {
         return (_n + _d / 2) / _d;
     }
 
@@ -732,7 +736,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint256 length = _values.length;
         for (uint256 i = 0; i < length; i++)
             numOfDigits += decimalLength(_values[i]);
-        return uint256(10) ** (roundDiv(numOfDigits, length) - 1);
+        return uint256(10) ** (roundDivUnsafe(numOfDigits, length) - 1);
     }
 
     /**
@@ -742,7 +746,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param _targetToken address of the target reserve token
     */
     function dispatchTokenRateUpdateEvents(IERC20Token _sourceToken, IERC20Token _targetToken) private {
-        uint256 poolTokenSupply = ISmartToken(address(anchor)).totalSupply();
+        uint256 poolTokenSupply = IDSToken(address(anchor)).totalSupply();
         uint256 sourceReserveBalance = reserveBalance(_sourceToken);
         uint256 targetReserveBalance = reserveBalance(_targetToken);
         uint32 sourceReserveWeight = reserves[_sourceToken].weight;
@@ -771,7 +775,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
       * @param _reserveWeight   reserve weight
     */
     function dispatchPoolTokenRateUpdateEvent(uint256 _poolTokenSupply, IERC20Token _reserveToken, uint256 _reserveBalance, uint32 _reserveWeight) private {
-        emit TokenRateUpdate(ISmartToken(address(anchor)), _reserveToken, _reserveBalance.mul(PPM_RESOLUTION), _poolTokenSupply.mul(_reserveWeight));
+        emit TokenRateUpdate(IDSToken(address(anchor)), _reserveToken, _reserveBalance.mul(PPM_RESOLUTION), _poolTokenSupply.mul(_reserveWeight));
     }
 
     /**
@@ -780,47 +784,5 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     */
     function time() internal view virtual returns (uint256) {
         return now;
-    }
-
-    /**
-      * @dev computes a reduced-scalar ratio
-      *
-      * @param _n   ratio numerator
-      * @param _d   ratio denominator
-      * @param _max maximum desired scalar
-      *
-      * @return ratio's numerator and denominator
-    */
-    function reducedRatio(uint256 _n, uint256 _d, uint256 _max) internal pure returns (uint256, uint256) {
-        if (_n > _max || _d > _max)
-            return normalizedRatio(_n, _d, _max);
-        return (_n, _d);
-    }
-
-    /**
-      * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)".
-    */
-    function normalizedRatio(uint256 _a, uint256 _b, uint256 _scale) internal pure returns (uint256, uint256) {
-        if (_a == _b)
-            return (_scale / 2, _scale / 2);
-        if (_a < _b)
-            return accurateRatio(_a, _b, _scale);
-        (uint256 y, uint256 x) = accurateRatio(_b, _a, _scale);
-        return (x, y);
-    }
-
-    /**
-      * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)", assuming that "a < b".
-    */
-    function accurateRatio(uint256 _a, uint256 _b, uint256 _scale) internal pure returns (uint256, uint256) {
-        uint256 maxVal = uint256(-1) / _scale;
-        if (_a > maxVal) {
-            uint256 c = _a / (maxVal + 1) + 1;
-            _a /= c;
-            _b /= c;
-        }
-        uint256 x = roundDiv(_a * _scale, _a.add(_b));
-        uint256 y = _scale - x;
-        return (x, y);
     }
 }

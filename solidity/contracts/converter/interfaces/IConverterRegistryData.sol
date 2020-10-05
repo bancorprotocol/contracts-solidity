@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 import "./IConverterAnchor.sol";
+import "../../token/interfaces/IERC20Token.sol";
 
 interface IConverterRegistryData {
     function addSmartToken(IConverterAnchor _anchor) external;

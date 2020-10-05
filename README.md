@@ -15,7 +15,7 @@ All smart contract functions are public and all upgrades are opt-in. If signific
 
 ## Language
 
-The terms “reserves” and “connectors” have the same meaning throughout Bancor’s smart contract code and documentation. “Reserve ratio” and “connector weight” are also used interchangeably. “Connector balance” refers to the token inventories held in a Smart Token’s reserve.
+The terms “reserves” and “connectors” have the same meaning throughout Bancor’s smart contract code and documentation. “Reserve ratio” and “connector weight” are also used interchangeably. “Connector balance” refers to the token inventories held in a liquidity pool's reserves.
 
 ## Warning
 

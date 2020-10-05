@@ -5,10 +5,9 @@ import "../../converter/interfaces/IConverterAnchor.sol";
 import "../../utility/interfaces/IOwned.sol";
 
 /*
-    Smart Token interface
+    DSToken interface
 */
-interface ISmartToken is IConverterAnchor, IERC20Token {
-    function disableTransfers(bool _disable) external;
+interface IDSToken is IConverterAnchor, IERC20Token {
     function issue(address _to, uint256 _amount) external;
     function destroy(address _from, uint256 _amount) external;
 }

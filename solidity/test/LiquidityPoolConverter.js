@@ -21,7 +21,7 @@ const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1Conver
 const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 const PoolTokensContainer = artifacts.require('PoolTokensContainer');
 const ChainlinkPriceOracle = artifacts.require('TestChainlinkPriceOracle');
 
@@ -35,7 +35,7 @@ contract('LiquidityPoolConverter', accounts => {
 
     const createAnchor = async (type) => {
         switch (type) {
-            case 1: return await SmartToken.new('Pool1', 'POOL1', 2);
+            case 1: return await DSToken.new('Pool1', 'POOL1', 2);
             case 2: return await PoolTokensContainer.new('Pool', 'POOL', 2);
         }
     };

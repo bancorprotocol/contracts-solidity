@@ -314,12 +314,12 @@ contract BancorFormula is IBancorFormula {
       * Formula:
       * return = _supply * ((1 + _amount / _reserveBalance) ^ (_reserveWeight / 1000000) - 1)
       *
-      * @param _supply          smart token supply
+      * @param _supply          liquid token supply
       * @param _reserveBalance  reserve balance
       * @param _reserveWeight   reserve weight, represented in ppm (1-1000000)
       * @param _amount          amount of reserve tokens to get the target amount for
       *
-      * @return smart token amount
+      * @return target
     */
     function purchaseTargetAmount(uint256 _supply,
                                   uint256 _reserveBalance,
@@ -355,10 +355,10 @@ contract BancorFormula is IBancorFormula {
       * Formula:
       * return = _reserveBalance * (1 - (1 - _amount / _supply) ^ (1000000 / _reserveWeight))
       *
-      * @param _supply          smart token supply
+      * @param _supply          liquid token supply
       * @param _reserveBalance  reserve balance
       * @param _reserveWeight   reserve weight, represented in ppm (1-1000000)
-      * @param _amount          amount of smart tokens to get the target amount for
+      * @param _amount          amount of liquid tokens to get the target amount for
       *
       * @return reserve token amount
     */
@@ -436,16 +436,16 @@ contract BancorFormula is IBancorFormula {
     }
 
     /**
-      * @dev given a smart token supply, reserve balance, reserve ratio and an amount of requested smart tokens,
-      * calculates the amount of reserve tokens required for purchasing the given amount of smart tokens
+      * @dev given a pool token supply, reserve balance, reserve ratio and an amount of requested pool tokens,
+      * calculates the amount of reserve tokens required for purchasing the given amount of pool tokens
       *
       * Formula:
       * return = _reserveBalance * (((_supply + _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio) - 1)
       *
-      * @param _supply          smart token supply
+      * @param _supply          pool token supply
       * @param _reserveBalance  reserve balance
       * @param _reserveRatio    reserve ratio, represented in ppm (2-2000000)
-      * @param _amount          requested amount of smart tokens
+      * @param _amount          requested amount of pool tokens
       *
       * @return reserve token amount
     */
@@ -477,18 +477,18 @@ contract BancorFormula is IBancorFormula {
     }
 
     /**
-      * @dev given a smart token supply, reserve balance, reserve ratio and an amount of reserve tokens to fund with,
-      * calculates the amount of smart tokens received for purchasing with the given amount of reserve tokens
+      * @dev given a pool token supply, reserve balance, reserve ratio and an amount of reserve tokens to fund with,
+      * calculates the amount of pool tokens received for purchasing with the given amount of reserve tokens
       *
       * Formula:
       * return = _supply * ((_amount / _reserveBalance + 1) ^ (_reserveRatio / MAX_WEIGHT) - 1)
       *
-      * @param _supply          smart token supply
+      * @param _supply          pool token supply
       * @param _reserveBalance  reserve balance
       * @param _reserveRatio    reserve ratio, represented in ppm (2-2000000)
       * @param _amount          amount of reserve tokens to fund with
       *
-      * @return smart token amount
+      * @return pool token amount
     */
     function fundSupplyAmount(uint256 _supply,
                               uint256 _reserveBalance,
@@ -518,16 +518,16 @@ contract BancorFormula is IBancorFormula {
     }
 
     /**
-      * @dev given a smart token supply, reserve balance, reserve ratio and an amount of smart tokens to liquidate,
-      * calculates the amount of reserve tokens received for selling the given amount of smart tokens
+      * @dev given a pool token supply, reserve balance, reserve ratio and an amount of pool tokens to liquidate,
+      * calculates the amount of reserve tokens received for selling the given amount of pool tokens
       *
       * Formula:
       * return = _reserveBalance * (1 - ((_supply - _amount) / _supply) ^ (MAX_WEIGHT / _reserveRatio))
       *
-      * @param _supply          smart token supply
+      * @param _supply          pool token supply
       * @param _reserveBalance  reserve balance
       * @param _reserveRatio    reserve ratio, represented in ppm (2-2000000)
-      * @param _amount          amount of smart tokens to liquidate
+      * @param _amount          amount of pool tokens to liquidate
       *
       * @return reserve token amount
     */

@@ -6,7 +6,7 @@ import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterFactory.sol";
 import "./interfaces/IConverterRegistry.sol";
 import "./interfaces/IConverterRegistryData.sol";
-import "../token/interfaces/ISmartToken.sol";
+import "../token/interfaces/IDSToken.sol";
 
 /**
   * @dev The ConverterRegistry maintains a list of all active converters in the Bancor Network.
@@ -30,14 +30,14 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     /**
       * @dev triggered when a converter anchor is added to the registry
       *
-      * @param _anchor smart token
+      * @param _anchor anchor token
     */
     event ConverterAnchorAdded(IConverterAnchor indexed _anchor);
 
     /**
       * @dev triggered when a converter anchor is removed from the registry
       *
-      * @param _anchor smart token
+      * @param _anchor anchor token
     */
     event ConverterAnchorRemoved(IConverterAnchor indexed _anchor);
 
@@ -59,7 +59,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @dev triggered when a convertible token is added to the registry
       *
       * @param _convertibleToken convertible token
-      * @param _smartToken associated smart token
+      * @param _smartToken associated anchor token
     */
     event ConvertibleTokenAdded(IERC20Token indexed _convertibleToken, IConverterAnchor indexed _smartToken);
 
@@ -67,7 +67,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
       * @dev triggered when a convertible token is removed from the registry
       *
       * @param _convertibleToken convertible token
-      * @param _smartToken associated smart token
+      * @param _smartToken associated anchor token
     */
     event ConvertibleTokenRemoved(IERC20Token indexed _convertibleToken, IConverterAnchor indexed _smartToken);
 
@@ -461,7 +461,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         if (reserveTokenCount > 1)
             addLiquidityPool(converterRegistryData, anchor);
         else
-            addConvertibleToken(converterRegistryData, ISmartToken(address(anchor)), anchor);
+            addConvertibleToken(converterRegistryData, IDSToken(address(anchor)), anchor);
 
         // add all reserve tokens
         for (uint256 i = 0; i < reserveTokenCount; i++)
@@ -478,7 +478,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         if (reserveTokenCount > 1)
             removeLiquidityPool(converterRegistryData, anchor);
         else
-            removeConvertibleToken(converterRegistryData, ISmartToken(address(anchor)), anchor);
+            removeConvertibleToken(converterRegistryData, IDSToken(address(anchor)), anchor);
 
         // remove all reserve tokens
         for (uint256 i = 0; i < reserveTokenCount; i++)

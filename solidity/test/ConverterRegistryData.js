@@ -22,11 +22,11 @@ contract('ConverterRegistryData', accounts => {
     });
 
     describe('security assertions', () => {
-        it('should revert when a non owner attempts to add a smart token', async () => {
+        it('should revert when a non owner attempts to add an anchor', async () => {
             await expectRevert(converterRegistry.addSmartToken(address1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
         });
 
-        it('should revert when a non owner attempts to remove a smart token', async () => {
+        it('should revert when a non owner attempts to remove an anchor', async () => {
             await converterRegistry.addSmartToken(address1);
             await expectRevert(converterRegistry.removeSmartToken(address1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
         });
@@ -50,8 +50,8 @@ contract('ConverterRegistryData', accounts => {
         });
     });
 
-    describe('smart tokens basic verification', () => {
-        it('should add a smart token if it does not exists', async () => {
+    describe('anchors basic verification', () => {
+        it('should add an anchor if it does not exists', async () => {
             expect(await converterRegistry.isSmartToken.call(address1)).to.be.false();
             expect(await converterRegistry.getSmartTokens.call()).not.to.include(address1);
             expect(await converterRegistry.getSmartTokenCount.call()).to.be.bignumber.equal(new BN(0));
@@ -64,12 +64,12 @@ contract('ConverterRegistryData', accounts => {
             expect(await converterRegistry.getSmartTokenCount.call()).to.be.bignumber.equal(new BN(1));
         });
 
-        it('should revert if adding a smart token that already exists', async () => {
+        it('should revert if adding an anchor that already exists', async () => {
             await converterRegistry.addSmartToken(address1);
             await expectRevert(converterRegistry.addSmartToken(address1), 'ERR_INVALID_ITEM');
         });
 
-        it('should remove a smart token', async () => {
+        it('should remove an anchor', async () => {
             await converterRegistry.addSmartToken(address1);
 
             expect(await converterRegistry.isSmartToken.call(address1)).to.be.true();
@@ -84,7 +84,7 @@ contract('ConverterRegistryData', accounts => {
             expect(await converterRegistry.getSmartTokenCount.call()).to.be.bignumber.equal(new BN(0));
         });
 
-        it("should revert if removing a smart token that doesn't not exist", async () => {
+        it("should revert if removing n anchor that doesn't not exist", async () => {
             await expectRevert(converterRegistry.removeSmartToken(address1), 'ERR_INVALID_ITEM');
         });
     });
@@ -169,7 +169,7 @@ contract('ConverterRegistryData', accounts => {
         });
     });
 
-    describe('smart tokens advanced verification', () => {
+    describe('anchors advanced verification', () => {
         const removeAllOneByOne = async (direction) => {
             for (const account of accounts) {
                 await converterRegistry.addSmartToken(account);
@@ -225,26 +225,26 @@ contract('ConverterRegistryData', accounts => {
         const keyAccounts = accounts.slice(0, 4);
         const valAccounts = accounts.slice(4, 8);
 
-        const test = async (convertibleToken, smartToken, func, currentState) => {
-            await func(convertibleToken, smartToken, currentState);
+        const test = async (convertibleToken, anchor, func, currentState) => {
+            await func(convertibleToken, anchor, currentState);
             const convertibleTokens = await converterRegistry.getConvertibleTokens();
-            const smartTokens = await Promise.all(convertibleTokens.map(convertibleToken =>
+            const anchors = await Promise.all(convertibleTokens.map(convertibleToken =>
                 converterRegistry.getConvertibleTokenSmartTokens(convertibleToken)));
 
-            expect({ convertibleTokens, smartTokens }).to.deep.eql(currentState);
+            expect({ convertibleTokens, anchors }).to.deep.eql(currentState);
         };
 
-        const add = async (convertibleToken, smartToken, currentState) => {
+        const add = async (convertibleToken, anchor, currentState) => {
             const index = currentState.convertibleTokens.indexOf(convertibleToken);
             if (index === -1) {
                 currentState.convertibleTokens.push(convertibleToken);
-                currentState.smartTokens.push([smartToken]);
+                currentState.anchors.push([anchor]);
             }
             else {
-                currentState.smartTokens[index].push(smartToken);
+                currentState.anchors[index].push(anchor);
             }
 
-            return converterRegistry.addConvertibleToken(convertibleToken, smartToken);
+            return converterRegistry.addConvertibleToken(convertibleToken, anchor);
         };
 
         const swapLast = (array, item) => {
@@ -252,17 +252,17 @@ contract('ConverterRegistryData', accounts => {
             array.length -= 1;
         };
 
-        const remove = async (convertibleToken, smartToken, currentState) => {
+        const remove = async (convertibleToken, anchor, currentState) => {
             const index = currentState.convertibleTokens.indexOf(convertibleToken);
-            if (currentState.smartTokens[index].length === 1) {
-                currentState.smartTokens.splice(index, 1);
+            if (currentState.anchors[index].length === 1) {
+                currentState.anchors.splice(index, 1);
                 swapLast(currentState.convertibleTokens, convertibleToken);
             }
             else {
-                swapLast(currentState.smartTokens[index], smartToken);
+                swapLast(currentState.anchors[index], anchor);
             }
 
-            return converterRegistry.removeConvertibleToken(convertibleToken, smartToken);
+            return converterRegistry.removeConvertibleToken(convertibleToken, anchor);
         };
 
         const reorder = (tokens, reverse) => {
@@ -278,18 +278,18 @@ contract('ConverterRegistryData', accounts => {
         };
 
         it('should add and remove data', async () => {
-            const currentState = { convertibleTokens: [], smartTokens: [] };
+            const currentState = { convertibleTokens: [], anchors: [] };
 
             for (const reverseKeys of [false, true]) {
                 for (const reverseVals of [false, true]) {
                     for (const addTuples of [rows, cols]) {
                         for (const removeTuples of [rows, cols]) {
-                            for (const [convertibleToken, smartToken] of addTuples(false, false)) {
-                                await test(convertibleToken, smartToken, add, currentState);
+                            for (const [convertibleToken, anchor] of addTuples(false, false)) {
+                                await test(convertibleToken, anchor, add, currentState);
                             }
 
-                            for (const [convertibleToken, smartToken] of removeTuples(reverseKeys, reverseVals)) {
-                                await test(convertibleToken, smartToken, remove, currentState);
+                            for (const [convertibleToken, anchor] of removeTuples(reverseKeys, reverseVals)) {
+                                await test(convertibleToken, anchor, remove, currentState);
                             }
                         }
                     }

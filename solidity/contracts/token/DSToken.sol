@@ -1,21 +1,16 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 import "./ERC20Token.sol";
-import "./interfaces/ISmartToken.sol";
+import "./interfaces/IDSToken.sol";
 import "../utility/Owned.sol";
-import "../utility/TokenHolder.sol";
 
 /**
-  * @dev Smart Token
+  * @dev DSToken represents a token with dynamic supply.
+  * The owner of the token can mint/burn tokens to/from any account.
   *
-  * 'Owned' is specified here for readability reasons
 */
-contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
+contract DSToken is IDSToken, ERC20Token, Owned {
     using SafeMath for uint256;
-
-    uint16 public constant version = 4;
-
-    bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false otherwise
 
     /**
       * @dev triggered when the total supply is increased
@@ -32,7 +27,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     event Destruction(uint256 _amount);
 
     /**
-      * @dev initializes a new SmartToken instance
+      * @dev initializes a new DSToken instance
       *
       * @param _name       token name
       * @param _symbol     token short symbol, minimum 1 character
@@ -42,27 +37,6 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
         public
         ERC20Token(_name, _symbol, _decimals, 0)
     {
-    }
-
-    // allows execution only when transfers are enabled
-    modifier transfersAllowed {
-        _transfersAllowed();
-        _;
-    }
-
-    // error message binary size optimization
-    function _transfersAllowed() internal view {
-        require(transfersEnabled, "ERR_TRANSFERS_DISABLED");
-    }
-
-    /**
-      * @dev disables/enables transfers
-      * can only be called by the contract owner
-      *
-      * @param _disable    true to disable transfers, false to enable them
-    */
-    function disableTransfers(bool _disable) public override ownerOnly {
-        transfersEnabled = !_disable;
     }
 
     /**
@@ -116,7 +90,6 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     function transfer(address _to, uint256 _value)
         public
         override(IERC20Token, ERC20Token)
-        transfersAllowed
         returns (bool)
     {
         return super.transfer(_to, _value);
@@ -136,7 +109,6 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     function transferFrom(address _from, address _to, uint256 _value)
         public
         override(IERC20Token, ERC20Token)
-        transfersAllowed
         returns (bool) 
     {
         return super.transferFrom(_from, _to, _value);

@@ -1,3 +1,16 @@
+### 0.6.18
+General
+* Added Math contract with various math utilities
+
+ERC20Token
+* Removed the approve frontrunning protection
+
+SmartToken
+* Renamed to DSToken
+* Removed the owner's ability to disable transfers
+* Removed the owner's ability to withdraw other tokens from the contract
+
+
 ### 0.6.17
 LiquidityPoolV1Converter
 * Added the ability to query the recent average rate

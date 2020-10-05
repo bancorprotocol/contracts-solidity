@@ -56,17 +56,17 @@ class Branch():
         self.reserveWeight = 0
         self.reserveStaked = 0
         self.reserveToken = token
-        self.smartToken = Token('smart' + token.symbol)
+        self.poolToken = Token('pool' + token.symbol)
     def addLiquidity(self, pool, user, amount):
         reserveAmount = amount if amount != 'all' else self.reserveToken.balanceOf[user]
-        supplyAmount = ratio(reserveAmount, self.smartToken.totalSupply, self.reserveStaked)
+        supplyAmount = ratio(reserveAmount, self.poolToken.totalSupply, self.reserveStaked)
         self.reserveToken.transfer(user, pool, reserveAmount)
-        self.smartToken.mint(user, supplyAmount)
+        self.poolToken.mint(user, supplyAmount)
         self.reserveStaked = add(self.reserveStaked, reserveAmount)
     def remLiquidity(self, pool, user, amount, lo, hi):
-        supplyAmount = amount if amount != 'all' else self.smartToken.balanceOf[user]
-        reserveAmount = ratio(ratio(supplyAmount, self.reserveStaked, self.smartToken.totalSupply), lo, hi)
-        self.smartToken.burn(user, supplyAmount)
+        supplyAmount = amount if amount != 'all' else self.poolToken.balanceOf[user]
+        reserveAmount = ratio(ratio(supplyAmount, self.reserveStaked, self.poolToken.totalSupply), lo, hi)
+        self.poolToken.burn(user, supplyAmount)
         self.reserveToken.transfer(pool, user, reserveAmount)
         self.reserveStaked = sub(self.reserveStaked, reserveAmount)
     def virtualStaked(self, amp):
@@ -79,7 +79,7 @@ class Branch():
             'reserveWeight': self.reserveWeight,
             'reserveStaked': self.reserveStaked,
             'reserveToken': self.reserveToken.serialize(),
-            'smartToken': self.smartToken.serialize(),
+            'poolToken': self.poolToken.serialize(),
         }
 
 class Pool():
@@ -164,7 +164,7 @@ def newPool(amp, mainSymbol, sideSymbol, numOfUsers, initialAmount):
         pool.branches[symbol].reserveToken.register(pool.id)
         for i in range(numOfUsers):
             userId = 'user{}'.format(i + 1)
-            pool.branches[symbol].smartToken.register(userId)
+            pool.branches[symbol].poolToken.register(userId)
             pool.branches[symbol].reserveToken.register(userId)
             pool.branches[symbol].reserveToken.mint(userId, initialAmount)
     return pool

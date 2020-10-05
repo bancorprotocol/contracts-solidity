@@ -6,25 +6,25 @@ const ConverterHelper = require('./helpers/Converter');
 
 const BancorNetwork = artifacts.require('BancorNetwork');
 const TestBancorNetwork = artifacts.require('TestBancorNetwork');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
 
 /*
 Token network structure:
 
-         SmartToken2
+         DSToken2
          /         \
-    SmartToken1   SmartToken3
+    DSToken1   DSToken3
 
 */
 
 contract('BancorNetworkWithOldConverter', accounts => {
     const OLD_CONVERTER_VERSION = 9;
 
-    let smartToken1;
-    let smartToken2;
-    let smartToken3;
+    let poolToken1;
+    let poolToken2;
+    let poolToken3;
     let contractRegistry;
     let converter;
     let bancorNetwork;
@@ -43,23 +43,23 @@ contract('BancorNetworkWithOldConverter', accounts => {
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
-        smartToken1 = await SmartToken.new('Token1', 'TKN1', 2);
-        await smartToken1.issue(owner, 1000000);
+        poolToken1 = await DSToken.new('Token1', 'TKN1', 2);
+        await poolToken1.issue(owner, 1000000);
 
-        smartToken2 = await SmartToken.new('Token2', 'TKN2', 2);
-        await smartToken2.issue(owner, 2000000);
+        poolToken2 = await DSToken.new('Token2', 'TKN2', 2);
+        await poolToken2.issue(owner, 2000000);
 
-        smartToken3 = await SmartToken.new('Token3', 'TKN3', 2);
-        await smartToken3.issue(owner, 3000000);
+        poolToken3 = await DSToken.new('Token3', 'TKN3', 2);
+        await poolToken3.issue(owner, 3000000);
 
-        converter = await ConverterHelper.new(1, smartToken2.address, contractRegistry.address, 0, smartToken1.address,
+        converter = await ConverterHelper.new(1, poolToken2.address, contractRegistry.address, 0, poolToken1.address,
             300000, OLD_CONVERTER_VERSION);
-        await converter.addConnector(smartToken3.address, 150000, false);
+        await converter.addConnector(poolToken3.address, 150000, false);
 
-        await smartToken1.transfer(converter.address, 40000);
-        await smartToken3.transfer(converter.address, 25000);
+        await poolToken1.transfer(converter.address, 40000);
+        await poolToken3.transfer(converter.address, 25000);
 
-        await smartToken2.transferOwnership(converter.address);
+        await poolToken2.transferOwnership(converter.address);
         await converter.acceptTokenOwnership();
     });
 
@@ -69,18 +69,18 @@ contract('BancorNetworkWithOldConverter', accounts => {
         expect(await network.isV28OrHigherConverterExternal.call(converter.address)).to.be.false();
     });
 
-    it('verifies that getReturnByPath returns the same amount as getReturn when converting a reserve to the smart token', async () => {
+    it('verifies that getReturnByPath returns the same amount as getReturn when converting a reserve to the liquid token', async () => {
         const value = new BN(100);
-        const getReturn = (await converter.getReturn.call(smartToken1.address, smartToken2.address, value));
-        const returnByPath = (await bancorNetwork.getReturnByPath.call([smartToken1.address, smartToken2.address, smartToken2.address], value))[0];
+        const getReturn = (await converter.getReturn.call(poolToken1.address, poolToken2.address, value));
+        const returnByPath = (await bancorNetwork.getReturnByPath.call([poolToken1.address, poolToken2.address, poolToken2.address], value))[0];
 
         expect(getReturn).to.be.bignumber.equal(returnByPath);
     });
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting from a token to a reserve', async () => {
         const value = new BN(100);
-        const getReturn = (await converter.getReturn.call(smartToken2.address, smartToken1.address, value));
-        const returnByPath = (await bancorNetwork.getReturnByPath.call([smartToken2.address, smartToken2.address, smartToken1.address], value))[0];
+        const getReturn = (await converter.getReturn.call(poolToken2.address, poolToken1.address, value));
+        const returnByPath = (await bancorNetwork.getReturnByPath.call([poolToken2.address, poolToken2.address, poolToken1.address], value))[0];
 
         expect(getReturn).to.be.bignumber.equal(returnByPath);
     });

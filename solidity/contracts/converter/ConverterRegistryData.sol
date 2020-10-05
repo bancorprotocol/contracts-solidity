@@ -35,7 +35,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
         mapping(address => List) table;
     }
 
-    Items private smartTokens;
+    Items private anchors;
     Items private liquidityPools;
     Lists private convertibleTokens;
 
@@ -48,21 +48,21 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
     }
 
     /**
-      * @dev adds a smart token
+      * @dev adds an anchor
       *
-      * @param _anchor smart token
+      * @param _anchor anchor
     */
     function addSmartToken(IConverterAnchor _anchor) external override only(CONVERTER_REGISTRY) {
-        addItem(smartTokens, address(_anchor));
+        addItem(anchors, address(_anchor));
     }
 
     /**
-      * @dev removes a smart token
+      * @dev removes an anchor
       *
-      * @param _anchor smart token
+      * @param _anchor anchor
     */
     function removeSmartToken(IConverterAnchor _anchor) external override only(CONVERTER_REGISTRY) {
-        removeItem(smartTokens, address(_anchor));
+        removeItem(anchors, address(_anchor));
     }
 
     /**
@@ -87,7 +87,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       * @dev adds a convertible token
       *
       * @param _convertibleToken    convertible token
-      * @param _anchor              associated smart token
+      * @param _anchor              associated anchor
     */
     function addConvertibleToken(IERC20Token _convertibleToken, IConverterAnchor _anchor) external override only(CONVERTER_REGISTRY) {
         List storage list = convertibleTokens.table[address(_convertibleToken)];
@@ -102,7 +102,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
       * @dev removes a convertible token
       *
       * @param _convertibleToken    convertible token
-      * @param _anchor              associated smart token
+      * @param _anchor              associated anchor
     */
     function removeConvertibleToken(IERC20Token _convertibleToken, IConverterAnchor _anchor) external override only(CONVERTER_REGISTRY) {
         List storage list = convertibleTokens.table[address(_convertibleToken)];
@@ -117,41 +117,41 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
     }
 
     /**
-      * @dev returns the number of smart tokens
+      * @dev returns the number of anchors
       *
-      * @return number of smart tokens
+      * @return number of anchors
     */
     function getSmartTokenCount() external view override returns (uint256) {
-        return smartTokens.array.length;
+        return anchors.array.length;
     }
 
     /**
-      * @dev returns the list of smart tokens
+      * @dev returns the list of anchors
       *
-      * @return list of smart tokens
+      * @return list of anchors
     */
     function getSmartTokens() external view override returns (address[] memory) {
-        return smartTokens.array;
+        return anchors.array;
     }
 
     /**
-      * @dev returns the smart token at a given index
+      * @dev returns the anchor at a given index
       *
       * @param _index index
-      * @return smart token at the given index
+      * @return anchor at the given index
     */
     function getSmartToken(uint256 _index) external view override returns (IConverterAnchor) {
-        return IConverterAnchor(smartTokens.array[_index]);
+        return IConverterAnchor(anchors.array[_index]);
     }
 
     /**
-      * @dev checks whether or not a given value is a smart token
+      * @dev checks whether or not a given value is an anchor
       *
       * @param _value value
-      * @return true if the given value is a smart token, false if not
+      * @return true if the given value is an anchor, false if not
     */
     function isSmartToken(address _value) external view override returns (bool) {
-        return smartTokens.table[_value].valid;
+        return anchors.table[_value].valid;
     }
 
     /**
@@ -231,41 +231,41 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
     }
 
     /**
-      * @dev returns the number of smart tokens associated with a given convertible token
+      * @dev returns the number of anchors associated with a given convertible token
       *
       * @param _convertibleToken convertible token
-      * @return number of smart tokens associated with the given convertible token
+      * @return number of anchors
     */
     function getConvertibleTokenSmartTokenCount(IERC20Token _convertibleToken) external view override returns (uint256) {
         return convertibleTokens.table[address(_convertibleToken)].items.array.length;
     }
 
     /**
-      * @dev returns the list of smart tokens associated with a given convertible token
+      * @dev returns the list of anchors associated with a given convertible token
       *
       * @param _convertibleToken convertible token
-      * @return list of smart tokens associated with the given convertible token
+      * @return list of anchors
     */
     function getConvertibleTokenSmartTokens(IERC20Token _convertibleToken) external view override returns (address[] memory) {
         return convertibleTokens.table[address(_convertibleToken)].items.array;
     }
 
     /**
-      * @dev returns the smart token associated with a given convertible token at a given index
+      * @dev returns the anchor associated with a given convertible token at a given index
       *
       * @param _index index
-      * @return smart token associated with the given convertible token at the given index
+      * @return anchor
     */
     function getConvertibleTokenSmartToken(IERC20Token _convertibleToken, uint256 _index) external view override returns (IConverterAnchor) {
         return IConverterAnchor(convertibleTokens.table[address(_convertibleToken)].items.array[_index]);
     }
 
     /**
-      * @dev checks whether or not a given value is a smart token of a given convertible token
+      * @dev checks whether or not a given value is an anchor of a given convertible token
       *
       * @param _convertibleToken convertible token
       * @param _value value
-      * @return true if the given value is a smart token of the given convertible token, false it not
+      * @return true if the given value is an anchor of the given convertible token, false it not
     */
     function isConvertibleTokenSmartToken(IERC20Token _convertibleToken, address _value) external view override returns (bool) {
         return convertibleTokens.table[address(_convertibleToken)].items.table[_value].valid;

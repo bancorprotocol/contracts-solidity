@@ -24,7 +24,7 @@ const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1Conver
 const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 const PoolTokensContainer = artifacts.require('PoolTokensContainer');
 const ChainlinkPriceOracle = artifacts.require('TestChainlinkPriceOracle');
 const Whitelist = artifacts.require('Whitelist');
@@ -116,11 +116,11 @@ contract('Converter', accounts => {
     const createAnchor = async (type) => {
         switch (type) {
             case 0:
-                anchor = await SmartToken.new('Token1', 'TKN1', 2);
+                anchor = await DSToken.new('Token1', 'TKN1', 2);
                 break;
 
             case 1:
-                anchor = await SmartToken.new('Pool1', 'POOL1', 2);
+                anchor = await DSToken.new('Pool1', 'POOL1', 2);
                 break;
 
             case 2:
@@ -269,46 +269,6 @@ contract('Converter', accounts => {
                         getConverterReserveAddresses(type, isETHReserve),
                         getConverterReserveWeights(type)
                     );
-                });
-
-                it('verifies that the owner can withdraw other tokens from the anchor', async () => {
-                    const converter = await initConverter(type, true, isETHReserve);
-                    const ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 100000);
-
-                    const prevBalance = await ercToken.balanceOf.call(owner);
-
-                    const value = new BN(100);
-                    await ercToken.transfer(anchorAddress, value);
-
-                    let balance = await ercToken.balanceOf.call(owner);
-                    expect(balance).to.be.bignumber.equal(prevBalance.sub(value));
-
-                    await converter.withdrawFromAnchor(ercToken.address, owner, value);
-
-                    balance = await ercToken.balanceOf.call(owner);
-                    expect(balance).to.be.bignumber.equal(prevBalance);
-                });
-
-                it('should revert when the owner attempts to withdraw other tokens from the anchor while the converter is not active', async () => {
-                    const converter = await initConverter(type, false, isETHReserve);
-                    const ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 100000);
-
-                    const value = new BN(222);
-                    await ercToken.transfer(anchor.address, value);
-
-                    await expectRevert(converter.withdrawFromAnchor(ercToken.address, owner, value),
-                        'ERR_ACCESS_DENIED');
-                });
-
-                it('should revert when a non owner attempts to withdraw other tokens from the anchor', async () => {
-                    const converter = await initConverter(type, true, isETHReserve);
-                    const ercToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 100000);
-
-                    const value = new BN(11);
-                    await ercToken.transfer(anchor.address, value);
-
-                    await expectRevert(converter.withdrawFromAnchor(ercToken.address, owner, value, { from: nonOwner }),
-                        'ERR_ACCESS_DENIED');
                 });
 
                 it('verifies the owner can update the conversion whitelist contract address', async () => {
@@ -482,7 +442,7 @@ contract('Converter', accounts => {
 
                     await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
                     const anchorAddress = await converter.anchor.call();
-                    const token = await SmartToken.at(anchorAddress);
+                    const token = await DSToken.at(anchorAddress);
                     const newOwner = await token.newOwner.call();
                     expect(newOwner).to.eql(nonOwner);
                 });

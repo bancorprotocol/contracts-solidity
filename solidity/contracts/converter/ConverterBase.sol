@@ -56,7 +56,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     /**
       * @dev version number
     */
-    uint16 public constant version = 39;
+    uint16 public constant version = 40;
 
     IConverterAnchor public override anchor;            // converter anchor contract
     IWhitelist public override conversionWhitelist;     // whitelist contract with list of addresses that are allowed to use the converter
@@ -305,18 +305,6 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
         require(reserveTokenCount() > 0, "ERR_INVALID_RESERVE_COUNT");
         anchor.acceptOwnership();
         syncReserveBalances();
-    }
-
-    /**
-      * @dev withdraws tokens held by the anchor and sends them to an account
-      * can only be called by the owner
-      *
-      * @param _token   ERC20 token contract address
-      * @param _to      account to receive the new amount
-      * @param _amount  amount to withdraw
-    */
-    function withdrawFromAnchor(IERC20Token _token, address _to, uint256 _amount) public ownerOnly {
-        anchor.withdrawTokens(_token, _to, _amount);
     }
 
     /**

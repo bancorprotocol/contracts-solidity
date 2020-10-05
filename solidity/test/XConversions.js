@@ -5,7 +5,7 @@ const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const BancorX = artifacts.require('BancorX');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const BancorFormula = artifacts.require('BancorFormula');
@@ -79,8 +79,8 @@ contract('XConversions', accounts => {
         erc20Token = await ERC20Token.new('Test Token', 'TST', 18, web3.utils.toWei(new BN(100)));
 
         // Create some converters.
-        const poolToken1 = await SmartToken.new('Pool Token 1', 'POOL1', 18);
-        const poolToken2 = await SmartToken.new('Pool Token 2', 'POOL2', 18);
+        const poolToken1 = await DSToken.new('Pool Token 1', 'POOL1', 18);
+        const poolToken2 = await DSToken.new('Pool Token 2', 'POOL2', 18);
         await poolToken2.issue(owner, web3.utils.toWei(new BN(200)));
         await poolToken2.issue(owner, web3.utils.toWei(new BN(200)));
 

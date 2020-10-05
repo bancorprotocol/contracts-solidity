@@ -155,14 +155,14 @@ const run = async () => {
     const oracleWhitelist = await web3Func(deploy, 'oracleWhitelist', 'Whitelist', []);
 
     // contract deployment for etherscan verification only
-    const smartToken = await web3Func(deploy, 'smartToken', 'SmartToken', ["Token1", "TKN1", 18]);
-    const smartToken2 = await web3Func(deploy, 'smartToken2', 'SmartToken', ["Token2", "TKN2", 18]);
+    const poolToken = await web3Func(deploy, 'poolToken', 'DSToken', ["Token1", "TKN1", 18]);
+    const poolToken2 = await web3Func(deploy, 'poolToken2', 'DSToken', ["Token2", "TKN2", 18]);
     const poolTokensContainer = await web3Func(deploy, 'poolTokensContainer', 'PoolTokensContainer', ["Pool", "POOL", 18]);
     const chainlinkOracle1 = await web3Func(deploy, 'chainlinkOracle1', 'ChainlinkETHToETHOracle', []);
     const chainlinkOracle2 = await web3Func(deploy, 'chainlinkOracle2', 'ChainlinkETHToETHOracle', []);
-    await web3Func(deploy, 'priceOracle', 'PriceOracle', [smartToken._address, smartToken2._address, chainlinkOracle1._address, chainlinkOracle2._address]);
-    await web3Func(deploy, 'liquidTokenConverter', 'LiquidTokenConverter', [smartToken._address, contractRegistry._address, 1000]);
-    await web3Func(deploy, 'liquidityPoolV1Converter', 'LiquidityPoolV1Converter', [smartToken2._address, contractRegistry._address, 1000]);
+    await web3Func(deploy, 'priceOracle', 'PriceOracle', [poolToken._address, poolToken2._address, chainlinkOracle1._address, chainlinkOracle2._address]);
+    await web3Func(deploy, 'liquidTokenConverter', 'LiquidTokenConverter', [poolToken._address, contractRegistry._address, 1000]);
+    await web3Func(deploy, 'liquidityPoolV1Converter', 'LiquidityPoolV1Converter', [poolToken2._address, contractRegistry._address, 1000]);
     await web3Func(deploy, 'liquidityPoolV2Converter', 'LiquidityPoolV2Converter', [poolTokensContainer._address, contractRegistry._address, 1000]);
 
     // initialize contract registry

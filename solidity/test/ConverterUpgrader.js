@@ -21,7 +21,7 @@ const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2Conver
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 const LiquidityPoolV2Converter = artifacts.require('LiquidityPoolV2Converter');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 const PoolTokensContainer = artifacts.require('PoolTokensContainer');
 const ChainlinkPriceOracle = artifacts.require('TestChainlinkPriceOracle');
 const PriceOracle = artifacts.require('PriceOracle');
@@ -38,19 +38,19 @@ const VERSIONS = [9, 10, 11, 23];
 
 contract('ConverterUpgrader', accounts => {
     const initWith1Reserve = async (deployer, version, activate) => {
-        const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
-        const converter = await ConverterHelper.new(0, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE,
+        const anchor = await DSToken.new('Token1', 'TKN1', 0);
+        const converter = await ConverterHelper.new(0, anchor.address, contractRegistry.address, MAX_CONVERSION_FEE,
             reserveToken1.address, 500000, version);
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
         await converter.setConversionFee(CONVERSION_FEE);
-        await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
+        await anchor.issue(deployer, TOKEN_TOTAL_SUPPLY);
         await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
 
         if (activate) {
-            await smartToken.transferOwnership(converter.address);
+            await anchor.transferOwnership(converter.address);
             await converter.acceptTokenOwnership();
         }
 
@@ -58,8 +58,8 @@ contract('ConverterUpgrader', accounts => {
     };
 
     const initWith2Reserves = async (deployer, version, activate) => {
-        const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
-        const converter = await ConverterHelper.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE,
+        const anchor = await DSToken.new('Token1', 'TKN1', 0);
+        const converter = await ConverterHelper.new(1, anchor.address, contractRegistry.address, MAX_CONVERSION_FEE,
             reserveToken1.address, 500000, version);
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
 
@@ -72,12 +72,12 @@ contract('ConverterUpgrader', accounts => {
         }
 
         await converter.setConversionFee(CONVERSION_FEE);
-        await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
+        await anchor.issue(deployer, TOKEN_TOTAL_SUPPLY);
         await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
         await reserveToken2.transfer(converter.address, RESERVE2_BALANCE);
 
         if (activate) {
-            await smartToken.transferOwnership(converter.address);
+            await anchor.transferOwnership(converter.address);
             await converter.acceptTokenOwnership();
         }
 
@@ -109,8 +109,8 @@ contract('ConverterUpgrader', accounts => {
     };
 
     const initWithoutReserves = async (deployer, version, activate) => {
-        const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
-        const converter = await ConverterHelper.new(0, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE,
+        const anchor = await DSToken.new('Token1', 'TKN1', 0);
+        const converter = await ConverterHelper.new(0, anchor.address, contractRegistry.address, MAX_CONVERSION_FEE,
             ZERO_ADDRESS, 0, version);
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
 
@@ -126,8 +126,8 @@ contract('ConverterUpgrader', accounts => {
     };
 
     const initWithEtherReserve = async (deployer, version, activate) => {
-        const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
-        const converter = await ConverterHelper.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE,
+        const anchor = await DSToken.new('Token1', 'TKN1', 0);
+        const converter = await ConverterHelper.new(1, anchor.address, contractRegistry.address, MAX_CONVERSION_FEE,
             etherToken.address, 500000, version);
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, etherToken.address);
 
@@ -140,13 +140,13 @@ contract('ConverterUpgrader', accounts => {
         }
 
         await converter.setConversionFee(CONVERSION_FEE);
-        await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
+        await anchor.issue(deployer, TOKEN_TOTAL_SUPPLY);
         await etherToken.deposit({ value: RESERVE1_BALANCE });
         await etherToken.transfer(converter.address, RESERVE1_BALANCE);
         await reserveToken2.transfer(converter.address, RESERVE2_BALANCE);
 
         if (activate) {
-            await smartToken.transferOwnership(converter.address);
+            await anchor.transferOwnership(converter.address);
             await converter.acceptTokenOwnership();
         }
 
@@ -158,20 +158,20 @@ contract('ConverterUpgrader', accounts => {
             throw new Error(`Converter version ${version} does not support ETH-reserve`);
         }
 
-        const smartToken = await SmartToken.new('Smart Token', 'TKN1', 0);
-        const converter = await ConverterHelper.new(1, smartToken.address, contractRegistry.address, MAX_CONVERSION_FEE,
+        const anchor = await DSToken.new('Token1', 'TKN1', 0);
+        const converter = await ConverterHelper.new(1, anchor.address, contractRegistry.address, MAX_CONVERSION_FEE,
             reserveToken1.address, 500000);
         const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         await converter.addReserve(ETH_RESERVE_ADDRESS, 500000);
         await converter.setConversionFee(CONVERSION_FEE);
-        await smartToken.issue(deployer, TOKEN_TOTAL_SUPPLY);
+        await anchor.issue(deployer, TOKEN_TOTAL_SUPPLY);
         await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
         await converter.send(RESERVE2_BALANCE, { from: deployer });
 
         if (activate) {
-            await smartToken.transferOwnership(converter.address);
+            await anchor.transferOwnership(converter.address);
             await converter.acceptTokenOwnership();
         }
 
@@ -211,11 +211,11 @@ contract('ConverterUpgrader', accounts => {
 
     const getConverterState = async (converter) => {
         const token = await converter.token.call();
-        const smartToken = await SmartToken.at(token);
+        const anchor = await DSToken.at(token);
         const state = {
             owner: await converter.owner.call(),
             token,
-            tokenOwner: await smartToken.owner.call(),
+            tokenOwner: await anchor.owner.call(),
             newOwner: await converter.newOwner.call(),
             conversionFee: await converter.conversionFee.call(),
             maxConversionFee: await converter.maxConversionFee.call(),

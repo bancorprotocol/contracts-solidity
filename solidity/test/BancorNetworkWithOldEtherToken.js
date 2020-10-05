@@ -7,7 +7,7 @@ const { ZERO_ADDRESS } = constants;
 const ConverterHelper = require('./helpers/Converter');
 
 const BancorNetwork = artifacts.require('BancorNetwork');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 const BancorFormula = artifacts.require('BancorFormula');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const EtherToken = artifacts.require('EtherToken');
@@ -16,11 +16,11 @@ const TestNonStandardToken = artifacts.require('TestNonStandardToken');
 /*
 Token network structure:
 
-         SmartToken2
+         DSToken2
          /         \
-    SmartToken1   SmartToken3
+    DSToken1   DSToken3
           \          \
-           \        SmartToken4
+           \        DSToken4
             \        /      \
             EtherToken     ERC20Token
 
@@ -28,10 +28,10 @@ Token network structure:
 
 contract('BancorNetworkWithOldEtherToken', accounts => {
     let etherToken;
-    let smartToken1;
-    let smartToken2;
-    let smartToken3;
-    let smartToken4;
+    let anchor1;
+    let anchor2;
+    let anchor3;
+    let anchor4;
     let erc20Token;
     let contractRegistry;
     let converter1;
@@ -39,12 +39,12 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     let converter3;
     let converter4;
     let bancorNetwork;
-    let smartToken1BuyPath;
-    let smartToken2BuyPath;
-    let smartToken3BuyPath;
-    let smartToken1SellPath;
-    let smartToken2SellPath;
-    let smartToken3SellPath;
+    let anchor1BuyPath;
+    let anchor2BuyPath;
+    let anchor3BuyPath;
+    let anchor1SellPath;
+    let anchor2SellPath;
+    let anchor3SellPath;
     let etherToErc20ConvertPath;
     const sender = accounts[0];
     const sender2 = accounts[1];
@@ -75,64 +75,64 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
 
         await bancorNetwork.registerEtherToken(etherToken.address, true);
 
-        smartToken1 = await SmartToken.new('Token1', 'TKN1', 2);
-        await smartToken1.issue(sender, 1000000);
+        anchor1 = await DSToken.new('Token1', 'TKN1', 2);
+        await anchor1.issue(sender, 1000000);
 
-        smartToken2 = await SmartToken.new('Token2', 'TKN2', 2);
-        await smartToken2.issue(sender, 2000000);
+        anchor2 = await DSToken.new('Token2', 'TKN2', 2);
+        await anchor2.issue(sender, 2000000);
 
-        smartToken3 = await SmartToken.new('Token3', 'TKN3', 2);
-        await smartToken3.issue(sender, 3000000);
+        anchor3 = await DSToken.new('Token3', 'TKN3', 2);
+        await anchor3.issue(sender, 3000000);
 
-        smartToken4 = await SmartToken.new('Token4', 'TKN4', 2);
-        await smartToken4.issue(sender, 2500000);
+        anchor4 = await DSToken.new('Token4', 'TKN4', 2);
+        await anchor4.issue(sender, 2500000);
 
-        await contractRegistry.registerAddress(registry.BNT_TOKEN, smartToken1.address);
+        await contractRegistry.registerAddress(registry.BNT_TOKEN, anchor1.address);
 
         erc20Token = await TestNonStandardToken.new('ERC20Token', 'ERC5', 2, 1000000);
 
-        converter1 = await ConverterHelper.new(0, smartToken1.address, contractRegistry.address, 0, etherToken.address,
+        converter1 = await ConverterHelper.new(0, anchor1.address, contractRegistry.address, 0, etherToken.address,
             250000, OLD_CONVERTER_VERSION);
 
-        converter2 = await ConverterHelper.new(MIN_RETURN, smartToken2.address, contractRegistry.address, 0, smartToken1.address,
+        converter2 = await ConverterHelper.new(MIN_RETURN, anchor2.address, contractRegistry.address, 0, anchor1.address,
             300000, OLD_CONVERTER_VERSION);
-        await converter2.addReserve(smartToken3.address, 150000);
+        await converter2.addReserve(anchor3.address, 150000);
 
-        converter3 = await ConverterHelper.new(0, smartToken3.address, contractRegistry.address, 0, smartToken4.address,
+        converter3 = await ConverterHelper.new(0, anchor3.address, contractRegistry.address, 0, anchor4.address,
             350000, OLD_CONVERTER_VERSION);
 
-        converter4 = await ConverterHelper.new(MIN_RETURN, smartToken4.address, contractRegistry.address, 0, etherToken.address,
+        converter4 = await ConverterHelper.new(MIN_RETURN, anchor4.address, contractRegistry.address, 0, etherToken.address,
             150000, OLD_CONVERTER_VERSION);
         await converter4.addReserve(erc20Token.address, 220000);
 
         await etherToken.transfer(converter1.address, 50000);
-        await smartToken1.transfer(converter2.address, 40000);
-        await smartToken3.transfer(converter2.address, 25000);
-        await smartToken4.transfer(converter3.address, 30000);
+        await anchor1.transfer(converter2.address, 40000);
+        await anchor3.transfer(converter2.address, 25000);
+        await anchor4.transfer(converter3.address, 30000);
         await etherToken.transfer(converter4.address, 20000);
         await erc20Token.transfer(converter4.address, 35000);
 
-        await smartToken1.transferOwnership(converter1.address);
+        await anchor1.transferOwnership(converter1.address);
         await converter1.acceptTokenOwnership();
 
-        await smartToken2.transferOwnership(converter2.address);
+        await anchor2.transferOwnership(converter2.address);
         await converter2.acceptTokenOwnership();
 
-        await smartToken3.transferOwnership(converter3.address);
+        await anchor3.transferOwnership(converter3.address);
         await converter3.acceptTokenOwnership();
 
-        await smartToken4.transferOwnership(converter4.address);
+        await anchor4.transferOwnership(converter4.address);
         await converter4.acceptTokenOwnership();
 
-        smartToken1BuyPath = [etherToken.address, smartToken1.address, smartToken1.address];
-        smartToken2BuyPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken2.address];
-        smartToken3BuyPath = [smartToken1.address, smartToken2.address, smartToken2.address, smartToken2.address, smartToken3.address];
+        anchor1BuyPath = [etherToken.address, anchor1.address, anchor1.address];
+        anchor2BuyPath = [etherToken.address, anchor1.address, anchor1.address, anchor2.address, anchor2.address];
+        anchor3BuyPath = [anchor1.address, anchor2.address, anchor2.address, anchor2.address, anchor3.address];
 
-        smartToken1SellPath = [smartToken1.address, smartToken1.address, etherToken.address];
-        smartToken2SellPath = [smartToken2.address, smartToken2.address, smartToken1.address, smartToken1.address, etherToken.address];
-        smartToken3SellPath = [smartToken3.address, smartToken2.address, smartToken2.address, smartToken2.address, smartToken1.address];
+        anchor1SellPath = [anchor1.address, anchor1.address, etherToken.address];
+        anchor2SellPath = [anchor2.address, anchor2.address, anchor1.address, anchor1.address, etherToken.address];
+        anchor3SellPath = [anchor3.address, anchor2.address, anchor2.address, anchor2.address, anchor1.address];
 
-        etherToErc20ConvertPath = [etherToken.address, smartToken4.address, erc20Token.address];
+        etherToErc20ConvertPath = [etherToken.address, anchor4.address, erc20Token.address];
     });
 
     it('verifies that sending ether to the converter fails', async () => {
@@ -141,20 +141,20 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
 
     it('should be able to convert from a non compliant ERC20 to another token', async () => {
         await erc20Token.approve(bancorNetwork.address, value);
-        const path = [erc20Token.address, smartToken4.address, smartToken4.address];
+        const path = [erc20Token.address, anchor4.address, anchor4.address];
 
-        const prevTokenBalance = await smartToken4.balanceOf.call(sender);
+        const prevTokenBalance = await anchor4.balanceOf.call(sender);
 
         const returnAmount = await bancorNetwork.convert.call(path, value, MIN_RETURN);
         await bancorNetwork.convert(path, value, MIN_RETURN);
 
-        const newTokenBalance = await smartToken4.balanceOf.call(sender);
+        const newTokenBalance = await anchor4.balanceOf.call(sender);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnAmount));
     });
 
-    it('should be able to convert from a smart token to a non compliant ERC20', async () => {
-        await smartToken4.approve(bancorNetwork.address, value);
-        const path = [smartToken4.address, smartToken4.address, erc20Token.address];
+    it('should be able to convert from a liquid token to a non compliant ERC20', async () => {
+        await anchor4.approve(bancorNetwork.address, value);
+        const path = [anchor4.address, anchor4.address, erc20Token.address];
 
         const prevTokenBalance = await erc20Token.balanceOf.call(sender);
 
@@ -166,22 +166,22 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('verifies that convert with a single converter results in increased balance for the buyer', async () => {
-        const prevTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor1.balanceOf.call(sender2);
 
-        const returnAmount = await bancorNetwork.convert.call(smartToken1BuyPath, value, MIN_RETURN, { from: sender2, value });
-        await bancorNetwork.convert(smartToken1BuyPath, value, MIN_RETURN, { from: sender2, value });
+        const returnAmount = await bancorNetwork.convert.call(anchor1BuyPath, value, MIN_RETURN, { from: sender2, value });
+        await bancorNetwork.convert(anchor1BuyPath, value, MIN_RETURN, { from: sender2, value });
 
-        const newTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const newTokenBalance = await anchor1.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnAmount));
     });
 
     it('verifies that convert with multiple converters results in increased balance for the buyer', async () => {
-        const prevTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor2.balanceOf.call(sender2);
 
-        const returnAmount = await bancorNetwork.convert.call(smartToken2BuyPath, value, MIN_RETURN, { from: sender2, value });
-        await bancorNetwork.convert(smartToken2BuyPath, value, MIN_RETURN, { from: sender2, value });
+        const returnAmount = await bancorNetwork.convert.call(anchor2BuyPath, value, MIN_RETURN, { from: sender2, value });
+        await bancorNetwork.convert(anchor2BuyPath, value, MIN_RETURN, { from: sender2, value });
 
-        const newTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const newTokenBalance = await anchor2.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnAmount));
     });
 
@@ -189,37 +189,37 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     it('verifies that convert with minimum return equal to the full expected return amount results in the exact increase in balance for the buyer', async () => {
         const value = new BN(100000);
 
-        const prevTokenBalance = await smartToken2.balanceOf.call(sender);
+        const prevTokenBalance = await anchor2.balanceOf.call(sender);
 
-        const returnAmount = (await bancorNetwork.getReturnByPath.call(smartToken2BuyPath, value))[0];
-        await bancorNetwork.convert(smartToken2BuyPath, value, returnAmount, { value });
+        const returnAmount = (await bancorNetwork.getReturnByPath.call(anchor2BuyPath, value))[0];
+        await bancorNetwork.convert(anchor2BuyPath, value, returnAmount, { value });
 
-        const newTokenBalance = await smartToken2.balanceOf.call(sender);
+        const newTokenBalance = await anchor2.balanceOf.call(sender);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnAmount));
     });
 
     it('should revert when attempting to convert and the return amount is lower than the given minimum', async () => {
         const value = new BN(1);
 
-        await expectRevert(bancorNetwork.convert(smartToken2BuyPath, value, 1000000, { from: sender2, value }),
+        await expectRevert(bancorNetwork.convert(anchor2BuyPath, value, 1000000, { from: sender2, value }),
             'ERR_RETURN_TOO_LOW');
     });
 
     it('should revert when attempting to convert and passing an amount higher than the ETH amount sent with the request', async () => {
-        await expectRevert(bancorNetwork.convert(smartToken2BuyPath, value, MIN_RETURN,
+        await expectRevert(bancorNetwork.convert(anchor2BuyPath, value, MIN_RETURN,
             { from: sender2, value: value.mul(new BN(2)) }), 'ERR_ETH_AMOUNT_MISMATCH');
     });
 
     it('verifies the caller balances after selling directly for ether with a single converter', async () => {
-        await smartToken1.approve(bancorNetwork.address, value);
+        await anchor1.approve(bancorNetwork.address, value);
 
-        const prevTokenBalance = await smartToken1.balanceOf.call(sender);
+        const prevTokenBalance = await anchor1.balanceOf.call(sender);
         const prevETHBalance = await balance.current(sender);
 
-        const res = await bancorNetwork.convert(smartToken1SellPath, value, MIN_RETURN);
+        const res = await bancorNetwork.convert(anchor1SellPath, value, MIN_RETURN);
 
         const newETHBalance = await balance.current(sender);
-        const newTokenBalance = await smartToken1.balanceOf.call(sender);
+        const newTokenBalance = await anchor1.balanceOf.call(sender);
 
         const transaction = await web3.eth.getTransaction(res.tx);
         const transactionCost = new BN(transaction.gasPrice).mul(new BN(res.receipt.cumulativeGasUsed));
@@ -229,15 +229,15 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('verifies the caller balances after selling directly for ether with multiple converters', async () => {
-        await smartToken2.approve(bancorNetwork.address, value);
+        await anchor2.approve(bancorNetwork.address, value);
 
-        const prevTokenBalance = await smartToken2.balanceOf.call(sender);
+        const prevTokenBalance = await anchor2.balanceOf.call(sender);
         const prevETHBalance = await balance.current(sender);
 
-        const res = await bancorNetwork.convert(smartToken2SellPath, value, MIN_RETURN);
+        const res = await bancorNetwork.convert(anchor2SellPath, value, MIN_RETURN);
 
         const newETHBalance = await balance.current(sender);
-        const newTokenBalance = await smartToken2.balanceOf.call(sender);
+        const newTokenBalance = await anchor2.balanceOf.call(sender);
 
         const transaction = await web3.eth.getTransaction(res.tx);
         const transactionCost = new BN(transaction.gasPrice).mul(new BN(res.receipt.cumulativeGasUsed));
@@ -247,29 +247,29 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('should revert when attempting to sell directly for ether and the return amount is lower than the given minimum', async () => {
-        await smartToken2.approve(bancorNetwork.address, value);
+        await anchor2.approve(bancorNetwork.address, value);
 
-        await expectRevert(bancorNetwork.convert(smartToken2SellPath, value, value.add(new BN(10000))),
+        await expectRevert(bancorNetwork.convert(anchor2SellPath, value, value.add(new BN(10000))),
             'ERR_RETURN_TOO_LOW');
     });
 
     it('verifies the caller balances after converting from one token to another with multiple converters', async () => {
         const path = [
-            smartToken1.address,
-            smartToken2.address, smartToken2.address,
-            smartToken2.address, smartToken3.address,
-            smartToken3.address, smartToken4.address
+            anchor1.address,
+            anchor2.address, anchor2.address,
+            anchor2.address, anchor3.address,
+            anchor3.address, anchor4.address
         ];
 
-        await smartToken1.approve(bancorNetwork.address, value);
+        await anchor1.approve(bancorNetwork.address, value);
 
-        const prevToken1Balance = await smartToken1.balanceOf.call(sender);
-        const prevToken4Balance = await smartToken4.balanceOf.call(sender);
+        const prevToken1Balance = await anchor1.balanceOf.call(sender);
+        const prevToken4Balance = await anchor4.balanceOf.call(sender);
 
         await bancorNetwork.convert(path, value, MIN_RETURN);
 
-        const newToken1Balance = await smartToken1.balanceOf.call(sender);
-        const newToken4Balance = await smartToken4.balanceOf.call(sender);
+        const newToken1Balance = await anchor1.balanceOf.call(sender);
+        const newToken4Balance = await anchor4.balanceOf.call(sender);
 
         expect(newToken4Balance).to.be.bignumber.gt(prevToken4Balance);
         expect(newToken1Balance).to.be.bignumber.lt(prevToken1Balance);
@@ -330,43 +330,43 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('verifies that convertFor transfers the converted amount correctly', async () => {
-        const prevTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor1.balanceOf.call(sender2);
 
-        await bancorNetwork.convertFor(smartToken1BuyPath, value, MIN_RETURN, sender2, { value });
+        await bancorNetwork.convertFor(anchor1BuyPath, value, MIN_RETURN, sender2, { value });
 
-        const newTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const newTokenBalance = await anchor1.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
     it('verifies that convert transfers the converted amount correctly', async () => {
-        const prevTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor1.balanceOf.call(sender2);
 
-        await bancorNetwork.convert(smartToken1BuyPath, value, MIN_RETURN, { from: sender2, value });
+        await bancorNetwork.convert(anchor1BuyPath, value, MIN_RETURN, { from: sender2, value });
 
-        const newTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const newTokenBalance = await anchor1.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
-    it('verifies claimAndConvertFor with a path that starts with a smart token and ends with another smart token', async () => {
-        await smartToken4.approve(bancorNetwork.address, value);
+    it('verifies claimAndConvertFor with a path that starts with a liquid token and ends with another liquid token', async () => {
+        await anchor4.approve(bancorNetwork.address, value);
 
-        const path = [smartToken4.address, smartToken3.address, smartToken3.address, smartToken2.address, smartToken2.address];
+        const path = [anchor4.address, anchor3.address, anchor3.address, anchor2.address, anchor2.address];
 
-        const prevTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor2.balanceOf.call(sender2);
 
         await bancorNetwork.claimAndConvertFor(path, value, MIN_RETURN, sender2);
 
-        const newTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const newTokenBalance = await anchor2.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
-    it('verifies that convertFor returns a valid amount when buying the smart token', async () => {
-        const amount = await bancorNetwork.convertFor.call(smartToken1BuyPath, value, MIN_RETURN, sender2, { value });
+    it('verifies that convertFor returns a valid amount when buying the liquid token', async () => {
+        const amount = await bancorNetwork.convertFor.call(anchor1BuyPath, value, MIN_RETURN, sender2, { value });
         expect(amount).be.bignumber.gt(new BN(0));
     });
 
-    it('verifies that convert returns a valid amount when buying the smart token', async () => {
-        const amount = await bancorNetwork.convert.call(smartToken1BuyPath, value, MIN_RETURN, { from: sender2, value });
+    it('verifies that convert returns a valid amount when buying the liquid token', async () => {
+        const amount = await bancorNetwork.convert.call(anchor1BuyPath, value, MIN_RETURN, { from: sender2, value });
         expect(amount).be.bignumber.gt(new BN(0));
     });
 
@@ -381,16 +381,16 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('should revert when calling convertFor with ether token but without sending ether', async () => {
-        await expectRevert.unspecified(bancorNetwork.convertFor(smartToken1BuyPath, value, MIN_RETURN, sender2));
+        await expectRevert.unspecified(bancorNetwork.convertFor(anchor1BuyPath, value, MIN_RETURN, sender2));
     });
 
     it('should revert when calling convertFor with ether amount different than the amount sent', async () => {
-        await expectRevert(bancorNetwork.convertFor.call(smartToken1BuyPath, value.add(new BN(1)), MIN_RETURN, sender2,
+        await expectRevert(bancorNetwork.convertFor.call(anchor1BuyPath, value.add(new BN(1)), MIN_RETURN, sender2,
             { value }), 'ERR_ETH_AMOUNT_MISMATCH');
     });
 
     it('should revert when calling convertFor with invalid path', async () => {
-        const invalidPath = [etherToken.address, smartToken1.address];
+        const invalidPath = [etherToken.address, anchor1.address];
 
         await expectRevert(bancorNetwork.convertFor(invalidPath, value, MIN_RETURN, sender2, { value }),
             'ERR_INVALID_PATH');
@@ -407,16 +407,16 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('should revert when calling convert with ether token but without sending ether', async () => {
-        await expectRevert.unspecified(bancorNetwork.convert(smartToken1BuyPath, value, MIN_RETURN, { from: sender2 }));
+        await expectRevert.unspecified(bancorNetwork.convert(anchor1BuyPath, value, MIN_RETURN, { from: sender2 }));
     });
 
     it('should revert when calling convert with ether amount different than the amount sent', async () => {
-        await expectRevert(bancorNetwork.convert.call(smartToken1BuyPath, value.add(new BN(1)), MIN_RETURN,
+        await expectRevert(bancorNetwork.convert.call(anchor1BuyPath, value.add(new BN(1)), MIN_RETURN,
             { from: sender2, value }), 'ERR_ETH_AMOUNT_MISMATCH');
     });
 
     it('should revert when calling convert with invalid path', async () => {
-        const invalidPath = [etherToken.address, smartToken1.address];
+        const invalidPath = [etherToken.address, anchor1.address];
 
         await expectRevert(bancorNetwork.convert(invalidPath, value, MIN_RETURN, { from: sender2, value }),
             'ERR_INVALID_PATH');
@@ -433,104 +433,104 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('verifies that claimAndConvertFor transfers the converted amount correctly', async () => {
-        await smartToken1.approve(bancorNetwork.address, value);
+        await anchor1.approve(bancorNetwork.address, value);
 
-        const prevTokenBalance = await smartToken3.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor3.balanceOf.call(sender2);
 
-        await bancorNetwork.claimAndConvertFor(smartToken3BuyPath, value, MIN_RETURN, sender2);
+        await bancorNetwork.claimAndConvertFor(anchor3BuyPath, value, MIN_RETURN, sender2);
 
-        const newTokenBalance = await smartToken3.balanceOf.call(sender2);
+        const newTokenBalance = await anchor3.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
     it('should revert when calling claimAndConvertFor without approval', async () => {
-        await expectRevert.unspecified(bancorNetwork.claimAndConvertFor(smartToken3BuyPath, value, MIN_RETURN, sender2));
+        await expectRevert.unspecified(bancorNetwork.claimAndConvertFor(anchor3BuyPath, value, MIN_RETURN, sender2));
     });
 
     it('verifies that claimAndConvert transfers the converted amount correctly', async () => {
-        await smartToken1.approve(bancorNetwork.address, value);
+        await anchor1.approve(bancorNetwork.address, value);
 
-        const prevTokenBalance = await smartToken3.balanceOf.call(sender);
+        const prevTokenBalance = await anchor3.balanceOf.call(sender);
 
-        await bancorNetwork.claimAndConvert(smartToken3BuyPath, value, MIN_RETURN);
+        await bancorNetwork.claimAndConvert(anchor3BuyPath, value, MIN_RETURN);
 
-        const newTokenBalance = await smartToken3.balanceOf.call(sender);
+        const newTokenBalance = await anchor3.balanceOf.call(sender);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
     it('should revert when calling claimAndConvert without approval', async () => {
-        await expectRevert.unspecified(bancorNetwork.claimAndConvert(smartToken3BuyPath, value, MIN_RETURN));
+        await expectRevert.unspecified(bancorNetwork.claimAndConvert(anchor3BuyPath, value, MIN_RETURN));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for buying the smart token', async () => {
-        const returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1BuyPath, value))[0];
+    it('verifies that getReturnByPath returns the correct amount for buying the liquid token', async () => {
+        const returnByPath = (await bancorNetwork.getReturnByPath.call(anchor1BuyPath, value))[0];
 
-        const prevTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor1.balanceOf.call(sender2);
 
-        await bancorNetwork.convertFor(smartToken1BuyPath, value, MIN_RETURN, sender2, { value });
+        await bancorNetwork.convertFor(anchor1BuyPath, value, MIN_RETURN, sender2, { value });
 
-        const newTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const newTokenBalance = await anchor1.balanceOf.call(sender2);
 
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnByPath));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for buying the smart token through multiple converters', async () => {
-        const returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken2BuyPath, value))[0];
+    it('verifies that getReturnByPath returns the correct amount for buying the liquid token through multiple converters', async () => {
+        const returnByPath = (await bancorNetwork.getReturnByPath.call(anchor2BuyPath, value))[0];
 
-        const prevTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor2.balanceOf.call(sender2);
 
-        await bancorNetwork.convertFor(smartToken2BuyPath, value, MIN_RETURN, sender2, { value });
+        await bancorNetwork.convertFor(anchor2BuyPath, value, MIN_RETURN, sender2, { value });
 
-        const newTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const newTokenBalance = await anchor2.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnByPath));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for buying the smart token', async () => {
-        const returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1BuyPath, value))[0];
+    it('verifies that getReturnByPath returns the correct amount for buying the liquid token', async () => {
+        const returnByPath = (await bancorNetwork.getReturnByPath.call(anchor1BuyPath, value))[0];
 
-        const prevTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor1.balanceOf.call(sender2);
 
-        await bancorNetwork.convert(smartToken1BuyPath, value, MIN_RETURN, { from: sender2, value });
+        await bancorNetwork.convert(anchor1BuyPath, value, MIN_RETURN, { from: sender2, value });
 
-        const newTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const newTokenBalance = await anchor1.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnByPath));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for buying the smart token through multiple converters', async () => {
-        const returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken2BuyPath, value))[0];
+    it('verifies that getReturnByPath returns the correct amount for buying the liquid token through multiple converters', async () => {
+        const returnByPath = (await bancorNetwork.getReturnByPath.call(anchor2BuyPath, value))[0];
 
-        const prevTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor2.balanceOf.call(sender2);
 
-        await bancorNetwork.convert(smartToken2BuyPath, value, MIN_RETURN, { from: sender2, value });
+        await bancorNetwork.convert(anchor2BuyPath, value, MIN_RETURN, { from: sender2, value });
 
-        const newTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const newTokenBalance = await anchor2.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnByPath));
     });
 
     it('verifies that getReturnByPath returns the correct amount for cross reserve conversion', async () => {
-        await bancorNetwork.convert([etherToken.address, smartToken1.address, smartToken1.address], value, MIN_RETURN, { from: sender2, value });
-        await smartToken1.approve(bancorNetwork.address, value, { from: sender2 });
+        await bancorNetwork.convert([etherToken.address, anchor1.address, anchor1.address], value, MIN_RETURN, { from: sender2, value });
+        await anchor1.approve(bancorNetwork.address, value, { from: sender2 });
 
-        const path = [smartToken1.address, smartToken2.address, smartToken3.address];
+        const path = [anchor1.address, anchor2.address, anchor3.address];
         const returnByPath = (await bancorNetwork.getReturnByPath.call(path, value))[0];
 
-        const prevTokenBalance = await smartToken3.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor3.balanceOf.call(sender2);
 
         await bancorNetwork.convert(path, value, MIN_RETURN, { from: sender2 });
 
-        const newTokenBalance = await smartToken3.balanceOf.call(sender2);
+        const newTokenBalance = await anchor3.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnByPath));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for selling the smart token via convert', async () => {
-        await bancorNetwork.convert(smartToken1BuyPath, value, MIN_RETURN, { from: sender2, value });
+    it('verifies that getReturnByPath returns the correct amount for selling the liquid token via convert', async () => {
+        await bancorNetwork.convert(anchor1BuyPath, value, MIN_RETURN, { from: sender2, value });
 
-        const returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1SellPath, value))[0];
-        await smartToken1.approve(bancorNetwork.address, value, { from: sender2 });
+        const returnByPath = (await bancorNetwork.getReturnByPath.call(anchor1SellPath, value))[0];
+        await anchor1.approve(bancorNetwork.address, value, { from: sender2 });
 
         const prevEthBalance = await balance.current(sender2);
 
-        const res = await bancorNetwork.convert(smartToken1SellPath, value, MIN_RETURN, { from: sender2 });
+        const res = await bancorNetwork.convert(anchor1SellPath, value, MIN_RETURN, { from: sender2 });
         const transaction = await web3.eth.getTransaction(res.tx);
         const transactionCost = new BN(transaction.gasPrice).mul(new BN(res.receipt.cumulativeGasUsed));
 
@@ -538,15 +538,15 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
         expect(newEthBalance).to.be.bignumber.equal(prevEthBalance.add(returnByPath).sub(transactionCost));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for selling the smart token through multiple converters', async () => {
-        await bancorNetwork.convert(smartToken2BuyPath, value, MIN_RETURN, { from: sender2, value });
+    it('verifies that getReturnByPath returns the correct amount for selling the liquid token through multiple converters', async () => {
+        await bancorNetwork.convert(anchor2BuyPath, value, MIN_RETURN, { from: sender2, value });
 
-        const returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken2SellPath, value))[0];
-        await smartToken2.approve(bancorNetwork.address, value, { from: sender2 });
+        const returnByPath = (await bancorNetwork.getReturnByPath.call(anchor2SellPath, value))[0];
+        await anchor2.approve(bancorNetwork.address, value, { from: sender2 });
 
         const prevEthBalance = await balance.current(sender2);
 
-        const res = await bancorNetwork.convert(smartToken2SellPath, value, MIN_RETURN, { from: sender2 });
+        const res = await bancorNetwork.convert(anchor2SellPath, value, MIN_RETURN, { from: sender2 });
 
         const transaction = await web3.eth.getTransaction(res.tx);
         const transactionCost = new BN(transaction.gasPrice).mul(new BN(res.receipt.cumulativeGasUsed));
@@ -555,14 +555,14 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
         expect(newEthBalance).to.be.bignumber.equal(prevEthBalance.add(returnByPath).sub(transactionCost));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for selling the smart token with a long conversion path', async () => {
-        await bancorNetwork.convert([etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken3.address], value,
+    it('verifies that getReturnByPath returns the correct amount for selling the liquid token with a long conversion path', async () => {
+        await bancorNetwork.convert([etherToken.address, anchor1.address, anchor1.address, anchor2.address, anchor3.address], value,
             MIN_RETURN, { from: sender2, value });
 
-        const path = [smartToken3.address, smartToken2.address, smartToken2.address, smartToken2.address, smartToken1.address,
-            smartToken1.address, etherToken.address];
+        const path = [anchor3.address, anchor2.address, anchor2.address, anchor2.address, anchor1.address,
+            anchor1.address, etherToken.address];
         const returnByPath = (await bancorNetwork.getReturnByPath.call(path, value))[0];
-        await smartToken3.approve(bancorNetwork.address, value, { from: sender2 });
+        await anchor3.approve(bancorNetwork.address, value, { from: sender2 });
 
         const prevEthBalance = await balance.current(sender2);
 
@@ -575,27 +575,27 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
         expect(newEthBalance).to.be.bignumber.equal(prevEthBalance.add(returnByPath).sub(transactionCost));
     });
 
-    it('verifies that getReturnByPath returns the same amount as getReturn when converting a reserve to the smart token', async () => {
-        const getReturn = (await converter2.getReturn.call(smartToken1.address, smartToken2.address, value))[0];
-        const returnByPath = (await bancorNetwork.getReturnByPath.call([smartToken1.address, smartToken2.address, smartToken2.address], value))[0];
+    it('verifies that getReturnByPath returns the same amount as getReturn when converting a reserve to the liquid token', async () => {
+        const getReturn = (await converter2.getReturn.call(anchor1.address, anchor2.address, value))[0];
+        const returnByPath = (await bancorNetwork.getReturnByPath.call([anchor1.address, anchor2.address, anchor2.address], value))[0];
 
         expect(getReturn).to.be.bignumber.equal(returnByPath);
     });
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting from a token to a reserve', async () => {
-        const getReturn = (await converter2.getReturn.call(smartToken2.address, smartToken1.address, value))[0];
-        const returnByPath = (await bancorNetwork.getReturnByPath.call([smartToken2.address, smartToken2.address, smartToken1.address], value))[0];
+        const getReturn = (await converter2.getReturn.call(anchor2.address, anchor1.address, value))[0];
+        const returnByPath = (await bancorNetwork.getReturnByPath.call([anchor2.address, anchor2.address, anchor1.address], value))[0];
 
         expect(getReturn).to.be.bignumber.equal(returnByPath);
     });
 
     it('should revert when attempting to call getReturnByPath on a path with fewer than 3 elements', async () => {
-        const invalidPath = [etherToken.address, smartToken1.address];
+        const invalidPath = [etherToken.address, anchor1.address];
         await expectRevert(bancorNetwork.getReturnByPath.call(invalidPath, value), 'ERR_INVALID_PATH');
     });
 
     it('should revert when attempting to call getReturnByPath on a path with an odd number of elements', async () => {
-        const invalidPath = [etherToken.address, smartToken1.address, smartToken2.address, smartToken3.address];
+        const invalidPath = [etherToken.address, anchor1.address, anchor2.address, anchor3.address];
         await expectRevert(bancorNetwork.getReturnByPath.call(invalidPath, value), 'ERR_INVALID_PATH');
     });
 
@@ -609,42 +609,42 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('verifies that convertFor2 transfers the converted amount correctly', async () => {
-        const prevTokenBalance = await smartToken1.balanceOf.call(sender2);
-        await bancorNetwork.convertFor2(smartToken1BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
+        const prevTokenBalance = await anchor1.balanceOf.call(sender2);
+        await bancorNetwork.convertFor2(anchor1BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
 
-        const newTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const newTokenBalance = await anchor1.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
     it('verifies that convert2 transfers the converted amount correctly', async () => {
-        const prevTokenBalance = await smartToken1.balanceOf.call(sender2);
-        await bancorNetwork.convert2(smartToken1BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
+        const prevTokenBalance = await anchor1.balanceOf.call(sender2);
+        await bancorNetwork.convert2(anchor1BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
 
-        const newTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const newTokenBalance = await anchor1.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
-    it('verifies claimAndConvertFor2 with a path that starts with a smart token and ends with another smart token', async () => {
-        await smartToken4.approve(bancorNetwork.address, value);
+    it('verifies claimAndConvertFor2 with a path that starts with a liquid token and ends with another liquid token', async () => {
+        await anchor4.approve(bancorNetwork.address, value);
 
-        const path = [smartToken4.address, smartToken3.address, smartToken3.address, smartToken2.address, smartToken2.address];
+        const path = [anchor4.address, anchor3.address, anchor3.address, anchor2.address, anchor2.address];
 
-        const prevTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor2.balanceOf.call(sender2);
 
         await bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0);
 
-        const newTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const newTokenBalance = await anchor2.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
-    it('verifies that convertFor2 returns a valid amount when buying the smart token', async () => {
-        const amount = await bancorNetwork.convertFor2.call(smartToken1BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
+    it('verifies that convertFor2 returns a valid amount when buying the liquid token', async () => {
+        const amount = await bancorNetwork.convertFor2.call(anchor1BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
 
         expect(amount).be.bignumber.gt(new BN(0));
     });
 
-    it('verifies that convert2 returns a valid amount when buying the smart token', async () => {
-        const amount = await bancorNetwork.convert2.call(smartToken1BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
+    it('verifies that convert2 returns a valid amount when buying the liquid token', async () => {
+        const amount = await bancorNetwork.convert2.call(anchor1BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
 
         expect(amount).be.bignumber.gt(new BN(0));
     });
@@ -662,16 +662,16 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('should revert when calling convertFor2 with ether token but without sending ether', async () => {
-        await expectRevert.unspecified(bancorNetwork.convertFor2(smartToken1BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0));
+        await expectRevert.unspecified(bancorNetwork.convertFor2(anchor1BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0));
     });
 
     it('should revert when calling convertFor2 with ether amount different than the amount sent', async () => {
-        await expectRevert(bancorNetwork.convertFor2.call(smartToken1BuyPath, value.add(new BN(1)), MIN_RETURN, sender2, ZERO_ADDRESS, 0,
+        await expectRevert(bancorNetwork.convertFor2.call(anchor1BuyPath, value.add(new BN(1)), MIN_RETURN, sender2, ZERO_ADDRESS, 0,
             { value }), 'ERR_ETH_AMOUNT_MISMATCH');
     });
 
     it('should revert when calling convertFor2 with invalid path', async () => {
-        const invalidPath = [etherToken.address, smartToken1.address];
+        const invalidPath = [etherToken.address, anchor1.address];
 
         await expectRevert(bancorNetwork.convertFor2(invalidPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0,
             { value }), 'ERR_INVALID_PATH');
@@ -688,16 +688,16 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('should revert when calling convert2 with ether token but without sending ether', async () => {
-        await expectRevert.unspecified(bancorNetwork.convert2(smartToken1BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2 }));
+        await expectRevert.unspecified(bancorNetwork.convert2(anchor1BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2 }));
     });
 
     it('should revert when calling convert2 with ether amount different than the amount sent', async () => {
-        await expectRevert(bancorNetwork.convert2.call(smartToken1BuyPath, value.add(new BN(1)), MIN_RETURN, ZERO_ADDRESS, 0,
+        await expectRevert(bancorNetwork.convert2.call(anchor1BuyPath, value.add(new BN(1)), MIN_RETURN, ZERO_ADDRESS, 0,
             { from: sender2, value }), 'ERR_ETH_AMOUNT_MISMATCH');
     });
 
     it('should revert when calling convert2 with invalid path', async () => {
-        const invalidPath = [etherToken.address, smartToken1.address];
+        const invalidPath = [etherToken.address, anchor1.address];
 
         await expectRevert(bancorNetwork.convert2(invalidPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value }),
             'ERR_INVALID_PATH');
@@ -714,93 +714,93 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('verifies that claimAndConvertFor2 transfers the converted amount correctly', async () => {
-        await smartToken1.approve(bancorNetwork.address, value);
-        const prevTokenBalance = await smartToken3.balanceOf.call(sender2);
-        await bancorNetwork.claimAndConvertFor2(smartToken3BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0);
-        const newTokenBalance = await smartToken3.balanceOf.call(sender2);
+        await anchor1.approve(bancorNetwork.address, value);
+        const prevTokenBalance = await anchor3.balanceOf.call(sender2);
+        await bancorNetwork.claimAndConvertFor2(anchor3BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0);
+        const newTokenBalance = await anchor3.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
     it('should revert when calling claimAndConvertFor2 without approval', async () => {
-        await expectRevert.unspecified(bancorNetwork.claimAndConvertFor2(smartToken3BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0));
+        await expectRevert.unspecified(bancorNetwork.claimAndConvertFor2(anchor3BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0));
     });
 
     it('verifies that claimAndConvert2 transfers the converted amount correctly', async () => {
-        await smartToken1.approve(bancorNetwork.address, value);
+        await anchor1.approve(bancorNetwork.address, value);
 
-        const prevTokenBalance = await smartToken3.balanceOf.call(sender);
+        const prevTokenBalance = await anchor3.balanceOf.call(sender);
 
-        await bancorNetwork.claimAndConvert2(smartToken3BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0);
+        await bancorNetwork.claimAndConvert2(anchor3BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0);
 
-        const newTokenBalance = await smartToken3.balanceOf.call(sender);
+        const newTokenBalance = await anchor3.balanceOf.call(sender);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
     it('should revert when calling claimAndConvert2 without approval', async () => {
-        await expectRevert.unspecified(bancorNetwork.claimAndConvert2(smartToken3BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0));
+        await expectRevert.unspecified(bancorNetwork.claimAndConvert2(anchor3BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for buying the smart token', async () => {
-        const returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1BuyPath, value))[0];
+    it('verifies that getReturnByPath returns the correct amount for buying the liquid token', async () => {
+        const returnByPath = (await bancorNetwork.getReturnByPath.call(anchor1BuyPath, value))[0];
 
-        const prevTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor1.balanceOf.call(sender2);
 
-        await bancorNetwork.convertFor2(smartToken1BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
+        await bancorNetwork.convertFor2(anchor1BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
 
-        const newTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const newTokenBalance = await anchor1.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnByPath));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for buying the smart token through multiple converters', async () => {
-        const returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken2BuyPath, value))[0];
+    it('verifies that getReturnByPath returns the correct amount for buying the liquid token through multiple converters', async () => {
+        const returnByPath = (await bancorNetwork.getReturnByPath.call(anchor2BuyPath, value))[0];
 
-        const prevTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor2.balanceOf.call(sender2);
 
-        await bancorNetwork.convertFor2(smartToken2BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
+        await bancorNetwork.convertFor2(anchor2BuyPath, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
 
-        const newTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const newTokenBalance = await anchor2.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnByPath));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for buying the smart token', async () => {
-        const returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1BuyPath, value))[0];
+    it('verifies that getReturnByPath returns the correct amount for buying the liquid token', async () => {
+        const returnByPath = (await bancorNetwork.getReturnByPath.call(anchor1BuyPath, value))[0];
 
-        const prevTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor1.balanceOf.call(sender2);
 
-        await bancorNetwork.convert2(smartToken1BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
+        await bancorNetwork.convert2(anchor1BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
 
-        const newTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const newTokenBalance = await anchor1.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnByPath));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for buying the smart token through multiple converters', async () => {
-        const returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken2BuyPath, value))[0];
+    it('verifies that getReturnByPath returns the correct amount for buying the liquid token through multiple converters', async () => {
+        const returnByPath = (await bancorNetwork.getReturnByPath.call(anchor2BuyPath, value))[0];
 
-        const prevTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor2.balanceOf.call(sender2);
 
-        await bancorNetwork.convert2(smartToken2BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
+        await bancorNetwork.convert2(anchor2BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
 
-        const newTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const newTokenBalance = await anchor2.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnByPath));
     });
 
     it('should be able to convert2 from a non compliant ERC20 to another token', async () => {
         await erc20Token.approve(bancorNetwork.address, value);
 
-        const path = [erc20Token.address, smartToken4.address, smartToken4.address];
+        const path = [erc20Token.address, anchor4.address, anchor4.address];
 
-        const prevTokenBalance = await smartToken4.balanceOf.call(sender);
+        const prevTokenBalance = await anchor4.balanceOf.call(sender);
 
         await bancorNetwork.convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0);
 
-        const newTokenBalance = await smartToken4.balanceOf.call(sender);
+        const newTokenBalance = await anchor4.balanceOf.call(sender);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
-    it('should be able to convert2 from a smart token to a non compliant ERC20', async () => {
-        await smartToken4.approve(bancorNetwork.address, value);
+    it('should be able to convert2 from a liquid token to a non compliant ERC20', async () => {
+        await anchor4.approve(bancorNetwork.address, value);
 
-        const path = [smartToken4.address, smartToken4.address, erc20Token.address];
+        const path = [anchor4.address, anchor4.address, erc20Token.address];
 
         const prevTokenBalance = await erc20Token.balanceOf.call(sender);
 
@@ -811,53 +811,53 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('verifies that convert2 with a single converter results in increased balance for the buyer', async () => {
-        const prevTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor1.balanceOf.call(sender2);
 
-        await bancorNetwork.convert2(smartToken1BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
+        await bancorNetwork.convert2(anchor1BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
 
-        const newTokenBalance = await smartToken1.balanceOf.call(sender2);
+        const newTokenBalance = await anchor1.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
     it('verifies that convert2 with multiple converters results in increased balance for the buyer', async () => {
-        const prevTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor2.balanceOf.call(sender2);
 
-        await bancorNetwork.convert2(smartToken2BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
+        await bancorNetwork.convert2(anchor2BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
 
-        const newTokenBalance = await smartToken2.balanceOf.call(sender2);
+        const newTokenBalance = await anchor2.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
     // eslint-disable-next-line max-len
     it('verifies that convert2 with minimum return equal to the full expected return amount results in the exact increase in balance for the buyer', async () => {
-        const prevTokenBalance = await smartToken2.balanceOf.call(sender);
+        const prevTokenBalance = await anchor2.balanceOf.call(sender);
 
-        const returnAmount = (await bancorNetwork.getReturnByPath.call(smartToken2BuyPath, value))[0];
-        await bancorNetwork.convert2(smartToken2BuyPath, value, returnAmount, ZERO_ADDRESS, 0, { value });
+        const returnAmount = (await bancorNetwork.getReturnByPath.call(anchor2BuyPath, value))[0];
+        await bancorNetwork.convert2(anchor2BuyPath, value, returnAmount, ZERO_ADDRESS, 0, { value });
 
-        const newTokenBalance = await smartToken2.balanceOf.call(sender);
+        const newTokenBalance = await anchor2.balanceOf.call(sender);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnAmount));
     });
 
     it('should revert when attempting to convert2 and the return amount is lower than the given minimum', async () => {
-        await expectRevert(bancorNetwork.convert2(smartToken2BuyPath, value, 1000000, ZERO_ADDRESS, 0,
+        await expectRevert(bancorNetwork.convert2(anchor2BuyPath, value, 1000000, ZERO_ADDRESS, 0,
             { from: sender2, value }), 'ERR_RETURN_TOO_LOW');
     });
 
     it('should revert when attempting to convert2 and passing an amount higher than the ETH amount sent with the request', async () => {
-        await expectRevert(bancorNetwork.convert2(smartToken2BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0,
+        await expectRevert(bancorNetwork.convert2(anchor2BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0,
             { from: sender2, value: value.add(new BN(1)) }), 'ERR_ETH_AMOUNT_MISMATCH');
     });
 
     it('verifies the caller balances after selling directly for ether with a single converter', async () => {
-        await smartToken1.approve(bancorNetwork.address, value);
+        await anchor1.approve(bancorNetwork.address, value);
 
-        const prevTokenBalance = await smartToken1.balanceOf.call(sender);
+        const prevTokenBalance = await anchor1.balanceOf.call(sender);
         const prevETHBalance = await balance.current(sender);
 
-        const res = await bancorNetwork.convert2(smartToken1SellPath, value, MIN_RETURN, ZERO_ADDRESS, 0);
+        const res = await bancorNetwork.convert2(anchor1SellPath, value, MIN_RETURN, ZERO_ADDRESS, 0);
         const newETHBalance = await balance.current(sender);
-        const newTokenBalance = await smartToken1.balanceOf.call(sender);
+        const newTokenBalance = await anchor1.balanceOf.call(sender);
 
         const transaction = await web3.eth.getTransaction(res.tx);
         const transactionCost = new BN(transaction.gasPrice).mul(new BN(res.receipt.cumulativeGasUsed));
@@ -867,13 +867,13 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('verifies the caller balances after selling directly for ether with multiple converters', async () => {
-        await smartToken2.approve(bancorNetwork.address, value);
-        const prevTokenBalance = await smartToken2.balanceOf.call(sender);
+        await anchor2.approve(bancorNetwork.address, value);
+        const prevTokenBalance = await anchor2.balanceOf.call(sender);
         const prevETHBalance = await balance.current(sender);
 
-        const res = await bancorNetwork.convert2(smartToken2SellPath, value, MIN_RETURN, ZERO_ADDRESS, 0);
+        const res = await bancorNetwork.convert2(anchor2SellPath, value, MIN_RETURN, ZERO_ADDRESS, 0);
         const newETHBalance = await balance.current(sender);
-        const newTokenBalance = await smartToken2.balanceOf.call(sender);
+        const newTokenBalance = await anchor2.balanceOf.call(sender);
 
         const transaction = await web3.eth.getTransaction(res.tx);
         const transactionCost = new BN(transaction.gasPrice).mul(new BN(res.receipt.cumulativeGasUsed));
@@ -883,60 +883,60 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('should revert when attempting to sell directly for ether and the return amount is lower than the given minimum', async () => {
-        await smartToken2.approve(bancorNetwork.address, value);
+        await anchor2.approve(bancorNetwork.address, value);
 
-        await expectRevert(bancorNetwork.convert2(smartToken2SellPath, value, value.add(new BN(10)), ZERO_ADDRESS, 0),
+        await expectRevert(bancorNetwork.convert2(anchor2SellPath, value, value.add(new BN(10)), ZERO_ADDRESS, 0),
             'ERR_RETURN_TOO_LOW');
     });
 
     it('verifies the caller balances after converting from one token to another with multiple converters', async () => {
         const path = [
-            smartToken1.address,
-            smartToken2.address, smartToken2.address,
-            smartToken2.address, smartToken3.address,
-            smartToken3.address, smartToken4.address
+            anchor1.address,
+            anchor2.address, anchor2.address,
+            anchor2.address, anchor3.address,
+            anchor3.address, anchor4.address
         ];
 
-        await smartToken1.approve(bancorNetwork.address, value);
+        await anchor1.approve(bancorNetwork.address, value);
 
-        const prevToken1Balance = await smartToken1.balanceOf.call(sender);
-        const prevToken4Balance = await smartToken4.balanceOf.call(sender);
+        const prevToken1Balance = await anchor1.balanceOf.call(sender);
+        const prevToken4Balance = await anchor4.balanceOf.call(sender);
 
         await bancorNetwork.convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0);
 
-        const newToken1Balance = await smartToken1.balanceOf.call(sender);
-        const newToken4Balance = await smartToken4.balanceOf.call(sender);
+        const newToken1Balance = await anchor1.balanceOf.call(sender);
+        const newToken4Balance = await anchor4.balanceOf.call(sender);
 
         expect(newToken4Balance).to.be.bignumber.gt(prevToken4Balance);
         expect(newToken1Balance).to.be.bignumber.lt(prevToken1Balance);
     });
 
     it('verifies that getReturnByPath returns the correct amount for cross reserve conversion', async () => {
-        await bancorNetwork.convert2([etherToken.address, smartToken1.address, smartToken1.address], value, MIN_RETURN,
+        await bancorNetwork.convert2([etherToken.address, anchor1.address, anchor1.address], value, MIN_RETURN,
             ZERO_ADDRESS, 0, { from: sender2, value });
-        await smartToken1.approve(bancorNetwork.address, value, { from: sender2 });
+        await anchor1.approve(bancorNetwork.address, value, { from: sender2 });
 
-        const path = [smartToken1.address, smartToken2.address, smartToken3.address];
+        const path = [anchor1.address, anchor2.address, anchor3.address];
 
         const returnByPath = (await bancorNetwork.getReturnByPath.call(path, value))[0];
 
-        const prevTokenBalance = await smartToken3.balanceOf.call(sender2);
+        const prevTokenBalance = await anchor3.balanceOf.call(sender2);
 
         await bancorNetwork.convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2 });
 
-        const newTokenBalance = await smartToken3.balanceOf.call(sender2);
+        const newTokenBalance = await anchor3.balanceOf.call(sender2);
         expect(newTokenBalance).to.be.bignumber.equal(prevTokenBalance.add(returnByPath));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for selling the smart token via convert2', async () => {
-        await bancorNetwork.convert2(smartToken1BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
-        await smartToken1.approve(bancorNetwork.address, value, { from: sender2 });
+    it('verifies that getReturnByPath returns the correct amount for selling the liquid token via convert2', async () => {
+        await bancorNetwork.convert2(anchor1BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
+        await anchor1.approve(bancorNetwork.address, value, { from: sender2 });
 
-        const returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken1SellPath, value))[0];
+        const returnByPath = (await bancorNetwork.getReturnByPath.call(anchor1SellPath, value))[0];
 
         const prevEthBalance = await balance.current(sender2);
 
-        const res = await bancorNetwork.convert2(smartToken1SellPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2 });
+        const res = await bancorNetwork.convert2(anchor1SellPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2 });
         const transaction = await web3.eth.getTransaction(res.tx);
         const transactionCost = new BN(transaction.gasPrice).mul(new BN(res.receipt.cumulativeGasUsed));
 
@@ -944,14 +944,14 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
         expect(newEthBalance).to.be.bignumber.equal(prevEthBalance.add(returnByPath).sub(transactionCost));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for selling the smart token through multiple converters', async () => {
-        await bancorNetwork.convert2(smartToken2BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
-        await smartToken2.approve(bancorNetwork.address, value, { from: sender2 });
+    it('verifies that getReturnByPath returns the correct amount for selling the liquid token through multiple converters', async () => {
+        await bancorNetwork.convert2(anchor2BuyPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
+        await anchor2.approve(bancorNetwork.address, value, { from: sender2 });
 
-        const returnByPath = (await bancorNetwork.getReturnByPath.call(smartToken2SellPath, value))[0];
+        const returnByPath = (await bancorNetwork.getReturnByPath.call(anchor2SellPath, value))[0];
         const prevEthBalance = await balance.current(sender2);
 
-        const res = await bancorNetwork.convert2(smartToken2SellPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2 });
+        const res = await bancorNetwork.convert2(anchor2SellPath, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2 });
         const transaction = await web3.eth.getTransaction(res.tx);
         const transactionCost = new BN(transaction.gasPrice).mul(new BN(res.receipt.cumulativeGasUsed));
 
@@ -959,13 +959,13 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
         expect(newEthBalance).to.be.bignumber.equal(prevEthBalance.add(returnByPath).sub(transactionCost));
     });
 
-    it('verifies that getReturnByPath returns the correct amount for selling the smart token with a long conversion path', async () => {
-        await bancorNetwork.convert2([etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address,
-            smartToken3.address], value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
-        await smartToken3.approve(bancorNetwork.address, value, { from: sender2 });
+    it('verifies that getReturnByPath returns the correct amount for selling the liquid token with a long conversion path', async () => {
+        await bancorNetwork.convert2([etherToken.address, anchor1.address, anchor1.address, anchor2.address,
+            anchor3.address], value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
+        await anchor3.approve(bancorNetwork.address, value, { from: sender2 });
 
-        const path = [smartToken3.address, smartToken2.address, smartToken2.address, smartToken2.address, smartToken1.address,
-            smartToken1.address, etherToken.address];
+        const path = [anchor3.address, anchor2.address, anchor2.address, anchor2.address, anchor1.address,
+            anchor1.address, etherToken.address];
         const returnByPath = (await bancorNetwork.getReturnByPath.call(path, value))[0];
 
         const prevEthBalance = await balance.current(sender2);
@@ -979,42 +979,42 @@ contract('BancorNetworkWithOldEtherToken', accounts => {
     });
 
     it('verifies that convertFor2 transfers the affiliate fee correctly', async () => {
-        const prevTokenBalance = await smartToken1.balanceOf.call(affiliate);
+        const prevTokenBalance = await anchor1.balanceOf.call(affiliate);
 
-        await bancorNetwork.convertFor2(smartToken1BuyPath, value, MIN_RETURN, sender2, affiliate, AFFILIATE_FEE, { value });
+        await bancorNetwork.convertFor2(anchor1BuyPath, value, MIN_RETURN, sender2, affiliate, AFFILIATE_FEE, { value });
 
-        const newTokenBalance = await smartToken1.balanceOf.call(affiliate);
+        const newTokenBalance = await anchor1.balanceOf.call(affiliate);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
     it('verifies that convert2 transfers the affiliate fee correctly', async () => {
-        const prevTokenBalance = await smartToken1.balanceOf.call(affiliate);
+        const prevTokenBalance = await anchor1.balanceOf.call(affiliate);
 
-        await bancorNetwork.convert2(smartToken1BuyPath, value, MIN_RETURN, affiliate, AFFILIATE_FEE, { from: sender2, value });
+        await bancorNetwork.convert2(anchor1BuyPath, value, MIN_RETURN, affiliate, AFFILIATE_FEE, { from: sender2, value });
 
-        const newTokenBalance = await smartToken1.balanceOf.call(affiliate);
+        const newTokenBalance = await anchor1.balanceOf.call(affiliate);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
     it('verifies that claimAndConvert2 transfers the affiliate fee correctly', async () => {
-        await smartToken3.approve(bancorNetwork.address, value);
+        await anchor3.approve(bancorNetwork.address, value);
 
-        const prevTokenBalance = await smartToken1.balanceOf.call(affiliate);
+        const prevTokenBalance = await anchor1.balanceOf.call(affiliate);
 
-        await bancorNetwork.claimAndConvert2(smartToken3SellPath, value, MIN_RETURN, affiliate, AFFILIATE_FEE);
+        await bancorNetwork.claimAndConvert2(anchor3SellPath, value, MIN_RETURN, affiliate, AFFILIATE_FEE);
 
-        const newTokenBalance = await smartToken1.balanceOf.call(affiliate);
+        const newTokenBalance = await anchor1.balanceOf.call(affiliate);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 
     it('verifies that claimAndConvertFor2 transfers the affiliate fee correctly', async () => {
-        await smartToken3.approve(bancorNetwork.address, value);
+        await anchor3.approve(bancorNetwork.address, value);
 
-        const prevTokenBalance = await smartToken1.balanceOf.call(affiliate);
+        const prevTokenBalance = await anchor1.balanceOf.call(affiliate);
 
-        await bancorNetwork.claimAndConvertFor2(smartToken3SellPath, value, MIN_RETURN, sender2, affiliate, AFFILIATE_FEE);
+        await bancorNetwork.claimAndConvertFor2(anchor3SellPath, value, MIN_RETURN, sender2, affiliate, AFFILIATE_FEE);
 
-        const newTokenBalance = await smartToken1.balanceOf.call(affiliate);
+        const newTokenBalance = await anchor1.balanceOf.call(affiliate);
         expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
     });
 

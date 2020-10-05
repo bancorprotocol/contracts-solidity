@@ -6,7 +6,7 @@ contract TestLiquidityPoolV1Converter is LiquidityPoolV1Converter {
     uint256 public currentTime;
 
     constructor(
-        ISmartToken _token,
+        IDSToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee
     )

@@ -2,8 +2,7 @@
 pragma solidity 0.6.12;
 import "./interfaces/IPoolTokensContainer.sol";
 import "../../../utility/Owned.sol";
-import "../../../utility/TokenHolder.sol";
-import "../../../token/SmartToken.sol";
+import "../../../token/DSToken.sol";
 
 /**
   * @dev The PoolTokensContainer contract serves as a container for multiple pool tokens.
@@ -12,13 +11,13 @@ import "../../../token/SmartToken.sol";
   *
   * It maintains and provides a list of the underlying pool tokens.
  */
-contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
+contract PoolTokensContainer is IPoolTokensContainer, Owned {
     uint8 internal constant MAX_POOL_TOKENS = 5;    // maximum pool tokens in the container
 
     string public name;                 // pool name
     string public symbol;               // pool symbol
     uint8 public decimals;              // underlying pool tokens decimals
-    ISmartToken[] private _poolTokens;  // underlying pool tokens
+    IDSToken[] private _poolTokens;  // underlying pool tokens
 
     /**
       * @dev initializes a new PoolTokensContainer instance
@@ -42,7 +41,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       *
       * @return list of pool tokens
     */
-    function poolTokens() external view override returns (ISmartToken[] memory) {
+    function poolTokens() external view override returns (IDSToken[] memory) {
         return _poolTokens;
     }
 
@@ -51,14 +50,14 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       *
       * @return new pool token address
     */
-    function createToken() external override ownerOnly returns (ISmartToken) {
+    function createToken() external override ownerOnly returns (IDSToken) {
         // verify that the max limit wasn't reached
         require(_poolTokens.length < MAX_POOL_TOKENS, "ERR_MAX_LIMIT_REACHED");
 
         string memory poolName = concatStrDigit(name, uint8(_poolTokens.length + 1));
         string memory poolSymbol = concatStrDigit(symbol, uint8(_poolTokens.length + 1));
 
-        SmartToken token = new SmartToken(poolName, poolSymbol, decimals);
+        DSToken token = new DSToken(poolName, poolSymbol, decimals);
         _poolTokens.push(token);
         return token;
     }
@@ -71,7 +70,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       * @param _to      account to receive the newly minted tokens
       * @param _amount  amount to mint
     */
-    function mint(ISmartToken _token, address _to, uint256 _amount) external override ownerOnly {
+    function mint(IDSToken _token, address _to, uint256 _amount) external override ownerOnly {
         _token.issue(_to, _amount);
     }
 
@@ -83,7 +82,7 @@ contract PoolTokensContainer is IPoolTokensContainer, Owned, TokenHolder {
       * @param _from    account to remove the tokens from
       * @param _amount  amount to burn
     */
-    function burn(ISmartToken _token, address _from, uint256 _amount) external override ownerOnly {
+    function burn(IDSToken _token, address _from, uint256 _amount) external override ownerOnly {
         _token.destroy(_from, _amount);
     }
 

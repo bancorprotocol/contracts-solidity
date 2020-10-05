@@ -3,9 +3,9 @@ const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
 const { ZERO_ADDRESS } = constants;
 
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 
-contract('SmartToken', accounts => {
+contract('DSToken', accounts => {
     let token;
     const name = 'Token1';
     const symbol = 'TKN1';
@@ -17,7 +17,7 @@ contract('SmartToken', accounts => {
     const nonOwner = accounts[3];
 
     beforeEach(async () => {
-        token = await SmartToken.new(name, symbol, decimals);
+        token = await DSToken.new(name, symbol, decimals);
     });
 
     it('verifies the token name, symbol and decimal units after construction', async () => {
@@ -27,23 +27,11 @@ contract('SmartToken', accounts => {
     });
 
     it('should revert when attempting to construct a token with no name', async () => {
-        await expectRevert(SmartToken.new('', symbol, decimals), 'ERR_INVALID_NAME');
+        await expectRevert(DSToken.new('', symbol, decimals), 'ERR_INVALID_NAME');
     });
 
     it('should revert when attempting to construct a token with no symbol', async () => {
-        await expectRevert(SmartToken.new(name, '', decimals), 'ERR_INVALID_SYMBOL');
-    });
-
-    it('verifies that the owner can disable & re-enable transfers', async () => {
-        await token.disableTransfers(true);
-        expect(await token.transfersEnabled.call()).to.be.false();
-
-        await token.disableTransfers(false);
-        expect(await token.transfersEnabled.call()).to.be.true();
-    });
-
-    it('should revert when a non owner attempts to disable transfers', async () => {
-        await expectRevert(token.disableTransfers(true, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        await expectRevert(DSToken.new(name, '', decimals), 'ERR_INVALID_SYMBOL');
     });
 
     it('verifies that issue tokens updates the target balance and the total supply', async () => {
@@ -123,17 +111,6 @@ contract('SmartToken', accounts => {
         expect(receiverBalance).to.be.bignumber.equal(value2);
     });
 
-    it('should revert when attempting to transfer while transfers are disabled', async () => {
-        const value = new BN(1000);
-        await token.issue(owner, value);
-
-        const value2 = 100;
-        await token.transfer(receiver, value2);
-
-        await token.disableTransfers(true);
-        await expectRevert(token.transfer(receiver, new BN(1)), 'ERR_TRANSFERS_DISABLED');
-    });
-
     it('verifies the allowance after an approval', async () => {
         const value = new BN(1000);
         await token.issue(owner, value);
@@ -143,22 +120,5 @@ contract('SmartToken', accounts => {
 
         const allowance = await token.allowance.call(owner, receiver);
         expect(allowance).to.be.bignumber.equal(value2);
-    });
-
-    it('should revert when attempting to transfer from while transfers are disabled', async () => {
-        const value = new BN(1000);
-        await token.issue(owner, value);
-
-        const value2 = new BN(888);
-        await token.approve(receiver, value2);
-
-        const allowance = await token.allowance.call(owner, receiver);
-        expect(allowance).to.be.bignumber.equal(value2);
-
-        const value3 = new BN(50);
-        await token.transferFrom(owner, receiver2, value3, { from: receiver });
-
-        await token.disableTransfers(true);
-        await expectRevert(token.transfer(receiver, new BN(1), { from: receiver }), 'ERR_TRANSFERS_DISABLED');
     });
 });

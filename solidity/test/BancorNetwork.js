@@ -31,20 +31,20 @@ const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 
 const PoolTokensContainer = artifacts.require('PoolTokensContainer');
-const SmartToken = artifacts.require('SmartToken');
+const DSToken = artifacts.require('DSToken');
 const ChainlinkPriceOracle = artifacts.require('TestChainlinkPriceOracle');
 const Whitelist = artifacts.require('Whitelist');
 
 /*
 Token network structure:
 
-    Anchor1  Anchor2
+        Anchor1     Anchor2
         /     \     /     \
-        ETH       BNT    ERC20Token1
+      ETH       BNT    ERC20Token1
 
-    Anchor3  Anchor4
+        Anchor3      Anchor4
         /       \     /
-    ERC20Token2    BNT
+    ERC20Token2   BNT
 */
 
 contract('BancorNetwork', accounts => {
@@ -62,27 +62,27 @@ contract('BancorNetwork', accounts => {
                 BNT: ['', anchor1, bntToken],
                 ERC1: ['', anchor1, bntToken, anchor2, erc20Token1],
                 ERC2: ['', anchor1, bntToken, anchor3, erc20Token2],
-                SMART4: ['', anchor1, bntToken, anchor4, anchor4]
+                ANCR4: ['', anchor1, bntToken, anchor4, anchor4]
             },
             BNT: {
                 ETH: [bntToken, anchor1, ''],
                 ERC1: [bntToken, anchor2, erc20Token1],
                 ERC2: [bntToken, anchor3, erc20Token2],
-                SMART4: [bntToken, anchor4, anchor4]
+                ANCR4: [bntToken, anchor4, anchor4]
             },
             ERC1: {
                 ETH: [erc20Token1, anchor2, bntToken, anchor1, ''],
                 BNT: [erc20Token1, anchor2, bntToken],
                 ERC2: [erc20Token1, anchor2, bntToken, anchor3, erc20Token2],
-                SMART4: [erc20Token1, anchor2, bntToken, anchor4, anchor4]
+                ANCR4: [erc20Token1, anchor2, bntToken, anchor4, anchor4]
             },
             ERC2: {
                 ETH: [erc20Token2, anchor3, bntToken, anchor1, ''],
                 BNT: [erc20Token2, anchor3, bntToken],
                 ERC1: [erc20Token2, anchor3, bntToken, anchor2, erc20Token1],
-                SMART4: [erc20Token2, anchor3, bntToken, anchor4, anchor4]
+                ANCR4: [erc20Token2, anchor3, bntToken, anchor4, anchor4]
             },
-            SMART4: {
+            ANCR4: {
                 ETH: [anchor4, anchor4, bntToken, anchor1, ''],
                 BNT: [anchor4, anchor4, bntToken],
                 ERC1: [anchor4, anchor4, bntToken, anchor2, erc20Token1],
@@ -286,15 +286,15 @@ contract('BancorNetwork', accounts => {
             erc20Token1 = await ERC20Token.new('ERC20Token', 'ERC1', 2, 1000000);
             erc20Token2 = await TestNonStandardToken.new('ERC20Token', 'ERC2', 2, 2000000);
 
-            anchor1 = await SmartToken.new('Smart1', 'SMART1', 2);
+            anchor1 = await DSToken.new('Anchor1', 'ANCR1', 2);
             await anchor1.issue(sender, 1000000);
 
             anchor2 = await PoolTokensContainer.new('Pool', 'POOL', 2);
 
-            anchor3 = await SmartToken.new('Smart3', 'SMART3', 2);
+            anchor3 = await DSToken.new('Anchor3', 'ANCR3', 2);
             await anchor3.issue(sender, 3000000);
 
-            anchor4 = await SmartToken.new('Smart4', 'SMART4', 2);
+            anchor4 = await DSToken.new('Anchor4', 'ANCR4', 2);
             await anchor4.issue(sender, 2500000);
 
             await contractRegistry.registerAddress(registry.BNT_TOKEN, bntToken.address);
@@ -520,7 +520,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when attempting to convert and passing an amount higher than the ETH amount sent with the request', async () => {
-            const path = paths.ETH.SMART4;
+            const path = paths.ETH.ANCR4;
             const value = new BN(10000);
 
             await expectRevert(bancorNetwork.convertByPath(path, value.add(new BN(1)), MIN_RETURN, ZERO_ADDRESS, ZERO_ADDRESS,
@@ -528,7 +528,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when attempting to convert without an affiliate account, but with an affiliate fee', async () => {
-            const path = paths.ETH.SMART4;
+            const path = paths.ETH.ANCR4;
             const value = new BN(100);
 
             await expectRevert(bancorNetwork.convertByPath(path, value, MIN_RETURN, ZERO_ADDRESS, ZERO_ADDRESS,
@@ -536,7 +536,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when attempting to convert with a 0 affiliate fee', async () => {
-            const path = paths.ETH.SMART4;
+            const path = paths.ETH.ANCR4;
             const value = new BN(100);
 
             await expectRevert(bancorNetwork.convertByPath(path, value, MIN_RETURN, ZERO_ADDRESS, affiliate,
@@ -544,7 +544,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('verifies that convert returns a valid amount when buying a liquid token', async () => {
-            const path = paths.ETH.SMART4;
+            const path = paths.ETH.ANCR4;
             const value = new BN(10000);
 
             const amount = await bancorNetwork.convert.call(path, value, MIN_RETURN, { from: sender, value });
@@ -552,14 +552,14 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling convertFor with ether token but without sending ether', async () => {
-            const path = paths.ETH.SMART4;
+            const path = paths.ETH.ANCR4;
             const value = new BN(10000);
 
             await expectRevert.unspecified(bancorNetwork.convertFor(path, value, MIN_RETURN, sender));
         });
 
         it('should revert when calling convertFor with ether amount lower than the ETH amount sent with the request', async () => {
-            const path = paths.ETH.SMART4;
+            const path = paths.ETH.ANCR4;
 
             const value = new BN(10000);
             await expectRevert(bancorNetwork.convertFor.call(path, value.sub(new BN(1)), MIN_RETURN, sender, { value }),
@@ -583,14 +583,14 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling convert with ether token but without sending ether', async () => {
-            const path = paths.ETH.SMART4;
+            const path = paths.ETH.ANCR4;
             const value = new BN(1000);
 
             await expectRevert.unspecified(bancorNetwork.convert(path, value, MIN_RETURN, { from: sender }));
         });
 
         it('should revert when calling convert with ether amount different than the amount sent', async () => {
-            const path = paths.ETH.SMART4;
+            const path = paths.ETH.ANCR4;
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convert.call(path, value.add(new BN(5)), MIN_RETURN, { from: sender, value }),
@@ -620,7 +620,7 @@ contract('BancorNetwork', accounts => {
 
             const balanceBeforeTransfer = await erc20Token2.balanceOf.call(sender2);
 
-            const path = paths.SMART4.ERC2;
+            const path = paths.ANCR4.ERC2;
             const returnAmount = await bancorNetwork.claimAndConvertFor.call(path, value, MIN_RETURN, sender2);
             await bancorNetwork.claimAndConvertFor(path, value, MIN_RETURN, sender2);
 
@@ -635,7 +635,7 @@ contract('BancorNetwork', accounts => {
 
             const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
 
-            const path = paths.ERC2.SMART4;
+            const path = paths.ERC2.ANCR4;
             const returnAmount = await bancorNetwork.claimAndConvertFor.call(path, value, MIN_RETURN, sender2);
             await bancorNetwork.claimAndConvertFor(path, value, MIN_RETURN, sender2);
 
@@ -644,7 +644,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling claimAndConvertFor without approval', async () => {
-            const path = paths.ERC1.SMART4;
+            const path = paths.ERC1.ANCR4;
             const value = new BN(1000);
 
             await expectRevert.unspecified(bancorNetwork.claimAndConvertFor(path, value, MIN_RETURN, sender2));
@@ -665,7 +665,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling claimAndConvert without approval', async () => {
-            const path = paths.ERC1.SMART4;
+            const path = paths.ERC1.ANCR4;
             const value = new BN(1000);
 
             await expectRevert.unspecified(bancorNetwork.claimAndConvert(path, value, MIN_RETURN));
@@ -689,7 +689,7 @@ contract('BancorNetwork', accounts => {
             const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
 
             const value = new BN(1000);
-            const path = paths.ETH.SMART4;
+            const path = paths.ETH.ANCR4;
             const returnAmount = await bancorNetwork.convertFor2.call(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
             await bancorNetwork.convertFor2(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
 
@@ -701,7 +701,7 @@ contract('BancorNetwork', accounts => {
             const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
 
             const value = new BN(1000);
-            const path = paths.ETH.SMART4;
+            const path = paths.ETH.ANCR4;
             const returnAmount = await bancorNetwork.convert2.call(path, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
             await bancorNetwork.convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
 
@@ -777,7 +777,7 @@ contract('BancorNetwork', accounts => {
 
             const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
 
-            const path = paths.ERC1.SMART4;
+            const path = paths.ERC1.ANCR4;
             const returnAmount = await bancorNetwork.claimAndConvertFor2.call(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0);
             await bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0);
 
@@ -786,7 +786,7 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling claimAndConvertFor2 without approval', async () => {
-            const path = paths.ERC1.SMART4;
+            const path = paths.ERC1.ANCR4;
             const value = new BN(1000);
             await expectRevert.unspecified(bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0));
         });
@@ -797,7 +797,7 @@ contract('BancorNetwork', accounts => {
 
             const balanceBeforeTransfer = await anchor4.balanceOf.call(sender);
 
-            const path = paths.ERC1.SMART4;
+            const path = paths.ERC1.ANCR4;
             const returnAmount = await bancorNetwork.claimAndConvert2.call(path, value, MIN_RETURN, ZERO_ADDRESS, 0);
             await bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0);
 
@@ -806,14 +806,14 @@ contract('BancorNetwork', accounts => {
         });
 
         it('should revert when calling claimAndConvert2 without approval', async () => {
-            const path = paths.ERC1.SMART4;
+            const path = paths.ERC1.ANCR4;
             const value = new BN(1000);
 
             await expectRevert.unspecified(bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0));
         });
 
         it('should revert when attempting to convert and passing an amount higher than the ETH amount sent with the request', async () => {
-            const path = paths.ETH.SMART4;
+            const path = paths.ETH.ANCR4;
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.convert2(path, value.add(new BN(10)), MIN_RETURN, ZERO_ADDRESS, 0,
