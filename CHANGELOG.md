@@ -1,4 +1,7 @@
 ### 0.6.18
+General
+* Added Math contract with various math utilities
+
 ERC20Token
 * Removed the approve frontrunning protection
 
