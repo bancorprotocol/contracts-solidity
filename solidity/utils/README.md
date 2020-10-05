@@ -4,6 +4,8 @@
 
 ### [Installation](../../README.md#installation)
 
+Following installation, `npm run build` should be executed once.
+
 ### Test Deployment
 
 Deploys a set of contracts for testing purpose; can be used on both private and public networks:

@@ -4,6 +4,8 @@
 
 ### [Installation](../../README.md#installation)
 
+Following installation, `npm run build` should be executed once.
+
 ### Verifying accuracy:
 
   * `python RandomTestCross.py`
