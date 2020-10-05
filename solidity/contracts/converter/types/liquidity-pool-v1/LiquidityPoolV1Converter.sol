@@ -555,7 +555,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         returns (uint256)
     {
         // calculate the geometric-mean of the reserve amounts approved by the user
-        uint256 amount = geometricMean(_reserveAmounts);
+        uint256 amount = Math.geometricMean(_reserveAmounts);
 
         // transfer each one of the reserve amounts from the user to the pool
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
@@ -695,48 +695,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
                 minIndex = i;
         }
         return formula.fundSupplyAmount(_totalSupply, reserves[_reserveTokens[minIndex]].balance, reserveRatio, _reserveAmounts[minIndex]);
-    }
-
-    /**
-      * @dev returns the number of decimal digits in a given value
-      *
-      * @param _x   value (assumed positive)
-      *
-      * @return the number of decimal digits in the given value
-    */
-    function decimalLength(uint256 _x) public pure returns (uint256) {
-        uint256 y = 0;
-        for (uint256 x = _x; x > 0; x /= 10)
-            y++;
-        return y;
-    }
-
-    /**
-      * @dev returns the nearest integer to a given quotient
-      * the computation is overflow-safe assuming that the input is sufficiently small
-      *
-      * @param _n   quotient numerator
-      * @param _d   quotient denominator
-      *
-      * @return the nearest integer to the given quotient
-    */
-    function roundDivUnsafe(uint256 _n, uint256 _d) public pure returns (uint256) {
-        return (_n + _d / 2) / _d;
-    }
-
-    /**
-      * @dev returns the average number of decimal digits in a given list of values
-      *
-      * @param _values  list of values (each of which assumed positive)
-      *
-      * @return the average number of decimal digits in the given list of values
-    */
-    function geometricMean(uint256[] memory _values) public pure returns (uint256) {
-        uint256 numOfDigits = 0;
-        uint256 length = _values.length;
-        for (uint256 i = 0; i < length; i++)
-            numOfDigits += decimalLength(_values[i]);
-        return uint256(10) ** (roundDivUnsafe(numOfDigits, length) - 1);
     }
 
     /**

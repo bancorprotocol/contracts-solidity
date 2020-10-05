@@ -117,4 +117,33 @@ contract('Math', accounts => {
             });
         }
     }
+
+    for (const values of [[123, 456789], [12, 345, 6789], [1, 1000, 1000000, 1000000000, 1000000000000]]) {
+        it(`geometricMean([${values}])`, async () => {
+            const expected = 10 ** (Math.round(values.join('').length / values.length) - 1);
+            const actual = await mathContract.geometricMeanTest(values);
+            expect(actual).to.be.bignumber.equal(new BN(expected));
+        });
+    }
+
+    for (let n = 1; n <= 77; n++) {
+        for (const k of [-1, 0, +1]) {
+            const x = new BN(10).pow(new BN(n)).add(new BN(k));
+            it(`decimalLength(${x.toString()})`, async () => {
+                const expected = x.toString().length;
+                const actual = await mathContract.decimalLengthTest(x);
+                expect(actual).to.be.bignumber.equal(new BN(expected));
+            });
+        }
+    }
+
+    for (let n = 0; n < 10; n++) {
+        for (let d = 1; d <= 10; d++) {
+            it(`roundDivUnsafe(${n}, ${d})`, async () => {
+                const expected = Math.round(n / d);
+                const actual = await mathContract.roundDivUnsafeTest(n, d);
+                expect(actual).to.be.bignumber.equal(new BN(expected));
+            });
+        }
+    }
 });

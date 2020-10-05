@@ -44,44 +44,6 @@ contract('ConverterLiquidity', accounts => {
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
     });
 
-    describe('auxiliary functions', () => {
-        let converter;
-
-        before(async () => {
-            // The following contract is unaffected by the underlying tests, thus can be shared
-            converter = await LiquidityPoolV1Converter.new(ETH_RESERVE_ADDRESS, contractRegistry.address, 0);
-        });
-
-        for (let n = 1; n <= 77; n++) {
-            for (const k of [-1, 0, +1]) {
-                const input = new BN(10).pow(new BN(n)).add(new BN(k));
-                it(`decimalLength(${input.toString()})`, async () => {
-                    const expected = input.toString().length;
-                    const actual = await converter.decimalLength.call(input);
-                    expect(actual).to.be.bignumber.equal(new BN(expected));
-                });
-            }
-        }
-
-        for (let n = 1; n <= 15; n++) {
-            for (let d = 1; d <= 15; d++) {
-                it(`roundDivUnsafe(${n}, ${d})`, async () => {
-                    const expected = Math.round(n / d);
-                    const actual = await converter.roundDivUnsafe.call(n, d);
-                    expect(actual).to.be.bignumber.equal(new BN(expected));
-                });
-            }
-        }
-
-        for (const values of [[123, 456789], [12, 345, 6789], [1, 1000, 1000000, 1000000000, 1000000000000]]) {
-            it(`geometricMean([${values}])`, async () => {
-                const expected = 10 ** (Math.round(values.join('').length / values.length) - 1);
-                const actual = await converter.geometricMean.call(values);
-                expect(actual).to.be.bignumber.equal(new BN(expected));
-            });
-        }
-    });
-
     describe('security assertion', () => {
         let converter;
         let poolToken;

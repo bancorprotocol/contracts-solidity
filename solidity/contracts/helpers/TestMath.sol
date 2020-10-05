@@ -24,4 +24,16 @@ contract TestMath {
     function roundDivTest(uint256 _n, uint256 _d) external pure returns (uint256) {
         return Math.roundDiv(_n, _d);
     }
+
+    function geometricMeanTest(uint256[] memory _values) external pure returns (uint256) {
+        return Math.geometricMean(_values);
+    }
+
+    function decimalLengthTest(uint256 _x) external pure returns (uint256) {
+        return Math.decimalLength(_x);
+    }
+
+    function roundDivUnsafeTest(uint256 _n, uint256 _d) external pure returns (uint256) {
+        return Math.roundDivUnsafe(_n, _d);
+    }
 }
