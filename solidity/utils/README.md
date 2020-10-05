@@ -97,7 +97,7 @@ Here is an example of the initial configuration file which should be provided to
             ]
         },
         {
-            "type": 2,
+            "type": 1,
             "symbol": "XYZBNT",
             "decimals": 18,
             "fee": "0.2%",
@@ -105,14 +105,12 @@ Here is an example of the initial configuration file which should be provided to
                 {
                     "symbol": "YYY",
                     "weight": "50%",
-                    "balance": "920",
-                    "oracle": "0xaaa...."
+                    "balance": "920"
                 },
                 {
                     "symbol": "BNT",
                     "weight": "50%",
-                    "balance": "6552",
-                    "oracle": "0xbbb...."
+                    "balance": "6552"
                 }
             ]
         },
