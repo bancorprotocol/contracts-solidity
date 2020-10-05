@@ -7,9 +7,6 @@
 ### Test Deployment
 
 Deploys a set of contracts for testing purpose; can be used on both private and public networks:
-
-Before executing the script, `npm run build` should be executed once in order to generate the binaries required for the deployment.
-
 ```bash
 node test_deployment.js
     Configuration file name
@@ -96,6 +93,26 @@ Here is an example of the initial configuration file which should be provided to
                     "symbol": "BNT",
                     "weight": "50%",
                     "balance": "270"
+                }
+            ]
+        },
+        {
+            "type": 2,
+            "symbol": "XYZBNT",
+            "decimals": 18,
+            "fee": "0.2%",
+            "reserves": [
+                {
+                    "symbol": "YYY",
+                    "weight": "50%",
+                    "balance": "920",
+                    "oracle": "0xaaa...."
+                },
+                {
+                    "symbol": "BNT",
+                    "weight": "50%",
+                    "balance": "6552",
+                    "oracle": "0xbbb...."
                 }
             ]
         },
