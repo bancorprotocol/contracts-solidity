@@ -8,8 +8,8 @@ pragma solidity 0.6.12;
   * indirectly) from within itself.
 */
 contract ReentrancyGuard {
-    // true while protected code is being executed, false otherwise
-    bool private locked = false;
+    // 1 while protected code is being executed, 0 otherwise
+    uint256 private locked = 0;
 
     /**
       * @dev ensures instantiation only by sub-contracts
@@ -19,13 +19,13 @@ contract ReentrancyGuard {
     // protects a function against reentrancy attacks
     modifier protected() {
         _protected();
-        locked = true;
+        locked = 1;
         _;
-        locked = false;
+        locked = 0;
     }
 
     // error message binary size optimization
     function _protected() internal view {
-        require(!locked, "ERR_REENTRANCY");
+        require(locked == 0, "ERR_REENTRANCY");
     }
 }
