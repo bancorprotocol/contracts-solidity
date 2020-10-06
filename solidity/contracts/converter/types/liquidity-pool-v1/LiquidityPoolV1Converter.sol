@@ -96,8 +96,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
         isStandardPool =
             reserveTokens.length == 2 &&
-            reserves[reserveTokens[0]].weight == 500000 &&
-            reserves[reserveTokens[1]].weight == 500000;
+            reserves[reserveTokens[0]].weight == PPM_RESOLUTION / 2 &&
+            reserves[reserveTokens[1]].weight == PPM_RESOLUTION / 2;
     }
 
     /**
