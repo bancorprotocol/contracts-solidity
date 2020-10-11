@@ -152,6 +152,12 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         override
         returns (uint256)
     {
+        // update the recent average rate
+        if (isStandardPool && prevAverageRateUpdateTime < time()) {
+            prevAverageRate = recentAverageRate();
+            prevAverageRateUpdateTime = time();
+        }
+
         // get expected target amount and fee
         (uint256 amount, uint256 fee) = targetAmountAndFee(_sourceToken, _targetToken, _amount);
 
@@ -176,12 +182,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             _beneficiary.transfer(amount);
         else
             safeTransfer(_targetToken, _beneficiary, amount);
-
-        // update the recent average rate
-        if (isStandardPool && prevAverageRateUpdateTime < time()) {
-            prevAverageRate = recentAverageRate();
-            prevAverageRateUpdateTime = time();
-        }
 
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);

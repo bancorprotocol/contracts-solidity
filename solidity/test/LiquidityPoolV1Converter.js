@@ -802,9 +802,9 @@ contract('LiquidityPoolV1Converter', accounts => {
                     const amount = new BN(1000);
 
                     const prevAverageRate = await getPrevAverageRate();
-                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
                     const currentRate = await getCurrentRate(ETH_RESERVE_ADDRESS, reserveToken2.address);
                     const expectedAverageRate = getExpectedAverageRate(prevAverageRate, currentRate, timeElapsed);
+                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
                     const averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
                     
                     expectRatesAlmostEqual(averageRate, expectedAverageRate);
