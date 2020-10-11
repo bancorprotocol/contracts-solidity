@@ -1,3 +1,14 @@
+### 0.6.19
+General
+* Moved more generic math functions into Math
+
+ReentrancyGuard
+* Gas optimization
+
+LiquidityPoolV1Converter
+* Recent average rate is now calculated before the conversion
+
+
 ### 0.6.18
 General
 * Added Math contract with various math utilities
