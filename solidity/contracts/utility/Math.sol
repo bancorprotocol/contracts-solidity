@@ -73,4 +73,46 @@ library Math {
     function roundDiv(uint256 _n, uint256 _d) internal pure returns (uint256) {
         return _n / _d + _n % _d / (_d - _d / 2);
     }
+
+    /**
+      * @dev returns the average number of decimal digits in a given list of positive integers
+      *
+      * @param _values  list of positive integers
+      *
+      * @return the average number of decimal digits in the given list of positive integers
+    */
+    function geometricMean(uint256[] memory _values) internal pure returns (uint256) {
+        uint256 numOfDigits = 0;
+        uint256 length = _values.length;
+        for (uint256 i = 0; i < length; i++)
+            numOfDigits += decimalLength(_values[i]);
+        return uint256(10) ** (roundDivUnsafe(numOfDigits, length) - 1);
+    }
+
+    /**
+      * @dev returns the number of decimal digits in a given positive integer
+      *
+      * @param _x   positive integer
+      *
+      * @return the number of decimal digits in the given positive integer
+    */
+    function decimalLength(uint256 _x) internal pure returns (uint256) {
+        uint256 y = 0;
+        for (uint256 x = _x; x > 0; x /= 10)
+            y++;
+        return y;
+    }
+
+    /**
+      * @dev returns the nearest integer to a given quotient
+      * the computation is overflow-safe assuming that the input is sufficiently small
+      *
+      * @param _n   quotient numerator
+      * @param _d   quotient denominator
+      *
+      * @return the nearest integer to the given quotient
+    */
+    function roundDivUnsafe(uint256 _n, uint256 _d) internal pure returns (uint256) {
+        return (_n + _d / 2) / _d;
+    }
 }

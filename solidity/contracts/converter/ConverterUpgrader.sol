@@ -88,7 +88,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _version     old converter version
     */
     function upgradeOld(IConverter _converter, bytes32 _version) public {
-        _version;
+        _version; // suppress compilation warning
         IConverter converter = IConverter(_converter);
         address prevOwner = converter.owner();
         acceptConverterOwnership(converter);
