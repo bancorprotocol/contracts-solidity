@@ -123,13 +123,18 @@ const run = async () => {
     const account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
     const web3Func = (func, ...args) => func(web3, account, gasPrice, ...args);
 
-    const addresses = { ETH: Web3.utils.toChecksumAddress('0x'.padEnd(42, 'e')) };
-    const tokenDecimals = { ETH: 18 };
+    const reserves = {
+        ETH: {
+            address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+            decimals: 18
+        }
+    };
 
     let phase = 0;
     if (getConfig().phase === undefined) {
         setConfig({ phase });
     }
+
     const execute = async (transaction, ...args) => {
         if (getConfig().phase === phase++) {
             await web3Func(send, transaction, ...args);
@@ -144,7 +149,7 @@ const run = async () => {
     const bancorFormula = await web3Func(deploy, 'bancorFormula', 'BancorFormula', []);
     const bancorNetwork = await web3Func(deploy, 'bancorNetwork', 'BancorNetwork', [contractRegistry._address]);
     const conversionPathFinder = await web3Func(deploy, 'conversionPathFinder', 'ConversionPathFinder', [contractRegistry._address]);
-    const converterUpgrader = await web3Func(deploy, 'converterUpgrader', 'ConverterUpgrader', [contractRegistry._address, addresses.ETH]);
+    const converterUpgrader = await web3Func(deploy, 'converterUpgrader', 'ConverterUpgrader', [contractRegistry._address, reserves.ETH.address]);
     const converterRegistry = await web3Func(deploy, 'converterRegistry', 'ConverterRegistry', [contractRegistry._address]);
     const converterRegistryData = await web3Func(deploy, 'converterRegistryData', 'ConverterRegistryData', [contractRegistry._address]);
     const liquidTokenConverterFactory = await web3Func(deploy, 'liquidTokenConverterFactory', 'LiquidTokenConverterFactory', []);
@@ -152,16 +157,16 @@ const run = async () => {
     const liquidityPoolV2ConverterFactory = await web3Func(deploy, 'liquidityPoolV2ConverterFactory', 'LiquidityPoolV2ConverterFactory', []);
     const liquidityPoolV2ConverterAnchorFactory = await web3Func(deploy, 'liquidityPoolV2ConverterAnchorFactory', 'LiquidityPoolV2ConverterAnchorFactory', []);
     const liquidityPoolV2ConverterCustomFactory = await web3Func(deploy, 'liquidityPoolV2ConverterCustomFactory', 'LiquidityPoolV2ConverterCustomFactory', []);
-    const oracleWhitelist = await web3Func(deploy, 'oracleWhitelist', 'Whitelist', []);
+    const whitelist = await web3Func(deploy, 'whitelist', 'Whitelist', []);
 
     // contract deployment for etherscan verification only
-    const poolToken = await web3Func(deploy, 'poolToken', 'DSToken', ["Token1", "TKN1", 18]);
-    const poolToken2 = await web3Func(deploy, 'poolToken2', 'DSToken', ["Token2", "TKN2", 18]);
-    const poolTokensContainer = await web3Func(deploy, 'poolTokensContainer', 'PoolTokensContainer', ["Pool", "POOL", 18]);
+    const poolToken1 = await web3Func(deploy, 'poolToken1', 'DSToken', ['Token1', 'TKN1', 18]);
+    const poolToken2 = await web3Func(deploy, 'poolToken2', 'DSToken', ['Token2', 'TKN2', 18]);
+    const poolTokensContainer = await web3Func(deploy, 'poolTokensContainer', 'PoolTokensContainer', ['Pool', 'POOL', 18]);
     const chainlinkOracle1 = await web3Func(deploy, 'chainlinkOracle1', 'ChainlinkETHToETHOracle', []);
     const chainlinkOracle2 = await web3Func(deploy, 'chainlinkOracle2', 'ChainlinkETHToETHOracle', []);
-    await web3Func(deploy, 'priceOracle', 'PriceOracle', [poolToken._address, poolToken2._address, chainlinkOracle1._address, chainlinkOracle2._address]);
-    await web3Func(deploy, 'liquidTokenConverter', 'LiquidTokenConverter', [poolToken._address, contractRegistry._address, 1000]);
+    await web3Func(deploy, 'priceOracle', 'PriceOracle', [poolToken1._address, poolToken2._address, chainlinkOracle1._address, chainlinkOracle2._address]);
+    await web3Func(deploy, 'liquidTokenConverter', 'LiquidTokenConverter', [poolToken1._address, contractRegistry._address, 1000]);
     await web3Func(deploy, 'liquidityPoolV1Converter', 'LiquidityPoolV1Converter', [poolToken2._address, contractRegistry._address, 1000]);
     await web3Func(deploy, 'liquidityPoolV2Converter', 'LiquidityPoolV2Converter', [poolTokensContainer._address, contractRegistry._address, 1000]);
 
@@ -174,7 +179,7 @@ const run = async () => {
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorConverterUpgrader'), converterUpgrader._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorConverterRegistry'), converterRegistry._address));
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorConverterRegistryData'), converterRegistryData._address));
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('ChainlinkOracleWhitelist'), oracleWhitelist._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('ChainlinkOracleWhitelist'), whitelist._address));
 
     // initialize converter factory
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidTokenConverterFactory._address));
@@ -184,76 +189,114 @@ const run = async () => {
     await execute(converterFactory.methods.registerTypedConverterCustomFactory(liquidityPoolV2ConverterCustomFactory._address));
 
     for (const reserve of getConfig().reserves) {
-        if (reserve.address) {
-            addresses[reserve.symbol] = reserve.address;
-            tokenDecimals[reserve.symbol] = reserve.decimals;
-            continue;
+        if (reserve.type === undefined) {
+            const token = deployed(web3, 'ERC20Token', reserve.address);
+            const symbol = await token.methods.symbol().call();
+            const decimals = await token.methods.decimals().call();
+            reserves[symbol] = { address: token._address, decimals: decimals };
         }
-
-        const name = reserve.symbol + ' ERC20 Token';
-        const symbol = reserve.symbol;
-        const decimals = reserve.decimals;
-        const supply = decimalToInteger(reserve.supply, decimals);
-        const token = await web3Func(deploy, 'erc20Token' + symbol, 'ERC20Token', [name, symbol, decimals, supply]);
-        addresses[reserve.symbol] = token._address;
-        tokenDecimals[reserve.symbol] = reserve.decimals;
+        if (reserve.type === 0) {
+            const name = reserve.symbol + ' ERC20 Token';
+            const symbol = reserve.symbol;
+            const decimals = reserve.decimals;
+            const supply = decimalToInteger(reserve.supply, decimals);
+            const token = await web3Func(deploy, 'erc20Token-' + symbol, 'ERC20Token', [name, symbol, decimals, supply]);
+            reserves[symbol] = { address: token._address, decimals: decimals };
+        }
+        if (reserve.type === 1) {
+            const name = reserve.symbol + ' DS Token';
+            const symbol = reserve.symbol;
+            const decimals = reserve.decimals;
+            const supply = decimalToInteger(reserve.supply, decimals);
+            const nonce = await web3.eth.getTransactionCount(account.address);
+            const token = await web3Func(deploy, 'dsToken-' + symbol, 'DSToken', [name, symbol, decimals]);
+            if (nonce !== await web3.eth.getTransactionCount(account.address)) {
+                await execute(token.methods.issue(account.address, supply));
+            }
+            reserves[symbol] = { address: token._address, decimals: decimals };
+        }
     }
 
-    for (const converter of getConfig().converters) {
+    for (const [converter, index] of getConfig().converters.map((converter, index) => [converter, index])) {
         const type = converter.type;
-        const name = converter.symbol + (type == 0 ? ' Liquid Token' : ' Liquidity Pool');
+        const name = converter.symbol + (type === 0 ? ' Liquid Token' : ' Liquidity Pool');
         const symbol = converter.symbol;
         const decimals = converter.decimals;
         const fee = percentageToPPM(converter.fee);
-        const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
+        const tokens = converter.reserves.map(reserve => reserves[reserve.symbol].address);
         const weights = converter.reserves.map(reserve => percentageToPPM(reserve.weight));
-        const amounts = converter.reserves.map(reserve => decimalToInteger(reserve.balance, tokenDecimals[reserve.symbol]));
+        const amounts = converter.reserves.map(reserve => decimalToInteger(reserve.balance, reserves[reserve.symbol].decimals));
         const value = amounts[converter.reserves.findIndex(reserve => reserve.symbol === 'ETH')];
 
-        await execute(converterRegistry.methods.newConverter(type, name, symbol, decimals, '1000000', tokens, weights));
-        const anchor = deployed(web3, 'IConverterAnchor', (await converterRegistry.methods.getAnchors().call()).slice(-1)[0]);
-        const converterBase = deployed(web3, 'ConverterBase', await anchor.methods.owner().call());
+        await execute(converterRegistry.methods.newConverter(type, name, symbol, decimals, percentageToPPM('100%'), tokens, weights));
+        const converterAnchor = deployed(web3, 'IConverterAnchor', (await converterRegistry.methods.getAnchor(index).call()));
+        const converterBase = deployed(web3, 'ConverterBase', await converterAnchor.methods.owner().call());
         await execute(converterBase.methods.acceptOwnership());
         await execute(converterBase.methods.setConversionFee(fee));
+
+        if (type === 2) {
+            for (const reserve of converter.reserves) {
+                if (reserve.oracle === undefined) {
+                    const oracle = await web3Func(deploy, 'chainlinkOracle-' + converter.symbol + reserve.symbol, 'ChainlinkETHToETHOracle', []);
+                    reserve.oracle = oracle._address;
+                }
+            }
+            const deployedConverter = deployed(web3, 'LiquidityPoolV2Converter', converterBase._address);
+            await execute(whitelist.methods.addAddress(converter.reserves[0].oracle));
+            await execute(whitelist.methods.addAddress(converter.reserves[1].oracle));
+            await execute(deployedConverter.methods.activate(tokens[0], converter.reserves[0].oracle, converter.reserves[1].oracle));
+        }
 
         if (type !== 0 && amounts.every(amount => amount > 0)) {
             for (let i = 0; i < converter.reserves.length; i++) {
                 const reserve = converter.reserves[i];
                 if (reserve.symbol !== 'ETH') {
-                    await execute(deployed(web3, 'ERC20Token', tokens[i]).methods.approve(converterBase._address, amounts[i]));
-                }
-
-                if (type == 2) {
-                    if (!reserve.oracle) {
-                        // can be used to deploy test (static) oracles
-                        /*
-                        const chainlinkPriceOracle = await web3Func(deploy, 'chainlinkPriceOracle' + converter.symbol + reserve.symbol, 'ChainlinkETHToETHOracle', []);
-                        reserve.oracle = chainlinkPriceOracle._address;
-                        */
-                    }
-                    await execute(oracleWhitelist.methods.addAddress(reserve.oracle));
+                    const deployedToken = deployed(web3, 'ERC20Token', tokens[i]);
+                    await execute(deployedToken.methods.approve(converterBase._address, amounts[i]));
                 }
             }
-
-            if (type == 1) {
-                await execute(deployed(web3, 'LiquidityPoolV1Converter', converterBase._address).methods.addLiquidity(tokens, amounts, 1), value);
+            if (type === 1) {
+                const deployedConverter = deployed(web3, 'LiquidityPoolV1Converter', converterBase._address);
+                await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
             }
-            else if (type == 2) {
+            if (type === 2) {
                 const deployedConverter = deployed(web3, 'LiquidityPoolV2Converter', converterBase._address);
-                await execute(deployedConverter.methods.activate(tokens[0], converter.reserves[0].oracle, converter.reserves[1].oracle));
-
-                for (let i = 0; i < converter.reserves.length; i++) {
-                    await execute(deployedConverter.methods.addLiquidity(tokens[i], amounts[i], 1), value);
-                }
+                await execute(deployedConverter.methods.addLiquidity(tokens[0], amounts[0], 1), value);
+                await execute(deployedConverter.methods.addLiquidity(tokens[1], amounts[1], 1), value);
             }
         }
 
-        addresses[converter.symbol] = anchor._address;
+        reserves[converter.symbol] = { address: converterAnchor._address, decimals: decimals };
     }
 
-    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BNTToken'), addresses.BNT));
-    await execute(conversionPathFinder.methods.setAnchorToken(addresses.BNT));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BNTToken'), reserves.BNT.address));
+    await execute(conversionPathFinder.methods.setAnchorToken(reserves.BNT.address));
     await execute(bancorFormula.methods.init());
+
+    const liquidityProtectionStore = await web3Func(deploy, 'liquidityProtectionStore', 'LiquidityProtectionStore', []);
+    const liquidityProtectionParams = [liquidityProtectionStore._address, reserves.BNT.address, reserves.vBNT.address, contractRegistry._address];
+    const liquidityProtection = await web3Func(deploy, 'liquidityProtection', 'LiquidityProtection', liquidityProtectionParams);
+
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('LiquidityProtectionStore'), liquidityProtectionStore._address));
+    await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('LiquidityProtection'), liquidityProtection._address));
+
+    await execute(liquidityProtectionStore.methods.transferOwnership(liquidityProtection._address));
+    await execute(deployed(web3, 'DSToken', reserves.BNT.address).methods.transferOwnership(liquidityProtection._address));
+    await execute(deployed(web3, 'DSToken', reserves.vBNT.address).methods.transferOwnership(liquidityProtection._address));
+    await execute(liquidityProtection.methods.acceptStoreOwnership());
+    await execute(liquidityProtection.methods.acceptNetworkTokenOwnership());
+    await execute(liquidityProtection.methods.acceptGovTokenOwnership());
+
+    const params = getConfig().liquidityProtectionParams;
+    const maxSystemNetworkTokenRatio = percentageToPPM(params.maxSystemNetworkTokenRatio);
+    const maxSystemNetworkTokenAmount = decimalToInteger(params.maxSystemNetworkTokenAmount, reserves.BNT.decimals);
+    await execute(liquidityProtection.methods.setSystemNetworkTokenLimits(maxSystemNetworkTokenAmount, maxSystemNetworkTokenRatio));
+    await execute(liquidityProtection.methods.setProtectionDelays(params.minProtectionDelay, params.maxProtectionDelay));
+    await execute(liquidityProtection.methods.setLockDuration(params.lockDuration));
+
+    for (const converter of params.converters) {
+        await execute(liquidityProtection.methods.whitelistPool(reserves[converter].address, true));
+    }
 
     web3.currentProvider.disconnect();
 };
