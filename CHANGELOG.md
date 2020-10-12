@@ -1,3 +1,8 @@
+### 0.6.20
+General
+* Added the liquidity protection mechanism
+
+
 ### 0.6.19
 General
 * Moved more generic math functions into Math
