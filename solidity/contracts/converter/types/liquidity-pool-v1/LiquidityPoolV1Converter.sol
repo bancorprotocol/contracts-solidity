@@ -242,6 +242,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         // calculate the numerator and the denumerator of the new rate
         Fraction memory prevAverage = prevAverageRate;
 
+        // if the previous average rate was never calculated, the average rate is equal to the current rate
+        if (prevAverage.n == 0 && prevAverage.d == 0) {
+            return Fraction({ n: currentRateN, d: currentRateD });
+        }
+
         uint256 x = prevAverage.d.mul(currentRateN);
         uint256 y = prevAverage.n.mul(currentRateD);
 
