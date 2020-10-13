@@ -726,9 +726,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         }
 
         // get the current rate between the reserves (recent average)
-        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(liquidity.poolToken.owner()));
-        Fraction memory currentRate;
-        (currentRate.n, currentRate.d) = converter.recentAverageRate(liquidity.reserveToken);
+        Fraction memory currentRate = reserveTokenRate(liquidity.poolToken, liquidity.reserveToken);
 
         // get the target token amount
         uint256 targetAmount = removeLiquidityTargetAmount(
@@ -765,7 +763,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         store.withdrawTokens(liquidity.poolToken, address(this), poolAmount);
 
         // remove liquidity
-        removeLiquidity(converter, poolAmount, liquidity.reserveToken, networkToken);
+        removeLiquidity(liquidity.poolToken, poolAmount, liquidity.reserveToken, networkToken);
 
         // transfer the base tokens to the caller
         uint256 baseBalance;
@@ -1032,18 +1030,20 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     /**
       * @dev utility to remove liquidity from a converter
       *
-      * @param _converter       converter
+      * @param _poolToken       pool token of the converter
       * @param _poolAmount      amount of pool tokens to remove
       * @param _reserveToken1   reserve token 1
       * @param _reserveToken2   reserve token 2
     */
     function removeLiquidity(
-        ILiquidityPoolV1Converter _converter,
+        IDSToken _poolToken,
         uint256 _poolAmount,
         IERC20Token _reserveToken1,
         IERC20Token _reserveToken2)
         internal
     {
+        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(_poolToken.owner()));
+
         IERC20Token[] memory reserveTokens = new IERC20Token[](2);
         uint256[] memory minReturns = new uint256[](2);
         reserveTokens[0] = _reserveToken1;
@@ -1053,7 +1053,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // ensure that the contract can receive ETH
         updatingLiquidity = true;
-        _converter.removeLiquidity(_poolAmount, reserveTokens, minReturns);
+        converter.removeLiquidity(_poolAmount, reserveTokens, minReturns);
         updatingLiquidity = false;
     }
 
