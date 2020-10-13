@@ -146,6 +146,7 @@ contract('LiquidityProtectionEdgeCases', accounts => {
         await liquidityProtection.acceptGovTokenOwnership();
         await liquidityProtection.whitelistPool(poolToken.address, true);
         await liquidityProtection.setSystemNetworkTokenLimits(-1, FULL_PPM);
+        await liquidityProtection.setAverageRateMaxDeviation(FULL_PPM);
     });
 
     for (const config of CONFIGURATIONS) {
@@ -163,7 +164,7 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                     test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.0000000000000001');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.000000000000001');
+                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.0003');
                 }
                 else {
                     throw new Error('invalid configuration');
@@ -213,7 +214,7 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                     test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.00000000000000001');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.0000001');
+                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.02');
                 }
                 else {
                     throw new Error('invalid configuration');
