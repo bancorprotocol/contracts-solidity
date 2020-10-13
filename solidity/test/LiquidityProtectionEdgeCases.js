@@ -151,7 +151,9 @@ contract('LiquidityProtectionEdgeCases', accounts => {
 
     for (const config of CONFIGURATIONS) {
         for (const numOfDays of NUM_OF_DAYS) {
+            const timestamp = numOfDays * 24 * 60 * 60 + 1;
             for (const decimals of DECIMAL_COMBINATIONS) {
+                const amounts = decimals.map(n => new BN(10).pow(new BN(n)));
 
                 let test;
                 if (!config.increaseRate && !config.generateFee) {
@@ -164,15 +166,13 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                     test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.00000000000000002');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.2');
+                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.00000000000000002');
                 }
                 else {
                     throw new Error('invalid configuration');
                 }
 
                 it(`base token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
-                    const amounts = decimals.map(n => new BN(10).pow(new BN(n)));
-
                     await baseToken.approve(converter.address, amounts[0]);
                     await networkToken.approve(converter.address, amounts[1]);
                     await converter.addLiquidity([baseToken.address, networkToken.address], [amounts[0], amounts[1]], 1);
@@ -191,7 +191,8 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                         await generateFee(FEE_PPM, baseToken, networkToken, amounts[2]);
                     }
     
-                    const actual = await liquidityProtection.removeLiquidityReturn(0, FULL_PPM, numOfDays * 24 * 60 * 60 + 1);
+                    await converter.setTime(timestamp);
+                    const actual = await liquidityProtection.removeLiquidityReturn(0, FULL_PPM, timestamp);
                     const error = test(actual[0], amounts[2]);
                     expect(error).to.be.empty(error);
                 });
@@ -201,7 +202,9 @@ contract('LiquidityProtectionEdgeCases', accounts => {
 
     for (const config of CONFIGURATIONS) {
         for (const numOfDays of NUM_OF_DAYS) {
+            const timestamp = numOfDays * 24 * 60 * 60 + 1;
             for (const decimals of DECIMAL_COMBINATIONS) {
+                const amounts = decimals.map(n => new BN(10).pow(new BN(n)));
 
                 let test;
                 if (!config.increaseRate && !config.generateFee) {
@@ -214,15 +217,13 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                     test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.0');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.3');
+                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.000000002');
                 }
                 else {
                     throw new Error('invalid configuration');
                 }
 
                 it(`network token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
-                    const amounts = decimals.map(n => new BN(10).pow(new BN(n)));
-
                     await baseToken.approve(converter.address, amounts[0]);
                     await networkToken.approve(converter.address, amounts[1]);
                     await converter.addLiquidity([baseToken.address, networkToken.address], [amounts[0], amounts[1]], 1);
@@ -241,7 +242,8 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                         await generateFee(FEE_PPM, networkToken, baseToken, amounts[3]);
                     }
 
-                    const actual = await liquidityProtection.removeLiquidityReturn(1, FULL_PPM, numOfDays * 24 * 60 * 60 + 1);
+                    await converter.setTime(timestamp);
+                    const actual = await liquidityProtection.removeLiquidityReturn(1, FULL_PPM, timestamp);
                     const error = test(actual[0], amounts[3]);
                     expect(error).to.be.empty(error);
                 });
