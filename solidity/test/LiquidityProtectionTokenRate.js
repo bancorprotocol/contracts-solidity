@@ -36,14 +36,6 @@ contract('LiquidityProtectionTokenRate', accounts => {
         await bancorNetwork.convertByPath(path, amount, 1, constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0);
     };
 
-    const ratio = (rate0, rate1) => {
-        const n = rate0[0].mul(rate1[1]);
-        const d = rate0[1].mul(rate1[0]);
-        if (n.eq(d))
-            return Decimal(1);
-        return Decimal(n.toString()).div(d.toString());
-    }
-
     let bancorNetwork;
     let liquidityProtection;
     let reserveToken1;
@@ -98,7 +90,10 @@ contract('LiquidityProtectionTokenRate', accounts => {
                     await converter.setTime(time);
                     const averageRate = await converter.recentAverageRate(reserveToken1.address);
                     const actualRate = await Promise.all([reserveToken2, reserveToken1].map(reserveToken => reserveToken.balanceOf(converter.address)));
-                    if (ratio(averageRate, actualRate).sub(1).mul(100).abs().lte(maxDeviation)) {
+                    const min = Decimal(actualRate[0].toString()).div(actualRate[1].toString()).mul(100 - maxDeviation).div(100);
+                    const max = Decimal(actualRate[0].toString()).div(actualRate[1].toString()).mul(100).div(100 - maxDeviation);
+                    const mid = Decimal(averageRate[0].toString()).div(averageRate[1].toString());
+                    if (min.lte(mid) && mid.lte(max)) {
                         const reserveTokenRate = await liquidityProtection.reserveTokenRateTest(poolToken.address, reserveToken1.address);
                         expect(reserveTokenRate[0]).to.be.bignumber.equal(averageRate[0]);
                         expect(reserveTokenRate[1]).to.be.bignumber.equal(averageRate[1]);
