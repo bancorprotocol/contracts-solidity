@@ -658,9 +658,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         Fraction memory poolRate = poolTokenRate(liquidity.poolToken, liquidity.reserveToken);
         uint256 poolAmount = targetAmount.mul(poolRate.d).mul(2).div(poolRate.n);
 
-        // limit the amount of pool tokens by the amount the system holds
-        uint256 systemBalance = store.systemBalance(liquidity.poolToken);
-        poolAmount = poolAmount > systemBalance ? systemBalance : poolAmount;
+        // limit the amount of pool tokens by the amount the system/caller holds
+        uint256 availableBalance = store.systemBalance(liquidity.poolToken).add(liquidity.poolAmount);
+        poolAmount = poolAmount > availableBalance ? availableBalance : poolAmount;
 
         // calculate the base token amount received by liquidating the pool tokens
         // note that the amount is divided by 2 since the pool amount represents both reserves
