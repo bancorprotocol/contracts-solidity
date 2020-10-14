@@ -166,7 +166,7 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                     test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.00000000000000002');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.00000000000000002');
+                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.000000000000001');
                 }
                 else {
                     throw new Error('invalid configuration');
