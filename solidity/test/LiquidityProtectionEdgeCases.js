@@ -146,6 +146,7 @@ contract('LiquidityProtectionEdgeCases', accounts => {
         await liquidityProtection.acceptGovTokenOwnership();
         await liquidityProtection.whitelistPool(poolToken.address, true);
         await liquidityProtection.setSystemNetworkTokenLimits(-1, FULL_PPM);
+        await liquidityProtection.setAverageRateMaxDeviation(FULL_PPM);
     });
 
     for (const config of CONFIGURATIONS) {
