@@ -33,4 +33,9 @@ contract TestLiquidityProtection is LiquidityProtection {
         Fraction memory impLossRate = impLoss(initialRate, currentRate);
         return (impLossRate.n, impLossRate.d);
     }
+
+    function reserveTokenRateTest(IDSToken _poolToken, IERC20Token _reserveToken) external view returns (uint256, uint256) {
+        Fraction memory rate = reserveTokenRate(_poolToken, _reserveToken);
+        return (rate.n, rate.d);
+    }
 }
