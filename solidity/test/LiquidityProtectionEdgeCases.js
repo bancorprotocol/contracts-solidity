@@ -87,12 +87,12 @@ contract('LiquidityProtectionEdgeCases', accounts => {
     }
 
     let contractRegistry;
+    let converterRegistry;
     let bancorNetwork;
     let baseToken;
     let networkToken;
     let govToken;
     let poolToken;
-    let converterRegistry;
     let converter;
     let liquidityProtectionStore;
     let liquidityProtection;
@@ -102,11 +102,12 @@ contract('LiquidityProtectionEdgeCases', accounts => {
     before(async () => {
         contractRegistry = await ContractRegistry.new();
         converterRegistry = await ConverterRegistry.new(contractRegistry.address);
-        converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
+        const converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
+
         const liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
-        converterFactory = await ConverterFactory.new();
+        const converterFactory = await ConverterFactory.new();
         await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
 
         const bancorFormula = await BancorFormula.new();
@@ -131,7 +132,7 @@ contract('LiquidityProtectionEdgeCases', accounts => {
         const anchorCount = await converterRegistry.getAnchorCount();
         const poolTokenAddress = await converterRegistry.getAnchor(anchorCount.sub(new BN(1)));
         poolToken = await DSToken.at(poolTokenAddress);
-        const converterAddress = await poolToken.owner()
+        const converterAddress = await poolToken.owner();
         converter = await LiquidityPoolV1Converter.at(converterAddress);
         await converter.acceptOwnership();
 
@@ -145,6 +146,7 @@ contract('LiquidityProtectionEdgeCases', accounts => {
         await liquidityProtection.acceptGovTokenOwnership();
         await liquidityProtection.whitelistPool(poolToken.address, true);
         await liquidityProtection.setSystemNetworkTokenLimits(-1, FULL_PPM);
+        await liquidityProtection.setAverageRateMaxDeviation(FULL_PPM);
     });
 
     for (const config of CONFIGURATIONS) {
@@ -161,7 +163,7 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                     test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, '0.0');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.0000000000000001');
+                    test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.00000000000000002');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
                     test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.000000000000001');
@@ -189,9 +191,8 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                         await generateFee(FEE_PPM, baseToken, networkToken, amounts[2]);
                     }
     
-                    const rateN = await converter.reserveBalance(networkToken.address);
-                    const rateD = await converter.reserveBalance(baseToken.address);
-                    const actual = await liquidityProtection.removeLiquidityReturn(0, FULL_PPM, rateN, rateD, timestamp);
+                    await converter.setTime(timestamp);
+                    const actual = await liquidityProtection.removeLiquidityReturn(0, FULL_PPM, timestamp);
                     const error = test(actual[0], amounts[2]);
                     expect(error).to.be.empty(error);
                 });
@@ -207,16 +208,16 @@ contract('LiquidityProtectionEdgeCases', accounts => {
 
                 let test;
                 if (!config.increaseRate && !config.generateFee) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.00000000000001');
+                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.000000000000002');
                 }
                 else if (!config.increaseRate && config.generateFee) {
                     test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, '0.0');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.00000000000000001');
+                    test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.0');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.0000001');
+                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.000000002');
                 }
                 else {
                     throw new Error('invalid configuration');
@@ -241,9 +242,8 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                         await generateFee(FEE_PPM, networkToken, baseToken, amounts[3]);
                     }
 
-                    const rateN = await converter.reserveBalance(baseToken.address);
-                    const rateD = await converter.reserveBalance(networkToken.address);
-                    const actual = await liquidityProtection.removeLiquidityReturn(1, FULL_PPM, rateN, rateD, timestamp);
+                    await converter.setTime(timestamp);
+                    const actual = await liquidityProtection.removeLiquidityReturn(1, FULL_PPM, timestamp);
                     const error = test(actual[0], amounts[3]);
                     expect(error).to.be.empty(error);
                 });

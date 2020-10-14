@@ -410,6 +410,22 @@ contract('LiquidityProtection', accounts => {
         await expectRevert(liquidityProtection.setLockDuration('100', { from: accounts[1] }), 'ERR_ACCESS_DENIED');
     });
 
+    it('verifies that the owner can set the maximum deviation of the average rate from the actual rate', async () => {
+        expect(await liquidityProtection.averageRateMaxDeviation.call()).to.be.bignumber.equal('20000');
+
+        const res = await liquidityProtection.setAverageRateMaxDeviation('30000');
+        expectEvent(res, 'AverageRateMaxDeviationUpdated', {
+            _prevAverageRateMaxDeviation: '20000',
+            _newAverageRateMaxDeviation: '30000'
+        });
+
+        expect(await liquidityProtection.averageRateMaxDeviation.call()).to.be.bignumber.equal('30000');
+    });
+
+    it('should revert when a non owner attempts to set the maximum deviation of the average rate from the actual rate', async () => {
+        await expectRevert(liquidityProtection.setAverageRateMaxDeviation('30000', { from: accounts[1] }), 'ERR_ACCESS_DENIED');
+    });
+
     describe('whitelist', () => {
         it('verifies that the owner can update the whitelist admin', async () => {
             const newWhitelistAdmin = accounts[3];

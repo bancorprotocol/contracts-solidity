@@ -1,3 +1,12 @@
+### 0.6.21
+LiquidityPoolV1Converter
+* Fixed an issue that caused recentAverageRate to return 0/0 for new converters
+
+LiquidityProtection
+* Fixed an issue in removeLiquidityReturn that returned the wrong amount
+* Added support for max rate deviation
+
+
 ### 0.6.20
 General
 * Added the liquidity protection mechanism

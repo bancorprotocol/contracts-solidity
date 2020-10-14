@@ -65,6 +65,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     // number of seconds from liquidation to full network token release
     uint256 public lockDuration = 24 hours;
 
+    // maximum deviation of the average rate from the actual rate
+    uint32 public averageRateMaxDeviation = 20000; // PPM units
+
     // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
     bool private updatingLiquidity = false;
 
@@ -129,6 +132,17 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     event LockDurationUpdated(
         uint256 _prevLockDuration,
         uint256 _newLockDuration
+    );
+
+    /**
+      * @dev triggered when the maximum deviation of the average rate from the actual rate is updated
+      *
+      * @param _prevAverageRateMaxDeviation previous maximum deviation of the average rate from the actual rate
+      * @param _newAverageRateMaxDeviation  new maximum deviation of the average rate from the actual rate
+    */
+    event AverageRateMaxDeviationUpdated(
+        uint32 _prevAverageRateMaxDeviation,
+        uint32 _newAverageRateMaxDeviation
     );
 
     /**
@@ -304,6 +318,19 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         emit LockDurationUpdated(lockDuration, _lockDuration);
 
         lockDuration = _lockDuration;
+    }
+
+    /**
+      * @dev sets the maximum deviation of the average rate from the actual rate
+      * can only be called by the contract owner
+      *
+      * @param _averageRateMaxDeviation maximum deviation of the average rate from the actual rate
+    */
+    function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation) external ownerOnly {
+        require(_averageRateMaxDeviation <= PPM_RESOLUTION, "ERR_INVALID_MAX_DEVIATION");
+        emit AverageRateMaxDeviationUpdated(averageRateMaxDeviation, _averageRateMaxDeviation);
+
+        averageRateMaxDeviation = _averageRateMaxDeviation;
     }
 
     /**
@@ -658,9 +685,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         Fraction memory poolRate = poolTokenRate(liquidity.poolToken, liquidity.reserveToken);
         uint256 poolAmount = targetAmount.mul(poolRate.d).mul(2).div(poolRate.n);
 
-        // limit the amount of pool tokens by the amount the system holds
-        uint256 systemBalance = store.systemBalance(liquidity.poolToken);
-        poolAmount = poolAmount > systemBalance ? systemBalance : poolAmount;
+        // limit the amount of pool tokens by the amount the system/caller holds
+        uint256 availableBalance = store.systemBalance(liquidity.poolToken).add(liquidity.poolAmount);
+        poolAmount = poolAmount > availableBalance ? availableBalance : poolAmount;
 
         // calculate the base token amount received by liquidating the pool tokens
         // note that the amount is divided by 2 since the pool amount represents both reserves
@@ -726,9 +753,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         }
 
         // get the current rate between the reserves (recent average)
-        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(liquidity.poolToken.owner()));
-        Fraction memory currentRate;
-        (currentRate.n, currentRate.d) = converter.recentAverageRate(liquidity.reserveToken);
+        Fraction memory currentRate = reserveTokenRate(liquidity.poolToken, liquidity.reserveToken);
 
         // get the target token amount
         uint256 targetAmount = removeLiquidityTargetAmount(
@@ -765,7 +790,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         store.withdrawTokens(liquidity.poolToken, address(this), poolAmount);
 
         // remove liquidity
-        removeLiquidity(converter, poolAmount, liquidity.reserveToken, networkToken);
+        removeLiquidity(liquidity.poolToken, poolAmount, liquidity.reserveToken, networkToken);
 
         // transfer the base tokens to the caller
         uint256 baseBalance;
@@ -993,7 +1018,22 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _reserveToken    reserve token
     */
     function reserveTokenRate(IDSToken _poolToken, IERC20Token _reserveToken) internal view returns (Fraction memory) {
-        (uint256 n, uint256 d) = ILiquidityPoolV1Converter(payable(_poolToken.owner())).recentAverageRate(_reserveToken);
+        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(_poolToken.owner()));
+
+        IERC20Token otherReserve = converter.connectorTokens(0);
+        if (otherReserve == _reserveToken) {
+            otherReserve = converter.connectorTokens(1);
+        }
+
+        uint256 currentRateN = converter.getConnectorBalance(otherReserve);
+        uint256 currentRateD = converter.getConnectorBalance(_reserveToken);
+        (uint256 n, uint256 d) = converter.recentAverageRate(_reserveToken);
+
+        uint256 min = currentRateN.mul(d).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION - averageRateMaxDeviation);
+        uint256 mid = currentRateD.mul(n).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION);
+        uint256 max = currentRateN.mul(d).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
+        require(min <= mid && mid <= max, "ERR_INVALID_RATE");
+
         return Fraction(n, d);
     }
 
@@ -1032,18 +1072,20 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     /**
       * @dev utility to remove liquidity from a converter
       *
-      * @param _converter       converter
+      * @param _poolToken       pool token of the converter
       * @param _poolAmount      amount of pool tokens to remove
       * @param _reserveToken1   reserve token 1
       * @param _reserveToken2   reserve token 2
     */
     function removeLiquidity(
-        ILiquidityPoolV1Converter _converter,
+        IDSToken _poolToken,
         uint256 _poolAmount,
         IERC20Token _reserveToken1,
         IERC20Token _reserveToken2)
         internal
     {
+        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(_poolToken.owner()));
+
         IERC20Token[] memory reserveTokens = new IERC20Token[](2);
         uint256[] memory minReturns = new uint256[](2);
         reserveTokens[0] = _reserveToken1;
@@ -1053,7 +1095,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // ensure that the contract can receive ETH
         updatingLiquidity = true;
-        _converter.removeLiquidity(_poolAmount, reserveTokens, minReturns);
+        converter.removeLiquidity(_poolAmount, reserveTokens, minReturns);
         updatingLiquidity = false;
     }
 
