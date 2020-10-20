@@ -600,7 +600,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
 
     /**
       * @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't.
-      * Note that we use the non standard erc-20 interface in which `approve` has no return value so that
+      * note that we use the non standard erc-20 interface in which `approve` has no return value so that
       * this function will work for both standard and non standard tokens
       *
       * @param _token   token to check the allowance in
