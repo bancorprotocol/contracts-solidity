@@ -10,7 +10,6 @@ import "../utility/SafeMath.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/TokenHolder.sol";
 import "../token/interfaces/IEtherToken.sol";
-import "../bancorx/interfaces/IBancorX.sol";
 
 /**
   * @dev ConverterBase
@@ -213,9 +212,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
       * can only be called if the converter has an ETH reserve
     */
     receive() external override payable {
-        require(reserves[ETH_RESERVE_ADDRESS].isSet, "ERR_INVALID_RESERVE"); // require(hasETHReserve(), "ERR_INVALID_RESERVE");
-        // a workaround for a problem when running solidity-coverage
-        // see https://github.com/sc-forks/solidity-coverage/issues/487
+        require(reserves[ETH_RESERVE_ADDRESS].isSet, "ERR_INVALID_RESERVE");
     }
 
     /**
@@ -436,15 +433,6 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
         returns (uint256)
     {
         return reserves[_reserveToken].balance;
-    }
-
-    /**
-      * @dev checks whether or not the converter has an ETH reserve
-      *
-      * @return true if the converter has an ETH reserve, false otherwise
-    */
-    function hasETHReserve() public view returns (bool) {
-        return reserves[ETH_RESERVE_ADDRESS].isSet;
     }
 
     /**
