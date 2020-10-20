@@ -1,3 +1,8 @@
+### 0.6.22
+LiquidityProtection
+* Fixed an issue that prevented users from adding single sided liquidity in some cases
+
+
 ### 0.6.21
 LiquidityPoolV1Converter
 * Fixed an issue that caused recentAverageRate to return 0/0 for new converters
