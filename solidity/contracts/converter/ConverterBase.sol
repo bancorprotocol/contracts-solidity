@@ -9,7 +9,6 @@ import "../utility/ReentrancyGuard.sol";
 import "../utility/SafeMath.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/TokenHolder.sol";
-import "../token/interfaces/IEtherToken.sol";
 
 /**
   * @dev ConverterBase
