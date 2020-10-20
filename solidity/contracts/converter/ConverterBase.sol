@@ -9,7 +9,6 @@ import "../utility/ReentrancyGuard.sol";
 import "../utility/SafeMath.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/TokenHolder.sol";
-import "../token/interfaces/IEtherToken.sol";
 
 /**
   * @dev ConverterBase
@@ -55,7 +54,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     /**
       * @dev version number
     */
-    uint16 public constant version = 42;
+    uint16 public constant version = 43;
 
     IConverterAnchor public override anchor;            // converter anchor contract
     IWhitelist public override conversionWhitelist;     // whitelist contract with list of addresses that are allowed to use the converter

@@ -15,10 +15,6 @@ contract TestLiquidityPoolV1Converter is LiquidityPoolV1Converter {
     {
     }
 
-    function setEtherToken(IEtherToken _etherToken) public {
-        etherToken = _etherToken;
-    }
-
     function time() internal view override returns (uint256) {
         return currentTime;
     }

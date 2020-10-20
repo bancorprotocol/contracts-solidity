@@ -17,7 +17,6 @@ import "../../../utility/Types.sol";
 contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     using Math for *;
 
-    IEtherToken internal etherToken = IEtherToken(0xc0829421C1d260BD3cB3E0F06cfE2D52db2cE315);
     uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
     
     // the period of time taken into account when calculating the recent averate rate
@@ -368,10 +367,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
                 if (msg.value > reserveAmount) {
                     msg.sender.transfer(msg.value - reserveAmount);
                 }
-                else if (msg.value < reserveAmount) {
-                    require(msg.value == 0, "ERR_INVALID_ETH_VALUE");
-                    safeTransferFrom(etherToken, msg.sender, address(this), reserveAmount);
-                    etherToken.withdraw(reserveAmount);
+                else {
+                    require(msg.value == reserveAmount, "ERR_INVALID_ETH_VALUE");
                 }
             }
             else {
