@@ -575,10 +575,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         networkToken.issue(address(this), networkLiquidityAmount);
 
         // transfer the base tokens from the caller and approve the converter
-        networkToken.approve(address(converter), networkLiquidityAmount);
+        ensureAllowance(networkToken, address(converter), networkLiquidityAmount);
         if (_baseToken != ETH_RESERVE_ADDRESS) {
             safeTransferFrom(_baseToken, msg.sender, address(this), _amount);
-            _baseToken.approve(address(converter), _amount);
+            ensureAllowance(_baseToken, address(converter), _amount);
         }
 
         // add liquidity
@@ -1198,6 +1198,24 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         }
 
         return Fraction({ n: timeElapsed, d: maxProtectionDelay });
+    }
+
+    /**
+      * @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't.
+      * note that we use the non standard erc-20 interface in which `approve` has no return value so that
+      * this function will work for both standard and non standard tokens
+      *
+      * @param _token   token to check the allowance in
+      * @param _spender approved address
+      * @param _value   allowance amount
+    */
+    function ensureAllowance(IERC20Token _token, address _spender, uint256 _value) private {
+        uint256 allowance = _token.allowance(address(this), _spender);
+        if (allowance < _value) {
+            if (allowance > 0)
+                safeApprove(_token, _spender, 0);
+            safeApprove(_token, _spender, _value);
+        }
     }
 
     // utility to get the reserve weight (including from older converters that don't support the new converterReserveWeight function)
