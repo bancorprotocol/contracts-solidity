@@ -411,34 +411,12 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // get the converter
         IConverter converter = IConverter(payable(_poolAnchor.owner()));
 
-        // get the reserves tokens
-        IERC20Token reserve0Token = converter.connectorTokens(0);
-        IERC20Token reserve1Token = converter.connectorTokens(1);
-
-        // get the pool token rates
+        // protect both reserves
         IDSToken poolToken = IDSToken(address(_poolAnchor));
-        Fraction memory reserve0Rate = poolTokenRate(poolToken, reserve0Token);
-        Fraction memory reserve1Rate = poolTokenRate(poolToken, reserve1Token);
+        protectLiquidity(poolToken, converter, 0, _amount / 2);
+        protectLiquidity(poolToken, converter, 1, _amount - _amount / 2);
 
-        // calculate the reserve balances based on the amount provided and the current pool token rate
-        uint256 protectedAmount0 = _amount / 2;
-        uint256 protectedAmount1 = _amount - protectedAmount0; // account for rounding errors
-        uint256 reserve0Amount = protectedAmount0.mul(reserve0Rate.n).div(reserve0Rate.d);
-        uint256 reserve1Amount = protectedAmount1.mul(reserve1Rate.n).div(reserve1Rate.d);
-
-        // add protected liquidity individually for each reserve
-        addProtectedLiquidity(msg.sender, poolToken, reserve0Token, protectedAmount0, reserve0Amount);
-        addProtectedLiquidity(msg.sender, poolToken, reserve1Token, protectedAmount1, reserve1Amount);
-
-        // mint governance tokens to the caller
-        if (reserve0Token == networkToken) {
-            govToken.issue(msg.sender, reserve0Amount);
-        }
-        else {
-            govToken.issue(msg.sender, reserve1Amount);
-        }
-
-        // transfer the pools tokens from the caller directly to the store
+        // transfer the pool tokens from the caller directly to the store
         safeTransferFrom(poolToken, msg.sender, address(store), _amount);
     }
 
@@ -556,8 +534,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // get the reserve balances
         ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(_poolAnchor.owner()));
-        uint256 reserveBalanceBase = converter.getConnectorBalance(_baseToken);
-        uint256 reserveBalanceNetwork = converter.getConnectorBalance(networkToken);
+        (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) = converterReserveBalances(converter, _baseToken, networkToken);
 
         // calculate and mint the required amount of network tokens for adding liquidity
         uint256 networkLiquidityAmount = _amount.mul(reserveBalanceNetwork).div(reserveBalanceBase);
@@ -575,10 +552,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         networkToken.issue(address(this), networkLiquidityAmount);
 
         // transfer the base tokens from the caller and approve the converter
-        networkToken.approve(address(converter), networkLiquidityAmount);
+        ensureAllowance(networkToken, address(converter), networkLiquidityAmount);
         if (_baseToken != ETH_RESERVE_ADDRESS) {
             safeTransferFrom(_baseToken, msg.sender, address(this), _amount);
-            _baseToken.approve(address(converter), _amount);
+            ensureAllowance(_baseToken, address(converter), _amount);
         }
 
         // add liquidity
@@ -960,6 +937,35 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
+      * @dev utility to protect existing liquidity
+      * also mints new governance tokens for the caller when protecting the network token reserve
+      *
+      * @param _poolAnchor      pool anchor
+      * @param _converter       pool converter
+      * @param _reserveIndex    index of the reserve to protect
+      * @param _poolAmount      amount of pool tokens to protect
+    */
+    function protectLiquidity(IDSToken _poolAnchor, IConverter _converter, uint256 _reserveIndex, uint256 _poolAmount) internal {
+        // get the reserves token
+        IERC20Token reserveToken = _converter.connectorTokens(_reserveIndex);
+
+        // get the pool token rate
+        IDSToken poolToken = IDSToken(address(_poolAnchor));
+        Fraction memory reserveRate = poolTokenRate(poolToken, reserveToken);
+
+        // calculate the reserve balance based on the amount provided and the current pool token rate
+        uint256 reserveAmount = _poolAmount.mul(reserveRate.n).div(reserveRate.d);
+
+        // protect the liquidity
+        addProtectedLiquidity(msg.sender, poolToken, reserveToken, _poolAmount, reserveAmount);
+
+        // for network token liquidity, mint governance tokens to the caller
+        if (reserveToken == networkToken) {
+            govToken.issue(msg.sender, reserveAmount);
+        }
+    }
+
+    /**
       * @dev adds protected liquidity for the caller to the store
       *
       * @param _provider        protected liquidity provider
@@ -1025,8 +1031,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             otherReserve = converter.connectorTokens(1);
         }
 
-        uint256 currentRateN = converter.getConnectorBalance(otherReserve);
-        uint256 currentRateD = converter.getConnectorBalance(_reserveToken);
+        (uint256 currentRateN, uint256 currentRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
         (uint256 n, uint256 d) = converter.recentAverageRate(_reserveToken);
 
         uint256 min = currentRateN.mul(d).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION - averageRateMaxDeviation);
@@ -1198,6 +1203,29 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         }
 
         return Fraction({ n: timeElapsed, d: maxProtectionDelay });
+    }
+
+    /**
+      * @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't.
+      * note that we use the non standard erc-20 interface in which `approve` has no return value so that
+      * this function will work for both standard and non standard tokens
+      *
+      * @param _token   token to check the allowance in
+      * @param _spender approved address
+      * @param _value   allowance amount
+    */
+    function ensureAllowance(IERC20Token _token, address _spender, uint256 _value) private {
+        uint256 allowance = _token.allowance(address(this), _spender);
+        if (allowance < _value) {
+            if (allowance > 0)
+                safeApprove(_token, _spender, 0);
+            safeApprove(_token, _spender, _value);
+        }
+    }
+
+    // utility to get the reserve balances
+    function converterReserveBalances(IConverter _converter, IERC20Token _reserveToken1, IERC20Token _reserveToken2) private view returns (uint256, uint256) {
+        return (_converter.getConnectorBalance(_reserveToken1), _converter.getConnectorBalance(_reserveToken2));
     }
 
     // utility to get the reserve weight (including from older converters that don't support the new converterReserveWeight function)
