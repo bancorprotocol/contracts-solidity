@@ -136,7 +136,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev converts a specific amount of source tokens to target tokens
-      * can only be called by the bancor network contract
       *
       * @param _sourceToken source ERC20 token
       * @param _targetToken target ERC20 token
@@ -692,11 +691,15 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     function getMinShare(IBancorFormula formula, uint256 _totalSupply, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts) private view returns (uint256) {
         uint256 minIndex = 0;
-        for (uint256 i = 1; i < _reserveTokens.length; i++) {
-            if (_reserveAmounts[i].mul(reserves[_reserveTokens[minIndex]].balance) < _reserveAmounts[minIndex].mul(reserves[_reserveTokens[i]].balance))
-                minIndex = i;
+        uint256 minBalance = reserves[_reserveTokens[0]].balance;
+        for (uint256 index = 1; index < _reserveTokens.length; index++) {
+            uint256 balance = reserves[_reserveTokens[index]].balance;
+            if (_reserveAmounts[index].mul(minBalance) < _reserveAmounts[minIndex].mul(balance)) {
+                minIndex = index;
+                minBalance = balance;
+            }
         }
-        return formula.fundSupplyAmount(_totalSupply, reserves[_reserveTokens[minIndex]].balance, reserveRatio, _reserveAmounts[minIndex]);
+        return formula.fundSupplyAmount(_totalSupply, minBalance, reserveRatio, _reserveAmounts[minIndex]);
     }
 
     /**
