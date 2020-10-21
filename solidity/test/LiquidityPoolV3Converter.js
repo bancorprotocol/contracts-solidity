@@ -656,7 +656,7 @@ contract('LiquidityPoolV3Converter', accounts => {
 
         const getPrevAverageRate = async () => {
             const prevAverageRate = await converter.prevAverageRate.call();
-            return { n: prevAverageRate[0], d: prevAverageRate[1] };
+            return { n: prevAverageRate.shrn(128), d: prevAverageRate.maskn(128) };
         };
 
         it('should be initially equal to the current rate', async () => {
