@@ -45,7 +45,6 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     uint32 public override maxConversionFee = 0;        // maximum conversion fee for the lifetime of the contract,
                                                         // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public override conversionFee = 0;           // current conversion fee, represented in ppm, 0...maxConversionFee
-    bool public constant conversionsEnabled = true;     // deprecated, backward compatibility
 
     uint256 public prevAverageRate;           // average rate after the previous conversion (1 reserve token 0 in reserve token 1 units)
     uint256 public prevAverageRateUpdateTime; // last time when the previous rate was updated (in seconds)
