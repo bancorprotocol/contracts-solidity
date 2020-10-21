@@ -232,8 +232,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
       * @dev deposits ether
       * can only be called if the converter has an ETH reserve
     */
-    receive() external override payable {
-        require(reserveIds[ETH_RESERVE_ADDRESS] != 0, "ERR_INVALID_RESERVE");
+    receive() external override payable validReserve(ETH_RESERVE_ADDRESS) {
     }
 
     /**
@@ -355,14 +354,15 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
         ownerOnly
     {
         address converterUpgrader = addressOf(CONVERTER_UPGRADER);
+        uint256 reserveId = reserveIds[_token];
 
         // if the token is not a reserve token, allow withdrawal
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
-        require(reserveIds[_token] == 0 || !isActive() || owner == converterUpgrader, "ERR_ACCESS_DENIED");
+        require(reserveId == 0 || !isActive() || owner == converterUpgrader, "ERR_ACCESS_DENIED");
         super.withdrawTokens(_token, _to, _amount);
 
         // if the token is a reserve token, sync the reserve balance
-        if (reserveIds[_token] != 0)
+        if (reserveId != 0)
             syncReserveBalance(_token);
     }
 
