@@ -50,8 +50,13 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @param  _registry               address of a contract registry contract
       * @param  _maxConversionFee       maximum conversion fee, represented in ppm
     */
-    constructor(IPoolTokensContainer _poolTokensContainer, IContractRegistry _registry, uint32 _maxConversionFee)
-        public LiquidityPoolConverter(_poolTokensContainer, _registry, _maxConversionFee)
+    constructor(
+        IPoolTokensContainer _poolTokensContainer,
+        IContractRegistry _registry,
+        uint32 _maxConversionFee
+    )
+        LiquidityPoolConverter(_poolTokensContainer, _registry, _maxConversionFee)
+        public
     {
     }
 

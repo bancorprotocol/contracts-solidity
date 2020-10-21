@@ -131,9 +131,9 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
         IContractRegistry _registry,
         uint32 _maxConversionFee
     )
-        validAddress(address(_anchor))
         ContractRegistryClient(_registry)
         internal
+        validAddress(address(_anchor))
         validConversionFee(_maxConversionFee)
     {
         anchor = _anchor;
