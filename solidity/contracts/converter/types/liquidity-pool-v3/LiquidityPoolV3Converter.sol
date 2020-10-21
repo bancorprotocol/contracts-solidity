@@ -687,25 +687,29 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             prevAverageRateUpdateTime = time();
         }
 
-        // get expected target amount and fee
-        (uint256 amount, uint256 fee) = targetAmountAndFee(_sourceToken, _targetToken, _amount);
+        uint256 sourceBalance = reserveBalance(_sourceToken);
+        uint256 targetBalance = reserveBalance(_targetToken);
+        uint256 targetAmount = crossReserveTargetAmount(sourceBalance, targetBalance, _amount);
+
+        // get the target amount minus the conversion fee and the conversion fee
+        uint256 fee = calculateFee(targetAmount);
+        uint256 amount = targetAmount - fee;
 
         // ensure that the trade gives something in return
         require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
 
         // ensure that the trade won't deplete the reserve balance
-        assert(amount < reserveBalance(_targetToken));
+        assert(amount < targetBalance);
 
         // ensure that the input amount was already deposited
         if (_sourceToken == ETH_RESERVE_ADDRESS)
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
         else
-            require(msg.value == 0 && _sourceToken.balanceOf(address(this)).sub(reserveBalance(_sourceToken)) >= _amount, "ERR_INVALID_AMOUNT");
+            require(msg.value == 0 && _sourceToken.balanceOf(address(this)).sub(sourceBalance) >= _amount, "ERR_INVALID_AMOUNT");
 
         // sync the reserve balances
         syncReserveBalance(_sourceToken);
-        uint256 reserveId = reserveIds[_targetToken];
-        setReserveBalance(reserveId, getReserveBalance(reserveId).sub(amount));
+        setReserveBalance(reserveIds[_targetToken], targetBalance - amount);
 
         // transfer funds to the beneficiary in the to reserve token
         if (_targetToken == ETH_RESERVE_ADDRESS)
