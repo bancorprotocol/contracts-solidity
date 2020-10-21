@@ -317,7 +317,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         external
         view
         override
-        returns (address, IDSToken,    IERC20Token, uint256, uint256, uint256, uint256, uint256) 
+        returns (address, IDSToken, IERC20Token, uint256, uint256, uint256, uint256, uint256) 
     {
         ProtectedLiquidity storage liquidity = protectedLiquidities[_id];
         return (
