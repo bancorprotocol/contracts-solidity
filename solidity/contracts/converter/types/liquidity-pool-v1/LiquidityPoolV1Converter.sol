@@ -136,7 +136,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     /**
       * @dev converts a specific amount of source tokens to target tokens
-      * can only be called by the bancor network contract
       *
       * @param _sourceToken source ERC20 token
       * @param _targetToken target ERC20 token
