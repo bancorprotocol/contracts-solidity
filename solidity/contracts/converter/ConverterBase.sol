@@ -495,7 +495,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
       * @return conversion fee
     */
     function calculateFee(uint256 _targetAmount) internal view returns (uint256) {
-        return _targetAmount.mul(conversionFee).div(PPM_RESOLUTION);
+        return _targetAmount.mul(conversionFee) / PPM_RESOLUTION;
     }
 
     /**
