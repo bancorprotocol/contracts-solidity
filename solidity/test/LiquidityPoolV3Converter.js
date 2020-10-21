@@ -778,7 +778,7 @@ contract('LiquidityPoolV3Converter', accounts => {
         }
     });
 
-    describe.only('add/remove liquidity', () => {
+    describe('add/remove liquidity', () => {
         const initLiquidityPool = async (hasETH) => {
             const poolToken = await DSToken.new('name', 'symbol', 0);
             const converter = await LiquidityPoolV3Converter.new(poolToken.address, contractRegistry.address, 0);
