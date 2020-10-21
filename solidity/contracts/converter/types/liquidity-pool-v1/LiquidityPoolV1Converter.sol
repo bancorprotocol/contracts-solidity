@@ -691,9 +691,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
 
     function getMinShare(IBancorFormula formula, uint256 _totalSupply, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts) private view returns (uint256) {
         uint256 minIndex = 0;
-        for (uint256 i = 1; i < _reserveTokens.length; i++) {
-            if (_reserveAmounts[i].mul(reserves[_reserveTokens[minIndex]].balance) < _reserveAmounts[minIndex].mul(reserves[_reserveTokens[i]].balance))
-                minIndex = i;
+        for (uint256 index = 1; index < _reserveTokens.length; index++) {
+            if (_reserveAmounts[index].mul(reserves[_reserveTokens[minIndex]].balance) < _reserveAmounts[minIndex].mul(reserves[_reserveTokens[index]].balance))
+                minIndex = index;
         }
         return formula.fundSupplyAmount(_totalSupply, reserves[_reserveTokens[minIndex]].balance, reserveRatio, _reserveAmounts[minIndex]);
     }
