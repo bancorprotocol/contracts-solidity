@@ -592,8 +592,9 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
       * @dev deprecated, backward compatibility
     */
     function connectors(IERC20Token _address) public view override returns (uint256, uint32, bool, bool, bool) {
-        if (reserveIds[_address] != 0)
-            return(reserveBalance(_address), PPM_RESOLUTION / 2, false, false, true);
+        uint256 reserveId = reserveIds[_address];
+        if (reserveId != 0)
+            return(getReserveBalance(reserveId), PPM_RESOLUTION / 2, false, false, true);
         return (0, 0, false, false, false);
     }
 
