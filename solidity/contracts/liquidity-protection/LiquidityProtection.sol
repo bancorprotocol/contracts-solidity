@@ -1134,7 +1134,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _poolAmount      pool token amount when the liquidity was added
       * @param _addRate         rate of 1 reserve token in the other reserve token units when the liquidity was added
       * @param _removeRate      rate of 1 reserve token in the other reserve token units when the liquidity is removed
-      * @return adjusted amount of pool tokens
+      * @return adjusted amount of reserve tokens
     */
     function adjustedAmount(
         IDSToken _poolToken,
