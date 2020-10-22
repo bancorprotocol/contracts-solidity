@@ -10,8 +10,8 @@ const DSToken = artifacts.require('DSToken');
 const ConverterRegistry = artifacts.require('ConverterRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConverterFactory = artifacts.require('ConverterFactory');
-const LiquidityPoolV1ConverterFactory = artifacts.require('TestLiquidityPoolV1ConverterFactory');
-const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
+const LiquidityPoolV3ConverterFactory = artifacts.require('TestLiquidityPoolV3ConverterFactory');
+const LiquidityPoolV3Converter = artifacts.require('TestLiquidityPoolV3Converter');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
 
@@ -52,9 +52,9 @@ contract('LiquidityProtectionTokenRate', accounts => {
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         liquidityProtection = await LiquidityProtection.new(accounts[0], accounts[0], accounts[0], contractRegistry.address);
 
-        const liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
+        const liquidityPoolV3ConverterFactory = await LiquidityPoolV3ConverterFactory.new();
         const converterFactory = await ConverterFactory.new();
-        await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
+        await converterFactory.registerTypedConverterFactory(liquidityPoolV3ConverterFactory.address);
 
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
@@ -70,9 +70,9 @@ contract('LiquidityProtectionTokenRate', accounts => {
         await reserveToken1.issue(accounts[0], new BN('1'.padEnd(30, '0')));
         await reserveToken2.issue(accounts[0], new BN('1'.padEnd(30, '0')));
 
-        await converterRegistry.newConverter(1, 'PT', 'PT', 18, FULL_PPM, [reserveToken1.address, reserveToken2.address], [HALF_PPM, HALF_PPM]);
+        await converterRegistry.newConverter(3, 'PT', 'PT', 18, FULL_PPM, [reserveToken1.address, reserveToken2.address], [HALF_PPM, HALF_PPM]);
         poolToken = await DSToken.at(await converterRegistry.getAnchor(0));
-        converter = await LiquidityPoolV1Converter.at(await poolToken.owner());
+        converter = await LiquidityPoolV3Converter.at(await poolToken.owner());
         await converter.acceptOwnership();
         time = await converter.currentTime();
     });

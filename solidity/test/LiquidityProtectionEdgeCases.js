@@ -10,8 +10,8 @@ const DSToken = artifacts.require('DSToken');
 const ConverterRegistry = artifacts.require('ConverterRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConverterFactory = artifacts.require('ConverterFactory');
-const LiquidityPoolV1ConverterFactory = artifacts.require('TestLiquidityPoolV1ConverterFactory');
-const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
+const LiquidityPoolV3ConverterFactory = artifacts.require('TestLiquidityPoolV3ConverterFactory');
+const LiquidityPoolV3Converter = artifacts.require('TestLiquidityPoolV3Converter');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
 
@@ -106,9 +106,9 @@ contract('LiquidityProtectionEdgeCases', accounts => {
 
         const converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
 
-        const liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
+        const liquidityPoolV3ConverterFactory = await LiquidityPoolV3ConverterFactory.new();
         const converterFactory = await ConverterFactory.new();
-        await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
+        await converterFactory.registerTypedConverterFactory(liquidityPoolV3ConverterFactory.address);
 
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
@@ -128,12 +128,12 @@ contract('LiquidityProtectionEdgeCases', accounts => {
         await baseToken.issue(owner, new BN('1'.padEnd(30, '0')));
         await networkToken.issue(owner, new BN('1'.padEnd(30, '0')));
 
-        await converterRegistry.newConverter(1, 'PT', 'PT', 18, FULL_PPM, [baseToken.address, networkToken.address], [HALF_PPM, HALF_PPM]);
+        await converterRegistry.newConverter(3, 'PT', 'PT', 18, FULL_PPM, [baseToken.address, networkToken.address], [HALF_PPM, HALF_PPM]);
         const anchorCount = await converterRegistry.getAnchorCount();
         const poolTokenAddress = await converterRegistry.getAnchor(anchorCount.sub(new BN(1)));
         poolToken = await DSToken.at(poolTokenAddress);
         const converterAddress = await poolToken.owner();
-        converter = await LiquidityPoolV1Converter.at(converterAddress);
+        converter = await LiquidityPoolV3Converter.at(converterAddress);
         await converter.acceptOwnership();
 
         liquidityProtectionStore = await LiquidityProtectionStore.new(contractRegistry.address);
@@ -163,10 +163,10 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                     test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, '0.0');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.00000000000000002');
+                    test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.00000002');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.000000000000001');
+                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.00000003');
                 }
                 else {
                     throw new Error('invalid configuration');
@@ -217,7 +217,7 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                     test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.0');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.000000002');
+                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.02');
                 }
                 else {
                     throw new Error('invalid configuration');
