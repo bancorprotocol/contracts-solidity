@@ -4,6 +4,8 @@ const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ConverterFactory = artifacts.require('TestConverterFactory');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
+const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
+const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
 const TypedConverterAnchorFactory = artifacts.require('TestTypedConverterAnchorFactory');
 const ConverterBase = artifacts.require('ConverterBase');
 const DSToken = artifacts.require('DSToken');
@@ -18,6 +20,9 @@ contract('ConverterFactory', accounts => {
 
     const MAX_CONVERSION_FEE = new BN(10000);
 
+    for (const Factory of [LiquidTokenConverterFactory, LiquidityPoolV1ConverterFactory, LiquidityPoolV2ConverterFactory]) {
+        describe(Factory.contractName, () => {
+
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await ContractRegistry.new();
@@ -26,7 +31,7 @@ contract('ConverterFactory', accounts => {
     beforeEach(async () => {
         converterFactory = await ConverterFactory.new();
         anchorFactory = await TypedConverterAnchorFactory.new('TypedAnchor');
-        factory = await LiquidTokenConverterFactory.new();
+        factory = await Factory.new();
     });
 
     it('should allow the owner to register a typed converter anchor factory', async () => {
@@ -56,7 +61,7 @@ contract('ConverterFactory', accounts => {
     it('should allow the owner to reregister a typed converter factory', async () => {
         await converterFactory.registerTypedConverterFactory(factory.address);
 
-        const factory2 = await LiquidTokenConverterFactory.new();
+        const factory2 = await Factory.new();
         expect(await factory.converterType.call()).to.be.bignumber.equal(await factory2.converterType.call());
 
         await converterFactory.registerTypedConverterFactory(factory2.address);
@@ -115,4 +120,6 @@ contract('ConverterFactory', accounts => {
 
         expectEvent(res, 'NewConverter', { _type: converterType, _converter: converter.address, _owner: owner });
     });
+    });
+    }
 });
