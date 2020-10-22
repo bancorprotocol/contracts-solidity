@@ -19,7 +19,6 @@ const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
 
 const PPM_RESOLUTION = new BN(1000000);
-const WEIGHTS = [PPM_RESOLUTION.div(2), PPM_RESOLUTION.div(2)];
 
 const RESERVE1_AMOUNT = new BN(1000000);
 const RESERVE2_AMOUNT = new BN(2500000);
@@ -41,7 +40,7 @@ contract('LiquidityProtection', accounts => {
             baseTokenAddress = baseToken.address;
         }
 
-        await converterRegistry.newConverter(3, 'PT', 'PT', 18, PPM_RESOLUTION, [baseTokenAddress, networkToken.address], WEIGHTS);
+        await converterRegistry.newConverter(3, 'PT', 'PT', 18, PPM_RESOLUTION, [baseTokenAddress, networkToken.address], [500000, 500000]);
         const anchorCount = await converterRegistry.getAnchorCount.call();
         const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
         poolToken = await DSToken.at(poolTokenAddress);
