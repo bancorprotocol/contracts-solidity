@@ -507,14 +507,15 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     /**
       * @dev gets the stored reserve balances
       *
-      * @param _reserve0Id  first reserve id
-      * @param _reserve1Id  second reserve id
+      * @param _sourceId    source reserve id
+      * @param _targetId    target reserve id
     */
-    function getReserveBalances(uint256 _reserve0Id, uint256 _reserve1Id) internal view returns (uint256, uint256) {
+    function getReserveBalances(uint256 _sourceId, uint256 _targetId) internal view returns (uint256, uint256) {
+        require(_sourceId + _targetId == 3, "ERR_INVALID_RESERVES");
         uint256 reserveBalancesLocal = reserveBalances;
         return (
-            (reserveBalancesLocal >> ((_reserve0Id - 1) * 128)) & MAX_UINT128,
-            (reserveBalancesLocal >> ((_reserve1Id - 1) * 128)) & MAX_UINT128
+            (reserveBalancesLocal >> ((_sourceId - 1) * 128)) & MAX_UINT128,
+            (reserveBalancesLocal >> ((_targetId - 1) * 128)) & MAX_UINT128
         );        
     }
 
@@ -667,7 +668,6 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     {
         uint256 sourceId = reserveIds[_sourceToken];
         uint256 targetId = reserveIds[_targetToken];
-        require(sourceId + targetId == 3, "ERR_INVALID_RESERVES");
 
         (uint256 sourceBalance, uint256 targetBalance) = getReserveBalances(sourceId, targetId);
 
@@ -705,7 +705,6 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
 
         uint256 sourceId = reserveIds[_sourceToken];
         uint256 targetId = reserveIds[_targetToken];
-        require(sourceId + targetId == 3, "ERR_INVALID_RESERVES");
 
         (uint256 sourceBalance, uint256 targetBalance) = getReserveBalances(sourceId, targetId);
         uint256 targetAmount = crossReserveTargetAmount(sourceBalance, targetBalance, _amount);
