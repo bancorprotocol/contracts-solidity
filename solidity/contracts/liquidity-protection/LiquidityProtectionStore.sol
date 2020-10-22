@@ -348,7 +348,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
     */
     function addProtectedLiquidity(
         address _provider,
-        IDSToken _poolToken,   
+        IDSToken _poolToken,
         IERC20Token _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount,
@@ -668,7 +668,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
       * @param _reserveToken    reserve token address
       * @return total protected amount
     */
-    function totalProtectedReserveAmount(IDSToken _poolToken,    IERC20Token _reserveToken) external view returns (uint256) {
+    function totalProtectedReserveAmount(IDSToken _poolToken, IERC20Token _reserveToken) external view returns (uint256) {
         return totalProtectedReserveAmounts[_poolToken][_reserveToken];
     }
 }
