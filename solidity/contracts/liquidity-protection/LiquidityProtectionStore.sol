@@ -77,7 +77,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
     */
     event ProtectionAdded(
         address indexed _provider,
-        IDSToken indexed    _poolToken,
+        IDSToken indexed _poolToken,
         IERC20Token indexed _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount
@@ -111,7 +111,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
     */
     event ProtectionRemoved(
         address indexed _provider,
-        IDSToken indexed    _poolToken,
+        IDSToken indexed _poolToken,
         IERC20Token indexed _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount
@@ -425,7 +425,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         address provider = liquidity.provider;
         require(provider != address(0), "ERR_INVALID_ID");
 
-        IDSToken poolToken    = liquidity.poolToken;
+        IDSToken poolToken = liquidity.poolToken;
         IERC20Token reserveToken = liquidity.reserveToken;
         uint256 prevPoolAmount = liquidity.poolAmount;
         uint256 prevReserveAmount = liquidity.reserveAmount;
@@ -454,7 +454,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         require(provider != address(0), "ERR_INVALID_ID");
 
         uint256 index = liquidity.index;
-        IDSToken poolToken    = liquidity.poolToken;
+        IDSToken poolToken = liquidity.poolToken;
         IERC20Token reserveToken = liquidity.reserveToken;
         uint256 poolAmount = liquidity.poolAmount;
         uint256 reserveAmount = liquidity.reserveAmount;
