@@ -508,29 +508,9 @@ contract('LiquidityProtection', accounts => {
         await expectRevert(liquidityProtection.isPoolSupported(accounts[2]), 'ERR_INVALID_ANCHOR');
     });
 
-    it('verifies that isPoolSupported returns false for a pool with 3 reserves', async () => {
-        const reserveToken = await DSToken.new('RSV1', 'RSV1', 18);
-        await converterRegistry.newConverter(
-            3, 'PT', 'PT', 18, 5000, [ETH_RESERVE_ADDRESS, networkToken.address, reserveToken.address], [100000, 100000, 100000]);
-        const anchorCount = await converterRegistry.getAnchorCount.call();
-        const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
-
-        const isSupported = await liquidityProtection.isPoolSupported.call(poolTokenAddress);
-        expect(isSupported).to.be.false;
-    });
-
     it('verifies that isPoolSupported returns false for a pool that does not have the network token as reserve', async () => {
         const reserveToken = await DSToken.new('RSV1', 'RSV1', 18);
         await converterRegistry.newConverter(3, 'PT', 'PT', 18, 5000, [ETH_RESERVE_ADDRESS, reserveToken.address], [500000, 500000]);
-        const anchorCount = await converterRegistry.getAnchorCount.call();
-        const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
-
-        const isSupported = await liquidityProtection.isPoolSupported.call(poolTokenAddress);
-        expect(isSupported).to.be.false;
-    });
-
-    it('verifies that isPoolSupported returns false for a pool with reserve weights that are not 50%/50%', async () => {
-        await converterRegistry.newConverter(3, 'PT', 'PT', 18, 5000, [ETH_RESERVE_ADDRESS, networkToken.address], [450000, 550000]);
         const anchorCount = await converterRegistry.getAnchorCount.call();
         const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
 
