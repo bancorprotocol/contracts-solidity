@@ -35,7 +35,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     */
     uint16 public constant version = 44;
 
-    uint256 reserveBalances;
+    uint256 public reserveBalances;
     IERC20Token[] public reserveTokens;
     mapping (IERC20Token => uint256) public reserveIds;
 
