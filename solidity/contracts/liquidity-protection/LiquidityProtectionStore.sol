@@ -657,7 +657,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
       * @param _poolToken   pool token address
       * @return total protected amount
     */
-    function totalProtectedPoolAmount(IDSToken _poolToken)    external view returns (uint256) {
+    function totalProtectedPoolAmount(IDSToken _poolToken) external view returns (uint256) {
         return totalProtectedPoolAmounts[_poolToken];
     }
 
