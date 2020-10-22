@@ -10,7 +10,6 @@ import "../../../utility/SafeMath.sol";
 import "../../../utility/TokenHandler.sol";
 import "../../../utility/TokenHolder.sol";
 import "../../../utility/Math.sol";
-import "../../../utility/Types.sol";
 
 /**
   * @dev Liquidity Pool v3 Converter
