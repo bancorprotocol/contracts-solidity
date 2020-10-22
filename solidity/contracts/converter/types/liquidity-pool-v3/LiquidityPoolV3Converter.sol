@@ -26,7 +26,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
 
     IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint256 private constant MAX_UINT128 = 0xffffffffffffffffffffffffffffffff;
-    uint256 private constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
+    uint256 private constant MAX_UINT112 = 0xffffffffffffffffffffffffffff;
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
     uint32 private constant PPM_RESOLUTION = 1000000;
 
@@ -45,8 +45,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
                                                         // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public override conversionFee = 0;           // current conversion fee, represented in ppm, 0...maxConversionFee
 
-    uint256 public prevAverageRate;           // average rate after the previous conversion (1 reserve token 0 in reserve token 1 units)
-    uint256 public prevAverageRateUpdateTime; // last time when the previous rate was updated (in seconds)
+    uint256 public prevAverageRate; // average rate after the previous conversion (1 reserve token 0 in reserve token 1 units)
 
     /**
       * @dev triggered when the converter is activated
@@ -697,10 +696,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
         returns (uint256)
     {
         // update the recent average rate
-        if (prevAverageRateUpdateTime < time()) {
-            prevAverageRate = recentAverageRate();
-            prevAverageRateUpdateTime = time();
-        }
+        updateRecentAverageRateIfNeeded();
 
         uint256 sourceId = reserveIds[_sourceToken];
         uint256 targetId = reserveIds[_targetToken];
@@ -757,57 +753,66 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     */
     function recentAverageRate(IERC20Token _token) external view returns (uint256, uint256) {
         // get the recent average rate of reserve 0
-        uint256 rate = recentAverageRate();
+        uint256 rate = getRecentAverageRate(prevAverageRate);
         if (_token == reserveTokens[0]) {
-            return (rate >> 128, rate & MAX_UINT128);
+            return ((rate >> 112) & MAX_UINT112, rate & MAX_UINT112);
         }
 
-        return (rate & MAX_UINT128, rate >> 128);
+        return (rate & MAX_UINT112, (rate >> 112) & MAX_UINT112);
+    }
+
+    /**
+      * @dev updates the recent average rate if needed
+    */
+    function updateRecentAverageRateIfNeeded() internal {
+        uint256 oldAverageRate = prevAverageRate;
+        uint256 newAverageRate = getRecentAverageRate(oldAverageRate);
+        if (oldAverageRate != newAverageRate) {
+            prevAverageRate = newAverageRate;
+        }
     }
 
     /**
       * @dev returns the recent average rate of 1 reserve token 0 in reserve token 1 units
       *
+      * @param _prevAverageRate a local copy of the previous average rate state-variable
       * @return recent average rate between the reserves
     */
-    function recentAverageRate() internal view returns (uint256) {
+    function getRecentAverageRate(uint256 _prevAverageRate) internal view returns (uint256) {
+        // get the previous average rate and its update-time
+        uint256 prevAverageRateT = _prevAverageRate >> 224;
+        uint256 prevAverageRateN = (_prevAverageRate >> 112) & MAX_UINT112;
+        uint256 prevAverageRateD = _prevAverageRate & MAX_UINT112;
+
         // get the elapsed time since the previous average rate was calculated
-        uint256 timeElapsed = time() - prevAverageRateUpdateTime;
-        uint256 prevAverageRateLocal = prevAverageRate;
-        uint256 reserveBalancesLocal = reserveBalances;
+        uint256 currentTime = time();
+        uint256 timeElapsed = currentTime - prevAverageRateT;
 
         // if the previous average rate was calculated in the current block, the average rate remains unchanged
         if (timeElapsed == 0) {
-            return prevAverageRateLocal;
+            return _prevAverageRate;
         }
-
-        // if the previous average rate was calculated a while ago, the average rate is equal to the current rate
-        if (timeElapsed >= AVERAGE_RATE_PERIOD) {
-            return reserveBalancesLocal;
-        }
-
-        // if the previous average rate was never calculated, the average rate is equal to the current rate
-        if (prevAverageRateLocal == 0) {
-            return reserveBalancesLocal;
-        }
-
-        // get the previous rate between the reserves
-        uint256 prevAverageN = prevAverageRateLocal >> 128;
-        uint256 prevAverageD = prevAverageRateLocal & MAX_UINT128;
 
         // get the current rate between the reserves
-        uint256 currentRateN = reserveBalancesLocal >> 128;
-        uint256 currentRateD = reserveBalancesLocal & MAX_UINT128;
+        uint256 currentRate = reserveBalances;
+        uint256 currentRateN = currentRate >> 128;
+        uint256 currentRateD = currentRate & MAX_UINT128;
 
-        uint256 x = prevAverageD.mul(currentRateN);
-        uint256 y = prevAverageN.mul(currentRateD);
+        // if the previous average rate was calculated a while ago or never, the average rate is equal to the current rate
+        if (timeElapsed >= AVERAGE_RATE_PERIOD || prevAverageRateT == 0) {
+            (currentRateN, currentRateD) = Math.reducedRatio(currentRateN, currentRateD, MAX_UINT112);
+            return (currentTime << 224) | (currentRateN << 112) | currentRateD;
+        }
+
+        uint256 x = prevAverageRateD.mul(currentRateN);
+        uint256 y = prevAverageRateN.mul(currentRateD);
 
         // since we know that timeElapsed < AVERAGE_RATE_PERIOD, we can avoid using SafeMath:
         uint256 newRateN = y.mul(AVERAGE_RATE_PERIOD - timeElapsed).add(x.mul(timeElapsed));
-        uint256 newRateD = prevAverageD.mul(currentRateD).mul(AVERAGE_RATE_PERIOD);
+        uint256 newRateD = prevAverageRateD.mul(currentRateD).mul(AVERAGE_RATE_PERIOD);
 
-        (newRateN, newRateD) = Math.reducedRatio(newRateN, newRateD, MAX_RATE_FACTOR_LOWER_BOUND);
-        return (newRateN << 128) | newRateD; // relying on the fact that MAX_RATE_FACTOR_LOWER_BOUND <= MAX_UINT128
+        (newRateN, newRateD) = Math.reducedRatio(newRateN, newRateD, MAX_UINT112);
+        return (currentTime << 224) | (newRateN << 112) | newRateD;
     }
 
     /**
