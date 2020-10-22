@@ -505,6 +505,20 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     }
 
     /**
+      * @dev gets the stored reserve balances
+      *
+      * @param _reserve0Id  first reserve id
+      * @param _reserve1Id  second reserve id
+    */
+    function getReserveBalances(uint256 _reserve0Id, uint256 _reserve1Id) internal view returns (uint256, uint256) {
+        uint256 reserveBalancesLocal = reserveBalances;
+        return (
+            (reserveBalancesLocal >> ((_reserve0Id - 1) * 128)) & MAX_UINT128,
+            (reserveBalancesLocal >> ((_reserve1Id - 1) * 128)) & MAX_UINT128
+        );        
+    }
+
+    /**
       * @dev sets the stored reserve balance for a given reserve id
       *
       * @param _reserveId       reserve id
@@ -651,12 +665,15 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
         active
         returns (uint256, uint256)
     {
-        // validate input
-        require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET");
+        uint256 sourceId = reserveIds[_sourceToken];
+        uint256 targetId = reserveIds[_targetToken];
+        require(sourceId + targetId == 3, "ERR_INVALID_RESERVES");
+
+        (uint256 sourceBalance, uint256 targetBalance) = getReserveBalances(sourceId, targetId);
 
         uint256 amount = crossReserveTargetAmount(
-            reserveBalance(_sourceToken),
-            reserveBalance(_targetToken),
+            sourceBalance,
+            targetBalance,
             _amount
         );
 
@@ -686,8 +703,11 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             prevAverageRateUpdateTime = time();
         }
 
-        uint256 sourceBalance = reserveBalance(_sourceToken);
-        uint256 targetBalance = reserveBalance(_targetToken);
+        uint256 sourceId = reserveIds[_sourceToken];
+        uint256 targetId = reserveIds[_targetToken];
+        require(sourceId + targetId == 3, "ERR_INVALID_RESERVES");
+
+        (uint256 sourceBalance, uint256 targetBalance) = getReserveBalances(sourceId, targetId);
         uint256 targetAmount = crossReserveTargetAmount(sourceBalance, targetBalance, _amount);
 
         // get the target amount minus the conversion fee and the conversion fee
@@ -701,14 +721,19 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
         assert(amount < targetBalance);
 
         // ensure that the input amount was already deposited
-        if (_sourceToken == ETH_RESERVE_ADDRESS)
+        uint256 actualSourceBalance;
+        if (_sourceToken == ETH_RESERVE_ADDRESS) {
+            actualSourceBalance = address(this).balance;
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
-        else
-            require(msg.value == 0 && _sourceToken.balanceOf(address(this)).sub(sourceBalance) >= _amount, "ERR_INVALID_AMOUNT");
+        }
+        else {
+            actualSourceBalance = _sourceToken.balanceOf(address(this));
+            require(msg.value == 0 && actualSourceBalance.sub(sourceBalance) >= _amount, "ERR_INVALID_AMOUNT");
+        }
 
         // sync the reserve balances
-        syncReserveBalance(_sourceToken);
-        setReserveBalance(reserveIds[_targetToken], targetBalance - amount);
+        setReserveBalance(sourceId, actualSourceBalance);
+        setReserveBalance(targetId, targetBalance - amount);
 
         // transfer funds to the beneficiary in the to reserve token
         if (_targetToken == ETH_RESERVE_ADDRESS)
@@ -720,7 +745,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
 
         // dispatch rate updates
-        dispatchTokenRateUpdateEvents(_sourceToken, _targetToken);
+        dispatchTokenRateUpdateEvents(_sourceToken, _targetToken, actualSourceBalance, targetBalance - amount);
 
         return amount;
     }
@@ -1239,28 +1264,28 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     /**
       * @dev dispatches token rate update events for the reserve tokens and the pool token
       *
-      * @param _sourceToken address of the source reserve token
-      * @param _targetToken address of the target reserve token
+      * @param _sourceToken     address of the source reserve token
+      * @param _targetToken     address of the target reserve token
+      * @param _sourceBalance   balance of the source reserve token
+      * @param _targetBalance   balance of the target reserve token
     */
-    function dispatchTokenRateUpdateEvents(IERC20Token _sourceToken, IERC20Token _targetToken) private {
+    function dispatchTokenRateUpdateEvents(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _sourceBalance, uint256 _targetBalance) private {
         uint256 poolTokenSupply = IDSToken(address(anchor)).totalSupply();
-        uint256 sourceReserveBalance = reserveBalance(_sourceToken);
-        uint256 targetReserveBalance = reserveBalance(_targetToken);
         uint32 sourceReserveWeight = PPM_RESOLUTION / 2;
         uint32 targetReserveWeight = PPM_RESOLUTION / 2;
 
         // dispatch token rate update event for the reserve tokens
-        uint256 rateN = targetReserveBalance.mul(sourceReserveWeight);
-        uint256 rateD = sourceReserveBalance.mul(targetReserveWeight);
+        uint256 rateN = _targetBalance.mul(sourceReserveWeight);
+        uint256 rateD = _sourceBalance.mul(targetReserveWeight);
         emit TokenRateUpdate(_sourceToken, _targetToken, rateN, rateD);
 
         // dispatch token rate update events for the pool token
-        dispatchPoolTokenRateUpdateEvent(poolTokenSupply, _sourceToken, sourceReserveBalance, sourceReserveWeight);
-        dispatchPoolTokenRateUpdateEvent(poolTokenSupply, _targetToken, targetReserveBalance, targetReserveWeight);
+        dispatchPoolTokenRateUpdateEvent(poolTokenSupply, _sourceToken, _sourceBalance, sourceReserveWeight);
+        dispatchPoolTokenRateUpdateEvent(poolTokenSupply, _targetToken, _targetBalance, targetReserveWeight);
 
         // dispatch price data update events (deprecated events)
-        emit PriceDataUpdate(_sourceToken, poolTokenSupply, sourceReserveBalance, sourceReserveWeight);
-        emit PriceDataUpdate(_targetToken, poolTokenSupply, targetReserveBalance, targetReserveWeight);
+        emit PriceDataUpdate(_sourceToken, poolTokenSupply, _sourceBalance, sourceReserveWeight);
+        emit PriceDataUpdate(_targetToken, poolTokenSupply, _targetBalance, targetReserveWeight);
     }
 
     /**
