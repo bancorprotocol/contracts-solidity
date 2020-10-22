@@ -16,6 +16,7 @@ const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
 const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
+const LiquidityPoolV3ConverterFactory = artifacts.require('LiquidityPoolV3ConverterFactory');
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
@@ -35,6 +36,7 @@ contract('ConverterRegistry', (accounts) => {
         await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterFactory((await LiquidityPoolV3ConverterFactory.new()).address);
 
         await converterFactory.registerTypedConverterAnchorFactory((await LiquidityPoolV2ConverterAnchorFactory.new()).address);
         await converterFactory.registerTypedConverterCustomFactory((await LiquidityPoolV2ConverterCustomFactory.new()).address);
@@ -614,6 +616,9 @@ contract('ConverterRegistry', (accounts) => {
             await testCreate(2, 'Pool4', 'ST7', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]);
             await testCreate(2, 'Pool5', 'ST8', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]);
             await testCreate(2, 'Pool6', 'ST9', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]);
+            await testCreate(3, 'Pool7', 'STA', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [500000, 500000]);
+            await testCreate(3, 'Pool8', 'STB', 18, 0, [erc20Token1.address, erc20Token2.address], [500000, 500000]);
+            await testCreate(3, 'Pool9', 'STC', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [500000, 500000]);
         };
 
         it('should create converters', async () => {
@@ -664,6 +669,12 @@ contract('ConverterRegistry', (accounts) => {
                     .to.eql(anchors[7]);
                 expect(await converterRegistry.getLiquidityPoolByConfig.call(2, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]))
                     .to.eql(anchors[8]);
+                expect(await converterRegistry.getLiquidityPoolByConfig.call(3, [ETH_RESERVE_ADDRESS, erc20Token1.address], [500000, 500000]))
+                    .to.eql(anchors[9]);
+                expect(await converterRegistry.getLiquidityPoolByConfig.call(3, [erc20Token1.address, erc20Token2.address], [500000, 500000]))
+                    .to.eql(anchors[10]);
+                expect(await converterRegistry.getLiquidityPoolByConfig.call(3, [erc20Token2.address, ETH_RESERVE_ADDRESS], [500000, 500000]))
+                    .to.eql(anchors[11]);
             });
 
             it('should return a list of converters for a list of anchors', async () => {
@@ -703,6 +714,12 @@ contract('ConverterRegistry', (accounts) => {
                     expect(await converterRegistry.getLiquidityPoolByConfig.call(2, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]))
                         .to.eql(ZERO_ADDRESS);
                     expect(await converterRegistry.getLiquidityPoolByConfig.call(2, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]))
+                        .to.eql(ZERO_ADDRESS);
+                    expect(await converterRegistry.getLiquidityPoolByConfig.call(3, [ETH_RESERVE_ADDRESS, erc20Token1.address], [500000, 500000]))
+                        .to.eql(ZERO_ADDRESS);
+                    expect(await converterRegistry.getLiquidityPoolByConfig.call(3, [erc20Token1.address, erc20Token2.address], [500000, 500000]))
+                        .to.eql(ZERO_ADDRESS);
+                    expect(await converterRegistry.getLiquidityPoolByConfig.call(3, [erc20Token2.address, ETH_RESERVE_ADDRESS], [500000, 500000]))
                         .to.eql(ZERO_ADDRESS);
                 });
             });
