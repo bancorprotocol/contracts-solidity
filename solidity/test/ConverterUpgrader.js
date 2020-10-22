@@ -303,12 +303,22 @@ contract('ConverterUpgrader', accounts => {
         etherToken = await EtherToken.new('Ether Token', 'ETH');
     });
 
+    const initFuncs = [
+        initWithoutReserves,
+        initWith1Reserve,
+        initWith2Reserves,
+        initLPV2,
+        initWithEtherReserve,
+        initWithETHReserve
+    ];
+
     const f = (a, b) => [].concat(...a.map(d => b.map(e => [].concat(d, e))));
     const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
-    const product = cartesian([initWithoutReserves, initWith1Reserve, initWith2Reserves, initLPV2, initWithEtherReserve, initWithETHReserve],
-        [...VERSIONS, null], [false, true]);
-    const combinations = product.filter(([init, version, active]) => !(init === initWithoutReserves && active) &&
-        !(init === initWithETHReserve && version));
+    const product = cartesian(initFuncs, [...VERSIONS, null], [false, true]);
+    const combinations = product.filter(([init, version, active]) =>
+        !(init === initWithoutReserves && active) &&
+        !(init === initWithETHReserve && version)
+    );
 
     for (const [init, version, activate] of combinations) {
         describe(`${init.name}(version = ${version || 'latest'}, activate = ${activate}):`, () => {
@@ -316,19 +326,20 @@ contract('ConverterUpgrader', accounts => {
                 let reserveTokens;
                 let upgradedReserveTokens;
 
-                if (init === initWithEtherReserve) {
+                switch (init) {
+                case initWithEtherReserve:
                     reserveTokens = [etherToken.address, reserveToken2.address];
-
                     // An EtherToken reserve is always upgraded to ETH_RESERVE_ADDRESS.
                     upgradedReserveTokens = [ETH_RESERVE_ADDRESS, reserveToken2.address];
-                }
-                else if (init === initWithETHReserve) {
+                    break;
+                case initWithETHReserve:
                     reserveTokens = [reserveToken1.address, ETH_RESERVE_ADDRESS];
                     upgradedReserveTokens = reserveTokens;
-                }
-                else {
+                    break;
+                default:
                     reserveTokens = [reserveToken1.address, reserveToken2.address];
                     upgradedReserveTokens = reserveTokens;
+                    break;
                 }
 
                 // Initial reserve balances are synced when the converter is being activated or during transfer to
