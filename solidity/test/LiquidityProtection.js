@@ -1474,7 +1474,7 @@ contract('LiquidityProtection', accounts => {
                                 });
                             }
                             else if (withFee) {
-                                it('verifies that removeLiquidityReturn returns that is larger than the initial amount', async () => {
+                                it('verifies that removeLiquidityReturn returns an amount that is larger than the initial amount', async () => {
                                     let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                                     const protectionId = protectionIds[protectionIds.length - 1];
 
