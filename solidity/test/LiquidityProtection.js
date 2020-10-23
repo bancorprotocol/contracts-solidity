@@ -532,7 +532,7 @@ contract('LiquidityProtection', accounts => {
         expect(protection1.reserveToken).to.eql(baseTokenAddress);
         expect(protection1.poolAmount).to.be.bignumber.equal(balance.div(new BN(2)));
         expect(protection1.reserveAmount).to.be.bignumber.equal(RESERVE1_AMOUNT);
-        expectAlmostEqual(protection1.reserveRateN.mul(RESERVE1_AMOUNT), protection1.reserveRateD.mul(RESERVE2_AMOUNT), '0.01334');
+        expectAlmostEqual(protection1.reserveRateN.mul(RESERVE1_AMOUNT), protection1.reserveRateD.mul(RESERVE2_AMOUNT), '0.0');
         expect(protection1.timestamp).to.be.bignumber.equal(new BN(now));
 
         let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[1]);
@@ -541,7 +541,7 @@ contract('LiquidityProtection', accounts => {
         expect(protection2.reserveToken).to.eql(networkToken.address);
         expect(protection2.poolAmount).to.be.bignumber.equal(balance.sub(balance.div(new BN(2))));
         expect(protection2.reserveAmount).to.be.bignumber.equal(RESERVE2_AMOUNT);
-        expectAlmostEqual(protection2.reserveRateN.mul(RESERVE2_AMOUNT), protection2.reserveRateD.mul(RESERVE1_AMOUNT), '0.01334');
+        expectAlmostEqual(protection2.reserveRateN.mul(RESERVE2_AMOUNT), protection2.reserveRateD.mul(RESERVE1_AMOUNT), '0.0');
         expect(protection2.timestamp).to.be.bignumber.equal(new BN(now));
 
         const newBalance = await poolToken.balanceOf.call(owner);
@@ -717,7 +717,7 @@ contract('LiquidityProtection', accounts => {
                 expect(protection.reserveToken).to.eql(baseTokenAddress);
                 expect(protection.poolAmount).to.be.bignumber.equal(expectedPoolAmount);
                 expect(protection.reserveAmount).to.be.bignumber.equal(reserveAmount);
-                expectAlmostEqual(protection.reserveRateN.mul(reserve1Balance), protection.reserveRateD.mul(reserve2Balance), '0.01334');
+                expectAlmostEqual(protection.reserveRateN.mul(reserve1Balance), protection.reserveRateD.mul(reserve2Balance), '0.0');
                 expect(protection.timestamp).to.be.bignumber.equal(new BN(now));
 
                 // verify balances
@@ -836,7 +836,7 @@ contract('LiquidityProtection', accounts => {
             expect(protection.reserveToken).to.eql(networkToken.address);
             expect(protection.poolAmount).to.be.bignumber.equal(expectedPoolAmount);
             expect(protection.reserveAmount).to.be.bignumber.equal(reserveAmount);
-            expectAlmostEqual(protection.reserveRateN.mul(reserve1Balance), protection.reserveRateD.mul(reserve2Balance), '0.01334');
+            expectAlmostEqual(protection.reserveRateN.mul(reserve1Balance), protection.reserveRateD.mul(reserve2Balance), '0.0');
             expect(protection.timestamp).to.be.bignumber.equal(new BN(now));
 
             // verify balances
