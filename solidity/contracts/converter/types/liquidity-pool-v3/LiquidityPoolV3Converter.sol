@@ -840,17 +840,20 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             require(reserveIds[ETH_RESERVE_ADDRESS] != 0, "ERR_NO_ETH_RESERVE");
         }
 
+        // save a local copy of the pool token
+        IDSToken poolToken = IDSToken(address(anchor));
+
         // get the total supply
-        uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
+        uint256 totalSupply = poolToken.totalSupply();
 
         // transfer from the user an equally-worth amount of each one of the reserve tokens
-        uint256 amount = addLiquidityToPool(_reserveTokens, _reserveAmounts, totalSupply);
+        uint256 amount = addLiquidityToPool(poolToken, _reserveTokens, _reserveAmounts, totalSupply);
 
         // verify that the equivalent amount of tokens is equal to or larger than the user's expectation
         require(amount >= _minReturn, "ERR_RETURN_TOO_LOW");
 
         // issue the tokens to the user
-        IDSToken(address(anchor)).issue(msg.sender, amount);
+        poolToken.issue(msg.sender, amount);
 
         // return the amount of pool tokens issued
         return amount;
@@ -875,14 +878,17 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
         // verify the user input
         verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
 
+        // save a local copy of the pool token
+        IDSToken poolToken = IDSToken(address(anchor));
+
         // get the total supply BEFORE destroying the user tokens
-        uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
+        uint256 totalSupply = poolToken.totalSupply();
 
         // destroy the user tokens
-        IDSToken(address(anchor)).destroy(msg.sender, _amount);
+        poolToken.destroy(msg.sender, _amount);
 
         // transfer to the user an equivalent amount of each one of the reserve tokens
-        return removeLiquidityFromPool(_reserveTokens, _reserveMinReturnAmounts, totalSupply, _amount);
+        return removeLiquidityFromPool(poolToken, _reserveTokens, _reserveMinReturnAmounts, totalSupply, _amount);
     }
 
     /**
@@ -907,7 +913,8 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             setReserveBalance(ethReserveId, getReserveBalance(ethReserveId).sub(msg.value));
         }
 
-        uint256 supply = IDSToken(address(anchor)).totalSupply();
+        IDSToken poolToken = IDSToken(address(anchor));
+        uint256 supply = poolToken.totalSupply();
 
         // iterate through the reserve tokens and transfer a percentage equal to the weight between
         // _amount and the total supply in each reserve from the caller to the converter
@@ -941,11 +948,11 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            emit TokenRateUpdate(IDSToken(address(anchor)), reserveToken, newReserveBalance, newPoolTokenSupply);
+            emit TokenRateUpdate(poolToken, reserveToken, newReserveBalance, newPoolTokenSupply);
         }
 
         // issue new funds to the caller in the pool token
-        IDSToken(address(anchor)).issue(msg.sender, _amount);
+        poolToken.issue(msg.sender, _amount);
 
         // return the amount of pool tokens issued
         return _amount;
@@ -968,14 +975,15 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     {
         require(_amount > 0, "ERR_ZERO_AMOUNT");
 
-        uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        IDSToken(address(anchor)).destroy(msg.sender, _amount);
+        IDSToken poolToken = IDSToken(address(anchor));
+        uint256 totalSupply = poolToken.totalSupply();
+        poolToken.destroy(msg.sender, _amount);
 
         uint256[] memory reserveMinReturnAmounts = new uint256[](reserveTokens.length);
         for (uint256 i = 0; i < reserveMinReturnAmounts.length; i++)
             reserveMinReturnAmounts[i] = 1;
 
-        return removeLiquidityFromPool(reserveTokens, reserveMinReturnAmounts, totalSupply, _amount);
+        return removeLiquidityFromPool(poolToken, reserveTokens, reserveMinReturnAmounts, totalSupply, _amount);
     }
 
     /**
@@ -1082,30 +1090,32 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     /**
       * @dev adds liquidity (reserve) to the pool
       *
+      * @param _poolToken       address of the pool token
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
       * @param _totalSupply     token total supply
       *
       * @return amount of pool tokens issued
     */
-    function addLiquidityToPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
+    function addLiquidityToPool(IDSToken _poolToken, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
         private
         returns (uint256)
     {
         if (_totalSupply == 0)
-            return addLiquidityToEmptyPool(_reserveTokens, _reserveAmounts);
-        return addLiquidityToNonEmptyPool(_reserveTokens, _reserveAmounts, _totalSupply);
+            return addLiquidityToEmptyPool(_poolToken, _reserveTokens, _reserveAmounts);
+        return addLiquidityToNonEmptyPool(_poolToken, _reserveTokens, _reserveAmounts, _totalSupply);
     }
 
     /**
       * @dev adds liquidity (reserve) to the pool when it's empty
       *
+      * @param _poolToken       address of the pool token
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
       *
       * @return amount of pool tokens issued
     */
-    function addLiquidityToEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)
+    function addLiquidityToEmptyPool(IDSToken _poolToken, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts)
         private
         returns (uint256)
     {
@@ -1126,7 +1136,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, reserveAmount, amount);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            emit TokenRateUpdate(IDSToken(address(anchor)), reserveToken, reserveAmount, amount);
+            emit TokenRateUpdate(_poolToken, reserveToken, reserveAmount, amount);
         }
 
         // return the amount of pool tokens issued
@@ -1136,13 +1146,14 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     /**
       * @dev adds liquidity (reserve) to the pool when it's not empty
       *
+      * @param _poolToken       address of the pool token
       * @param _reserveTokens   address of each reserve token
       * @param _reserveAmounts  amount of each reserve token
       * @param _totalSupply     token total supply
       *
       * @return amount of pool tokens issued
     */
-    function addLiquidityToNonEmptyPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
+    function addLiquidityToNonEmptyPool(IDSToken _poolToken, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts, uint256 _totalSupply)
         private
         returns (uint256)
     {
@@ -1175,7 +1186,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            emit TokenRateUpdate(IDSToken(address(anchor)), reserveToken, newReserveBalance, newPoolTokenSupply);
+            emit TokenRateUpdate(_poolToken, reserveToken, newReserveBalance, newPoolTokenSupply);
         }
 
         // return the amount of pool tokens issued
@@ -1205,6 +1216,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     /**
       * @dev removes liquidity (reserve) from the pool
       *
+      * @param _poolToken               address of the pool token
       * @param _reserveTokens           address of each reserve token
       * @param _reserveMinReturnAmounts minimum return-amount of each reserve token
       * @param _totalSupply             token total supply
@@ -1212,7 +1224,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
       *
       * @return the amount of each reserve token granted for the given amount of pool tokens
     */
-    function removeLiquidityFromPool(IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _totalSupply, uint256 _amount)
+    function removeLiquidityFromPool(IDSToken _poolToken, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveMinReturnAmounts, uint256 _totalSupply, uint256 _amount)
         private
         returns (uint256[] memory)
     {
@@ -1239,7 +1251,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            emit TokenRateUpdate(IDSToken(address(anchor)), reserveToken, newReserveBalance, newPoolTokenSupply);
+            emit TokenRateUpdate(_poolToken, reserveToken, newReserveBalance, newPoolTokenSupply);
         }
 
         // return the amount of each reserve token granted for the given amount of pool tokens
