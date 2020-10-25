@@ -77,7 +77,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
     */
     event ProtectionAdded(
         address indexed _provider,
-        IDSToken indexed    _poolToken,
+        IDSToken indexed _poolToken,
         IERC20Token indexed _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount
@@ -111,7 +111,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
     */
     event ProtectionRemoved(
         address indexed _provider,
-        IDSToken indexed    _poolToken,
+        IDSToken indexed _poolToken,
         IERC20Token indexed _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount
@@ -317,7 +317,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         external
         view
         override
-        returns (address, IDSToken,    IERC20Token, uint256, uint256, uint256, uint256, uint256) 
+        returns (address, IDSToken, IERC20Token, uint256, uint256, uint256, uint256, uint256) 
     {
         ProtectedLiquidity storage liquidity = protectedLiquidities[_id];
         return (
@@ -348,7 +348,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
     */
     function addProtectedLiquidity(
         address _provider,
-        IDSToken _poolToken,   
+        IDSToken _poolToken,
         IERC20Token _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount,
@@ -425,7 +425,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         address provider = liquidity.provider;
         require(provider != address(0), "ERR_INVALID_ID");
 
-        IDSToken poolToken    = liquidity.poolToken;
+        IDSToken poolToken = liquidity.poolToken;
         IERC20Token reserveToken = liquidity.reserveToken;
         uint256 prevPoolAmount = liquidity.poolAmount;
         uint256 prevReserveAmount = liquidity.reserveAmount;
@@ -454,7 +454,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         require(provider != address(0), "ERR_INVALID_ID");
 
         uint256 index = liquidity.index;
-        IDSToken poolToken    = liquidity.poolToken;
+        IDSToken poolToken = liquidity.poolToken;
         IERC20Token reserveToken = liquidity.reserveToken;
         uint256 poolAmount = liquidity.poolAmount;
         uint256 reserveAmount = liquidity.reserveAmount;
@@ -657,7 +657,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
       * @param _poolToken   pool token address
       * @return total protected amount
     */
-    function totalProtectedPoolAmount(IDSToken _poolToken)    external view returns (uint256) {
+    function totalProtectedPoolAmount(IDSToken _poolToken) external view returns (uint256) {
         return totalProtectedPoolAmounts[_poolToken];
     }
 
@@ -668,7 +668,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
       * @param _reserveToken    reserve token address
       * @return total protected amount
     */
-    function totalProtectedReserveAmount(IDSToken _poolToken,    IERC20Token _reserveToken) external view returns (uint256) {
+    function totalProtectedReserveAmount(IDSToken _poolToken, IERC20Token _reserveToken) external view returns (uint256) {
         return totalProtectedReserveAmounts[_poolToken][_reserveToken];
     }
 }
