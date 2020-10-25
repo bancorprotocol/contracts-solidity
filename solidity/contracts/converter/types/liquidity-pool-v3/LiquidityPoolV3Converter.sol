@@ -558,65 +558,6 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     }
 
     /**
-      * @dev deprecated since version 28, backward compatibility - use only for earlier versions
-    */
-    function token() public view override returns (IConverterAnchor) {
-        return anchor;
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function transferTokenOwnership(address _newOwner) public override ownerOnly {
-        transferAnchorOwnership(_newOwner);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function acceptTokenOwnership() public override ownerOnly {
-        acceptAnchorOwnership();
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function connectors(IERC20Token _address) public view override returns (uint256, uint32, bool, bool, bool) {
-        uint256 reserveId = reserveIds[_address];
-        if (reserveId != 0)
-            return(getReserveBalance(reserveId), PPM_RESOLUTION / 2, false, false, true);
-        return (0, 0, false, false, false);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function connectorTokens(uint256 _index) public view override returns (IERC20Token) {
-        return reserveTokens[_index];
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function connectorTokenCount() public view override returns (uint16) {
-        return reserveTokenCount();
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function getConnectorBalance(IERC20Token _connectorToken) public view override returns (uint256) {
-        return reserveBalance(_connectorToken);
-    }
-
-    /**
-      * @dev deprecated, backward compatibility
-    */
-    function getReturn(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256) {
-        return targetAmountAndFee(_sourceToken, _targetToken, _amount);
-    }
-
-    /**
       * @dev returns the converter type
       *
       * @return see the converter types in the the main contract doc
@@ -1330,5 +1271,64 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             return _reserveBalance;
 
         return _amount.mul(_reserveBalance) / _supply;
+    }
+
+    /**
+      * @dev deprecated since version 28, backward compatibility - use only for earlier versions
+    */
+    function token() public view override returns (IConverterAnchor) {
+        return anchor;
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function transferTokenOwnership(address _newOwner) public override ownerOnly {
+        transferAnchorOwnership(_newOwner);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function acceptTokenOwnership() public override ownerOnly {
+        acceptAnchorOwnership();
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function connectors(IERC20Token _address) public view override returns (uint256, uint32, bool, bool, bool) {
+        uint256 reserveId = reserveIds[_address];
+        if (reserveId != 0)
+            return(getReserveBalance(reserveId), PPM_RESOLUTION / 2, false, false, true);
+        return (0, 0, false, false, false);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function connectorTokens(uint256 _index) public view override returns (IERC20Token) {
+        return reserveTokens[_index];
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function connectorTokenCount() public view override returns (uint16) {
+        return reserveTokenCount();
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function getConnectorBalance(IERC20Token _connectorToken) public view override returns (uint256) {
+        return reserveBalance(_connectorToken);
+    }
+
+    /**
+      * @dev deprecated, backward compatibility
+    */
+    function getReturn(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _amount) public view returns (uint256, uint256) {
+        return targetAmountAndFee(_sourceToken, _targetToken, _amount);
     }
 }
