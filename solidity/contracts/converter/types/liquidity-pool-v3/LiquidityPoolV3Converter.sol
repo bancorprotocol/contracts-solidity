@@ -40,7 +40,6 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     mapping (IERC20Token => uint256) public reserveIds;
 
     IConverterAnchor public override anchor;            // converter anchor contract
-    IWhitelist public override conversionWhitelist;     // whitelist contract with list of addresses that are allowed to use the converter
     uint32 public override maxConversionFee = 0;        // maximum conversion fee for the lifetime of the contract,
                                                         // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public override conversionFee = 0;           // current conversion fee, represented in ppm, 0...maxConversionFee
@@ -268,22 +267,6 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     }
 
     /**
-      * @dev allows the owner to update & enable the conversion whitelist contract address
-      * when set, only addresses that are whitelisted are actually allowed to use the converter
-      * note that the whitelist check is actually done by the BancorNetwork contract
-      *
-      * @param _whitelist    address of a whitelist contract
-    */
-    function setConversionWhitelist(IWhitelist _whitelist)
-        public
-        override
-        ownerOnly
-        notThis(address(_whitelist))
-    {
-        conversionWhitelist = _whitelist;
-    }
-
-    /**
       * @dev returns true if the converter is active, false otherwise
       *
       * @return true if the converter is active, false otherwise
@@ -473,11 +456,6 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     {
         // validate input
         require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET");
-
-        // if a whitelist is set, verify that both and trader and the beneficiary are whitelisted
-        require(address(conversionWhitelist) == address(0) ||
-                (conversionWhitelist.isWhitelisted(_trader) && conversionWhitelist.isWhitelisted(_beneficiary)),
-                "ERR_NOT_WHITELISTED");
 
         return doConvert(_sourceToken, _targetToken, _amount, _trader, _beneficiary);
     }
