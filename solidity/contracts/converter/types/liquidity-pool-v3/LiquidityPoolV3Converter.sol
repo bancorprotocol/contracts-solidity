@@ -508,6 +508,19 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     }
 
     /**
+      * @dev sets the stored reserve balances
+      *
+      * @param _sourceId        source reserve id
+      * @param _targetId        target reserve id
+      * @param _sourceBalance   source reserve balance
+      * @param _targetBalance   target reserve balance
+    */
+    function setReserveBalances(uint256 _sourceId, uint256 _targetId, uint256 _sourceBalance, uint256 _targetBalance) internal {
+        require(_sourceBalance <= MAX_UINT128 && _targetBalance <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW"); 
+        reserveBalances = (_sourceBalance << ((_sourceId - 1) * 128)) | (_targetBalance << ((_targetId - 1) * 128));
+    }
+
+    /**
       * @dev syncs the stored reserve balance for a given reserve with the real reserve balance
       *
       * @param _reserveToken    address of the reserve token
@@ -526,9 +539,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
         IERC20Token _reserveToken1 = reserveTokens[1];
         uint256 balance0 = _reserveToken0 == ETH_RESERVE_ADDRESS ? address(this).balance : _reserveToken0.balanceOf(address(this));
         uint256 balance1 = _reserveToken1 == ETH_RESERVE_ADDRESS ? address(this).balance : _reserveToken1.balanceOf(address(this));
-        require(balance0 <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW"); 
-        require(balance1 <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW"); 
-        reserveBalances = balance0 | (balance1 << 128);
+        setReserveBalances(1, 2, balance0, balance1);
     }
 
     /**
@@ -640,8 +651,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
         }
 
         // sync the reserve balances
-        setReserveBalance(sourceId, actualSourceBalance);
-        setReserveBalance(targetId, targetBalance - amount);
+        setReserveBalances(sourceId, targetId, actualSourceBalance, targetBalance - amount);
 
         // transfer funds to the beneficiary in the to reserve token
         if (_targetToken == ETH_RESERVE_ADDRESS)
