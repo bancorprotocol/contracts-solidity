@@ -9,6 +9,7 @@ import "../utility/ReentrancyGuard.sol";
 import "../utility/SafeMath.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/TokenHolder.sol";
+import "../utility/interfaces/IWhitelist.sol";
 
 /**
   * @dev ConverterBase
@@ -57,7 +58,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     uint16 public constant version = 43;
 
     IConverterAnchor public override anchor;            // converter anchor contract
-    IWhitelist public override conversionWhitelist;     // whitelist contract with list of addresses that are allowed to use the converter
+    IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public reserveTokens;                 // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
     mapping (IERC20Token => Reserve) public reserves;   // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
     uint32 public reserveRatio = 0;                     // ratio between the reserves and the market cap, equal to the total reserve weights
@@ -256,7 +257,6 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     */
     function setConversionWhitelist(IWhitelist _whitelist)
         public
-        override
         ownerOnly
         notThis(address(_whitelist))
     {
