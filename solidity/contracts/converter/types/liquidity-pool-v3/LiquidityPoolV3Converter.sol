@@ -668,12 +668,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
         uint256 targetId = reserveIds[_targetToken];
 
         (uint256 sourceBalance, uint256 targetBalance) = getReserveBalances(sourceId, targetId);
-
-        uint256 amount = crossReserveTargetAmount(
-            sourceBalance,
-            targetBalance,
-            _amount
-        );
+        uint256 amount = crossReserveTargetAmount(sourceBalance, targetBalance, _amount);
 
         // return the amount minus the conversion fee and the conversion fee
         uint256 fee = calculateFee(amount);
