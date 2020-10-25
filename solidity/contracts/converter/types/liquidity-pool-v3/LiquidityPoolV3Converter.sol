@@ -941,7 +941,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            dispatchPoolTokenRateUpdateEvent(newPoolTokenSupply, reserveToken, newReserveBalance, PPM_RESOLUTION / 2);
+            emit TokenRateUpdate(IDSToken(address(anchor)), reserveToken, newReserveBalance, newPoolTokenSupply);
         }
 
         // issue new funds to the caller in the pool token
@@ -1126,7 +1126,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, reserveAmount, amount);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            dispatchPoolTokenRateUpdateEvent(amount, reserveToken, reserveAmount, PPM_RESOLUTION / 2);
+            emit TokenRateUpdate(IDSToken(address(anchor)), reserveToken, reserveAmount, amount);
         }
 
         // return the amount of pool tokens issued
@@ -1175,7 +1175,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            dispatchPoolTokenRateUpdateEvent(newPoolTokenSupply, reserveToken, newReserveBalance, PPM_RESOLUTION / 2);
+            emit TokenRateUpdate(IDSToken(address(anchor)), reserveToken, newReserveBalance, newPoolTokenSupply);
         }
 
         // return the amount of pool tokens issued
@@ -1239,7 +1239,7 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            dispatchPoolTokenRateUpdateEvent(newPoolTokenSupply, reserveToken, newReserveBalance, PPM_RESOLUTION / 2);
+            emit TokenRateUpdate(IDSToken(address(anchor)), reserveToken, newReserveBalance, newPoolTokenSupply);
         }
 
         // return the amount of each reserve token granted for the given amount of pool tokens
@@ -1268,34 +1268,19 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
       * @param _targetBalance   balance of the target reserve token
     */
     function dispatchTokenRateUpdateEvents(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _sourceBalance, uint256 _targetBalance) private {
-        uint256 poolTokenSupply = IDSToken(address(anchor)).totalSupply();
-        uint32 sourceReserveWeight = PPM_RESOLUTION / 2;
-        uint32 targetReserveWeight = PPM_RESOLUTION / 2;
+        IDSToken poolToken = IDSToken(address(anchor));
+        uint256 poolTokenSupply = poolToken.totalSupply();
 
         // dispatch token rate update event for the reserve tokens
-        uint256 rateN = _targetBalance.mul(sourceReserveWeight);
-        uint256 rateD = _sourceBalance.mul(targetReserveWeight);
-        emit TokenRateUpdate(_sourceToken, _targetToken, rateN, rateD);
+        emit TokenRateUpdate(_sourceToken, _targetToken, _targetBalance, _sourceBalance);
 
         // dispatch token rate update events for the pool token
-        dispatchPoolTokenRateUpdateEvent(poolTokenSupply, _sourceToken, _sourceBalance, sourceReserveWeight);
-        dispatchPoolTokenRateUpdateEvent(poolTokenSupply, _targetToken, _targetBalance, targetReserveWeight);
+        emit TokenRateUpdate(poolToken, _sourceToken, _sourceBalance, poolTokenSupply);
+        emit TokenRateUpdate(poolToken, _targetToken, _targetBalance, poolTokenSupply);
 
         // dispatch price data update events (deprecated events)
-        emit PriceDataUpdate(_sourceToken, poolTokenSupply, _sourceBalance, sourceReserveWeight);
-        emit PriceDataUpdate(_targetToken, poolTokenSupply, _targetBalance, targetReserveWeight);
-    }
-
-    /**
-      * @dev dispatches token rate update event for the pool token
-      *
-      * @param _poolTokenSupply total pool token supply
-      * @param _reserveToken    address of the reserve token
-      * @param _reserveBalance  reserve balance
-      * @param _reserveWeight   reserve weight
-    */
-    function dispatchPoolTokenRateUpdateEvent(uint256 _poolTokenSupply, IERC20Token _reserveToken, uint256 _reserveBalance, uint32 _reserveWeight) private {
-        emit TokenRateUpdate(IDSToken(address(anchor)), _reserveToken, _reserveBalance.mul(PPM_RESOLUTION), _poolTokenSupply.mul(_reserveWeight));
+        emit PriceDataUpdate(_sourceToken, poolTokenSupply, _sourceBalance, PPM_RESOLUTION / 2);
+        emit PriceDataUpdate(_targetToken, poolTokenSupply, _targetBalance, PPM_RESOLUTION / 2);
     }
 
     /**

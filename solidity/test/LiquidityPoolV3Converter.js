@@ -92,7 +92,6 @@ contract('LiquidityPoolV3Converter', accounts => {
     const sender2 = accounts[9];
 
     const MIN_RETURN = new BN(1);
-    const PPM_RESOLUTION = new BN(1000000);
 
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
@@ -141,22 +140,20 @@ contract('LiquidityPoolV3Converter', accounts => {
 
         const poolTokenSupply = await token.totalSupply.call();
         const reserve1Balance = await converter.reserveBalance.call(reserveToken.address);
-        const reserve1Weight = await converter.reserveWeight.call(reserveToken.address);
         const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-        const reserve2Weight = await converter.reserveWeight.call(reserveToken2.address);
 
         expectEvent(res, 'TokenRateUpdate', {
             _token1: tokenAddress,
             _token2: reserveToken.address,
-            _rateN: reserve1Balance.mul(PPM_RESOLUTION),
-            _rateD: poolTokenSupply.mul(reserve1Weight)
+            _rateN: reserve1Balance,
+            _rateD: poolTokenSupply
         });
 
         expectEvent(res, 'TokenRateUpdate', {
             _token1: tokenAddress,
             _token2: reserveToken2.address,
-            _rateN: reserve2Balance.mul(PPM_RESOLUTION),
-            _rateD: poolTokenSupply.mul(reserve2Weight)
+            _rateN: reserve2Balance,
+            _rateD: poolTokenSupply
         });
     });
 
@@ -174,15 +171,15 @@ contract('LiquidityPoolV3Converter', accounts => {
         expectEvent(res, 'TokenRateUpdate', {
             _token1: tokenAddress,
             _token2: reserveToken.address,
-            _rateN: reserve1Balance.mul(PPM_RESOLUTION),
-            _rateD: poolTokenSupply.mul(reserve1Weight)
+            _rateN: reserve1Balance,
+            _rateD: poolTokenSupply
         });
 
         expectEvent(res, 'TokenRateUpdate', {
             _token1: tokenAddress,
             _token2: reserveToken2.address,
-            _rateN: reserve2Balance.mul(PPM_RESOLUTION),
-            _rateD: poolTokenSupply.mul(reserve2Weight)
+            _rateN: reserve2Balance,
+            _rateD: poolTokenSupply
         });
     });
 
@@ -229,9 +226,7 @@ contract('LiquidityPoolV3Converter', accounts => {
 
                 const poolTokenSupply = await token.totalSupply.call();
                 const reserve1Balance = await converter.reserveBalance(getReserve1Address(isETHReserve));
-                const reserve1Weight = await converter.reserveWeight(getReserve1Address(isETHReserve));
                 const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
-                const reserve2Weight = await converter.reserveWeight(reserveToken2.address);
 
                 const events = await converter.getPastEvents('TokenRateUpdate', {
                     fromBlock: res.receipt.blockNumber,
@@ -242,22 +237,22 @@ contract('LiquidityPoolV3Converter', accounts => {
                 const { args: event1 } = events[0];
                 expect(event1._token1).to.eql(getReserve1Address(isETHReserve));
                 expect(event1._token2).to.eql(reserveToken2.address);
-                expect(event1._rateN).to.be.bignumber.equal(reserve2Balance.mul(reserve1Weight));
-                expect(event1._rateD).to.be.bignumber.equal(reserve1Balance.mul(reserve2Weight));
+                expect(event1._rateN).to.be.bignumber.equal(reserve2Balance);
+                expect(event1._rateD).to.be.bignumber.equal(reserve1Balance);
 
                 // TokenRateUpdate for [source, pool token):
                 const { args: event2 } = events[1];
                 expect(event2._token1).to.eql(tokenAddress);
                 expect(event2._token2).to.eql(getReserve1Address(isETHReserve));
-                expect(event2._rateN).to.be.bignumber.equal(reserve1Balance.mul(PPM_RESOLUTION));
-                expect(event2._rateD).to.be.bignumber.equal(poolTokenSupply.mul(reserve1Weight));
+                expect(event2._rateN).to.be.bignumber.equal(reserve1Balance);
+                expect(event2._rateD).to.be.bignumber.equal(poolTokenSupply);
 
                 // TokenRateUpdate for [pool token, target):
                 const { args: event3 } = events[2];
                 expect(event3._token1).to.eql(tokenAddress);
                 expect(event3._token2).to.eql(reserveToken2.address);
-                expect(event3._rateN).to.be.bignumber.equal(reserve2Balance.mul(PPM_RESOLUTION));
-                expect(event3._rateD).to.be.bignumber.equal(poolTokenSupply.mul(reserve2Weight));
+                expect(event3._rateN).to.be.bignumber.equal(reserve2Balance);
+                expect(event3._rateD).to.be.bignumber.equal(poolTokenSupply);
             });
 
             it('should revert when attempting to convert when the return is smaller than the minimum requested amount', async () => {
