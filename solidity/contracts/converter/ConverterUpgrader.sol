@@ -24,6 +24,7 @@ import "./types/liquidity-pool-v2/interfaces/ILiquidityPoolV2Converter.sol";
   * and then the upgrader 'upgrade' function should be executed directly.
 */
 contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
+    uint32 private constant PPM_RESOLUTION = 1000000;
     IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     IEtherToken public etherToken;
 
@@ -148,6 +149,13 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         // old converter - if it has 1 reserve token, the type is a liquid token, otherwise the type liquidity pool
         else if (reserveTokenCount > 1)
             newType = 1;
+
+        if (newType == 1 && reserveTokenCount == 2) {
+            (, uint32 weight0, , , ) = _oldConverter.connectors(_oldConverter.connectorTokens(0));
+            (, uint32 weight1, , , ) = _oldConverter.connectors(_oldConverter.connectorTokens(1));
+            if (weight0 == PPM_RESOLUTION / 2 && weight1 == PPM_RESOLUTION / 2)
+                newType = 3;
+        }
 
         IConverterFactory converterFactory = IConverterFactory(addressOf(CONVERTER_FACTORY));
         IConverter converter = converterFactory.createConverter(newType, anchor, registry, maxConversionFee);
