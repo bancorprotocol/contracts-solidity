@@ -1268,7 +1268,10 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
       * @param _targetBalance   balance of the target reserve token
     */
     function dispatchTokenRateUpdateEvents(IERC20Token _sourceToken, IERC20Token _targetToken, uint256 _sourceBalance, uint256 _targetBalance) private {
+        // save a local copy of the pool token
         IDSToken poolToken = IDSToken(address(anchor));
+
+        // get the total supply of pool tokens
         uint256 poolTokenSupply = poolToken.totalSupply();
 
         // dispatch token rate update event for the reserve tokens
