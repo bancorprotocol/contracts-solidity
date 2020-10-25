@@ -835,7 +835,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 _removeTimestamp)
         internal view returns (uint256)
     {
-        // get the adjusted amount of pool tokens based on the exposure and rate changes
+        // get the adjusted amount of reserve tokens based on the exposure and rate changes
         uint256 outputAmount = adjustedAmount(_poolToken, _reserveToken, _poolAmount, _addRate, _removeRate);
 
         // calculate the protection level
@@ -1127,14 +1127,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev returns the adjusted amount of pool tokens based on the exposure and rate changes
+      * @dev returns the adjusted amount of reserve tokens based on the exposure and rate changes
       *
       * @param _poolToken       pool token
       * @param _reserveToken    reserve token
       * @param _poolAmount      pool token amount when the liquidity was added
       * @param _addRate         rate of 1 reserve token in the other reserve token units when the liquidity was added
       * @param _removeRate      rate of 1 reserve token in the other reserve token units when the liquidity is removed
-      * @return adjusted amount of pool tokens
+      * @return adjusted amount of reserve tokens
     */
     function adjustedAmount(
         IDSToken _poolToken,
