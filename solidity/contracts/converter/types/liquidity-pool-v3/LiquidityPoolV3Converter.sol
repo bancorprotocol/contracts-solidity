@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+import "../../ConverterVersion.sol";
 import "../../interfaces/IConverter.sol";
 import "../../interfaces/IConverterAnchor.sol";
 import "../../interfaces/IConverterUpgrader.sol";
@@ -20,7 +21,7 @@ import "../../../utility/Math.sol";
   * Even though pools can have many reserves, the standard pool configuration
   * is 2 reserves with 50%/50% weights.
 */
-contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, ContractRegistryClient, ReentrancyGuard {
+contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
     using Math for *;
 
@@ -29,11 +30,6 @@ contract LiquidityPoolV3Converter is IConverter, TokenHandler, TokenHolder, Cont
     uint256 private constant MAX_UINT112 = 0xffffffffffffffffffffffffffff;
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
     uint32 private constant PPM_RESOLUTION = 1000000;
-
-    /**
-      * @dev version number
-    */
-    uint16 public constant version = 44;
 
     uint256 public reserveBalances;
     IERC20Token[] public reserveTokens;
