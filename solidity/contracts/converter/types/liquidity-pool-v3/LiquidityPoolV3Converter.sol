@@ -621,7 +621,7 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
         returns (uint256)
     {
         // update the recent average rate
-        updateRecentAverageRateIfNeeded();
+        updateRecentAverageRate();
 
         uint256 sourceId = reserveIds[_sourceToken];
         uint256 targetId = reserveIds[_targetToken];
@@ -688,7 +688,7 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
     /**
       * @dev updates the recent average rate if needed
     */
-    function updateRecentAverageRateIfNeeded() internal {
+    function updateRecentAverageRate() internal {
         uint256 oldAverageRate = prevAverageRate;
         uint256 newAverageRate = getRecentAverageRate(oldAverageRate);
         if (oldAverageRate != newAverageRate) {
