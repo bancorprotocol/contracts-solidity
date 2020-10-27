@@ -543,7 +543,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // note that the amount is divided by 2 since it's not possible to liquidate one reserve only
         Fraction memory poolRate = poolTokenRate(poolToken, networkToken);
         uint256 newSystemBalance = store.systemBalance(poolToken);
-        newSystemBalance = (newSystemBalance.mul(poolRate.n).div(poolRate.d) / 2).add(networkLiquidityAmount);
+        newSystemBalance = (newSystemBalance.mul(poolRate.n / 2).div(poolRate.d)).add(networkLiquidityAmount);
 
         require(newSystemBalance <= maxSystemNetworkTokenAmount, "ERR_MAX_AMOUNT_REACHED");
         require(newSystemBalance.mul(PPM_RESOLUTION) <= newSystemBalance.add(reserveBalanceNetwork).mul(maxSystemNetworkTokenRatio), "ERR_MAX_RATIO_REACHED");
@@ -660,7 +660,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // calculate the amount of pool tokens required for liquidation
         // note that the amount is doubled since it's not possible to liquidate one reserve only
         Fraction memory poolRate = poolTokenRate(liquidity.poolToken, liquidity.reserveToken);
-        uint256 poolAmount = targetAmount.mul(poolRate.d).mul(2).div(poolRate.n);
+        uint256 poolAmount = targetAmount.mul(poolRate.d).div(poolRate.n / 2);
 
         // limit the amount of pool tokens by the amount the system/caller holds
         uint256 availableBalance = store.systemBalance(liquidity.poolToken).add(liquidity.poolAmount);
@@ -668,7 +668,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // calculate the base token amount received by liquidating the pool tokens
         // note that the amount is divided by 2 since the pool amount represents both reserves
-        uint256 baseAmount = poolAmount.mul(poolRate.n).div(poolRate.d).div(2);
+        uint256 baseAmount = poolAmount.mul(poolRate.n / 2).div(poolRate.d);
         uint256 networkAmount = 0;
 
         // calculate the compensation if still needed
@@ -756,7 +756,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // calculate the amount of pool tokens required for liquidation
         // note that the amount is doubled since it's not possible to liquidate one reserve only
         Fraction memory poolRate = poolTokenRate(liquidity.poolToken, liquidity.reserveToken);
-        uint256 poolAmount = targetAmount.mul(poolRate.d).mul(2).div(poolRate.n);
+        uint256 poolAmount = targetAmount.mul(poolRate.d).div(poolRate.n / 2);
 
         // limit the amount of pool tokens by the amount the system holds
         uint256 systemBalance = store.systemBalance(liquidity.poolToken);
@@ -947,10 +947,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // get the pool token rate
         IDSToken poolToken = IDSToken(address(_poolAnchor));
-        Fraction memory reserveRate = poolTokenRate(poolToken, reserveToken);
+        Fraction memory poolRate = poolTokenRate(poolToken, reserveToken);
 
         // calculate the reserve balance based on the amount provided and the current pool token rate
-        uint256 reserveAmount = _poolAmount.mul(reserveRate.n).div(reserveRate.d);
+        uint256 reserveAmount = _poolAmount.mul(poolRate.n).div(poolRate.d);
 
         // protect the liquidity
         addProtectedLiquidity(msg.sender, poolToken, reserveToken, _poolAmount, reserveAmount);
@@ -1143,17 +1143,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         internal view returns (uint256)
     {
         Fraction memory poolRate = poolTokenRate(_poolToken, _reserveToken);
-
-        uint256 reserve0Amount0 = _reserveAmount;
-        uint256 reserve0Amount1 = _poolAmount.mul(poolRate.n).div(poolRate.d);
-        uint256 reserve1Amount0 = reserve0Amount0.mul(_addRate.n).div(_addRate.d);
-        uint256 reserve1Amount1 = reserve0Amount1.mul(_removeRate.n).div(_removeRate.d);
-
-        uint256 n = reserve0Amount1.mul(reserve1Amount1);
-        uint256 d = reserve0Amount0.mul(reserve1Amount0);
-
-        require(n >= d, "ERR_NEGATIVE_FEE");
-        return Math.floorSqrt(n / d) - 1;
+        uint256 n = Math.floorSqrt(_addRate.d.mul(_removeRate.n)).mul(_poolAmount).mul(poolRate.n);
+        uint256 d = Math.floorSqrt(_addRate.n.mul(_removeRate.d)).mul(poolRate.d);
+        return n.div(d).sub(_reserveAmount);
     }
 
     /**
