@@ -1149,25 +1149,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 reserve1Amount0 = reserve0Amount0.mul(_addRate.n).div(_addRate.d);
         uint256 reserve1Amount1 = reserve0Amount1.mul(_removeRate.n).div(_removeRate.d);
 
-        if (reserve0Amount1 < reserve0Amount0 && reserve1Amount1 <= reserve1Amount0)
-            return 0;
-        if (reserve0Amount1 <= reserve0Amount0 && reserve1Amount1 < reserve1Amount0)
-            return 0;
-        if (reserve0Amount1 == reserve0Amount0 && reserve1Amount1 == reserve1Amount0)
-            return 1;
+        uint256 n = reserve0Amount1.mul(reserve1Amount1);
+        uint256 d = reserve0Amount0.mul(reserve1Amount0);
 
-        uint256 n = reserve0Amount1 * reserve1Amount1;
-        uint256 d = reserve0Amount0 * reserve1Amount0;
-
-        if (n / reserve0Amount1 == reserve1Amount1 && d / reserve0Amount0 == reserve1Amount0) {
-            if (n < d)
-                return 0;
-            if (n == d)
-                return 1;
-            return Math.floorSqrt(n / d);
-        }
-
-        return Math.floorSqrt((reserve0Amount1 / reserve0Amount0).mul(reserve1Amount1 / reserve1Amount0));
+        require(n >= d, "ERR_NEGATIVE_FEE");
+        return Math.floorSqrt(n / d) - 1;
     }
 
     /**
