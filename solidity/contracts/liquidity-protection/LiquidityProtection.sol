@@ -1149,7 +1149,25 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 reserve1Amount0 = reserve0Amount0.mul(_addRate.n).div(_addRate.d);
         uint256 reserve1Amount1 = reserve0Amount1.mul(_removeRate.n).div(_removeRate.d);
 
-        return Math.floorSqrt(reserve0Amount1.mul(reserve1Amount1).div(reserve0Amount0.mul(reserve1Amount0)));
+        if (reserve0Amount1 < reserve0Amount0 && reserve1Amount1 <= reserve1Amount0)
+            return 0;
+        if (reserve0Amount1 <= reserve0Amount0 && reserve1Amount1 < reserve1Amount0)
+            return 0;
+        if (reserve0Amount1 == reserve0Amount0 && reserve1Amount1 == reserve1Amount0)
+            return 1;
+
+        uint256 n = reserve0Amount1 * reserve1Amount1;
+        uint256 d = reserve0Amount0 * reserve1Amount0;
+
+        if (n / reserve0Amount1 == reserve1Amount1 && d / reserve0Amount0 == reserve1Amount0) {
+            if (n < d)
+                return 0;
+            if (n == d)
+                return 1;
+            return Math.floorSqrt(n / d);
+        }
+
+        return Math.floorSqrt((reserve0Amount1 / reserve0Amount0).mul(reserve1Amount1 / reserve1Amount0));
     }
 
     /**
@@ -1199,8 +1217,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _level   impermanent loss (as a ratio between 0 and 1)
     */
     function compensation(uint256 _amount, uint256 _fee, Fraction memory _loss, Fraction memory _level) internal pure returns (uint256) {
+        (uint256 lossN, uint256 lossD) = Math.reducedRatio(_loss.n, _loss.d, MAX_UINT128);
         (uint256 compN, uint256 compD) = Math.reducedRatio(_loss.n.mul(_level.n), _loss.d.mul(_level.d), MAX_UINT128);
-        return _fee.add(_amount).mul(_loss.d - _loss.n).div(_loss.d).add(_amount.mul(compN).div(compD));
+        return _fee.add(_amount).mul(lossD - lossN).div(lossD).add(_amount.mul(compN).div(compD));
     }
 
     /**
