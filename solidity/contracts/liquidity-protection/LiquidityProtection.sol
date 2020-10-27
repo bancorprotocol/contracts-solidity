@@ -1143,9 +1143,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         internal view returns (uint256)
     {
         Fraction memory poolRate = poolTokenRate(_poolToken, _reserveToken);
-        uint256 n = Math.floorSqrt(_addRate.d.mul(_removeRate.n)).mul(_poolAmount).mul(poolRate.n);
+        uint256 n = Math.floorSqrt(_addRate.d.mul(_removeRate.n)).mul(poolRate.n);
         uint256 d = Math.floorSqrt(_addRate.n.mul(_removeRate.d)).mul(poolRate.d);
-        return n.div(d).sub(_reserveAmount);
+        return n.div(d).mul(_poolAmount).sub(_reserveAmount);
     }
 
     /**
