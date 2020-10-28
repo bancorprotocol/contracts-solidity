@@ -28,7 +28,7 @@ const PROTECTION_PARTIAL_PROTECTION = 1;
 const PROTECTION_FULL_PROTECTION = 2;
 const PROTECTION_EXCESSIVE_PROTECTION = 3;
 
-contract('LiquidityProtection', accounts => {
+contract('LiquidityProtectionV1', accounts => {
     const initPool = async (isETH = false, whitelist = true, standard = true) => {
         if (isETH) {
             baseTokenAddress = ETH_RESERVE_ADDRESS;
