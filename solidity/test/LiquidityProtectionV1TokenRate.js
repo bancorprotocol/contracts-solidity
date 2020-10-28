@@ -29,7 +29,7 @@ function percentageToPPM(value) {
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 
-contract('LiquidityProtectionTokenRateV1', accounts => {
+contract('LiquidityProtectionV1TokenRate', accounts => {
     const convert = async (sourceToken, targetToken, amount) => {
         await sourceToken.approve(bancorNetwork.address, amount);
         const path = [sourceToken.address, poolToken.address, targetToken.address];

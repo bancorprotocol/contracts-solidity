@@ -50,7 +50,7 @@ const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 const FEE_PPM = percentageToPPM('1%');
 
-contract('LiquidityProtectionEdgeCasesV1', accounts => {
+contract('LiquidityProtectionV1EdgeCases', accounts => {
     const addProtectedLiquidity = async (token, amount) => {
         await token.approve(liquidityProtection.address, amount);
         await liquidityProtection.addLiquidity(poolToken.address, token.address, amount);
