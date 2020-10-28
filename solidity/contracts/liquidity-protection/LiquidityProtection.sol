@@ -1131,7 +1131,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _reserveAmount   reserve token amount that was added
       * @param _addRate         rate of 1 reserve token in the other reserve token units when the liquidity was added
       * @param _removeRate      rate of 1 reserve token in the other reserve token units when the liquidity is removed
-      * @return fee amount of reserve tokens
+      * @return fee amount of reserve tokens = sqrt(_removeRate / _addRate) * poolRate * _poolAmount - _reserveAmount)
     */
     function feeAmount(
         IDSToken _poolToken,
@@ -1145,7 +1145,24 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         Fraction memory poolRate = poolTokenRate(_poolToken, _reserveToken);
         uint256 n = Math.floorSqrt(_addRate.d.mul(_removeRate.n)).mul(poolRate.n);
         uint256 d = Math.floorSqrt(_addRate.n.mul(_removeRate.d)).mul(poolRate.d);
-        return n.div(d).mul(_poolAmount).sub(_reserveAmount);
+
+        /*
+            return n / d * _poolAmount - _reserveAmount
+        */
+
+        uint256 x = n * _poolAmount;
+        uint256 y = d * _reserveAmount;
+
+        if (x / n == _poolAmount) {
+            if (y / d == _reserveAmount)
+                return x.sub(y).div(d);
+            else
+                return x.div(d).sub(_reserveAmount);
+        }
+        else {
+            (uint256 hi, uint256 lo) = n > _poolAmount ? (n, _poolAmount) : (_poolAmount, n);
+            return hi.div(d).mul(lo).sub(_reserveAmount);
+        }
     }
 
     /**
