@@ -668,7 +668,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // calculate the base token amount received by liquidating the pool tokens
         // note that the amount is divided by 2 since the pool amount represents both reserves
-        uint256 baseAmount = poolAmount.mul(poolRate.n).div(poolRate.d).div(2);
+        uint256 baseAmount = poolAmount.mul(poolRate.n / 2).div(poolRate.d);
         uint256 networkAmount = 0;
 
         // calculate the compensation if still needed
