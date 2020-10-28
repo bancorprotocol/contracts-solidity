@@ -543,7 +543,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // note that the amount is divided by 2 since it's not possible to liquidate one reserve only
         Fraction memory poolRate = poolTokenRate(poolToken, networkToken);
         uint256 newSystemBalance = store.systemBalance(poolToken);
-        newSystemBalance = (newSystemBalance.mul(poolRate.n / 2).div(poolRate.d)).add(networkLiquidityAmount);
+        newSystemBalance = (newSystemBalance.mul(poolRate.n).div(poolRate.d) / 2).add(networkLiquidityAmount);
 
         require(newSystemBalance <= maxSystemNetworkTokenAmount, "ERR_MAX_AMOUNT_REACHED");
         require(newSystemBalance.mul(PPM_RESOLUTION) <= newSystemBalance.add(reserveBalanceNetwork).mul(maxSystemNetworkTokenRatio), "ERR_MAX_RATIO_REACHED");
@@ -660,7 +660,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // calculate the amount of pool tokens required for liquidation
         // note that the amount is doubled since it's not possible to liquidate one reserve only
         Fraction memory poolRate = poolTokenRate(liquidity.poolToken, liquidity.reserveToken);
-        uint256 poolAmount = targetAmount.mul(poolRate.d).div(poolRate.n / 2);
+        uint256 poolAmount = targetAmount.mul(poolRate.d).mul(2).div(poolRate.n);
 
         // limit the amount of pool tokens by the amount the system/caller holds
         uint256 availableBalance = store.systemBalance(liquidity.poolToken).add(liquidity.poolAmount);
@@ -668,7 +668,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // calculate the base token amount received by liquidating the pool tokens
         // note that the amount is divided by 2 since the pool amount represents both reserves
-        uint256 baseAmount = poolAmount.mul(poolRate.n / 2).div(poolRate.d);
+        uint256 baseAmount = poolAmount.mul(poolRate.n).div(poolRate.d).div(2);
         uint256 networkAmount = 0;
 
         // calculate the compensation if still needed
@@ -756,7 +756,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // calculate the amount of pool tokens required for liquidation
         // note that the amount is doubled since it's not possible to liquidate one reserve only
         Fraction memory poolRate = poolTokenRate(liquidity.poolToken, liquidity.reserveToken);
-        uint256 poolAmount = targetAmount.mul(poolRate.d).div(poolRate.n / 2);
+        uint256 poolAmount = targetAmount.mul(poolRate.d).mul(2).div(poolRate.n);
 
         // limit the amount of pool tokens by the amount the system holds
         uint256 systemBalance = store.systemBalance(liquidity.poolToken);
@@ -947,10 +947,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // get the pool token rate
         IDSToken poolToken = IDSToken(address(_poolAnchor));
-        Fraction memory poolRate = poolTokenRate(poolToken, reserveToken);
+        Fraction memory reserveRate = poolTokenRate(poolToken, reserveToken);
 
         // calculate the reserve balance based on the amount provided and the current pool token rate
-        uint256 reserveAmount = _poolAmount.mul(poolRate.n).div(poolRate.d);
+        uint256 reserveAmount = _poolAmount.mul(reserveRate.n).div(reserveRate.d);
 
         // protect the liquidity
         addProtectedLiquidity(msg.sender, poolToken, reserveToken, _poolAmount, reserveAmount);
