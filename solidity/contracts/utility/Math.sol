@@ -26,6 +26,23 @@ library Math {
     }
 
     /**
+      * @dev returns the smallest integer larger than or equal to the square root of a positive integer
+      *
+      * @param _num a positive integer
+      *
+      * @return the smallest integer larger than or equal to the square root of the positive integer
+    */
+    function ceilSqrt(uint256 _num) internal pure returns (uint256) {
+        uint256 x = _num / 2 + 1;
+        uint256 y = (x + _num / x) / 2;
+        while (x > y) {
+            x = y;
+            y = (x + _num / x) / 2;
+        }
+        return x * x == _num ? x : x + 1;
+    }
+
+    /**
       * @dev computes a reduced-scalar ratio
       *
       * @param _n   ratio numerator
