@@ -835,8 +835,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 _removeTimestamp)
         internal view returns (uint256)
     {
-        // get the fee amount of reserve tokens based on the exposure and rate changes
-        uint256 fee = feeAmount(_poolToken, _reserveToken, _poolAmount, _reserveAmount, _addRate, _removeRate);
+        // calculate the entitled amount of reserve tokens before compensation
+        uint256 entitlement = entitledAmount(_poolToken, _reserveToken, _poolAmount, _addRate, _removeRate);
 
         // calculate the impermanent loss
         Fraction memory loss = impLoss(_addRate, _removeRate);
@@ -845,7 +845,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         Fraction memory level = protectionLevel(_addTimestamp, _removeTimestamp);
 
         // calculate the compensation
-        return compensation(_reserveAmount, fee, loss, level);
+        return compensation(_reserveAmount, entitlement, loss, level);
     }
 
     /**
@@ -1123,21 +1123,19 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev returns the fee amount of reserve tokens based on the exposure and rate changes
+      * @dev returns the entitled amount of reserve tokens before compensation
       *
       * @param _poolToken       pool token
       * @param _reserveToken    reserve token
       * @param _poolAmount      pool token amount when the liquidity was added
-      * @param _reserveAmount   reserve token amount that was added
       * @param _addRate         rate of 1 reserve token in the other reserve token units when the liquidity was added
       * @param _removeRate      rate of 1 reserve token in the other reserve token units when the liquidity is removed
-      * @return fee amount of reserve tokens = sqrt(_removeRate / _addRate) * poolRate * _poolAmount - _reserveAmount)
+      * @return entitled amount of reserve tokens = sqrt(_removeRate / _addRate) * poolRate * _poolAmount)
     */
-    function feeAmount(
+    function entitledAmount(
         IDSToken _poolToken,
         IERC20Token _reserveToken,
         uint256 _poolAmount,
-        uint256 _reserveAmount,
         Fraction memory _addRate,
         Fraction memory _removeRate)
         internal view returns (uint256)
@@ -1146,23 +1144,13 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 n = Math. ceilSqrt(_addRate.d.mul(_removeRate.n)).mul(poolRate.n);
         uint256 d = Math.floorSqrt(_addRate.n.mul(_removeRate.d)).mul(poolRate.d);
 
-        /*
-            return n / d * _poolAmount - _reserveAmount
-        */
-
         uint256 x = n * _poolAmount;
-        uint256 y = d * _reserveAmount;
-
         if (x / n == _poolAmount) {
-            if (y / d == _reserveAmount)
-                return x.sub(y).div(d);
-            else
-                return x.div(d).sub(_reserveAmount);
+            return x.div(d);
         }
-        else {
-            (uint256 hi, uint256 lo) = n > _poolAmount ? (n, _poolAmount) : (_poolAmount, n);
-            return hi.div(d).mul(lo).sub(_reserveAmount);
-        }
+
+        (uint256 hi, uint256 lo) = n > _poolAmount ? (n, _poolAmount) : (_poolAmount, n);
+        return hi.div(d).mul(lo);
     }
 
     /**
@@ -1207,14 +1195,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @dev returns the compensation based on the impermanent loss and the protection level
       *
       * @param _amount  protected amount in units of the reserve token
-      * @param _fee     accumulated fee in units of the reserve token
+      * @param _total   amount plus fee in units of the reserve token
       * @param _loss    protection level (as a ratio between 0 and 1)
       * @param _level   impermanent loss (as a ratio between 0 and 1)
     */
-    function compensation(uint256 _amount, uint256 _fee, Fraction memory _loss, Fraction memory _level) internal pure returns (uint256) {
+    function compensation(uint256 _amount, uint256 _total, Fraction memory _loss, Fraction memory _level) internal pure returns (uint256) {
         (uint256 lossN, uint256 lossD) = Math.reducedRatio(_loss.n, _loss.d, MAX_UINT128);
         (uint256 compN, uint256 compD) = Math.reducedRatio(_loss.n.mul(_level.n), _loss.d.mul(_level.d), MAX_UINT128);
-        return _fee.add(_amount).mul(lossD - lossN).div(lossD).add(_amount.mul(compN).div(compD));
+        return _total.mul(lossD - lossN).div(lossD).add(_amount.mul(compN).div(compD));
     }
 
     /**
