@@ -844,8 +844,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // calculate the protection level
         Fraction memory level = protectionLevel(_addTimestamp, _removeTimestamp);
 
-        // calculate the compensation
-        return compensation(_reserveAmount, entitlement, loss, level);
+        // calculate the compensation amount
+        return compensationAmount(_reserveAmount, entitlement, loss, level);
     }
 
     /**
@@ -1192,14 +1192,15 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev returns the compensation based on the impermanent loss and the protection level
+      * @dev returns the compensation amount based on the impermanent loss and the protection level
       *
       * @param _amount  protected amount in units of the reserve token
       * @param _total   amount plus fee in units of the reserve token
       * @param _loss    protection level (as a ratio between 0 and 1)
       * @param _level   impermanent loss (as a ratio between 0 and 1)
+      * @return compensation amount
     */
-    function compensation(uint256 _amount, uint256 _total, Fraction memory _loss, Fraction memory _level) internal pure returns (uint256) {
+    function compensationAmount(uint256 _amount, uint256 _total, Fraction memory _loss, Fraction memory _level) internal pure returns (uint256) {
         (uint256 compN, uint256 compD) = Math.reducedRatio(_loss.n.mul(_level.n), _loss.d.mul(_level.d), MAX_UINT128);
         return _total.mul(_loss.d.sub(_loss.n)).div(_loss.d).add(_amount.mul(compN).div(compD));
     }
