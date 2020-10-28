@@ -1155,10 +1155,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
     /**
       * @dev returns the impermanent loss incurred due to the change in rates between the reserve tokens
-      * the loss is returned in percentages (Fraction)
       *
       * @param _prevRate    previous rate between the reserves
       * @param _newRate     new rate between the reserves
+      * @return impermanent loss (as a ratio)
     */
     function impLoss(Fraction memory _prevRate, Fraction memory _newRate) internal pure returns (Fraction memory) {
         uint256 ratioN = _newRate.n.mul(_prevRate.d);
@@ -1187,10 +1187,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
     /**
       * @dev returns the protection level based on the timestamp and protection delays
-      * the protection level is returned as a Fraction
       *
       * @param _addTimestamp    time at which the liquidity was added
       * @param _removeTimestamp time at which the liquidity is removed
+      * @return protection level (as a ratio)
     */
     function protectionLevel(uint256 _addTimestamp, uint256 _removeTimestamp) internal view returns (Fraction memory) {
         uint256 timeElapsed = _removeTimestamp.sub(_addTimestamp);
