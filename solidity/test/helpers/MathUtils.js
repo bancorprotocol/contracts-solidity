@@ -1,5 +1,6 @@
 module.exports = {
     floorSqrt,
+    ceilSqrt,
     reducedRatio,
     normalizedRatio,
     accurateRatio,
@@ -13,6 +14,10 @@ const Decimal = require('decimal.js');
 
 function floorSqrt(n) {
     return Decimal(n.toString()).sqrt().floor().toFixed();
+}
+
+function ceilSqrt(n) {
+    return Decimal(n.toString()).sqrt().ceil().toFixed();
 }
 
 function reducedRatio(a, b, max) {
