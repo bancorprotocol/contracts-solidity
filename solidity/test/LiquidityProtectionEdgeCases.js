@@ -44,7 +44,7 @@ const CONFIGURATIONS = [
 ];
 
 const NUM_OF_DAYS = [30, 100];
-const DECIMAL_COMBINATIONS = cartesian([12, 25], [12, 25], [15, 22], [15, 22]);
+const DECIMAL_COMBINATIONS = cartesian([12, 24], [12, 24], [15, 21], [15, 21]);
 
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
@@ -157,10 +157,10 @@ contract('LiquidityProtectionEdgeCases', accounts => {
 
                 let test;
                 if (!config.increaseRate && !config.generateFee) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.000000000000001');
+                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.0');
                 }
                 else if (!config.increaseRate && config.generateFee) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, '0.000009');
+                    test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, '0.0');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
                     test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.0');
@@ -208,16 +208,16 @@ contract('LiquidityProtectionEdgeCases', accounts => {
 
                 let test;
                 if (!config.increaseRate && !config.generateFee) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.02');
+                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.0');
                 }
                 else if (!config.increaseRate && config.generateFee) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, '0.02');
+                    test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, '0.002');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
                     test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.0');
                 }
                 else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.02');
+                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.002');
                 }
                 else {
                     throw new Error('invalid configuration');
