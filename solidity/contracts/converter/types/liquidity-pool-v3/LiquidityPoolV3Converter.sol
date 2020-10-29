@@ -292,10 +292,10 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
       * @dev updates the current conversion fee
       * can only be called by the contract owner
       *
-      * @param _conversionFee new conversion fee, represented in ppm
+      * @param _conversionFee deprecated, backward compatibility
     */
     function setConversionFee(uint32 _conversionFee) public override ownerOnly {
-        require(_conversionFee == CONVERSION_FEE, "ERR_INVALID_CONVERSION_FEE");
+        _conversionFee;
     }
 
     /**
