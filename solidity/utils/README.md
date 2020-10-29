@@ -61,7 +61,7 @@ Here is an example of the initial configuration file which should be provided to
     ],
     "converters": [
         {
-            "type": 1,
+            "type": 3,
             "symbol": "ETHBNT",
             "decimals": 18,
             "fee": "0.1%",
@@ -79,7 +79,7 @@ Here is an example of the initial configuration file which should be provided to
             ]
         },
         {
-            "type": 1,
+            "type": 3,
             "symbol": "XXXBNT",
             "decimals": 18,
             "fee": "0.1%",
@@ -104,12 +104,12 @@ Here is an example of the initial configuration file which should be provided to
             "reserves": [
                 {
                     "symbol": "YYY",
-                    "weight": "50%",
+                    "weight": "40%",
                     "balance": "312"
                 },
                 {
                     "symbol": "BNT",
-                    "weight": "50%",
+                    "weight": "60%",
                     "balance": "270"
                 }
             ]
