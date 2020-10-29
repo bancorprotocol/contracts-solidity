@@ -837,6 +837,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     {
         // calculate the entitled amount of reserve tokens before compensation
         uint256 entitlement = entitledAmount(_poolToken, _reserveToken, _poolAmount, _addRate, _removeRate);
+        if (entitlement < _reserveAmount) {
+            entitlement = _reserveAmount;
+        }
 
         // calculate the impermanent loss
         Fraction memory loss = impLoss(_addRate, _removeRate);
