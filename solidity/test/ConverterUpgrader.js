@@ -72,7 +72,7 @@ contract('ConverterUpgrader', accounts => {
             await converter.addReserve(reserveToken2.address, 500000);
         }
 
-        await converter.setConversionFee(CONVERSION_FEE);
+        if (type != 3) await converter.setConversionFee(CONVERSION_FEE);
         await anchor.issue(deployer, TOKEN_TOTAL_SUPPLY);
         await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
         await reserveToken2.transfer(converter.address, RESERVE2_BALANCE);
@@ -148,7 +148,7 @@ contract('ConverterUpgrader', accounts => {
             await converter.addReserve(reserveToken2.address, 500000);
         }
 
-        await converter.setConversionFee(CONVERSION_FEE);
+        if (type != 3) await converter.setConversionFee(CONVERSION_FEE);
         await anchor.issue(deployer, TOKEN_TOTAL_SUPPLY);
         await etherToken.deposit({ value: RESERVE1_BALANCE });
         await etherToken.transfer(converter.address, RESERVE1_BALANCE);
@@ -182,7 +182,7 @@ contract('ConverterUpgrader', accounts => {
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         await converter.addReserve(ETH_RESERVE_ADDRESS, 500000);
-        await converter.setConversionFee(CONVERSION_FEE);
+        if (type != 3) await converter.setConversionFee(CONVERSION_FEE);
         await anchor.issue(deployer, TOKEN_TOTAL_SUPPLY);
         await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
         await converter.send(RESERVE2_BALANCE, { from: deployer });
