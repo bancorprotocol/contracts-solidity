@@ -709,7 +709,7 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
     */
     function recentAverageRate(IERC20Token _token) external view returns (uint256, uint256) {
         // get the recent average rate of reserve 0
-        uint256 rate = getRecentAverageRate(averageRateInfo);
+        uint256 rate = calcRecentAverageRate(averageRateInfo);
         if (_token == __reserveTokens[0]) {
             return ((rate >> 112) & MAX_UINT112, rate & MAX_UINT112);
         }
@@ -722,7 +722,7 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
     */
     function updateRecentAverageRate() internal {
         uint256 averageRateInfo1 = averageRateInfo;
-        uint256 averageRateInfo2 = getRecentAverageRate(averageRateInfo1);
+        uint256 averageRateInfo2 = calcRecentAverageRate(averageRateInfo1);
         if (averageRateInfo1 != averageRateInfo2) {
             averageRateInfo = averageRateInfo2;
         }
@@ -734,7 +734,7 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
       * @param _prevAverageRate a local copy of the previous average rate state-variable
       * @return recent average rate between the reserves
     */
-    function getRecentAverageRate(uint256 _prevAverageRate) internal view returns (uint256) {
+    function calcRecentAverageRate(uint256 _prevAverageRate) internal view returns (uint256) {
         // get the previous average rate and its update-time
         uint256 prevAverageRateT = _prevAverageRate >> 224;
         uint256 prevAverageRateN = (_prevAverageRate >> 112) & MAX_UINT112;
