@@ -64,7 +64,6 @@ Here is an example of the initial configuration file which should be provided to
             "type": 3,
             "symbol": "ETHBNT",
             "decimals": 18,
-            "fee": "0.15%",
             "reserves": [
                 {
                     "symbol": "ETH",
@@ -82,7 +81,6 @@ Here is an example of the initial configuration file which should be provided to
             "type": 3,
             "symbol": "XXXBNT",
             "decimals": 18,
-            "fee": "0.15%",
             "reserves": [
                 {
                     "symbol": "XXX",
