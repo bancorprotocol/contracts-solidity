@@ -21,7 +21,6 @@ interface IConverter is IOwned {
 
     function conversionFee() external view returns (uint32);
     function maxConversionFee() external view returns (uint32);
-    function reserveBalance(IERC20Token _reserveToken) external view returns (uint256);
     receive() external payable;
 
     function transferAnchorOwnership(address _newOwner) external;
