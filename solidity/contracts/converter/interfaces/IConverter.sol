@@ -20,12 +20,10 @@ interface IConverter is IOwned {
                      address payable _beneficiary) external payable returns (uint256);
 
     function conversionFee() external view returns (uint32);
-    function maxConversionFee() external view returns (uint32);
     receive() external payable;
 
     function transferAnchorOwnership(address _newOwner) external;
     function acceptAnchorOwnership() external;
-    function setConversionFee(uint32 _conversionFee) external;
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) external;
     function withdrawETH(address payable _to) external;
     function addReserve(IERC20Token _token, uint32 _ratio) external;

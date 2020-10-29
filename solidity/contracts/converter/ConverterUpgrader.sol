@@ -8,6 +8,11 @@ import "../utility/interfaces/IWhitelist.sol";
 import "../token/interfaces/IEtherToken.sol";
 import "./types/liquidity-pool-v2/interfaces/ILiquidityPoolV2Converter.sol";
 
+interface IConverterExtension is IConverter {
+    function maxConversionFee() external view returns (uint32);
+    function setConversionFee(uint32 _conversionFee) external;
+}
+
 /**
   * @dev Converter Upgrader
   *
@@ -95,7 +100,6 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         acceptConverterOwnership(converter);
         IConverter newConverter = createConverter(converter);
         copyReserves(converter, newConverter);
-        copyConversionFee(converter, newConverter);
         transferReserveBalances(converter, newConverter);
         IConverterAnchor anchor = converter.token();
 
@@ -138,7 +142,6 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     */
     function createConverter(IConverter _oldConverter) private returns (IConverter) {
         IConverterAnchor anchor = _oldConverter.token();
-        uint32 maxConversionFee = _oldConverter.maxConversionFee();
         uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 
         // determine new converter type
@@ -158,7 +161,17 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         }
 
         IConverterFactory converterFactory = IConverterFactory(addressOf(CONVERTER_FACTORY));
-        IConverter converter = converterFactory.createConverter(newType, anchor, registry, maxConversionFee);
+        IConverter converter;
+
+        if (newType == 3) {
+            converter = converterFactory.createConverter(3, anchor, registry, 0);
+        }
+        else {
+            uint32 conversionFee = _oldConverter.conversionFee();
+            uint32 maxConversionFee = IConverterExtension(address(_oldConverter)).maxConversionFee();
+            converter = converterFactory.createConverter(newType, anchor, registry, maxConversionFee);
+            IConverterExtension(address(converter)).setConversionFee(conversionFee);
+        }
 
         converter.acceptOwnership();
         return converter;
@@ -191,17 +204,6 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
                 _newConverter.addReserve(reserveAddress, weight);
             }
         }
-    }
-
-    /**
-      * @dev copies the conversion fee from the old converter to the new one
-      *
-      * @param _oldConverter    old converter contract address
-      * @param _newConverter    new converter contract address
-    */
-    function copyConversionFee(IConverter _oldConverter, IConverter _newConverter) private {
-        uint32 conversionFee = _oldConverter.conversionFee();
-        _newConverter.setConversionFee(conversionFee);
     }
 
     /**

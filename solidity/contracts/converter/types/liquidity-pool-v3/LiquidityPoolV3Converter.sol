@@ -38,9 +38,6 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
 
     IConverterAnchor public override anchor;    // converter anchor contract
 
-    uint32 public override maxConversionFee = CONVERSION_FEE;   // maximum conversion fee, represented in ppm, 0...1000000
-    uint32 public override conversionFee = CONVERSION_FEE;      // current conversion fee, represented in ppm, 0...maxConversionFee
-
     // average rate details:
     // bits 0...111 represent the numerator of the rate between reserve token 0 and reserve token 1
     // bits 111...223 represent the denominator of the rate between reserve token 0 and reserve token 1
@@ -215,6 +212,13 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
     }
 
     /**
+      * @dev returns the conversion fee
+    */
+    function conversionFee() external view override returns (uint32) {
+        return CONVERSION_FEE;
+    }
+
+    /**
       * @dev withdraws ether
       * can only be called by the owner if the converter is inactive or by upgrader contract
       * can only be called after the upgrader contract has accepted the ownership of this contract
@@ -286,16 +290,6 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
         anchor.acceptOwnership();
         syncReserveBalances();
         emit Activation(converterType(), anchor, true);
-    }
-
-    /**
-      * @dev updates the current conversion fee
-      * can only be called by the contract owner
-      *
-      * @param _conversionFee deprecated, backward compatibility
-    */
-    function setConversionFee(uint32 _conversionFee) public override ownerOnly {
-        _conversionFee;
     }
 
     /**

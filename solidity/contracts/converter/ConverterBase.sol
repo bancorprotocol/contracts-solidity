@@ -58,7 +58,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHandler, T
     IERC20Token[] public reserveTokens;                 // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
     mapping (IERC20Token => Reserve) public reserves;   // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
     uint32 public reserveRatio = 0;                     // ratio between the reserves and the market cap, equal to the total reserve weights
-    uint32 public override maxConversionFee = 0;        // maximum conversion fee for the lifetime of the contract,
+    uint32 public maxConversionFee = 0;                 // maximum conversion fee for the lifetime of the contract,
                                                         // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public override conversionFee = 0;           // current conversion fee, represented in ppm, 0...maxConversionFee
 
@@ -304,7 +304,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHandler, T
       *
       * @param _conversionFee new conversion fee, represented in ppm
     */
-    function setConversionFee(uint32 _conversionFee) public override ownerOnly {
+    function setConversionFee(uint32 _conversionFee) public ownerOnly {
         require(_conversionFee <= maxConversionFee, "ERR_INVALID_CONVERSION_FEE");
         emit ConversionFeeUpdate(conversionFee, _conversionFee);
         conversionFee = _conversionFee;
