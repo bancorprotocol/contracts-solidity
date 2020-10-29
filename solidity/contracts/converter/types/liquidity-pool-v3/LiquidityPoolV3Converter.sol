@@ -433,7 +433,6 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
     */
     function reserveBalance(IERC20Token _reserveToken)
         public
-        override
         view
         returns (uint256)
     {
