@@ -44,7 +44,7 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
     // bits 111...223 represent the denominator of the rate between reserve token 0 and reserve token 1
     // bits 224...255 represent the update-time of the rate between reserve token 0 and reserve token 1
     // where `numerator / denominator` gives the worth of one reserve token 0 in units of reserve token 1
-    uint256 public prevAverageRate;
+    uint256 public averageRateInfo;
 
     /**
       * @dev triggered when the converter is activated
@@ -697,7 +697,7 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
     */
     function recentAverageRate(IERC20Token _token) external view returns (uint256, uint256) {
         // get the recent average rate of reserve 0
-        uint256 rate = getRecentAverageRate(prevAverageRate);
+        uint256 rate = getRecentAverageRate(averageRateInfo);
         if (_token == reserveTokens[0]) {
             return ((rate >> 112) & MAX_UINT112, rate & MAX_UINT112);
         }
@@ -709,10 +709,10 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
       * @dev updates the recent average rate if needed
     */
     function updateRecentAverageRate() internal {
-        uint256 oldAverageRate = prevAverageRate;
-        uint256 newAverageRate = getRecentAverageRate(oldAverageRate);
-        if (oldAverageRate != newAverageRate) {
-            prevAverageRate = newAverageRate;
+        uint256 averageRateInfo1 = averageRateInfo;
+        uint256 averageRateInfo2 = getRecentAverageRate(averageRateInfo1);
+        if (averageRateInfo1 != averageRateInfo2) {
+            averageRateInfo = averageRateInfo2;
         }
     }
 
