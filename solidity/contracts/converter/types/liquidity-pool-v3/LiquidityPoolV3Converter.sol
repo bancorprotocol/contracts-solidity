@@ -378,7 +378,7 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
       *
       * @return array of reserve tokens
     */
-    function reserveTokenArray() public view returns (IERC20Token[] memory) {
+    function reserveTokens() public view returns (IERC20Token[] memory) {
         return __reserveTokens;
     }
 
