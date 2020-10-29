@@ -38,9 +38,7 @@ function condOrAlmostEqual(cond, actual, expected, maxError) {
 }
 
 const CONFIGURATIONS = [
-    {increaseRate: false, generateFee: false},
-    {increaseRate: false, generateFee: true},
-    {increaseRate: true, generateFee: false}
+    {increaseRate: false, generateFee: true}
 ];
 
 const NUM_OF_DAYS = [30, 100];
@@ -71,12 +69,10 @@ contract('LiquidityProtectionV3EdgeCases', accounts => {
     };
 
     const generateFee = async (conversionFee, sourceToken, targetToken, amount) => {
-        await converter.setConversionFee(conversionFee);
         const prevBalance = await targetToken.balanceOf(owner);
         await convert(sourceToken, targetToken, amount.div(new BN(2)));
         const currBalance = await targetToken.balanceOf(owner);
         await convert(targetToken, sourceToken, currBalance.sub(prevBalance));
-        await converter.setConversionFee(0);
     };
 
     const getNetworkTokenMaxAmount = async () => {

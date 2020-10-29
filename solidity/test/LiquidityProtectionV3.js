@@ -138,8 +138,6 @@ contract('LiquidityProtectionV3', accounts => {
     };
 
     const generateFee = async () => {
-        await converter.setConversionFee(10000);
-
         // convert back & forth
         const prevBalance = await networkToken.balanceOf(owner);
 
@@ -150,8 +148,6 @@ contract('LiquidityProtectionV3', accounts => {
 
         amount = balance.sub(prevBalance);
         await convert([networkToken.address, poolToken.address, baseTokenAddress], amount, 1);
-
-        await converter.setConversionFee(0);
     }
 
     const getRate = async (reserveAddress) => {
@@ -1344,7 +1340,7 @@ contract('LiquidityProtectionV3', accounts => {
 
         for (let reserve = 0; reserve < 2; reserve++) {
             for (let rateChange = 0; rateChange < 3; rateChange++) {
-                for (let withFee = 0; withFee < 2; withFee++) {
+                for (let withFee = 1; withFee < 2; withFee++) {
                     for (let protection = PROTECTION_NO_PROTECTION; protection <= PROTECTION_EXCESSIVE_PROTECTION; protection++) {
                         context(`(${reserve == 0 ? 'base token' : 'network token'}) with ${protectionText[protection]} and ${rateChangeText[rateChange]} ${withFee ? 'with fee' : 'without fee'}`, () => {
                             let reserveAmount = new BN(5000);

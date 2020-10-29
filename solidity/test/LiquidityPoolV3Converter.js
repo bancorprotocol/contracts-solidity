@@ -187,7 +187,6 @@ contract('LiquidityPoolV3Converter', accounts => {
         describe(`${isETHReserve === 0 ? '(with ERC20 reserves)' : '(with ETH reserve)'}:`, () => {
             it('verifies that convert returns valid amount and fee after converting', async () => {
                 const converter = await initConverter(true, isETHReserve, 5000);
-                await converter.setConversionFee(3000);
 
                 const amount = new BN(500);
                 let value = 0;
@@ -211,7 +210,6 @@ contract('LiquidityPoolV3Converter', accounts => {
 
             it('verifies the TokenRateUpdate event after conversion', async () => {
                 const converter = await initConverter(true, isETHReserve, 10000);
-                await converter.setConversionFee(6000);
 
                 const amount = new BN(500);
                 let value = 0;
