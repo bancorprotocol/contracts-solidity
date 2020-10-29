@@ -225,7 +225,6 @@ const run = async () => {
         const name = converter.symbol + (type === 0 ? ' Liquid Token' : ' Liquidity Pool');
         const symbol = converter.symbol;
         const decimals = converter.decimals;
-        const fee = percentageToPPM(converter.fee);
         const tokens = converter.reserves.map(reserve => reserves[reserve.symbol].address);
         const weights = converter.reserves.map(reserve => percentageToPPM(reserve.weight));
         const amounts = converter.reserves.map(reserve => decimalToInteger(reserve.balance, reserves[reserve.symbol].decimals));
@@ -235,7 +234,11 @@ const run = async () => {
         const converterAnchor = deployed(web3, 'IConverterAnchor', (await converterRegistry.methods.getAnchor(index).call()));
         const converterBase = deployed(web3, 'ConverterBase', await converterAnchor.methods.owner().call());
         await execute(converterBase.methods.acceptOwnership());
-        await execute(converterBase.methods.setConversionFee(fee));
+
+        if (type !== 3) {
+            const fee = percentageToPPM(converter.fee);
+            await execute(converterBase.methods.setConversionFee(fee));
+        }
 
         if (type === 2) {
             for (const reserve of converter.reserves) {
