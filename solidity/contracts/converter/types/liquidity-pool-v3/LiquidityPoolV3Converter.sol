@@ -30,14 +30,16 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
     uint256 private constant MAX_UINT112 = 0xffffffffffffffffffffffffffff;
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
     uint32 private constant PPM_RESOLUTION = 1000000;
+    uint32 private constant CONVERSION_FEE = 1500; // 0.15%
 
     uint256 public reserveBalances;
     IERC20Token[] public reserveTokens;
     mapping (IERC20Token => uint256) public reserveIds;
 
     IConverterAnchor public override anchor;    // converter anchor contract
-    uint32 public override maxConversionFee;    // maximum conversion fee, represented in ppm, 0...1000000
-    uint32 public override conversionFee;       // current conversion fee, represented in ppm, 0...maxConversionFee
+
+    uint32 public override maxConversionFee = CONVERSION_FEE;   // maximum conversion fee, represented in ppm, 0...1000000
+    uint32 public override conversionFee = CONVERSION_FEE;      // current conversion fee, represented in ppm, 0...maxConversionFee
 
     // average rate details:
     // bits 0...111 represent the numerator of the rate between reserve token 0 and reserve token 1
@@ -90,14 +92,6 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
         uint256 _rateN,
         uint256 _rateD
     );
-
-    /**
-      * @dev triggered when the conversion fee is updated
-      *
-      * @param  _prevFee    previous fee percentage, represented in ppm
-      * @param  _newFee     new fee percentage, represented in ppm
-    */
-    event ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee);
 
     /**
       * @dev triggered after liquidity is added
@@ -154,7 +148,7 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
       *
       * @param  _anchor             anchor governed by the converter
       * @param  _registry           address of a contract registry contract
-      * @param  _maxConversionFee   maximum conversion fee, represented in ppm
+      * @param  _maxConversionFee   deprecated, backward compatibility
     */
     constructor(
         IConverterAnchor _anchor,
@@ -164,10 +158,9 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
         ContractRegistryClient(_registry)
         public
         validAddress(address(_anchor))
-        validConversionFee(_maxConversionFee)
     {
         anchor = _anchor;
-        maxConversionFee = _maxConversionFee;
+        _maxConversionFee;
     }
 
     // ensures that the converter is active
@@ -201,17 +194,6 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
     // error message binary size optimization
     function _validReserve(IERC20Token _address) internal view {
         require(reserveIds[_address] != 0, "ERR_INVALID_RESERVE");
-    }
-
-    // validates conversion fee
-    modifier validConversionFee(uint32 _conversionFee) {
-        _validConversionFee(_conversionFee);
-        _;
-    }
-
-    // error message binary size optimization
-    function _validConversionFee(uint32 _conversionFee) internal pure {
-        require(_conversionFee <= PPM_RESOLUTION, "ERR_INVALID_CONVERSION_FEE");
     }
 
     // validates reserve weight
@@ -313,9 +295,7 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
       * @param _conversionFee new conversion fee, represented in ppm
     */
     function setConversionFee(uint32 _conversionFee) public override ownerOnly {
-        require(_conversionFee <= maxConversionFee, "ERR_INVALID_CONVERSION_FEE");
-        emit ConversionFeeUpdate(conversionFee, _conversionFee);
-        conversionFee = _conversionFee;
+        require(_conversionFee == CONVERSION_FEE, "ERR_INVALID_CONVERSION_FEE");
     }
 
     /**
@@ -476,8 +456,8 @@ contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler,
       *
       * @return conversion fee
     */
-    function calculateFee(uint256 _targetAmount) internal view returns (uint256) {
-        return _targetAmount.mul(conversionFee) / PPM_RESOLUTION;
+    function calculateFee(uint256 _targetAmount) internal pure returns (uint256) {
+        return _targetAmount.mul(CONVERSION_FEE) / PPM_RESOLUTION;
     }
 
     /**
