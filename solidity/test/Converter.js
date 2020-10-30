@@ -19,9 +19,11 @@ const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const LiquidityPoolV2Converter = artifacts.require('LiquidityPoolV2Converter');
+const LiquidityPoolV3Converter = artifacts.require('LiquidityPoolV3Converter');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
 const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
+const LiquidityPoolV3ConverterFactory = artifacts.require('LiquidityPoolV3ConverterFactory');
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 const DSToken = artifacts.require('DSToken');
@@ -35,6 +37,7 @@ contract('Converter', accounts => {
             case 0: return LiquidTokenConverter.new(anchorAddress, registryAddress, maxConversionFee);
             case 1: return LiquidityPoolV1Converter.new(anchorAddress, registryAddress, maxConversionFee);
             case 2: return LiquidityPoolV2Converter.new(anchorAddress, registryAddress, maxConversionFee);
+            case 3: return LiquidityPoolV3Converter.new(anchorAddress, registryAddress, maxConversionFee);
         }
     };
 
@@ -43,6 +46,7 @@ contract('Converter', accounts => {
             case 0: return 'LiquidTokenConverter';
             case 1: return 'LiquidityPoolV1Converter';
             case 2: return 'LiquidityPoolV2Converter';
+            case 3: return 'LiquidityPoolV3Converter';
         }
 
         return 'Unknown';
@@ -53,6 +57,7 @@ contract('Converter', accounts => {
             case 0: return [getReserve1Address(isETHReserve)];
             case 1: return [getReserve1Address(isETHReserve), reserveToken2.address];
             case 2: return [getReserve1Address(isETHReserve), reserveToken2.address];
+            case 3: return [getReserve1Address(isETHReserve), reserveToken2.address];
         }
 
         return 'Unknown';
@@ -63,6 +68,7 @@ contract('Converter', accounts => {
             case 0: return [250000];
             case 1: return [250000, 150000];
             case 2: return [500000, 500000];
+            case 3: return [500000, 500000];
         }
 
         return 'Unknown';
@@ -85,6 +91,7 @@ contract('Converter', accounts => {
                 break;
 
             case 1:
+            case 3:
                 await reserveToken2.transfer(converter.address, 8000);
                 await anchor.issue(owner, 20000);
                 break;
@@ -120,6 +127,7 @@ contract('Converter', accounts => {
                 break;
 
             case 1:
+            case 3:
                 anchor = await DSToken.new('Pool1', 'POOL1', 2);
                 break;
 
@@ -169,7 +177,7 @@ contract('Converter', accounts => {
     const nonOwner = accounts[1];
     const receiver = accounts[3];
 
-    const NUM_CONVERTER_TYPES = 3;
+    const NUM_CONVERTER_TYPES = 4;
     const MIN_RETURN = new BN(1);
     const WEIGHT_10_PERCENT = new BN(100000);
     const MAX_CONVERSION_FEE = new BN(200000);
@@ -188,6 +196,7 @@ contract('Converter', accounts => {
         await factory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
+        await factory.registerTypedConverterFactory((await LiquidityPoolV3ConverterFactory.new()).address);
 
         await factory.registerTypedConverterAnchorFactory((await LiquidityPoolV2ConverterAnchorFactory.new()).address);
         await factory.registerTypedConverterCustomFactory((await LiquidityPoolV2ConverterCustomFactory.new()).address);
@@ -271,6 +280,7 @@ contract('Converter', accounts => {
                     );
                 });
 
+                if (type != 3) {
                 it('verifies the owner can update the conversion whitelist contract address', async () => {
                     const converter = await initConverter(type, false, isETHReserve);
                     const prevWhitelist = await converter.conversionWhitelist.call();
@@ -306,6 +316,7 @@ contract('Converter', accounts => {
 
                     await expectRevert(converter.setConversionWhitelist(converter.address), 'ERR_ADDRESS_IS_SELF');
                 });
+                }
 
                 it('verifies the owner can update the fee', async () => {
                     const converter = await initConverter(type, false, isETHReserve, MAX_CONVERSION_FEE);
@@ -354,6 +365,7 @@ contract('Converter', accounts => {
                     }
                 });
 
+                if (type != 3) {
                 it('should revert when a non owner attempts to add a reserve', async () => {
                     await createAnchor(type);
                     const converter = await createConverter(type, anchorAddress);
@@ -416,6 +428,7 @@ contract('Converter', accounts => {
 
                     await expectRevert(converter.reserveBalance.call(reserveToken2.address), 'ERR_INVALID_RESERVE');
                 });
+                }
 
                 it('verifies that the converter can accept the anchor ownership', async () => {
                     const converter = await initConverter(type, false, isETHReserve);
@@ -628,7 +641,7 @@ contract('Converter', accounts => {
                     const converter = await initConverter(type, true, isETHReserve);
 
                     await expectRevert(converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), getReserve1Address(isETHReserve), 500),
-                        type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_SAME_SOURCE_TARGET');
+                        ['ERR_INVALID_TOKEN', 'ERR_SAME_SOURCE_TARGET', 'ERR_SAME_SOURCE_TARGET', 'ERR_INVALID_RESERVE'][type]);
                 });
 
                 it('should revert when attempting to convert with an invalid source token address', async () => {
