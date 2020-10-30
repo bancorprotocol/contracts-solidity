@@ -114,7 +114,7 @@ contract('ConverterFactory', accounts => {
 
                 expect(await converter.anchor.call()).to.be.eql(anchor.address);
                 expect(await converter.registry.call()).to.be.eql(contractRegistry.address);
-                expect(await converter.maxConversionFee.call()).to.be.bignumber.equal(MAX_CONVERSION_FEE);
+                if (!converterType.eq(3)) expect(await converter.maxConversionFee.call()).to.be.bignumber.equal(MAX_CONVERSION_FEE);
                 expect(await converter.owner.call()).to.be.eql(converterFactory.address);
                 expect(await converter.newOwner.call()).to.be.eql(owner);
 

@@ -243,7 +243,6 @@ contract('ConverterUpgrader', accounts => {
             tokenOwner: await anchor.owner.call(),
             newOwner: await converter.newOwner.call(),
             conversionFee: await converter.conversionFee.call(),
-            maxConversionFee: await converter.maxConversionFee.call(),
             reserveTokenCount: await converter.connectorTokenCount.call(),
             reserveTokens: []
         };
@@ -402,7 +401,7 @@ contract('ConverterUpgrader', accounts => {
                 expect(oldConverterInitialState.newOwner).to.be.eql(ZERO_ADDRESS);
                 expect(oldConverterInitialState.tokenOwner).to.be.eql(activate ? oldConverter.address : deployer);
                 expect(oldConverterInitialState.conversionFee).to.be.bignumber.equal(CONVERSION_FEE);
-                expect(oldConverterInitialState.maxConversionFee).to.be.bignumber.equal(MAX_CONVERSION_FEE);
+                expect(await oldConverter.maxConversionFee.call()).to.be.bignumber.equal(MAX_CONVERSION_FEE);
 
                 for (let i = 0; i < oldConverterInitialState.reserveTokenCount.toNumber(); ++i) {
                     expect(oldConverterInitialState.reserveTokens[i].token).to.be.eql(reserveTokens[i]);
@@ -431,8 +430,8 @@ contract('ConverterUpgrader', accounts => {
                 expect(oldConverterCurrentState.token).to.be.eql(oldConverterInitialState.token);
                 expect(oldConverterCurrentState.tokenOwner).to.be.eql(activate ? newConverter.address : deployer);
                 expect(oldConverterCurrentState.conversionFee).to.be.bignumber.equal(CONVERSION_FEE);
-                expect(oldConverterCurrentState.maxConversionFee).to.be.bignumber.equal(MAX_CONVERSION_FEE);
                 expect(oldConverterCurrentState.reserveTokenCount).to.be.bignumber.equal(oldConverterInitialState.reserveTokenCount);
+                expect(await oldConverter.maxConversionFee.call()).to.be.bignumber.equal(MAX_CONVERSION_FEE);
 
                 for (let i = 0; i < oldConverterCurrentState.reserveTokenCount.toNumber(); ++i) {
                     expect(oldConverterCurrentState.reserveTokens[i].token).to.be.eql(oldConverterInitialState.reserveTokens[i].token);
@@ -455,8 +454,9 @@ contract('ConverterUpgrader', accounts => {
                 expect(newConverterCurrentState.token).to.be.eql(oldConverterInitialState.token);
                 expect(newConverterCurrentState.tokenOwner).to.be.eql(activate ? newConverter.address : deployer);
                 expect(newConverterCurrentState.conversionFee).to.be.bignumber.equal(CONVERSION_FEE);
-                expect(newConverterCurrentState.maxConversionFee).to.be.bignumber.equal(MAX_CONVERSION_FEE);
                 expect(newConverterCurrentState.reserveTokenCount).to.be.bignumber.equal(oldConverterInitialState.reserveTokenCount);
+                if (!(await newConverter.converterType.call()).eq(3))
+                    expect(await newConverter.maxConversionFee.call()).to.be.bignumber.equal(MAX_CONVERSION_FEE);
 
                 for (let i = 0; i < newConverterCurrentState.reserveTokenCount.toNumber(); ++i) {
                     expect(newConverterCurrentState.reserveTokens[i].balance).to.be.bignumber.equal(upgradedReserveBalances[i]);

@@ -18,15 +18,15 @@ const ConverterFactory = artifacts.require('ConverterFactory');
 const ConverterUpgrader = artifacts.require('ConverterUpgrader');
 
 contract('LiquidityPoolV3Converter', accounts => {
-    const createConverter = async (tokenAddress, registryAddress = contractRegistry.address, maxConversionFee = 0) => {
-        return LiquidityPoolV3Converter.new(tokenAddress, registryAddress, maxConversionFee);
+    const createConverter = async (tokenAddress, registryAddress = contractRegistry.address) => {
+        return LiquidityPoolV3Converter.new(tokenAddress, registryAddress, 0);
     };
 
-    const initConverter = async (activate, isETHReserve, maxConversionFee = 0) => {
+    const initConverter = async (activate, isETHReserve) => {
         token = await DSToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
-        const converter = await createConverter(tokenAddress, contractRegistry.address, maxConversionFee);
+        const converter = await createConverter(tokenAddress, contractRegistry.address);
         await converter.addReserve(getReserve1Address(isETHReserve), 500000);
         await converter.addReserve(reserveToken2.address, 500000);
         await reserveToken2.transfer(converter.address, 8000);
@@ -186,7 +186,7 @@ contract('LiquidityPoolV3Converter', accounts => {
     for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
         describe(`${isETHReserve === 0 ? '(with ERC20 reserves)' : '(with ETH reserve)'}:`, () => {
             it('verifies that convert returns valid amount and fee after converting', async () => {
-                const converter = await initConverter(true, isETHReserve, 5000);
+                const converter = await initConverter(true, isETHReserve);
 
                 const amount = new BN(500);
                 let value = 0;
@@ -209,7 +209,7 @@ contract('LiquidityPoolV3Converter', accounts => {
             });
 
             it('verifies the TokenRateUpdate event after conversion', async () => {
-                const converter = await initConverter(true, isETHReserve, 10000);
+                const converter = await initConverter(true, isETHReserve);
 
                 const amount = new BN(500);
                 let value = 0;
@@ -607,7 +607,7 @@ contract('LiquidityPoolV3Converter', accounts => {
 
         let converter;
         beforeEach(async () => {
-            converter = await initConverter(true, true, 5000);
+            converter = await initConverter(true, true);
         });
 
         const getExpectedAverageRate = (prevAverageRate, currentRate, timeElapsed) => {
