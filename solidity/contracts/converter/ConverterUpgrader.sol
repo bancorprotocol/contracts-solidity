@@ -141,40 +141,28 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @return the new converter  new converter contract address
     */
     function createConverter(IConverter _oldConverter) private returns (IConverter) {
-        IConverterAnchor anchor = _oldConverter.token();
-        uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
+        uint16 oldType = converterType(_oldConverter);
+        uint16 newType = oldType;
 
-        // determine new converter type
-        uint16 newType = 0;
-        // new converter - get the type from the converter itself
-        if (isV28OrHigherConverter(_oldConverter))
-            newType = _oldConverter.converterType();
-        // old converter - if it has 1 reserve token, the type is a liquid token, otherwise the type liquidity pool
-        else if (reserveTokenCount > 1)
-            newType = 1;
-
-        if (newType == 1 && reserveTokenCount == 2) {
+        if (oldType == 1 && _oldConverter.connectorTokenCount() == 2) {
             (, uint32 weight0, , , ) = _oldConverter.connectors(_oldConverter.connectorTokens(0));
             (, uint32 weight1, , , ) = _oldConverter.connectors(_oldConverter.connectorTokens(1));
             if (weight0 == PPM_RESOLUTION / 2 && weight1 == PPM_RESOLUTION / 2)
                 newType = 3;
         }
 
+        uint32 maxConversionFee = 0;
+        if (oldType != 3)
+            maxConversionFee = IConverterExtension(address(_oldConverter)).maxConversionFee();
+
         IConverterFactory converterFactory = IConverterFactory(addressOf(CONVERTER_FACTORY));
-        IConverter converter;
+        IConverter newConverter = converterFactory.createConverter(newType, _oldConverter.token(), registry, maxConversionFee);
+        newConverter.acceptOwnership();
 
-        if (newType == 3) {
-            converter = converterFactory.createConverter(3, anchor, registry, 0);
-        }
-        else {
-            uint32 conversionFee = _oldConverter.conversionFee();
-            uint32 maxConversionFee = IConverterExtension(address(_oldConverter)).maxConversionFee();
-            converter = converterFactory.createConverter(newType, anchor, registry, maxConversionFee);
-            IConverterExtension(address(converter)).setConversionFee(conversionFee);
-        }
+        if (newType != 3)
+            IConverterExtension(address(newConverter)).setConversionFee(_oldConverter.conversionFee());
 
-        converter.acceptOwnership();
-        return converter;
+        return newConverter;
     }
 
     /**
@@ -278,6 +266,15 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
             // activate the new converter
             newConverter.activate(primaryReserveToken, oracleA, oracleB);
         }
+    }
+
+    function converterType(IConverter _converter) internal view returns (uint16) {
+        // new converter - get the type from the converter itself
+        if (isV28OrHigherConverter(_converter))
+            return _converter.converterType();
+
+        // old converter - the type is 0 (Liquid Token) if it has 1 reserve token, and 1 (Liquidity Pool) otherwise
+        return _converter.connectorTokenCount() == 1 ? 0 : 1;
     }
 
     bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
