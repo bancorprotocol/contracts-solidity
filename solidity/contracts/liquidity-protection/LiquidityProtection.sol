@@ -638,7 +638,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion).div(PPM_RESOLUTION);
         }
 
-        // get the add/remove rates between the reserves
+        // get the rate between the reserves upon adding liquidity and now
         Fraction memory addRate = Fraction({ n: liquidity.reserveRateN, d: liquidity.reserveRateD });
         Fraction memory removeRate = reserveTokenAverageRate(liquidity.poolToken, liquidity.reserveToken);
 
@@ -701,7 +701,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PERCENT");
 
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
-        Fraction memory addRate = Fraction({ n: liquidity.reserveRateN, d: liquidity.reserveRateD });
 
         // verify input & permissions
         require(liquidity.provider == msg.sender, "ERR_ACCESS_DENIED");
@@ -731,7 +730,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             govToken.destroy(msg.sender, liquidity.reserveAmount);
         }
 
-        // get the remove rate between the reserves
+        // get the rate between the reserves upon adding liquidity and now
+        Fraction memory addRate = Fraction({ n: liquidity.reserveRateN, d: liquidity.reserveRateD });
         Fraction memory removeRate = reserveTokenAverageRate(liquidity.poolToken, liquidity.reserveToken);
 
         // get the target token amount
@@ -917,7 +917,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // calculate the amount of pool tokens based on the amount of reserve tokens
         uint256 poolAmount = _reserveAmount.mul(_poolRateD).div(_poolRateN);
 
-        // get the add/remove rates between the reserves
+        // get the rate between the reserves upon adding liquidity and now
         Fraction memory addRate = Fraction({ n: _reserveRateN, d: _reserveRateD });
         Fraction memory removeRate = reserveTokenAverageRate(_poolToken, _reserveToken);
 
@@ -1035,12 +1035,32 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         (uint256 currentRateN, uint256 currentRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
         (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(_reserveToken);
 
-        uint256 min = currentRateN.mul(averageRateD).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION - averageRateMaxDeviation);
-        uint256 mid = currentRateD.mul(averageRateN).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION);
-        uint256 max = currentRateN.mul(averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
-        require(min <= mid && mid <= max, "ERR_INVALID_RATE");
+        require(averageRateInRange(currentRateN, currentRateD, averageRateN, averageRateD, averageRateMaxDeviation), "ERR_INVALID_RATE");
 
         return Fraction(averageRateN, averageRateD);
+    }
+
+    /**
+      * @dev returns whether or not the deviation of the average-rate from the current-rate is within range
+      *
+      * @param _currentRateN    current-rate numerator
+      * @param _currentRateD    current-rate denominator
+      * @param _averageRateN    average-rate numerator
+      * @param _averageRateD    average-rate denominator
+      * @param _maxDeviation    the maximum permitted deviation of the average-rate from the spot-rate
+    */
+    function averageRateInRange(
+        uint256 _currentRateN,
+        uint256 _currentRateD,
+        uint256 _averageRateN,
+        uint256 _averageRateD,
+        uint32 _maxDeviation)
+        internal pure returns (bool)
+    {
+        uint256 min = _currentRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION - _maxDeviation);
+        uint256 mid = _currentRateD.mul(_averageRateN).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION);
+        uint256 max = _currentRateN.mul(_averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
+        return min <= mid && mid <= max;
     }
 
     /**
