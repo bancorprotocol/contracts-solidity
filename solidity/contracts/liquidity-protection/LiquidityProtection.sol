@@ -787,7 +787,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             uint256 delta = targetAmount - baseBalance;
 
             // calculate the delta in network tokens
-            delta = delta.mul(currentRate.n).div(currentRate.d);
+            delta = delta.mul(removeRate.n).div(removeRate.d);
 
             // the delta might be very small due to precision loss
             // in which case no compensation will take place (gas optimization)
