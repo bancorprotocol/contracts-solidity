@@ -638,7 +638,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion).div(PPM_RESOLUTION);
         }
 
-        // get the add/remove rates between the reserves
+        // get the rate between the reserves upon adding liquidity and now
         Fraction memory addRate = Fraction({ n: liquidity.reserveRateN, d: liquidity.reserveRateD });
         Fraction memory removeRate = reserveTokenAverageRate(liquidity.poolToken, liquidity.reserveToken);
 
@@ -701,7 +701,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PERCENT");
 
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
-        Fraction memory addRate = Fraction({ n: liquidity.reserveRateN, d: liquidity.reserveRateD });
 
         // verify input & permissions
         require(liquidity.provider == msg.sender, "ERR_ACCESS_DENIED");
@@ -731,7 +730,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             govToken.destroy(msg.sender, liquidity.reserveAmount);
         }
 
-        // get the remove rate between the reserves
+        // get the rate between the reserves upon adding liquidity and now
+        Fraction memory addRate = Fraction({ n: liquidity.reserveRateN, d: liquidity.reserveRateD });
         Fraction memory removeRate = reserveTokenAverageRate(liquidity.poolToken, liquidity.reserveToken);
 
         // get the target token amount
@@ -918,7 +918,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // calculate the amount of pool tokens based on the amount of reserve tokens
         uint256 poolAmount = _reserveAmount.mul(_poolRateD).div(_poolRateN);
 
-        // get the add/remove rates between the reserves
+        // get the rate between the reserves upon adding liquidity and now
         Fraction memory addRate = Fraction({ n: _reserveRateN, d: _reserveRateD });
         Fraction memory removeRate = reserveTokenAverageRate(_poolToken, _reserveToken);
 
