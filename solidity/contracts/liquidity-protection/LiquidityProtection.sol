@@ -657,35 +657,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             return (targetAmount, targetAmount, 0);
         }
 
-        // handle base token return
+        // calculate the amount of base tokens required for liquidation
+        uint256 baseAmount = liquidationAmount(liquidity.poolToken, liquidity.reserveToken, liquidity.poolAmount, targetAmount, true);
 
-        // calculate the amount of pool tokens required for liquidation
-        // note that the amount is doubled since it's not possible to liquidate one reserve only
-        Fraction memory poolRate = poolTokenRate(liquidity.poolToken, liquidity.reserveToken);
-        uint256 poolAmount = targetAmount.mul(poolRate.d).div(poolRate.n / 2);
-
-        // limit the amount of pool tokens by the amount the system/caller holds
-        uint256 availableBalance = store.systemBalance(liquidity.poolToken).add(liquidity.poolAmount);
-        poolAmount = poolAmount > availableBalance ? availableBalance : poolAmount;
-
-        // calculate the base token amount received by liquidating the pool tokens
-        // note that the amount is divided by 2 since the pool amount represents both reserves
-        uint256 baseAmount = poolAmount.mul(poolRate.n / 2).div(poolRate.d);
-        uint256 networkAmount = 0;
-
-        // calculate the compensation if still needed
-        if (baseAmount < targetAmount) {
-            uint256 delta = targetAmount - baseAmount;
-
-            // calculate the delta in network tokens
-            delta = delta.mul(removeRate.n).div(removeRate.d);
-
-            // the delta might be very small due to precision loss
-            // in which case no compensation will take place (gas optimization)
-            if (delta >= _minNetworkCompensation()) {
-                networkAmount = delta;
-            }
-        }
+        // calculate the amount of network tokens returned as compensation
+        uint256 networkAmount = networkCompensation(targetAmount, baseAmount, removeRate);
 
         return (targetAmount, baseAmount, networkAmount);
     }
@@ -753,16 +729,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             return;
         }
 
-        // remove base token liquidity
-
         // calculate the amount of pool tokens required for liquidation
-        // note that the amount is doubled since it's not possible to liquidate one reserve only
-        Fraction memory poolRate = poolTokenRate(liquidity.poolToken, liquidity.reserveToken);
-        uint256 poolAmount = targetAmount.mul(poolRate.d).div(poolRate.n / 2);
-
-        // limit the amount of pool tokens by the amount the system holds
-        uint256 systemBalance = store.systemBalance(liquidity.poolToken);
-        poolAmount = poolAmount > systemBalance ? systemBalance : poolAmount;
+        uint256 poolAmount = liquidationAmount(liquidity.poolToken, liquidity.reserveToken, 0, targetAmount, false);
 
         // withdraw the pool tokens from the store
         store.decSystemBalance(liquidity.poolToken, poolAmount);
@@ -782,26 +750,18 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             safeTransfer(liquidity.reserveToken, msg.sender, baseBalance);
         }
         
-        // compensate the caller with network tokens if still needed
-        if (baseBalance < targetAmount) {
-            uint256 delta = targetAmount - baseBalance;
-
-            // calculate the delta in network tokens
-            delta = delta.mul(removeRate.n).div(removeRate.d);
-
-            // the delta might be very small due to precision loss
-            // in which case no compensation will take place (gas optimization)
-            if (delta >= _minNetworkCompensation()) {
-                // check if there's enough network token balance, otherwise mint more
-                uint256 networkBalance = networkToken.balanceOf(address(this));
-                if (networkBalance < delta) {
-                    networkToken.issue(address(this), delta - networkBalance);
-                }
-
-                // lock network tokens for the caller
-                safeTransfer(networkToken, address(store), delta);
-                lockTokens(msg.sender, delta);
+        // calculate the amount of network tokens returned as compensation
+        uint256 networkAmount = networkCompensation(targetAmount, baseBalance, removeRate);
+        if (networkAmount > 0) {
+            // check if there's enough network token balance, otherwise mint more
+            uint256 networkBalance = networkToken.balanceOf(address(this));
+            if (networkBalance < networkAmount) {
+                networkToken.issue(address(this), networkAmount - networkBalance);
             }
+
+            // lock network tokens for the caller
+            safeTransfer(networkToken, address(store), networkAmount);
+            lockTokens(msg.sender, networkAmount);
         }
 
         // if the contract still holds network token, burn them
@@ -854,6 +814,67 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         return outputAmount.add(_reserveAmount.mul(compN).div(compD));
     }
 
+    /**
+      * @dev returns the amount of tokens required for liquidation
+      *
+      * @param _poolToken       pool token
+      * @param _reserveToken    reserve token
+      * @param _poolAmount      pool token amount when the liquidity was added
+      * @param _targetAmount    target token amount received in return
+      * @param _isBaseAmount    true if the required amount is of the based token
+      * @return amount of tokens required for liquidation
+    */
+    function liquidationAmount(
+        IDSToken _poolToken,
+        IERC20Token _reserveToken,
+        uint256 _poolAmount,
+        uint256 _targetAmount,
+        bool _isBaseAmount)
+        internal view returns (uint256)
+    {
+        // calculate the amount of pool tokens required for liquidation
+        // note that the amount is doubled since it's not possible to liquidate one reserve only
+        Fraction memory poolRate = poolTokenRate(_poolToken, _reserveToken);
+        uint256 poolAmount = _targetAmount.mul(poolRate.d).div(poolRate.n / 2);
+
+        // limit the amount of pool tokens by the amount that the system holds
+        uint256 systemBalance = store.systemBalance(_poolToken).add(_poolAmount);
+        poolAmount = poolAmount > systemBalance ? systemBalance : poolAmount;
+
+        if (_isBaseAmount) {
+            // calculate the base token amount received by liquidating the pool tokens
+            // note that the amount is divided by 2 since the pool amount represents both reserves
+            return poolAmount.mul(poolRate.n / 2).div(poolRate.d);
+        }
+
+        return poolAmount;
+    }
+
+    /**
+      * @dev returns the amount of network tokens received as compensation
+      *
+      * @param _targetAmount    target token amount received in return
+      * @param _baseAmount      base token amount liquidated
+      * @param _removeRate      rate between the reserve tokens
+      * @return amount of network tokens received as compensation
+    */
+    function networkCompensation(
+        uint256 _targetAmount,
+        uint256 _baseAmount,
+        Fraction memory _removeRate)
+        internal view returns (uint256)
+    {
+        if (_targetAmount > _baseAmount) {
+            // calculate the delta in network tokens
+            uint256 networkAmount = (_targetAmount - _baseAmount).mul(_removeRate.n).div(_removeRate.d);
+
+            // if the delta might be very small due to precision loss, then no compensation will take place (gas optimization)
+            if (networkAmount >= _minNetworkCompensation())
+                return networkAmount;
+        }
+
+        return 0;
+    }
     /**
       * @dev allows the caller to claim network token balance that is no longer locked
       * note that the function can revert if the range is too large
