@@ -1256,22 +1256,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         return weight;
     }
 
-    bytes4 private constant CONVERTER_VERSION_FUNC_SELECTOR = bytes4(keccak256("version()"));
-
-    // using a static call to identify converter version
-    // the function had a different signature in older converters but in the worst case,
-    // these converters won't be supported (revert) until they are upgraded
-    function converterVersion(IConverter _converter) internal view returns (uint16) {
-        bytes memory data = abi.encodeWithSelector(CONVERTER_VERSION_FUNC_SELECTOR);
-        (bool success, bytes memory returnData) = address(_converter).staticcall{ gas: 4000 }(data);
-
-        if (success && returnData.length == 32) {
-            return abi.decode(returnData, (uint16));
-        }
-
-        return 0;
-    }
-
     /**
       * @dev returns minimum network tokens compensation
       * utility to allow overrides for tests
