@@ -657,20 +657,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             return (targetAmount, targetAmount, 0);
         }
 
-        // handle base token return
+        // calculate the amount of base tokens required for liquidation
+        uint256 baseAmount = liquidationAmount(liquidity.poolToken, liquidity.reserveToken, liquidity.poolAmount, targetAmount, true);
 
-        // calculate the amount of pool tokens required for liquidation
-        // note that the amount is doubled since it's not possible to liquidate one reserve only
-        Fraction memory poolRate = poolTokenRate(liquidity.poolToken, liquidity.reserveToken);
-        uint256 poolAmount = targetAmount.mul(poolRate.d).div(poolRate.n / 2);
-
-        // limit the amount of pool tokens by the amount the system/caller holds
-        uint256 availableBalance = store.systemBalance(liquidity.poolToken).add(liquidity.poolAmount);
-        poolAmount = poolAmount > availableBalance ? availableBalance : poolAmount;
-
-        // calculate the base token amount received by liquidating the pool tokens
-        // note that the amount is divided by 2 since the pool amount represents both reserves
-        uint256 baseAmount = poolAmount.mul(poolRate.n / 2).div(poolRate.d);
         uint256 networkAmount = 0;
 
         // calculate the compensation if still needed
@@ -753,16 +742,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             return;
         }
 
-        // remove base token liquidity
-
         // calculate the amount of pool tokens required for liquidation
-        // note that the amount is doubled since it's not possible to liquidate one reserve only
-        Fraction memory poolRate = poolTokenRate(liquidity.poolToken, liquidity.reserveToken);
-        uint256 poolAmount = targetAmount.mul(poolRate.d).div(poolRate.n / 2);
-
-        // limit the amount of pool tokens by the amount the system holds
-        uint256 systemBalance = store.systemBalance(liquidity.poolToken);
-        poolAmount = poolAmount > systemBalance ? systemBalance : poolAmount;
+        uint256 poolAmount = liquidationAmount(liquidity.poolToken, liquidity.reserveToken, 0, targetAmount, false);
 
         // withdraw the pool tokens from the store
         store.decSystemBalance(liquidity.poolToken, poolAmount);
@@ -852,6 +833,42 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         Fraction memory loss = impLoss(_addRate, _removeRate);
         (uint256 compN, uint256 compD) = Math.reducedRatio(loss.n.mul(level.n), loss.d.mul(level.d), MAX_UINT128);
         return outputAmount.add(_reserveAmount.mul(compN).div(compD));
+    }
+
+    /**
+      * @dev returns the amount of tokens required for liquidation
+      *
+      * @param _poolToken       pool token
+      * @param _reserveToken    reserve token
+      * @param _poolAmount      pool token amount when the liquidity was added
+      * @param _targetAmount    target token amount received in return
+      * @param _isBaseAmount    true if the required amount is of the based token
+      * @return amount of tokens required for liquidation
+    */
+    function liquidationAmount(
+        IDSToken _poolToken,
+        IERC20Token _reserveToken,
+        uint256 _poolAmount,
+        uint256 _targetAmount,
+        bool _isBaseAmount)
+        internal view returns (uint256)
+    {
+        // calculate the amount of pool tokens required for liquidation
+        // note that the amount is doubled since it's not possible to liquidate one reserve only
+        Fraction memory poolRate = poolTokenRate(_poolToken, _reserveToken);
+        uint256 poolAmount = _targetAmount.mul(poolRate.d).div(poolRate.n / 2);
+
+        // limit the amount of pool tokens by the amount that the system holds
+        uint256 systemBalance = store.systemBalance(_poolToken).add(_poolAmount);
+        poolAmount = poolAmount > systemBalance ? systemBalance : poolAmount;
+
+        if (_isBaseAmount) {
+            // calculate the base token amount received by liquidating the pool tokens
+            // note that the amount is divided by 2 since the pool amount represents both reserves
+            return poolAmount.mul(poolRate.n / 2).div(poolRate.d);
+        }
+
+        return poolAmount;
     }
 
     /**
