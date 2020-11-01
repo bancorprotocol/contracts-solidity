@@ -638,8 +638,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion).div(PPM_RESOLUTION);
         }
 
+        // get the add/remove rates between the reserves
         Fraction memory addRate = Fraction({ n: liquidity.reserveRateN, d: liquidity.reserveRateD });
-        Fraction memory removeRate = reserveTokenRate(liquidity.poolToken, liquidity.reserveToken);
+        Fraction memory removeRate = reserveTokenAverageRate(liquidity.poolToken, liquidity.reserveToken);
+
         uint256 targetAmount = removeLiquidityTargetAmount(
             liquidity.poolToken,
             liquidity.reserveToken,
@@ -729,8 +731,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             govToken.destroy(msg.sender, liquidity.reserveAmount);
         }
 
-        // get the current rate between the reserves (recent average)
-        Fraction memory currentRate = reserveTokenRate(liquidity.poolToken, liquidity.reserveToken);
+        // get the remove rate between the reserves
+        Fraction memory removeRate = reserveTokenAverageRate(liquidity.poolToken, liquidity.reserveToken);
 
         // get the target token amount
         uint256 targetAmount = removeLiquidityTargetAmount(
@@ -739,7 +741,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             liquidity.poolAmount,
             liquidity.reserveAmount,
             addRate,
-            currentRate,
+            removeRate,
             liquidity.timestamp,
             time());
 
@@ -916,9 +918,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // calculate the amount of pool tokens based on the amount of reserve tokens
         uint256 poolAmount = _reserveAmount.mul(_poolRateD).div(_poolRateN);
 
-        // get the add/remove rates
+        // get the add/remove rates between the reserves
         Fraction memory addRate = Fraction({ n: _reserveRateN, d: _reserveRateD });
-        Fraction memory removeRate = reserveTokenRate(_poolToken, _reserveToken);
+        Fraction memory removeRate = reserveTokenAverageRate(_poolToken, _reserveToken);
 
         // get the current return
         uint256 protectedReturn = removeLiquidityTargetAmount(
@@ -984,7 +986,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         internal
         returns (uint256)
     {
-        Fraction memory rate = reserveTokenRate(_poolToken, _reserveToken);
+        Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken);
         return store.addProtectedLiquidity(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount, rate.n, rate.d, time());
     }
 
@@ -1018,12 +1020,12 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev returns the rate of 1 reserve token in the other reserve token units
+      * @dev returns the average rate of 1 reserve token in the other reserve token units
       *
       * @param _poolToken       pool token
       * @param _reserveToken    reserve token
     */
-    function reserveTokenRate(IDSToken _poolToken, IERC20Token _reserveToken) internal view returns (Fraction memory) {
+    function reserveTokenAverageRate(IDSToken _poolToken, IERC20Token _reserveToken) internal view returns (Fraction memory) {
         ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(_poolToken.owner()));
 
         IERC20Token otherReserve = converter.connectorTokens(0);
@@ -1032,14 +1034,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         }
 
         (uint256 currentRateN, uint256 currentRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
-        (uint256 n, uint256 d) = converter.recentAverageRate(_reserveToken);
+        (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(_reserveToken);
 
-        uint256 min = currentRateN.mul(d).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION - averageRateMaxDeviation);
-        uint256 mid = currentRateD.mul(n).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION);
-        uint256 max = currentRateN.mul(d).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
+        uint256 min = currentRateN.mul(averageRateD).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION - averageRateMaxDeviation);
+        uint256 mid = currentRateD.mul(averageRateN).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION);
+        uint256 max = currentRateN.mul(averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
         require(min <= mid && mid <= max, "ERR_INVALID_RATE");
 
-        return Fraction(n, d);
+        return Fraction(averageRateN, averageRateD);
     }
 
     /**
