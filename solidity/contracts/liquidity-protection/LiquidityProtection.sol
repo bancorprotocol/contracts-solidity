@@ -1036,12 +1036,32 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         (uint256 currentRateN, uint256 currentRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
         (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(_reserveToken);
 
-        uint256 min = currentRateN.mul(averageRateD).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION - averageRateMaxDeviation);
-        uint256 mid = currentRateD.mul(averageRateN).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION);
-        uint256 max = currentRateN.mul(averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
-        require(min <= mid && mid <= max, "ERR_INVALID_RATE");
+        require(averageRateInRange(currentRateN, currentRateD, averageRateN, averageRateD, averageRateMaxDeviation), "ERR_INVALID_RATE");
 
         return Fraction(averageRateN, averageRateD);
+    }
+
+    /**
+      * @dev returns whether or not the deviation of the average-rate from the current-rate is within range
+      *
+      * @param _currentRateN    current-rate numerator
+      * @param _currentRateD    current-rate denominator
+      * @param _averageRateN    average-rate numerator
+      * @param _averageRateD    average-rate denominator
+      * @param _maxDeviation    the maximum permitted deviation of the average-rate from the spot-rate
+    */
+    function averageRateInRange(
+        uint256 _currentRateN,
+        uint256 _currentRateD,
+        uint256 _averageRateN,
+        uint256 _averageRateD,
+        uint32 _maxDeviation)
+        internal pure returns (bool)
+    {
+        uint256 min = _currentRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION - _maxDeviation);
+        uint256 mid = _currentRateD.mul(_averageRateN).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION);
+        uint256 max = _currentRateN.mul(_averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
+        return min <= mid && mid <= max;
     }
 
     /**
