@@ -94,12 +94,12 @@ contract('LiquidityProtectionTokenRate', accounts => {
                     const max = Decimal(actualRate[0].toString()).div(actualRate[1].toString()).mul(100).div(100 - maxDeviation);
                     const mid = Decimal(averageRate[0].toString()).div(averageRate[1].toString());
                     if (min.lte(mid) && mid.lte(max)) {
-                        const reserveTokenRate = await liquidityProtection.reserveTokenRateTest(poolToken.address, reserveToken1.address);
+                        const reserveTokenRate = await liquidityProtection.averageRateTest(poolToken.address, reserveToken1.address);
                         expect(reserveTokenRate[0]).to.be.bignumber.equal(averageRate[0]);
                         expect(reserveTokenRate[1]).to.be.bignumber.equal(averageRate[1]);
                     }
                     else {
-                        await expectRevert(liquidityProtection.reserveTokenRateTest(poolToken.address, reserveToken1.address), 'ERR_INVALID_RATE');
+                        await expectRevert(liquidityProtection.averageRateTest(poolToken.address, reserveToken1.address), 'ERR_INVALID_RATE');
                     }
                     await converter.removeLiquidity(await poolToken.balanceOf(accounts[0]), [reserveToken1.address, reserveToken2.address], [1, 1]);
                 });
