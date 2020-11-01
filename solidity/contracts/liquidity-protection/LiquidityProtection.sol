@@ -752,6 +752,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         
         // calculate the amount of network tokens returned as compensation
         uint256 networkAmount = networkCompensation(targetAmount, baseBalance, removeRate);
+
         if (networkAmount > 0) {
             // check if there's enough network token balance, otherwise mint more
             uint256 networkBalance = networkToken.balanceOf(address(this));
@@ -875,6 +876,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         return 0;
     }
+
     /**
       * @dev allows the caller to claim network token balance that is no longer locked
       * note that the function can revert if the range is too large
