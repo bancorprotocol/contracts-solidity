@@ -10,8 +10,8 @@ const DSToken = artifacts.require('DSToken');
 const ConverterRegistry = artifacts.require('ConverterRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConverterFactory = artifacts.require('ConverterFactory');
-const LiquidityPoolV3ConverterFactory = artifacts.require('TestLiquidityPoolV3ConverterFactory');
-const LiquidityPoolV3Converter = artifacts.require('TestLiquidityPoolV3Converter');
+const StandardPoolConverterFactory = artifacts.require('TestStandardPoolConverterFactory');
+const StandardPoolConverter = artifacts.require('TestStandardPoolConverter');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
 
@@ -29,7 +29,7 @@ function percentageToPPM(value) {
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 
-contract('LiquidityProtectionV3TokenRate', accounts => {
+contract('LiquidityProtectionStandardPoolTokenRate', accounts => {
     const convert = async (sourceToken, targetToken, amount) => {
         await sourceToken.approve(bancorNetwork.address, amount);
         const path = [sourceToken.address, poolToken.address, targetToken.address];
@@ -52,9 +52,9 @@ contract('LiquidityProtectionV3TokenRate', accounts => {
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         liquidityProtection = await LiquidityProtection.new(accounts[0], accounts[0], accounts[0], contractRegistry.address);
 
-        const liquidityPoolV3ConverterFactory = await LiquidityPoolV3ConverterFactory.new();
+        const standardPoolConverterFactory = await StandardPoolConverterFactory.new();
         const converterFactory = await ConverterFactory.new();
-        await converterFactory.registerTypedConverterFactory(liquidityPoolV3ConverterFactory.address);
+        await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
@@ -72,7 +72,7 @@ contract('LiquidityProtectionV3TokenRate', accounts => {
 
         await converterRegistry.newConverter(3, 'PT', 'PT', 18, FULL_PPM, [reserveToken1.address, reserveToken2.address], [HALF_PPM, HALF_PPM]);
         poolToken = await DSToken.at(await converterRegistry.getAnchor(0));
-        converter = await LiquidityPoolV3Converter.at(await poolToken.owner());
+        converter = await StandardPoolConverter.at(await poolToken.owner());
         await converter.acceptOwnership();
         time = await converter.currentTime();
     });

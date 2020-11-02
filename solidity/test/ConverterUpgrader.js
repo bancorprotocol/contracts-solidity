@@ -18,7 +18,7 @@ const ConverterUpgrader = artifacts.require('ConverterUpgrader');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
 const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
-const LiquidityPoolV3ConverterFactory = artifacts.require('LiquidityPoolV3ConverterFactory');
+const StandardPoolConverterFactory = artifacts.require('StandardPoolConverterFactory');
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 const LiquidityPoolV2Converter = artifacts.require('LiquidityPoolV2Converter');
@@ -89,7 +89,7 @@ contract('ConverterUpgrader', accounts => {
         return await initWith2Reserves(1, deployer, version, activate);
     };
 
-    const initV3With2Reserves = async (deployer, version, activate) => {
+    const initType3With2Reserves = async (deployer, version, activate) => {
         return await initWith2Reserves(3, deployer, version, activate);
     };
 
@@ -166,7 +166,7 @@ contract('ConverterUpgrader', accounts => {
         return await initWithEtherReserve(1, deployer, version, activate);
     };
 
-    const initV3WithEtherReserve = async (deployer, version, activate) => {
+    const initType3WithEtherReserve = async (deployer, version, activate) => {
         return await initWithEtherReserve(3, deployer, version, activate);
     };
 
@@ -199,7 +199,7 @@ contract('ConverterUpgrader', accounts => {
         return await initWithETHReserve(1, deployer, version, activate);
     };
 
-    const initV3WithETHReserve = async (deployer, version, activate) => {
+    const initType3WithETHReserve = async (deployer, version, activate) => {
         return await initWithETHReserve(3, deployer, version, activate);
     };
 
@@ -308,7 +308,7 @@ contract('ConverterUpgrader', accounts => {
         await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
-        await converterFactory.registerTypedConverterFactory((await LiquidityPoolV3ConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
 
         await converterFactory.registerTypedConverterAnchorFactory((await LiquidityPoolV2ConverterAnchorFactory.new()).address);
         await converterFactory.registerTypedConverterCustomFactory((await LiquidityPoolV2ConverterCustomFactory.new()).address);
@@ -333,12 +333,12 @@ contract('ConverterUpgrader', accounts => {
         initWithoutReserves,
         initWith1Reserve,
         initV1With2Reserves,
-        initV3With2Reserves,
+        initType3With2Reserves,
         initLPV2,
         initV1WithEtherReserve,
-        initV3WithEtherReserve,
+        initType3WithEtherReserve,
         initV1WithETHReserve,
-        initV3WithETHReserve
+        initType3WithETHReserve
     ];
 
     const f = (a, b) => [].concat(...a.map(d => b.map(e => [].concat(d, e))));
@@ -347,7 +347,7 @@ contract('ConverterUpgrader', accounts => {
     const combinations = product.filter(([init, version, active]) =>
         !(init === initWithoutReserves && active) &&
         !(init === initV1WithETHReserve && version) &&
-        !(init === initV3WithETHReserve && version)
+        !(init === initType3WithETHReserve && version)
     );
 
     for (const [init, version, activate] of combinations) {
@@ -358,13 +358,13 @@ contract('ConverterUpgrader', accounts => {
 
                 switch (init) {
                 case initV1WithEtherReserve:
-                case initV3WithEtherReserve:
+                case initType3WithEtherReserve:
                     reserveTokens = [etherToken.address, reserveToken2.address];
                     // An EtherToken reserve is always upgraded to ETH_RESERVE_ADDRESS.
                     upgradedReserveTokens = [ETH_RESERVE_ADDRESS, reserveToken2.address];
                     break;
                 case initV1WithETHReserve:
-                case initV3WithETHReserve:
+                case initType3WithETHReserve:
                     reserveTokens = [reserveToken1.address, ETH_RESERVE_ADDRESS];
                     upgradedReserveTokens = reserveTokens;
                     break;

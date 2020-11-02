@@ -155,7 +155,7 @@ const run = async () => {
     const liquidTokenConverterFactory = await web3Func(deploy, 'liquidTokenConverterFactory', 'LiquidTokenConverterFactory', []);
     const liquidityPoolV1ConverterFactory = await web3Func(deploy, 'liquidityPoolV1ConverterFactory', 'LiquidityPoolV1ConverterFactory', []);
     const liquidityPoolV2ConverterFactory = await web3Func(deploy, 'liquidityPoolV2ConverterFactory', 'LiquidityPoolV2ConverterFactory', []);
-    const liquidityPoolV3ConverterFactory = await web3Func(deploy, 'liquidityPoolV3ConverterFactory', 'LiquidityPoolV3ConverterFactory', []);
+    const standardPoolConverterFactory = await web3Func(deploy, 'standardPoolConverterFactory', 'StandardPoolConverterFactory', []);
     const liquidityPoolV2ConverterAnchorFactory = await web3Func(deploy, 'liquidityPoolV2ConverterAnchorFactory', 'LiquidityPoolV2ConverterAnchorFactory', []);
     const liquidityPoolV2ConverterCustomFactory = await web3Func(deploy, 'liquidityPoolV2ConverterCustomFactory', 'LiquidityPoolV2ConverterCustomFactory', []);
     const whitelist = await web3Func(deploy, 'whitelist', 'Whitelist', []);
@@ -170,7 +170,7 @@ const run = async () => {
     await web3Func(deploy, 'liquidTokenConverter', 'LiquidTokenConverter', [poolToken1._address, contractRegistry._address, 1000]);
     await web3Func(deploy, 'liquidityPoolV1Converter', 'LiquidityPoolV1Converter', [poolToken2._address, contractRegistry._address, 1000]);
     await web3Func(deploy, 'liquidityPoolV2Converter', 'LiquidityPoolV2Converter', [poolTokensContainer._address, contractRegistry._address, 1000]);
-    await web3Func(deploy, 'liquidityPoolV3Converter', 'LiquidityPoolV3Converter', [poolToken2._address, contractRegistry._address, 1000]);
+    await web3Func(deploy, 'standardPoolConverter', 'StandardPoolConverter', [poolToken2._address, contractRegistry._address, 1000]);
 
     // initialize contract registry
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('ContractRegistry'), contractRegistry._address));
@@ -187,7 +187,7 @@ const run = async () => {
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidTokenConverterFactory._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidityPoolV1ConverterFactory._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidityPoolV2ConverterFactory._address));
-    await execute(converterFactory.methods.registerTypedConverterFactory(liquidityPoolV3ConverterFactory._address));
+    await execute(converterFactory.methods.registerTypedConverterFactory(standardPoolConverterFactory._address));
     await execute(converterFactory.methods.registerTypedConverterAnchorFactory(liquidityPoolV2ConverterAnchorFactory._address));
     await execute(converterFactory.methods.registerTypedConverterCustomFactory(liquidityPoolV2ConverterCustomFactory._address));
 
@@ -268,7 +268,7 @@ const run = async () => {
                 await execute(deployedConverter.methods.addLiquidity(tokens[1], amounts[1], 1), value);
             }
             if (type === 3) {
-                const deployedConverter = deployed(web3, 'LiquidityPoolV3Converter', converterBase._address);
+                const deployedConverter = deployed(web3, 'StandardPoolConverter', converterBase._address);
                 await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
             }
         }

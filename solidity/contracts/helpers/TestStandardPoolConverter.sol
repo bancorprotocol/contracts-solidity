@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
-import "../converter/types/liquidity-pool-v3/LiquidityPoolV3Converter.sol";
+import "../converter/types/standard-pool/StandardPoolConverter.sol";
 
-contract TestLiquidityPoolV3Converter is LiquidityPoolV3Converter {
+contract TestStandardPoolConverter is StandardPoolConverter {
     uint256 public currentTime = 1;
 
     constructor(
@@ -10,7 +10,7 @@ contract TestLiquidityPoolV3Converter is LiquidityPoolV3Converter {
         IContractRegistry _registry,
         uint32 _maxConversionFee
     )
-        LiquidityPoolV3Converter(_token, _registry, _maxConversionFee)
+        StandardPoolConverter(_token, _registry, _maxConversionFee)
         public
     {
     }

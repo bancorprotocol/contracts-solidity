@@ -10,8 +10,8 @@ const DSToken = artifacts.require('DSToken');
 const ConverterRegistry = artifacts.require('ConverterRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConverterFactory = artifacts.require('ConverterFactory');
-const LiquidityPoolV3ConverterFactory = artifacts.require('TestLiquidityPoolV3ConverterFactory');
-const LiquidityPoolV3Converter = artifacts.require('TestLiquidityPoolV3Converter');
+const StandardPoolConverterFactory = artifacts.require('TestStandardPoolConverterFactory');
+const StandardPoolConverter = artifacts.require('TestStandardPoolConverter');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
 
@@ -50,7 +50,7 @@ const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 const FEE_PPM = percentageToPPM('1%');
 
-contract('LiquidityProtectionV3EdgeCases', accounts => {
+contract('LiquidityProtectionStandardPoolEdgeCases', accounts => {
     const addProtectedLiquidity = async (token, amount) => {
         await token.approve(liquidityProtection.address, amount);
         await liquidityProtection.addLiquidity(poolToken.address, token.address, amount);
@@ -106,9 +106,9 @@ contract('LiquidityProtectionV3EdgeCases', accounts => {
 
         const converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
 
-        const liquidityPoolV3ConverterFactory = await LiquidityPoolV3ConverterFactory.new();
+        const standardPoolConverterFactory = await StandardPoolConverterFactory.new();
         const converterFactory = await ConverterFactory.new();
-        await converterFactory.registerTypedConverterFactory(liquidityPoolV3ConverterFactory.address);
+        await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
@@ -133,7 +133,7 @@ contract('LiquidityProtectionV3EdgeCases', accounts => {
         const poolTokenAddress = await converterRegistry.getAnchor(anchorCount.sub(new BN(1)));
         poolToken = await DSToken.at(poolTokenAddress);
         const converterAddress = await poolToken.owner();
-        converter = await LiquidityPoolV3Converter.at(converterAddress);
+        converter = await StandardPoolConverter.at(converterAddress);
         await converter.acceptOwnership();
 
         liquidityProtectionStore = await LiquidityProtectionStore.new(contractRegistry.address);

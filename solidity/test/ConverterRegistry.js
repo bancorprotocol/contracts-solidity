@@ -16,7 +16,7 @@ const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
 const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
-const LiquidityPoolV3ConverterFactory = artifacts.require('LiquidityPoolV3ConverterFactory');
+const StandardPoolConverterFactory = artifacts.require('StandardPoolConverterFactory');
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
@@ -36,7 +36,7 @@ contract('ConverterRegistry', (accounts) => {
         await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
-        await converterFactory.registerTypedConverterFactory((await LiquidityPoolV3ConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
 
         await converterFactory.registerTypedConverterAnchorFactory((await LiquidityPoolV2ConverterAnchorFactory.new()).address);
         await converterFactory.registerTypedConverterCustomFactory((await LiquidityPoolV2ConverterCustomFactory.new()).address);

@@ -19,11 +19,11 @@ const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const LiquidityPoolV2Converter = artifacts.require('LiquidityPoolV2Converter');
-const LiquidityPoolV3Converter = artifacts.require('LiquidityPoolV3Converter');
+const StandardPoolConverter = artifacts.require('StandardPoolConverter');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
 const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
-const LiquidityPoolV3ConverterFactory = artifacts.require('LiquidityPoolV3ConverterFactory');
+const StandardPoolConverterFactory = artifacts.require('StandardPoolConverterFactory');
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 const DSToken = artifacts.require('DSToken');
@@ -37,7 +37,7 @@ contract('Converter', accounts => {
             case 0: return LiquidTokenConverter.new(anchorAddress, registryAddress, maxConversionFee);
             case 1: return LiquidityPoolV1Converter.new(anchorAddress, registryAddress, maxConversionFee);
             case 2: return LiquidityPoolV2Converter.new(anchorAddress, registryAddress, maxConversionFee);
-            case 3: return LiquidityPoolV3Converter.new(anchorAddress, registryAddress, maxConversionFee);
+            case 3: return StandardPoolConverter.new(anchorAddress, registryAddress, maxConversionFee);
         }
     };
 
@@ -46,7 +46,7 @@ contract('Converter', accounts => {
             case 0: return 'LiquidTokenConverter';
             case 1: return 'LiquidityPoolV1Converter';
             case 2: return 'LiquidityPoolV2Converter';
-            case 3: return 'LiquidityPoolV3Converter';
+            case 3: return 'StandardPoolConverter';
         }
 
         return 'Unknown';
@@ -196,7 +196,7 @@ contract('Converter', accounts => {
         await factory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
-        await factory.registerTypedConverterFactory((await LiquidityPoolV3ConverterFactory.new()).address);
+        await factory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
 
         await factory.registerTypedConverterAnchorFactory((await LiquidityPoolV2ConverterAnchorFactory.new()).address);
         await factory.registerTypedConverterCustomFactory((await LiquidityPoolV2ConverterCustomFactory.new()).address);

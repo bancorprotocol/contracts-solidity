@@ -13,15 +13,12 @@ import "../../../utility/TokenHolder.sol";
 import "../../../utility/Math.sol";
 
 /**
-  * @dev Liquidity Pool v3 Converter
+  * @dev Standard Pool Converter
   *
-  * The liquidity pool v3 converter is a specialized version of a converter that manages
-  * a classic bancor liquidity pool.
-  *
-  * Even though pools can have many reserves, the standard pool configuration
-  * is 2 reserves with 50%/50% weights.
+  * The standard pool converter is a specialized version of a converter that's optimized
+  * for a liquidity pool that has 2 reserves with 50%/50% weights.
 */
-contract LiquidityPoolV3Converter is ConverterVersion, IConverter, TokenHandler, TokenHolder, ContractRegistryClient, ReentrancyGuard {
+contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
     using Math for *;
 

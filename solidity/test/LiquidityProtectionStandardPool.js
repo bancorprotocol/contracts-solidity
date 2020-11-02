@@ -13,8 +13,8 @@ const DSToken = artifacts.require('DSToken');
 const ConverterRegistry = artifacts.require('ConverterRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConverterFactory = artifacts.require('ConverterFactory');
-const LiquidityPoolV3ConverterFactory = artifacts.require('TestLiquidityPoolV3ConverterFactory');
-const LiquidityPoolV3Converter = artifacts.require('TestLiquidityPoolV3Converter');
+const StandardPoolConverterFactory = artifacts.require('TestStandardPoolConverterFactory');
+const StandardPoolConverter = artifacts.require('TestStandardPoolConverter');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
 
@@ -28,7 +28,7 @@ const PROTECTION_PARTIAL_PROTECTION = 1;
 const PROTECTION_FULL_PROTECTION = 2;
 const PROTECTION_EXCESSIVE_PROTECTION = 3;
 
-contract('LiquidityProtectionV3', accounts => {
+contract('LiquidityProtectionStandardPool', accounts => {
     const initPool = async (isETH = false, whitelist = true) => {
         if (isETH) {
             baseTokenAddress = ETH_RESERVE_ADDRESS;
@@ -45,7 +45,7 @@ contract('LiquidityProtectionV3', accounts => {
         const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
         poolToken = await DSToken.at(poolTokenAddress);
         converterAddress = await poolToken.owner.call();
-        converter = await LiquidityPoolV3Converter.at(converterAddress);
+        converter = await StandardPoolConverter.at(converterAddress);
         await converter.setTime(now);
         await converter.acceptOwnership();
         await networkToken.approve(converter.address, RESERVE2_AMOUNT);
@@ -214,9 +214,9 @@ contract('LiquidityProtectionV3', accounts => {
         converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
-        const liquidityPoolV3ConverterFactory = await LiquidityPoolV3ConverterFactory.new();
+        const standardPoolConverterFactory = await StandardPoolConverterFactory.new();
         converterFactory = await ConverterFactory.new();
-        await converterFactory.registerTypedConverterFactory(liquidityPoolV3ConverterFactory.address);
+        await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();

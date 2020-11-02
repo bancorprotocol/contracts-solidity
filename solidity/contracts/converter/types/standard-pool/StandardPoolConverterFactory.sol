@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
-import "./LiquidityPoolV3Converter.sol";
+import "./StandardPoolConverter.sol";
 import "../../interfaces/IConverter.sol";
 import "../../interfaces/ITypedConverterFactory.sol";
 import "../../../token/interfaces/IDSToken.sol";
 
 /*
-    LiquidityPoolV3Converter Factory
+    StandardPoolConverter Factory
 */
-contract LiquidityPoolV3ConverterFactory is ITypedConverterFactory {
+contract StandardPoolConverterFactory is ITypedConverterFactory {
     /**
       * @dev returns the converter type the factory is associated with
       *
@@ -34,7 +34,7 @@ contract LiquidityPoolV3ConverterFactory is ITypedConverterFactory {
         override
         returns (IConverter)
     {
-        IConverter converter = new LiquidityPoolV3Converter(IDSToken(address(_anchor)), _registry, _maxConversionFee);
+        IConverter converter = new StandardPoolConverter(IDSToken(address(_anchor)), _registry, _maxConversionFee);
         converter.transferOwnership(msg.sender);
         return converter;
     }
