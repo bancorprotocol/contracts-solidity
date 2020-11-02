@@ -10,8 +10,8 @@ const DSToken = artifacts.require('DSToken');
 const ConverterRegistry = artifacts.require('ConverterRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConverterFactory = artifacts.require('ConverterFactory');
-const LiquidityPoolV3ConverterFactory = artifacts.require('TestLiquidityPoolV3ConverterFactory');
-const LiquidityPoolV3Converter = artifacts.require('TestLiquidityPoolV3Converter');
+const LiquidityPoolV1ConverterFactory = artifacts.require('TestLiquidityPoolV1ConverterFactory');
+const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
 
@@ -29,7 +29,7 @@ function percentageToPPM(value) {
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 
-contract('LiquidityProtectionV3TokenRate', accounts => {
+contract('LiquidityProtectionV1TokenRate', accounts => {
     const convert = async (sourceToken, targetToken, amount) => {
         await sourceToken.approve(bancorNetwork.address, amount);
         const path = [sourceToken.address, poolToken.address, targetToken.address];
@@ -52,9 +52,9 @@ contract('LiquidityProtectionV3TokenRate', accounts => {
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         liquidityProtection = await LiquidityProtection.new(accounts[0], accounts[0], accounts[0], contractRegistry.address);
 
-        const liquidityPoolV3ConverterFactory = await LiquidityPoolV3ConverterFactory.new();
+        const liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
         const converterFactory = await ConverterFactory.new();
-        await converterFactory.registerTypedConverterFactory(liquidityPoolV3ConverterFactory.address);
+        await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
 
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
@@ -70,9 +70,9 @@ contract('LiquidityProtectionV3TokenRate', accounts => {
         await reserveToken1.issue(accounts[0], new BN('1'.padEnd(30, '0')));
         await reserveToken2.issue(accounts[0], new BN('1'.padEnd(30, '0')));
 
-        await converterRegistry.newConverter(3, 'PT', 'PT', 18, FULL_PPM, [reserveToken1.address, reserveToken2.address], [HALF_PPM, HALF_PPM]);
+        await converterRegistry.newConverter(1, 'PT', 'PT', 18, FULL_PPM, [reserveToken1.address, reserveToken2.address], [HALF_PPM, HALF_PPM]);
         poolToken = await DSToken.at(await converterRegistry.getAnchor(0));
-        converter = await LiquidityPoolV3Converter.at(await poolToken.owner());
+        converter = await LiquidityPoolV1Converter.at(await poolToken.owner());
         await converter.acceptOwnership();
         time = await converter.currentTime();
     });
@@ -94,12 +94,12 @@ contract('LiquidityProtectionV3TokenRate', accounts => {
                     const max = Decimal(actualRate[0].toString()).div(actualRate[1].toString()).mul(100).div(100 - maxDeviation);
                     const mid = Decimal(averageRate[0].toString()).div(averageRate[1].toString());
                     if (min.lte(mid) && mid.lte(max)) {
-                        const reserveTokenRate = await liquidityProtection.reserveTokenRateTest(poolToken.address, reserveToken1.address);
+                        const reserveTokenRate = await liquidityProtection.averageRateTest(poolToken.address, reserveToken1.address);
                         expect(reserveTokenRate[0]).to.be.bignumber.equal(averageRate[0]);
                         expect(reserveTokenRate[1]).to.be.bignumber.equal(averageRate[1]);
                     }
                     else {
-                        await expectRevert(liquidityProtection.reserveTokenRateTest(poolToken.address, reserveToken1.address), 'ERR_INVALID_RATE');
+                        await expectRevert(liquidityProtection.averageRateTest(poolToken.address, reserveToken1.address), 'ERR_INVALID_RATE');
                     }
                     await converter.removeLiquidity(await poolToken.balanceOf(accounts[0]), [reserveToken1.address, reserveToken2.address], [1, 1]);
                 });

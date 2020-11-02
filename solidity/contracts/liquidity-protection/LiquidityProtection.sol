@@ -38,6 +38,15 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 timestamp;          // timestamp
     }
 
+    struct PackedRates {
+        uint128 addSpotRateN;
+        uint128 addSpotRateD;
+        uint128 removeSpotRateN;
+        uint128 removeSpotRateD;
+        uint128 removeAverageRateN;
+        uint128 removeAverageRateD;
+    }
+
     IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint32 internal constant PPM_RESOLUTION = 1000000;
     uint256 internal constant MAX_UINT128 = 0xffffffffffffffffffffffffffffffff;
@@ -65,7 +74,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     // number of seconds from liquidation to full network token release
     uint256 public lockDuration = 24 hours;
 
-    // maximum deviation of the average rate from the actual rate
+    // maximum deviation of the average rate from the spot rate
     uint32 public averageRateMaxDeviation = 20000; // PPM units
 
     // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
@@ -135,10 +144,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     );
 
     /**
-      * @dev triggered when the maximum deviation of the average rate from the actual rate is updated
+      * @dev triggered when the maximum deviation of the average rate from the spot rate is updated
       *
-      * @param _prevAverageRateMaxDeviation previous maximum deviation of the average rate from the actual rate
-      * @param _newAverageRateMaxDeviation  new maximum deviation of the average rate from the actual rate
+      * @param _prevAverageRateMaxDeviation previous maximum deviation of the average rate from the spot rate
+      * @param _newAverageRateMaxDeviation  new maximum deviation of the average rate from the spot rate
     */
     event AverageRateMaxDeviationUpdated(
         uint32 _prevAverageRateMaxDeviation,
@@ -199,16 +208,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       *
       * @param _newOwner    the new owner of the store
     */
-    function transferStoreOwnership(address _newOwner) external ownerOnly {
-        store.transferOwnership(_newOwner);
+    function transferStoreOwnership(address _newOwner) external {
+        transferOwnership(store, _newOwner);
     }
 
     /**
       * @dev accepts the ownership of the store
       * can only be called by the contract owner
     */
-    function acceptStoreOwnership() external ownerOnly {
-        store.acceptOwnership();
+    function acceptStoreOwnership() external {
+        acceptOwnership(store);
     }
 
     /**
@@ -217,16 +226,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       *
       * @param _newOwner    the new owner of the network token
     */
-    function transferNetworkTokenOwnership(address _newOwner) external ownerOnly {
-        networkToken.transferOwnership(_newOwner);
+    function transferNetworkTokenOwnership(address _newOwner) external {
+        transferOwnership(networkToken, _newOwner);
     }
 
     /**
       * @dev accepts the ownership of the network token
       * can only be called by the contract owner
     */
-    function acceptNetworkTokenOwnership() external ownerOnly {
-        networkToken.acceptOwnership();
+    function acceptNetworkTokenOwnership() external {
+        acceptOwnership(networkToken);
     }
 
     /**
@@ -235,16 +244,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       *
       * @param _newOwner    the new owner of the governance token
     */
-    function transferGovTokenOwnership(address _newOwner) external ownerOnly {
-        govToken.transferOwnership(_newOwner);
+    function transferGovTokenOwnership(address _newOwner) external {
+        transferOwnership(govToken, _newOwner);
     }
 
     /**
       * @dev accepts the ownership of the governance token
       * can only be called by the contract owner
     */
-    function acceptGovTokenOwnership() external ownerOnly {
-        govToken.acceptOwnership();
+    function acceptGovTokenOwnership() external {
+        acceptOwnership(govToken);
     }
 
     /**
@@ -321,10 +330,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev sets the maximum deviation of the average rate from the actual rate
+      * @dev sets the maximum deviation of the average rate from the spot rate
       * can only be called by the contract owner
       *
-      * @param _averageRateMaxDeviation maximum deviation of the average rate from the actual rate
+      * @param _averageRateMaxDeviation maximum deviation of the average rate from the spot rate
     */
     function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation) external ownerOnly {
         require(_averageRateMaxDeviation <= PPM_RESOLUTION, "ERR_INVALID_MAX_DEVIATION");
@@ -501,10 +510,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         IDSToken poolToken = IDSToken(address(_poolAnchor));
 
         // get the rate between the pool token and the reserve
-        Fraction memory tokenRate = poolTokenRate(poolToken, networkToken);
+        Fraction memory poolRate = poolTokenRate(poolToken, networkToken);
 
         // calculate the amount of pool tokens based on the amount of reserve tokens
-        uint256 poolTokenAmount = _amount.mul(tokenRate.d).div(tokenRate.n);
+        uint256 poolTokenAmount = _amount.mul(poolRate.d).div(poolRate.n);
 
         // remove the pool tokens from the system's ownership (will revert if not enough tokens are available)
         store.decSystemBalance(poolToken, poolTokenAmount);
@@ -634,19 +643,19 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // calculate the portion of the liquidity to remove
         if (_portion != PPM_RESOLUTION) {
-            liquidity.poolAmount = liquidity.poolAmount.mul(_portion).div(PPM_RESOLUTION);
-            liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion).div(PPM_RESOLUTION);
+            liquidity.poolAmount = liquidity.poolAmount.mul(_portion) / PPM_RESOLUTION;
+            liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion) / PPM_RESOLUTION;
         }
 
-        Fraction memory addRate = Fraction({ n: liquidity.reserveRateN, d: liquidity.reserveRateD });
-        Fraction memory removeRate = reserveTokenRate(liquidity.poolToken, liquidity.reserveToken);
+        // get the rate between the reserves upon adding liquidity and now
+        PackedRates memory packedRates = getPackedRates(liquidity.poolToken, liquidity.reserveToken, liquidity.reserveRateN, liquidity.reserveRateD);
+
         uint256 targetAmount = removeLiquidityTargetAmount(
             liquidity.poolToken,
             liquidity.reserveToken,
             liquidity.poolAmount,
             liquidity.reserveAmount,
-            addRate,
-            removeRate,
+            packedRates,
             liquidity.timestamp,
             _removeTimestamp);
 
@@ -676,7 +685,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             uint256 delta = targetAmount - baseAmount;
 
             // calculate the delta in network tokens
-            delta = delta.mul(removeRate.n).div(removeRate.d);
+            delta = delta.mul(packedRates.removeAverageRateN).div(packedRates.removeAverageRateD);
 
             // the delta might be very small due to precision loss
             // in which case no compensation will take place (gas optimization)
@@ -699,7 +708,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PERCENT");
 
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
-        Fraction memory addRate = Fraction({ n: liquidity.reserveRateN, d: liquidity.reserveRateD });
 
         // verify input & permissions
         require(liquidity.provider == msg.sender, "ERR_ACCESS_DENIED");
@@ -715,8 +723,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             // remove portion of the pool tokens from the provider
             uint256 fullPoolAmount = liquidity.poolAmount;
             uint256 fullReserveAmount = liquidity.reserveAmount;
-            liquidity.poolAmount = liquidity.poolAmount.mul(_portion).div(PPM_RESOLUTION);
-            liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion).div(PPM_RESOLUTION);
+            liquidity.poolAmount = liquidity.poolAmount.mul(_portion) / PPM_RESOLUTION;
+            liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion) / PPM_RESOLUTION;
 
             store.updateProtectedLiquidityAmounts(_id, fullPoolAmount - liquidity.poolAmount, fullReserveAmount - liquidity.reserveAmount);
         }
@@ -729,8 +737,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             govToken.destroy(msg.sender, liquidity.reserveAmount);
         }
 
-        // get the current rate between the reserves (recent average)
-        Fraction memory currentRate = reserveTokenRate(liquidity.poolToken, liquidity.reserveToken);
+        // get the rate between the reserves upon adding liquidity and now
+        PackedRates memory packedRates = getPackedRates(liquidity.poolToken, liquidity.reserveToken, liquidity.reserveRateN, liquidity.reserveRateD);
 
         // get the target token amount
         uint256 targetAmount = removeLiquidityTargetAmount(
@@ -738,8 +746,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             liquidity.reserveToken,
             liquidity.poolAmount,
             liquidity.reserveAmount,
-            addRate,
-            currentRate,
+            packedRates,
             liquidity.timestamp,
             time());
 
@@ -785,7 +792,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             uint256 delta = targetAmount - baseBalance;
 
             // calculate the delta in network tokens
-            delta = delta.mul(currentRate.n).div(currentRate.d);
+            delta = delta.mul(packedRates.removeAverageRateN).div(packedRates.removeAverageRateD);
 
             // the delta might be very small due to precision loss
             // in which case no compensation will take place (gas optimization)
@@ -818,8 +825,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _reserveToken    reserve token
       * @param _poolAmount      pool token amount when the liquidity was added
       * @param _reserveAmount   reserve token amount that was added
-      * @param _addRate         rate of 1 reserve token in the other reserve token units when the liquidity was added
-      * @param _removeRate      rate of 1 reserve token in the other reserve token units when the liquidity is removed
+      * @param _packedRates     packed object containing the reserves rates
       * @param _addTimestamp    time at which the liquidity was added
       * @param _removeTimestamp time at which the liquidity is removed
       * @return amount received for removing liquidity
@@ -829,20 +835,24 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         IERC20Token _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount,
-        Fraction memory _addRate,
-        Fraction memory _removeRate,
+        PackedRates memory _packedRates,
         uint256 _addTimestamp,
         uint256 _removeTimestamp)
         internal view returns (uint256)
     {
+        // get the rate between the reserves upon adding liquidity and now
+        Fraction memory addSpotRate = Fraction({n: _packedRates.addSpotRateN, d: _packedRates.addSpotRateD});
+        Fraction memory removeSpotRate = Fraction({n: _packedRates.removeSpotRateN, d: _packedRates.removeSpotRateD});
+        Fraction memory removeAverageRate = Fraction({n: _packedRates.removeAverageRateN, d: _packedRates.removeAverageRateD});
+
         // calculate the entitled amount of reserve tokens before compensation
-        uint256 entitlement = entitledAmount(_poolToken, _reserveToken, _poolAmount, _addRate, _removeRate);
+        uint256 entitlement = entitledAmount(_poolToken, _reserveToken, _poolAmount, addSpotRate, removeSpotRate);
         if (entitlement < _reserveAmount) {
             entitlement = _reserveAmount;
         }
 
         // calculate the impermanent loss
-        Fraction memory loss = impLoss(_addRate, _removeRate);
+        Fraction memory loss = impLoss(addSpotRate, removeAverageRate);
 
         // calculate the protection level
         Fraction memory level = protectionLevel(_addTimestamp, _removeTimestamp);
@@ -915,9 +925,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // calculate the amount of pool tokens based on the amount of reserve tokens
         uint256 poolAmount = _reserveAmount.mul(_poolRateD).div(_poolRateN);
 
-        // get the add/remove rates
-        Fraction memory addRate = Fraction({ n: _reserveRateN, d: _reserveRateD });
-        Fraction memory removeRate = reserveTokenRate(_poolToken, _reserveToken);
+        // get the rate between the reserves upon adding liquidity and now
+        PackedRates memory packedRates = getPackedRates(_poolToken, _reserveToken, _reserveRateN, _reserveRateD);
 
         // get the current return
         uint256 protectedReturn = removeLiquidityTargetAmount(
@@ -925,13 +934,12 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             _reserveToken,
             poolAmount,
             _reserveAmount,
-            addRate,
-            removeRate,
+            packedRates,
             time().sub(maxProtectionDelay),
             time()
         );
 
-        // calculate the ROI as the ratio between the current fully protecteda return and the initial amount
+        // calculate the ROI as the ratio between the current fully protected return and the initial amount
         return protectedReturn.mul(PPM_RESOLUTION).div(_reserveAmount);
     }
 
@@ -952,7 +960,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         IDSToken poolToken = IDSToken(address(_poolAnchor));
         Fraction memory poolRate = poolTokenRate(poolToken, reserveToken);
 
-        // calculate the reserve balance based on the amount provided and the current pool token rate
+        // calculate the reserve balance based on the amount provided and the pool token rate
         uint256 reserveAmount = _poolAmount.mul(poolRate.n).div(poolRate.d);
 
         // protect the liquidity
@@ -983,7 +991,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         internal
         returns (uint256)
     {
-        Fraction memory rate = reserveTokenRate(_poolToken, _reserveToken);
+        Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken);
         return store.addProtectedLiquidity(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount, rate.n, rate.d, time());
     }
 
@@ -1017,12 +1025,23 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev returns the rate of 1 reserve token in the other reserve token units
+      * @dev returns the average rate of 1 reserve token in the other reserve token units
       *
       * @param _poolToken       pool token
       * @param _reserveToken    reserve token
     */
-    function reserveTokenRate(IDSToken _poolToken, IERC20Token _reserveToken) internal view returns (Fraction memory) {
+    function reserveTokenAverageRate(IDSToken _poolToken, IERC20Token _reserveToken) internal view returns (Fraction memory) {
+        (, , uint256 averageRateN, uint256 averageRateD) = reserveTokenRates(_poolToken, _reserveToken);
+        return Fraction(averageRateN, averageRateD);
+    }
+
+    /**
+      * @dev returns the spot rate and average rate of 1 reserve token in the other reserve token units
+      *
+      * @param _poolToken       pool token
+      * @param _reserveToken    reserve token
+    */
+    function reserveTokenRates(IDSToken _poolToken, IERC20Token _reserveToken) internal view returns (uint256, uint256, uint256, uint256) {
         ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(_poolToken.owner()));
 
         IERC20Token otherReserve = converter.connectorTokens(0);
@@ -1030,15 +1049,67 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             otherReserve = converter.connectorTokens(1);
         }
 
-        (uint256 currentRateN, uint256 currentRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
-        (uint256 n, uint256 d) = converter.recentAverageRate(_reserveToken);
+        (uint256 spotRateN, uint256 spotRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
+        (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(_reserveToken);
 
-        uint256 min = currentRateN.mul(d).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION - averageRateMaxDeviation);
-        uint256 mid = currentRateD.mul(n).mul(PPM_RESOLUTION - averageRateMaxDeviation).mul(PPM_RESOLUTION);
-        uint256 max = currentRateN.mul(d).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
-        require(min <= mid && mid <= max, "ERR_INVALID_RATE");
+        require(averageRateInRange(spotRateN, spotRateD, averageRateN, averageRateD, averageRateMaxDeviation), "ERR_INVALID_RATE");
 
-        return Fraction(n, d);
+        return (spotRateN, spotRateD, averageRateN, averageRateD);
+    }
+
+    /**
+      * @dev returns a packed object containing the reserves rates
+      *
+      * @param _poolToken       pool token
+      * @param _reserveToken    reserve token
+      * @param _addSpotRateN    add spot rate numerator
+      * @param _addSpotRateD    add spot rate denominator
+      * @return packed object containing the reserves rates
+    */
+    function getPackedRates(
+        IDSToken _poolToken,
+        IERC20Token _reserveToken,
+        uint256 _addSpotRateN,
+        uint256 _addSpotRateD)
+        internal view returns (PackedRates memory)
+    {
+        (uint256 removeSpotRateN, uint256 removeSpotRateD, uint256 removeAverageRateN, uint256 removeAverageRateD) = reserveTokenRates(_poolToken, _reserveToken);
+
+        require(_addSpotRateN <= MAX_UINT128 && _addSpotRateD <= MAX_UINT128, "ERR_INVALID_RATE");
+        require(removeSpotRateN <= MAX_UINT128 && removeSpotRateD <= MAX_UINT128, "ERR_INVALID_RATE");
+        require(removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128, "ERR_INVALID_RATE");
+
+        return PackedRates({
+            addSpotRateN: uint128(_addSpotRateN),
+            addSpotRateD: uint128(_addSpotRateD),
+            removeSpotRateN: uint128(removeSpotRateN),
+            removeSpotRateD: uint128(removeSpotRateD),
+            removeAverageRateN: uint128(removeAverageRateN),
+            removeAverageRateD: uint128(removeAverageRateD)
+        });
+    }
+
+    /**
+      * @dev returns whether or not the deviation of the average rate from the spot rate is within range
+      *
+      * @param _spotRateN       spot rate numerator
+      * @param _spotRateD       spot rate denominator
+      * @param _averageRateN    average rate numerator
+      * @param _averageRateD    average rate denominator
+      * @param _maxDeviation    the maximum permitted deviation of the average rate from the spot rate
+    */
+    function averageRateInRange(
+        uint256 _spotRateN,
+        uint256 _spotRateD,
+        uint256 _averageRateN,
+        uint256 _averageRateD,
+        uint32 _maxDeviation)
+        internal pure returns (bool)
+    {
+        uint256 min = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION - _maxDeviation);
+        uint256 mid = _spotRateD.mul(_averageRateN).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION);
+        uint256 max = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
+        return min <= mid && mid <= max;
     }
 
     /**
@@ -1210,6 +1281,25 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
+      * @dev transfers the ownership of a contract
+      * can only be called by the contract owner
+      *
+      * @param _owned       the owned contract
+      * @param _newOwner    the new owner of the contract
+    */
+    function transferOwnership(IOwned _owned, address _newOwner) internal ownerOnly {
+        _owned.transferOwnership(_newOwner);
+    }
+
+    /**
+      * @dev accepts the ownership of a contract
+      * can only be called by the contract owner
+    */
+    function acceptOwnership(IOwned _owned) internal ownerOnly {
+        _owned.acceptOwnership();
+    }
+
+    /**
       * @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't.
       * note that we use the non standard erc-20 interface in which `approve` has no return value so that
       * this function will work for both standard and non standard tokens
@@ -1236,22 +1326,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function converterReserveWeight(IConverter _converter, IERC20Token _reserveToken) private view returns (uint32) {
         (, uint32 weight,,,) = _converter.connectors(_reserveToken);
         return weight;
-    }
-
-    bytes4 private constant CONVERTER_VERSION_FUNC_SELECTOR = bytes4(keccak256("version()"));
-
-    // using a static call to identify converter version
-    // the function had a different signature in older converters but in the worst case,
-    // these converters won't be supported (revert) until they are upgraded
-    function converterVersion(IConverter _converter) internal view returns (uint16) {
-        bytes memory data = abi.encodeWithSelector(CONVERTER_VERSION_FUNC_SELECTOR);
-        (bool success, bytes memory returnData) = address(_converter).staticcall{ gas: 4000 }(data);
-
-        if (success && returnData.length == 32) {
-            return abi.decode(returnData, (uint16));
-        }
-
-        return 0;
     }
 
     /**
