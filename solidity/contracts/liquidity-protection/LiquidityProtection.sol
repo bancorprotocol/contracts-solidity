@@ -501,10 +501,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         IDSToken poolToken = IDSToken(address(_poolAnchor));
 
         // get the rate between the pool token and the reserve
-        Fraction memory tokenRate = poolTokenRate(poolToken, networkToken);
+        Fraction memory poolRate = poolTokenRate(poolToken, networkToken);
 
         // calculate the amount of pool tokens based on the amount of reserve tokens
-        uint256 poolTokenAmount = _amount.mul(tokenRate.d).div(tokenRate.n);
+        uint256 poolTokenAmount = _amount.mul(poolRate.d).div(poolRate.n);
 
         // remove the pool tokens from the system's ownership (will revert if not enough tokens are available)
         store.decSystemBalance(poolToken, poolTokenAmount);
