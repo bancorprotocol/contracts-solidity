@@ -1048,7 +1048,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _currentRateD    current-rate denominator
       * @param _averageRateN    average-rate numerator
       * @param _averageRateD    average-rate denominator
-      * @param _maxDeviation    the maximum permitted deviation of the average-rate from the spot-rate
+      * @param _maxDeviation    the maximum permitted deviation of the average-rate from the current-rate
     */
     function averageRateInRange(
         uint256 _currentRateN,
