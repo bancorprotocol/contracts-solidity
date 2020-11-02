@@ -208,16 +208,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       *
       * @param _newOwner    the new owner of the store
     */
-    function transferStoreOwnership(address _newOwner) external ownerOnly {
-        store.transferOwnership(_newOwner);
+    function transferStoreOwnership(address _newOwner) external {
+        transferOwnership(store, _newOwner);
     }
 
     /**
       * @dev accepts the ownership of the store
       * can only be called by the contract owner
     */
-    function acceptStoreOwnership() external ownerOnly {
-        store.acceptOwnership();
+    function acceptStoreOwnership() external {
+        acceptOwnership(store);
     }
 
     /**
@@ -226,16 +226,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       *
       * @param _newOwner    the new owner of the network token
     */
-    function transferNetworkTokenOwnership(address _newOwner) external ownerOnly {
-        networkToken.transferOwnership(_newOwner);
+    function transferNetworkTokenOwnership(address _newOwner) external {
+        transferOwnership(networkToken, _newOwner);
     }
 
     /**
       * @dev accepts the ownership of the network token
       * can only be called by the contract owner
     */
-    function acceptNetworkTokenOwnership() external ownerOnly {
-        networkToken.acceptOwnership();
+    function acceptNetworkTokenOwnership() external {
+        acceptOwnership(networkToken);
     }
 
     /**
@@ -244,16 +244,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       *
       * @param _newOwner    the new owner of the governance token
     */
-    function transferGovTokenOwnership(address _newOwner) external ownerOnly {
-        govToken.transferOwnership(_newOwner);
+    function transferGovTokenOwnership(address _newOwner) external {
+        transferOwnership(govToken, _newOwner);
     }
 
     /**
       * @dev accepts the ownership of the governance token
       * can only be called by the contract owner
     */
-    function acceptGovTokenOwnership() external ownerOnly {
-        govToken.acceptOwnership();
+    function acceptGovTokenOwnership() external {
+        acceptOwnership(govToken);
     }
 
     /**
@@ -1278,6 +1278,25 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function compensationAmount(uint256 _amount, uint256 _total, Fraction memory _loss, Fraction memory _level) internal pure returns (uint256) {
         (uint256 compN, uint256 compD) = Math.reducedRatio(_loss.n.mul(_level.n), _loss.d.mul(_level.d), MAX_UINT128);
         return _total.mul(_loss.d.sub(_loss.n)).div(_loss.d).add(_amount.mul(compN).div(compD));
+    }
+
+    /**
+      * @dev transfers the ownership of a contract
+      * can only be called by the contract owner
+      *
+      * @param _owned       the owned contract
+      * @param _newOwner    the new owner of the contract
+    */
+    function transferOwnership(IOwned _owned, address _newOwner) internal ownerOnly {
+        _owned.transferOwnership(_newOwner);
+    }
+
+    /**
+      * @dev accepts the ownership of a contract
+      * can only be called by the contract owner
+    */
+    function acceptOwnership(IOwned _owned) internal ownerOnly {
+        _owned.acceptOwnership();
     }
 
     /**
