@@ -657,10 +657,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             return (targetAmount, targetAmount, 0);
         }
 
-        // calculate the amount of base tokens required for liquidation
+        // get the amount of pool tokens to be liquidated, in units of the base token
         uint256 baseAmount = liquidationAmount(liquidity.poolToken, liquidity.reserveToken, liquidity.poolAmount, targetAmount, true);
 
-        // calculate the amount of network tokens returned as compensation
+        // get the amount of network tokens to be given back as compensation
         uint256 networkAmount = networkCompensation(targetAmount, baseAmount, removeRate);
 
         return (targetAmount, baseAmount, networkAmount);
@@ -729,7 +729,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             return;
         }
 
-        // calculate the amount of pool tokens required for liquidation
+        // get the amount of pool tokens to be liquidated
         uint256 poolAmount = liquidationAmount(liquidity.poolToken, liquidity.reserveToken, 0, targetAmount, false);
 
         // withdraw the pool tokens from the store
@@ -750,7 +750,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             safeTransfer(liquidity.reserveToken, msg.sender, baseBalance);
         }
         
-        // calculate the amount of network tokens returned as compensation
+        // get the amount of network tokens to be given back as compensation
         uint256 networkAmount = networkCompensation(targetAmount, baseBalance, removeRate);
 
         if (networkAmount > 0) {
@@ -816,21 +816,21 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev returns the amount of tokens required for liquidation
+      * @dev returns the amount of pool tokens to be liquidated
       *
       * @param _poolToken       pool token
       * @param _reserveToken    reserve token
       * @param _poolAmount      pool token amount when the liquidity was added
       * @param _targetAmount    target token amount received in return
-      * @param _isBaseAmount    true if the required amount is of the based token
-      * @return amount of tokens required for liquidation
+      * @param _baseTokenUnits  return the result in units of the base token
+      * @return amount of pool tokens to be liquidated
     */
     function liquidationAmount(
         IDSToken _poolToken,
         IERC20Token _reserveToken,
         uint256 _poolAmount,
         uint256 _targetAmount,
-        bool _isBaseAmount)
+        bool _baseTokenUnits)
         internal view returns (uint256)
     {
         // calculate the amount of pool tokens required for liquidation
@@ -842,8 +842,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 systemBalance = store.systemBalance(_poolToken).add(_poolAmount);
         poolAmount = poolAmount > systemBalance ? systemBalance : poolAmount;
 
-        if (_isBaseAmount) {
-            // calculate the base token amount received by liquidating the pool tokens
+        if (_baseTokenUnits) {
+            // return the result in units of the base token
             // note that the amount is divided by 2 since the pool amount represents both reserves
             return poolAmount.mul(poolRate.n / 2).div(poolRate.d);
         }
@@ -852,12 +852,12 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev returns the amount of network tokens received as compensation
+      * @dev returns the amount of network tokens to be given back as compensation
       *
       * @param _targetAmount    target token amount received in return
       * @param _baseAmount      base token amount liquidated
       * @param _removeRate      rate between the reserve tokens
-      * @return amount of network tokens received as compensation
+      * @return amount of network tokens to be given back as compensation
     */
     function networkCompensation(
         uint256 _targetAmount,
