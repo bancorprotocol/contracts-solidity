@@ -65,7 +65,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     // number of seconds from liquidation to full network token release
     uint256 public lockDuration = 24 hours;
 
-    // maximum deviation of the average rate from the current rate
+    // maximum deviation of the average rate from the spot rate
     uint32 public averageRateMaxDeviation = 20000; // PPM units
 
     // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
@@ -135,10 +135,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     );
 
     /**
-      * @dev triggered when the maximum deviation of the average rate from the current rate is updated
+      * @dev triggered when the maximum deviation of the average rate from the spot rate is updated
       *
-      * @param _prevAverageRateMaxDeviation previous maximum deviation of the average rate from the current rate
-      * @param _newAverageRateMaxDeviation  new maximum deviation of the average rate from the current rate
+      * @param _prevAverageRateMaxDeviation previous maximum deviation of the average rate from the spot rate
+      * @param _newAverageRateMaxDeviation  new maximum deviation of the average rate from the spot rate
     */
     event AverageRateMaxDeviationUpdated(
         uint32 _prevAverageRateMaxDeviation,
@@ -321,10 +321,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev sets the maximum deviation of the average rate from the current rate
+      * @dev sets the maximum deviation of the average rate from the spot rate
       * can only be called by the contract owner
       *
-      * @param _averageRateMaxDeviation maximum deviation of the average rate from the current rate
+      * @param _averageRateMaxDeviation maximum deviation of the average rate from the spot rate
     */
     function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation) external ownerOnly {
         require(_averageRateMaxDeviation <= PPM_RESOLUTION, "ERR_INVALID_MAX_DEVIATION");
@@ -934,7 +934,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             time()
         );
 
-        // calculate the ROI as the ratio between the current fully protecteda return and the initial amount
+        // calculate the ROI as the ratio between the current fully protected return and the initial amount
         return protectedReturn.mul(PPM_RESOLUTION).div(_reserveAmount);
     }
 
@@ -955,7 +955,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         IDSToken poolToken = IDSToken(address(_poolAnchor));
         Fraction memory poolRate = poolTokenRate(poolToken, reserveToken);
 
-        // calculate the reserve balance based on the amount provided and the current pool token rate
+        // calculate the reserve balance based on the amount provided and the pool token rate
         uint256 reserveAmount = _poolAmount.mul(poolRate.n).div(poolRate.d);
 
         // protect the liquidity
@@ -1033,34 +1033,34 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             otherReserve = converter.connectorTokens(1);
         }
 
-        (uint256 currentRateN, uint256 currentRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
+        (uint256 spotRateN, uint256 spotRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
         (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(_reserveToken);
 
-        require(averageRateInRange(currentRateN, currentRateD, averageRateN, averageRateD, averageRateMaxDeviation), "ERR_INVALID_RATE");
+        require(averageRateInRange(spotRateN, spotRateD, averageRateN, averageRateD, averageRateMaxDeviation), "ERR_INVALID_RATE");
 
         return Fraction(averageRateN, averageRateD);
     }
 
     /**
-      * @dev returns whether or not the deviation of the average rate from the current rate is within range
+      * @dev returns whether or not the deviation of the average rate from the spot rate is within range
       *
-      * @param _currentRateN    current rate numerator
-      * @param _currentRateD    current rate denominator
+      * @param _spotRateN       spot rate numerator
+      * @param _spotRateD       spot rate denominator
       * @param _averageRateN    average rate numerator
       * @param _averageRateD    average rate denominator
-      * @param _maxDeviation    the maximum permitted deviation of the average rate from the current rate
+      * @param _maxDeviation    the maximum permitted deviation of the average rate from the spot rate
     */
     function averageRateInRange(
-        uint256 _currentRateN,
-        uint256 _currentRateD,
+        uint256 _spotRateN,
+        uint256 _spotRateD,
         uint256 _averageRateN,
         uint256 _averageRateD,
         uint32 _maxDeviation)
         internal pure returns (bool)
     {
-        uint256 min = _currentRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION - _maxDeviation);
-        uint256 mid = _currentRateD.mul(_averageRateN).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION);
-        uint256 max = _currentRateN.mul(_averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
+        uint256 min = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION - _maxDeviation);
+        uint256 mid = _spotRateD.mul(_averageRateN).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION);
+        uint256 max = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
         return min <= mid && mid <= max;
     }
 
