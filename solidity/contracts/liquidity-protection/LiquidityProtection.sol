@@ -39,10 +39,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     struct PackedRates {
-        uint128 addCurrentRateN;
-        uint128 addCurrentRateD;
-        uint128 removeCurrentRateN;
-        uint128 removeCurrentRateD;
+        uint128 addSpotRateN;
+        uint128 addSpotRateD;
+        uint128 removeSpotRateN;
+        uint128 removeSpotRateD;
         uint128 removeAverageRateN;
         uint128 removeAverageRateD;
     }
@@ -841,18 +841,18 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         internal view returns (uint256)
     {
         // get the rate between the reserves upon adding liquidity and now
-        Fraction memory addCurrentRate = Fraction({n: _packedRates.addCurrentRateN, d: _packedRates.addCurrentRateD});
-        Fraction memory removeCurrentRate = Fraction({n: _packedRates.removeCurrentRateN, d: _packedRates.removeCurrentRateD});
+        Fraction memory addSpotRate = Fraction({n: _packedRates.addSpotRateN, d: _packedRates.addSpotRateD});
+        Fraction memory removeSpotRate = Fraction({n: _packedRates.removeSpotRateN, d: _packedRates.removeSpotRateD});
         Fraction memory removeAverageRate = Fraction({n: _packedRates.removeAverageRateN, d: _packedRates.removeAverageRateD});
 
         // calculate the entitled amount of reserve tokens before compensation
-        uint256 entitlement = entitledAmount(_poolToken, _reserveToken, _poolAmount, addCurrentRate, removeCurrentRate);
+        uint256 entitlement = entitledAmount(_poolToken, _reserveToken, _poolAmount, addSpotRate, removeSpotRate);
         if (entitlement < _reserveAmount) {
             entitlement = _reserveAmount;
         }
 
         // calculate the impermanent loss
-        Fraction memory loss = impLoss(addCurrentRate, removeAverageRate);
+        Fraction memory loss = impLoss(addSpotRate, removeAverageRate);
 
         // calculate the protection level
         Fraction memory level = protectionLevel(_addTimestamp, _removeTimestamp);
@@ -1036,7 +1036,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev returns the current rate and average rate of 1 reserve token in the other reserve token units
+      * @dev returns the spot rate and average rate of 1 reserve token in the other reserve token units
       *
       * @param _poolToken       pool token
       * @param _reserveToken    reserve token
@@ -1054,7 +1054,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         require(averageRateInRange(spotRateN, spotRateD, averageRateN, averageRateD, averageRateMaxDeviation), "ERR_INVALID_RATE");
 
-        return (currentRateN, currentRateD, averageRateN, averageRateD);
+        return (spotRateN, spotRateD, averageRateN, averageRateD);
     }
 
     /**
@@ -1062,28 +1062,28 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       *
       * @param _poolToken       pool token
       * @param _reserveToken    reserve token
-      * @param _addCurrentRateN add current rate numerator
-      * @param _addCurrentRateD add current rate denominator
+      * @param _addSpotRateN    add spot rate numerator
+      * @param _addSpotRateD    add spot rate denominator
       * @return packed object containing the reserves rates
     */
     function getPackedRates(
         IDSToken _poolToken,
         IERC20Token _reserveToken,
-        uint256 _addCurrentRateN,
-        uint256 _addCurrentRateD)
+        uint256 _addSpotRateN,
+        uint256 _addSpotRateD)
         internal view returns (PackedRates memory)
     {
-        (uint256 removeCurrentRateN, uint256 removeCurrentRateD, uint256 removeAverageRateN, uint256 removeAverageRateD) = reserveTokenRates(_poolToken, _reserveToken);
+        (uint256 removeSpotRateN, uint256 removeSpotRateD, uint256 removeAverageRateN, uint256 removeAverageRateD) = reserveTokenRates(_poolToken, _reserveToken);
 
-        require(_addCurrentRateN <= MAX_UINT128 && _addCurrentRateD <= MAX_UINT128, "ERR_INVALID_RATE");
-        require(removeCurrentRateN <= MAX_UINT128 && removeCurrentRateD <= MAX_UINT128, "ERR_INVALID_RATE");
+        require(_addSpotRateN <= MAX_UINT128 && _addSpotRateD <= MAX_UINT128, "ERR_INVALID_RATE");
+        require(removeSpotRateN <= MAX_UINT128 && removeSpotRateD <= MAX_UINT128, "ERR_INVALID_RATE");
         require(removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128, "ERR_INVALID_RATE");
 
         return PackedRates({
-            addCurrentRateN: uint128(_addCurrentRateN),
-            addCurrentRateD: uint128(_addCurrentRateD),
-            removeCurrentRateN: uint128(removeCurrentRateN),
-            removeCurrentRateD: uint128(removeCurrentRateD),
+            addSpotRateN: uint128(_addSpotRateN),
+            addSpotRateD: uint128(_addSpotRateD),
+            removeSpotRateN: uint128(removeSpotRateN),
+            removeSpotRateD: uint128(removeSpotRateD),
             removeAverageRateN: uint128(removeAverageRateN),
             removeAverageRateD: uint128(removeAverageRateD)
         });
