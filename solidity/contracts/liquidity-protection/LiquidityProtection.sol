@@ -643,8 +643,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // calculate the portion of the liquidity to remove
         if (_portion != PPM_RESOLUTION) {
-            liquidity.poolAmount = liquidity.poolAmount.mul(_portion).div(PPM_RESOLUTION);
-            liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion).div(PPM_RESOLUTION);
+            liquidity.poolAmount = liquidity.poolAmount.mul(_portion) / PPM_RESOLUTION;
+            liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion) / PPM_RESOLUTION;
         }
 
         // get the rate between the reserves upon adding liquidity and now
@@ -723,8 +723,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             // remove portion of the pool tokens from the provider
             uint256 fullPoolAmount = liquidity.poolAmount;
             uint256 fullReserveAmount = liquidity.reserveAmount;
-            liquidity.poolAmount = liquidity.poolAmount.mul(_portion).div(PPM_RESOLUTION);
-            liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion).div(PPM_RESOLUTION);
+            liquidity.poolAmount = liquidity.poolAmount.mul(_portion) / PPM_RESOLUTION;
+            liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion) / PPM_RESOLUTION;
 
             store.updateProtectedLiquidityAmounts(_id, fullPoolAmount - liquidity.poolAmount, fullReserveAmount - liquidity.reserveAmount);
         }
