@@ -65,7 +65,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     // number of seconds from liquidation to full network token release
     uint256 public lockDuration = 24 hours;
 
-    // maximum deviation of the average rate from the actual rate
+    // maximum deviation of the average rate from the current rate
     uint32 public averageRateMaxDeviation = 20000; // PPM units
 
     // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
@@ -135,10 +135,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     );
 
     /**
-      * @dev triggered when the maximum deviation of the average rate from the actual rate is updated
+      * @dev triggered when the maximum deviation of the average rate from the current rate is updated
       *
-      * @param _prevAverageRateMaxDeviation previous maximum deviation of the average rate from the actual rate
-      * @param _newAverageRateMaxDeviation  new maximum deviation of the average rate from the actual rate
+      * @param _prevAverageRateMaxDeviation previous maximum deviation of the average rate from the current rate
+      * @param _newAverageRateMaxDeviation  new maximum deviation of the average rate from the current rate
     */
     event AverageRateMaxDeviationUpdated(
         uint32 _prevAverageRateMaxDeviation,
@@ -321,10 +321,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev sets the maximum deviation of the average rate from the actual rate
+      * @dev sets the maximum deviation of the average rate from the current rate
       * can only be called by the contract owner
       *
-      * @param _averageRateMaxDeviation maximum deviation of the average rate from the actual rate
+      * @param _averageRateMaxDeviation maximum deviation of the average rate from the current rate
     */
     function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation) external ownerOnly {
         require(_averageRateMaxDeviation <= PPM_RESOLUTION, "ERR_INVALID_MAX_DEVIATION");
@@ -1042,13 +1042,13 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev returns whether or not the deviation of the average-rate from the current-rate is within range
+      * @dev returns whether or not the deviation of the average rate from the current rate is within range
       *
-      * @param _currentRateN    current-rate numerator
-      * @param _currentRateD    current-rate denominator
-      * @param _averageRateN    average-rate numerator
-      * @param _averageRateD    average-rate denominator
-      * @param _maxDeviation    the maximum permitted deviation of the average-rate from the current-rate
+      * @param _currentRateN    current rate numerator
+      * @param _currentRateD    current rate denominator
+      * @param _averageRateN    average rate numerator
+      * @param _averageRateD    average rate denominator
+      * @param _maxDeviation    the maximum permitted deviation of the average rate from the current rate
     */
     function averageRateInRange(
         uint256 _currentRateN,
