@@ -195,6 +195,29 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         require(updatingLiquidity, "ERR_NOT_UPDATING_LIQUIDITY");
     }
 
+    // ensures that the pool is supported
+    modifier poolSupported(IConverterAnchor _poolAnchor) {
+        _poolSupported(_poolAnchor);
+        _;
+    }
+
+    // error message binary size optimization
+    function _poolSupported(IConverterAnchor _poolAnchor) internal view {
+        require(isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
+    }
+
+    // ensures that the pool is supported and whitelisted
+    modifier poolSupportedAndWhitelisted(IConverterAnchor _poolAnchor) {
+        _poolSupportedAndWhitelisted(_poolAnchor);
+        _;
+    }
+
+    // error message binary size optimization
+    function _poolSupportedAndWhitelisted(IConverterAnchor _poolAnchor) internal view {
+        require(isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
+        require(store.isPoolWhitelisted(_poolAnchor), "ERR_POOL_NOT_WHITELISTED");
+    }
+
     /**
       * @dev accept ETH
       * used when removing liquidity from ETH converters
@@ -351,11 +374,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _poolAnchor  anchor of the pool
       * @param _add         true to add the pool to the whitelist, false to remove it from the whitelist
     */
-    function whitelistPool(IConverterAnchor _poolAnchor, bool _add) external {
+    function whitelistPool(IConverterAnchor _poolAnchor, bool _add) external poolSupported(_poolAnchor) {
         require(msg.sender == whitelistAdmin || msg.sender == owner, "ERR_ACCESS_DENIED");
-
-        // verify that the pool is supported
-        require(isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
 
         // add or remove the pool to/from the whitelist
         if (_add)
@@ -411,12 +431,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function protectLiquidity(IConverterAnchor _poolAnchor, uint256 _amount)
         external
         protected
+        poolSupportedAndWhitelisted(_poolAnchor)
         greaterThanZero(_amount)
     {
-        // verify that the pool is supported
-        require(isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
-        require(store.isPoolWhitelisted(_poolAnchor), "ERR_POOL_NOT_WHITELISTED");
-
         // get the converter
         IConverter converter = IConverter(payable(_poolAnchor.owner()));
 
@@ -480,13 +497,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         external
         payable
         protected
+        poolSupportedAndWhitelisted(_poolAnchor)
         greaterThanZero(_amount)
         returns (uint256)
     {
-        // verify that the pool is supported & whitelisted
-        require(isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
-        require(store.isPoolWhitelisted(_poolAnchor), "ERR_POOL_NOT_WHITELISTED");
-
         if (_reserveToken == networkToken) {
             require(msg.value == 0, "ERR_ETH_AMOUNT_MISMATCH");    
             return addNetworkTokenLiquidity(_poolAnchor, _amount);
