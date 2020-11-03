@@ -424,6 +424,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     function reserveBalance(IERC20Token _reserveToken)
         public
         view
+        override
         validReserve(_reserveToken)
         returns (uint256)
     {
