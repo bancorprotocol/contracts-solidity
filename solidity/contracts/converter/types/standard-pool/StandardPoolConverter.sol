@@ -726,14 +726,14 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     /**
       * @dev returns the recent average rate of 1 reserve token 0 in reserve token 1 units
       *
-      * @param _prevAverageRate a local copy of the previous average rate state-variable
+      * @param _averageRateInfo a local copy of the `averageRateInfo` state-variable
       * @return recent average rate between the reserves
     */
-    function calcRecentAverageRate(uint256 _prevAverageRate) internal view returns (uint256) {
+    function calcRecentAverageRate(uint256 _averageRateInfo) internal view returns (uint256) {
         // get the previous average rate and its update-time
-        uint256 prevAverageRateT = _prevAverageRate >> 224;
-        uint256 prevAverageRateN = (_prevAverageRate >> 112) & MAX_UINT112;
-        uint256 prevAverageRateD = _prevAverageRate & MAX_UINT112;
+        uint256 prevAverageRateT = _averageRateInfo >> 224;
+        uint256 prevAverageRateN = (_averageRateInfo >> 112) & MAX_UINT112;
+        uint256 prevAverageRateD = _averageRateInfo & MAX_UINT112;
 
         // get the elapsed time since the previous average rate was calculated
         uint256 currentTime = time();
@@ -741,7 +741,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
 
         // if the previous average rate was calculated in the current block, the average rate remains unchanged
         if (timeElapsed == 0) {
-            return _prevAverageRate;
+            return _averageRateInfo;
         }
 
         // get the current rate between the reserves
