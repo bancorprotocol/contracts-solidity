@@ -6,8 +6,6 @@ import "../utility/SafeMath.sol";
 
 /**
   * @dev Ether tokenization contract
-  *
-  * 'Owned' is specified here for readability reasons
 */
 contract EtherToken is IEtherToken, ERC20Token {
     using SafeMath for uint256;

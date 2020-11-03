@@ -4,8 +4,8 @@ import "../utility/ContractRegistryClient.sol";
 import "./interfaces/IConverterRegistryData.sol";
 
 /**
-  * @dev The ConverterRegistryData contract is an integral part of the converter registry
-  * as it serves as the database contract that holds all registry data.
+  * @dev This contract is an integral part of the converter registry,
+  * and it serves as the database contract that holds all registry data.
   *
   * The registry is separated into two different contracts for upgradability - the data contract
   * is harder to upgrade as it requires migrating all registry data into a new contract, while

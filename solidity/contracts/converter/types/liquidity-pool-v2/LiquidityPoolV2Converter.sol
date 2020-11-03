@@ -8,9 +8,7 @@ import "../../../utility/interfaces/IPriceOracle.sol";
 import "../../../utility/Types.sol";
 
 /**
-  * @dev Liquidity Pool v2 Converter
-  *
-  * The liquidity pool v2 converter is a specialized version of a converter that uses
+  * @dev This contract is a specialized version of a converter that uses
   * price oracles to rebalance the reserve weights in such a way that the primary token
   * balance always strives to match the staked balance.
   *
