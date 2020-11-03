@@ -6,9 +6,7 @@ import "../../../utility/Math.sol";
 import "../../../utility/Types.sol";
 
 /**
-  * @dev Liquidity Pool v1 Converter
-  *
-  * The liquidity pool v1 converter is a specialized version of a converter that manages
+  * @dev This contract is a specialized version of a converter that manages
   * a classic bancor liquidity pool.
   *
   * Even though pools can have many reserves, the standard pool configuration

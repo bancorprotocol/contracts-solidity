@@ -6,11 +6,11 @@ import "./interfaces/IPriceOracle.sol";
 import "./interfaces/IChainlinkPriceOracle.sol";
 
 /**
-  * @dev Provides the off-chain rate between two tokens
+  * @dev This contract provides the off-chain rate between two tokens.
   *
   * The price oracle uses chainlink oracles internally to get the rates of the two tokens
   * with respect to a common denominator, and then returns the rate between them, which
-  * is equivalent to the rate of TokenA / TokenB
+  * is equivalent to the rate of TokenA / TokenB.
 */
 contract PriceOracle is IPriceOracle, Utils {
     using SafeMath for uint256;

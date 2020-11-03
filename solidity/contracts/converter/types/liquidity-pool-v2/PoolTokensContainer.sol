@@ -5,7 +5,7 @@ import "../../../utility/Owned.sol";
 import "../../../token/DSToken.sol";
 
 /**
-  * @dev The PoolTokensContainer contract serves as a container for multiple pool tokens.
+  * @dev This contract serves as a container for multiple pool tokens.
   * It is used by specific liquidity pool types that require more than a single pool token,
   * while still maintaining the single converter / anchor relationship.
   *

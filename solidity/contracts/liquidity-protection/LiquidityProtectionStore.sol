@@ -7,9 +7,9 @@ import "../utility/TokenHandler.sol";
 import "../utility/Utils.sol";
 
 /**
-  * @dev The Liquidity Protection Store contract serves as the storage of the liquidity protection
-  * mechanism. It holds the data and tokens and is non upgradable.
+  * @dev This contract serves as the storage of the liquidity protection mechanism.
   *
+  * It holds the data and tokens, and it is generally non-upgradable.
 */
 contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHandler, Utils {
     using SafeMath for uint256;
