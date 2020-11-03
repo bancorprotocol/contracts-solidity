@@ -21,7 +21,7 @@ interface ILiquidityPoolV1Converter is IConverter {
 }
 
 /**
-  * @dev Liquidity Protection
+  * @dev This contract provides the liquidity protection mechanism.
 */
 contract LiquidityProtection is TokenHandler, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;

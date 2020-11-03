@@ -4,9 +4,7 @@ import "../../ConverterBase.sol";
 import "../../../token/interfaces/IDSToken.sol";
 
 /**
-  * @dev Liquid Token Converter
-  *
-  * The liquid token converter is a specialized version of a converter that manages a liquid token.
+  * @dev This contract is a specialized version of a converter that manages a liquid token.
   *
   * The converters govern a token with a single reserve and allow converting between the two.
   * Liquid tokens usually have fractional reserve (reserve ratio smaller than 100%).

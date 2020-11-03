@@ -9,7 +9,7 @@ import "./interfaces/IConverterRegistryData.sol";
 import "../token/interfaces/IDSToken.sol";
 
 /**
-  * @dev The ConverterRegistry maintains a list of all active converters in the Bancor Network.
+  * @dev This contract maintains a list of all active converters in the Bancor Network.
   *
   * Since converters can be upgraded and thus their address can change, the registry actually keeps
   * converter anchors internally and not the converters themselves.

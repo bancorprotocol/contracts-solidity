@@ -9,9 +9,7 @@ import "../token/interfaces/IEtherToken.sol";
 import "./types/liquidity-pool-v2/interfaces/ILiquidityPoolV2Converter.sol";
 
 /**
-  * @dev Converter Upgrader
-  *
-  * The converter upgrader contract allows upgrading an older converter contract (0.4 and up)
+  * @dev This contract contract allows upgrading an older converter contract (0.4 and up)
   * to the latest version.
   * To begin the upgrade process, simply execute the 'upgrade' function.
   * At the end of the process, the ownership of the newly upgraded converter will be transferred

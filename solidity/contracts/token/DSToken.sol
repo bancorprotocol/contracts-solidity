@@ -5,9 +5,9 @@ import "./interfaces/IDSToken.sol";
 import "../utility/Owned.sol";
 
 /**
-  * @dev DSToken represents a token with dynamic supply.
-  * The owner of the token can mint/burn tokens to/from any account.
+  * @dev This contract represents a token with dynamic supply.
   *
+  * The owner of the token can mint/burn tokens to/from any account.
 */
 contract DSToken is IDSToken, ERC20Token, Owned {
     using SafeMath for uint256;

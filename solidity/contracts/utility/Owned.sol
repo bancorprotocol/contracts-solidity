@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 import "./interfaces/IOwned.sol";
 
 /**
-  * @dev Provides support and utilities for contract ownership
+  * @dev This contract provides support and utilities for contract ownership.
 */
 contract Owned is IOwned {
     address public override owner;
