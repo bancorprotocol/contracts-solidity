@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 /**
-  * @dev Provides types that can be used by various contracts
+  * @dev This contract provides types which can be used by various contracts.
 */
 
 struct Fraction {

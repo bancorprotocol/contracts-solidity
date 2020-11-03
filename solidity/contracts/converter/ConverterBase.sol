@@ -12,9 +12,7 @@ import "../utility/TokenHolder.sol";
 import "../utility/interfaces/IWhitelist.sol";
 
 /**
-  * @dev ConverterBase
-  *
-  * The converter contains the main logic for conversions between different ERC20 tokens.
+  * @dev This contract contains the main logic for conversions between different ERC20 tokens.
   *
   * It is also the upgradable part of the mechanism (note that upgrades are opt-in).
   *
@@ -426,6 +424,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     function reserveBalance(IERC20Token _reserveToken)
         public
         view
+        override
         validReserve(_reserveToken)
         returns (uint256)
     {

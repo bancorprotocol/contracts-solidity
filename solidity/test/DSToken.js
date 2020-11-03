@@ -96,29 +96,4 @@ contract('DSToken', accounts => {
 
         await expectRevert(token.destroy(receiver, new BN(1), { from: nonOwner }), 'ERR_ACCESS_DENIED');
     });
-
-    it('verifies the balances after a transfer', async () => {
-        const value = new BN(5666);
-        await token.issue(owner, value);
-
-        const value2 = new BN(666);
-        await token.transfer(receiver, value2);
-
-        const ownerBalance = await token.balanceOf.call(owner);
-        expect(ownerBalance).to.be.bignumber.equal(value.sub(value2));
-
-        const receiverBalance = await token.balanceOf.call(receiver);
-        expect(receiverBalance).to.be.bignumber.equal(value2);
-    });
-
-    it('verifies the allowance after an approval', async () => {
-        const value = new BN(1000);
-        await token.issue(owner, value);
-
-        const value2 = new BN(200);
-        await token.approve(receiver, value2);
-
-        const allowance = await token.allowance.call(owner, receiver);
-        expect(allowance).to.be.bignumber.equal(value2);
-    });
 });

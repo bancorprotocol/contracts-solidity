@@ -3,9 +3,7 @@ pragma solidity 0.6.12;
 import "./ConverterBase.sol";
 
 /**
-  * @dev Liquidity Pool Converter
-  *
-  * The liquidity pool converter is the base contract for specific types of converters that
+  * @dev This contract is the base contract for specific types of converters that
   * manage liquidity pools.
   *
   * Liquidity pools have 2 reserves or more and they allow converting between them.

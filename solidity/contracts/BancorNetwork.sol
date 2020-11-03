@@ -18,7 +18,7 @@ interface ILegacyConverter {
 }
 
 /**
-  * @dev The BancorNetwork contract is the main entry point for Bancor token conversions.
+  * @dev This contract is the main entry point for Bancor token conversions.
   * It also allows for the conversion of any token in the Bancor Network to any other token in a single
   * transaction by providing a conversion path.
   *
