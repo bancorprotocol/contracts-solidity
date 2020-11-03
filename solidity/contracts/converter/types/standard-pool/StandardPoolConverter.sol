@@ -1266,11 +1266,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         return now;
     }
 
-    function crossReserveTargetAmount(uint256 _sourceReserveBalance, uint256 _tarreadReserveBalance, uint256 _amount) private pure returns (uint256) {
+    function crossReserveTargetAmount(uint256 _sourceReserveBalance, uint256 _targetReserveBalance, uint256 _amount) private pure returns (uint256) {
         // validate input
-        require(_sourceReserveBalance > 0 && _tarreadReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
 
-        return _tarreadReserveBalance.mul(_amount) / _sourceReserveBalance.add(_amount);
+        return _targetReserveBalance.mul(_amount) / _sourceReserveBalance.add(_amount);
     }
 
     function fundCost(uint256 _supply, uint256 _reserveBalance, uint256 _amount) private pure returns (uint256) {
