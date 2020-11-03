@@ -74,43 +74,4 @@ contract DSToken is IDSToken, ERC20Token, Owned {
         emit Transfer(_from, address(0), _amount);
         emit Destruction(_amount);
     }
-
-    // ERC20 standard method overrides with some extra functionality
-
-    /**
-      * @dev send coins
-      * throws on any error rather then return a false flag to minimize user errors
-      * in addition to the standard checks, the function throws if transfers are disabled
-      *
-      * @param _to      target address
-      * @param _value   transfer amount
-      *
-      * @return true if the transfer was successful, false if it wasn't
-    */
-    function transfer(address _to, uint256 _value)
-        public
-        override(IERC20Token, ERC20Token)
-        returns (bool)
-    {
-        return super.transfer(_to, _value);
-    }
-
-    /**
-      * @dev an account/contract attempts to get the coins
-      * throws on any error rather then return a false flag to minimize user errors
-      * in addition to the standard checks, the function throws if transfers are disabled
-      *
-      * @param _from    source address
-      * @param _to      target address
-      * @param _value   transfer amount
-      *
-      * @return true if the transfer was successful, false if it wasn't
-    */
-    function transferFrom(address _from, address _to, uint256 _value)
-        public
-        override(IERC20Token, ERC20Token)
-        returns (bool) 
-    {
-        return super.transferFrom(_from, _to, _value);
-    }
 }
