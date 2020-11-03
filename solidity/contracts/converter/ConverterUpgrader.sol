@@ -5,7 +5,6 @@ import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IConverterFactory.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/interfaces/IWhitelist.sol";
-import "../token/interfaces/IEtherToken.sol";
 import "./types/liquidity-pool-v2/interfaces/ILiquidityPoolV2Converter.sol";
 
 /**
@@ -24,7 +23,6 @@ import "./types/liquidity-pool-v2/interfaces/ILiquidityPoolV2Converter.sol";
 contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     uint32 private constant PPM_RESOLUTION = 1000000;
     IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-    IEtherToken public etherToken;
 
     /**
       * @dev triggered when the contract accept a converter ownership
@@ -47,8 +45,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       *
       * @param _registry    address of a contract registry contract
     */
-    constructor(IContractRegistry _registry, IEtherToken _etherToken) ContractRegistryClient(_registry) public {
-        etherToken = _etherToken;
+    constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
     }
 
     /**
@@ -180,10 +177,6 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
             if (reserveAddress == ETH_RESERVE_ADDRESS) {
                 _newConverter.addReserve(ETH_RESERVE_ADDRESS, weight);
             }
-            // Ether reserve token
-            else if (reserveAddress == etherToken) {
-                _newConverter.addReserve(ETH_RESERVE_ADDRESS, weight);
-            }
             // ERC20 reserve token
             else {
                 _newConverter.addReserve(reserveAddress, weight);
@@ -219,12 +212,6 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
             // Ether reserve
             if (reserveAddress == ETH_RESERVE_ADDRESS) {
                 _oldConverter.withdrawETH(address(_newConverter));
-            }
-            // Ether reserve token
-            else if (reserveAddress == etherToken) {
-                reserveBalance = etherToken.balanceOf(address(_oldConverter));
-                _oldConverter.withdrawTokens(etherToken, address(this), reserveBalance);
-                etherToken.withdrawTo(address(_newConverter), reserveBalance);
             }
             // ERC20 reserve token
             else {
