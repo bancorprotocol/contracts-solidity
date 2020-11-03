@@ -859,10 +859,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         Fraction memory removeSpotRate = Fraction({n: _packedRates.removeSpotRateN, d: _packedRates.removeSpotRateD});
         Fraction memory removeAverageRate = Fraction({n: _packedRates.removeAverageRateN, d: _packedRates.removeAverageRateD});
 
-        // calculate the entitled amount of reserve tokens before compensation
-        uint256 entitlement = entitledAmount(_poolToken, _reserveToken, _poolAmount, addSpotRate, removeSpotRate);
-        if (entitlement < _reserveAmount) {
-            entitlement = _reserveAmount;
+        // calculate the protected amount of reserve tokens plus accumulated fee before compensation
+        uint256 total = protectedAmountPlusFee(_poolToken, _reserveToken, _poolAmount, addSpotRate, removeSpotRate);
+        if (total < _reserveAmount) {
+            total = _reserveAmount;
         }
 
         // calculate the impermanent loss
@@ -872,7 +872,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         Fraction memory level = protectionLevel(_addTimestamp, _removeTimestamp);
 
         // calculate the compensation amount
-        return compensationAmount(_reserveAmount, entitlement, loss, level);
+        return compensationAmount(_reserveAmount, total, loss, level);
     }
 
     /**
@@ -1211,16 +1211,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev returns the entitled amount of reserve tokens before compensation
+      * @dev returns the protected amount of reserve tokens plus accumulated fee before compensation
       *
       * @param _poolToken       pool token
       * @param _reserveToken    reserve token
       * @param _poolAmount      pool token amount when the liquidity was added
       * @param _addRate         rate of 1 reserve token in the other reserve token units when the liquidity was added
       * @param _removeRate      rate of 1 reserve token in the other reserve token units when the liquidity is removed
-      * @return entitled amount of reserve tokens = sqrt(_removeRate / _addRate) * poolRate * _poolAmount
+      * @return protected amount of reserve tokens plus accumulated fee = sqrt(_removeRate / _addRate) * poolRate * _poolAmount
     */
-    function entitledAmount(
+    function protectedAmountPlusFee(
         IDSToken _poolToken,
         IERC20Token _reserveToken,
         uint256 _poolAmount,
