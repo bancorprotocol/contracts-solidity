@@ -13,10 +13,8 @@ import "../../../utility/TokenHolder.sol";
 import "../../../utility/Math.sol";
 
 /**
-  * @dev Standard Pool Converter
-  *
-  * The standard pool converter is a specialized version of a converter that's optimized
-  * for a liquidity pool that has 2 reserves with 50%/50% weights.
+  * @dev This contract is a specialized version of the converter, which is
+  * optimized for a liquidity pool that has 2 reserves with 50%/50% weights.
 */
 contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
