@@ -429,6 +429,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     function reserveBalance(IERC20Token _reserveToken)
         public
         view
+        override
         returns (uint256)
     {
         uint256 reserveId = __reserveIds[_reserveToken];
