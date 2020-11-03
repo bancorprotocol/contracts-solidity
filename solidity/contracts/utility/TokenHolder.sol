@@ -7,11 +7,11 @@ import "./interfaces/ITokenHolder.sol";
 import "../token/interfaces/IERC20Token.sol";
 
 /**
-  * @dev We consider every contract to be a 'token holder' since it's currently not possible
-  * for a contract to deny receiving tokens.
+  * @dev This contract provides a safety mechanism for allowing the owner to
+  * send tokens that were sent to the contract by mistake back to the sender.
   *
-  * The TokenHolder's contract sole purpose is to provide a safety mechanism that allows
-  * the owner to send tokens that were sent to the contract by mistake back to their sender.
+  * We consider every contract to be a 'token holder' since it's currently not possible
+  * for a contract to deny receiving tokens.
   *
   * Note that we use the non standard ERC-20 interface which has no return value for transfer
   * in order to support both non standard as well as standard token contracts.

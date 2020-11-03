@@ -5,11 +5,11 @@ import "./Utils.sol";
 import "./interfaces/IContractRegistry.sol";
 
 /**
-  * @dev Contract Registry
+  * @dev This contract maintains contract addresses by name.
   *
-  * The contract registry keeps contract addresses by name.
   * The owner can update contract addresses so that a contract name always points to the latest version
   * of the given contract.
+  *
   * Other contracts can query the registry to get updated addresses instead of depending on specific
   * addresses.
   *

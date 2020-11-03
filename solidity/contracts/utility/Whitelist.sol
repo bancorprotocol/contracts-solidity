@@ -5,7 +5,7 @@ import "./Utils.sol";
 import "./interfaces/IWhitelist.sol";
 
 /**
-  * @dev The contract manages a list of whitelisted addresses
+  * @dev This contract manages a list of whitelisted addresses.
 */
 contract Whitelist is IWhitelist, Owned, Utils {
     mapping (address => bool) private whitelist;

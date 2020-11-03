@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 import "./SafeMath.sol";
 
 /**
-  * @dev Library for complex math operations
+  * @dev This library provides a set of complex math operations.
 */
 library Math {
     using SafeMath for uint256;
