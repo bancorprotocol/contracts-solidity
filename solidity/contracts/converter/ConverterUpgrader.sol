@@ -148,8 +148,9 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         if (newType == 1 && reserveTokenCount == 2) {
             (, uint32 weight0, , , ) = _oldConverter.connectors(_oldConverter.connectorTokens(0));
             (, uint32 weight1, , , ) = _oldConverter.connectors(_oldConverter.connectorTokens(1));
-            if (weight0 == PPM_RESOLUTION / 2 && weight1 == PPM_RESOLUTION / 2)
+            if (weight0 == PPM_RESOLUTION / 2 && weight1 == PPM_RESOLUTION / 2) {
                 newType = 3;
+            }
         }
 
         IConverterFactory converterFactory = IConverterFactory(addressOf(CONVERTER_FACTORY));
@@ -230,8 +231,9 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _activate        activate the new converter
     */
     function handleTypeSpecificData(IConverter _oldConverter, IConverter _newConverter, bool _activate) private {
-        if (!isV28OrHigherConverter(_oldConverter))
+        if (!isV28OrHigherConverter(_oldConverter)) {
             return;
+        }
 
         uint16 converterType = _oldConverter.converterType();
         if (converterType == 2) {

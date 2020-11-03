@@ -338,8 +338,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         super.withdrawTokens(_token, _to, _amount);
 
         // if the token is a reserve token, sync the reserve balance
-        if (reserveId != 0)
+        if (reserveId != 0) {
             syncReserveBalance(_token);
+        }
     }
 
     /**
@@ -681,10 +682,12 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         writeReserveBalances(sourceId, targetId, actualSourceBalance, targetBalance - amount);
 
         // transfer funds to the beneficiary in the to reserve token
-        if (_targetToken == ETH_RESERVE_ADDRESS)
+        if (_targetToken == ETH_RESERVE_ADDRESS) {
             _beneficiary.transfer(amount);
-        else
+        }
+        else {
             safeTransfer(_targetToken, _beneficiary, amount);
+        }
 
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
@@ -787,9 +790,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         verifyLiquidityInput(_reserveTokens, _reserveAmounts, _minReturn);
 
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
-        for (uint256 i = 0; i < _reserveTokens.length; i++)
-            if (_reserveTokens[i] == ETH_RESERVE_ADDRESS)
+        for (uint256 i = 0; i < _reserveTokens.length; i++) {
+            if (_reserveTokens[i] == ETH_RESERVE_ADDRESS) {
                 require(_reserveAmounts[i] == msg.value, "ERR_ETH_AMOUNT_MISMATCH");
+            }
+        }
 
         // if the input value of ETH is larger than zero, then verify that one of the reserves is ETH
         if (msg.value > 0) {
@@ -1026,8 +1031,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
             // verify that every input reserve token is included in the reserve tokens
             require(__reserveIds[_reserveTokens[i]] != 0, "ERR_INVALID_RESERVE");
             for (j = 0; j < length; j++) {
-                if (__reserveTokens[i] == _reserveTokens[j])
+                if (__reserveTokens[i] == _reserveTokens[j]) {
                     break;
+                }
             }
             // verify that every reserve token is included in the input reserve tokens
             require(j < length, "ERR_INVALID_RESERVE");
@@ -1053,8 +1059,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         private
         returns (uint256)
     {
-        if (_totalSupply == 0)
+        if (_totalSupply == 0) {
             return addLiquidityToEmptyPool(_poolToken, _reserveTokens, _reserveAmounts);
+        }
         return addLiquidityToNonEmptyPool(_poolToken, _reserveTokens, _reserveAmounts, _totalSupply);
     }
 
@@ -1080,8 +1087,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
             uint256 reserveId = __reserveIds[reserveToken];
             uint256 reserveAmount = _reserveAmounts[i];
 
-            if (reserveToken != ETH_RESERVE_ADDRESS) // ETH has already been transferred as part of the transaction
+            if (reserveToken != ETH_RESERVE_ADDRESS) { // ETH has already been transferred as part of the transaction
                 safeTransferFrom(reserveToken, msg.sender, address(this), reserveAmount);
+            }
 
             writeReserveBalance(reserveId, reserveAmount);
 
@@ -1123,10 +1131,12 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
             assert(reserveAmount <= _reserveAmounts[i]);
 
             // transfer each one of the reserve amounts from the user to the pool
-            if (reserveToken != ETH_RESERVE_ADDRESS) // ETH has already been transferred as part of the transaction
+            if (reserveToken != ETH_RESERVE_ADDRESS) { // ETH has already been transferred as part of the transaction
                 safeTransferFrom(reserveToken, msg.sender, address(this), reserveAmount);
-            else if (_reserveAmounts[i] > reserveAmount) // transfer the extra amount of ETH back to the user
+            }
+            else if (_reserveAmounts[i] > reserveAmount) { // transfer the extra amount of ETH back to the user
                 msg.sender.transfer(_reserveAmounts[i] - reserveAmount);
+            }
 
             uint256 newReserveBalance = rsvBalance.add(reserveAmount);
             writeReserveBalance(reserveId, newReserveBalance);
@@ -1191,10 +1201,12 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
             writeReserveBalance(reserveId, newReserveBalance);
 
             // transfer each one of the reserve amounts from the pool to the user
-            if (reserveToken == ETH_RESERVE_ADDRESS)
+            if (reserveToken == ETH_RESERVE_ADDRESS) {
                 msg.sender.transfer(reserveAmount);
-            else
+            }
+            else {
                 safeTransfer(reserveToken, msg.sender, reserveAmount);
+            }
 
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
@@ -1267,8 +1279,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
 
         // special case for 0 amount
-        if (_amount == 0)
+        if (_amount == 0) {
             return 0;
+        }
 
         return (_amount.mul(_reserveBalance) - 1) / _supply + 1;
     }
@@ -1279,8 +1292,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
 
         // special case for 0 amount
-        if (_amount == 0)
+        if (_amount == 0) {
             return 0;
+        }
 
         return _amount.mul(_supply) / _reserveBalance;
     }
@@ -1292,12 +1306,14 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         require(_amount <= _supply, "ERR_INVALID_AMOUNT");
 
         // special case for 0 amount
-        if (_amount == 0)
+        if (_amount == 0) {
             return 0;
+        }
 
         // special case for liquidating the entire supply
-        if (_amount == _supply)
+        if (_amount == _supply) {
             return _reserveBalance;
+        }
 
         return _amount.mul(_reserveBalance) / _supply;
     }
@@ -1328,8 +1344,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     */
     function connectors(IERC20Token _address) public view override returns (uint256, uint32, bool, bool, bool) {
         uint256 reserveId = __reserveIds[_address];
-        if (reserveId != 0)
+        if (reserveId != 0) {
             return(readReserveBalance(reserveId), PPM_RESOLUTION / 2, false, false, true);
+        }
         return (0, 0, false, false, false);
     }
 
