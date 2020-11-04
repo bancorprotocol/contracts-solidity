@@ -14,7 +14,7 @@ contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
     }
 
     function time() internal view override returns (uint256) {
-        return currentTime != 0 ? currentTime : now;
+        return currentTime != 0 ? currentTime : block.timestamp;
     }
 
     function setTime(uint256 _currentTime) public {
