@@ -503,7 +503,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
       * @param _reserveId   reserve id
     */
     function readReserveBalance(uint256 _reserveId) internal view returns (uint256) {
-        return (__reserveBalances >> ((_reserveId - 1) * 128)) & MAX_UINT128;        
+        return decodeReserveBalance(__reserveBalances, _reserveId - 1);        
     }
 
     /**
@@ -514,11 +514,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     */
     function readReserveBalances(uint256 _sourceId, uint256 _targetId) internal view returns (uint256, uint256) {
         require(_sourceId + _targetId == 3, "ERR_INVALID_RESERVES");
-        uint256 reserveBalancesLocal = __reserveBalances;
-        return (
-            (reserveBalancesLocal >> ((_sourceId - 1) * 128)) & MAX_UINT128,
-            (reserveBalancesLocal >> ((_targetId - 1) * 128)) & MAX_UINT128
-        );        
+        return decodeReserveBalances(__reserveBalances, _sourceId - 1, _targetId - 1);        
     }
 
     /**
@@ -529,8 +525,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     */
     function writeReserveBalance(uint256 _reserveId, uint256 _reserveBalance) internal {
         require(_reserveBalance <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW"); 
-        uint256 otherBalance = readReserveBalance(3 - _reserveId);
-        __reserveBalances = (_reserveBalance << ((_reserveId - 1) * 128)) | (otherBalance << ((2 - _reserveId) * 128));
+        uint256 otherBalance = decodeReserveBalance(__reserveBalances, 2 - _reserveId);
+        __reserveBalances = encodeReserveBalances(_reserveBalance, _reserveId - 1, otherBalance, 2 - _reserveId);
     }
 
     /**
@@ -543,7 +539,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     */
     function writeReserveBalances(uint256 _sourceId, uint256 _targetId, uint256 _sourceBalance, uint256 _targetBalance) internal {
         require(_sourceBalance <= MAX_UINT128 && _targetBalance <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW"); 
-        __reserveBalances = (_sourceBalance << ((_sourceId - 1) * 128)) | (_targetBalance << ((_targetId - 1) * 128));
+        __reserveBalances = encodeReserveBalances(_sourceBalance, _sourceId - 1, _targetBalance, _targetId - 1);
     }
 
     /**
@@ -708,11 +704,15 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     function recentAverageRate(IERC20Token _token) external view returns (uint256, uint256) {
         // get the recent average rate of reserve 0
         uint256 rate = calcRecentAverageRate(averageRateInfo);
+
+        uint256 rateN = decodeAverageRateN(rate);
+        uint256 rateD = decodeAverageRateD(rate);
+
         if (_token == __reserveTokens[0]) {
-            return ((rate >> 112) & MAX_UINT112, rate & MAX_UINT112);
+            return (rateN, rateD);
         }
 
-        return (rate & MAX_UINT112, (rate >> 112) & MAX_UINT112);
+        return (rateD, rateN);
     }
 
     /**
@@ -734,9 +734,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     */
     function calcRecentAverageRate(uint256 _averageRateInfo) internal view returns (uint256) {
         // get the previous average rate and its update-time
-        uint256 prevAverageRateT = _averageRateInfo >> 224;
-        uint256 prevAverageRateN = (_averageRateInfo >> 112) & MAX_UINT112;
-        uint256 prevAverageRateD = _averageRateInfo & MAX_UINT112;
+        uint256 prevAverageRateT = decodeAverageRateT(_averageRateInfo);
+        uint256 prevAverageRateN = decodeAverageRateN(_averageRateInfo);
+        uint256 prevAverageRateD = decodeAverageRateD(_averageRateInfo);
 
         // get the elapsed time since the previous average rate was calculated
         uint256 currentTime = time();
@@ -748,14 +748,12 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         }
 
         // get the current rate between the reserves
-        uint256 currentRate = __reserveBalances;
-        uint256 currentRateN = currentRate >> 128;
-        uint256 currentRateD = currentRate & MAX_UINT128;
+        (uint256 currentRateN, uint256 currentRateD) = decodeReserveBalances(__reserveBalances, 1, 0);
 
         // if the previous average rate was calculated a while ago or never, the average rate is equal to the current rate
         if (timeElapsed >= AVERAGE_RATE_PERIOD || prevAverageRateT == 0) {
             (currentRateN, currentRateD) = Math.reducedRatio(currentRateN, currentRateD, MAX_UINT112);
-            return (currentTime << 224) | (currentRateN << 112) | currentRateD;
+            return encodeAverageRateInfo(currentTime, currentRateN, currentRateD);
         }
 
         uint256 x = prevAverageRateD.mul(currentRateN);
@@ -766,7 +764,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         uint256 newRateD = prevAverageRateD.mul(currentRateD).mul(AVERAGE_RATE_PERIOD);
 
         (newRateN, newRateD) = Math.reducedRatio(newRateN, newRateD, MAX_UINT112);
-        return (currentTime << 224) | (newRateN << 112) | newRateD;
+        return encodeAverageRateInfo(currentTime, newRateN, newRateD);
     }
 
     /**
@@ -1264,6 +1262,38 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     */
     function time() internal view virtual returns (uint256) {
         return block.timestamp;
+    }
+
+    function encodeReserveBalance(uint256 _balance, uint256 _index) private pure returns (uint256) {
+        return _balance << (_index * 128);        
+    }
+
+    function decodeReserveBalance(uint256 _balances, uint256 _index) private pure returns (uint256) {
+        return (_balances >> (_index * 128)) & MAX_UINT128;        
+    }
+
+    function encodeReserveBalances(uint256 _balance0, uint256 _index0, uint256 _balance1, uint256 _index1) private pure returns (uint256) {
+        return encodeReserveBalance(_balance0, _index0) | encodeReserveBalance(_balance1, _index1);        
+    }
+
+    function decodeReserveBalances(uint256 _balances, uint256 _index0, uint256 _index1) private pure returns (uint256, uint256) {
+        return (decodeReserveBalance(_balances, _index0), decodeReserveBalance(_balances, _index1));        
+    }
+
+    function encodeAverageRateInfo(uint256 _averageRateT, uint256 _averageRateN, uint256 _averageRateD) private pure returns (uint256) {
+        return (_averageRateT << 224) | (_averageRateN << 112) | _averageRateD;
+    }
+
+    function decodeAverageRateT(uint256 _averageRateInfo) private pure returns (uint256) {
+        return _averageRateInfo >> 224;
+    }
+
+    function decodeAverageRateN(uint256 _averageRateInfo) private pure returns (uint256) {
+        return (_averageRateInfo >> 112) & MAX_UINT112;
+    }
+
+    function decodeAverageRateD(uint256 _averageRateInfo) private pure returns (uint256) {
+        return _averageRateInfo & MAX_UINT112;
     }
 
     function crossReserveTargetAmount(uint256 _sourceReserveBalance, uint256 _targetReserveBalance, uint256 _amount) private pure returns (uint256) {
