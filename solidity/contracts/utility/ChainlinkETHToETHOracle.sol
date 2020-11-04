@@ -24,6 +24,6 @@ contract ChainlinkETHToETHOracle is IChainlinkPriceOracle {
       * @return always returns current block's timestamp
     */
     function latestTimestamp() external view override returns (uint256) {
-        return now;
+        return block.timestamp;
     }
 }
