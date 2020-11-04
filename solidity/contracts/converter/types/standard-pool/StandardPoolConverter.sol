@@ -145,7 +145,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     );
 
     /**
-      * @dev used by sub-contracts to initialize a new converter
+      * @dev initializes a new StandardPoolConverter instance
       *
       * @param  _anchor             anchor governed by the converter
       * @param  _registry           address of a contract registry contract
