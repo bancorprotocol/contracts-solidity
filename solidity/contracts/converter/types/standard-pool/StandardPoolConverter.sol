@@ -1263,7 +1263,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
       * utility to allow overrides for tests
     */
     function time() internal view virtual returns (uint256) {
-        return now;
+        return block.timestamp;
     }
 
     function crossReserveTargetAmount(uint256 _sourceReserveBalance, uint256 _targetReserveBalance, uint256 _amount) private pure returns (uint256) {
