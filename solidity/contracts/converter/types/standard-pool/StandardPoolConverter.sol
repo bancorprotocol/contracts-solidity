@@ -360,7 +360,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     }
 
     /**
-      * @dev returns the number of reserve tokens defined
+      * @dev returns the number of reserve tokens
       * note that prior to version 17, you should use 'connectorTokenCount' instead
       *
       * @return number of reserve tokens
@@ -370,7 +370,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     }
 
     /**
-      * @dev returns the array of reserve tokens defined
+      * @dev returns the array of reserve tokens
       *
       * @return array of reserve tokens
     */
