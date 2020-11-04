@@ -123,10 +123,12 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
 
         // sets the primary & secondary reserve tokens
         primaryReserveToken = _primaryReserveToken;
-        if (_primaryReserveToken == reserveTokens[0])
+        if (_primaryReserveToken == reserveTokens[0]) {
             secondaryReserveToken = reserveTokens[1];
-        else
+        }
+        else {
             secondaryReserveToken = reserveTokens[0];
+        }
 
         // creates and initalizes the price oracle and sets initial rates
         LiquidityPoolV2ConverterCustomFactory customFactory =
@@ -399,10 +401,12 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
 
         // ensure that the input amount was already deposited
-        if (_sourceToken == ETH_RESERVE_ADDRESS)
+        if (_sourceToken == ETH_RESERVE_ADDRESS) {
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
-        else
+        }
+        else {
             require(msg.value == 0 && _sourceToken.balanceOf(address(this)).sub(reserveBalance(_sourceToken)) >= _amount, "ERR_INVALID_AMOUNT");
+        }
 
         // sync the reserve balances
         syncReserveBalance(_sourceToken);
@@ -489,10 +493,12 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         // for an empty pool, the price is 1:1, otherwise the price is based on the ratio
         // between the pool token supply and the staked balance
         uint256 poolTokenAmount = 0;
-        if (initialStakedBalance == 0 || poolTokenSupply == 0)
+        if (initialStakedBalance == 0 || poolTokenSupply == 0) {
             poolTokenAmount = _amount;
-        else
+        }
+        else {
             poolTokenAmount = _amount.mul(poolTokenSupply).div(initialStakedBalance);
+        }
         require(poolTokenAmount >= _minReturn, "ERR_RETURN_TOO_LOW");
 
         // mint new pool tokens to the caller
@@ -554,10 +560,12 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
         stakedBalances[reserveToken] = newStakedBalance;
 
         // transfer the reserve amount to the caller
-        if (reserveToken == ETH_RESERVE_ADDRESS)
+        if (reserveToken == ETH_RESERVE_ADDRESS) {
             msg.sender.transfer(reserveAmount);
-        else
+        }
+        else {
             safeTransfer(reserveToken, msg.sender, reserveAmount);
+        }
 
         // rebalance the pool's reserve weights
         rebalance();
@@ -768,6 +776,6 @@ contract LiquidityPoolV2Converter is LiquidityPoolConverter {
       * @dev returns the current time
     */
     function time() internal view virtual returns (uint256) {
-        return now;
+        return block.timestamp;
     }
 }

@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 import "../converter/types/liquidity-pool-v2/LiquidityPoolV2Converter.sol";
 
 contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
-    uint256 public currentTime;
+    uint256 public currentTime = 1;
 
     constructor(IPoolTokensContainer _token, IContractRegistry _registry, uint32 _maxConversionFee)
         public LiquidityPoolV2Converter(_token, _registry, _maxConversionFee) {
@@ -14,7 +14,7 @@ contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
     }
 
     function time() internal view override returns (uint256) {
-        return currentTime != 0 ? currentTime : now;
+        return currentTime;
     }
 
     function setTime(uint256 _currentTime) public {
