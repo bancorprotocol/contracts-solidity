@@ -56,9 +56,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
       * @param _fromToken       source ERC20 token
       * @param _toToken         target ERC20 token
       * @param _trader          wallet that initiated the trade
-      * @param _amount          amount converted, in the source token
-      * @param _return          amount returned, minus conversion fee
-      * @param _conversionFee   conversion fee
+      * @param _amount          input amount in units of the source token
+      * @param _return          output amount minus conversion fee in units of the target token
+      * @param _conversionFee   conversion fee in units of the target token
     */
     event Conversion(
         IERC20Token indexed _fromToken,
