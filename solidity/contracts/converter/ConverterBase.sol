@@ -79,9 +79,9 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
       * @param _fromToken       source ERC20 token
       * @param _toToken         target ERC20 token
       * @param _trader          wallet that initiated the trade
-      * @param _amount          amount converted, in the source token
-      * @param _return          amount returned, minus conversion fee
-      * @param _conversionFee   conversion fee
+      * @param _amount          input amount in units of the source token
+      * @param _return          output amount minus conversion fee in units of the target token
+      * @param _conversionFee   conversion fee in units of the target token
     */
     event Conversion(
         IERC20Token indexed _fromToken,
@@ -336,8 +336,9 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
         super.withdrawTokens(_token, _to, _amount);
 
         // if the token is a reserve token, sync the reserve balance
-        if (reserves[_token].isSet)
+        if (reserves[_token].isSet) {
             syncReserveBalance(_token);
+        }
     }
 
     /**
@@ -501,10 +502,12 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
       * @param _reserveToken    address of the reserve token
     */
     function syncReserveBalance(IERC20Token _reserveToken) internal validReserve(_reserveToken) {
-        if (_reserveToken == ETH_RESERVE_ADDRESS)
+        if (_reserveToken == ETH_RESERVE_ADDRESS) {
             reserves[_reserveToken].balance = address(this).balance;
-        else
+        }
+        else {
             reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this));
+        }
     }
 
     /**
