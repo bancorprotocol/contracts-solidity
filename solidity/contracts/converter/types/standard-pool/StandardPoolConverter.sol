@@ -221,6 +221,15 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     }
 
     /**
+      * @dev returns the converter type
+      *
+      * @return see the converter types in the the main contract doc
+    */
+    function converterType() public pure override returns (uint16) {
+        return 3;
+    }
+
+    /**
       * @dev deposits ether
       * can only be called if the converter has an ETH reserve
     */
@@ -594,15 +603,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
         assert(_feeAmount < 2 ** 255);
         emit Conversion(_sourceToken, _targetToken, _trader, _amount, _returnAmount, int256(_feeAmount));
-    }
-
-    /**
-      * @dev returns the converter type
-      *
-      * @return see the converter types in the the main contract doc
-    */
-    function converterType() public pure override returns (uint16) {
-        return 3;
     }
 
     /**
