@@ -358,7 +358,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     }
 
     /**
-      * @dev returns the number of reserve tokens defined
+      * @dev returns the number of reserve tokens
       * note that prior to version 17, you should use 'connectorTokenCount' instead
       *
       * @return number of reserve tokens
