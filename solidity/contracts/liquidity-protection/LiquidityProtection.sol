@@ -38,13 +38,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 timestamp;          // timestamp
     }
 
+    // various rates between the reserve token in context (A) and the other reserve token (B)
     struct PackedRates {
-        uint128 addSpotRateN;
-        uint128 addSpotRateD;
-        uint128 removeSpotRateN;
-        uint128 removeSpotRateD;
-        uint128 removeAverageRateN;
-        uint128 removeAverageRateD;
+        uint128 addSpotRateN;       // spot rate of 1 A in units of B when liquidity was added
+        uint128 addSpotRateD;       // spot rate of 1 A in units of B when liquidity was added
+        uint128 removeSpotRateN;    // spot rate of 1 A in units of B when liquidity is removed
+        uint128 removeSpotRateD;    // spot rate of 1 A in units of B when liquidity is removed
+        uint128 removeAverageRateN; // average rate of 1 A in units of B when liquidity is removed
+        uint128 removeAverageRateD; // average rate of 1 A in units of B when liquidity is removed
     }
 
     IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
@@ -661,8 +662,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion) / PPM_RESOLUTION;
         }
 
-        // get the rate between the reserves upon adding liquidity and now
-        PackedRates memory packedRates = getPackedRates(liquidity.poolToken, liquidity.reserveToken, liquidity.reserveRateN, liquidity.reserveRateD);
+        // get the various rates between the reserves upon adding liquidity and now
+        PackedRates memory packedRates = packRates(liquidity.poolToken, liquidity.reserveToken, liquidity.reserveRateN, liquidity.reserveRateD);
 
         uint256 targetAmount = removeLiquidityTargetAmount(
             liquidity.poolToken,
@@ -751,8 +752,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             govToken.destroy(msg.sender, liquidity.reserveAmount);
         }
 
-        // get the rate between the reserves upon adding liquidity and now
-        PackedRates memory packedRates = getPackedRates(liquidity.poolToken, liquidity.reserveToken, liquidity.reserveRateN, liquidity.reserveRateD);
+        // get the various rates between the reserves upon adding liquidity and now
+        PackedRates memory packedRates = packRates(liquidity.poolToken, liquidity.reserveToken, liquidity.reserveRateN, liquidity.reserveRateD);
 
         // get the target token amount
         uint256 targetAmount = removeLiquidityTargetAmount(
@@ -839,7 +840,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _reserveToken    reserve token
       * @param _poolAmount      pool token amount when the liquidity was added
       * @param _reserveAmount   reserve token amount that was added
-      * @param _packedRates     packed object containing the reserves rates
+      * @param _packedRates     see `struct PackedRates`
       * @param _addTimestamp    time at which the liquidity was added
       * @param _removeTimestamp time at which the liquidity is removed
       * @return amount received for removing liquidity
@@ -939,8 +940,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // calculate the amount of pool tokens based on the amount of reserve tokens
         uint256 poolAmount = _reserveAmount.mul(_poolRateD).div(_poolRateN);
 
-        // get the rate between the reserves upon adding liquidity and now
-        PackedRates memory packedRates = getPackedRates(_poolToken, _reserveToken, _reserveRateN, _reserveRateD);
+        // get the various rates between the reserves upon adding liquidity and now
+        PackedRates memory packedRates = packRates(_poolToken, _reserveToken, _reserveRateN, _reserveRateD);
 
         // get the current return
         uint256 protectedReturn = removeLiquidityTargetAmount(
@@ -1072,15 +1073,15 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-      * @dev returns a packed object containing the reserves rates
+      * @dev returns the various rates between the reserves
       *
       * @param _poolToken       pool token
       * @param _reserveToken    reserve token
       * @param _addSpotRateN    add spot rate numerator
       * @param _addSpotRateD    add spot rate denominator
-      * @return packed object containing the reserves rates
+      * @return see `struct PackedRates`
     */
-    function getPackedRates(
+    function packRates(
         IDSToken _poolToken,
         IERC20Token _reserveToken,
         uint256 _addSpotRateN,
