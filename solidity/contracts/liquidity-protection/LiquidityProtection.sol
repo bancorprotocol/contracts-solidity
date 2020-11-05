@@ -1057,6 +1057,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
     /**
       * @dev returns whether or not the deviation of the average rate from the spot rate is within range
+      * for example, if the maximum permitted deviation is 5%, then return `95/100 <= average/spot <= 100/95`
       *
       * @param _spotRateN       spot rate numerator
       * @param _spotRateD       spot rate denominator
