@@ -83,7 +83,7 @@ contract('ConverterLiquidity', accounts => {
 
             it('should revert if the minimum-return is larger than the return', async () => {
                 await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i])));
-                await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts, -1), 'ERR_RETURN_TOO_LOW');
+                await expectRevert(converter.addLiquidity(reserveTokens, reserveAmounts, MAX_UINT256), 'ERR_RETURN_TOO_LOW');
             });
 
             it('should revert if any of the input reserve amounts is not larger than zero', async () => {
