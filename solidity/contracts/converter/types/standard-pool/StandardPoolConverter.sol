@@ -21,8 +21,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     using Math for *;
 
     IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-    uint256 private constant MAX_UINT128 = 0xffffffffffffffffffffffffffffffff;
-    uint256 private constant MAX_UINT112 = 0xffffffffffffffffffffffffffff;
+    uint256 private constant MAX_UINT128 = 2 ** 128 - 1;
+    uint256 private constant MAX_UINT112 = 2 ** 112 - 1;
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
     uint32 private constant PPM_RESOLUTION = 1000000;
 
