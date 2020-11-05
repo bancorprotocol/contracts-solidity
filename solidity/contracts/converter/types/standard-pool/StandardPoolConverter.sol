@@ -72,7 +72,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     /**
       * @dev triggered when the rate between two tokens in the converter changes
       * note that the event might be dispatched for rate updates between any two tokens in the converter
-      * note that prior to version 28, you should use the 'PriceDataUpdate' event instead
       *
       * @param  _token1 address of the first token
       * @param  _token2 address of the second token
@@ -126,22 +125,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         uint256 _amount,
         uint256 _newBalance,
         uint256 _newSupply
-    );
-
-    /**
-      * @dev triggered after a conversion with new price data
-      * deprecated, use `TokenRateUpdate` from version 28 and up
-      *
-      * @param  _connectorToken     reserve token
-      * @param  _tokenSupply        pool token supply
-      * @param  _connectorBalance   reserve balance
-      * @param  _connectorWeight    reserve weight
-    */
-    event PriceDataUpdate(
-        IERC20Token indexed _connectorToken,
-        uint256 _tokenSupply,
-        uint256 _connectorBalance,
-        uint32 _connectorWeight
     );
 
     /**
@@ -1250,10 +1233,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         // dispatch token rate update events for the pool token
         emit TokenRateUpdate(poolToken, _sourceToken, _sourceBalance, poolTokenSupply);
         emit TokenRateUpdate(poolToken, _targetToken, _targetBalance, poolTokenSupply);
-
-        // dispatch price data update events (deprecated events)
-        emit PriceDataUpdate(_sourceToken, poolTokenSupply, _sourceBalance, PPM_RESOLUTION / 2);
-        emit PriceDataUpdate(_targetToken, poolTokenSupply, _targetBalance, PPM_RESOLUTION / 2);
     }
 
     /**
