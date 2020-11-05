@@ -496,7 +496,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
       * @param _targetId    target reserve id
     */
     function reserveBalances(uint256 _sourceId, uint256 _targetId) internal view returns (uint256, uint256) {
-        require(_sourceId + _targetId == 3, "ERR_INVALID_RESERVES");
+        require((_sourceId == 1 && _targetId == 2) || (_sourceId == 2 && _targetId == 1), "ERR_INVALID_RESERVES");
         return decodeReserveBalances(__reserveBalances, _sourceId, _targetId);        
     }
 
