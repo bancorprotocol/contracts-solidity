@@ -50,7 +50,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
     IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint32 internal constant PPM_RESOLUTION = 1000000;
-    uint256 internal constant MAX_UINT128 = 0xffffffffffffffffffffffffffffffff;
+    uint256 internal constant MAX_UINT128 = 2 ** 128 - 1;
 
     // the address of the whitelist administrator
     address public whitelistAdmin;
