@@ -548,9 +548,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     }
 
     /**
-      * @dev syncs all stored reserve balances, excluding the ether value of the current transaction
+      * @dev syncs all stored reserve balances, excluding a given amount of ether from the ether reserve balance (if relevant)
       *
-      * @param _value   the ether value of the current transaction
+      * @param _value   amount of ether to exclude from the ether reserve balance (if relevant)
     */
     function syncReserveBalances(uint256 _value) internal {
         IERC20Token _reserveToken0 = __reserveTokens[0];
