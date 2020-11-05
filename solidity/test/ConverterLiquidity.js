@@ -1,8 +1,9 @@
 const { expect } = require('chai');
-const { expectRevert, BN, balance } = require('@openzeppelin/test-helpers');
+const { expectRevert, BN, balance, constants } = require('@openzeppelin/test-helpers');
 const Decimal = require('decimal.js');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { MAX_UINT256 } = constants;
 
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const DSToken = artifacts.require('DSToken');
@@ -20,7 +21,7 @@ contract('ConverterLiquidity', accounts => {
                 await converter.addReserve(ETH_RESERVE_ADDRESS, weights[i] * 10000);
             }
             else {
-                const erc20Token = await ERC20Token.new('name', 'symbol', 0, -1);
+                const erc20Token = await ERC20Token.new('name', 'symbol', 0, MAX_UINT256);
                 await converter.addReserve(erc20Token.address, weights[i] * 10000);
             }
         }
