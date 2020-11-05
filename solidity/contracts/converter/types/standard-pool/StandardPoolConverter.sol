@@ -506,7 +506,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
       * @param _reserveId       reserve id
       * @param _reserveBalance  reserve balance
     */
-    function storeReserveBalance(uint256 _reserveId, uint256 _reserveBalance) internal {
+    function setReserveBalance(uint256 _reserveId, uint256 _reserveBalance) internal {
         require(_reserveBalance <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW"); 
         uint256 otherBalance = decodeReserveBalance(__reserveBalances, 3 - _reserveId);
         __reserveBalances = encodeReserveBalances(_reserveBalance, _reserveId, otherBalance, 3 - _reserveId);
@@ -520,7 +520,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
       * @param _sourceBalance   source reserve balance
       * @param _targetBalance   target reserve balance
     */
-    function storeReserveBalances(uint256 _sourceId, uint256 _targetId, uint256 _sourceBalance, uint256 _targetBalance) internal {
+    function setReserveBalances(uint256 _sourceId, uint256 _targetId, uint256 _sourceBalance, uint256 _targetBalance) internal {
         require(_sourceBalance <= MAX_UINT128 && _targetBalance <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW"); 
         __reserveBalances = encodeReserveBalances(_sourceBalance, _sourceId, _targetBalance, _targetId);
     }
@@ -533,7 +533,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     function syncReserveBalance(IERC20Token _reserveToken) internal {
         uint256 reserveId = __reserveIds[_reserveToken];
         uint256 balance = _reserveToken == ETH_RESERVE_ADDRESS ? address(this).balance : _reserveToken.balanceOf(address(this));
-        storeReserveBalance(reserveId, balance);
+        setReserveBalance(reserveId, balance);
     }
 
     /**
@@ -544,7 +544,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         IERC20Token _reserveToken1 = __reserveTokens[1];
         uint256 balance0 = _reserveToken0 == ETH_RESERVE_ADDRESS ? address(this).balance : _reserveToken0.balanceOf(address(this));
         uint256 balance1 = _reserveToken1 == ETH_RESERVE_ADDRESS ? address(this).balance : _reserveToken1.balanceOf(address(this));
-        storeReserveBalances(1, 2, balance0, balance1);
+        setReserveBalances(1, 2, balance0, balance1);
     }
 
     /**
@@ -555,7 +555,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         IERC20Token _reserveToken1 = __reserveTokens[1];
         uint256 balance0 = _reserveToken0 == ETH_RESERVE_ADDRESS ? address(this).balance - msg.value : _reserveToken0.balanceOf(address(this));
         uint256 balance1 = _reserveToken1 == ETH_RESERVE_ADDRESS ? address(this).balance - msg.value : _reserveToken1.balanceOf(address(this));
-        storeReserveBalances(1, 2, balance0, balance1);
+        setReserveBalances(1, 2, balance0, balance1);
     }
 
     /**
@@ -658,7 +658,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         }
 
         // sync the reserve balances
-        storeReserveBalances(sourceId, targetId, actualSourceBalance, targetBalance - amount);
+        setReserveBalances(sourceId, targetId, actualSourceBalance, targetBalance - amount);
 
         // transfer funds to the beneficiary in the to reserve token
         if (_targetToken == ETH_RESERVE_ADDRESS) {
@@ -878,7 +878,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
 
             // sync the reserve balance
             uint256 newReserveBalance = rsvBalance.add(reserveAmount);
-            storeReserveBalance(reserveId, newReserveBalance);
+            setReserveBalance(reserveId, newReserveBalance);
 
             uint256 newPoolTokenSupply = supply.add(_amount);
 
@@ -1072,7 +1072,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
                 safeTransferFrom(reserveToken, msg.sender, address(this), reserveAmount);
             }
 
-            storeReserveBalance(reserveId, reserveAmount);
+            setReserveBalance(reserveId, reserveAmount);
 
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, reserveAmount, amount);
 
@@ -1120,7 +1120,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
             }
 
             uint256 newReserveBalance = rsvBalance.add(reserveAmount);
-            storeReserveBalance(reserveId, newReserveBalance);
+            setReserveBalance(reserveId, newReserveBalance);
 
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
@@ -1179,7 +1179,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
 
             uint256 reserveId = __reserveIds[reserveToken];
             uint256 newReserveBalance = reserveBalance(reserveId).sub(reserveAmount);
-            storeReserveBalance(reserveId, newReserveBalance);
+            setReserveBalance(reserveId, newReserveBalance);
 
             // transfer each one of the reserve amounts from the pool to the user
             if (reserveToken == ETH_RESERVE_ADDRESS) {
