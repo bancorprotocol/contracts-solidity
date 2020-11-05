@@ -95,7 +95,6 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     /**
       * @dev triggered when the rate between two tokens in the converter changes
       * note that the event might be dispatched for rate updates between any two tokens in the converter
-      * note that prior to version 28, you should use the 'PriceDataUpdate' event instead
       *
       * @param  _token1 address of the first token
       * @param  _token2 address of the second token
