@@ -28,22 +28,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     uint256 public prevAverageRateUpdateTime; // last time when the previous rate was updated (in seconds)
 
     /**
-      * @dev triggered after a conversion with new price data
-      * deprecated, use `TokenRateUpdate` from version 28 and up
-      *
-      * @param  _connectorToken     reserve token
-      * @param  _tokenSupply        pool token supply
-      * @param  _connectorBalance   reserve balance
-      * @param  _connectorWeight    reserve weight
-    */
-    event PriceDataUpdate(
-        IERC20Token indexed _connectorToken,
-        uint256 _tokenSupply,
-        uint256 _connectorBalance,
-        uint32 _connectorWeight
-    );
-
-    /**
       * @dev initializes a new LiquidityPoolV1Converter instance
       *
       * @param  _token              pool token governed by the converter
@@ -734,10 +718,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         // dispatch token rate update events for the pool token
         dispatchPoolTokenRateUpdateEvent(poolTokenSupply, _sourceToken, sourceReserveBalance, sourceReserveWeight);
         dispatchPoolTokenRateUpdateEvent(poolTokenSupply, _targetToken, targetReserveBalance, targetReserveWeight);
-
-        // dispatch price data update events (deprecated events)
-        emit PriceDataUpdate(_sourceToken, poolTokenSupply, sourceReserveBalance, sourceReserveWeight);
-        emit PriceDataUpdate(_targetToken, poolTokenSupply, targetReserveBalance, targetReserveWeight);
     }
 
     /**
