@@ -27,6 +27,8 @@ import "../token/interfaces/IDSToken.sol";
   * The contract is upgradable.
 */
 contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenHandler {
+    uint32 private constant PPM_RESOLUTION = 1000000;
+
     /**
       * @dev triggered when a converter anchor is added to the registry
       *
@@ -115,6 +117,12 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     {
         uint256 length = _reserveTokens.length;
         require(length == _reserveWeights.length, "ERR_INVALID_RESERVES");
+
+        // for standard converters, change type 1 to type 3
+        if (_type == 1 && length == 2 && _reserveWeights[0] == PPM_RESOLUTION / 2 && _reserveWeights[1] == PPM_RESOLUTION / 2) {
+            _type = 3;
+        }
+
         require(getLiquidityPoolByConfig(_type, _reserveTokens, _reserveWeights) == IConverterAnchor(0), "ERR_ALREADY_EXISTS");
 
         IConverterFactory factory = IConverterFactory(addressOf(CONVERTER_FACTORY));
