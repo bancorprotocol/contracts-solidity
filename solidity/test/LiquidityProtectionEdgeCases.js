@@ -2,6 +2,7 @@ const { expect } = require('chai');
 const { BN, constants } = require('@openzeppelin/test-helpers');
 const { registry } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
+const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 
 const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorFormula = artifacts.require('BancorFormula');
@@ -59,7 +60,7 @@ contract('LiquidityProtectionEdgeCases', accounts => {
     const convert = async (sourceToken, targetToken, amount) => {
         await sourceToken.approve(bancorNetwork.address, amount);
         const path = [sourceToken.address, poolToken.address, targetToken.address];
-        await bancorNetwork.convertByPath(path, amount, 1, constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0);
+        await bancorNetwork.convertByPath(path, amount, 1, ZERO_ADDRESS, ZERO_ADDRESS, 0);
     };
 
     const increaseRate = async (sourceToken, targetToken, amount) => {
@@ -145,7 +146,7 @@ contract('LiquidityProtectionEdgeCases', accounts => {
         await liquidityProtection.acceptNetworkTokenOwnership();
         await liquidityProtection.acceptGovTokenOwnership();
         await liquidityProtection.whitelistPool(poolToken.address, true);
-        await liquidityProtection.setSystemNetworkTokenLimits(-1, FULL_PPM);
+        await liquidityProtection.setSystemNetworkTokenLimits(MAX_UINT256, FULL_PPM);
         await liquidityProtection.setAverageRateMaxDeviation(FULL_PPM);
     });
 
@@ -176,21 +177,21 @@ contract('LiquidityProtectionEdgeCases', accounts => {
                     await baseToken.approve(converter.address, amounts[0]);
                     await networkToken.approve(converter.address, amounts[1]);
                     await converter.addLiquidity([baseToken.address, networkToken.address], [amounts[0], amounts[1]], 1);
-    
+
                     await addProtectedLiquidity(baseToken, amounts[2]);
                     const networkTokenMaxAmount = await getNetworkTokenMaxAmount();
                     if (amounts[3].gt(networkTokenMaxAmount))
                         amounts[3] = networkTokenMaxAmount;
                     await addProtectedLiquidity(networkToken, amounts[3]);
-    
+
                     if (config.increaseRate) {
                         await increaseRate(networkToken, baseToken, amounts[3]);
                     }
-    
+
                     if (config.generateFee) {
                         await generateFee(FEE_PPM, baseToken, networkToken, amounts[2]);
                     }
-    
+
                     await converter.setTime(timestamp);
                     const actual = await liquidityProtection.removeLiquidityReturn(0, FULL_PPM, timestamp);
                     const error = test(actual[0], amounts[2]);
