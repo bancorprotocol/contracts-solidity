@@ -549,12 +549,14 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
 
     /**
       * @dev syncs all stored reserve balances, excluding the ether value of the current transaction
+      *
+      * @param _value   the ether value of the current transaction
     */
-    function syncReserveBalancesExcludingCurrentValue() internal {
+    function syncReserveBalancesExcludingCurrentValue(uint256 _value) internal {
         IERC20Token _reserveToken0 = __reserveTokens[0];
         IERC20Token _reserveToken1 = __reserveTokens[1];
-        uint256 balance0 = _reserveToken0 == ETH_RESERVE_ADDRESS ? address(this).balance - msg.value : _reserveToken0.balanceOf(address(this));
-        uint256 balance1 = _reserveToken1 == ETH_RESERVE_ADDRESS ? address(this).balance - msg.value : _reserveToken1.balanceOf(address(this));
+        uint256 balance0 = _reserveToken0 == ETH_RESERVE_ADDRESS ? address(this).balance - _value : _reserveToken0.balanceOf(address(this));
+        uint256 balance1 = _reserveToken1 == ETH_RESERVE_ADDRESS ? address(this).balance - _value : _reserveToken1.balanceOf(address(this));
         setReserveBalances(1, 2, balance0, balance1);
     }
 
@@ -849,7 +851,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         protected
         returns (uint256)
     {
-        syncReserveBalancesExcludingCurrentValue();
+        syncReserveBalancesExcludingCurrentValue(msg.value);
 
         IDSToken poolToken = IDSToken(address(anchor));
         uint256 supply = poolToken.totalSupply();
@@ -1098,7 +1100,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         private
         returns (uint256)
     {
-        syncReserveBalancesExcludingCurrentValue();
+        syncReserveBalancesExcludingCurrentValue(msg.value);
 
         uint256 amount = getMinShare(_totalSupply, _reserveTokens, _reserveAmounts);
         uint256 newPoolTokenSupply = _totalSupply.add(amount);
