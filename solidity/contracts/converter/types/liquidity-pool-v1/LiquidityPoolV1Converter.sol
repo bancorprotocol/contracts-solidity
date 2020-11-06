@@ -493,8 +493,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         uint256 j;
 
         uint256 length = reserveTokens.length;
-        require(length == _reserveTokens.length, "ERR_INVALID_RESERVE");
-        require(length == _reserveAmounts.length, "ERR_INVALID_AMOUNT");
+        require(length == _reserveTokens.length, "ERR_INVALID_RESERVES");
+        require(length == _reserveAmounts.length, "ERR_INVALID_AMOUNTS");
 
         for (i = 0; i < length; i++) {
             // verify that every input reserve token is included in the reserve tokens
@@ -505,9 +505,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
                 }
             }
             // verify that every reserve token is included in the input reserve tokens
-            require(j < length, "ERR_INVALID_RESERVE");
+            require(j < length, "ERR_MISSING_RESERVE");
             // verify that every input reserve token amount is larger than zero
-            require(_reserveAmounts[i] > 0, "ERR_INVALID_AMOUNT");
+            require(_reserveAmounts[i] > 0, "ERR_ZERO_AMOUNT");
         }
 
         // verify that the input token amount is larger than zero
