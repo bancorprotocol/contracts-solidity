@@ -858,11 +858,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
 
         // iterate through the reserve tokens and transfer a percentage equal to the weight between
         // _amount and the total supply in each reserve from the caller to the converter
-        uint256 reserveCount = __reserveTokens.length;
-        for (uint256 i = 0; i < reserveCount; i++) {
+        for (uint256 i = 0; i < 2; i++) {
             IERC20Token reserveToken = __reserveTokens[i];
-            uint256 reserveId = __reserveIds[reserveToken];
-            uint256 rsvBalance = reserveBalance(reserveId);
+            uint256 rsvBalance = reserveBalance(i + 1);
             uint256 reserveAmount = fundCost(supply, rsvBalance, _amount);
 
             // transfer funds from the caller in the reserve token
@@ -880,7 +878,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
 
             // sync the reserve balance
             uint256 newReserveBalance = rsvBalance.add(reserveAmount);
-            setReserveBalance(reserveId, newReserveBalance);
+            setReserveBalance(i + 1, newReserveBalance);
 
             uint256 newPoolTokenSupply = supply.add(_amount);
 
@@ -919,7 +917,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         uint256 totalSupply = poolToken.totalSupply();
         poolToken.destroy(msg.sender, _amount);
 
-        uint256[] memory reserveMinReturnAmounts = new uint256[](__reserveTokens.length);
+        uint256[] memory reserveMinReturnAmounts = new uint256[](2);
         for (uint256 i = 0; i < reserveMinReturnAmounts.length; i++)
             reserveMinReturnAmounts[i] = 1;
 
@@ -994,6 +992,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     /**
       * @dev verifies that a given array of tokens is identical to the converter's array of reserve tokens
       * we take this input in order to allow specifying the corresponding reserve amounts in any order
+      * this function rearranges the input arrays according to the converter's array of reserve tokens
       *
       * @param _reserveTokens   array of reserve tokens
       * @param _reserveAmounts  array of reserve amounts
@@ -1003,29 +1002,24 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         private
         view
     {
-        uint256 i;
-        uint256 j;
+        require(_reserveTokens.length == 2, "ERR_INVALID_RESERVES");
+        require(_reserveAmounts.length == 2, "ERR_INVALID_AMOUNTS");
+        require(_reserveAmounts[0] > 0 && _reserveAmounts[1] > 0 && _amount > 0, "ERR_ZERO_AMOUNT");
 
-        uint256 length = __reserveTokens.length;
-        require(length == _reserveTokens.length, "ERR_INVALID_RESERVES");
-        require(length == _reserveAmounts.length, "ERR_INVALID_AMOUNTS");
+        uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
+        uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
 
-        for (i = 0; i < length; i++) {
-            // verify that every input reserve token is included in the reserve tokens
-            require(__reserveIds[_reserveTokens[i]] != 0, "ERR_INVALID_RESERVE");
-            for (j = 0; j < length; j++) {
-                if (__reserveTokens[i] == _reserveTokens[j]) {
-                    break;
-                }
-            }
-            // verify that every reserve token is included in the input reserve tokens
-            require(j < length, "ERR_MISSING_RESERVE");
-            // verify that every input reserve token amount is larger than zero
-            require(_reserveAmounts[i] > 0, "ERR_ZERO_AMOUNT");
+        if (reserve0Id == 2 && reserve1Id == 1) {
+            IERC20Token tempReserveToken = _reserveTokens[0];
+            _reserveTokens[0] = _reserveTokens[1];
+            _reserveTokens[1] = tempReserveToken;
+            uint256 tempReserveAmount = _reserveAmounts[0];
+            _reserveAmounts[0] = _reserveAmounts[1];
+            _reserveAmounts[1] = tempReserveAmount;
         }
-
-        // verify that the input token amount is larger than zero
-        require(_amount > 0, "ERR_ZERO_AMOUNT");
+        else {
+            require(reserve0Id == 1 && reserve1Id == 2, "ERR_INVALID_RESERVE");
+        }
     }
 
     /**
@@ -1067,14 +1061,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
         // transfer each one of the reserve amounts from the user to the pool
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
-            uint256 reserveId = __reserveIds[reserveToken];
             uint256 reserveAmount = _reserveAmounts[i];
 
             if (reserveToken != ETH_RESERVE_ADDRESS) { // ETH has already been transferred as part of the transaction
                 safeTransferFrom(reserveToken, msg.sender, address(this), reserveAmount);
             }
 
-            setReserveBalance(reserveId, reserveAmount);
+            setReserveBalance(i + 1, reserveAmount);
 
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, reserveAmount, amount);
 
@@ -1107,8 +1100,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
-            uint256 reserveId = __reserveIds[reserveToken];
-            uint256 rsvBalance = reserveBalance(reserveId);
+            uint256 rsvBalance = reserveBalance(i + 1);
             uint256 reserveAmount = fundCost(_totalSupply, rsvBalance, amount);
             require(reserveAmount > 0, "ERR_ZERO_TARGET_AMOUNT");
             assert(reserveAmount <= _reserveAmounts[i]);
@@ -1122,7 +1114,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
             }
 
             uint256 newReserveBalance = rsvBalance.add(reserveAmount);
-            setReserveBalance(reserveId, newReserveBalance);
+            setReserveBalance(i + 1, newReserveBalance);
 
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
@@ -1150,7 +1142,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
     {
         uint256[] memory reserveAmounts = new uint256[](_reserveTokens.length);
         for (uint256 i = 0; i < reserveAmounts.length; i++)
-            reserveAmounts[i] = liquidateReserveAmount(_totalSupply, reserveBalance(__reserveIds[_reserveTokens[i]]), _amount);
+            reserveAmounts[i] = liquidateReserveAmount(_totalSupply, reserveBalance(i + 1), _amount);
         return reserveAmounts;
     }
 
@@ -1179,9 +1171,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
             uint256 reserveAmount = reserveAmounts[i];
             require(reserveAmount >= _reserveMinReturnAmounts[i], "ERR_ZERO_TARGET_AMOUNT");
 
-            uint256 reserveId = __reserveIds[reserveToken];
-            uint256 newReserveBalance = reserveBalance(reserveId).sub(reserveAmount);
-            setReserveBalance(reserveId, newReserveBalance);
+            uint256 newReserveBalance = reserveBalance(i + 1).sub(reserveAmount);
+            setReserveBalance(i + 1, newReserveBalance);
 
             // transfer each one of the reserve amounts from the pool to the user
             if (reserveToken == ETH_RESERVE_ADDRESS) {
@@ -1203,9 +1194,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, TokenHandler, To
 
     function getMinShare(uint256 _totalSupply, IERC20Token[] memory _reserveTokens, uint256[] memory _reserveAmounts) private view returns (uint256) {
         uint256 minIndex = 0;
-        uint256 minBalance = reserveBalance(__reserveIds[_reserveTokens[0]]);
+        uint256 minBalance = reserveBalance(1);
         for (uint256 i = 1; i < _reserveTokens.length; i++) {
-            uint256 thisBalance = reserveBalance(__reserveIds[_reserveTokens[i]]);
+            uint256 thisBalance = reserveBalance(i + 1);
             if (_reserveAmounts[i].mul(minBalance) < _reserveAmounts[minIndex].mul(thisBalance)) {
                 minIndex = i;
                 minBalance = thisBalance;
