@@ -30,13 +30,10 @@ function percentageToPPM(value) {
 function condOrAlmostEqual(cond, actual, expected, maxError) {
     if (!cond) {
         const error = Decimal(actual.toString()).div(expected.toString()).sub(1).abs();
-        console.log(error.toFixed(25));
-        return '';
         if (error.gt(maxError)) {
             return `error = ${error.toFixed(maxError.length)}`;
         }
     }
-    console.log('ok');
     return '';
 }
 
@@ -47,11 +44,7 @@ const CONFIGURATIONS = [
 ];
 
 const NUM_OF_DAYS = [30, 100];
-const DECIMAL_COMBINATIONS = cartesian([6, 12, 18, 24], [6, 12, 18, 24], [9, 15, 21], [9, 15, 21]).filter(([a, b, c, d]) =>
-    !(a == 6 && b == 24) &&
-    !(a == 24 && b == 6) &&
-    !(a == 18 && b == 6) &&
-    !(a == 24 && b == 12 && c == 9));
+const DECIMAL_COMBINATIONS = cartesian([12, 24], [12, 24], [15, 21], [15, 21]);
 
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
