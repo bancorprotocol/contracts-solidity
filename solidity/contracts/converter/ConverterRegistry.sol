@@ -118,8 +118,8 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         uint256 length = _reserveTokens.length;
         require(length == _reserveWeights.length, "ERR_INVALID_RESERVES");
 
-        // for standard converters, change type 1 to type 3
-        if (_type == 1 && length == 2 && _reserveWeights[0] == PPM_RESOLUTION / 2 && _reserveWeights[1] == PPM_RESOLUTION / 2) {
+        // for standard pools, change type 1 to type 3
+        if (_type == 1 && isStandardPool(_reserveWeights)) {
             _type = 3;
         }
 
@@ -457,6 +457,18 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
     function removeConvertibleToken(IConverterRegistryData _converterRegistryData, IERC20Token _convertibleToken, IConverterAnchor _anchor) internal {
         _converterRegistryData.removeConvertibleToken(_convertibleToken, _anchor);
         emit ConvertibleTokenRemoved(_convertibleToken, _anchor);
+    }
+
+    /**
+      * @dev checks whether or not a given configuration depicts a standard pool
+      *
+      * @param _reserveWeights  reserve weights
+      *
+      * @return true if the given configuration depicts a standard pool, false otherwise
+    */
+    function isStandardPool(uint32[] memory _reserveWeights) internal view virtual returns (bool) {
+        this; // silent state mutability warning without generating additional bytecode
+        return _reserveWeights.length == 2 && _reserveWeights[0] == PPM_RESOLUTION / 2 && _reserveWeights[1] == PPM_RESOLUTION / 2;
     }
 
     function addConverterInternal(IConverter _converter) private {

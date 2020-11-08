@@ -7,8 +7,10 @@ import "../converter/ConverterRegistry.sol";
 */
 contract TestConverterRegistry is ConverterRegistry {
     IConverter public createdConverter;
+    bool public typeChangingEnabled;
 
     constructor(IContractRegistry _registry) public ConverterRegistry(_registry) {
+        typeChangingEnabled = true;
     }
 
     function newConverter(
@@ -25,5 +27,13 @@ contract TestConverterRegistry is ConverterRegistry {
             _reserveWeights);
 
         return createdConverter;
+    }
+
+    function isStandardPool(uint32[] memory _reserveWeights) internal view override returns (bool) {
+        return typeChangingEnabled && super.isStandardPool(_reserveWeights);
+    }
+
+    function enableTypeChanging(bool _state) external {
+        typeChangingEnabled = _state;
     }
 }

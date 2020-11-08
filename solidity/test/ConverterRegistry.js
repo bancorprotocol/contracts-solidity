@@ -20,7 +20,7 @@ const StandardPoolConverterFactory = artifacts.require('StandardPoolConverterFac
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
-const TestConverterRegistry = artifacts.require('TestConverterRegistry');
+const ConverterRegistry = artifacts.require('TestConverterRegistry');
 const ConverterHelper = require('./helpers/Converter');
 
 contract('ConverterRegistry', (accounts) => {
@@ -45,7 +45,7 @@ contract('ConverterRegistry', (accounts) => {
     beforeEach(async () => {
         contractRegistry = await ContractRegistry.new();
 
-        converterRegistry = await TestConverterRegistry.new(contractRegistry.address);
+        converterRegistry = await ConverterRegistry.new(contractRegistry.address);
         converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
