@@ -62,18 +62,16 @@ contract('LiquidityProtectionV1EdgeCases', accounts => {
         await bancorNetwork.convertByPath(path, amount, 1, constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0);
     };
 
-    const increaseRate = async (sourceToken, targetToken, amount) => {
-        await convert(
-            sourceToken,
-            targetToken,
-            new BN(Decimal(2).sqrt().sub(1).mul(amount.toString()).toFixed(0))
-        );
+    const increaseRate = async (sourceToken, targetToken) => {
+        const sourceBalance = await converter.reserveBalance(sourceToken.address);
+        await convert(sourceToken, targetToken, sourceBalance.div(new BN(100)));
     };
 
-    const generateFee = async (conversionFee, sourceToken, targetToken, amount) => {
+    const generateFee = async (conversionFee, sourceToken, targetToken) => {
         await converter.setConversionFee(conversionFee);
         const prevBalance = await targetToken.balanceOf(owner);
-        await convert(sourceToken, targetToken, amount.div(new BN(2)));
+        const sourceBalance = await converter.reserveBalance(sourceToken.address);
+        await convert(sourceToken, targetToken, sourceBalance.div(new BN(100)));
         const currBalance = await targetToken.balanceOf(owner);
         await convert(targetToken, sourceToken, currBalance.sub(prevBalance));
         await converter.setConversionFee(0);
@@ -127,8 +125,8 @@ contract('LiquidityProtectionV1EdgeCases', accounts => {
         networkToken = await DSToken.new('BNT', 'BNT', 18);
         govToken = await DSToken.new('vBNT', 'vBNT', 18);
 
-        await baseToken.issue(owner, new BN('1'.padEnd(30, '0')));
-        await networkToken.issue(owner, new BN('1'.padEnd(30, '0')));
+        await baseToken.issue(owner, new BN('1'.padEnd(40, '0')));
+        await networkToken.issue(owner, new BN('1'.padEnd(40, '0')));
 
         await converterRegistry.newConverter(1, 'PT', 'PT', 18, FULL_PPM, [baseToken.address, networkToken.address], [HALF_PPM, HALF_PPM]);
         const anchorCount = await converterRegistry.getAnchorCount();
@@ -186,11 +184,11 @@ contract('LiquidityProtectionV1EdgeCases', accounts => {
                     await addProtectedLiquidity(networkToken, amounts[3]);
     
                     if (config.increaseRate) {
-                        await increaseRate(networkToken, baseToken, amounts[3]);
+                        await increaseRate(networkToken, baseToken);
                     }
     
                     if (config.generateFee) {
-                        await generateFee(FEE_PPM, baseToken, networkToken, amounts[2]);
+                        await generateFee(FEE_PPM, baseToken, networkToken);
                     }
     
                     await converter.setTime(timestamp);
@@ -237,11 +235,11 @@ contract('LiquidityProtectionV1EdgeCases', accounts => {
                     await addProtectedLiquidity(networkToken, amounts[3]);
 
                     if (config.increaseRate) {
-                        await increaseRate(baseToken, networkToken, amounts[2]);
+                        await increaseRate(baseToken, networkToken);
                     }
 
                     if (config.generateFee) {
-                        await generateFee(FEE_PPM, networkToken, baseToken, amounts[3]);
+                        await generateFee(FEE_PPM, networkToken, baseToken);
                     }
 
                     await converter.setTime(timestamp);
