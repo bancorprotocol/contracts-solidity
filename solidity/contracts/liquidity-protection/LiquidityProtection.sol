@@ -196,6 +196,17 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         require(updatingLiquidity, "ERR_NOT_UPDATING_LIQUIDITY");
     }
 
+    // ensures that the portion is valid
+    modifier validPortion(uint32 _portion) {
+        _validPortion(_portion);
+        _;
+    }
+
+    // error message binary size optimization
+    function _validPortion(uint32 _portion) internal pure {
+        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
+    }
+
     // ensures that the pool is supported
     modifier poolSupported(IConverterAnchor _poolAnchor) {
         _poolSupported(_poolAnchor);
@@ -645,11 +656,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 _id,
         uint32 _portion,
         uint256 _removeTimestamp
-    ) external view returns (uint256, uint256, uint256)
+    ) external view validPortion(_portion) returns (uint256, uint256, uint256)
     {
-        // verify input
-        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
-
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
 
         // verify input
@@ -705,9 +713,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _id      id in the caller's list of protected liquidity
       * @param _portion portion of liquidity to remove, in PPM
     */
-    function removeLiquidity(uint256 _id, uint32 _portion) external protected {
-        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
-
+    function removeLiquidity(uint256 _id, uint32 _portion) external validPortion(_portion) protected {
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
 
         // verify input & permissions
