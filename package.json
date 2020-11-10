@@ -56,7 +56,7 @@
     "solc": "^0.6.12",
     "solhint": "^3.1.0",
     "solidity-coverage": "^0.7.9",
-    "token-governance": "bancorprotocol/token-governance#governor",
+    "@bancor/token-governance": "bancorprotocol/token-governance#governor",
     "truffle": "5.1.36",
     "truffle-flattener": "1.4.4",
     "web3": "1.2.11"
