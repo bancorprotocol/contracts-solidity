@@ -648,7 +648,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     ) external view returns (uint256, uint256, uint256)
     {
         // verify input
-        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PERCENT");
+        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
 
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
 
@@ -720,7 +720,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _portion portion of liquidity to remove, in PPM
     */
     function removeLiquidity(uint256 _id, uint32 _portion) external protected {
-        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PERCENT");
+        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
 
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
 
