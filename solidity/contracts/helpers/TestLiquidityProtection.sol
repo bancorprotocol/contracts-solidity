@@ -30,8 +30,8 @@ contract TestLiquidityProtection is LiquidityProtection {
         uint256 _currentRateN,
         uint256 _currentRateD
     ) external pure returns (uint256, uint256) {
-        Fraction memory initialRate = Fraction({n: _initialRateN, d: _initialRateD});
-        Fraction memory currentRate = Fraction({n: _currentRateN, d: _currentRateD});
+        Fraction memory initialRate = Fraction({ n: _initialRateN, d: _initialRateD });
+        Fraction memory currentRate = Fraction({ n: _currentRateN, d: _currentRateD });
         Fraction memory impLossRate = impLoss(initialRate, currentRate);
         return (impLossRate.n, impLossRate.d);
     }

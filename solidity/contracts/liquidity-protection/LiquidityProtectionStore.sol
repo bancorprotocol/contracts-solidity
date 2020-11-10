@@ -554,7 +554,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         greaterThanZero(_expirationTime)
         returns (uint256)
     {
-        lockedBalances[_provider].push(LockedBalance({amount: _amount, expirationTime: _expirationTime}));
+        lockedBalances[_provider].push(LockedBalance({ amount: _amount, expirationTime: _expirationTime }));
 
         emit BalanceLocked(_provider, _amount, _expirationTime);
         return lockedBalances[_provider].length - 1;

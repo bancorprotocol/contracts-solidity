@@ -9,5 +9,6 @@ import "../../utility/interfaces/IOwned.sol";
 */
 interface IDSToken is IConverterAnchor, IERC20Token {
     function issue(address _to, uint256 _amount) external;
+
     function destroy(address _from, uint256 _amount) external;
 }

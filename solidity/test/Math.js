@@ -6,9 +6,9 @@ const MathUtils = require('./helpers/MathUtils');
 const MathContract = artifacts.require('TestMath');
 
 const MAX_UINT256 = Decimal(2).pow(256).sub(1);
-const SCALES = [6, 18, 30].map(n => Decimal(10).pow(n));
+const SCALES = [6, 18, 30].map((n) => Decimal(10).pow(n));
 
-contract('Math', accounts => {
+contract('Math', (accounts) => {
     before(async () => {
         mathContract = await MathContract.new();
     });
@@ -129,7 +129,11 @@ contract('Math', accounts => {
         }
     }
 
-    for (const values of [[123, 456789], [12, 345, 6789], [1, 1000, 1000000, 1000000000, 1000000000000]]) {
+    for (const values of [
+        [123, 456789],
+        [12, 345, 6789],
+        [1, 1000, 1000000, 1000000000, 1000000000000]
+    ]) {
         it(`geometricMean([${values}])`, async () => {
             const expected = 10 ** (Math.round(values.join('').length / values.length) - 1);
             const actual = await mathContract.geometricMeanTest(values);

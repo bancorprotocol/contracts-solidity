@@ -893,8 +893,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 _removeTimestamp
     ) internal view returns (uint256) {
         // get the rate between the reserves upon adding liquidity and now
-        Fraction memory addSpotRate = Fraction({n: _packedRates.addSpotRateN, d: _packedRates.addSpotRateD});
-        Fraction memory removeSpotRate = Fraction({n: _packedRates.removeSpotRateN, d: _packedRates.removeSpotRateD});
+        Fraction memory addSpotRate = Fraction({ n: _packedRates.addSpotRateN, d: _packedRates.addSpotRateD });
+        Fraction memory removeSpotRate = Fraction({ n: _packedRates.removeSpotRateN, d: _packedRates.removeSpotRateD });
         Fraction memory removeAverageRate = Fraction({
             n: _packedRates.removeAverageRateN,
             d: _packedRates.removeAverageRateD
@@ -1088,7 +1088,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 reserveBalance = converter.getConnectorBalance(_reserveToken);
 
         // for standard pools, 50% of the pool supply value equals the value of each reserve
-        return Fraction({n: reserveBalance.mul(2), d: poolTokenSupply});
+        return Fraction({ n: reserveBalance.mul(2), d: poolTokenSupply });
     }
 
     /**
@@ -1232,7 +1232,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // ensure that the contract can receive ETH
         updatingLiquidity = true;
-        _converter.addLiquidity{value: _value}(reserveTokens, amounts, 1);
+        _converter.addLiquidity{ value: _value }(reserveTokens, amounts, 1);
         updatingLiquidity = false;
     }
 
@@ -1333,7 +1333,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 prod = ratioN * ratioD;
         uint256 root = prod / ratioN == ratioD ? Math.floorSqrt(prod) : Math.floorSqrt(ratioN) * Math.floorSqrt(ratioD);
         uint256 sum = ratioN.add(ratioD);
-        return Fraction({n: sum.sub(root.mul(2)), d: sum});
+        return Fraction({ n: sum.sub(root.mul(2)), d: sum });
     }
 
     /**
@@ -1346,14 +1346,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function protectionLevel(uint256 _addTimestamp, uint256 _removeTimestamp) internal view returns (Fraction memory) {
         uint256 timeElapsed = _removeTimestamp.sub(_addTimestamp);
         if (timeElapsed < minProtectionDelay) {
-            return Fraction({n: 0, d: 1});
+            return Fraction({ n: 0, d: 1 });
         }
 
         if (timeElapsed >= maxProtectionDelay) {
-            return Fraction({n: 1, d: 1});
+            return Fraction({ n: 1, d: 1 });
         }
 
-        return Fraction({n: timeElapsed, d: maxProtectionDelay});
+        return Fraction({ n: timeElapsed, d: maxProtectionDelay });
     }
 
     /**
