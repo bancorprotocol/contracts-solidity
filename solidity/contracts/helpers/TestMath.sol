@@ -13,23 +13,43 @@ contract TestMath {
         return Math.ceilSqrt(_num);
     }
 
-    function reducedRatioTest(uint256 _n, uint256 _d, uint256 _max) external pure returns (uint256, uint256) {
+    function reducedRatioTest(
+        uint256 _n,
+        uint256 _d,
+        uint256 _max
+    ) external pure returns (uint256, uint256) {
         return Math.reducedRatio(_n, _d, _max);
     }
 
-    function normalizedRatioTest(uint256 _a, uint256 _b, uint256 _scale) external pure returns (uint256, uint256) {
+    function normalizedRatioTest(
+        uint256 _a,
+        uint256 _b,
+        uint256 _scale
+    ) external pure returns (uint256, uint256) {
         return Math.normalizedRatio(_a, _b, _scale);
     }
 
-    function accurateRatioTest(uint256 _a, uint256 _b, uint256 _scale) external pure returns (uint256, uint256) {
+    function accurateRatioTest(
+        uint256 _a,
+        uint256 _b,
+        uint256 _scale
+    ) external pure returns (uint256, uint256) {
         return Math.accurateRatio(_a, _b, _scale);
     }
 
-    function roundDivTest(uint256 _n, uint256 _d) external pure returns (uint256) {
+    function roundDivTest(uint256 _n, uint256 _d)
+        external
+        pure
+        returns (uint256)
+    {
         return Math.roundDiv(_n, _d);
     }
 
-    function geometricMeanTest(uint256[] memory _values) external pure returns (uint256) {
+    function geometricMeanTest(uint256[] memory _values)
+        external
+        pure
+        returns (uint256)
+    {
         return Math.geometricMean(_values);
     }
 
@@ -37,7 +57,11 @@ contract TestMath {
         return Math.decimalLength(_x);
     }
 
-    function roundDivUnsafeTest(uint256 _n, uint256 _d) external pure returns (uint256) {
+    function roundDivUnsafeTest(uint256 _n, uint256 _d)
+        external
+        pure
+        returns (uint256)
+    {
         return Math.roundDivUnsafe(_n, _d);
     }
 }

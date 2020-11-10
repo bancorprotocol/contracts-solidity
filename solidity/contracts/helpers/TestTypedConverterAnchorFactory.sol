@@ -15,7 +15,11 @@ contract TestTypedConverterAnchorFactory is ITypedConverterAnchorFactory {
         return 8;
     }
 
-    function createAnchor(string memory /*_name */, string memory _symbol, uint8 _decimals) external override returns (IConverterAnchor) {
+    function createAnchor(
+        string memory, /*_name */
+        string memory _symbol,
+        uint8 _decimals
+    ) external override returns (IConverterAnchor) {
         IConverterAnchor anchor = new DSToken(name, _symbol, _decimals);
         anchor.transferOwnership(msg.sender);
         return anchor;

@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 import "../utility/ReentrancyGuard.sol";
 
-
 contract TestReentrancyGuardAttacker {
     TestReentrancyGuard public target;
     bool public reentrancy;
@@ -22,7 +21,9 @@ contract TestReentrancyGuardAttacker {
     }
 
     function run() public {
-        callProtectedMethod ? target.protectedMethod() : target.unprotectedMethod();
+        callProtectedMethod
+            ? target.protectedMethod()
+            : target.unprotectedMethod();
     }
 
     function callback() external {

@@ -6,36 +6,43 @@ import "./interfaces/IPriceOracle.sol";
 import "./interfaces/IChainlinkPriceOracle.sol";
 
 /**
-  * @dev This contract provides the off-chain rate between two tokens.
-  *
-  * The price oracle uses chainlink oracles internally to get the rates of the two tokens
-  * with respect to a common denominator, and then returns the rate between them, which
-  * is equivalent to the rate of TokenA / TokenB.
-*/
+ * @dev This contract provides the off-chain rate between two tokens.
+ *
+ * The price oracle uses chainlink oracles internally to get the rates of the two tokens
+ * with respect to a common denominator, and then returns the rate between them, which
+ * is equivalent to the rate of TokenA / TokenB.
+ */
 contract PriceOracle is IPriceOracle, Utils {
     using SafeMath for uint256;
 
-    IERC20Token private constant ETH_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    IERC20Token private constant ETH_ADDRESS = IERC20Token(
+        0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+    );
     uint8 private constant ETH_DECIMALS = 18;
 
-    IERC20Token public tokenA;  // token A the oracle supports
-    IERC20Token public tokenB;  // token B the oracle supports
-    mapping (IERC20Token => uint8) public tokenDecimals;    // token -> token decimals
+    IERC20Token public tokenA; // token A the oracle supports
+    IERC20Token public tokenB; // token B the oracle supports
+    mapping(IERC20Token => uint8) public tokenDecimals; // token -> token decimals
 
-    IChainlinkPriceOracle public override tokenAOracle;  // token A chainlink price oracle
-    IChainlinkPriceOracle public override tokenBOracle;  // token B chainlink price oracle
-    mapping (IERC20Token => IChainlinkPriceOracle) public tokensToOracles;  // token -> price oracle for easier access
+    IChainlinkPriceOracle public override tokenAOracle; // token A chainlink price oracle
+    IChainlinkPriceOracle public override tokenBOracle; // token B chainlink price oracle
+    mapping(IERC20Token => IChainlinkPriceOracle) public tokensToOracles; // token -> price oracle for easier access
 
     /**
-      * @dev initializes a new PriceOracle instance
-      * note that the oracles must have the same common denominator (USD, ETH etc.)
-      *
-      * @param  _tokenA         first token to support
-      * @param  _tokenB         second token to support
-      * @param  _tokenAOracle   first token price oracle
-      * @param  _tokenBOracle   second token price oracle
-    */
-    constructor(IERC20Token _tokenA, IERC20Token _tokenB, IChainlinkPriceOracle _tokenAOracle, IChainlinkPriceOracle _tokenBOracle)
+     * @dev initializes a new PriceOracle instance
+     * note that the oracles must have the same common denominator (USD, ETH etc.)
+     *
+     * @param  _tokenA         first token to support
+     * @param  _tokenB         second token to support
+     * @param  _tokenAOracle   first token price oracle
+     * @param  _tokenBOracle   second token price oracle
+     */
+    constructor(
+        IERC20Token _tokenA,
+        IERC20Token _tokenB,
+        IChainlinkPriceOracle _tokenAOracle,
+        IChainlinkPriceOracle _tokenBOracle
+    )
         public
         validUniqueAddresses(address(_tokenA), address(_tokenB))
         validUniqueAddresses(address(_tokenAOracle), address(_tokenBOracle))
@@ -58,7 +65,10 @@ contract PriceOracle is IPriceOracle, Utils {
     }
 
     // error message binary size optimization
-    function _validUniqueAddresses(address _address1, address _address2) internal pure {
+    function _validUniqueAddresses(address _address1, address _address2)
+        internal
+        pure
+    {
         _validAddress(_address1);
         _validAddress(_address2);
         require(_address1 != _address2, "ERR_SAME_ADDRESS");
@@ -71,23 +81,30 @@ contract PriceOracle is IPriceOracle, Utils {
     }
 
     // error message binary size optimization
-    function _supportedTokens(IERC20Token _tokenA, IERC20Token _tokenB) internal view {
+    function _supportedTokens(IERC20Token _tokenA, IERC20Token _tokenB)
+        internal
+        view
+    {
         _validUniqueAddresses(address(_tokenA), address(_tokenB));
-        require(address(tokensToOracles[_tokenA]) != address(0) && address(tokensToOracles[_tokenB]) != address(0), "ERR_UNSUPPORTED_TOKEN");
+        require(
+            address(tokensToOracles[_tokenA]) != address(0) &&
+                address(tokensToOracles[_tokenB]) != address(0),
+            "ERR_UNSUPPORTED_TOKEN"
+        );
     }
 
     /**
-      * @dev returns the latest known rate between the two given tokens
-      * for a given pair of tokens A and B, returns the rate of A / B
-      * (the number of B units equivalent to a single A unit)
-      * the rate is returned as a fraction (numerator / denominator) for accuracy
-      *
-      * @param  _tokenA token to get the rate of 1 unit of
-      * @param  _tokenB token to get the rate of 1 `_tokenA` against
-      *
-      * @return numerator
-      * @return denominator
-    */
+     * @dev returns the latest known rate between the two given tokens
+     * for a given pair of tokens A and B, returns the rate of A / B
+     * (the number of B units equivalent to a single A unit)
+     * the rate is returned as a fraction (numerator / denominator) for accuracy
+     *
+     * @param  _tokenA token to get the rate of 1 unit of
+     * @param  _tokenB token to get the rate of 1 `_tokenA` against
+     *
+     * @return numerator
+     * @return denominator
+     */
     function latestRate(IERC20Token _tokenA, IERC20Token _tokenB)
         public
         view
@@ -112,47 +129,50 @@ contract PriceOracle is IPriceOracle, Utils {
         // 1 weiA costs $0.00005, 1 weiB costs $0.02, and weiA / weiB is 0.0025.
 
         if (decimalsTokenA > decimalsTokenB) {
-            rateTokenB = rateTokenB.mul(uint256(10) ** (decimalsTokenA - decimalsTokenB));
-        }
-        else if (decimalsTokenA < decimalsTokenB) {
-            rateTokenA = rateTokenA.mul(uint256(10) ** (decimalsTokenB - decimalsTokenA));
+            rateTokenB = rateTokenB.mul(
+                uint256(10)**(decimalsTokenA - decimalsTokenB)
+            );
+        } else if (decimalsTokenA < decimalsTokenB) {
+            rateTokenA = rateTokenA.mul(
+                uint256(10)**(decimalsTokenB - decimalsTokenA)
+            );
         }
 
         return (rateTokenA, rateTokenB);
     }
 
     /**
-      * @dev returns the timestamp of the last price update
-      *
-      * @return timestamp
-    */
-    function lastUpdateTime()
-        public
-        view
-        override
-        returns (uint256) {
+     * @dev returns the timestamp of the last price update
+     *
+     * @return timestamp
+     */
+    function lastUpdateTime() public view override returns (uint256) {
         // returns the oldest timestamp between the two
         uint256 timestampA = tokenAOracle.latestTimestamp();
         uint256 timestampB = tokenBOracle.latestTimestamp();
 
-        return  timestampA > timestampB ? timestampA : timestampB;
+        return timestampA > timestampB ? timestampA : timestampB;
     }
 
     /**
-      * @dev returns both the rate and the timestamp of the last update in a single call (gas optimization)
-      *
-      * @param  _tokenA token to get the rate of 1 unit of
-      * @param  _tokenB token to get the rate of 1 `_tokenA` against
-      *
-      * @return numerator
-      * @return denominator
-      * @return timestamp of the last update
-    */
+     * @dev returns both the rate and the timestamp of the last update in a single call (gas optimization)
+     *
+     * @param  _tokenA token to get the rate of 1 unit of
+     * @param  _tokenB token to get the rate of 1 `_tokenA` against
+     *
+     * @return numerator
+     * @return denominator
+     * @return timestamp of the last update
+     */
     function latestRateAndUpdateTime(IERC20Token _tokenA, IERC20Token _tokenB)
         public
         view
         override
-        returns (uint256, uint256, uint256)
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
     {
         (uint256 numerator, uint256 denominator) = latestRate(_tokenA, _tokenB);
 

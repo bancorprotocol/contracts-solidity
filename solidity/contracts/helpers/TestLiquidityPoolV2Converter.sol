@@ -5,9 +5,11 @@ import "../converter/types/liquidity-pool-v2/LiquidityPoolV2Converter.sol";
 contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
     uint256 public currentTime = 1;
 
-    constructor(IPoolTokensContainer _token, IContractRegistry _registry, uint32 _maxConversionFee)
-        public LiquidityPoolV2Converter(_token, _registry, _maxConversionFee) {
-    }
+    constructor(
+        IPoolTokensContainer _token,
+        IContractRegistry _registry,
+        uint32 _maxConversionFee
+    ) public LiquidityPoolV2Converter(_token, _registry, _maxConversionFee) {}
 
     function setExternalRateUpdateTime(uint256 _externalRateUpdateTime) public {
         externalRateUpdateTime = _externalRateUpdateTime;
@@ -29,8 +31,7 @@ contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
 
         if (_reserveToken == primaryReserveToken) {
             reserves[secondaryReserveToken].weight = PPM_RESOLUTION - _weight;
-        }
-        else {
+        } else {
             reserves[primaryReserveToken].weight = PPM_RESOLUTION - _weight;
         }
     }
