@@ -469,11 +469,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function unprotectLiquidity(uint256 _id1, uint256 _id2) external protected {
         require(_id1 != _id2, "ERR_SAME_ID");
 
-        ProtectedLiquidity memory liquidity1 = protectedLiquidity(_id1);
-        ProtectedLiquidity memory liquidity2 = protectedLiquidity(_id2);
-
-        // verify input & permissions
-        require(liquidity1.provider == msg.sender && liquidity2.provider == msg.sender, "ERR_ACCESS_DENIED");
+        ProtectedLiquidity memory liquidity1 = protectedLiquidity(_id1, msg.sender);
+        ProtectedLiquidity memory liquidity2 = protectedLiquidity(_id2, msg.sender);
 
         // verify that the two protections were added together (using `protect`)
         require(
@@ -620,11 +617,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         notThis(_newProvider)
         returns (uint256)
     {
-        ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
+        ProtectedLiquidity memory liquidity = protectedLiquidity(_id, msg.sender);
 
-        // verify input & permissions
-        require(liquidity.provider == msg.sender, "ERR_ACCESS_DENIED");
-        
         // remove the protected liquidity from the current provider
         store.removeProtectedLiquidity(_id);
 
@@ -714,10 +708,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _portion portion of liquidity to remove, in PPM
     */
     function removeLiquidity(uint256 _id, uint32 _portion) external validPortion(_portion) protected {
-        ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
-
-        // verify input & permissions
-        require(liquidity.provider == msg.sender, "ERR_ACCESS_DENIED");
+        ProtectedLiquidity memory liquidity = protectedLiquidity(_id, msg.sender);
 
         // verify that the pool is whitelisted
         require(store.isPoolWhitelisted(liquidity.poolToken), "ERR_POOL_NOT_WHITELISTED");
@@ -1193,6 +1184,19 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             liquidity.timestamp
         ) = store.protectedLiquidity(_id);
 
+        return liquidity;
+    }
+
+    /**
+      * @dev returns a protected liquidity from the store
+      *
+      * @param _id          protected liquidity id
+      * @param _provider    authorized provider
+      * @return protected liquidity
+    */
+    function protectedLiquidity(uint256 _id, address _provider) internal view returns (ProtectedLiquidity memory) {
+        ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
+        require(liquidity.provider == _provider, "ERR_ACCESS_DENIED");
         return liquidity;
     }
 
