@@ -38,14 +38,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 timestamp;          // timestamp
     }
 
-    // various rates between the reserve token in context (A) and the other reserve token (B)
+    // various rates between the two reserve tokens. the rate is of 1 unit of the protected reserve token in units of the other reserve token
     struct PackedRates {
-        uint128 addSpotRateN;       // spot rate of 1 A in units of B when liquidity was added
-        uint128 addSpotRateD;       // spot rate of 1 A in units of B when liquidity was added
-        uint128 removeSpotRateN;    // spot rate of 1 A in units of B when liquidity is removed
-        uint128 removeSpotRateD;    // spot rate of 1 A in units of B when liquidity is removed
-        uint128 removeAverageRateN; // average rate of 1 A in units of B when liquidity is removed
-        uint128 removeAverageRateD; // average rate of 1 A in units of B when liquidity is removed
+        uint128 addSpotRateN;       // spot rate of 1 A in units of B when liquidity was added (numerator)
+        uint128 addSpotRateD;       // spot rate of 1 A in units of B when liquidity was added (denominator)
+        uint128 removeSpotRateN;    // spot rate of 1 A in units of B when liquidity is removed (numerator)
+        uint128 removeSpotRateD;    // spot rate of 1 A in units of B when liquidity is removed (denominator)
+        uint128 removeAverageRateN; // average rate of 1 A in units of B when liquidity is removed (numerator)
+        uint128 removeAverageRateD; // average rate of 1 A in units of B when liquidity is removed (denominator)
     }
 
     IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
@@ -1090,9 +1090,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     {
         (uint256 removeSpotRateN, uint256 removeSpotRateD, uint256 removeAverageRateN, uint256 removeAverageRateD) = reserveTokenRates(_poolToken, _reserveToken);
 
-        require(_addSpotRateN <= MAX_UINT128 && _addSpotRateD <= MAX_UINT128, "ERR_INVALID_RATE");
-        require(removeSpotRateN <= MAX_UINT128 && removeSpotRateD <= MAX_UINT128, "ERR_INVALID_RATE");
-        require(removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128, "ERR_INVALID_RATE");
+        require((_addSpotRateN <= MAX_UINT128 && _addSpotRateD <= MAX_UINT128) &&
+                (removeSpotRateN <= MAX_UINT128 && removeSpotRateD <= MAX_UINT128) &&
+                (removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128), "ERR_INVALID_RATE");
 
         return PackedRates({
             addSpotRateN: uint128(_addSpotRateN),
